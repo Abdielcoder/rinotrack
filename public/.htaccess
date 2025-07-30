@@ -1,0 +1,6 @@
+# Configuración mínima para evitar errores
+# Sin mod_rewrite
+
+# Solo tipos MIME básicos
+AddType text/css .css
+AddType application/javascript .js

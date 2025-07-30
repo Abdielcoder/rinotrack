@@ -1,0 +1,595 @@
+<?php
+
+class AdminController {
+    private $auth;
+    private $userModel;
+    private $projectModel;
+    private $clanModel;
+    private $roleModel;
+    
+    public function __construct() {
+        $this->auth = new Auth();
+        $this->userModel = new User();
+        $this->projectModel = new Project();
+        $this->clanModel = new Clan();
+        $this->roleModel = new Role();
+    }
+    
+    /**
+     * Página principal del panel de administración
+     */
+    public function index() {
+        // Verificar autenticación y permisos
+        $this->requireAuth();
+        if (!$this->hasAdminAccess()) {
+            Utils::redirect('dashboard');
+        }
+        
+        // Obtener estadísticas generales
+        $data = [
+            'userStats' => $this->userModel->getStats(),
+            'projectStats' => $this->projectModel->getStats(),
+            'clanStats' => $this->clanModel->getStats(),
+            'roleStats' => $this->roleModel->getStats(),
+            'currentPage' => 'admin',
+            'user' => $this->auth->getCurrentUser()
+        ];
+        
+        $this->loadView('admin/dashboard', $data);
+    }
+    
+    /**
+     * Gestión de usuarios
+     */
+    public function users() {
+        $this->requireAuth();
+        if (!$this->hasAdminAccess()) {
+            Utils::redirect('dashboard');
+        }
+        
+        $search = $_GET['search'] ?? '';
+        $users = empty($search) ? 
+            $this->userModel->getAllWithRoles() : 
+            $this->userModel->search($search);
+        
+        $data = [
+            'users' => $users,
+            'roles' => $this->roleModel->getAll(),
+            'search' => $search,
+            'currentPage' => 'admin',
+            'user' => $this->auth->getCurrentUser()
+        ];
+        
+        $this->loadView('admin/users', $data);
+    }
+    
+    /**
+     * Crear nuevo usuario
+     */
+    public function createUser() {
+        $this->requireAuth();
+        if (!$this->hasAdminAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos'], 403);
+        }
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Utils::redirect('admin/users');
+        }
+        
+        // Validar datos
+        $username = Utils::sanitizeInput($_POST['username'] ?? '');
+        $email = Utils::sanitizeInput($_POST['email'] ?? '');
+        $fullName = Utils::sanitizeInput($_POST['fullName'] ?? '');
+        $password = $_POST['password'] ?? '';
+        $roleId = (int)($_POST['roleId'] ?? 0);
+        
+        $errors = [];
+        
+        // Validaciones
+        if (empty($username) || strlen($username) < 3) {
+            $errors['username'] = 'El nombre de usuario debe tener al menos 3 caracteres';
+        }
+        
+        if (empty($email) || !Utils::isValidEmail($email)) {
+            $errors['email'] = 'Debe proporcionar un email válido';
+        }
+        
+        if (empty($fullName)) {
+            $errors['fullName'] = 'El nombre completo es requerido';
+        }
+        
+        if (empty($password) || strlen($password) < 6) {
+            $errors['password'] = 'La contraseña debe tener al menos 6 caracteres';
+        }
+        
+        if ($roleId <= 0) {
+            $errors['roleId'] = 'Debe seleccionar un rol válido';
+        }
+        
+        // Verificar si ya existe
+        if ($this->userModel->exists($username, $email)) {
+            $errors['general'] = 'Ya existe un usuario con ese nombre de usuario o email';
+        }
+        
+        if (!empty($errors)) {
+            Utils::jsonResponse(['success' => false, 'errors' => $errors], 400);
+        }
+        
+        // Crear usuario
+        $userId = $this->userModel->create($username, $email, $password, $fullName);
+        
+        if ($userId) {
+            // Asignar rol
+            $roleAssigned = $this->roleModel->assignToUser($userId, $roleId);
+            
+            if ($roleAssigned) {
+                Utils::jsonResponse(['success' => true, 'message' => 'Usuario creado exitosamente']);
+            } else {
+                // Si falla la asignación de rol, eliminar el usuario creado
+                $this->userModel->delete($userId);
+                Utils::jsonResponse(['success' => false, 'message' => 'Error al asignar rol al usuario'], 500);
+            }
+        } else {
+            Utils::jsonResponse(['success' => false, 'message' => 'Error al crear usuario'], 500);
+        }
+    }
+    
+    /**
+     * Actualizar usuario
+     */
+    public function updateUser() {
+        $this->requireAuth();
+        if (!$this->hasAdminAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos'], 403);
+        }
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Utils::redirect('admin/users');
+        }
+        
+        $userId = (int)($_POST['userId'] ?? 0);
+        $username = Utils::sanitizeInput($_POST['username'] ?? '');
+        $email = Utils::sanitizeInput($_POST['email'] ?? '');
+        $fullName = Utils::sanitizeInput($_POST['fullName'] ?? '');
+        $roleId = (int)($_POST['roleId'] ?? 0);
+        $isActive = isset($_POST['isActive']) ? 1 : 0;
+        
+        if ($userId <= 0) {
+            Utils::jsonResponse(['success' => false, 'message' => 'ID de usuario inválido'], 400);
+        }
+        
+        // Actualizar usuario
+        $result = $this->userModel->update($userId, $username, $email, $fullName, $isActive);
+        
+        if ($result && $roleId > 0) {
+            // Actualizar rol
+            $this->roleModel->assignToUser($userId, $roleId);
+        }
+        
+        if ($result) {
+            Utils::jsonResponse(['success' => true, 'message' => 'Usuario actualizado exitosamente']);
+        } else {
+            Utils::jsonResponse(['success' => false, 'message' => 'Error al actualizar usuario'], 500);
+        }
+    }
+    
+    /**
+     * Cambiar estado activo/inactivo del usuario
+     */
+    public function toggleUserStatus() {
+        $this->requireAuth();
+        if (!$this->hasAdminAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos'], 403);
+        }
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Utils::redirect('admin/users');
+        }
+        
+        $userId = (int)($_POST['userId'] ?? 0);
+        
+        if ($userId <= 0) {
+            Utils::jsonResponse(['success' => false, 'message' => 'ID de usuario inválido'], 400);
+        }
+        
+        // Verificar que el usuario existe
+        $user = $this->userModel->findById($userId);
+        if (!$user) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Usuario no encontrado'], 404);
+        }
+        
+        // Protección: No permitir desactivar al super admin
+        $userRole = $this->roleModel->getUserRole($userId);
+        if ($userRole && $userRole['role_name'] === 'super_admin') {
+            Utils::jsonResponse(['success' => false, 'message' => 'No se puede desactivar al super administrador'], 403);
+        }
+        
+        // Cambiar el estado (toggle)
+        $newStatus = $user['is_active'] ? 0 : 1;
+        $result = $this->userModel->updateStatus($userId, $newStatus);
+        
+        if ($result) {
+            $statusText = $newStatus ? 'activado' : 'desactivado';
+            Utils::jsonResponse(['success' => true, 'message' => "Usuario {$statusText} exitosamente"]);
+        } else {
+            Utils::jsonResponse(['success' => false, 'message' => 'Error al cambiar estado del usuario'], 500);
+        }
+    }
+    
+    /**
+     * Gestión de proyectos
+     */
+    public function projects() {
+        $this->requireAuth();
+        if (!$this->hasAdminAccess()) {
+            Utils::redirect('dashboard');
+        }
+        
+        $projects = $this->projectModel->getAllWithClanInfo();
+        $clans = $this->clanModel->getAll();
+        
+        $data = [
+            'projects' => $projects,
+            'clans' => $clans,
+            'currentPage' => 'admin',
+            'user' => $this->auth->getCurrentUser()
+        ];
+        
+        $this->loadView('admin/projects', $data);
+    }
+    
+    /**
+     * Crear nuevo proyecto
+     */
+    public function createProject() {
+        // DEBUG temporal
+        error_log("DEBUG createProject - Iniciando método");
+        error_log("DEBUG createProject - SESSION: " . json_encode($_SESSION ?? []));
+        
+        $this->requireAuth();
+        if (!$this->hasAdminAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos'], 403);
+        }
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Utils::redirect('admin/projects');
+        }
+        
+        $projectName = Utils::sanitizeInput($_POST['projectName'] ?? '');
+        $description = Utils::sanitizeInput($_POST['description'] ?? '');
+        $clanId = (int)($_POST['clanId'] ?? 0);
+        $currentUser = $this->auth->getCurrentUser();
+        
+        // DEBUG temporal
+        error_log("DEBUG createProject - currentUser: " . json_encode($currentUser));
+        error_log("DEBUG createProject - user_id: " . ($currentUser['user_id'] ?? 'NULL'));
+        
+        $errors = [];
+        
+        if (empty($projectName)) {
+            $errors['projectName'] = 'El nombre del proyecto es requerido';
+        }
+        
+        if ($clanId <= 0) {
+            $errors['clanId'] = 'Debe seleccionar un clan válido';
+        }
+        
+        if (!empty($errors)) {
+            Utils::jsonResponse(['success' => false, 'errors' => $errors], 400);
+        }
+        
+        $projectId = $this->projectModel->create($projectName, $description, $clanId, $currentUser['user_id']);
+        
+        if ($projectId) {
+            Utils::jsonResponse(['success' => true, 'message' => 'Proyecto creado exitosamente']);
+        } else {
+            Utils::jsonResponse(['success' => false, 'message' => 'Error al crear proyecto'], 500);
+        }
+    }
+    
+    /**
+     * Gestión de clanes
+     */
+    public function clans() {
+        $this->requireAuth();
+        if (!$this->hasAdminAccess()) {
+            Utils::redirect('dashboard');
+        }
+        
+        $clans = $this->clanModel->getAll();
+        $users = $this->userModel->getAllWithRoles();
+        
+        $data = [
+            'clans' => $clans,
+            'users' => $users,
+            'currentPage' => 'admin',
+            'user' => $this->auth->getCurrentUser()
+        ];
+        
+        $this->loadView('admin/clans', $data);
+    }
+    
+    /**
+     * Crear nuevo clan
+     */
+    public function createClan() {
+        $this->requireAuth();
+        if (!$this->hasAdminAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos'], 403);
+        }
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Utils::redirect('admin/clans');
+        }
+        
+        $clanName = Utils::sanitizeInput($_POST['clanName'] ?? '');
+        $clanDepartamento = Utils::sanitizeInput($_POST['clanDepartamento'] ?? '');
+        
+        if (empty($clanName)) {
+            Utils::jsonResponse(['success' => false, 'message' => 'El nombre del clan es requerido'], 400);
+        }
+        
+        if ($this->clanModel->exists($clanName)) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Ya existe un clan con ese nombre'], 400);
+        }
+        
+        $clanId = $this->clanModel->create($clanName, $clanDepartamento);
+        
+        if ($clanId) {
+            Utils::jsonResponse(['success' => true, 'message' => 'Clan creado exitosamente']);
+        } else {
+            Utils::jsonResponse(['success' => false, 'message' => 'Error al crear clan'], 500);
+        }
+    }
+    
+    /**
+     * Actualizar clan
+     */
+    public function updateClan() {
+        $this->requireAuth();
+        if (!$this->hasAdminAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos'], 403);
+        }
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Utils::redirect('admin/clans');
+        }
+        
+        $clanId = (int)($_POST['clanId'] ?? 0);
+        $clanName = Utils::sanitizeInput($_POST['clanName'] ?? '');
+        $clanDepartamento = Utils::sanitizeInput($_POST['clanDepartamento'] ?? '');
+        
+        if ($clanId <= 0) {
+            Utils::jsonResponse(['success' => false, 'message' => 'ID de clan inválido'], 400);
+        }
+        
+        if (empty($clanName)) {
+            Utils::jsonResponse(['success' => false, 'message' => 'El nombre del clan es requerido'], 400);
+        }
+        
+        // Verificar que el clan existe
+        $clan = $this->clanModel->findById($clanId);
+        if (!$clan) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Clan no encontrado'], 404);
+        }
+        
+        // Verificar si el nuevo nombre ya existe (excepto para el clan actual)
+        if ($clan['clan_name'] !== $clanName && $this->clanModel->exists($clanName)) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Ya existe un clan con ese nombre'], 400);
+        }
+        
+        $result = $this->clanModel->update($clanId, $clanName, $clanDepartamento);
+        
+        if ($result) {
+            Utils::jsonResponse(['success' => true, 'message' => 'Clan actualizado exitosamente']);
+        } else {
+            Utils::jsonResponse(['success' => false, 'message' => 'Error al actualizar clan'], 500);
+        }
+    }
+    
+    /**
+     * Eliminar clan
+     */
+    public function deleteClan() {
+        $this->requireAuth();
+        if (!$this->hasAdminAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos'], 403);
+        }
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Utils::redirect('admin/clans');
+        }
+        
+        $clanId = (int)($_POST['clanId'] ?? 0);
+        
+        if ($clanId <= 0) {
+            Utils::jsonResponse(['success' => false, 'message' => 'ID de clan inválido'], 400);
+        }
+        
+        // Verificar que el clan existe
+        $clan = $this->clanModel->findById($clanId);
+        if (!$clan) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Clan no encontrado'], 404);
+        }
+        
+        // Intentar eliminar el clan
+        $result = $this->clanModel->delete($clanId);
+        
+        if ($result === true) {
+            Utils::jsonResponse(['success' => true, 'message' => 'Clan eliminado exitosamente']);
+        } elseif (is_array($result) && isset($result['error'])) {
+            Utils::jsonResponse(['success' => false, 'message' => $result['error']], 400);
+        } else {
+            Utils::jsonResponse(['success' => false, 'message' => 'Error al eliminar clan'], 500);
+        }
+    }
+    
+    /**
+     * Obtener miembros de un clan
+     */
+    public function getClanMembers() {
+        $this->requireAuth();
+        if (!$this->hasAdminAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos'], 403);
+        }
+        
+        $clanId = (int)($_GET['clanId'] ?? 0);
+        
+        if ($clanId <= 0) {
+            Utils::jsonResponse(['success' => false, 'message' => 'ID de clan inválido'], 400);
+        }
+        
+        $members = $this->clanModel->getMembers($clanId);
+        Utils::jsonResponse(['success' => true, 'members' => $members]);
+    }
+    
+    /**
+     * Obtener detalles completos de un clan
+     */
+    public function getClanDetails() {
+        $this->requireAuth();
+        if (!$this->hasAdminAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos'], 403);
+        }
+        
+        $clanId = (int)($_GET['clanId'] ?? 0);
+        
+        if ($clanId <= 0) {
+            Utils::jsonResponse(['success' => false, 'message' => 'ID de clan inválido'], 400);
+        }
+        
+        // Obtener información básica del clan
+        $clan = $this->clanModel->findById($clanId);
+        if (!$clan) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Clan no encontrado'], 404);
+        }
+        
+        // Obtener miembros del clan con información adicional
+        $members = $this->clanModel->getMembers($clanId);
+        
+        // Obtener proyectos del clan
+        $projects = $this->projectModel->getByClan($clanId);
+        
+        // Preparar datos completos del clan
+        $clanDetails = [
+            'clan_id' => $clan['clan_id'],
+            'clan_name' => $clan['clan_name'],
+            'created_at' => $clan['created_at'],
+            'member_count' => $clan['member_count'],
+            'project_count' => $clan['project_count'],
+            'members' => $members,
+            'projects' => $projects
+        ];
+        
+        Utils::jsonResponse(['success' => true, 'clan' => $clanDetails]);
+    }
+    
+    /**
+     * Agregar miembro a clan
+     */
+    public function addClanMember() {
+        $this->requireAuth();
+        if (!$this->hasAdminAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos'], 403);
+        }
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Utils::redirect('admin/clans');
+        }
+        
+        $clanId = (int)($_POST['clanId'] ?? 0);
+        $userId = (int)($_POST['userId'] ?? 0);
+        
+        if ($clanId <= 0 || $userId <= 0) {
+            Utils::jsonResponse(['success' => false, 'message' => 'ID de clan o usuario inválido'], 400);
+        }
+        
+        // Verificar que el clan existe
+        $clan = $this->clanModel->findById($clanId);
+        if (!$clan) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Clan no encontrado'], 404);
+        }
+        
+        // Verificar que el usuario existe
+        $user = $this->userModel->findById($userId);
+        if (!$user) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Usuario no encontrado'], 404);
+        }
+        
+        // Agregar miembro al clan
+        $result = $this->clanModel->addMember($clanId, $userId);
+        
+        if ($result) {
+            Utils::jsonResponse(['success' => true, 'message' => 'Miembro agregado exitosamente']);
+        } else {
+            Utils::jsonResponse(['success' => false, 'message' => 'Error al agregar miembro'], 500);
+        }
+    }
+    
+    /**
+     * Remover miembro de clan
+     */
+    public function removeClanMember() {
+        $this->requireAuth();
+        if (!$this->hasAdminAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos'], 403);
+        }
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Utils::redirect('admin/clans');
+        }
+        
+        $clanId = (int)($_POST['clanId'] ?? 0);
+        $userId = (int)($_POST['userId'] ?? 0);
+        
+        if ($clanId <= 0 || $userId <= 0) {
+            Utils::jsonResponse(['success' => false, 'message' => 'ID de clan o usuario inválido'], 400);
+        }
+        
+        // Remover miembro del clan
+        $result = $this->clanModel->removeMember($clanId, $userId);
+        
+        if ($result) {
+            Utils::jsonResponse(['success' => true, 'message' => 'Miembro removido exitosamente']);
+        } else {
+            Utils::jsonResponse(['success' => false, 'message' => 'Error al remover miembro'], 500);
+        }
+    }
+    
+    /**
+     * Verificar si el usuario tiene acceso de administración
+     */
+    private function hasAdminAccess() {
+        $currentUser = $this->auth->getCurrentUser();
+        if (!$currentUser) {
+            return false;
+        }
+        
+        return $this->roleModel->userHasMinimumRole($currentUser['user_id'], Role::ADMIN);
+    }
+    
+    /**
+     * Verificar autenticación
+     */
+    private function requireAuth() {
+        if (!$this->auth->isLoggedIn()) {
+            Utils::redirect('login');
+        }
+    }
+    
+    /**
+     * Cargar vista
+     */
+    private function loadView($view, $data = []) {
+        // Extraer variables para la vista
+        extract($data);
+        
+        // Incluir archivo de vista
+        $viewFile = __DIR__ . '/../views/' . $view . '.php';
+        if (file_exists($viewFile)) {
+            include $viewFile;
+        } else {
+            die('Vista no encontrada: ' . $view);
+        }
+    }
+}

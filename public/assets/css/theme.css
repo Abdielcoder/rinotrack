@@ -1,0 +1,460 @@
+/* ============================================
+   RINOTRACK - SISTEMA DE TEMAS MODERNOS
+   Plantilla base minimalista y tecnológica
+   ============================================ */
+
+:root {
+  /* === COLORES PRINCIPALES === */
+  --primary-color: #6366f1;
+  --primary-light: #8b5cf6;
+  --primary-dark: #4f46e5;
+  --primary-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  
+  /* === COLORES SECUNDARIOS === */
+  --secondary-color: #10b981;
+  --secondary-light: #34d399;
+  --secondary-dark: #059669;
+  
+  /* === COLORES DE FONDO === */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --bg-tertiary: #f1f5f9;
+  --bg-accent: #e2e8f0;
+  --bg-dark: #0f172a;
+  --bg-glass: rgba(255, 255, 255, 0.8);
+  --bg-glass-dark: rgba(15, 23, 42, 0.8);
+  
+  /* === COLORES DE TEXTO === */
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --text-muted: #94a3b8;
+  --text-light: #cbd5e1;
+  --text-white: #ffffff;
+  
+  /* === COLORES DE ESTADO === */
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+  --info: #3b82f6;
+  
+  /* === SOMBRAS Y EFECTOS === */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.3);
+  
+  /* === BORDES Y RADIOS === */
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+  
+  /* === ESPACIADO === */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --spacing-2xl: 3rem;
+  
+  /* === TIPOGRAFÍA === */
+  --font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --font-weight-light: 300;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  
+  /* === TRANSICIONES === */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.3s ease;
+  --transition-slow: 0.5s ease;
+  
+  /* === EFECTOS GLASSMORFISMO === */
+  --glass-bg: rgba(255, 255, 255, 0.1);
+  --glass-border: rgba(255, 255, 255, 0.2);
+  --glass-backdrop: blur(10px);
+}
+
+/* === TEMA OSCURO === */
+[data-theme="dark"] {
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-tertiary: #334155;
+  --bg-accent: #475569;
+  --bg-glass: rgba(15, 23, 42, 0.8);
+  
+  --text-primary: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --text-light: #64748b;
+  
+  --glass-bg: rgba(0, 0, 0, 0.2);
+  --glass-border: rgba(255, 255, 255, 0.1);
+}
+
+/* === TEMA TECH BLUE === */
+[data-theme="tech-blue"] {
+  --primary-color: #0ea5e9;
+  --primary-light: #38bdf8;
+  --primary-dark: #0284c7;
+  --primary-gradient: linear-gradient(135deg, #0ea5e9 0%, #8b5cf6 100%);
+  
+  --secondary-color: #06b6d4;
+  --bg-secondary: #f0f9ff;
+  --bg-tertiary: #e0f2fe;
+}
+
+/* === TEMA FOREST GREEN === */
+[data-theme="forest"] {
+  --primary-color: #059669;
+  --primary-light: #10b981;
+  --primary-dark: #047857;
+  --primary-gradient: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  
+  --secondary-color: #0d9488;
+  --bg-secondary: #f0fdf4;
+  --bg-tertiary: #dcfce7;
+}
+
+/* === TEMA SUNSET === */
+[data-theme="sunset"] {
+  --primary-color: #f59e0b;
+  --primary-light: #fbbf24;
+  --primary-dark: #d97706;
+  --primary-gradient: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+  
+  --secondary-color: #f97316;
+  --bg-secondary: #fffbeb;
+  --bg-tertiary: #fef3c7;
+}
+
+/* === RESET Y BASE === */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-family);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  line-height: 1.6;
+  font-weight: var(--font-weight-normal);
+  transition: all var(--transition-normal);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* === UTILIDADES GLOBALES === */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-backdrop);
+  border: 1px solid var(--glass-border);
+}
+
+.gradient-bg {
+  background: var(--primary-gradient);
+}
+
+.card {
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--bg-accent);
+  transition: all var(--transition-normal);
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md) var(--spacing-lg);
+  border: none;
+  border-radius: var(--radius-md);
+  font-weight: var(--font-weight-medium);
+  text-decoration: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  outline: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary {
+  background: var(--primary-gradient);
+  color: var(--text-white);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg);
+}
+
+.btn-secondary {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border: 2px solid var(--bg-accent);
+}
+
+.btn-secondary:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+/* === ANIMACIONES === */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.6s ease-out forwards;
+}
+
+.animate-slide-in {
+  animation: slideIn 0.6s ease-out forwards;
+}
+
+.animate-pulse {
+  animation: pulse 2s infinite;
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 768px) {
+  :root {
+    --spacing-md: 0.75rem;
+    --spacing-lg: 1rem;
+    --spacing-xl: 1.5rem;
+    --radius-lg: 16px;
+  }
+}
+
+/* ============================================
+   DROPDOWN MENU STYLES
+   ============================================ */
+
+.nav-item.dropdown {
+    position: relative;
+}
+
+.dropdown-toggle {
+    cursor: pointer;
+    user-select: none;
+}
+
+.dropdown-arrow {
+    margin-left: 0.5rem;
+    font-size: 0.8rem;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    color: rgba(99, 102, 241, 0.8);
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-10px);
+    min-width: 260px;
+    max-width: 320px;
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 10000;
+    list-style: none;
+    margin: 0;
+    padding: 0.75rem 0;
+    white-space: nowrap;
+}
+
+.nav-item.dropdown:hover .dropdown-menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+}
+
+.nav-item.dropdown:hover .dropdown-arrow {
+    transform: rotate(180deg);
+}
+
+.dropdown-menu li {
+    margin: 0;
+    position: relative;
+}
+
+.dropdown-menu li:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 1.5rem;
+    right: 1.5rem;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.1), transparent);
+}
+
+.dropdown-menu li:last-child {
+    margin-bottom: 0.25rem;
+}
+
+.dropdown-link {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+    color: var(--text-primary);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.95rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    border-radius: var(--radius-md);
+    margin: 0 0.5rem;
+    line-height: 1.4;
+}
+
+.dropdown-link:hover {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    color: white;
+    transform: translateX(3px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.dropdown-link i {
+    width: 18px;
+    height: 18px;
+    text-align: center;
+    opacity: 0.8;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+
+.dropdown-link:hover i {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+/* Dark theme para dropdown */
+[data-theme="dark"] .dropdown-menu {
+    background: rgba(30, 41, 59, 0.98);
+    border-color: rgba(148, 163, 184, 0.2);
+}
+
+[data-theme="dark"] .dropdown-link {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .dropdown-link:hover {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+}
+
+[data-theme="dark"] .dropdown-menu li:not(:last-child)::after {
+    background: linear-gradient(90deg, transparent, rgba(148, 163, 184, 0.2), transparent);
+}
+
+/* Responsive para dropdown */
+@media (max-width: 1024px) {
+    .dropdown-menu {
+        left: auto;
+        right: 0;
+        transform: translateY(-10px);
+        min-width: 280px;
+    }
+    
+    .nav-item.dropdown:hover .dropdown-menu {
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 768px) {
+    .dropdown-menu {
+        position: fixed;
+        top: auto;
+        left: 50%;
+        right: auto;
+        transform: translateX(-50%) translateY(-10px);
+        min-width: 90vw;
+        max-width: 340px;
+        margin-top: 15px;
+        z-index: 15000;
+    }
+    
+    .nav-item.dropdown:hover .dropdown-menu {
+        transform: translateX(-50%) translateY(0);
+    }
+    
+    .dropdown-link {
+        padding: 1.25rem 1.5rem;
+        font-size: 1rem;
+        gap: 1.25rem;
+    }
+    
+    .dropdown-link i {
+        width: 20px;
+        height: 20px;
+        font-size: 1rem;
+    }
+    
+    [data-theme="dark"] .dropdown-menu {
+        background: rgba(30, 41, 59, 0.98);
+    }
+}
+
+@media (max-width: 480px) {
+    .dropdown-menu {
+        min-width: 95vw;
+        margin-top: 10px;
+    }
+    
+    .dropdown-link {
+        padding: 1.5rem;
+        font-size: 1.1rem;
+    }
+}
