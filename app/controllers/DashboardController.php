@@ -5,6 +5,7 @@ class DashboardController {
     
     public function __construct() {
         $this->auth = new Auth();
+        $this->roleModel = new Role();
     }
     
     /**
@@ -35,6 +36,7 @@ class DashboardController {
             'stats' => $this->getStats(),
             'recentActivity' => $this->getRecentActivity(),
             'sessionInfo' => $this->getSessionInfo(),
+            'isAdmin' => $this->roleModel->userHasMinimumRole($user['user_id'], Role::ADMIN),
             'currentPage' => 'dashboard'
         ];
         
@@ -46,12 +48,18 @@ class DashboardController {
      * Obtener estadísticas del usuario
      */
     private function getStats() {
-        // Por ahora datos estáticos, en una aplicación real vendrían de la base de datos
+        $projectModel = new Project();
+        $taskModel = new Task();
+        $user = $this->auth->getCurrentUser();
+
+        $projectStats = $projectModel->getStats();
+        $taskStats = $taskModel->getStats(null, $user['user_id']);
+
         return [
-            'projects' => 24,
-            'tasks' => 158,
-            'completed' => '89%',
-            'in_progress' => 12
+            'projects' => $projectStats['total_projects'],
+            'tasks' => $taskStats['total_tasks'],
+            'completed' => $projectStats['total_projects'] > 0 ? round($projectStats['completed_projects'] / $projectStats['total_projects'] * 100) . '%' : '0%',
+            'in_progress' => $taskStats['pending_tasks']
         ];
     }
     
@@ -59,24 +67,39 @@ class DashboardController {
      * Obtener actividad reciente
      */
     private function getRecentActivity() {
-        // Por ahora datos estáticos, en una aplicación real vendrían de la base de datos
-        return [
-            [
+        $projectModel = new Project();
+        $taskModel = new Task();
+        $user = $this->auth->getCurrentUser();
+
+        $recentProjects = $projectModel->getByUser($user['user_id']);
+        $recentTasks = $taskModel->getByUser($user['user_id'], true);
+
+        $activity = [];
+
+        foreach ($recentProjects as $project) {
+            $activity[] = [
                 'icon' => 'fas fa-plus',
-                'title' => 'Nuevo proyecto creado',
-                'time' => 'Hace 2 horas'
-            ],
-            [
-                'icon' => 'fas fa-check',
-                'title' => 'Tarea completada',
-                'time' => 'Hace 4 horas'
-            ],
-            [
-                'icon' => 'fas fa-edit',
-                'title' => 'Perfil actualizado',
-                'time' => 'Ayer'
-            ]
-        ];
+                'title' => 'Nuevo proyecto creado: ' . $project['project_name'],
+                'time' => date('d/m/Y', strtotime($project['created_at']))
+            ];
+        }
+
+        foreach ($recentTasks as $task) {
+            if ($task['is_completed']) {
+                $activity[] = [
+                    'icon' => 'fas fa-check',
+                    'title' => 'Tarea completada: ' . $task['task_name'],
+                    'time' => date('d/m/Y', strtotime($task['completed_at']))
+                ];
+            }
+        }
+
+        // Sort activity by time
+        usort($activity, function ($a, $b) {
+            return strtotime($b['time']) - strtotime($a['time']);
+        });
+
+        return array_slice($activity, 0, 3);
     }
     
     /**

@@ -1,11 +1,11 @@
 <?php
 // Configurar archivos adicionales para layout
 $additionalCSS = [
-    APP_URL . 'assets/css/kpi.css'
+    '/RinoTrack/public/assets/css/kpi.css'
 ];
 
 $additionalJS = [
-    APP_URL . 'assets/js/kpi-projects.js'
+    '/RinoTrack/public/assets/js/kpi-projects.js'
 ];
 
 // Calcular puntos
@@ -29,6 +29,10 @@ ob_start();
             </div>
             
             <div class="actions-minimal">
+                <a href="?route=admin" class="btn-minimal">
+                    <i class="fas fa-arrow-left"></i>
+                    Volver a Admin
+                </a>
                 <a href="?route=kpi/dashboard" class="btn-minimal">
                     <i class="fas fa-chart-line"></i>
                     Dashboard
@@ -52,6 +56,14 @@ ob_start();
                         <span class="stat-separator">de</span>
                         <span class="stat-item"><?php echo number_format($currentKPI['total_points']); ?> totales</span>
                     </div>
+                    <?php if (isset($_GET['debug'])): ?>
+                    <!-- Debug info -->
+                    <div style="background: #f0f0f0; padding: 5px; margin: 5px 0; font-size: 12px; color: #666;">
+                        Debug: remainingPoints=<?php echo $remainingPoints; ?>, 
+                        assignedPoints=<?php echo $assignedPoints; ?>, 
+                        total_points=<?php echo $currentKPI['total_points']; ?>
+                    </div>
+                    <?php endif; ?>
                     <div class="period-progress">
                         <span class="progress-label"><?php echo $currentKPI['total_points'] > 0 ? round(($assignedPoints / $currentKPI['total_points']) * 100, 1) : 0; ?>% asignado</span>
                         <div class="progress-minimal">
@@ -114,7 +126,7 @@ ob_start();
                         <?php foreach ($projects as $project): ?>
                             <?php 
                             // Calcular progreso simplificado
-                            $progressPercentage = rand(10, 95); // TODO: Usar cálculo real del progreso
+                            $progressPercentage = $project['progress_percentage'];
                             ?>
                             <div class="project-item assigned" data-project-id="<?php echo $project['project_id']; ?>">
                                 <div class="project-info">
@@ -137,11 +149,14 @@ ob_start();
                                 </div>
                                 
                                 <div class="project-actions">
-                                    <button class="btn-action" onclick="openEditKPIModal(<?php echo $project['project_id']; ?>, '<?php echo htmlspecialchars($project['project_name']); ?>', <?php echo $project['kpi_points']; ?>)" title="Editar KPI">
-                                        ✏️
+                                    <button class="btn-action" onclick='openTasksModal(<?php echo $project['project_id']; ?>, <?php echo json_encode($project['project_name']); ?>)' title="Gestionar Tareas">
+                                        <i class="fas fa-tasks"></i>
                                     </button>
-                                    <button class="btn-action" onclick="toggleDistributionMode(<?php echo $project['project_id']; ?>, '<?php echo $project['task_distribution_mode']; ?>')" title="Cambiar distribución">
-                                        🔄
+                                    <button class="btn-action" onclick='openEditKPIModal(<?php echo $project['project_id']; ?>, <?php echo json_encode($project['project_name']); ?>, <?php echo $project['kpi_points']; ?>)' title="Editar KPI">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn-action" onclick='toggleDistributionMode(<?php echo $project['project_id']; ?>, <?php echo json_encode($project['task_distribution_mode']); ?>)' title="Cambiar distribución">
+                                        <i class="fas fa-sync-alt"></i>
                                     </button>
                                 </div>
                             </div>
@@ -324,6 +339,29 @@ ob_start();
                 </button>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- Modal Tareas -->
+<div id="tasksModal" class="modal" style="display: none;">
+    <div class="modal-overlay"></div>
+    <div class="modal-content large">
+        <div class="modal-header">
+            <div class="modal-title">
+                <i class="fas fa-tasks"></i>
+                <span id="tasksModalTitle">Gestionar Tareas</span>
+            </div>
+            <button class="modal-close" onclick="closeTasksModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="modal-body" id="tasksModalBody">
+            <!-- El contenido se cargará aquí vía AJAX -->
+            <div class="loading-spinner">
+                <i class="fas fa-spinner fa-spin"></i> Cargando...
+            </div>
+        </div>
     </div>
 </div>
 

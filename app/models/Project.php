@@ -380,6 +380,60 @@ class Project {
     }
     
     /**
+     * Actualizar el progreso de un proyecto basado en sus tareas
+     */
+    public function updateProgress($projectId) {
+        try {
+            // Calcular el progreso desde la tabla de tareas
+            $stmt = $this->db->prepare("
+                SELECT 
+                    p.kpi_points,
+                    p.task_distribution_mode,
+                    COUNT(t.task_id) as total_tasks,
+                    SUM(CASE WHEN t.is_completed = 1 THEN 1 ELSE 0 END) as completed_tasks,
+                    CASE 
+                        WHEN p.task_distribution_mode = 'automatic' THEN 
+                            COALESCE(SUM(CASE WHEN t.is_completed = 1 THEN t.automatic_points ELSE 0 END), 0)
+                        ELSE 
+                            COALESCE(SUM(CASE WHEN t.is_completed = 1 THEN (t.assigned_percentage * p.kpi_points / 100) ELSE 0 END), 0)
+                    END as earned_points
+                FROM Projects p
+                LEFT JOIN Tasks t ON p.project_id = t.project_id
+                WHERE p.project_id = ?
+                GROUP BY p.project_id
+            ");
+            $stmt->execute([$projectId]);
+            $progressData = $stmt->fetch();
+            
+            if ($progressData) {
+                $totalTasks = $progressData['total_tasks'] ?? 0;
+                $completedTasks = $progressData['completed_tasks'] ?? 0;
+                $kpiPoints = $progressData['kpi_points'] ?? 0;
+                $earnedPoints = $progressData['earned_points'] ?? 0;
+                
+                // Calcular el porcentaje de progreso
+                $progressPercentage = ($kpiPoints > 0) ? ($earnedPoints / $kpiPoints) * 100 : 0;
+                
+                // Actualizar la tabla de proyectos
+                $updateStmt = $this->db->prepare("
+                    UPDATE Projects 
+                    SET 
+                        total_tasks = ?, 
+                        completed_tasks = ?, 
+                        progress_percentage = ?
+                    WHERE project_id = ?
+                ");
+                $updateStmt->execute([$totalTasks, $completedTasks, $progressPercentage, $projectId]);
+            }
+            
+            return true;
+        } catch (PDOException $e) {
+            error_log("Error al actualizar progreso del proyecto: " . $e->getMessage());
+            return false;
+        }
+    }
+    
+    /**
      * Asignar o actualizar KPI de un proyecto
      */
     public function assignKPI($projectId, $kpiQuarterId, $kpiPoints) {
@@ -494,6 +548,25 @@ class Project {
             
         } catch (PDOException $e) {
             error_log("Error al calcular progreso KPI del proyecto: " . $e->getMessage());
+            return [];
+        }
+    }
+    
+    public function getByUser($userId) {
+        try {
+            $stmt = $this->db->prepare("
+                SELECT 
+                    p.*,
+                    c.clan_name
+                FROM Projects p
+                LEFT JOIN Clans c ON p.clan_id = c.clan_id
+                WHERE p.created_by_user_id = ?
+                ORDER BY p.created_at DESC
+            ");
+            $stmt->execute([$userId]);
+            return $stmt->fetchAll();
+        } catch (PDOException $e) {
+            error_log("Error al obtener proyectos del usuario: " . $e->getMessage());
             return [];
         }
     }

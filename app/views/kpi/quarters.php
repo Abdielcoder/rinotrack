@@ -13,6 +13,10 @@ ob_start();
             </div>
             
             <div class="actions-minimal">
+                <a href="?route=admin" class="btn-minimal">
+                    <i class="fas fa-arrow-left"></i>
+                    Volver a Admin
+                </a>
                 <a href="?route=kpi/dashboard" class="btn-minimal">
                     <i class="fas fa-chart-line"></i>
                     Dashboard

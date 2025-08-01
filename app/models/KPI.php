@@ -11,6 +11,9 @@ class KPI {
     
     public function __construct() {
         $this->db = Database::getConnection();
+        if (!$this->db) {
+            error_log("Error: No se pudo establecer la conexión a la base de datos en la clase KPI.");
+        }
     }
     
     /**
@@ -367,8 +370,8 @@ class KPI {
                 SELECT 
                     c.clan_name,
                     ck.total_points,
-                    ck.assigned_points,
-                    COALESCE(progress.completed_points, 0) as completed_points,
+                    ck.assigned_points as total_assigned,
+                    COALESCE(progress.completed_points, 0) as earned_points,
                     COALESCE(progress.completed_points / ck.total_points * 100, 0) as completion_percentage,
                     COUNT(p.project_id) as total_projects
                 FROM Clan_KPIs ck
@@ -391,7 +394,7 @@ class KPI {
                 ) progress ON ck.kpi_id = progress.kpi_quarter_id
                 WHERE ck.year = ? AND ck.quarter = ?
                 GROUP BY ck.kpi_id, c.clan_id
-                ORDER BY completion_percentage DESC, completed_points DESC
+                ORDER BY completion_percentage DESC, earned_points DESC
             ");
             $stmt->execute([$year, $quarter]);
             return $stmt->fetchAll();
@@ -438,11 +441,18 @@ class KPI {
                 FROM KPI_Quarters kq
                 LEFT JOIN Projects p ON kq.kpi_quarter_id = p.kpi_quarter_id
                 WHERE kq.is_active = 1
-                GROUP BY kq.kpi_quarter_id
+                GROUP BY kq.kpi_quarter_id, kq.quarter, kq.year, kq.total_points, kq.is_active, kq.status, kq.created_at
                 LIMIT 1
             ");
             $stmt->execute();
             $result = $stmt->fetch();
+            
+            // Debug: Log para verificar datos
+            if ($result) {
+                error_log("DEBUG KPI getCurrentQuarter: kpi_quarter_id = " . $result['kpi_quarter_id']);
+                error_log("DEBUG KPI getCurrentQuarter: total_points = " . $result['total_points']);
+                error_log("DEBUG KPI getCurrentQuarter: assigned_points = " . ($result['assigned_points'] ?? 'N/A'));
+            }
             
             // Si no hay trimestre activo, intentar crear uno automáticamente
             if (!$result) {
@@ -452,6 +462,9 @@ class KPI {
                 $result = $stmt->fetch();
             }
             
+            if (!$result) {
+                error_log("Error: No se pudo obtener el trimestre activo después de la inicialización.");
+            }
             return $result;
         } catch (PDOException $e) {
             error_log("Error al obtener trimestre actual: " . $e->getMessage());

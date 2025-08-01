@@ -28,14 +28,14 @@ class Auth {
         // }
         
         // Actualizar último login
-        $this->userModel->updateLastLogin($user['id']);
+        $this->userModel->updateLastLogin($user['user_id']);
         
         // Crear sesión
         $this->createSession($user);
         
         // Configurar "recordarme" si está seleccionado
         if ($rememberMe) {
-            $this->setRememberToken($user['id']);
+            $this->setRememberToken($user['user_id']);
         }
         
         return $user;
@@ -45,7 +45,7 @@ class Auth {
      * Crear sesión de usuario
      */
     private function createSession($user) {
-        $_SESSION['user_id'] = $user['id'];
+        $_SESSION['user_id'] = $user['user_id'];
         $_SESSION['username'] = $user['username'];
         $_SESSION['email'] = $user['email'];
         $_SESSION['full_name'] = $user['full_name'];

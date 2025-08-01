@@ -129,6 +129,12 @@ ob_start();
                 <p class="welcome-subtitle">
                     Bienvenido de vuelta a tu dashboard. Aquí tienes un resumen de tu actividad reciente.
                 </p>
+                <?php if ($isAdmin): ?>
+                <a href="?route=admin" class="btn btn-primary" style="margin-top: 1rem;">
+                    <i class="fas fa-cog"></i>
+                    Ir al Panel de Administración
+                </a>
+                <?php endif; ?>
             </div>
             <div class="welcome-stats">
                 <div class="quick-stat">

@@ -1,6 +1,8 @@
 <?php
 
 class KPIController {
+    private $db;
+    private $auth;
     private $kpiModel;
     private $projectModel;
     private $clanModel;
@@ -8,6 +10,8 @@ class KPIController {
     private $roleModel;
 
     public function __construct() {
+        $this->db = Database::getConnection();
+        $this->auth = new Auth();
         $this->kpiModel = new KPI();
         $this->projectModel = new Project();
         $this->clanModel = new Clan();
@@ -267,24 +271,20 @@ class KPIController {
             $projectsWithoutKPI = $this->projectModel->getProjectsWithoutKPI();
         }
 
-        // Calcular puntos disponibles para la vista
-        $assignedPoints = 0;
-        foreach ($projects as $project) {
-            $assignedPoints += $project['kpi_points'] ?? 0;
-        }
-        
-        // También considerar proyectos sin KPI que podrían tener puntos asignados
+        // Usar los datos calculados por el modelo KPI
         if ($currentKPI) {
-            $stmt = $this->db->prepare("
-                SELECT COALESCE(SUM(kpi_points), 0) as total_assigned 
-                FROM Projects 
-                WHERE kpi_quarter_id = ?
-            ");
-            $stmt->execute([$currentKPI['kpi_quarter_id']]);
-            $totalAssigned = $stmt->fetch()['total_assigned'];
-            $remainingPoints = $currentKPI['total_points'] - $totalAssigned;
+            $assignedPoints = $currentKPI['assigned_points'] ?? 0;
+            $remainingPoints = $currentKPI['total_points'] - $assignedPoints;
+            
+            // Debug: Log para verificar cálculos
+            error_log("DEBUG projects: kpi_quarter_id = " . $currentKPI['kpi_quarter_id']);
+            error_log("DEBUG projects: total_points = " . $currentKPI['total_points']);
+            error_log("DEBUG projects: assigned_points (from model) = " . $assignedPoints);
+            error_log("DEBUG projects: remainingPoints = " . $remainingPoints);
         } else {
+            $assignedPoints = 0;
             $remainingPoints = 0;
+            error_log("DEBUG projects: No hay KPI activo");
         }
 
         // Datos adicionales para la vista
@@ -296,7 +296,8 @@ class KPIController {
             'remainingPoints' => $remainingPoints,
             'assignedPoints' => $assignedPoints,
             'currentPage' => 'kpi',
-            'user' => (new Auth())->getCurrentUser()
+            'user' => (new Auth())->getCurrentUser(),
+            'loadKpiProjectsJs' => true // Flag to load specific JS
         ];
 
         // Extraer variables para la vista
@@ -420,6 +421,142 @@ class KPIController {
     }
 
     /**
+     * Obtener tareas de un proyecto (para AJAX)
+     */
+    public function getProjectTasks() {
+        if (!$this->hasAdminAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+        }
+
+        $projectId = (int)($_GET['project_id'] ?? 0);
+        if ($projectId <= 0) {
+            Utils::jsonResponse(['success' => false, 'message' => 'ID de proyecto inválido'], 400);
+        }
+
+        $tasks = $this->taskModel->getByProject($projectId);
+        $project = $this->projectModel->findById($projectId);
+        
+        Utils::jsonResponse(['success' => true, 'tasks' => $tasks, 'project' => $project]);
+    }
+
+    /**
+     * Agregar una nueva tarea a un proyecto (para AJAX)
+     */
+    public function addTask() {
+        if (!$this->hasAdminAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            try {
+                $projectId = (int)($_POST['project_id'] ?? 0);
+                $taskName = Utils::sanitizeInput($_POST['task_name'] ?? '');
+                $assignedPercentage = (float)($_POST['assigned_percentage'] ?? 0);
+                $currentUser = $this->auth->getCurrentUser();
+
+                if (!$currentUser || !isset($currentUser['user_id'])) {
+                    Utils::jsonResponse(['success' => false, 'message' => 'Error de sesión: No se pudo identificar al usuario.'], 401);
+                }
+
+                if ($projectId <= 0 || empty($taskName)) {
+                    Utils::jsonResponse(['success' => false, 'message' => 'Datos de tarea inválidos'], 400);
+                }
+
+                $taskId = $this->taskModel->create(
+                    $projectId,
+                    $taskName,
+                    '', // Descripción vacía por ahora
+                    null, // Sin asignar por ahora
+                    'medium',
+                    null,
+                    $currentUser['user_id'],
+                    $assignedPercentage
+                );
+
+                if ($taskId) {
+                    Utils::jsonResponse(['success' => true, 'message' => 'Tarea agregada exitosamente']);
+                } else {
+                    Utils::jsonResponse(['success' => false, 'message' => 'Error al agregar la tarea'], 500);
+                }
+            } catch (Exception $e) {
+                // Capturar cualquier error inesperado y registrarlo
+                error_log("Error fatal en addTask: " . $e->getMessage());
+                Utils::jsonResponse(['success' => false, 'message' => 'Ocurrió un error interno en el servidor.'], 500);
+            }
+        }
+    }
+
+    /**
+     * Cambiar estado de una tarea (para AJAX)
+     */
+    public function toggleTaskStatus() {
+        if (!$this->hasAdminAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $taskId = (int)($_POST['task_id'] ?? 0);
+            $isCompleted = isset($_POST['is_completed']) && $_POST['is_completed'] === 'true';
+
+            if ($taskId <= 0) {
+                Utils::jsonResponse(['success' => false, 'message' => 'ID de tarea inválido'], 400);
+            }
+
+            $result = $this->taskModel->toggleStatus($taskId, $isCompleted);
+
+            if ($result) {
+                Utils::jsonResponse(['success' => true, 'message' => 'Estado de la tarea actualizado']);
+            } else {
+                Utils::jsonResponse(['success' => false, 'message' => 'Error al actualizar la tarea'], 500);
+            }
+        }
+    }
+    
+    /**
+     * Debug temporal para verificar datos de KPI
+     */
+    public function debug() {
+        if (!$this->hasAdminAccess()) {
+            header('HTTP/1.1 403 Forbidden');
+            echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
+            exit;
+        }
+
+        $currentKPI = $this->kpiModel->getCurrentQuarter();
+        
+        if ($currentKPI) {
+            // Verificar proyectos con KPI asignado
+            $stmt = $this->db->prepare("
+                SELECT project_id, project_name, kpi_points, kpi_quarter_id 
+                FROM Projects 
+                WHERE kpi_quarter_id = ?
+            ");
+            $stmt->execute([$currentKPI['kpi_quarter_id']]);
+            $projectsWithKPI = $stmt->fetchAll();
+            
+            $totalAssigned = 0;
+            foreach ($projectsWithKPI as $project) {
+                $totalAssigned += $project['kpi_points'];
+            }
+            
+            $data = [
+                'currentKPI' => $currentKPI,
+                'projectsWithKPI' => $projectsWithKPI,
+                'totalAssigned' => $totalAssigned,
+                'remainingPoints' => $currentKPI['total_points'] - $totalAssigned,
+                'assignedPointsFromModel' => $currentKPI['assigned_points'] ?? 0
+            ];
+            
+            echo "<pre>";
+            print_r($data);
+            echo "</pre>";
+        } else {
+            echo "No hay trimestre KPI activo";
+        }
+        exit;
+    }
+
+    /**
      * Cambiar modalidad de distribución de tareas
      */
     public function changeDistributionMode() {
@@ -468,7 +605,9 @@ class KPIController {
             ];
         }
 
-        $assignedPoints = $this->kpiModel->getAssignedPoints($currentKPI['kpi_quarter_id']);
+        // Usar los datos calculados por el modelo KPI
+        $assignedPoints = $currentKPI['assigned_points'] ?? 0;
+        
         $totalProjects = count($this->projectModel->getByKPIQuarter($currentKPI['kpi_quarter_id']));
         $activeClans = count($this->kpiModel->getClanRankingByQuarterId($currentKPI['kpi_quarter_id']));
         
@@ -505,7 +644,7 @@ class KPIController {
             // Calcular progreso del proyecto
             $progress = $this->projectModel->calculateKPIProgress($project['project_id']);
             $project['progress_percentage'] = $progress['progress_percentage'];
-            $project['completed_points'] = $progress['completed_points'];
+            $project['completed_points'] = $progress['earned_points'];
             
             // Agregar campos que necesita la vista
             $project['status'] = $this->determineProjectStatus($project['progress_percentage']);
@@ -606,11 +745,9 @@ class KPIController {
             $totalCompletedPoints = 0;
             
             foreach ($projects as $project) {
-                // Calcular progreso de cada proyecto (simplificado por ahora)
-                // En una implementación real, esto calcularía basado en tareas completadas
-                $progressPercentage = rand(0, 100); // TODO: Usar cálculo real
-                $completedPoints = ($progressPercentage / 100) * $project['kpi_points'];
-                $totalCompletedPoints += $completedPoints;
+                // Calcular progreso de cada proyecto
+                $progress = $this->projectModel->calculateKPIProgress($project['project_id']);
+                $totalCompletedPoints += $progress['earned_points'];
             }
             
             return (int)$totalCompletedPoints;

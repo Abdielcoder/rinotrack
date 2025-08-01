@@ -1,6 +1,18 @@
-# Configuración mínima para evitar errores
-# Sin mod_rewrite
+<IfModule mod_rewrite.c>
+    RewriteEngine On
 
-# Solo tipos MIME básicos
+    # Establecer la base de la reescritura al directorio public
+    RewriteBase /RinoTrack/public/
+
+    # EXCEPCIÓN: No aplicar las siguientes reglas a archivos existentes en el directorio 'assets'
+    RewriteRule ^assets/ - [L]
+
+    # REGLA PRINCIPAL: Redirigir todas las demás solicitudes a index.php
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ index.php?route=$1 [L,QSA]
+</IfModule>
+
+# Servir archivos con el tipo MIME correcto
 AddType text/css .css
 AddType application/javascript .js

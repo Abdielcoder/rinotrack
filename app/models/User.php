@@ -13,7 +13,7 @@ class User {
     public function findByUsernameOrEmail($username) {
         try {
             $stmt = $this->db->prepare("
-                SELECT user_id as id, username, email, password_hash, full_name, is_active, last_login, created_at 
+                SELECT user_id, username, email, password_hash, full_name, is_active, last_login, created_at 
                 FROM Users 
                 WHERE (username = ? OR email = ?) AND is_active = 1
             ");

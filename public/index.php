@@ -219,6 +219,26 @@ try {
         $controller->getAvailablePoints();
         break;
         
+    case 'kpi/get-tasks':
+        $controller = new KPIController();
+        $controller->getProjectTasks();
+        break;
+
+    case 'kpi/add-task':
+        $controller = new KPIController();
+        $controller->addTask();
+        break;
+
+    case 'kpi/toggle-task-status':
+        $controller = new KPIController();
+        $controller->toggleTaskStatus();
+        break;
+        
+    case 'kpi/debug':
+        $controller = new KPIController();
+        $controller->debug();
+        break;
+        
     case 'kpi/change-distribution':
         $controller = new KPIController();
         $controller->changeDistributionMode();
