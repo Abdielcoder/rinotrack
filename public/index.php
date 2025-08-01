@@ -243,6 +243,16 @@ try {
         $controller = new KPIController();
         $controller->changeDistributionMode();
         break;
+        
+    case 'kpi/get-project-progress':
+        $controller = new KPIController();
+        $controller->getProjectProgress();
+        break;
+        
+    case 'kpi/get-projects-data':
+        $controller = new KPIController();
+        $controller->getProjectsData();
+        break;
             
         case 'badges':
             // Por ahora redirigir al dashboard

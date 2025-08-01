@@ -413,16 +413,44 @@ class KPI {
         }
         
         try {
-            // Obtener datos del trimestre
-            $stmt = $this->db->prepare("SELECT year, quarter FROM KPI_Quarters WHERE kpi_quarter_id = ?");
+            // Nuevo método que calcula el ranking basado en proyectos del trimestre actual
+            $stmt = $this->db->prepare("
+                SELECT 
+                    c.clan_id,
+                    c.clan_name,
+                    c.clan_departamento,
+                    COALESCE(SUM(p.kpi_points), 0) as total_assigned,
+                    COALESCE(SUM(
+                        CASE 
+                            WHEN p.task_distribution_mode = 'automatic' THEN 
+                                (SELECT COALESCE(SUM(t.automatic_points), 0) 
+                                 FROM Tasks t 
+                                 WHERE t.project_id = p.project_id AND t.is_completed = 1)
+                            ELSE 
+                                (SELECT COALESCE(SUM(t.assigned_percentage * p.kpi_points / 100), 0) 
+                                 FROM Tasks t 
+                                 WHERE t.project_id = p.project_id AND t.is_completed = 1)
+                        END
+                    ), 0) as earned_points,
+                    COUNT(p.project_id) as total_projects
+                FROM Clans c
+                LEFT JOIN Projects p ON c.clan_id = p.clan_id AND p.kpi_quarter_id = ?
+                GROUP BY c.clan_id, c.clan_name, c.clan_departamento
+                HAVING total_assigned > 0
+                ORDER BY earned_points DESC, total_assigned DESC
+            ");
             $stmt->execute([$quarterId]);
-            $quarter = $stmt->fetch();
+            $results = $stmt->fetchAll();
             
-            if (!$quarter) {
-                return [];
+
+            
+            // Agregar porcentaje de eficiencia
+            foreach ($results as &$clan) {
+                $clan['efficiency_percentage'] = $clan['total_assigned'] > 0 ? 
+                    round(($clan['earned_points'] / $clan['total_assigned']) * 100, 1) : 0;
             }
             
-            return $this->getClanRanking($quarter['year'], $quarter['quarter']);
+            return $results;
         } catch (PDOException $e) {
             error_log("Error al obtener ranking por ID de trimestre: " . $e->getMessage());
             return [];
@@ -592,9 +620,11 @@ class KPI {
      */
     public function createQuarter($quarter, $year, $totalPoints = 1000, $activateImmediately = false) {
         try {
+            error_log("KPI::createQuarter - Starting transaction for quarter: $quarter, year: $year");
             $this->db->beginTransaction();
             
             // Verificar si ya existe el trimestre
+            error_log("KPI::createQuarter - Checking if quarter exists: $quarter, $year");
             $stmt = $this->db->prepare("SELECT COUNT(*) as count FROM KPI_Quarters WHERE quarter = ? AND year = ?");
             $stmt->execute([$quarter, $year]);
             if ($stmt->fetch()['count'] > 0) {
@@ -603,11 +633,13 @@ class KPI {
             
             // Si se debe activar inmediatamente, desactivar otros trimestres
             if ($activateImmediately) {
+                error_log("KPI::createQuarter - Deactivating other quarters");
                 $stmt = $this->db->prepare("UPDATE KPI_Quarters SET is_active = 0");
                 $stmt->execute();
             }
             
             // Crear el trimestre
+            error_log("KPI::createQuarter - Inserting new quarter: $quarter, $year, $totalPoints, " . ($activateImmediately ? 1 : 0));
             $stmt = $this->db->prepare("
                 INSERT INTO KPI_Quarters (quarter, year, total_points, is_active, status, created_at) 
                 VALUES (?, ?, ?, ?, 'planning', NOW())
@@ -616,6 +648,7 @@ class KPI {
             
             if ($result) {
                 $quarterId = $this->db->lastInsertId();
+                error_log("KPI::createQuarter - Successfully created quarter with ID: $quarterId");
                 $this->db->commit();
                 return $quarterId;
             } else {
@@ -623,8 +656,9 @@ class KPI {
             }
         } catch (Exception $e) {
             $this->db->rollback();
-            error_log("Error al crear trimestre: " . $e->getMessage());
-            return false;
+            error_log("KPI::createQuarter - Error: " . $e->getMessage());
+            error_log("KPI::createQuarter - Stack trace: " . $e->getTraceAsString());
+            throw $e; // Re-throw the exception so the controller can handle it properly
         }
     }
     

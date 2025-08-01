@@ -181,10 +181,11 @@ ob_start();
             </button>
         </div>
         
-        <form id="quarterForm" class="modal-form">
-            <input type="hidden" id="quarterId" name="quarterId">
-            
-            <div class="form-row">
+        <div class="modal-body">
+            <form id="quarterForm" class="modal-form">
+                <input type="hidden" id="quarterId" name="quarterId">
+                
+                <div class="form-row">
                 <div class="form-group">
                     <label for="quarterYear">
                         <i class="fas fa-calendar"></i>
@@ -235,19 +236,22 @@ ob_start();
                 </label>
                 <small class="form-help">Si está marcado, este trimestre se activará automáticamente</small>
             </div>
-            
-            <div class="modal-actions">
-                <button type="button" class="btn btn-secondary" onclick="closeQuarterModal()">
-                    Cancelar
-                </button>
-                <button type="submit" class="btn btn-primary" id="quarterSubmitBtn">
-                    <span id="quarterSubmitText">Crear Trimestre</span>
-                    <span id="quarterSubmitLoader" class="btn-loader" style="display: none;">
-                        <i class="fas fa-spinner fa-spin"></i>
-                    </span>
-                </button>
-            </div>
-        </form>
+            </form>
+        </div>
+        
+        <div class="modal-footer">
+            <button type="button" class="action-btn secondary" onclick="closeQuarterModal()">
+                <i class="fas fa-times"></i>
+                <span>Cancelar</span>
+            </button>
+            <button type="submit" form="quarterForm" class="action-btn primary" id="quarterSubmitBtn">
+                <i class="fas fa-check"></i>
+                <span id="quarterSubmitText">Crear Trimestre</span>
+                <span id="quarterSubmitLoader" class="btn-loader" style="display: none;">
+                    <i class="fas fa-spinner fa-spin"></i>
+                </span>
+            </button>
+        </div>
     </div>
 </div>
 
@@ -261,8 +265,10 @@ ob_start();
             </button>
         </div>
         
-        <div class="quarter-details-content">
-            <!-- Se llenará dinámicamente -->
+        <div class="modal-body">
+            <div class="quarter-details-content">
+                <!-- Se llenará dinámicamente -->
+            </div>
         </div>
     </div>
 </div>

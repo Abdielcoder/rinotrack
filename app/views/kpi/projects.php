@@ -85,7 +85,7 @@ ob_start();
         <main class="content-minimal">
             <!-- Proyectos Pendientes -->
             <?php if (!empty($projectsWithoutKPI)): ?>
-                <section class="projects-minimal">
+                <section class="projects-minimal" data-section="pending">
                     <div class="section-header-minimal">
                         <h3>Proyectos Pendientes (<?php echo count($projectsWithoutKPI); ?>)</h3>
                     </div>
@@ -117,7 +117,7 @@ ob_start();
 
             <!-- Proyectos con KPI -->
             <?php if (!empty($projects)): ?>
-                <section class="projects-minimal">
+                <section class="projects-minimal" data-section="with-kpi">
                     <div class="section-header-minimal">
                         <h3>Proyectos con KPI (<?php echo count($projects); ?>)</h3>
                     </div>

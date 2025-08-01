@@ -103,14 +103,17 @@ class KPIController {
             }
 
             try {
+                error_log("Creating quarter: $quarter, $year, $totalPoints, " . ($activateImmediately ? 'true' : 'false'));
                 $result = $this->kpiModel->createQuarter($quarter, $year, $totalPoints, $activateImmediately);
 
                 if ($result) {
                     Utils::jsonResponse(['success' => true, 'message' => 'Trimestre KPI creado exitosamente']);
                 } else {
+                    // Check if there's a specific error message from the model
                     Utils::jsonResponse(['success' => false, 'message' => 'Error al crear el trimestre KPI'], 500);
                 }
             } catch (Exception $e) {
+                error_log("Error in createQuarter: " . $e->getMessage());
                 Utils::jsonResponse(['success' => false, 'message' => $e->getMessage()], 400);
             }
         }
@@ -721,7 +724,7 @@ class KPIController {
                 
                 // Calcular puntos completados
                 $progress = $this->projectModel->calculateKPIProgress($project['project_id']);
-                $clanStats[$clanId]['completed_points'] += $progress['completed_points'];
+                $clanStats[$clanId]['completed_points'] += $progress['earned_points'];
             }
             
             return array_values($clanStats);
@@ -754,6 +757,91 @@ class KPIController {
         } catch (Exception $e) {
             error_log("Error al calcular puntos completados: " . $e->getMessage());
             return 0;
+        }
+    }
+
+    /**
+     * Obtener progreso actual de un proyecto específico
+     */
+    public function getProjectProgress() {
+        if (!$this->hasAdminAccess()) {
+            echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
+            return;
+        }
+
+        $projectId = $_GET['project_id'] ?? null;
+        
+        if (!$projectId) {
+            echo json_encode(['success' => false, 'message' => 'ID de proyecto requerido']);
+            return;
+        }
+
+        try {
+            // Calcular el progreso actual del proyecto
+            $progress = $this->projectModel->calculateKPIProgress($projectId);
+            
+            echo json_encode([
+                'success' => true,
+                'progress_percentage' => round($progress['progress_percentage'], 1),
+                'earned_points' => $progress['earned_points'],
+                'total_points' => $progress['total_points']
+            ]);
+        } catch (Exception $e) {
+            error_log("Error al obtener progreso del proyecto: " . $e->getMessage());
+            echo json_encode([
+                'success' => false, 
+                'message' => 'Error al obtener progreso del proyecto'
+            ]);
+        }
+    }
+
+    /**
+     * Obtener datos actualizados de proyectos para refrescar la vista
+     */
+    public function getProjectsData() {
+        if (!$this->hasAdminAccess()) {
+            echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
+            return;
+        }
+
+        try {
+            error_log("getProjectsData - Starting");
+            // Obtener KPI actual
+            $currentKPI = $this->kpiModel->getCurrentQuarter();
+            
+            if (!$currentKPI) {
+                error_log("getProjectsData - No active KPI quarter found");
+                echo json_encode([
+                    'success' => true,
+                    'projects' => [],
+                    'projectsWithoutKPI' => [],
+                    'message' => 'No hay período KPI activo'
+                ]);
+                return;
+            }
+
+            error_log("getProjectsData - Getting projects for quarter ID: " . $currentKPI['kpi_quarter_id']);
+            // Obtener proyectos con KPI del trimestre actual
+            $projects = $this->getProjectsProgress($currentKPI['kpi_quarter_id']);
+            
+            error_log("getProjectsData - Getting projects without KPI");
+            // Obtener proyectos sin KPI asignado
+            $projectsWithoutKPI = $this->projectModel->getProjectsWithoutKPI();
+            
+            error_log("getProjectsData - Success, returning data");
+            echo json_encode([
+                'success' => true,
+                'projects' => $projects,
+                'projectsWithoutKPI' => $projectsWithoutKPI,
+                'currentKPI' => $currentKPI
+            ]);
+        } catch (Exception $e) {
+            error_log("getProjectsData - Error: " . $e->getMessage());
+            error_log("getProjectsData - Stack trace: " . $e->getTraceAsString());
+            echo json_encode([
+                'success' => false, 
+                'message' => 'Error al obtener datos de proyectos'
+            ]);
         }
     }
 }

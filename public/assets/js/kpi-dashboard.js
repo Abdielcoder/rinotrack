@@ -70,13 +70,24 @@ function animateNumbers() {
 function animateProgressBars() {
     const progressBars = document.querySelectorAll('.progress-fill, .progress-fill-mini, .progress-fill-project');
     
-    progressBars.forEach(bar => {
-        const width = bar.style.width;
-        bar.style.width = '0%';
+    progressBars.forEach((bar, index) => {
+        const targetWidth = bar.style.width;
+        const currentWidth = parseFloat(targetWidth) || 0;
         
-        setTimeout(() => {
-            bar.style.width = width;
-        }, 500);
+        // Solo animar si hay progreso (width > 0)
+        if (currentWidth > 0) {
+            // Establecer width inicial solo si no está ya establecido
+            if (!bar.dataset.animated) {
+                bar.style.width = '0%';
+                bar.dataset.animated = 'true';
+                
+                // Animar con delay escalonado para efecto más suave
+                setTimeout(() => {
+                    bar.style.transition = 'width 0.8s ease-out';
+                    bar.style.width = targetWidth;
+                }, 100 + (index * 50));
+            }
+        }
     });
 }
 
@@ -211,7 +222,8 @@ function refreshDashboardData() {
     setTimeout(() => {
         // En una implementación real, aquí harías fetch a las APIs
         animateNumbers();
-        animateProgressBars();
+        // No animar barras de progreso en auto-refresh para evitar confusión
+        // animateProgressBars();
         showToast('Datos actualizados', 'success');
     }, 1000);
 }
