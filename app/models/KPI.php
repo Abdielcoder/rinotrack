@@ -712,7 +712,7 @@ class KPI {
             // Actualizar el trimestre
             $stmt = $this->db->prepare("
                 UPDATE KPI_Quarters 
-                SET quarter = ?, year = ?, total_points = ?, updated_at = NOW()
+                SET quarter = ?, year = ?, total_points = ?
                 WHERE kpi_quarter_id = ?
             ");
             $result = $stmt->execute([$quarter, $year, $totalPoints, $quarterId]);
@@ -726,7 +726,7 @@ class KPI {
         } catch (Exception $e) {
             $this->db->rollback();
             error_log("Error al actualizar trimestre: " . $e->getMessage());
-            return false;
+            throw $e; // Re-lanzar la excepción para que el controlador la maneje
         }
     }
     
@@ -750,7 +750,7 @@ class KPI {
             // Activar el trimestre seleccionado
             $stmt = $this->db->prepare("
                 UPDATE KPI_Quarters 
-                SET is_active = 1, status = 'active', updated_at = NOW()
+                SET is_active = 1, status = 'active'
                 WHERE kpi_quarter_id = ?
             ");
             $result = $stmt->execute([$quarterId]);

@@ -54,7 +54,8 @@ $controllers = [
     __DIR__ . '/../app/controllers/AuthController.php',
     __DIR__ . '/../app/controllers/DashboardController.php',
     __DIR__ . '/../app/controllers/AdminController.php',
-    __DIR__ . '/../app/controllers/KPIController.php'
+    __DIR__ . '/../app/controllers/KPIController.php',
+    __DIR__ . '/../app/controllers/ClanLeaderController.php'
 ];
 
 foreach ($controllers as $controller) {
@@ -252,6 +253,153 @@ try {
     case 'kpi/get-projects-data':
         $controller = new KPIController();
         $controller->getProjectsData();
+        break;
+        
+    // Rutas del Líder de Clan
+    case 'clan_leader':
+    case 'clan_leader/dashboard':
+        $controller = new ClanLeaderController();
+        $controller->index();
+        break;
+        
+    case 'clan_leader/members':
+        $controller = new ClanLeaderController();
+        $controller->members();
+        break;
+        
+    case 'clan_leader/add-member':
+        $controller = new ClanLeaderController();
+        $controller->addMember();
+        break;
+        
+    case 'clan_leader/remove-member':
+        $controller = new ClanLeaderController();
+        $controller->removeMember();
+        break;
+        
+    case 'clan_leader/get-available-users':
+        $controller = new ClanLeaderController();
+        $controller->getAvailableUsers();
+        break;
+        
+    case 'clan_leader/get-clan-members':
+        $controller = new ClanLeaderController();
+        $controller->getClanMembers();
+        break;
+        
+    case 'clan_leader/projects':
+        $controller = new ClanLeaderController();
+        $controller->projects();
+        break;
+        
+    case 'clan_leader/create-project':
+        $controller = new ClanLeaderController();
+        $controller->createProject();
+        break;
+        
+    case 'clan_leader/update-project':
+        $controller = new ClanLeaderController();
+        $controller->updateProject();
+        break;
+        
+    case 'clan_leader/delete-project':
+        $controller = new ClanLeaderController();
+        $controller->deleteProject();
+        break;
+        
+    case 'clan_leader/kpi-dashboard':
+        $controller = new ClanLeaderController();
+        $controller->kpiDashboard();
+        break;
+        
+    case 'clan_leader/assign-kpi':
+        $controller = new ClanLeaderController();
+        $controller->assignKPI();
+        break;
+        
+    case 'clan_leader/get-available-points':
+        $controller = new ClanLeaderController();
+        $controller->getAvailablePoints();
+        break;
+        
+    case 'clan_leader/tasks':
+        $controller = new ClanLeaderController();
+        $controller->tasks();
+        break;
+        
+    case 'clan_leader/add-task':
+        $controller = new ClanLeaderController();
+        $controller->addTask();
+        break;
+        
+    case 'clan_leader/create-task':
+        $controller = new ClanLeaderController();
+        $controller->createTask();
+        break;
+        
+    case 'clan_leader/update-task':
+        $controller = new ClanLeaderController();
+        $controller->updateTask();
+        break;
+        
+    case 'clan_leader/toggle-task-status':
+        $controller = new ClanLeaderController();
+        $controller->toggleTaskStatus();
+        break;
+        
+    case 'clan_leader/get-task-details':
+        $controller = new ClanLeaderController();
+        $controller->getTaskDetails();
+        break;
+        
+    case 'clan_leader/add-task-comment':
+        $controller = new ClanLeaderController();
+        $controller->addTaskComment();
+        break;
+        
+    case 'clan_leader/update-subtask-status':
+        $controller = new ClanLeaderController();
+        $controller->updateSubtaskStatus();
+        break;
+        
+    case 'clan_leader/get-available-labels':
+        $controller = new ClanLeaderController();
+        $controller->getAvailableLabels();
+        break;
+        
+    case 'clan_leader/test':
+        $controller = new ClanLeaderController();
+        $controller->test();
+        break;
+        
+    case 'clan_leader/delete-task':
+        $controller = new ClanLeaderController();
+        $controller->deleteTask();
+        break;
+        
+    case 'clan_leader/delete-subtask':
+        $controller = new ClanLeaderController();
+        $controller->deleteSubtask();
+        break;
+        
+    case 'clan_leader/add-collaborators':
+        $controller = new ClanLeaderController();
+        $controller->addCollaborators();
+        break;
+        
+    case 'clan_leader/remove-collaborator':
+        $controller = new ClanLeaderController();
+        $controller->removeCollaborator();
+        break;
+        
+    case 'clan_leader/update-user-percentage':
+        $controller = new ClanLeaderController();
+        $controller->updateUserPercentage();
+        break;
+        
+    case 'clan_leader/collaborator-availability':
+        $controller = new ClanLeaderController();
+        $controller->collaboratorAvailability();
         break;
             
         case 'badges':

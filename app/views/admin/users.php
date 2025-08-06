@@ -1,6 +1,206 @@
 <?php
-// Capturar el contenido de la vista
+// Iniciar buffer de salida
 ob_start();
+
+// Configurar variables para el layout
+$title = 'Gestión de Usuarios - ' . APP_NAME;
+
+// JavaScript que debe estar disponible inmediatamente
+$additionalJS = [];
+$additionalCSS = [];
+
+// Agregar JavaScript inline al head
+$inlineJS = '<script>
+// JavaScript para gestión de usuarios
+let currentUserId = null;
+let isEditMode = false;
+
+window.openCreateUserModal = function() {
+    isEditMode = false;
+    currentUserId = null;
+    document.getElementById("modalTitle").textContent = "Crear Usuario";
+    document.getElementById("submitText").textContent = "Crear Usuario";
+    document.getElementById("userForm").reset();
+    document.getElementById("userId").value = "";
+    document.getElementById("passwordGroup").style.display = "block";
+    document.getElementById("password").required = true;
+    document.getElementById("userModal").style.display = "block";
+};
+
+window.closeUserModal = function() {
+    document.getElementById("userModal").style.display = "none";
+    clearErrors();
+};
+
+window.editUser = function(userId) {
+    isEditMode = true;
+    currentUserId = userId;
+    document.getElementById("modalTitle").textContent = "Editar Usuario";
+    document.getElementById("submitText").textContent = "Actualizar Usuario";
+    document.getElementById("userId").value = userId;
+    document.getElementById("passwordGroup").style.display = "none";
+    document.getElementById("password").required = false;
+    
+    // Cargar datos del usuario desde la tabla
+    const userRow = document.querySelector("tr:has(button[onclick=\"editUser(" + userId + ")\"])");
+    if (userRow) {
+        const cells = userRow.querySelectorAll("td");
+        
+        // Extraer datos de la fila
+        const username = cells[0].querySelector(".username").textContent;
+        const email = cells[1].textContent;
+        const fullName = cells[2].textContent !== "-" ? cells[2].textContent : "";
+        const roleBadge = cells[3].querySelector(".role-badge");
+        const isActive = cells[4].querySelector(".status-badge").classList.contains("active");
+        
+        // Llenar el formulario
+        document.getElementById("username").value = username;
+        document.getElementById("email").value = email;
+        document.getElementById("fullName").value = fullName;
+        document.getElementById("isActive").checked = isActive;
+        
+        // Buscar el rol en el select
+        const roleText = roleBadge.textContent.trim();
+        const roleSelect = document.getElementById("roleId");
+        for (let option of roleSelect.options) {
+            if (option.textContent.trim() === roleText) {
+                roleSelect.value = option.value;
+                break;
+            }
+        }
+    }
+    
+    document.getElementById("userModal").style.display = "block";
+};
+
+window.searchUsers = function() {
+    const searchTerm = document.getElementById("searchInput").value;
+    const url = new URL(window.location);
+    if (searchTerm) {
+        url.searchParams.set("search", searchTerm);
+    } else {
+        url.searchParams.delete("search");
+    }
+    window.location.href = url.toString();
+};
+
+window.toggleUserStatus = function(userId) {
+    if (confirm("¿Estás seguro de que quieres cambiar el estado de este usuario?")) {
+        const formData = new FormData();
+        formData.append("userId", userId);
+        
+        fetch("?route=admin/toggle-user-status", {
+            method: "POST",
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert("Estado del usuario actualizado exitosamente");
+                location.reload();
+            } else {
+                alert(data.message || "Error al actualizar el estado del usuario");
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            alert("Error de conexión al actualizar el estado del usuario");
+        });
+    }
+};
+
+function clearErrors() {
+    const errorElements = document.querySelectorAll(".error-message");
+    errorElements.forEach(element => {
+        element.classList.remove("show");
+        element.textContent = "";
+    });
+}
+
+// Event listeners cuando el DOM esté listo
+document.addEventListener("DOMContentLoaded", function() {
+    // Buscar al presionar Enter
+    const searchInput = document.getElementById("searchInput");
+    if (searchInput) {
+        searchInput.addEventListener("keypress", function(e) {
+            if (e.key === "Enter") {
+                searchUsers();
+            }
+        });
+    }
+
+    // Manejar envío del formulario
+    const userForm = document.getElementById("userForm");
+    if (userForm) {
+        userForm.addEventListener("submit", function(e) {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById("submitBtn");
+            const submitText = document.getElementById("submitText");
+            const submitLoader = document.getElementById("submitLoader");
+            
+            // Mostrar loader
+            submitBtn.disabled = true;
+            submitText.style.display = "none";
+            submitLoader.style.display = "inline-block";
+            
+            const formData = new FormData(this);
+            const url = isEditMode ? "?route=admin/update-user" : "?route=admin/create-user";
+            
+            fetch(url, {
+                method: "POST",
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    closeUserModal();
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    if (data.errors) {
+                        // Mostrar errores específicos del formulario
+                        let errorMessage = "Errores de validación:\n";
+                        Object.keys(data.errors).forEach(field => {
+                            errorMessage += `- ${data.errors[field]}\n`;
+                        });
+                        alert(errorMessage);
+                    } else {
+                        alert(data.message || "Error al procesar la solicitud");
+                    }
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("Error de conexión: " + error.message);
+            })
+            .finally(() => {
+                submitBtn.disabled = false;
+                submitText.style.display = "inline";
+                submitLoader.style.display = "none";
+            });
+        });
+    }
+
+    // Cerrar modal al hacer clic fuera
+    window.onclick = function(event) {
+        const userModal = document.getElementById("userModal");
+        if (event.target === userModal) {
+            closeUserModal();
+        }
+    };
+});
+</script>';
+
+// Agregar el JavaScript al head
+$additionalJS[] = $inlineJS;
 ?>
 
 <div class="modern-dashboard" data-theme="default">
@@ -685,198 +885,9 @@ ob_start();
 }
 </style>
 
-<script>
-// JavaScript para gestión de usuarios
-let currentUserId = null;
-let isEditMode = false;
-
-function openCreateUserModal() {
-    isEditMode = false;
-    currentUserId = null;
-    document.getElementById('modalTitle').textContent = 'Crear Usuario';
-    document.getElementById('submitText').textContent = 'Crear Usuario';
-    document.getElementById('userForm').reset();
-    document.getElementById('userId').value = '';
-    document.getElementById('passwordGroup').style.display = 'block';
-    document.getElementById('password').required = true;
-    document.getElementById('userModal').style.display = 'block';
-}
-
-function closeUserModal() {
-    document.getElementById('userModal').style.display = 'none';
-    clearErrors();
-}
-
-function editUser(userId) {
-    isEditMode = true;
-    currentUserId = userId;
-    document.getElementById('modalTitle').textContent = 'Editar Usuario';
-    document.getElementById('submitText').textContent = 'Actualizar Usuario';
-    document.getElementById('userId').value = userId;
-    document.getElementById('passwordGroup').style.display = 'none';
-    document.getElementById('password').required = false;
-    
-    // Cargar datos del usuario desde la tabla
-    const userRow = document.querySelector(`tr:has(button[onclick="editUser(${userId})"])`);
-    if (userRow) {
-        const cells = userRow.querySelectorAll('td');
-        
-        // Extraer datos de la fila
-        const username = cells[0].querySelector('.username').textContent;
-        const email = cells[1].textContent;
-        const fullName = cells[2].textContent !== '-' ? cells[2].textContent : '';
-        const roleBadge = cells[3].querySelector('.role-badge');
-        const isActive = cells[4].querySelector('.status-badge').classList.contains('active');
-        
-        // Llenar el formulario
-        document.getElementById('username').value = username;
-        document.getElementById('email').value = email;
-        document.getElementById('fullName').value = fullName;
-        document.getElementById('isActive').checked = isActive;
-        
-        // Buscar el rol en el select
-        const roleText = roleBadge.textContent.trim();
-        const roleSelect = document.getElementById('roleId');
-        for (let option of roleSelect.options) {
-            if (option.textContent.trim() === roleText) {
-                roleSelect.value = option.value;
-                break;
-            }
-        }
-    }
-    
-    document.getElementById('userModal').style.display = 'block';
-}
-
-function searchUsers() {
-    const searchTerm = document.getElementById('searchInput').value;
-    const url = new URL(window.location);
-    if (searchTerm) {
-        url.searchParams.set('search', searchTerm);
-    } else {
-        url.searchParams.delete('search');
-    }
-    window.location.href = url.toString();
-}
-
-// Buscar al presionar Enter
-document.getElementById('searchInput').addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') {
-        searchUsers();
-    }
-});
-
-// Manejar envío del formulario
-document.getElementById('userForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const submitBtn = document.getElementById('submitBtn');
-    const submitText = document.getElementById('submitText');
-    const submitLoader = document.getElementById('submitLoader');
-    
-    // Mostrar loader
-    submitBtn.disabled = true;
-    submitText.style.display = 'none';
-    submitLoader.style.display = 'inline-block';
-    
-    const formData = new FormData(this);
-    const url = isEditMode ? '?route=admin/update-user' : '?route=admin/create-user';
-    
-    fetch(url, {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showToast(data.message, 'success');
-            closeUserModal();
-            setTimeout(() => {
-                window.location.reload();
-            }, 1500);
-        } else {
-            if (data.errors) {
-                showFormErrors(data.errors);
-            } else {
-                showToast(data.message, 'error');
-            }
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showToast('Error de conexión', 'error');
-    })
-    .finally(() => {
-        submitBtn.disabled = false;
-        submitText.style.display = 'inline';
-        submitLoader.style.display = 'none';
-    });
-});
-
-function showFormErrors(errors) {
-    clearErrors();
-    Object.keys(errors).forEach(field => {
-        const errorElement = document.getElementById(field + 'Error');
-        if (errorElement) {
-            errorElement.textContent = errors[field];
-            errorElement.classList.add('show');
-        }
-    });
-}
-
-function clearErrors() {
-    const errorElements = document.querySelectorAll('.error-message');
-    errorElements.forEach(element => {
-        element.classList.remove('show');
-        element.textContent = '';
-    });
-}
-
-// Función para activar/desactivar usuario
-function toggleUserStatus(userId) {
-    if (confirm('¿Estás seguro de que quieres cambiar el estado de este usuario?')) {
-        const formData = new FormData();
-        formData.append('userId', userId);
-        
-        showToast('Actualizando estado del usuario...', 'info');
-        
-        fetch('?route=admin/toggle-user-status', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showToast(data.message, 'success');
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1500);
-            } else {
-                showToast(data.message, 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showToast('Error de conexión al cambiar estado del usuario', 'error');
-        });
-    }
-}
-
-// Cerrar modal al hacer clic fuera
-window.onclick = function(event) {
-    const modal = document.getElementById('userModal');
-    if (event.target === modal) {
-        closeUserModal();
-    }
-}
-</script>
-
 <?php
 // Guardar el contenido en una variable
 $content = ob_get_clean();
-
-// Configurar variables para el layout
-$title = 'Gestión de Usuarios - ' . APP_NAME;
 
 // Incluir el layout del admin
 include __DIR__ . '/layout.php';

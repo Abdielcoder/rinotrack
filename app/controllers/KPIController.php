@@ -27,10 +27,15 @@ class KPIController {
         $currentUser = $auth->getCurrentUser();
         
         if (!$currentUser) {
+            error_log("hasAdminAccess: No current user found");
             return false;
         }
         
-        return $this->roleModel->userHasMinimumRole($currentUser['user_id'], Role::ADMIN);
+        error_log("hasAdminAccess: Checking user ID " . $currentUser['user_id'] . " for admin role");
+        $hasAccess = $this->roleModel->userHasMinimumRole($currentUser['user_id'], Role::ADMIN);
+        error_log("hasAdminAccess: Result = " . ($hasAccess ? 'true' : 'false'));
+        
+        return $hasAccess;
     }
 
     /**
@@ -51,11 +56,18 @@ class KPIController {
         // Ranking de clanes
         $clanRanking = $this->kpiModel->getClanRankingByQuarterId($currentKPI['kpi_quarter_id'] ?? null);
         
+        // Agregar total_points a cada clan
+        if ($clanRanking && $currentKPI) {
+            foreach ($clanRanking as &$clan) {
+                $clan['total_points'] = $currentKPI['total_points'] ?? 1000;
+            }
+        }
+        
         // Proyectos con progreso
         $projectsProgress = $this->getProjectsProgress($currentKPI['kpi_quarter_id'] ?? null);
         
-        // Proyectos recientes para actividad
-        $recentProjects = $projectsProgress; // Usar los mismos datos por ahora
+        // Datos para el camino tipo serpiente
+        $snakePathData = $this->getSnakePathData($currentKPI);
 
         require_once __DIR__ . '/../views/kpi/dashboard.php';
     }
@@ -79,88 +91,134 @@ class KPIController {
      * Crear nuevo trimestre KPI
      */
     public function createQuarter() {
+        error_log("=== CREATE QUARTER DEBUG ===");
+        error_log("createQuarter called - Method: " . $_SERVER['REQUEST_METHOD']);
+        error_log("POST data: " . print_r($_POST, true));
+        error_log("Raw input: " . file_get_contents('php://input'));
+        
         if (!$this->hasAdminAccess()) {
+            error_log("Access denied - user doesn't have admin access");
             Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
         }
 
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $quarter = Utils::sanitizeInput($_POST['quarter'] ?? '');
-            $year = (int)($_POST['year'] ?? date('Y'));
-            $totalPoints = (int)($_POST['total_points'] ?? 1000);
-            $activateImmediately = isset($_POST['activate_immediately']) && $_POST['activate_immediately'] === 'on';
-
-            // Validaciones
-            if (empty($quarter) || !in_array($quarter, ['Q1', 'Q2', 'Q3', 'Q4'])) {
-                Utils::jsonResponse(['success' => false, 'message' => 'Trimestre inválido'], 400);
-            }
-
-            if ($year < 2020 || $year > 2030) {
-                Utils::jsonResponse(['success' => false, 'message' => 'Año inválido'], 400);
-            }
-
-            if ($totalPoints < 100 || $totalPoints > 10000) {
-                Utils::jsonResponse(['success' => false, 'message' => 'Los puntos deben estar entre 100 y 10,000'], 400);
-            }
-
-            try {
-                error_log("Creating quarter: $quarter, $year, $totalPoints, " . ($activateImmediately ? 'true' : 'false'));
-                $result = $this->kpiModel->createQuarter($quarter, $year, $totalPoints, $activateImmediately);
-
-                if ($result) {
-                    Utils::jsonResponse(['success' => true, 'message' => 'Trimestre KPI creado exitosamente']);
-                } else {
-                    // Check if there's a specific error message from the model
-                    Utils::jsonResponse(['success' => false, 'message' => 'Error al crear el trimestre KPI'], 500);
-                }
-            } catch (Exception $e) {
-                error_log("Error in createQuarter: " . $e->getMessage());
-                Utils::jsonResponse(['success' => false, 'message' => $e->getMessage()], 400);
-            }
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            error_log("Invalid method: " . $_SERVER['REQUEST_METHOD']);
+            Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
         }
+
+        $quarter = Utils::sanitizeInput($_POST['quarter'] ?? '');
+        $year = (int)($_POST['year'] ?? date('Y'));
+        $totalPoints = (int)($_POST['total_points'] ?? 1000);
+        $activateImmediately = isset($_POST['activate_immediately']) && $_POST['activate_immediately'] === 'on';
+
+        error_log("Parsed data - quarter: '$quarter', year: $year, totalPoints: $totalPoints, activateImmediately: " . ($activateImmediately ? 'true' : 'false'));
+
+        // Validaciones
+        if (empty($quarter) || !in_array($quarter, ['Q1', 'Q2', 'Q3', 'Q4'])) {
+            error_log("Invalid quarter: '$quarter'");
+            Utils::jsonResponse(['success' => false, 'message' => 'Trimestre inválido: ' . $quarter], 400);
+        }
+
+        if ($year < 2020 || $year > 2030) {
+            error_log("Invalid year: $year");
+            Utils::jsonResponse(['success' => false, 'message' => 'Año inválido: ' . $year], 400);
+        }
+
+        if ($totalPoints < 100 || $totalPoints > 100000) {
+            error_log("Invalid totalPoints: $totalPoints");
+            Utils::jsonResponse(['success' => false, 'message' => 'Los puntos deben estar entre 100 y 100,000'], 400);
+        }
+
+        // Verificar si ya existe un trimestre con el mismo período
+        try {
+            $existingQuarter = $this->kpiModel->getByYearAndQuarter($year, $quarter);
+            if ($existingQuarter) {
+                error_log("Quarter already exists: $quarter $year");
+                Utils::jsonResponse(['success' => false, 'message' => "Ya existe un trimestre {$quarter} para el año {$year}"], 400);
+            }
+        } catch (Exception $e) {
+            error_log("Error checking existing quarter: " . $e->getMessage());
+        }
+
+        try {
+            error_log("Creating quarter: $quarter, $year, $totalPoints, " . ($activateImmediately ? 'true' : 'false'));
+            $result = $this->kpiModel->createQuarter($quarter, $year, $totalPoints, $activateImmediately);
+
+            if ($result) {
+                error_log("Quarter created successfully with ID: $result");
+                Utils::jsonResponse(['success' => true, 'message' => 'Trimestre KPI creado exitosamente']);
+            } else {
+                error_log("Failed to create quarter - model returned false");
+                Utils::jsonResponse(['success' => false, 'message' => 'Error al crear el trimestre KPI'], 500);
+            }
+        } catch (Exception $e) {
+            error_log("Error in createQuarter: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 400);
+        }
+        error_log("=== END CREATE QUARTER DEBUG ===");
     }
     
     /**
      * Actualizar trimestre KPI
      */
     public function updateQuarter() {
+        error_log("updateQuarter called - Method: " . $_SERVER['REQUEST_METHOD']);
+        error_log("POST data: " . print_r($_POST, true));
+        
         if (!$this->hasAdminAccess()) {
+            error_log("Access denied - user doesn't have admin access");
             Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
         }
 
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $quarterId = (int)($_POST['quarterId'] ?? 0);
-            $quarter = Utils::sanitizeInput($_POST['quarter'] ?? '');
-            $year = (int)($_POST['year'] ?? date('Y'));
-            $totalPoints = (int)($_POST['total_points'] ?? 1000);
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            error_log("Invalid method: " . $_SERVER['REQUEST_METHOD']);
+            Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
+        }
 
-            // Validaciones
-            if ($quarterId <= 0) {
-                Utils::jsonResponse(['success' => false, 'message' => 'ID de trimestre inválido'], 400);
+        $quarterId = (int)($_POST['quarterId'] ?? 0);
+        $quarter = Utils::sanitizeInput($_POST['quarter'] ?? '');
+        $year = (int)($_POST['year'] ?? date('Y'));
+        $totalPoints = (int)($_POST['total_points'] ?? 1000);
+
+        error_log("Parsed data - quarterId: $quarterId, quarter: '$quarter', year: $year, totalPoints: $totalPoints");
+
+        // Validaciones
+        if ($quarterId <= 0) {
+            error_log("Invalid quarterId: $quarterId");
+            Utils::jsonResponse(['success' => false, 'message' => 'ID de trimestre inválido: ' . $quarterId], 400);
+        }
+
+        if (empty($quarter) || !in_array($quarter, ['Q1', 'Q2', 'Q3', 'Q4'])) {
+            error_log("Invalid quarter: '$quarter'");
+            Utils::jsonResponse(['success' => false, 'message' => 'Trimestre inválido: ' . $quarter], 400);
+        }
+
+        if ($year < 2020 || $year > 2030) {
+            error_log("Invalid year: $year");
+            Utils::jsonResponse(['success' => false, 'message' => 'Año inválido: ' . $year], 400);
+        }
+
+        if ($totalPoints < 100 || $totalPoints > 100000) {
+            error_log("Invalid totalPoints: $totalPoints");
+            Utils::jsonResponse(['success' => false, 'message' => 'Los puntos deben estar entre 100 y 100,000'], 400);
+        }
+
+        try {
+            error_log("Updating quarter: ID=$quarterId, quarter=$quarter, year=$year, points=$totalPoints");
+            $result = $this->kpiModel->updateQuarter($quarterId, $quarter, $year, $totalPoints);
+
+            if ($result) {
+                error_log("Quarter updated successfully");
+                Utils::jsonResponse(['success' => true, 'message' => 'Trimestre actualizado exitosamente']);
+            } else {
+                error_log("Failed to update quarter - model returned false");
+                Utils::jsonResponse(['success' => false, 'message' => 'Error al actualizar el trimestre'], 500);
             }
-
-            if (empty($quarter) || !in_array($quarter, ['Q1', 'Q2', 'Q3', 'Q4'])) {
-                Utils::jsonResponse(['success' => false, 'message' => 'Trimestre inválido'], 400);
-            }
-
-            if ($year < 2020 || $year > 2030) {
-                Utils::jsonResponse(['success' => false, 'message' => 'Año inválido'], 400);
-            }
-
-            if ($totalPoints < 100 || $totalPoints > 10000) {
-                Utils::jsonResponse(['success' => false, 'message' => 'Los puntos deben estar entre 100 y 10,000'], 400);
-            }
-
-            try {
-                $result = $this->kpiModel->updateQuarter($quarterId, $quarter, $year, $totalPoints);
-
-                if ($result) {
-                    Utils::jsonResponse(['success' => true, 'message' => 'Trimestre actualizado exitosamente']);
-                } else {
-                    Utils::jsonResponse(['success' => false, 'message' => 'Error al actualizar el trimestre'], 500);
-                }
-            } catch (Exception $e) {
-                Utils::jsonResponse(['success' => false, 'message' => $e->getMessage()], 400);
-            }
+        } catch (Exception $e) {
+            error_log("Error in updateQuarter: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 400);
         }
     }
     
@@ -520,43 +578,41 @@ class KPIController {
      */
     public function debug() {
         if (!$this->hasAdminAccess()) {
-            header('HTTP/1.1 403 Forbidden');
-            echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
-            exit;
+            Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
         }
 
-        $currentKPI = $this->kpiModel->getCurrentQuarter();
-        
-        if ($currentKPI) {
-            // Verificar proyectos con KPI asignado
-            $stmt = $this->db->prepare("
-                SELECT project_id, project_name, kpi_points, kpi_quarter_id 
-                FROM Projects 
-                WHERE kpi_quarter_id = ?
-            ");
-            $stmt->execute([$currentKPI['kpi_quarter_id']]);
-            $projectsWithKPI = $stmt->fetchAll();
-            
-            $totalAssigned = 0;
-            foreach ($projectsWithKPI as $project) {
-                $totalAssigned += $project['kpi_points'];
-            }
-            
-            $data = [
-                'currentKPI' => $currentKPI,
-                'projectsWithKPI' => $projectsWithKPI,
-                'totalAssigned' => $totalAssigned,
-                'remainingPoints' => $currentKPI['total_points'] - $totalAssigned,
-                'assignedPointsFromModel' => $currentKPI['assigned_points'] ?? 0
-            ];
-            
-            echo "<pre>";
-            print_r($data);
-            echo "</pre>";
-        } else {
-            echo "No hay trimestre KPI activo";
+        // Test database connection
+        $dbTest = 'FAILED';
+        try {
+            $stmt = $this->db->query("SELECT 1");
+            $dbTest = 'OK';
+        } catch (Exception $e) {
+            $dbTest = 'ERROR: ' . $e->getMessage();
         }
-        exit;
+
+        // Test KPI_Quarters table
+        $tableTest = 'FAILED';
+        try {
+            $stmt = $this->db->query("SELECT COUNT(*) FROM KPI_Quarters");
+            $count = $stmt->fetchColumn();
+            $tableTest = "OK - $count records";
+        } catch (Exception $e) {
+            $tableTest = 'ERROR: ' . $e->getMessage();
+        }
+
+        $debugInfo = [
+            'database_connection' => $dbTest,
+            'kpi_quarters_table' => $tableTest,
+            'current_user' => $this->auth->getCurrentUser(),
+            'admin_access' => $this->hasAdminAccess(),
+            'kpi_model' => $this->kpiModel ? 'OK' : 'FAILED',
+            'server_time' => date('Y-m-d H:i:s'),
+            'php_version' => PHP_VERSION,
+            'post_data' => $_POST,
+            'request_method' => $_SERVER['REQUEST_METHOD']
+        ];
+
+        Utils::jsonResponse(['success' => true, 'debug' => $debugInfo]);
     }
 
     /**
@@ -843,5 +899,237 @@ class KPIController {
                 'message' => 'Error al obtener datos de proyectos'
             ]);
         }
+    }
+
+    /**
+     * Obtener datos para el camino tipo serpiente
+     */
+    private function getSnakePathData($currentKPI) {
+        if (!$currentKPI) {
+            return [
+                'quarter_progress' => 0,
+                'clans_data' => [],
+                'total_points' => 1000,
+                'quarter_info' => []
+            ];
+        }
+
+        // Calcular progreso del trimestre basado en la fecha actual
+        $quarterProgress = $this->calculateQuarterProgress($currentKPI['quarter'], $currentKPI['year']);
+        
+        // Obtener datos de clanes con sus puntos
+        $clansData = $this->getClansSnakePathData($currentKPI['kpi_quarter_id']);
+        
+        // Información del trimestre
+        $quarterInfo = $this->getQuarterInfo($currentKPI['quarter'], $currentKPI['year']);
+
+        return [
+            'quarter_progress' => $quarterProgress,
+            'clans_data' => $clansData,
+            'total_points' => $currentKPI['total_points'],
+            'quarter_info' => $quarterInfo
+        ];
+    }
+
+    /**
+     * Calcular progreso del trimestre basado en la fecha actual
+     */
+    private function calculateQuarterProgress($quarter, $year) {
+        $quarterMonths = [
+            'Q1' => [1, 2, 3],
+            'Q2' => [4, 5, 6],
+            'Q3' => [7, 8, 9],
+            'Q4' => [10, 11, 12]
+        ];
+        
+        $currentDate = new DateTime();
+        $currentYear = (int)$currentDate->format('Y');
+        $currentMonth = (int)$currentDate->format('n');
+        $currentDay = (int)$currentDate->format('j');
+        
+        // Si no es el año del trimestre, retornar 0 o 100
+        if ($currentYear != $year) {
+            return $currentYear > $year ? 100 : 0;
+        }
+        
+        $quarterStartMonth = $quarterMonths[$quarter][0];
+        $quarterEndMonth = $quarterMonths[$quarter][2];
+        
+        // Si estamos antes del trimestre
+        if ($currentMonth < $quarterStartMonth) {
+            return 0;
+        }
+        
+        // Si estamos después del trimestre
+        if ($currentMonth > $quarterEndMonth) {
+            return 100;
+        }
+        
+        // Calcular progreso dentro del trimestre
+        $daysInQuarter = 0;
+        $daysElapsed = 0;
+        
+        foreach ($quarterMonths[$quarter] as $month) {
+            $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $month, $currentYear);
+            $daysInQuarter += $daysInMonth;
+            
+            if ($month < $currentMonth) {
+                $daysElapsed += $daysInMonth;
+            } elseif ($month == $currentMonth) {
+                $daysElapsed += $currentDay;
+            }
+        }
+        
+        return min(100, max(0, round(($daysElapsed / $daysInQuarter) * 100, 1)));
+    }
+
+    /**
+     * Obtener datos de clanes para el camino tipo serpiente
+     */
+    private function getClansSnakePathData($kpiQuarterId) {
+        try {
+            // Consulta simplificada para debugging
+            $stmt = $this->db->prepare("
+                SELECT 
+                    c.clan_id,
+                    c.clan_name,
+                    c.clan_departamento,
+                    COALESCE(SUM(p.kpi_points), 0) as total_assigned,
+                    COALESCE(SUM(
+                        CASE 
+                            WHEN p.task_distribution_mode = 'automatic' THEN 
+                                (SELECT COALESCE(SUM(t.automatic_points), 0) 
+                                 FROM Tasks t 
+                                 WHERE t.project_id = p.project_id AND t.is_completed = 1)
+                            ELSE 
+                                (SELECT COALESCE(SUM(t.assigned_percentage * p.kpi_points / 100), 0) 
+                                 FROM Tasks t 
+                                 WHERE t.project_id = p.project_id AND t.is_completed = 1)
+                        END
+                    ), 0) as earned_points,
+                    COUNT(p.project_id) as total_projects
+                FROM Clans c
+                LEFT JOIN Projects p ON c.clan_id = p.clan_id AND p.kpi_quarter_id = ?
+                GROUP BY c.clan_id, c.clan_name, c.clan_departamento
+                ORDER BY earned_points DESC, total_assigned DESC
+            ");
+            $stmt->execute([$kpiQuarterId]);
+            $clans = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Si no hay clanes con datos, obtener todos los clanes
+            if (empty($clans)) {
+                $stmt = $this->db->prepare("
+                    SELECT 
+                        c.clan_id,
+                        c.clan_name,
+                        c.clan_departamento,
+                        0 as earned_points,
+                        0 as total_assigned,
+                        1000 as total_points
+                    FROM Clans c
+                    ORDER BY c.clan_name ASC
+                ");
+                $stmt->execute();
+                $clans = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            }
+            
+            // Asignar colores e iconos específicos para cada clan
+            $clanIcons = [
+                'Zeus' => 'fas fa-bolt',
+                'Artemisa' => 'fas fa-moon',
+                'Afrodita' => 'fas fa-heart',
+                'Apollo' => 'fas fa-sun',
+                'Athena' => 'fas fa-shield-alt',
+                'Hermes' => 'fas fa-running',
+                'Ares' => 'fas fa-sword',
+                'Poseidon' => 'fas fa-water',
+                'Hades' => 'fas fa-skull',
+                'Hera' => 'fas fa-crown',
+                'Servicio' => 'fas fa-cogs',
+                'Aura' => 'fas fa-star',
+                'Nexus' => 'fas fa-network-wired',
+                'Pulse' => 'fas fa-heartbeat',
+                'Vortex' => 'fas fa-wind',
+                'Phoenix' => 'fas fa-fire',
+                'Dragon' => 'fas fa-dragon',
+                'Eagle' => 'fas fa-eagle',
+                'Wolf' => 'fas fa-paw',
+                'Lion' => 'fas fa-crown'
+            ];
+            
+            $clanColors = [
+                'Zeus' => '#ef4444',      // Rojo
+                'Artemisa' => '#8b5cf6',  // Púrpura
+                'Afrodita' => '#ec4899',  // Rosa
+                'Apollo' => '#f59e0b',    // Naranja
+                'Athena' => '#3b82f6',    // Azul
+                'Hermes' => '#10b981',    // Verde
+                'Ares' => '#dc2626',      // Rojo oscuro
+                'Poseidon' => '#0891b2',  // Azul marino
+                'Hades' => '#6b7280',     // Gris
+                'Hera' => '#fbbf24',      // Amarillo
+                'Servicio' => '#6366f1',  // Índigo
+                'Aura' => '#f97316',      // Naranja brillante
+                'Nexus' => '#06b6d4',     // Cian
+                'Pulse' => '#ef4444',     // Rojo
+                'Vortex' => '#8b5cf6',    // Púrpura
+                'Phoenix' => '#dc2626',   // Rojo oscuro
+                'Dragon' => '#059669',    // Verde esmeralda
+                'Eagle' => '#1e40af',     // Azul oscuro
+                'Wolf' => '#6b7280',      // Gris
+                'Lion' => '#fbbf24'       // Amarillo
+            ];
+            
+            foreach ($clans as &$clan) {
+                // Asignar color específico para el clan
+                if (empty($clan['clan_color'])) {
+                    $clan['clan_color'] = $clanColors[$clan['clan_name']] ?? '#3b82f6';
+                }
+                
+                // Asignar icono específico para el clan
+                if (empty($clan['clan_icon'])) {
+                    $clan['clan_icon'] = $clanIcons[$clan['clan_name']] ?? 'fas fa-users';
+                }
+                
+                // Asegurar que los valores numéricos sean correctos
+                $clan['earned_points'] = (int)($clan['earned_points'] ?? 0);
+                $clan['total_assigned'] = (int)($clan['total_assigned'] ?? 0);
+                $clan['total_points'] = (int)($clan['total_points'] ?? 1000);
+                
+                // Calcular posición en el camino (sin límite de 1000)
+                $clan['path_position'] = max(0, $clan['earned_points']);
+                $clan['progress_percentage'] = $clan['total_points'] > 0 ? 
+                    round(($clan['earned_points'] / $clan['total_points']) * 100, 1) : 0;
+                
+                // Log para debugging
+                error_log("Clan {$clan['clan_name']}: earned_points={$clan['earned_points']}, total_assigned={$clan['total_assigned']}, path_position={$clan['path_position']}, icon={$clan['clan_icon']}");
+            }
+            
+            return $clans;
+        } catch (PDOException $e) {
+            error_log("Error al obtener datos de clanes para snake path: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Obtener información del trimestre
+     */
+    private function getQuarterInfo($quarter, $year) {
+        $quarterMonths = [
+            'Q1' => ['ENE', 'FEB', 'MAR'],
+            'Q2' => ['ABR', 'MAY', 'JUN'],
+            'Q3' => ['JUL', 'AGO', 'SEP'],
+            'Q4' => ['OCT', 'NOV', 'DIC']
+        ];
+        
+        $months = $quarterMonths[$quarter] ?? ['MES1', 'MES2', 'MES3'];
+        
+        return [
+            'quarter' => $quarter,
+            'year' => $year,
+            'months' => $months,
+            'display_name' => $quarter . ' ' . $year
+        ];
     }
 }

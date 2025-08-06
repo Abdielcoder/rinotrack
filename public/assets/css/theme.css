@@ -458,3 +458,206 @@ body {
         font-size: 1.1rem;
     }
 }
+
+/* ===== MODALES DE CONFIRMACIÓN ===== */
+.confirmation-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.confirmation-modal-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.confirmation-modal {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 0;
+    max-width: 450px;
+    width: 90%;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    transform: scale(0.8) translateY(-20px);
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.confirmation-modal-overlay.show .confirmation-modal {
+    transform: scale(1) translateY(0);
+}
+
+.confirmation-modal-header {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+    padding: 20px 24px;
+    text-align: center;
+    position: relative;
+}
+
+.confirmation-modal-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="rgba(255,255,255,0.1)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>') no-repeat center;
+    background-size: 60px;
+    opacity: 0.1;
+}
+
+.confirmation-modal-title {
+    color: #ffffff;
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin: 0;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    position: relative;
+    z-index: 1;
+}
+
+.confirmation-modal-body {
+    padding: 24px;
+    text-align: center;
+}
+
+.confirmation-modal-icon {
+    font-size: 3rem;
+    margin-bottom: 16px;
+    display: block;
+}
+
+.confirmation-modal-icon.warning {
+    color: #ff6b6b;
+}
+
+.confirmation-modal-icon.info {
+    color: #4ecdc4;
+}
+
+.confirmation-modal-icon.success {
+    color: #45b7d1;
+}
+
+.confirmation-modal-message {
+    color: #e0e0e0;
+    font-size: 1rem;
+    line-height: 1.6;
+    margin: 0 0 20px 0;
+    white-space: pre-line;
+}
+
+.confirmation-modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 24px;
+}
+
+.confirmation-modal-btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 100px;
+    position: relative;
+    overflow: hidden;
+}
+
+.confirmation-modal-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.confirmation-modal-btn:hover::before {
+    left: 100%;
+}
+
+.confirmation-modal-btn.cancel {
+    background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.confirmation-modal-btn.cancel:hover {
+    background: linear-gradient(135deg, #5a6268 0%, #343a40 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.confirmation-modal-btn.confirm {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.confirmation-modal-btn.confirm:hover {
+    background: linear-gradient(135deg, #ff5252 0%, #e64a19 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+}
+
+.confirmation-modal-btn:active {
+    transform: translateY(0);
+}
+
+/* Animaciones adicionales */
+@keyframes modalShake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
+    20%, 40%, 60%, 80% { transform: translateX(2px); }
+}
+
+.confirmation-modal.shake {
+    animation: modalShake 0.5s ease-in-out;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+    .confirmation-modal {
+        width: 95%;
+        margin: 20px;
+    }
+    
+    .confirmation-modal-actions {
+        flex-direction: column;
+    }
+    
+    .confirmation-modal-btn {
+        width: 100%;
+    }
+}
+
+/* Responsive para modales regulares */
+@media (max-width: 768px) {
+    .modal-footer {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .modal-footer .action-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}

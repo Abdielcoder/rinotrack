@@ -182,10 +182,10 @@ ob_start();
                             <i class="fas fa-users"></i>
                             Ver Usuarios
                         </a>
-                        <button class="btn btn-secondary" onclick="openUserModal()">
+                        <a href="?route=admin/users" class="btn btn-secondary">
                             <i class="fas fa-user-plus"></i>
                             Crear Usuario
-                        </button>
+                        </a>
                     </div>
                 </div>
 
@@ -202,10 +202,10 @@ ob_start();
                             <i class="fas fa-list"></i>
                             Ver Proyectos
                         </a>
-                        <button class="btn btn-secondary" onclick="openProjectModal()">
+                        <a href="?route=admin/projects" class="btn btn-secondary">
                             <i class="fas fa-plus"></i>
                             Crear Proyecto
-                        </button>
+                        </a>
                     </div>
                 </div>
 
@@ -222,10 +222,10 @@ ob_start();
                             <i class="fas fa-eye"></i>
                             Ver Clanes
                         </a>
-                        <button class="btn btn-secondary" onclick="openClanModal()">
+                        <a href="?route=admin/clans" class="btn btn-secondary">
                             <i class="fas fa-plus"></i>
                             Crear Clan
-                        </button>
+                        </a>
                     </div>
                 </div>
 

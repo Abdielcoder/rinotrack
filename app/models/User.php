@@ -253,4 +253,57 @@ class User {
             return [];
         }
     }
+    
+    /**
+     * Obtener el clan del usuario
+     */
+    public function getUserClan($userId) {
+        try {
+            $stmt = $this->db->prepare("
+                SELECT 
+                    c.clan_id,
+                    c.clan_name,
+                    c.clan_departamento
+                FROM Clans c
+                JOIN Clan_Members cm ON c.clan_id = cm.clan_id
+                WHERE cm.user_id = ?
+                LIMIT 1
+            ");
+            $stmt->execute([$userId]);
+            return $stmt->fetch();
+        } catch (PDOException $e) {
+            error_log("Error al obtener clan del usuario: " . $e->getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * Obtener usuarios por clan
+     */
+    public function getUsersByClan($clanId) {
+        try {
+            $stmt = $this->db->prepare("
+                SELECT 
+                    u.user_id,
+                    u.username,
+                    u.full_name,
+                    u.email,
+                    u.is_active,
+                    u.last_login,
+                    u.created_at,
+                    r.role_name
+                FROM Users u
+                JOIN Clan_Members cm ON u.user_id = cm.user_id
+                LEFT JOIN User_Roles ur ON u.user_id = ur.user_id
+                LEFT JOIN Roles r ON ur.role_id = r.role_id
+                WHERE cm.clan_id = ?
+                ORDER BY u.full_name
+            ");
+            $stmt->execute([$clanId]);
+            return $stmt->fetchAll();
+        } catch (PDOException $e) {
+            error_log("Error al obtener usuarios por clan: " . $e->getMessage());
+            return [];
+        }
+    }
 }

@@ -52,7 +52,7 @@
     window.activateQuarter = function(quarterId) {
         const confirmMsg = '¿Estás seguro de que quieres activar este trimestre?\n\nEsto desactivará el trimestre actual si existe.';
         
-        if (confirm(confirmMsg)) {
+        confirmDelete(confirmMsg, () => {
             showToast('Activando trimestre...', 'info');
             
             const formData = new FormData();
@@ -78,7 +78,7 @@
                 console.error('Error:', error);
                 showToast('Error de conexión al activar trimestre', 'error');
             });
-        }
+        });
     };
 
     window.viewQuarterDetails = function(quarterId) {
@@ -113,7 +113,7 @@
     window.deleteQuarter = function(quarterId) {
         const confirmMsg = '¿Estás seguro de que quieres eliminar este trimestre?\n\nEsta acción no se puede deshacer.\n\nSolo se pueden eliminar trimestres inactivos sin proyectos asignados.';
         
-        if (confirm(confirmMsg)) {
+        confirmDelete(confirmMsg, () => {
             showToast('Eliminando trimestre...', 'info');
             
             const formData = new FormData();
@@ -139,7 +139,7 @@
                 console.error('Error:', error);
                 showToast('Error de conexión al eliminar trimestre', 'error');
             });
-        }
+        });
     };
 
     // Funciones internas
@@ -219,6 +219,7 @@
     }
 
     function populateQuarterForm(quarter) {
+        document.getElementById('quarterId').value = quarter.kpi_quarter_id;
         document.getElementById('quarterYear').value = quarter.year;
         document.getElementById('quarterPeriod').value = quarter.quarter;
         document.getElementById('totalPoints').value = quarter.total_points;
@@ -243,12 +244,34 @@
         const formData = new FormData(e.target);
         const route = isEditMode ? 'kpi/update-quarter' : 'kpi/create-quarter';
         
+        // Debug: Log los datos que se están enviando
+        console.log('Enviando datos:', {
+            route: route,
+            isEditMode: isEditMode,
+            formData: Object.fromEntries(formData)
+        });
+        
         fetch(`?route=${route}`, {
             method: 'POST',
             credentials: 'same-origin',
             body: formData
         })
-        .then(response => response.json())
+        .then(async response => {
+            if (!response.ok) {
+                // Intentar obtener el mensaje de error del servidor
+                let errorMessage = `HTTP error! status: ${response.status}`;
+                try {
+                    const errorData = await response.json();
+                    if (errorData.message) {
+                        errorMessage = errorData.message;
+                    }
+                } catch (e) {
+                    // Si no se puede parsear JSON, usar el mensaje por defecto
+                }
+                throw new Error(errorMessage);
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.success) {
                 showToast(data.message, 'success');
@@ -258,12 +281,14 @@
                 }, 1500);
             } else {
                 showToast(data.message, 'error');
-                showFormErrors(data.errors);
+                if (data.errors) {
+                    showFormErrors(data.errors);
+                }
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            showToast('Error de conexión al guardar', 'error');
+            showToast('Error al guardar: ' + error.message, 'error');
         })
         .finally(() => {
             // Ocultar loading
@@ -281,6 +306,9 @@
         const quarter = document.getElementById('quarterPeriod').value;
         const points = document.getElementById('totalPoints').value;
         
+        // Debug: Log los valores del formulario
+        console.log('Validando formulario:', { year, quarter, points, isEditMode });
+        
         if (!year) {
             showFieldError('quarterYear', 'El año es requerido');
             isValid = false;
@@ -296,6 +324,12 @@
             isValid = false;
         }
         
+        if (points > 100000) {
+            showFieldError('totalPoints', 'Los puntos deben ser máximo 100,000');
+            isValid = false;
+        }
+        
+        console.log('Formulario válido:', isValid);
         return isValid;
     }
 

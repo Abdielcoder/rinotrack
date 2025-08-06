@@ -2,6 +2,10 @@
 
 document.addEventListener('DOMContentLoaded', function() {
     initKPIDashboard();
+    // Inicializar el camino tipo serpiente
+    if (window.snakePathData) {
+        initializeSnakePath();
+    }
 });
 
 function initKPIDashboard() {
@@ -358,6 +362,505 @@ function exportDashboardData(format = 'pdf') {
     setTimeout(() => {
         showToast(`Dashboard exportado exitosamente`, 'success');
     }, 2000);
+}
+
+// ============================================================================
+// CAMINO TIPO SERPIENTE - FUNCIONES
+// ============================================================================
+
+/**
+ * Inicializar el camino tipo serpiente
+ */
+function initializeSnakePath() {
+    console.log('Inicializando snake path...');
+    console.log('window.snakePathData:', window.snakePathData);
+    
+    if (!window.snakePathData) {
+        console.log('No hay datos disponibles para el snake path');
+        return;
+    }
+    
+    if (!window.snakePathData.clans_data) {
+        console.log('No hay datos de clanes en snakePathData');
+        console.log('Estructura de snakePathData:', Object.keys(window.snakePathData));
+        return;
+    }
+    
+    console.log('Inicializando snake path con datos:', window.snakePathData);
+    console.log('Clanes disponibles:', window.snakePathData.clans_data);
+    
+    // Generar el camino
+    generateSnakePath(window.snakePathData);
+    
+    // Generar marcadores de clanes
+    generateClanMarkers(window.snakePathData);
+    
+    // Generar leyenda
+    generateClanLegend(window.snakePathData);
+}
+
+/**
+ * Generar el camino tipo serpiente
+ */
+function generateSnakePath(data) {
+    const pathGrid = document.getElementById('snakePathGrid');
+    if (!pathGrid) return;
+    
+    // Definir el camino tipo serpiente con estilo elegante y flujo suave
+    const snakePath = [
+        // Fila 1: Izquierda a derecha (INICIO -> 250)
+        ['INICIO', '50', '100', '150', '200', '250', null, null, null, null, null, null, null],
+        
+        // Fila 2: Izquierda a derecha (275 -> 500)
+        ['275', '300', '325', '350', '375', '400', '425', '450', '475', '500', null, null, null],
+        
+        // Fila 3: Derecha a izquierda (525 -> 750)
+        [null, null, null, '525', '550', '575', '600', '625', '650', '675', '700', '725', '750'],
+        
+        // Fila 4: Izquierda a derecha (775 -> 1000 FIN)
+        ['775', '800', '825', '850', '875', '900', '925', '950', '975', '1000', 'FIN', null, null]
+    ];
+    
+    // Limpiar el grid
+    pathGrid.innerHTML = '';
+    
+    // Generar las celdas del camino
+    snakePath.forEach((row, rowIndex) => {
+        row.forEach((value, colIndex) => {
+            if (value !== null) {
+                const cell = createPathCell(value, rowIndex, colIndex, data);
+                pathGrid.appendChild(cell);
+            }
+        });
+    });
+    
+    // Agregar flechas de conexión
+    // addConnectionArrows(); // Eliminado según la solicitud
+}
+
+
+
+/**
+ * Crear una celda del camino
+ */
+function createPathCell(value, rowIndex, colIndex, data) {
+    const cell = document.createElement('div');
+    cell.className = 'path-cell';
+    
+    // Determinar el tipo de celda
+    if (value === 'INICIO') {
+        cell.classList.add('start');
+        cell.textContent = 'INICIO';
+    } else if (value === 'META') {
+        cell.classList.add('goal');
+        cell.textContent = 'META';
+    } else {
+        const numValue = parseInt(value);
+        if (isNaN(numValue)) {
+            cell.classList.add('regular');
+            cell.textContent = value;
+        } else {
+            // Verificar si es un hito importante
+            if (numValue % 100 === 0 && numValue > 0) {
+                cell.classList.add('milestone');
+            } else {
+                cell.classList.add('regular');
+            }
+            
+            // Verificar si es la posición actual del trimestre
+            if (isQuarterProgressPosition(numValue, data.quarter_progress)) {
+                cell.classList.add('quarter-progress');
+            }
+            
+            cell.textContent = numValue;
+        }
+    }
+    
+    // Posicionar la celda en el grid
+    cell.style.gridRow = rowIndex + 1;
+    cell.style.gridColumn = colIndex + 1;
+    
+    // Agregar tooltip con información
+    if (value !== 'INICIO' && value !== 'META') {
+        const numValue = parseInt(value);
+        if (!isNaN(numValue)) {
+            cell.title = `${numValue} puntos`;
+        }
+    }
+    
+    return cell;
+}
+
+/**
+ * Verificar si una posición corresponde al progreso actual del trimestre
+ */
+function isQuarterProgressPosition(position, quarterProgress) {
+    const targetPosition = Math.round((quarterProgress / 100) * 1000);
+    return Math.abs(position - targetPosition) <= 25; // Margen de 25 puntos
+}
+
+/**
+ * Generar los marcadores de clanes
+ */
+function generateClanMarkers(data) {
+    const markersContainer = document.getElementById('clanMarkers');
+    if (!markersContainer) {
+        console.error('No se encontró el contenedor de marcadores');
+        return;
+    }
+    
+    // Limpiar marcadores existentes
+    markersContainer.innerHTML = '';
+    
+    console.log('Generando marcadores para clanes:', data.clans_data);
+    
+    // Agrupar clanes por posición
+    const clansByPosition = {};
+    
+    data.clans_data.forEach((clan, index) => {
+        console.log(`Clan ${index + 1}:`, clan.clan_name, 'Puntos:', clan.earned_points);
+        
+        // Calcular posición base usando earned_points directamente
+        const basePosition = calculateMarkerPosition(clan.earned_points || 0);
+        const positionKey = `${basePosition.x}-${basePosition.y}`;
+        
+        if (!clansByPosition[positionKey]) {
+            clansByPosition[positionKey] = [];
+        }
+        clansByPosition[positionKey].push(clan);
+    });
+    
+    // Crear marcadores con padding para múltiples clanes
+    Object.keys(clansByPosition).forEach(positionKey => {
+        const clans = clansByPosition[positionKey];
+        const basePosition = calculateMarkerPosition(clans[0].earned_points || 0);
+        
+        // Calcular padding basado en el número de clanes
+        const totalClans = clans.length;
+        const markerWidth = 32; // Ancho del marcador en px
+        const padding = 8; // Espacio entre marcadores en px
+        const totalWidth = (totalClans * markerWidth) + ((totalClans - 1) * padding);
+        
+        // Convertir porcentaje a píxeles (asumiendo que el contenedor tiene un ancho fijo)
+        const containerWidth = 1200; // Ancho aproximado del contenedor en px
+        const baseXInPx = (basePosition.x / 100) * containerWidth;
+        const startX = baseXInPx - (totalWidth / 2); // Centrar el grupo
+        
+        clans.forEach((clan, index) => {
+            const marker = createClanMarker(clan, data, {
+                x: startX + (index * (markerWidth + padding)),
+                y: Math.max(2, basePosition.y - 8) // 8% arriba de la caja, mínimo 2%
+            });
+            markersContainer.appendChild(marker);
+        });
+    });
+    
+    console.log('Marcadores generados:', markersContainer.children.length);
+}
+
+/**
+ * Crear un marcador de clan
+ */
+function createClanMarker(clan, data, customPosition = null) {
+    const marker = document.createElement('div');
+    marker.className = 'clan-marker';
+    marker.style.backgroundColor = clan.clan_color || '#3b82f6';
+    marker.style.width = '32px';
+    marker.style.height = '32px';
+    marker.style.zIndex = '10';
+    
+    // Calcular posición
+    let position;
+    if (customPosition) {
+        // Usar posición personalizada (para múltiples clanes)
+        position = customPosition;
+        marker.style.left = position.x + 'px';
+        marker.style.top = position.y + '%';
+    } else {
+        // Calcular posición normal usando earned_points directamente
+        position = calculateMarkerPosition(clan.earned_points || 0);
+        
+        // Posicionar ligeramente arriba de la caja para mejor visibilidad
+        const adjustedY = Math.max(2, position.y - 8); // 8% arriba de la caja, mínimo 2%
+        
+        marker.style.left = position.x + '%';
+        marker.style.top = adjustedY + '%';
+    }
+    
+    // Agregar icono del clan
+    const icon = document.createElement('i');
+    icon.className = clan.clan_icon || 'fas fa-users';
+    icon.style.fontSize = '14px';
+    marker.appendChild(icon);
+    
+    // Agregar tooltip con información del clan
+    marker.title = `${clan.clan_name}\n${clan.earned_points || 0} puntos (${clan.progress_percentage || 0}%)`;
+    
+    // Agregar evento click para mostrar detalles
+    marker.addEventListener('click', () => {
+        showClanDetails(clan);
+    });
+    
+    // Agregar borde blanco para mejor visibilidad
+    marker.style.border = '3px solid white';
+    marker.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.3)';
+    
+    // Si el clan tiene 0 puntos, hacer el marcador más sutil
+    if (clan.earned_points === 0) {
+        marker.style.opacity = '0.7';
+        marker.style.filter = 'grayscale(30%)';
+    }
+    
+    console.log(`Marcador creado para ${clan.clan_name} en posición:`, position);
+    
+    return marker;
+}
+
+/**
+ * Calcular la posición de un marcador en el camino
+ */
+function calculateMarkerPosition(points) {
+    console.log(`Calculando posición para ${points} puntos`);
+    
+    // Mapear puntos a posiciones específicas en las cajas
+    const pointPositions = {
+        // Fila 1: Izquierda a derecha (INICIO -> 250)
+        0: {x: 7.7, y: 12.5},    // INICIO
+        50: {x: 15.4, y: 12.5},
+        100: {x: 23.1, y: 12.5},
+        150: {x: 30.8, y: 12.5},
+        200: {x: 38.5, y: 12.5},
+        250: {x: 46.2, y: 12.5},
+        
+        // Fila 2: Izquierda a derecha (275 -> 500)
+        275: {x: 7.7, y: 37.5},
+        300: {x: 15.4, y: 37.5},
+        325: {x: 23.1, y: 37.5},
+        350: {x: 30.8, y: 37.5},
+        375: {x: 38.5, y: 37.5},
+        400: {x: 46.2, y: 37.5},
+        425: {x: 53.8, y: 37.5},
+        450: {x: 61.5, y: 37.5},
+        475: {x: 69.2, y: 37.5},
+        500: {x: 76.9, y: 37.5},
+        
+        // Fila 3: Derecha a izquierda (525 -> 750)
+        525: {x: 84.6, y: 62.5},
+        550: {x: 76.9, y: 62.5},
+        575: {x: 69.2, y: 62.5},
+        600: {x: 61.5, y: 62.5},
+        625: {x: 53.8, y: 62.5},
+        650: {x: 46.2, y: 62.5},
+        675: {x: 38.5, y: 62.5},
+        700: {x: 30.8, y: 62.5},
+        725: {x: 23.1, y: 62.5},
+        750: {x: 15.4, y: 62.5},
+        
+        // Fila 4: Izquierda a derecha (775 -> 1000 FIN)
+        775: {x: 7.7, y: 87.5},
+        800: {x: 15.4, y: 87.5},
+        825: {x: 23.1, y: 87.5},
+        850: {x: 30.8, y: 87.5},
+        875: {x: 38.5, y: 87.5},
+        900: {x: 46.2, y: 87.5},
+        925: {x: 53.8, y: 87.5},
+        950: {x: 61.5, y: 87.5},
+        975: {x: 69.2, y: 87.5},
+        1000: {x: 76.9, y: 87.5},  // Caja 1000
+        1001: {x: 84.6, y: 87.5}   // FIN
+    };
+    
+    // Para puntos mayores o iguales a 1000, usar la posición FIN
+    if (points >= 1000) {
+        console.log(`${points} puntos >= 1000, usando posición FIN`);
+        return pointPositions[1001]; // Posición FIN
+    }
+    
+    // Para puntos exactos, usar la posición correspondiente
+    if (pointPositions[points]) {
+        console.log(`${points} puntos exactos, usando posición ${points}`);
+        return pointPositions[points];
+    }
+    
+    // Para puntos intermedios, encontrar la caja más cercana
+    const availablePoints = Object.keys(pointPositions).map(Number).sort((a, b) => a - b);
+    let closestPoint = availablePoints[0];
+    let minDifference = Math.abs(points - closestPoint);
+    
+    for (const point of availablePoints) {
+        const difference = Math.abs(points - point);
+        if (difference < minDifference) {
+            minDifference = difference;
+            closestPoint = point;
+        }
+    }
+    
+    console.log(`${points} puntos intermedios, usando posición más cercana: ${closestPoint}`);
+    return pointPositions[closestPoint];
+}
+
+/**
+ * Generar la leyenda de clanes
+ */
+function generateClanLegend(data) {
+    const legendContainer = document.getElementById('clanLegend');
+    if (!legendContainer) return;
+    
+    // Limpiar leyenda existente
+    legendContainer.innerHTML = '';
+    
+    data.clans_data.forEach(clan => {
+        const legendItem = createLegendItem(clan);
+        legendContainer.appendChild(legendItem);
+    });
+}
+
+/**
+ * Crear un elemento de la leyenda
+ */
+function createLegendItem(clan) {
+    const item = document.createElement('div');
+    item.className = 'legend-item';
+    
+    // Marcador de color
+    const marker = document.createElement('div');
+    marker.className = 'legend-marker';
+    marker.style.backgroundColor = clan.clan_color;
+    
+    const icon = document.createElement('i');
+    icon.className = clan.clan_icon;
+    marker.appendChild(icon);
+    
+    // Información del clan
+    const info = document.createElement('div');
+    info.className = 'legend-info';
+    
+    const name = document.createElement('div');
+    name.className = 'legend-clan-name';
+    name.textContent = clan.clan_name;
+    
+    const dept = document.createElement('div');
+    dept.className = 'legend-clan-dept';
+    dept.textContent = clan.clan_departamento || 'Sin departamento';
+    
+    info.appendChild(name);
+    info.appendChild(dept);
+    
+    // Puntos
+    const points = document.createElement('div');
+    points.className = 'legend-points';
+    
+    const pointsValue = document.createElement('div');
+    pointsValue.className = 'legend-points-value';
+    pointsValue.textContent = clan.earned_points.toLocaleString();
+    
+    const pointsLabel = document.createElement('div');
+    pointsLabel.className = 'legend-points-label';
+    pointsLabel.textContent = 'puntos';
+    
+    points.appendChild(pointsValue);
+    points.appendChild(pointsLabel);
+    
+    // Ensamblar el elemento
+    item.appendChild(marker);
+    item.appendChild(info);
+    item.appendChild(points);
+    
+    return item;
+}
+
+/**
+ * Mostrar detalles de un clan
+ */
+function showClanDetails(clan) {
+    // Crear modal con detalles del clan
+    const modal = document.createElement('div');
+    modal.className = 'clan-details-modal';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>${clan.clan_name}</h3>
+                <button class="modal-close" onclick="this.parentElement.parentElement.parentElement.remove()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="clan-detail-item">
+                    <strong>Departamento:</strong> ${clan.clan_departamento || 'Sin departamento'}
+                </div>
+                <div class="clan-detail-item">
+                    <strong>Puntos Ganados:</strong> ${clan.earned_points.toLocaleString()}
+                </div>
+                <div class="clan-detail-item">
+                    <strong>Puntos Asignados:</strong> ${clan.total_assigned.toLocaleString()}
+                </div>
+                <div class="clan-detail-item">
+                    <strong>Progreso:</strong> ${clan.progress_percentage}%
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Agregar estilos al modal
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+    `;
+    
+    const modalContent = modal.querySelector('.modal-content');
+    modalContent.style.cssText = `
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        max-width: 400px;
+        width: 90%;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    `;
+    
+    const modalHeader = modal.querySelector('.modal-header');
+    modalHeader.style.cssText = `
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #e5e7eb;
+    `;
+    
+    const modalClose = modal.querySelector('.modal-close');
+    modalClose.style.cssText = `
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: #6b7280;
+        padding: 0.25rem;
+    `;
+    
+    const clanDetailItems = modal.querySelectorAll('.clan-detail-item');
+    clanDetailItems.forEach(item => {
+        item.style.cssText = `
+            margin-bottom: 0.75rem;
+            padding: 0.5rem;
+            background: #f9fafb;
+            border-radius: 6px;
+        `;
+    });
+    
+    document.body.appendChild(modal);
+    
+    // Cerrar modal al hacer click fuera
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.remove();
+        }
+    });
 }
 
 // Inicializar cuando se carga el documento

@@ -54,6 +54,47 @@ ob_start();
     </header>
 
     <?php if ($currentKPI): ?>
+        <!-- Camino Tipo Serpiente -->
+        <section class="snake-path-section">
+            <div class="snake-path-container">
+                <div class="snake-path-header">
+                    <h3>Progreso del Trimestre</h3>
+                    <div class="quarter-info">
+                        <span class="quarter-label"><?php echo htmlspecialchars($currentKPI['quarter'] . ' ' . $currentKPI['year']); ?></span>
+                        <span class="quarter-period">
+                            <?php
+                            $quarterMonths = [
+                                'Q1' => ['ENE', 'FEB', 'MAR'],
+                                'Q2' => ['ABR', 'MAY', 'JUN'],
+                                'Q3' => ['JUL', 'AGO', 'SEP'],
+                                'Q4' => ['OCT', 'NOV', 'DIC']
+                            ];
+                            $months = $quarterMonths[$currentKPI['quarter']] ?? ['MES1', 'MES2', 'MES3'];
+                            echo implode(' - ', $months);
+                            ?>
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="snake-path-board">
+                    <div class="path-grid" id="snakePathGrid">
+                        <!-- El camino se generará dinámicamente con JavaScript -->
+                    </div>
+                    
+                    <div class="clan-markers" id="clanMarkers">
+                        <!-- Los marcadores de clanes se generarán dinámicamente -->
+                    </div>
+                </div>
+                
+                <div class="snake-path-legend">
+                    <div class="legend-title">Clanes Participantes</div>
+                    <div class="legend-items" id="clanLegend">
+                        <!-- La leyenda se generará dinámicamente -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- Estadísticas Minimalistas -->
         <div class="content-minimal">
             <section class="stats-minimal">
@@ -111,8 +152,8 @@ ob_start();
                                 
                                 <div class="clan-progress">
                                     <?php 
-                                    $efficiency = $clan['total_assigned'] > 0 ? 
-                                        round((($clan['earned_points'] ?? 0) / $clan['total_assigned']) * 100, 1) : 0;
+                                    $efficiency = $clan['total_points'] > 0 ? 
+                                        round((($clan['earned_points'] ?? 0) / $clan['total_points']) * 100, 1) : 0;
                                     ?>
                                     <div class="progress-bar-small">
                                         <div class="progress-fill-small" style="width: <?php echo min($efficiency, 100); ?>%"></div>
@@ -128,48 +169,16 @@ ob_start();
                     </div>
                 <?php endif; ?>
             </section>
-
-            <!-- Actividad Reciente Minimalista -->
-            <section class="activity-minimal">
-                <h3>Actividad Reciente</h3>
-                
-                <?php if (!empty($recentProjects)): ?>
-                    <div class="activity-list">
-                        <?php foreach (array_slice($recentProjects, 0, 3) as $project): ?>
-                            <div class="activity-item">
-                                <div class="project-info">
-                                    <div class="project-name"><?php echo Utils::escape($project['project_name']); ?></div>
-                                    <div class="project-clan"><?php echo Utils::escape($project['clan_name']); ?></div>
-                                </div>
-                                
-                                <div class="project-metrics">
-                                    <span class="kpi-points"><?php echo number_format($project['kpi_points'] ?? 0); ?> pts</span>
-                                    <span class="task-count"><?php echo $project['tasks_completed'] ?? 0; ?> tareas</span>
-                                </div>
-                                
-                                <div class="project-progress">
-                                    <?php $projectProgress = $project['progress_percentage'] ?? 0; ?>
-                                    <div class="progress-bar-tiny">
-                                        <div class="progress-fill-tiny" style="width: <?php echo $projectProgress; ?>%"></div>
-                                    </div>
-                                    <span class="progress-text"><?php echo round($projectProgress, 1); ?>%</span>
-                                </div>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
-                    <div class="activity-footer">
-                        <a href="?route=kpi/projects" class="link-minimal">Ver todos los proyectos →</a>
-                    </div>
-                <?php else: ?>
-                    <div class="empty-minimal">
-                        <span>📋 No hay proyectos recientes</span>
-                        <a href="?route=kpi/projects" class="link-minimal">Asignar KPIs</a>
-                    </div>
-                <?php endif; ?>
-            </section>
         </div>
     <?php endif; ?>
 </div>
+
+<!-- Script para pasar datos del camino tipo serpiente al JavaScript -->
+<script>
+window.snakePathData = <?= json_encode($snakePathData ?? []) ?>;
+console.log('Datos pasados desde PHP:', window.snakePathData);
+console.log('Clanes disponibles:', window.snakePathData?.clans_data);
+</script>
 
 <?php
 // Guardar el contenido en una variable

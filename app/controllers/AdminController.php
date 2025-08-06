@@ -67,12 +67,19 @@ class AdminController {
      * Crear nuevo usuario
      */
     public function createUser() {
+        // DEBUG: Log para diagnosticar el problema
+        error_log("=== CREATE USER DEBUG ===");
+        error_log("createUser called - Method: " . $_SERVER['REQUEST_METHOD']);
+        error_log("POST data: " . print_r($_POST, true));
+        
         $this->requireAuth();
         if (!$this->hasAdminAccess()) {
+            error_log("Access denied - user doesn't have admin access");
             Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos'], 403);
         }
         
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            error_log("Invalid method: " . $_SERVER['REQUEST_METHOD']);
             Utils::redirect('admin/users');
         }
         
@@ -82,6 +89,8 @@ class AdminController {
         $fullName = Utils::sanitizeInput($_POST['fullName'] ?? '');
         $password = $_POST['password'] ?? '';
         $roleId = (int)($_POST['roleId'] ?? 0);
+        
+        error_log("Parsed data - username: '$username', email: '$email', fullName: '$fullName', roleId: $roleId, password length: " . strlen($password));
         
         $errors = [];
         
@@ -112,6 +121,7 @@ class AdminController {
         }
         
         if (!empty($errors)) {
+            error_log("Validation errors: " . print_r($errors, true));
             Utils::jsonResponse(['success' => false, 'errors' => $errors], 400);
         }
         

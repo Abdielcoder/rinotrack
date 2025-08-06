@@ -1,6 +1,13 @@
 <?php
-// Capturar el contenido de la vista
+// Iniciar buffer de salida
 ob_start();
+
+// Configurar variables para el layout
+$title = 'Gestión de Clanes - ' . APP_NAME;
+
+// JavaScript que debe estar disponible inmediatamente
+$additionalJS = [];
+$additionalCSS = [];
 ?>
 
 <div class="modern-dashboard" data-theme="default">
@@ -382,7 +389,7 @@ ob_start();
                     <h4>Miembros Actuales</h4>
                     <span id="memberCount" class="count-badge">0 miembros</span>
                 </div>
-                <div id="currentMembers" class="members-list">
+                <div id="membersList" class="members-list">
                     <!-- Se llena dinámicamente -->
                 </div>
             </div>
@@ -410,6 +417,342 @@ ob_start();
         </div>
     </div>
 </div>
+
+<!-- JavaScript necesario para la funcionalidad de clanes -->
+<script>
+// Variables globales
+let currentClanId = null;
+let isEditMode = false;
+let currentDetailsClanId = null;
+let currentDetailsClanName = null;
+
+// Función para eliminar clan - debe estar disponible inmediatamente
+function deleteClan(clanId) {
+    if (confirm("¿Estás seguro de que quieres eliminar este clan? Esta acción no se puede deshacer.")) {
+        const formData = new FormData();
+        formData.append("clanId", clanId);
+        
+        fetch("?route=admin/delete-clan", {
+            method: "POST",
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert("Clan eliminado exitosamente");
+                location.reload();
+            } else {
+                alert(data.message || "Error al eliminar el clan");
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            alert("Error de conexión al eliminar el clan");
+        });
+    }
+}
+
+// Asegurar que la función esté disponible globalmente
+window.deleteClan = deleteClan;
+
+// Definir todas las funciones globalmente inmediatamente
+window.viewClanDetails = function(clanId) {
+    currentDetailsClanId = clanId;
+    
+    const modal = document.getElementById("clanDetailsModal");
+    if (!modal) {
+        alert("Error: Modal no disponible");
+        return;
+    }
+    modal.style.display = "block";
+    
+    // Cargar datos del clan
+    fetch("?route=admin/clan-details&clanId=" + clanId)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                populateClanDetails(data.clan);
+            } else {
+                alert(data.message || "Error al cargar detalles del clan");
+                closeClanDetailsModal();
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            alert("Error de conexión al cargar detalles");
+            closeClanDetailsModal();
+        });
+};
+
+window.closeClanDetailsModal = function() {
+    const modal = document.getElementById("clanDetailsModal");
+    if (modal) modal.style.display = "none";
+    currentDetailsClanId = null;
+    currentDetailsClanName = null;
+};
+
+window.openCreateClanModal = function() {
+    isEditMode = false;
+    currentClanId = null;
+    document.getElementById("modalTitle").textContent = "Crear Clan";
+    document.getElementById("submitText").textContent = "Crear Clan";
+    document.getElementById("clanForm").reset();
+    document.getElementById("clanId").value = "";
+    document.getElementById("clanModal").style.display = "block";
+};
+
+window.closeClanModal = function() {
+    document.getElementById("clanModal").style.display = "none";
+    clearErrors();
+    document.getElementById("clanForm").reset();
+    document.getElementById("modalTitle").textContent = "Crear Clan";
+    document.getElementById("submitText").textContent = "Crear Clan";
+    isEditMode = false;
+    currentClanId = null;
+};
+
+window.editClan = function(clanId) {
+    isEditMode = true;
+    currentClanId = clanId;
+    document.getElementById("modalTitle").textContent = "Editar Clan";
+    document.getElementById("submitText").textContent = "Actualizar Clan";
+    document.getElementById("clanId").value = clanId;
+    
+    fetch("?route=admin/clan-details&clanId=" + clanId)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const clan = data.clan;
+                document.getElementById("clanName").value = clan.clan_name;
+                document.getElementById("clanDepartamento").value = clan.clan_departamento || "";
+                document.getElementById("clanModal").style.display = "block";
+            } else {
+                alert(data.message || "Error al cargar datos del clan");
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            alert("Error de conexión al cargar datos del clan");
+        });
+};
+
+window.manageClanMembers = function(clanId) {
+    currentClanId = clanId;
+    document.getElementById("membersModalTitle").textContent = "Gestionar Miembros del Clan";
+    document.getElementById("membersModal").style.display = "block";
+    loadClanMembers(clanId);
+};
+
+window.closeMembersModal = function() {
+    document.getElementById("membersModal").style.display = "none";
+    currentClanId = null;
+};
+
+window.addMemberToClan = function() {
+    const userSelect = document.getElementById("userSelect");
+    const userId = userSelect.value;
+    
+    if (!userId) {
+        alert("Por favor selecciona un usuario");
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append("clanId", currentClanId);
+    formData.append("userId", userId);
+    
+    fetch("?route=admin/add-clan-member", {
+        method: "POST",
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert("Miembro agregado exitosamente");
+            loadClanMembers(currentClanId);
+            userSelect.value = "";
+        } else {
+            alert(data.message || "Error al agregar miembro");
+        }
+    })
+    .catch(error => {
+        console.error("Error:", error);
+        alert("Error de conexión al agregar miembro");
+    });
+};
+
+window.removeMemberFromClan = function(userId) {
+    if (confirm("¿Quieres quitar este miembro del clan?")) {
+        const formData = new FormData();
+        formData.append("clanId", currentClanId);
+        formData.append("userId", userId);
+        
+        fetch("?route=admin/remove-clan-member", {
+            method: "POST",
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert("Miembro removido exitosamente");
+                loadClanMembers(currentClanId);
+            } else {
+                alert(data.message || "Error al remover miembro");
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            alert("Error de conexión al remover miembro");
+        });
+    }
+};
+
+// Funciones auxiliares
+function clearErrors() {
+    const errorElements = document.querySelectorAll(".error-message");
+    errorElements.forEach(element => {
+        element.classList.remove("show");
+        element.textContent = "";
+    });
+}
+
+function populateClanDetails(clanData) {
+    currentDetailsClanName = clanData.clan_name;
+    
+    document.getElementById("detailClanName").textContent = clanData.clan_name;
+    document.getElementById("detailClanId").textContent = clanData.clan_id;
+    document.getElementById("detailCreatedAt").textContent = new Date(clanData.created_at).toLocaleDateString();
+    document.getElementById("detailMemberCount").textContent = clanData.members.length + " miembros";
+    document.getElementById("detailProjectCount").textContent = clanData.projects.length + " proyectos";
+    
+    // Renderizar miembros
+    const membersContainer = document.getElementById("detailsMembers");
+    if (membersContainer) {
+        let membersHTML = "";
+        clanData.members.forEach(member => {
+            membersHTML += "<div class=\"member-card\">";
+            membersHTML += "<div class=\"member-avatar\"><i class=\"fas fa-user\"></i></div>";
+            membersHTML += "<div class=\"member-info\">";
+            membersHTML += "<div class=\"member-name\">" + member.full_name + "</div>";
+            membersHTML += "<div class=\"member-email\">" + member.email + "</div>";
+            membersHTML += "</div></div>";
+        });
+        membersContainer.innerHTML = membersHTML;
+    }
+    
+    // Renderizar proyectos
+    const projectsContainer = document.getElementById("detailsProjects");
+    if (projectsContainer) {
+        let projectsHTML = "";
+        clanData.projects.forEach(project => {
+            projectsHTML += "<div class=\"project-card\">";
+            projectsHTML += "<div class=\"project-name\">" + project.project_name + "</div>";
+            projectsHTML += "<div class=\"project-description\">" + (project.description || "Sin descripción") + "</div>";
+            projectsHTML += "</div>";
+        });
+        projectsContainer.innerHTML = projectsHTML;
+    }
+}
+
+function loadClanMembers(clanId) {
+    fetch("?route=admin/clan-members&clanId=" + clanId)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const membersContainer = document.getElementById("membersList");
+                if (membersContainer) {
+                    let membersHTML = "";
+                    data.members.forEach(member => {
+                        membersHTML += "<div class=\"member-item\">";
+                        membersHTML += "<div class=\"member-info\">";
+                        membersHTML += "<div class=\"member-name\">" + member.full_name + "</div>";
+                        membersHTML += "<div class=\"member-email\">" + member.email + "</div>";
+                        membersHTML += "</div>";
+                        membersHTML += "<button class=\"btn-remove\" onclick=\"removeMemberFromClan(" + member.user_id + ")\">";
+                        membersHTML += "<i class=\"fas fa-times\"></i>";
+                        membersHTML += "</button>";
+                        membersHTML += "</div>";
+                    });
+                    membersContainer.innerHTML = membersHTML;
+                }
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            alert("Error al cargar miembros del clan");
+        });
+}
+
+// Event listeners cuando el DOM esté listo
+document.addEventListener("DOMContentLoaded", function() {
+    // Manejar envío del formulario de clan
+    const clanForm = document.getElementById("clanForm");
+    if (clanForm) {
+        clanForm.addEventListener("submit", function(e) {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById("submitBtn");
+            const submitText = document.getElementById("submitText");
+            const submitLoader = document.getElementById("submitLoader");
+            
+            // Mostrar loader
+            submitBtn.disabled = true;
+            submitText.style.display = "none";
+            submitLoader.style.display = "inline-block";
+            
+            const formData = new FormData(this);
+            
+            // Determinar la ruta según el modo
+            const route = isEditMode ? "admin/update-clan" : "admin/create-clan";
+            
+            fetch("?route=" + route, {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    closeClanModal();
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    alert(data.message || "Error al procesar la solicitud");
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("Error de conexión");
+            })
+            .finally(() => {
+                submitBtn.disabled = false;
+                submitText.style.display = "inline";
+                submitLoader.style.display = "none";
+            });
+        });
+    }
+
+    // Cerrar modales al hacer clic fuera
+    window.onclick = function(event) {
+        const clanModal = document.getElementById("clanModal");
+        const membersModal = document.getElementById("membersModal");
+        const detailsModal = document.getElementById("clanDetailsModal");
+        
+        if (event.target === clanModal) {
+            closeClanModal();
+        }
+        
+        if (event.target === membersModal) {
+            closeMembersModal();
+        }
+        
+        if (event.target === detailsModal) {
+            closeClanDetailsModal();
+        }
+    };
+});
+</script>
 
 <style>
 /* Estilos específicos para gestión de clanes */
@@ -1323,568 +1666,10 @@ ob_start();
 }
 </style>
 
-<script>
-// JavaScript para gestión de clanes
-let currentClanId = null;
-let isEditMode = false;
-
-function openCreateClanModal() {
-    isEditMode = false;
-    currentClanId = null;
-    document.getElementById('modalTitle').textContent = 'Crear Clan';
-    document.getElementById('submitText').textContent = 'Crear Clan';
-    document.getElementById('clanForm').reset();
-    document.getElementById('clanId').value = '';
-    document.getElementById('clanModal').style.display = 'block';
-}
-
-function closeClanModal() {
-    document.getElementById('clanModal').style.display = 'none';
-    clearErrors();
-    
-    // Limpiar formulario y resetear modo
-    document.getElementById('clanForm').reset();
-    document.getElementById('modalTitle').textContent = 'Crear Clan';
-    document.getElementById('submitText').textContent = 'Crear Clan';
-    isEditMode = false;
-    currentClanId = null;
-}
-
-function editClan(clanId) {
-    isEditMode = true;
-    currentClanId = clanId;
-    document.getElementById('modalTitle').textContent = 'Editar Clan';
-    document.getElementById('submitText').textContent = 'Actualizar Clan';
-    document.getElementById('clanId').value = clanId;
-    
-    // Cargar datos del clan desde el backend
-    fetch(`?route=admin/clan-details&clanId=${clanId}`, {
-        method: 'GET',
-        credentials: 'same-origin'
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            const clan = data.clan;
-            document.getElementById('clanName').value = clan.clan_name;
-            document.getElementById('clanDepartamento').value = clan.clan_departamento || '';
-            document.getElementById('clanModal').style.display = 'block';
-        } else {
-            showToast('Error al cargar datos del clan', 'error');
-        }
-    })
-    .catch(error => {
-        showToast('Error de conexión al cargar datos del clan', 'error');
-    });
-}
-
-function deleteClan(clanId) {
-    if (confirm('¿Estás seguro de que quieres eliminar este clan?\n\nSi el clan tiene proyectos asociados no podrá ser eliminado.\n\nEsta acción no se puede deshacer.')) {
-        const formData = new FormData();
-        formData.append('clanId', clanId);
-        
-        // Mostrar spinner o loading state
-        showToast('Eliminando clan...', 'info');
-        
-        fetch('?route=admin/delete-clan', {
-            method: 'POST',
-            credentials: 'same-origin',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showToast(data.message, 'success');
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1500);
-            } else {
-                showToast(data.message, 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showToast('Error de conexión al eliminar clan', 'error');
-        });
-    }
-}
-
-// Variables globales para el modal de detalles
-let currentDetailsClanId = null;
-let currentDetailsClanName = null;
-
-function viewClanDetails(clanId) {
-    currentDetailsClanId = clanId;
-    
-    // Mostrar modal primero
-    const modal = document.getElementById('clanDetailsModal');
-    if (!modal) {
-        showToast('Error: Modal no disponible', 'error');
-        return;
-    }
-    modal.style.display = 'block';
-    
-    // Pequeña pausa para asegurar que el DOM esté renderizado
-    setTimeout(() => {
-        // Mostrar loading state
-        showLoadingState();
-        
-        // Cargar datos del clan
-        fetch(`?route=admin/clan-details&clanId=${clanId}`, {
-            method: 'GET',
-            credentials: 'same-origin'
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    populateClanDetails(data.clan);
-                } else {
-                    hideLoadingState();
-                    showToast(data.message || 'Error al cargar detalles del clan', 'error');
-                    closeClanDetailsModal();
-                }
-            })
-            .catch(error => {
-                hideLoadingState();
-                showToast('Error de conexión al cargar detalles', 'error');
-                closeClanDetailsModal();
-            });
-    }, 100); // 100ms de pausa para renderizado del DOM
-}
-
-function closeClanDetailsModal() {
-    document.getElementById('clanDetailsModal').style.display = 'none';
-    currentDetailsClanId = null;
-    currentDetailsClanName = null;
-}
-
-function showLoadingState() {
-    const detailsContainer = document.querySelector('.details-container');
-    if (!detailsContainer) {
-        return;
-    }
-    
-    // No sobrescribir el contenido, solo agregar overlay de loading
-    const loadingOverlay = document.createElement('div');
-    loadingOverlay.className = 'loading-overlay';
-    loadingOverlay.innerHTML = `
-        <div class="loading-details">
-            <i class="fas fa-spinner"></i>
-            Cargando detalles del clan...
-        </div>
-    `;
-    
-    // Remover overlay anterior si existe
-    const existingOverlay = detailsContainer.querySelector('.loading-overlay');
-    if (existingOverlay) {
-        existingOverlay.remove();
-    }
-    
-    // Agregar nuevo overlay
-    detailsContainer.appendChild(loadingOverlay);
-}
-
-function hideLoadingState() {
-    const detailsContainer = document.querySelector('.details-container');
-    if (detailsContainer) {
-        const loadingOverlay = detailsContainer.querySelector('.loading-overlay');
-        if (loadingOverlay) {
-            loadingOverlay.remove();
-        }
-    }
-}
-
-function populateClanDetails(clanData) {
-    // Primero ocultar el loading state
-    hideLoadingState();
-    
-    currentDetailsClanName = clanData.clan_name;
-    
-    // Función auxiliar para actualizar elemento si existe
-    function updateElement(id, value) {
-        const element = document.getElementById(id);
-        if (element) {
-            element.textContent = value;
-        }
-    }
-    
-    // Función auxiliar para actualizar innerHTML si existe
-    function updateElementHTML(id, value) {
-        const element = document.getElementById(id);
-        if (element) {
-            element.innerHTML = value;
-        }
-    }
-    
-    // Información general
-    updateElement('detailClanName', clanData.clan_name);
-    updateElement('detailClanId', clanData.clan_id);
-    updateElement('detailCreatedAt', formatDate(clanData.created_at));
-    updateElement('detailClanDepartamento', clanData.clan_departamento || 'Sin departamento');
-    updateElement('detailMemberCount', `${clanData.members.length} miembro${clanData.members.length !== 1 ? 's' : ''}`);
-    updateElement('detailProjectCount', `${clanData.projects.length} proyecto${clanData.projects.length !== 1 ? 's' : ''}`);
-    
-    // Estadísticas
-    const activeMembersCount = clanData.members.filter(m => m.is_active).length;
-    updateElement('statActiveMembersCount', activeMembersCount);
-    updateElement('statActiveProjectsCount', clanData.projects.length);
-    
-    // Calcular días desde creación
-    const createdDate = new Date(clanData.created_at);
-    const today = new Date();
-    const daysDiff = Math.floor((today - createdDate) / (1000 * 60 * 60 * 24));
-    updateElement('statDaysOld', daysDiff);
-    
-    // Mostrar miembros
-    renderMembers(clanData.members);
-    
-    // Mostrar proyectos
-    renderProjects(clanData.projects);
-    
-    // Actualizar el título del modal
-    updateElementHTML('detailsModalTitle', `
-        <i class="fas fa-info-circle"></i>
-        Detalles del Clan: ${escapeHtml(clanData.clan_name)}
-    `);
-}
-
-function renderMembers(members) {
-    const membersContainer = document.getElementById('detailsMembers');
-    
-    if (!membersContainer) {
-        return;
-    }
-    
-    if (members.length === 0) {
-        membersContainer.innerHTML = `
-            <div class="empty-data">
-                <i class="fas fa-users"></i>
-                <p>No hay miembros asignados a este clan</p>
-            </div>
-        `;
-        return;
-    }
-    
-    membersContainer.innerHTML = members.map(member => `
-        <div class="member-card">
-            <div class="member-header">
-                <div class="member-avatar-details">
-                    ${(member.full_name || member.username).charAt(0).toUpperCase()}
-                </div>
-                <div class="member-info-details">
-                    <div class="member-name-details">${escapeHtml(member.full_name || member.username)}</div>
-                    <div class="member-email-details">${escapeHtml(member.email)}</div>
-                    ${member.role_name ? `<div class="member-role-details">${escapeHtml(member.role_name)}</div>` : ''}
-                </div>
-            </div>
-        </div>
-    `).join('');
-}
-
-function renderProjects(projects) {
-    const projectsContainer = document.getElementById('detailsProjects');
-    
-    if (!projectsContainer) {
-        return;
-    }
-    
-    if (projects.length === 0) {
-        projectsContainer.innerHTML = `
-            <div class="empty-data">
-                <i class="fas fa-project-diagram"></i>
-                <p>No hay proyectos asociados a este clan</p>
-            </div>
-        `;
-        return;
-    }
-    
-    projectsContainer.innerHTML = projects.map(project => `
-        <div class="project-card">
-            <div class="project-name">${escapeHtml(project.project_name)}</div>
-            <div class="project-description">
-                ${project.description ? escapeHtml(project.description) : 'Sin descripción'}
-            </div>
-            <div class="project-meta">
-                <span>Creado: ${formatDate(project.created_at)}</span>
-                <span>ID: ${project.project_id}</span>
-            </div>
-        </div>
-    `).join('');
-}
-
-function formatDate(dateString) {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-    });
-}
-
-function manageClanMembers(clanId) {
-    currentClanId = clanId;
-    document.getElementById('membersModalTitle').textContent = 'Gestionar Miembros del Clan';
-    loadClanMembers(clanId);
-    document.getElementById('membersModal').style.display = 'block';
-}
-
-function closeMembersModal() {
-    document.getElementById('membersModal').style.display = 'none';
-    currentClanId = null;
-}
-
-function loadClanMembers(clanId) {
-    const membersList = document.getElementById('currentMembers');
-    const memberCount = document.getElementById('memberCount');
-    
-    // Mostrar loading state
-    membersList.innerHTML = '<div class="loading-state"><i class="fas fa-spinner fa-spin"></i> Cargando miembros...</div>';
-    
-            fetch(`?route=admin/clan-members&clanId=${clanId}`, {
-            method: 'GET',
-            credentials: 'same-origin'
-        })
-            .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                const members = data.members;
-                memberCount.textContent = `${members.length} miembro${members.length !== 1 ? 's' : ''}`;
-                
-                if (members.length === 0) {
-                    membersList.innerHTML = '<div class="empty-members">No hay miembros asignados a este clan</div>';
-                } else {
-                    membersList.innerHTML = members.map(member => `
-                        <div class="member-item">
-                            <div class="member-info">
-                                <div class="member-avatar">
-                                    ${(member.full_name || member.username).charAt(0).toUpperCase()}
-                                </div>
-                                <div class="member-details">
-                                    <div class="member-name">${escapeHtml(member.full_name || member.username)}</div>
-                                    <div class="member-email">${escapeHtml(member.email)}</div>
-                                    ${member.role_name ? `<div class="member-role">${escapeHtml(member.role_name)}</div>` : ''}
-                                </div>
-                            </div>
-                            <button class="btn-remove" onclick="removeMemberFromClan(${member.user_id})">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                    `).join('');
-                }
-                
-                // Actualizar el select de usuarios para excluir miembros actuales
-                updateUserSelect(members);
-            } else {
-                membersList.innerHTML = '<div class="error-state">Error al cargar miembros</div>';
-                showToast(data.message || 'Error al cargar miembros', 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            membersList.innerHTML = '<div class="error-state">Error de conexión</div>';
-            showToast('Error de conexión al cargar miembros', 'error');
-        });
-}
-
-function addMemberToClan() {
-    const userSelect = document.getElementById('userSelect');
-    const userId = userSelect.value;
-    
-    if (!userId) {
-        showToast('Selecciona un usuario para agregar', 'warning');
-        return;
-    }
-    
-    if (!currentClanId) {
-        showToast('Error: No se ha seleccionado un clan', 'error');
-        return;
-    }
-    
-    const formData = new FormData();
-    formData.append('clanId', currentClanId);
-    formData.append('userId', userId);
-    
-    showToast('Agregando miembro...', 'info');
-    
-    fetch('?route=admin/add-clan-member', {
-        method: 'POST',
-        credentials: 'same-origin',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showToast(data.message, 'success');
-            // Recargar la lista de miembros
-            loadClanMembers(currentClanId);
-            // Limpiar la selección
-            userSelect.value = '';
-        } else {
-            showToast(data.message, 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showToast('Error de conexión al agregar miembro', 'error');
-    });
-}
-
-function removeMemberFromClan(userId) {
-    if (confirm('¿Quieres quitar este miembro del clan?')) {
-        const formData = new FormData();
-        formData.append('clanId', currentClanId);
-        formData.append('userId', userId);
-        
-        showToast('Removiendo miembro...', 'info');
-        
-        fetch('?route=admin/remove-clan-member', {
-            method: 'POST',
-            credentials: 'same-origin',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showToast(data.message, 'success');
-                // Recargar la lista de miembros
-                loadClanMembers(currentClanId);
-            } else {
-                showToast(data.message, 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showToast('Error de conexión al remover miembro', 'error');
-        });
-    }
-}
-
-
-
-// Manejar envío del formulario de clan
-document.getElementById('clanForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const submitBtn = document.getElementById('submitBtn');
-    const submitText = document.getElementById('submitText');
-    const submitLoader = document.getElementById('submitLoader');
-    
-    // Mostrar loader
-    submitBtn.disabled = true;
-    submitText.style.display = 'none';
-    submitLoader.style.display = 'inline-block';
-    
-    const formData = new FormData(this);
-    
-    // Determinar la ruta según el modo
-    const route = isEditMode ? 'admin/update-clan' : 'admin/create-clan';
-    
-    fetch(`?route=${route}`, {
-        method: 'POST',
-        credentials: 'same-origin',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showToast(data.message, 'success');
-            closeClanModal();
-            setTimeout(() => {
-                window.location.reload();
-            }, 1500);
-        } else {
-            showToast(data.message, 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showToast('Error de conexión', 'error');
-    })
-    .finally(() => {
-        submitBtn.disabled = false;
-        submitText.style.display = 'inline';
-        submitLoader.style.display = 'none';
-    });
-});
-
-function clearErrors() {
-    const errorElements = document.querySelectorAll('.error-message');
-    errorElements.forEach(element => {
-        element.classList.remove('show');
-        element.textContent = '';
-    });
-}
-
-// Función auxiliar para escapar HTML
-function escapeHtml(text) {
-    const map = {
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#039;'
-    };
-    return text.replace(/[&<>"']/g, function(m) { return map[m]; });
-}
-
-// Función para actualizar el select de usuarios excluyendo miembros actuales
-function updateUserSelect(currentMembers) {
-    const userSelect = document.getElementById('userSelect');
-    const currentMemberIds = currentMembers.map(member => member.user_id.toString());
-    
-    // Obtener todas las opciones del select
-    const options = userSelect.querySelectorAll('option');
-    
-    options.forEach(option => {
-        if (option.value === '') return; // Mantener la opción vacía
-        
-        if (currentMemberIds.includes(option.value)) {
-            option.style.display = 'none';
-            option.disabled = true;
-        } else {
-            option.style.display = 'block';
-            option.disabled = false;
-        }
-    });
-    
-    // Si la opción actualmente seleccionada está deshabilitada, limpiar selección
-    if (userSelect.value && currentMemberIds.includes(userSelect.value)) {
-        userSelect.value = '';
-    }
-}
-
-// Cerrar modales al hacer clic fuera
-window.onclick = function(event) {
-    const clanModal = document.getElementById('clanModal');
-    const membersModal = document.getElementById('membersModal');
-    const detailsModal = document.getElementById('clanDetailsModal');
-    
-    if (event.target === clanModal) {
-        closeClanModal();
-    }
-    
-    if (event.target === membersModal) {
-        closeMembersModal();
-    }
-    
-    if (event.target === detailsModal) {
-        closeClanDetailsModal();
-    }
-}
-</script>
-
 <?php
 // Guardar el contenido en una variable
 $content = ob_get_clean();
 
-// Configurar variables para el layout
-$title = 'Gestión de Clanes - ' . APP_NAME;
-
 // Incluir el layout del admin
 include __DIR__ . '/layout.php';
-?>
+?> 

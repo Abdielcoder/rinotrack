@@ -27,23 +27,22 @@
         const APP_URL = '<?php echo APP_URL; ?>';
     </script>
     
-    <?php if (isset($additionalJS)): ?>
-        <?php foreach ($additionalJS as $js): ?>
-            <script src="<?php echo $js; ?>"></script>
-        <?php endforeach; ?>
-    <?php endif; ?>
-</head>
-<body>
-    <?php echo $content ?? ''; ?>
-    
     <!-- JavaScript con rutas absolutas -->
     <script src="<?php echo APP_URL; ?>assets/js/script.js"></script>
     
     <?php if (isset($additionalJS)): ?>
         <?php foreach ($additionalJS as $js): ?>
-            <script src="<?php echo $js; ?>"></script>
+            <?php if (strpos($js, '<script>') === 0): ?>
+                <!-- Including inline JS -->
+                <?php echo $js; ?>
+            <?php else: ?>
+                <!-- Including external JS: <?php echo htmlspecialchars($js); ?> -->
+                <script src="<?php echo $js; ?>"></script>
+            <?php endif; ?>
         <?php endforeach; ?>
     <?php endif; ?>
-</body>
+</head>
+<body>
+    <?php echo $content ?? ''; ?>
 </body>
 </html>

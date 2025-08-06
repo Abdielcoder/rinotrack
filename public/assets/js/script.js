@@ -1,3 +1,50 @@
+// Función global para mostrar notificaciones toast
+window.showToast = function(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.textContent = message;
+    toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: var(--bg-primary);
+        border: 1px solid var(--bg-accent);
+        border-radius: var(--radius-md);
+        padding: var(--spacing-md) var(--spacing-lg);
+        box-shadow: var(--shadow-lg);
+        z-index: 10000;
+        transform: translateX(100%);
+        transition: transform 0.3s ease;
+        max-width: 300px;
+        color: var(--text-primary);
+    `;
+    
+    if (type === 'success') {
+        toast.style.borderLeftColor = 'var(--success)';
+        toast.style.borderLeftWidth = '4px';
+    } else if (type === 'error') {
+        toast.style.borderLeftColor = 'var(--error)';
+        toast.style.borderLeftWidth = '4px';
+    } else if (type === 'warning') {
+        toast.style.borderLeftColor = 'var(--warning)';
+        toast.style.borderLeftWidth = '4px';
+    } else if (type === 'info') {
+        toast.style.borderLeftColor = 'var(--info)';
+        toast.style.borderLeftWidth = '4px';
+    }
+    
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.transform = 'translateX(0)';
+    }, 10);
+    
+    setTimeout(() => {
+        toast.style.transform = 'translateX(100%)';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+};
+
 // Esperar a que el DOM esté completamente cargado
 document.addEventListener('DOMContentLoaded', function() {
     
@@ -354,44 +401,147 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // === NOTIFICACIONES TOAST ===
-    window.showToast = function(message, type = 'info') {
-        const toast = document.createElement('div');
-        toast.className = `toast toast-${type}`;
-        toast.textContent = message;
-        toast.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: var(--bg-primary);
-            border: 1px solid var(--bg-accent);
-            border-radius: var(--radius-md);
-            padding: var(--spacing-md) var(--spacing-lg);
-            box-shadow: var(--shadow-lg);
-            z-index: 10000;
-            transform: translateX(100%);
-            transition: transform 0.3s ease;
-            max-width: 300px;
-            color: var(--text-primary);
-        `;
-        
-        if (type === 'success') {
-            toast.style.borderLeftColor = 'var(--success)';
-            toast.style.borderLeftWidth = '4px';
-        } else if (type === 'error') {
-            toast.style.borderLeftColor = 'var(--error)';
-            toast.style.borderLeftWidth = '4px';
-        }
-        
-        document.body.appendChild(toast);
-        
-        setTimeout(() => {
-            toast.style.transform = 'translateX(0)';
-        }, 10);
-        
-        setTimeout(() => {
-            toast.style.transform = 'translateX(100%)';
-            setTimeout(() => toast.remove(), 300);
-        }, 3000);
-    };
+
 }); 
+
+/* ===== SISTEMA DE MODALES DE CONFIRMACIÓN ===== */
+
+// Función global para mostrar modales de confirmación personalizados
+window.showConfirmationModal = function(options) {
+    const {
+        title = 'Confirmar Acción',
+        message = '¿Estás seguro de que quieres realizar esta acción?',
+        icon = 'warning',
+        confirmText = 'Confirmar',
+        cancelText = 'Cancelar',
+        onConfirm = null,
+        onCancel = null,
+        type = 'warning' // warning, info, success
+    } = options;
+
+    // Crear el HTML del modal
+    const modalHTML = `
+        <div class="confirmation-modal-overlay" id="confirmationModalOverlay">
+            <div class="confirmation-modal" id="confirmationModal">
+                <div class="confirmation-modal-header">
+                    <h3 class="confirmation-modal-title">${title}</h3>
+                </div>
+                <div class="confirmation-modal-body">
+                    <i class="fas fa-${getIconForType(type)} confirmation-modal-icon ${type}"></i>
+                    <p class="confirmation-modal-message">${message}</p>
+                    <div class="confirmation-modal-actions">
+                        <button class="confirmation-modal-btn cancel" id="confirmationCancelBtn">
+                            ${cancelText}
+                        </button>
+                        <button class="confirmation-modal-btn confirm" id="confirmationConfirmBtn">
+                            ${confirmText}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Agregar el modal al DOM
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+    const overlay = document.getElementById('confirmationModalOverlay');
+    const modal = document.getElementById('confirmationModal');
+    const confirmBtn = document.getElementById('confirmationConfirmBtn');
+    const cancelBtn = document.getElementById('confirmationCancelBtn');
+
+    // Mostrar el modal con animación
+    setTimeout(() => {
+        overlay.classList.add('show');
+    }, 10);
+
+    // Función para cerrar el modal
+    const closeModal = (result) => {
+        overlay.classList.remove('show');
+        setTimeout(() => {
+            document.body.removeChild(overlay);
+            if (result && onConfirm) {
+                onConfirm();
+            } else if (!result && onCancel) {
+                onCancel();
+            }
+        }, 300);
+    };
+
+    // Event listeners
+    confirmBtn.addEventListener('click', () => closeModal(true));
+    cancelBtn.addEventListener('click', () => closeModal(false));
+    
+    // Cerrar al hacer clic en el overlay
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+            closeModal(false);
+        }
+    });
+
+    // Cerrar con Escape
+    const handleEscape = (e) => {
+        if (e.key === 'Escape') {
+            closeModal(false);
+            document.removeEventListener('keydown', handleEscape);
+        }
+    };
+    document.addEventListener('keydown', handleEscape);
+
+    // Enfocar el botón de cancelar por defecto
+    cancelBtn.focus();
+};
+
+// Función para obtener el icono según el tipo
+function getIconForType(type) {
+    const icons = {
+        warning: 'exclamation-triangle',
+        info: 'info-circle',
+        success: 'check-circle',
+        danger: 'times-circle',
+        question: 'question-circle'
+    };
+    return icons[type] || 'exclamation-triangle';
+}
+
+// Función de conveniencia para confirmaciones de eliminación
+window.confirmDelete = function(message, onConfirm, onCancel = null) {
+    showConfirmationModal({
+        title: 'Confirmar Eliminación',
+        message: message,
+        icon: 'warning',
+        confirmText: 'Eliminar',
+        cancelText: 'Cancelar',
+        type: 'warning',
+        onConfirm: onConfirm,
+        onCancel: onCancel
+    });
+};
+
+// Función de conveniencia para confirmaciones de información
+window.confirmInfo = function(message, onConfirm, onCancel = null) {
+    showConfirmationModal({
+        title: 'Información',
+        message: message,
+        icon: 'info',
+        confirmText: 'Aceptar',
+        cancelText: 'Cancelar',
+        type: 'info',
+        onConfirm: onConfirm,
+        onCancel: onCancel
+    });
+};
+
+// Función de conveniencia para confirmaciones de éxito
+window.confirmSuccess = function(message, onConfirm, onCancel = null) {
+    showConfirmationModal({
+        title: 'Éxito',
+        message: message,
+        icon: 'check',
+        confirmText: 'Continuar',
+        cancelText: 'Cancelar',
+        type: 'success',
+        onConfirm: onConfirm,
+        onCancel: onCancel
+    });
+}; 

@@ -594,4 +594,68 @@ class Project {
             return [];
         }
     }
+    
+    /**
+     * Obtener proyectos sin KPI asignado por clan
+     */
+    public function getProjectsWithoutKPIByClan($clanId) {
+        try {
+            $stmt = $this->db->prepare("
+                SELECT 
+                    p.*,
+                    c.clan_name,
+                    u.full_name as created_by_name
+                FROM Projects p
+                LEFT JOIN Clans c ON p.clan_id = c.clan_id
+                LEFT JOIN Users u ON p.created_by_user_id = u.user_id
+                WHERE (p.kpi_quarter_id IS NULL OR p.kpi_points = 0) AND p.clan_id = ?
+                ORDER BY p.created_at DESC
+            ");
+            $stmt->execute([$clanId]);
+            return $stmt->fetchAll();
+        } catch (PDOException $e) {
+            error_log("Error al obtener proyectos sin KPI por clan: " . $e->getMessage());
+            return [];
+        }
+    }
+    
+    /**
+     * Obtener estadísticas de proyectos por clan
+     */
+    public function getStatsByClan($clanId) {
+        try {
+            $stmt = $this->db->prepare("
+                SELECT 
+                    COUNT(*) as total_projects,
+                    SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) as active_projects,
+                    SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_projects,
+                    SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_projects,
+                    SUM(CASE WHEN kpi_quarter_id IS NOT NULL AND kpi_points > 0 THEN 1 ELSE 0 END) as kpi_projects,
+                    COALESCE(SUM(kpi_points), 0) as total_kpi_points
+                FROM Projects 
+                WHERE clan_id = ?
+            ");
+            $stmt->execute([$clanId]);
+            $result = $stmt->fetch();
+            
+            return [
+                'total_projects' => (int)($result['total_projects'] ?? 0),
+                'active_projects' => (int)($result['active_projects'] ?? 0),
+                'completed_projects' => (int)($result['completed_projects'] ?? 0),
+                'pending_projects' => (int)($result['pending_projects'] ?? 0),
+                'kpi_projects' => (int)($result['kpi_projects'] ?? 0),
+                'total_kpi_points' => (int)($result['total_kpi_points'] ?? 0)
+            ];
+        } catch (PDOException $e) {
+            error_log("Error al obtener estadísticas de proyectos por clan: " . $e->getMessage());
+            return [
+                'total_projects' => 0,
+                'active_projects' => 0,
+                'completed_projects' => 0,
+                'pending_projects' => 0,
+                'kpi_projects' => 0,
+                'total_kpi_points' => 0
+            ];
+        }
+    }
 }

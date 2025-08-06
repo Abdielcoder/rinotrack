@@ -223,7 +223,7 @@ ob_start();
                     Puntos Totales
                 </label>
                 <input type="number" id="totalPoints" name="total_points" 
-                       value="1000" min="100" max="10000" step="100" required 
+                       value="1000" min="100" max="100000" step="100" required 
                        placeholder="Ej: 1000">
                 <small class="form-help">Cantidad total de puntos disponibles para asignar en este trimestre</small>
             </div>

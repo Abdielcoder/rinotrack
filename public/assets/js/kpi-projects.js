@@ -85,7 +85,13 @@ function updateAvailablePoints() {
 // Cambiar modo de distribución
 function toggleDistributionMode(projectId, currentMode) {
     const newMode = currentMode === 'automatic' ? 'percentage' : 'automatic';
-    if (confirm(`¿Quieres cambiar el modo de distribución a "${newMode}"?`)) {
+            showConfirmationModal({
+            title: 'Confirmar Cambio de Modo',
+            message: `¿Quieres cambiar el modo de distribución a "${newMode}"?`,
+            type: 'warning',
+            confirmText: 'Cambiar',
+            cancelText: 'Cancelar',
+            onConfirm: () => {
         const formData = new FormData();
         formData.append('project_id', projectId);
         formData.append('mode', newMode);

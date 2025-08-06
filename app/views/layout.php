@@ -13,15 +13,48 @@
             <link rel="stylesheet" href="<?php echo $css; ?>">
         <?php endforeach; ?>
     <?php endif; ?>
+    
+    <!-- JavaScript crítico en el head -->
+    <?php if (isset($additionalJS)): ?>
+        <?php foreach ($additionalJS as $js): ?>
+            <?php echo $js; ?>
+        <?php endforeach; ?>
+    <?php endif; ?>
+    
+    <!-- Script de emergencia para deleteClan -->
+    <script>
+    // Función deleteClan de emergencia - disponible globalmente
+    window.deleteClan = function(clanId) {
+        if (confirm("¿Estás seguro de que quieres eliminar este clan? Esta acción no se puede deshacer.")) {
+            const formData = new FormData();
+            formData.append("clanId", clanId);
+            
+            fetch("?route=admin/delete-clan", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert("Clan eliminado exitosamente");
+                    location.reload();
+                } else {
+                    alert(data.message || "Error al eliminar el clan");
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("Error de conexión al eliminar el clan");
+            });
+        }
+    };
+    
+    console.log("✅ Función deleteClan cargada desde layout global");
+    </script>
 </head>
 <body>
     <?php echo $content ?? ''; ?>
     
     <script src="<?php echo Utils::asset('assets/js/script.js'); ?>"></script>
-    <?php if (isset($additionalJS)): ?>
-        <?php foreach ($additionalJS as $js): ?>
-            <script src="<?php echo $js; ?>"></script>
-        <?php endforeach; ?>
-    <?php endif; ?>
 </body>
 </html>

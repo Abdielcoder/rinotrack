@@ -11,9 +11,22 @@ class AuthController {
      * Mostrar página de login
      */
     public function showLogin() {
-        // Si ya está logueado, redirigir al dashboard
+        // Si ya está logueado, redirigir según su rol
         if ($this->auth->isLoggedIn()) {
-            Utils::redirect('dashboard');
+            $currentUser = $this->auth->getCurrentUser();
+            $roleModel = new Role();
+            
+            // Si es super administrador o administrador, redirigir al panel de administración
+            if ($roleModel->userHasRole($currentUser['user_id'], Role::SUPER_ADMIN) || 
+                $roleModel->userHasRole($currentUser['user_id'], Role::ADMIN)) {
+                Utils::redirect('admin');
+            }
+            // Si es líder de clan, redirigir al dashboard del clan leader
+            elseif ($roleModel->userHasRole($currentUser['user_id'], Role::LIDER_CLAN)) {
+                Utils::redirect('clan_leader');
+            } else {
+                Utils::redirect('dashboard');
+            }
         }
         
         // Cargar vista de login
@@ -31,10 +44,24 @@ class AuthController {
         
         // Verificar si ya está logueado
         if ($this->auth->isLoggedIn()) {
+            $currentUser = $this->auth->getCurrentUser();
+            $roleModel = new Role();
+            $redirectUrl = 'dashboard'; // Por defecto
+            
+            // Si es super administrador o administrador, redirigir al panel de administración
+            if ($roleModel->userHasRole($currentUser['user_id'], Role::SUPER_ADMIN) || 
+                $roleModel->userHasRole($currentUser['user_id'], Role::ADMIN)) {
+                $redirectUrl = 'admin';
+            }
+            // Si es líder de clan, redirigir al dashboard del clan leader
+            elseif ($roleModel->userHasRole($currentUser['user_id'], Role::LIDER_CLAN)) {
+                $redirectUrl = 'clan_leader';
+            }
+            
             Utils::jsonResponse([
                 'success' => true,
                 'message' => 'Ya tienes una sesión activa',
-                'redirect' => 'dashboard'
+                'redirect' => $redirectUrl
             ]);
         }
         
@@ -97,9 +124,23 @@ class AuthController {
             // Login exitoso
             $this->auth->logLoginAttempt($username, true, $ipAddress);
             
+            // Determinar la redirección basada en el rol del usuario
+            $roleModel = new Role();
+            $redirectUrl = 'dashboard'; // Por defecto
+            
+            // Si es super administrador o administrador, redirigir al panel de administración
+            if ($roleModel->userHasRole($user['user_id'], Role::SUPER_ADMIN) || 
+                $roleModel->userHasRole($user['user_id'], Role::ADMIN)) {
+                $redirectUrl = 'admin';
+            }
+            // Si es líder de clan, redirigir al dashboard del clan leader
+            elseif ($roleModel->userHasRole($user['user_id'], Role::LIDER_CLAN)) {
+                $redirectUrl = 'clan_leader';
+            }
+            
             $response['success'] = true;
             $response['message'] = '¡Bienvenido, ' . Utils::escape($user['full_name'] ?: $user['username']) . '!';
-            $response['redirect'] = 'dashboard';
+            $response['redirect'] = $redirectUrl;
             
             Utils::jsonResponse($response);
         } else {
