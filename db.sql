@@ -1198,8 +1198,149 @@ ALTER TABLE `User_Roles`
   ADD KEY `role_id` (`role_id`);
 
 --
+-- Indices de la tabla `Gamification_Badges`
+--
+ALTER TABLE `Gamification_Badges`
+  ADD PRIMARY KEY (`badge_id`),
+  ADD KEY `idx_badge_category` (`badge_category`),
+  ADD KEY `idx_is_active` (`is_active`);
+
+--
+-- Indices de la tabla `Gamification_User_Badges`
+--
+ALTER TABLE `Gamification_User_Badges`
+  ADD PRIMARY KEY (`user_badge_id`),
+  ADD UNIQUE KEY `unique_user_badge` (`user_id`,`badge_id`),
+  ADD KEY `idx_user_id` (`user_id`),
+  ADD KEY `idx_badge_id` (`badge_id`),
+  ADD KEY `idx_earned_at` (`earned_at`);
+
+--
+-- Indices de la tabla `Gamification_User_Points`
+--
+ALTER TABLE `Gamification_User_Points`
+  ADD PRIMARY KEY (`user_points_id`),
+  ADD KEY `idx_user_id` (`user_id`),
+  ADD KEY `idx_points_type` (`points_type`),
+  ADD KEY `idx_earned_at` (`earned_at`),
+  ADD KEY `idx_source` (`source`);
+
+--
+-- Indices de la tabla `Gamification_Clan_Achievements`
+--
+ALTER TABLE `Gamification_Clan_Achievements`
+  ADD PRIMARY KEY (`clan_achievement_id`),
+  ADD KEY `idx_clan_id` (`clan_id`),
+  ADD KEY `idx_achievement_category` (`achievement_category`),
+  ADD KEY `idx_is_active` (`is_active`);
+
+--
+-- Indices de la tabla `Gamification_Clan_Progress`
+--
+ALTER TABLE `Gamification_Clan_Progress`
+  ADD PRIMARY KEY (`clan_progress_id`),
+  ADD UNIQUE KEY `unique_clan_achievement` (`clan_id`,`achievement_id`),
+  ADD KEY `idx_clan_id` (`clan_id`),
+  ADD KEY `idx_achievement_id` (`achievement_id`),
+  ADD KEY `idx_is_completed` (`is_completed`);
+
+--
+-- Indices de la tabla `Gamification_User_Progress`
+--
+ALTER TABLE `Gamification_User_Progress`
+  ADD PRIMARY KEY (`user_progress_id`),
+  ADD UNIQUE KEY `unique_user_badge_progress` (`user_id`,`badge_id`),
+  ADD KEY `idx_user_id` (`user_id`),
+  ADD KEY `idx_badge_id` (`badge_id`),
+  ADD KEY `idx_is_completed` (`is_completed`);
+
+--
+-- Indices de la tabla `Gamification_Leaderboard`
+--
+ALTER TABLE `Gamification_Leaderboard`
+  ADD PRIMARY KEY (`leaderboard_id`),
+  ADD UNIQUE KEY `unique_user_leaderboard` (`user_id`),
+  ADD KEY `idx_clan_id` (`clan_id`),
+  ADD KEY `idx_total_points` (`total_points`),
+  ADD KEY `idx_rank_position` (`rank_position`);
+
+--
+-- Indices de la tabla `Gamification_Events`
+--
+ALTER TABLE `Gamification_Events`
+  ADD PRIMARY KEY (`event_id`),
+  ADD KEY `idx_event_type` (`event_type`),
+  ADD KEY `idx_start_date` (`start_date`),
+  ADD KEY `idx_end_date` (`end_date`),
+  ADD KEY `idx_is_active` (`is_active`);
+
+--
+-- Indices de la tabla `Gamification_Event_Participants`
+--
+ALTER TABLE `Gamification_Event_Participants`
+  ADD PRIMARY KEY (`event_participant_id`),
+  ADD KEY `idx_event_id` (`event_id`),
+  ADD KEY `idx_user_id` (`user_id`),
+  ADD KEY `idx_clan_id` (`clan_id`),
+  ADD KEY `idx_rank_position` (`rank_position`);
+
+--
 -- AUTO_INCREMENT de las tablas volcadas
 --
+
+--
+-- AUTO_INCREMENT de la tabla `Gamification_Badges`
+--
+ALTER TABLE `Gamification_Badges`
+  MODIFY `badge_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+
+--
+-- AUTO_INCREMENT de la tabla `Gamification_User_Badges`
+--
+ALTER TABLE `Gamification_User_Badges`
+  MODIFY `user_badge_id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `Gamification_User_Points`
+--
+ALTER TABLE `Gamification_User_Points`
+  MODIFY `user_points_id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `Gamification_Clan_Achievements`
+--
+ALTER TABLE `Gamification_Clan_Achievements`
+  MODIFY `clan_achievement_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+
+--
+-- AUTO_INCREMENT de la tabla `Gamification_Clan_Progress`
+--
+ALTER TABLE `Gamification_Clan_Progress`
+  MODIFY `clan_progress_id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `Gamification_User_Progress`
+--
+ALTER TABLE `Gamification_User_Progress`
+  MODIFY `user_progress_id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `Gamification_Leaderboard`
+--
+ALTER TABLE `Gamification_Leaderboard`
+  MODIFY `leaderboard_id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `Gamification_Events`
+--
+ALTER TABLE `Gamification_Events`
+  MODIFY `event_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT de la tabla `Gamification_Event_Participants`
+--
+ALTER TABLE `Gamification_Event_Participants`
+  MODIFY `event_participant_id` int NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT de la tabla `Clans`
@@ -1408,8 +1549,253 @@ ALTER TABLE `Task_Label_Assignments`
 ALTER TABLE `User_Roles`
   ADD CONSTRAINT `user_roles_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `Users` (`user_id`) ON DELETE CASCADE,
   ADD CONSTRAINT `user_roles_ibfk_2` FOREIGN KEY (`role_id`) REFERENCES `Roles` (`role_id`) ON DELETE CASCADE;
+
+--
+-- Filtros para la tabla `Gamification_User_Badges`
+--
+ALTER TABLE `Gamification_User_Badges`
+  ADD CONSTRAINT `fk_user_badges_user` FOREIGN KEY (`user_id`) REFERENCES `Users` (`user_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_user_badges_badge` FOREIGN KEY (`badge_id`) REFERENCES `Gamification_Badges` (`badge_id`) ON DELETE CASCADE;
+
+--
+-- Filtros para la tabla `Gamification_User_Points`
+--
+ALTER TABLE `Gamification_User_Points`
+  ADD CONSTRAINT `fk_user_points_user` FOREIGN KEY (`user_id`) REFERENCES `Users` (`user_id`) ON DELETE CASCADE;
+
+--
+-- Filtros para la tabla `Gamification_Clan_Achievements`
+--
+ALTER TABLE `Gamification_Clan_Achievements`
+  ADD CONSTRAINT `fk_clan_achievements_clan` FOREIGN KEY (`clan_id`) REFERENCES `Clans` (`clan_id`) ON DELETE CASCADE;
+
+--
+-- Filtros para la tabla `Gamification_Clan_Progress`
+--
+ALTER TABLE `Gamification_Clan_Progress`
+  ADD CONSTRAINT `fk_clan_progress_clan` FOREIGN KEY (`clan_id`) REFERENCES `Clans` (`clan_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_clan_progress_achievement` FOREIGN KEY (`achievement_id`) REFERENCES `Gamification_Clan_Achievements` (`clan_achievement_id`) ON DELETE CASCADE;
+
+--
+-- Filtros para la tabla `Gamification_User_Progress`
+--
+ALTER TABLE `Gamification_User_Progress`
+  ADD CONSTRAINT `fk_user_progress_user` FOREIGN KEY (`user_id`) REFERENCES `Users` (`user_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_user_progress_badge` FOREIGN KEY (`badge_id`) REFERENCES `Gamification_Badges` (`badge_id`) ON DELETE CASCADE;
+
+--
+-- Filtros para la tabla `Gamification_Leaderboard`
+--
+ALTER TABLE `Gamification_Leaderboard`
+  ADD CONSTRAINT `fk_leaderboard_user` FOREIGN KEY (`user_id`) REFERENCES `Users` (`user_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_leaderboard_clan` FOREIGN KEY (`clan_id`) REFERENCES `Clans` (`clan_id`) ON DELETE SET NULL;
+
+--
+-- Filtros para la tabla `Gamification_Event_Participants`
+--
+ALTER TABLE `Gamification_Event_Participants`
+  ADD CONSTRAINT `fk_event_participants_event` FOREIGN KEY (`event_id`) REFERENCES `Gamification_Events` (`event_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_event_participants_user` FOREIGN KEY (`user_id`) REFERENCES `Users` (`user_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_event_participants_clan` FOREIGN KEY (`clan_id`) REFERENCES `Clans` (`clan_id`) ON DELETE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `Gamification_Badges`
+--
+
+CREATE TABLE `Gamification_Badges` (
+  `badge_id` int NOT NULL,
+  `badge_name` varchar(100) NOT NULL,
+  `badge_description` text NOT NULL,
+  `badge_icon` varchar(255) DEFAULT NULL,
+  `badge_color` varchar(7) DEFAULT '#3B82F6',
+  `badge_category` enum('task_completion','project_milestone','clan_achievement','time_based','special_event','leadership','collaboration','innovation','quality','speed') NOT NULL,
+  `points_reward` int DEFAULT '0',
+  `required_criteria` json DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Volcado de datos para la tabla `Gamification_Badges`
+--
+
+INSERT INTO `Gamification_Badges` (`badge_id`, `badge_name`, `badge_description`, `badge_icon`, `badge_color`, `badge_category`, `points_reward`, `required_criteria`, `is_active`, `created_at`) VALUES
+(1, 'Héroe del Olimpo', 'Completa 10 tareas en un día', '🏛️', '#FFD700', 'task_completion', 100, '{\"tasks_completed\": 10, \"timeframe\": \"day\"}', 1, '2025-08-07 16:00:00'),
+(2, 'Guerrero de Esparta', 'Completa 50 tareas en total', '⚔️', '#DC2626', 'task_completion', 250, '{\"tasks_completed\": 50, \"timeframe\": \"total\"}', 1, '2025-08-07 16:00:00'),
+(3, 'Arquitecto del Olimpo', 'Completa 5 proyectos exitosamente', '🏗️', '#059669', 'project_milestone', 500, '{\"projects_completed\": 5}', 1, '2025-08-07 16:00:00'),
+(4, 'Líder de Clan', 'Dirige un clan por 30 días consecutivos', '👑', '#7C3AED', 'leadership', 300, '{\"clan_leadership_days\": 30}', 1, '2025-08-07 16:00:00'),
+(5, 'Colaborador Estelar', 'Ayuda a 20 compañeros con sus tareas', '🤝', '#0891B2', 'collaboration', 200, '{\"collaborations\": 20}', 1, '2025-08-07 16:00:00'),
+(6, 'Innovador Prometeo', 'Propone 3 mejoras que se implementan', '🔥', '#EA580C', 'innovation', 400, '{\"implemented_improvements\": 3}', 1, '2025-08-07 16:00:00'),
+(7, 'Velocista de Hermes', 'Completa tareas antes del tiempo estimado', '⚡', '#F59E0B', 'speed', 150, '{\"early_completions\": 10}', 1, '2025-08-07 16:00:00'),
+(8, 'Maestro de la Calidad', 'Recibe 5 evaluaciones perfectas', '⭐', '#10B981', 'quality', 300, '{\"perfect_ratings\": 5}', 1, '2025-08-07 16:00:00'),
+(9, 'Veterano del Olimpo', 'Pertenece al sistema por 100 días', '🏺', '#6B7280', 'time_based', 100, '{\"days_active\": 100}', 1, '2025-08-07 16:00:00'),
+(10, 'Campeón de Clan', 'Tu clan gana el ranking mensual', '🏆', '#DC2626', 'clan_achievement', 600, '{\"clan_ranking\": 1, \"timeframe\": \"month\"}', 1, '2025-08-07 16:00:00');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `Gamification_User_Badges`
+--
+
+CREATE TABLE `Gamification_User_Badges` (
+  `user_badge_id` int NOT NULL,
+  `user_id` int NOT NULL,
+  `badge_id` int NOT NULL,
+  `earned_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `earned_points` int DEFAULT '0',
+  `context_data` json DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `Gamification_User_Points`
+--
+
+CREATE TABLE `Gamification_User_Points` (
+  `user_points_id` int NOT NULL,
+  `user_id` int NOT NULL,
+  `points` int NOT NULL,
+  `points_type` enum('earned','spent','bonus','penalty') NOT NULL,
+  `source` varchar(100) NOT NULL,
+  `description` text,
+  `related_id` int DEFAULT NULL,
+  `related_type` varchar(50) DEFAULT NULL,
+  `earned_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `Gamification_Clan_Achievements`
+--
+
+CREATE TABLE `Gamification_Clan_Achievements` (
+  `clan_achievement_id` int NOT NULL,
+  `clan_id` int NOT NULL,
+  `achievement_name` varchar(100) NOT NULL,
+  `achievement_description` text NOT NULL,
+  `achievement_icon` varchar(255) DEFAULT NULL,
+  `achievement_color` varchar(7) DEFAULT '#3B82F6',
+  `achievement_category` enum('project_completion','team_collaboration','efficiency','innovation','quality','growth') NOT NULL,
+  `points_reward` int DEFAULT '0',
+  `required_criteria` json DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Volcado de datos para la tabla `Gamification_Clan_Achievements`
+--
+
+INSERT INTO `Gamification_Clan_Achievements` (`clan_achievement_id`, `clan_id`, `achievement_name`, `achievement_description`, `achievement_icon`, `achievement_color`, `achievement_category`, `points_reward`, `required_criteria`, `is_active`, `created_at`) VALUES
+(1, 5, 'Clan Kratos - Maestros del Desarrollo', 'Completa 20 proyectos de desarrollo en un trimestre', '⚔️', '#DC2626', 'project_completion', 1000, '{\"projects_completed\": 20, \"timeframe\": \"quarter\"}', 1, '2025-08-07 16:00:00'),
+(2, 6, 'Clan Artemisa - Estrategas del Marketing', 'Lanza 10 campañas exitosas en un mes', '🏹', '#059669', 'project_completion', 800, '{\"successful_campaigns\": 10, \"timeframe\": \"month\"}', 1, '2025-08-07 16:00:00'),
+(3, 7, 'Clan Afrodita - Guardianes del Talento', 'Contrata y capacita 15 nuevos colaboradores', '💝', '#EC4899', 'growth', 600, '{\"new_hires_trained\": 15}', 1, '2025-08-07 16:00:00'),
+(4, 8, 'Clan Persefone - Maestros del Servicio', 'Mantiene 95% de satisfacción del cliente por 3 meses', '🌺', '#8B5CF6', 'quality', 750, '{\"satisfaction_rate\": 95, \"duration_months\": 3}', 1, '2025-08-07 16:00:00'),
+(5, 10, 'Clan Aura - Innovadores de ZAX', 'Implementa 5 nuevas tecnologías o procesos', '💡', '#F59E0B', 'innovation', 900, '{\"new_technologies\": 5}', 1, '2025-08-07 16:00:00'),
+(6, 11, 'Clan Hermes - Comerciales Veloces', 'Cierra 50 ventas en una semana', '🚀', '#0891B2', 'efficiency', 1200, '{\"sales_closed\": 50, \"timeframe\": \"week\"}', 1, '2025-08-07 16:00:00'),
+(7, 12, 'Clan GAIA - Operadores Maestros', 'Optimiza 10 procesos operativos', '🌍', '#10B981', 'efficiency', 800, '{\"processes_optimized\": 10}', 1, '2025-08-07 16:00:00'),
+(8, 13, 'Clan ZEUS - Líderes Supremos', 'Dirige 5 iniciativas estratégicas exitosas', '⚡', '#FFD700', 'project_completion', 1500, '{\"strategic_initiatives\": 5}', 1, '2025-08-07 16:00:00');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `Gamification_Clan_Progress`
+--
+
+CREATE TABLE `Gamification_Clan_Progress` (
+  `clan_progress_id` int NOT NULL,
+  `clan_id` int NOT NULL,
+  `achievement_id` int NOT NULL,
+  `current_progress` int DEFAULT '0',
+  `target_progress` int NOT NULL,
+  `is_completed` tinyint(1) DEFAULT '0',
+  `completed_at` timestamp NULL DEFAULT NULL,
+  `last_updated` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `Gamification_User_Progress`
+--
+
+CREATE TABLE `Gamification_User_Progress` (
+  `user_progress_id` int NOT NULL,
+  `user_id` int NOT NULL,
+  `badge_id` int NOT NULL,
+  `current_progress` int DEFAULT '0',
+  `target_progress` int NOT NULL,
+  `is_completed` tinyint(1) DEFAULT '0',
+  `completed_at` timestamp NULL DEFAULT NULL,
+  `last_updated` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `Gamification_Leaderboard`
+--
+
+CREATE TABLE `Gamification_Leaderboard` (
+  `leaderboard_id` int NOT NULL,
+  `user_id` int NOT NULL,
+  `clan_id` int DEFAULT NULL,
+  `total_points` int DEFAULT '0',
+  `badges_earned` int DEFAULT '0',
+  `tasks_completed` int DEFAULT '0',
+  `projects_completed` int DEFAULT '0',
+  `rank_position` int DEFAULT NULL,
+  `last_updated` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `Gamification_Events`
+--
+
+CREATE TABLE `Gamification_Events` (
+  `event_id` int NOT NULL,
+  `event_name` varchar(100) NOT NULL,
+  `event_description` text NOT NULL,
+  `event_type` enum('seasonal','special','milestone','competition') NOT NULL,
+  `start_date` date NOT NULL,
+  `end_date` date NOT NULL,
+  `bonus_multiplier` decimal(3,2) DEFAULT '1.00',
+  `is_active` tinyint(1) DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Volcado de datos para la tabla `Gamification_Events`
+--
+
+INSERT INTO `Gamification_Events` (`event_id`, `event_name`, `event_description`, `event_type`, `start_date`, `end_date`, `bonus_multiplier`, `is_active`, `created_at`) VALUES
+(1, 'Festival del Olimpo', 'Evento especial de fin de año con bonificaciones dobles', 'seasonal', '2025-12-01', '2025-12-31', 2.00, 1, '2025-08-07 16:00:00'),
+(2, 'Guerra de Clanes', 'Competencia entre clanes por el título de campeón', 'competition', '2025-09-01', '2025-09-30', 1.50, 1, '2025-08-07 16:00:00'),
+(3, 'Semana de la Innovación', 'Bonificación especial por proyectos innovadores', 'special', '2025-10-15', '2025-10-21', 1.75, 1, '2025-08-07 16:00:00');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `Gamification_Event_Participants`
+--
+
+CREATE TABLE `Gamification_Event_Participants` (
+  `event_participant_id` int NOT NULL,
+  `event_id` int NOT NULL,
+  `user_id` int DEFAULT NULL,
+  `clan_id` int DEFAULT NULL,
+  `points_earned` int DEFAULT '0',
+  `rank_position` int DEFAULT NULL,
+  `joined_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

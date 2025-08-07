@@ -32,22 +32,21 @@ class ClanLeaderController {
             $this->db->rollback();
         }
         
-        // Verificar autenticación
-        $this->requireAuth();
-        
-        // Obtener usuario actual
+        // Obtener usuario actual (sin verificar autenticación inmediatamente)
         $this->currentUser = $this->auth->getCurrentUser();
         
-        // Verificar que es líder de clan
-        if (!$this->hasClanLeaderAccess()) {
-            Utils::redirect('dashboard');
-        }
-        
-        // Obtener el clan del usuario
-        $this->userClan = $this->userModel->getUserClan($this->currentUser['user_id']);
-        if (!$this->userClan) {
-            // Si no tiene clan asignado, redirigir
-            Utils::redirect('dashboard');
+        // Solo inicializar clan si hay usuario autenticado
+        if ($this->currentUser) {
+            // Verificar que es líder de clan
+            if (!$this->hasClanLeaderAccess()) {
+                // No redirigir aquí, dejar que cada método maneje su propia verificación
+                $this->userClan = null;
+            } else {
+                // Obtener el clan del usuario
+                $this->userClan = $this->userModel->getUserClan($this->currentUser['user_id']);
+            }
+        } else {
+            $this->userClan = null;
         }
     }
     
@@ -119,29 +118,66 @@ class ClanLeaderController {
      * Agregar miembro al clan
      */
     public function addMember() {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            Utils::redirect('clan_leader/members');
-        }
-        
-        $userId = (int)($_POST['userId'] ?? 0);
-        
-        if ($userId <= 0) {
-            Utils::jsonResponse(['success' => false, 'message' => 'ID de usuario inválido'], 400);
-        }
-        
-        // Verificar que el usuario existe
-        $user = $this->userModel->findById($userId);
-        if (!$user) {
-            Utils::jsonResponse(['success' => false, 'message' => 'Usuario no encontrado'], 404);
-        }
-        
-        // Agregar miembro al clan
-        $result = $this->clanModel->addMember($this->userClan['clan_id'], $userId);
-        
-        if ($result) {
-            Utils::jsonResponse(['success' => true, 'message' => 'Miembro agregado exitosamente']);
-        } else {
-            Utils::jsonResponse(['success' => false, 'message' => 'Error al agregar miembro'], 500);
+        try {
+            // Verificar autenticación
+            if (!$this->auth->isLoggedIn()) {
+                Utils::jsonResponse(['success' => false, 'message' => 'No autenticado'], 401);
+                return;
+            }
+            
+            // Verificar permisos de líder de clan
+            if (!$this->hasClanLeaderAccess()) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos de líder de clan'], 403);
+                return;
+            }
+            
+            // Verificar que el usuario tiene clan asignado
+            if (!$this->userClan) {
+                Utils::jsonResponse(['success' => false, 'message' => 'No tienes un clan asignado'], 403);
+                return;
+            }
+            
+            // Verificar método HTTP
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
+                return;
+            }
+            
+            $userId = (int)($_POST['userId'] ?? 0);
+            
+            if ($userId <= 0) {
+                Utils::jsonResponse(['success' => false, 'message' => 'ID de usuario inválido'], 400);
+                return;
+            }
+            
+            // Verificar que el usuario existe
+            $user = $this->userModel->findById($userId);
+            if (!$user) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Usuario no encontrado'], 404);
+                return;
+            }
+            
+            // Verificar que el usuario no esté ya en el clan
+            $existingMembers = $this->clanModel->getMembers($this->userClan['clan_id']);
+            foreach ($existingMembers as $member) {
+                if ($member['user_id'] == $userId) {
+                    Utils::jsonResponse(['success' => false, 'message' => 'El usuario ya es miembro del clan'], 409);
+                    return;
+                }
+            }
+            
+            // Agregar miembro al clan
+            $result = $this->clanModel->addMember($this->userClan['clan_id'], $userId);
+            
+            if ($result) {
+                Utils::jsonResponse(['success' => true, 'message' => 'Miembro agregado exitosamente']);
+            } else {
+                Utils::jsonResponse(['success' => false, 'message' => 'Error al agregar miembro'], 500);
+            }
+            
+        } catch (Exception $e) {
+            error_log("Error en ClanLeaderController::addMember: " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor'], 500);
         }
     }
     
@@ -170,6 +206,24 @@ class ClanLeaderController {
      */
     public function getAvailableUsers() {
         try {
+            // Verificar autenticación
+            if (!$this->auth->isLoggedIn()) {
+                Utils::jsonResponse(['success' => false, 'message' => 'No autenticado'], 401);
+                return;
+            }
+            
+            // Verificar permisos de líder de clan
+            if (!$this->hasClanLeaderAccess()) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos de líder de clan'], 403);
+                return;
+            }
+            
+            // Verificar que el usuario tiene clan asignado
+            if (!$this->userClan) {
+                Utils::jsonResponse(['success' => false, 'message' => 'No tienes un clan asignado'], 403);
+                return;
+            }
+            
             // Obtener todos los usuarios que no están en el clan
             $stmt = $this->db->prepare("
                 SELECT 
@@ -207,28 +261,71 @@ class ClanLeaderController {
      * Remover miembro del clan
      */
     public function removeMember() {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            Utils::redirect('clan_leader/members');
-        }
-        
-        $userId = (int)($_POST['userId'] ?? 0);
-        
-        if ($userId <= 0) {
-            Utils::jsonResponse(['success' => false, 'message' => 'ID de usuario inválido'], 400);
-        }
-        
-        // No permitir remover al líder del clan
-        if ($userId === $this->currentUser['user_id']) {
-            Utils::jsonResponse(['success' => false, 'message' => 'No puedes removerte a ti mismo del clan'], 400);
-        }
-        
-        // Remover miembro del clan
-        $result = $this->clanModel->removeMember($this->userClan['clan_id'], $userId);
-        
-        if ($result) {
-            Utils::jsonResponse(['success' => true, 'message' => 'Miembro removido exitosamente']);
-        } else {
-            Utils::jsonResponse(['success' => false, 'message' => 'Error al remover miembro'], 500);
+        try {
+            // Verificar autenticación
+            if (!$this->auth->isLoggedIn()) {
+                Utils::jsonResponse(['success' => false, 'message' => 'No autenticado'], 401);
+                return;
+            }
+            
+            // Verificar permisos de líder de clan
+            if (!$this->hasClanLeaderAccess()) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos de líder de clan'], 403);
+                return;
+            }
+            
+            // Verificar que el usuario tiene clan asignado
+            if (!$this->userClan) {
+                Utils::jsonResponse(['success' => false, 'message' => 'No tienes un clan asignado'], 403);
+                return;
+            }
+            
+            // Verificar método HTTP
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
+                return;
+            }
+            
+            $userId = (int)($_POST['userId'] ?? 0);
+            
+            if ($userId <= 0) {
+                Utils::jsonResponse(['success' => false, 'message' => 'ID de usuario inválido'], 400);
+                return;
+            }
+            
+            // No permitir remover al líder del clan
+            if ($userId === $this->currentUser['user_id']) {
+                Utils::jsonResponse(['success' => false, 'message' => 'No puedes removerte a ti mismo del clan'], 400);
+                return;
+            }
+            
+            // Verificar que el usuario existe y está en el clan
+            $existingMembers = $this->clanModel->getMembers($this->userClan['clan_id']);
+            $userInClan = false;
+            foreach ($existingMembers as $member) {
+                if ($member['user_id'] == $userId) {
+                    $userInClan = true;
+                    break;
+                }
+            }
+            
+            if (!$userInClan) {
+                Utils::jsonResponse(['success' => false, 'message' => 'El usuario no es miembro del clan'], 404);
+                return;
+            }
+            
+            // Remover miembro del clan
+            $result = $this->clanModel->removeMember($this->userClan['clan_id'], $userId);
+            
+            if ($result) {
+                Utils::jsonResponse(['success' => true, 'message' => 'Miembro removido exitosamente']);
+            } else {
+                Utils::jsonResponse(['success' => false, 'message' => 'Error al remover miembro'], 500);
+            }
+            
+        } catch (Exception $e) {
+            error_log("Error en ClanLeaderController::removeMember: " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor'], 500);
         }
     }
     
@@ -256,41 +353,63 @@ class ClanLeaderController {
      * Crear nuevo proyecto
      */
     public function createProject() {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            Utils::redirect('clan_leader/projects');
-        }
-        
-        // Validar datos
-        $projectName = Utils::sanitizeInput($_POST['projectName'] ?? '');
-        $description = Utils::sanitizeInput($_POST['description'] ?? '');
-        
-        $errors = [];
-        
-        // Validaciones
-        if (empty($projectName) || strlen($projectName) < 3) {
-            $errors['projectName'] = 'El nombre del proyecto debe tener al menos 3 caracteres';
-        }
-        
-        if (empty($description)) {
-            $errors['description'] = 'La descripción es requerida';
-        }
-        
-        if (!empty($errors)) {
-            Utils::jsonResponse(['success' => false, 'message' => 'Datos inválidos', 'errors' => $errors], 400);
-        }
-        
-        // Crear proyecto
-        $result = $this->projectModel->create(
-            $projectName, 
-            $description, 
-            $this->userClan['clan_id'], 
-            $this->currentUser['user_id']
-        );
-        
-        if ($result) {
-            Utils::jsonResponse(['success' => true, 'message' => 'Proyecto creado exitosamente']);
-        } else {
-            Utils::jsonResponse(['success' => false, 'message' => 'Error al crear proyecto'], 500);
+        try {
+            // Verificar autenticación
+            if (!$this->auth->isLoggedIn()) {
+                Utils::jsonResponse(['success' => false, 'message' => 'No autenticado'], 401);
+                return;
+            }
+            
+            // Verificar permisos de líder de clan
+            if (!$this->hasClanLeaderAccess()) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos de líder de clan'], 403);
+                return;
+            }
+            
+            // Verificar que el usuario tiene clan asignado
+            if (!$this->userClan) {
+                Utils::jsonResponse(['success' => false, 'message' => 'No tienes un clan asignado'], 403);
+                return;
+            }
+            
+            // Verificar método HTTP
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
+                return;
+            }
+            
+            // Validar datos
+            $projectName = Utils::sanitizeInput($_POST['projectName'] ?? '');
+            $description = Utils::sanitizeInput($_POST['description'] ?? '');
+            
+            // Validaciones
+            if (empty($projectName) || strlen($projectName) < 3) {
+                Utils::jsonResponse(['success' => false, 'message' => 'El nombre del proyecto debe tener al menos 3 caracteres'], 400);
+                return;
+            }
+            
+            if (empty($description)) {
+                Utils::jsonResponse(['success' => false, 'message' => 'La descripción es requerida'], 400);
+                return;
+            }
+            
+            // Crear proyecto
+            $result = $this->projectModel->create(
+                $projectName, 
+                $description, 
+                $this->userClan['clan_id'], 
+                $this->currentUser['user_id']
+            );
+            
+            if ($result) {
+                Utils::jsonResponse(['success' => true, 'message' => 'Proyecto creado exitosamente']);
+            } else {
+                Utils::jsonResponse(['success' => false, 'message' => 'Error al crear proyecto'], 500);
+            }
+            
+        } catch (Exception $e) {
+            error_log("Error en ClanLeaderController::createProject: " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor'], 500);
         }
     }
     
@@ -746,13 +865,35 @@ class ClanLeaderController {
      * Crear tarea con múltiples usuarios y subtareas
      */
     public function createTask() {
-        // Limpiar cualquier transacción activa antes de empezar
-        if ($this->db->inTransaction()) {
-            $this->db->rollback();
-        }
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
-        }
+        try {
+            // Verificar autenticación
+            if (!$this->auth->isLoggedIn()) {
+                Utils::jsonResponse(['success' => false, 'message' => 'No autenticado'], 401);
+                return;
+            }
+            
+            // Verificar permisos de líder de clan
+            if (!$this->hasClanLeaderAccess()) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos de líder de clan'], 403);
+                return;
+            }
+            
+            // Verificar que el usuario tiene clan asignado
+            if (!$this->userClan) {
+                Utils::jsonResponse(['success' => false, 'message' => 'No tienes un clan asignado'], 403);
+                return;
+            }
+            
+            // Verificar método HTTP
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
+                return;
+            }
+            
+            // Limpiar cualquier transacción activa antes de empezar
+            if ($this->db->inTransaction()) {
+                $this->db->rollback();
+            }
         
         $taskTitle = Utils::sanitizeInput($_POST['task_title'] ?? '');
         $taskDueDate = $_POST['task_due_date'] ?? '';
@@ -866,7 +1007,12 @@ class ClanLeaderController {
             error_log("Error al crear tarea: " . $e->getMessage());
             Utils::jsonResponse(['success' => false, 'message' => 'Error al crear la tarea: ' . $e->getMessage()], 500);
         }
+        
+    } catch (Exception $e) {
+        error_log("Error en ClanLeaderController::createTask: " . $e->getMessage());
+        Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor'], 500);
     }
+}
     
     /**
      * Agregar tarea
@@ -1312,55 +1458,84 @@ class ClanLeaderController {
      * Actualizar estado de tarea
      */
     public function toggleTaskStatus() {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
-        }
-        
-        $taskId = (int)($_POST['taskId'] ?? 0);
-        $isCompleted = (bool)($_POST['isCompleted'] ?? false);
-        
-        if ($taskId <= 0) {
-            Utils::jsonResponse(['success' => false, 'message' => 'ID de tarea inválido'], 400);
-        }
-        
-        // Verificar que la tarea pertenece a un proyecto del clan
-        $task = $this->taskModel->findById($taskId);
-        if (!$task) {
-            Utils::jsonResponse(['success' => false, 'message' => 'Tarea no encontrada'], 404);
-        }
-        
-        $project = $this->projectModel->findById($task['project_id']);
-        if (!$project || $project['clan_id'] != $this->userClan['clan_id']) {
-            Utils::jsonResponse(['success' => false, 'message' => 'Tarea no encontrada'], 404);
-        }
-        
-        // Determinar el nuevo estado basado en el estado actual
-        $currentStatus = $task['status'];
-        $newStatus = '';
-        
-        if ($isCompleted) {
-            $newStatus = 'completed';
-        } else {
-            // Si no está completada, cambiar a pending
-            $newStatus = 'pending';
-        }
-        
-        // Actualizar estado usando el método update del modelo
-        $result = $this->taskModel->update(
-            $taskId,
-            $task['task_name'],
-            $task['description'],
-            $task['assigned_to_user_id'],
-            $task['priority'],
-            $task['due_date'],
-            null, // assigned_percentage
-            $newStatus // nuevo parámetro para estado
-        );
-        
-        if ($result) {
-            Utils::jsonResponse(['success' => true, 'message' => 'Estado de tarea actualizado']);
-        } else {
-            Utils::jsonResponse(['success' => false, 'message' => 'Error al actualizar tarea'], 500);
+        try {
+            // Verificar autenticación
+            if (!$this->auth->isLoggedIn()) {
+                Utils::jsonResponse(['success' => false, 'message' => 'No autenticado'], 401);
+                return;
+            }
+            
+            // Verificar permisos de líder de clan
+            if (!$this->hasClanLeaderAccess()) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos de líder de clan'], 403);
+                return;
+            }
+            
+            // Verificar que el usuario tiene clan asignado
+            if (!$this->userClan) {
+                Utils::jsonResponse(['success' => false, 'message' => 'No tienes un clan asignado'], 403);
+                return;
+            }
+            
+            // Verificar método HTTP
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
+                return;
+            }
+            
+            $taskId = (int)($_POST['taskId'] ?? 0);
+            $isCompleted = (bool)($_POST['isCompleted'] ?? false);
+            
+            if ($taskId <= 0) {
+                Utils::jsonResponse(['success' => false, 'message' => 'ID de tarea inválido'], 400);
+                return;
+            }
+            
+            // Verificar que la tarea pertenece a un proyecto del clan
+            $task = $this->taskModel->findById($taskId);
+            if (!$task) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Tarea no encontrada'], 404);
+                return;
+            }
+            
+            $project = $this->projectModel->findById($task['project_id']);
+            if (!$project || $project['clan_id'] != $this->userClan['clan_id']) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Tarea no encontrada'], 404);
+                return;
+            }
+            
+            // Determinar el nuevo estado basado en el estado actual
+            $currentStatus = $task['status'];
+            $newStatus = '';
+            
+            if ($isCompleted) {
+                $newStatus = 'completed';
+            } else {
+                // Si no está completada, cambiar a pending
+                $newStatus = 'pending';
+            }
+            
+            // Actualizar estado usando el método update del modelo
+            $result = $this->taskModel->update(
+                $taskId,
+                $task['task_name'],
+                $task['description'],
+                $task['assigned_to_user_id'],
+                $task['priority'],
+                $task['due_date'],
+                null, // assigned_percentage
+                $newStatus // nuevo parámetro para estado
+            );
+            
+            if ($result) {
+                Utils::jsonResponse(['success' => true, 'message' => 'Estado de tarea actualizado']);
+            } else {
+                Utils::jsonResponse(['success' => false, 'message' => 'Error al actualizar tarea'], 500);
+            }
+            
+        } catch (Exception $e) {
+            error_log("Error en ClanLeaderController::toggleTaskStatus: " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor'], 500);
         }
     }
     

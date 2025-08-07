@@ -60,7 +60,13 @@ ob_start();
                         </a></li>
                     </ul>
                 </li>
-                <li class="nav-item">
+                <li style="display: none;" class="nav-item">
+                    <a href="?route=gamification" class="nav-link">
+                        <i class="fas fa-trophy"></i>
+                        <span>Gamificación</span>
+                    </a>
+                </li>
+                <li style="display: none;" class="nav-item">
                     <a href="?route=dashboard" class="nav-link">
                         <i class="fas fa-arrow-left"></i>
                         <span>Volver</span>

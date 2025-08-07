@@ -38,7 +38,8 @@ $models = [
     __DIR__ . '/../app/models/Clan.php',
     __DIR__ . '/../app/models/Role.php',
     __DIR__ . '/../app/models/KPI.php',
-    __DIR__ . '/../app/models/Task.php'
+    __DIR__ . '/../app/models/Task.php',
+    __DIR__ . '/../app/models/Gamification.php'
 ];
 
 foreach ($models as $model) {
@@ -55,7 +56,8 @@ $controllers = [
     __DIR__ . '/../app/controllers/DashboardController.php',
     __DIR__ . '/../app/controllers/AdminController.php',
     __DIR__ . '/../app/controllers/KPIController.php',
-    __DIR__ . '/../app/controllers/ClanLeaderController.php'
+    __DIR__ . '/../app/controllers/ClanLeaderController.php',
+    __DIR__ . '/../app/controllers/GamificationController.php'
 ];
 
 foreach ($controllers as $controller) {
@@ -397,10 +399,76 @@ try {
         $controller->updateUserPercentage();
         break;
         
-    case 'clan_leader/collaborator-availability':
-        $controller = new ClanLeaderController();
-        $controller->collaboratorAvailability();
-        break;
+            case 'clan_leader/collaborator-availability':
+            $controller = new ClanLeaderController();
+            $controller->collaboratorAvailability();
+            break;
+        
+        // Rutas de Gamificación
+        case 'gamification':
+            $controller = new GamificationController();
+            $controller->index();
+            break;
+            
+        case 'gamification/badges':
+            $controller = new GamificationController();
+            $controller->badges();
+            break;
+            
+        case 'gamification/createBadge':
+            $controller = new GamificationController();
+            $controller->createBadge();
+            break;
+            
+        case 'gamification/updateBadge':
+            $controller = new GamificationController();
+            $controller->updateBadge();
+            break;
+            
+        case 'gamification/deleteBadge':
+            $controller = new GamificationController();
+            $controller->deleteBadge();
+            break;
+            
+        case 'gamification/awardBadge':
+            $controller = new GamificationController();
+            $controller->awardBadge();
+            break;
+            
+        case 'gamification/users':
+            $controller = new GamificationController();
+            $controller->users();
+            break;
+            
+        case 'gamification/user-profile':
+            $controller = new GamificationController();
+            $controller->userProfile($_GET['user_id'] ?? 0);
+            break;
+            
+        case 'gamification/clan-achievements':
+            $controller = new GamificationController();
+            $controller->clanAchievements();
+            break;
+            
+        case 'gamification/createClanAchievement':
+            $controller = new GamificationController();
+            $controller->createClanAchievement();
+            break;
+            
+        case 'gamification/events':
+            $controller = new GamificationController();
+            $controller->events();
+            break;
+            
+        case 'gamification/createEvent':
+            $controller = new GamificationController();
+            $controller->createEvent();
+            break;
+            
+        case 'gamification/leaderboard':
+            $controller = new GamificationController();
+            $controller->leaderboard();
+            break;
             
         case 'badges':
             // Por ahora redirigir al dashboard

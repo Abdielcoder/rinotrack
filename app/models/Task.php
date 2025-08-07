@@ -733,11 +733,17 @@ class Task {
                 $values[] = $taskId;
                 
                 $sql = "UPDATE Tasks SET " . implode(", ", $fields) . " WHERE task_id = ?";
+                
+                // Log para debugging
+                error_log("SQL Query: " . $sql);
+                error_log("Values: " . json_encode($values));
+                
                 $stmt = $this->db->prepare($sql);
                 $result = $stmt->execute($values);
                 
                 if (!$result) {
-                    throw new Exception("Error al ejecutar la consulta SQL");
+                    $errorInfo = $stmt->errorInfo();
+                    throw new Exception("Error al ejecutar la consulta SQL: " . json_encode($errorInfo));
                 }
             }
             
