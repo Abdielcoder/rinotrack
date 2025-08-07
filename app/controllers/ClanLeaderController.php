@@ -1490,9 +1490,14 @@ class ClanLeaderController {
      */
     private function getClanIcon($clanName) {
         $icons = [
-            'Zeus' => '⚡', // Rayo de Zeus
+            'ZEUS' => '⚡', // Rayo de Zeus
             'Artemisa' => '🏹', // Arco y flecha de Artemisa
             'Afrodita' => '💝', // Corazón de Afrodita
+            'Kratos' => '👊', // Puño de Kratos
+            'Hermes' => '🏃', // Corredor de Hermes
+            'Persefone' => '🌱', // Planta de Persefone
+            'Aura' => '⭐', // Estrella de Aura
+            'GAIA' => '🌿', // Hoja de Gaia
         ];
         
         return $icons[$clanName] ?? '⚔️'; // Icono por defecto

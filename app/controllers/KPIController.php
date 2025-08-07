@@ -1035,18 +1035,21 @@ class KPIController {
             
             // Asignar colores e iconos específicos para cada clan
             $clanIcons = [
-                'Zeus' => 'fas fa-bolt',
+                'ZEUS' => 'fas fa-bolt',
                 'Artemisa' => 'fas fa-moon',
                 'Afrodita' => 'fas fa-heart',
+                'Kratos' => 'fas fa-fist-raised',
+                'Hermes' => 'fas fa-running',
+                'Persefone' => 'fas fa-seedling',
+                'Aura' => 'fas fa-star',
+                'GAIA' => 'fas fa-leaf',
                 'Apollo' => 'fas fa-sun',
                 'Athena' => 'fas fa-shield-alt',
-                'Hermes' => 'fas fa-running',
                 'Ares' => 'fas fa-sword',
                 'Poseidon' => 'fas fa-water',
                 'Hades' => 'fas fa-skull',
                 'Hera' => 'fas fa-crown',
                 'Servicio' => 'fas fa-cogs',
-                'Aura' => 'fas fa-star',
                 'Nexus' => 'fas fa-network-wired',
                 'Pulse' => 'fas fa-heartbeat',
                 'Vortex' => 'fas fa-wind',
@@ -1058,26 +1061,29 @@ class KPIController {
             ];
             
             $clanColors = [
-                'Zeus' => '#ef4444',      // Rojo
+                'ZEUS' => '#ef4444',      // Rojo
                 'Artemisa' => '#8b5cf6',  // Púrpura
                 'Afrodita' => '#ec4899',  // Rosa
+                'Kratos' => '#dc2626',    // Rojo oscuro
+                'Hermes' => '#10b981',    // Verde
+                'Persefone' => '#059669', // Verde esmeralda
+                'Aura' => '#f97316',      // Naranja brillante
+                'GAIA' => '#16a34a',      // Verde bosque
                 'Apollo' => '#f59e0b',    // Naranja
                 'Athena' => '#3b82f6',    // Azul
-                'Hermes' => '#10b981',    // Verde
-                'Ares' => '#dc2626',      // Rojo oscuro
+                'Ares' => '#991b1b',      // Rojo muy oscuro
                 'Poseidon' => '#0891b2',  // Azul marino
                 'Hades' => '#6b7280',     // Gris
                 'Hera' => '#fbbf24',      // Amarillo
                 'Servicio' => '#6366f1',  // Índigo
-                'Aura' => '#f97316',      // Naranja brillante
                 'Nexus' => '#06b6d4',     // Cian
-                'Pulse' => '#ef4444',     // Rojo
-                'Vortex' => '#8b5cf6',    // Púrpura
-                'Phoenix' => '#dc2626',   // Rojo oscuro
-                'Dragon' => '#059669',    // Verde esmeralda
+                'Pulse' => '#be185d',     // Rosa oscuro
+                'Vortex' => '#7c3aed',    // Púrpura oscuro
+                'Phoenix' => '#ea580c',   // Naranja rojizo
+                'Dragon' => '#047857',    // Verde teal
                 'Eagle' => '#1e40af',     // Azul oscuro
-                'Wolf' => '#6b7280',      // Gris
-                'Lion' => '#fbbf24'       // Amarillo
+                'Wolf' => '#4b5563',      // Gris medio
+                'Lion' => '#d97706'       // Amarillo oscuro
             ];
             
             foreach ($clans as &$clan) {

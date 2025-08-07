@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: localhost:8889
--- Tiempo de generación: 02-08-2025 a las 17:42:25
+-- Tiempo de generación: 07-08-2025 a las 15:35:45
 -- Versión del servidor: 8.0.40
 -- Versión de PHP: 8.3.14
 
@@ -39,9 +39,14 @@ CREATE TABLE `Clans` (
 --
 
 INSERT INTO `Clans` (`clan_id`, `clan_name`, `clan_departamento`, `created_at`) VALUES
-(5, 'Zeus', 'Desarrollo', '2025-07-30 16:53:15'),
+(5, 'Kratos', 'Desarrollo/Transformación/Sistemas', '2025-07-30 16:53:15'),
 (6, 'Artemisa', 'Marketing', '2025-07-30 19:53:16'),
-(7, 'Afrodita', 'Recursos Humanos', '2025-07-30 20:31:47');
+(7, 'Afrodita', 'Recursos Humanos', '2025-07-30 20:31:47'),
+(8, 'Persefone', 'Servicio', '2025-08-02 17:50:21'),
+(10, 'Aura', 'ZAX', '2025-08-04 17:57:03'),
+(11, 'Hermes', 'Comercial', '2025-08-06 20:43:53'),
+(12, 'GAIA', 'Operación/Proyectos', '2025-08-06 20:50:45'),
+(13, 'ZEUS', 'Dirección', '2025-08-06 20:56:30');
 
 -- --------------------------------------------------------
 
@@ -61,15 +66,6 @@ CREATE TABLE `Clan_KPIs` (
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ;
-
---
--- Volcado de datos para la tabla `Clan_KPIs`
---
-
-INSERT INTO `Clan_KPIs` (`kpi_id`, `clan_id`, `kpi_quarter_id`, `year`, `quarter`, `total_points`, `assigned_points`, `status`, `created_at`, `updated_at`) VALUES
-(1, 7, 4, 2025, 3, 1000, 0, 'active', '2025-07-30 22:37:23', '2025-07-30 22:37:23'),
-(2, 6, 4, 2025, 3, 1000, 0, 'active', '2025-07-30 22:37:23', '2025-07-30 22:37:23'),
-(3, 5, 4, 2025, 3, 1000, 0, 'active', '2025-07-30 22:37:23', '2025-07-30 22:37:23');
 
 -- --------------------------------------------------------
 
@@ -96,8 +92,49 @@ INSERT INTO `Clan_Members` (`clan_member_id`, `clan_id`, `user_id`) VALUES
 (4, 5, 10),
 (3, 5, 11),
 (8, 5, 12),
+(82, 5, 38),
 (9, 6, 13),
-(10, 7, 14);
+(11, 6, 15),
+(17, 6, 17),
+(19, 6, 18),
+(21, 6, 44),
+(10, 7, 14),
+(13, 7, 39),
+(15, 7, 40),
+(68, 8, 19),
+(69, 8, 20),
+(77, 8, 21),
+(71, 8, 45),
+(73, 8, 46),
+(75, 8, 47),
+(79, 8, 48),
+(81, 8, 55),
+(31, 10, 41),
+(83, 10, 42),
+(30, 10, 43),
+(32, 10, 50),
+(84, 11, 56),
+(85, 11, 57),
+(33, 12, 22),
+(34, 12, 23),
+(36, 12, 24),
+(38, 12, 25),
+(40, 12, 26),
+(42, 12, 27),
+(44, 12, 28),
+(46, 12, 29),
+(48, 12, 30),
+(54, 12, 31),
+(56, 12, 32),
+(58, 12, 33),
+(60, 12, 34),
+(62, 12, 35),
+(64, 12, 36),
+(66, 12, 37),
+(52, 12, 48),
+(50, 12, 49),
+(86, 13, 16),
+(88, 13, 58);
 
 -- --------------------------------------------------------
 
@@ -139,10 +176,7 @@ CREATE TABLE `KPI_Quarters` (
 --
 
 INSERT INTO `KPI_Quarters` (`kpi_quarter_id`, `quarter`, `year`, `total_points`, `is_active`, `status`, `created_at`) VALUES
-(2, 'Q2', 2025, 3000, 0, 'planning', '2025-07-30 22:00:58'),
-(4, 'Q3', 2025, 3000, 1, 'planning', '2025-07-30 22:07:02'),
-(5, 'Q1', 2025, 3000, 0, 'planning', '2025-07-30 22:07:27'),
-(10, 'Q4', 2025, 1000, 0, 'planning', '2025-08-01 17:14:31');
+(11, 'Q3', 2025, 20000, 1, 'active', '2025-08-05 15:55:52');
 
 -- --------------------------------------------------------
 
@@ -204,7 +238,84 @@ INSERT INTO `login_attempts` (`id`, `username`, `success`, `ip_address`, `attemp
 (39, 'abdielc', 1, '::1', '2025-08-01 20:57:44'),
 (40, 'abdielc', 1, '::1', '2025-08-01 20:58:51'),
 (41, 'abdielc@rinorisk.com', 0, '::1', '2025-08-02 17:36:35'),
-(42, 'abdielc', 1, '::1', '2025-08-02 17:36:45');
+(42, 'abdielc', 1, '::1', '2025-08-02 17:36:45'),
+(43, 'super', 1, '::1', '2025-08-02 17:47:51'),
+(44, 'abdielc', 1, '::1', '2025-08-04 17:03:08'),
+(45, 'super', 1, '::1', '2025-08-04 17:49:15'),
+(46, 'abdielc', 1, '::1', '2025-08-04 17:57:26'),
+(47, 'jessicam', 0, '::1', '2025-08-04 19:09:04'),
+(48, 'super', 1, '::1', '2025-08-04 19:09:12'),
+(49, 'jessicam', 0, '::1', '2025-08-04 19:09:35'),
+(50, 'jessicam', 1, '::1', '2025-08-04 19:09:57'),
+(51, 'super', 1, '::1', '2025-08-04 19:10:39'),
+(52, 'jessicam', 1, '::1', '2025-08-04 19:12:19'),
+(53, 'abdielc', 1, '::1', '2025-08-04 19:29:07'),
+(54, 'abdielc', 1, '::1', '2025-08-04 20:15:56'),
+(55, 'super', 1, '::1', '2025-08-04 21:52:57'),
+(56, 'super', 0, '::1', '2025-08-04 22:09:10'),
+(57, 'super', 1, '::1', '2025-08-04 22:09:18'),
+(58, 'abdielc', 1, '::1', '2025-08-04 22:37:58'),
+(59, 'super', 1, '::1', '2025-08-04 22:39:30'),
+(60, 'abdielc', 1, '::1', '2025-08-04 22:42:35'),
+(61, 'super', 1, '::1', '2025-08-04 22:43:25'),
+(62, 'abdielc', 1, '::1', '2025-08-04 22:48:32'),
+(63, 'jessicam', 1, '::1', '2025-08-04 23:05:48'),
+(64, 'abdielc', 1, '::1', '2025-08-04 23:06:21'),
+(65, 'super', 1, '::1', '2025-08-04 23:20:49'),
+(66, 'abdielc', 1, '::1', '2025-08-04 23:30:18'),
+(67, 'super', 1, '::1', '2025-08-05 15:55:32'),
+(68, 'abdielc', 1, '::1', '2025-08-05 16:22:37'),
+(69, 'super', 1, '::1', '2025-08-05 16:27:57'),
+(70, 'abdielc', 1, '::1', '2025-08-05 17:42:14'),
+(71, 'super', 1, '::1', '2025-08-05 17:51:18'),
+(72, 'abdielc', 1, '::1', '2025-08-05 19:13:32'),
+(73, 'abdielc', 1, '::1', '2025-08-05 19:33:28'),
+(74, 'super', 1, '::1', '2025-08-05 19:33:42'),
+(75, 'super', 1, '::1', '2025-08-05 19:35:01'),
+(76, 'super', 1, '::1', '2025-08-05 19:37:34'),
+(77, 'abdielc', 1, '::1', '2025-08-05 20:51:08'),
+(78, 'super', 1, '::1', '2025-08-06 19:34:12'),
+(79, 'super', 1, '::1', '2025-08-06 21:11:48'),
+(80, 'bereniceh', 0, '::1', '2025-08-06 21:55:08'),
+(81, 'bereniceh', 1, '::1', '2025-08-06 21:57:04'),
+(82, 'jessicam', 1, '::1', '2025-08-06 22:01:01'),
+(83, 'sofiag', 1, '::1', '2025-08-06 22:02:26'),
+(84, 'arisbethc', 1, '::1', '2025-08-06 22:03:40'),
+(85, 'abdielc', 1, '::1', '2025-08-06 22:21:14'),
+(86, 'super', 1, '::1', '2025-08-06 22:21:28'),
+(87, 'arisbethc', 1, '::1', '2025-08-06 22:58:27'),
+(88, 'bereniceh', 1, '::1', '2025-08-06 22:59:36'),
+(89, 'super', 1, '::1', '2025-08-06 23:00:16'),
+(90, 'karenf', 1, '::1', '2025-08-06 23:06:37'),
+(91, 'jessicam', 1, '::1', '2025-08-06 23:07:26'),
+(92, 'karenf', 1, '::1', '2025-08-06 23:07:53'),
+(93, 'super', 1, '::1', '2025-08-06 23:08:42'),
+(94, 'sofiag', 1, '::1', '2025-08-06 23:09:09'),
+(95, 'super', 1, '::1', '2025-08-06 23:09:42'),
+(96, 'sofiag', 1, '::1', '2025-08-06 23:10:23'),
+(97, 'super', 1, '::1', '2025-08-06 23:14:40'),
+(98, 'arisbethc', 1, '::1', '2025-08-06 23:16:08'),
+(99, 'super', 1, '::1', '2025-08-06 23:18:43'),
+(100, 'ivan2', 0, '::1', '2025-08-06 23:26:34'),
+(101, 'ivan2', 1, '::1', '2025-08-06 23:27:16'),
+(102, 'super', 1, '::1', '2025-08-06 23:28:01'),
+(103, 'ivan2', 1, '::1', '2025-08-06 23:29:34'),
+(104, 'ivan3', 1, '::1', '2025-08-06 23:30:00'),
+(105, 'super', 1, '::1', '2025-08-06 23:30:41'),
+(106, 'ivan3', 1, '::1', '2025-08-06 23:31:27'),
+(107, 'super', 1, '::1', '2025-08-06 23:32:50'),
+(108, 'abdielc', 1, '::1', '2025-08-06 23:34:39'),
+(109, 'abdielc', 1, '::1', '2025-08-07 15:28:03'),
+(110, 'jessicam', 1, '::1', '2025-08-07 15:28:31'),
+(111, 'arisbethc', 1, '::1', '2025-08-07 15:28:49'),
+(112, 'sofiag', 1, '::1', '2025-08-07 15:29:09'),
+(113, 'bereniceh', 1, '::1', '2025-08-07 15:29:26'),
+(114, 'karenf', 1, '::1', '2025-08-07 15:29:47'),
+(115, 'ivanm', 1, '::1', '2025-08-07 15:30:04'),
+(116, 'super', 1, '::1', '2025-08-07 15:30:49'),
+(117, 'ivan2', 1, '::1', '2025-08-07 15:31:57'),
+(118, 'ivan3', 1, '::1', '2025-08-07 15:32:18'),
+(119, 'ivanm', 1, '::1', '2025-08-07 15:33:14');
 
 -- --------------------------------------------------------
 
@@ -234,12 +345,9 @@ CREATE TABLE `Projects` (
 --
 
 INSERT INTO `Projects` (`project_id`, `project_name`, `description`, `clan_id`, `created_by_user_id`, `status`, `total_tasks`, `completed_tasks`, `progress_percentage`, `created_at`, `updated_at`, `kpi_quarter_id`, `kpi_points`, `task_distribution_mode`) VALUES
-(1, 'Consulta estadistica', 'Módulo del portal RinoRisk', 5, 1, 'open', 0, 0, 0.00, '2025-07-30 17:29:12', '2025-07-30 22:28:12', NULL, 0, 'automatic'),
-(2, 'Modulo promotoria fase 2', 'Modulo segunda parte continuacion de consulta estadistica.', 5, 1, 'open', 0, 0, 0.00, '2025-07-30 17:30:26', '2025-07-30 22:28:12', NULL, 0, 'automatic'),
-(3, 'Convención MTY', 'Convención Rino', 6, 1, 'open', 1, 1, 100.00, '2025-07-30 22:09:19', '2025-08-01 16:32:25', 4, 1000, 'automatic'),
-(4, 'Recluta de Agentes', 'Proyecto para reclutar Agentes.', 7, 1, 'open', 1, 1, 100.00, '2025-07-30 22:09:41', '2025-08-01 16:21:58', 4, 1000, 'automatic'),
-(5, 'Consulta Promotoria', 'Fase 1 de modulo de promotoria', 5, 1, 'open', 1, 1, 100.00, '2025-07-30 22:11:09', '2025-08-01 17:43:16', 4, 500, 'automatic'),
-(6, 'Consulta de promotoria fase 2', 'Continuación de fase anterior', 5, 1, 'open', 5, 1, 33.33, '2025-07-30 22:11:37', '2025-08-01 20:30:32', 4, 500, 'automatic');
+(14, 'Consulta de promotoria Fase 1', 'Primera fase operativa de relaciones de colaboradores', 5, 2, 'open', 0, 0, 0.00, '2025-08-05 21:01:49', '2025-08-05 22:29:24', 11, 400, 'automatic'),
+(15, 'Nuevos indicadores / Procesos automaticos', 'Investigación y desarrollo de robots para obtener nuevas fuentes de información', 5, 2, 'open', 0, 0, 0.00, '2025-08-05 22:08:11', '2025-08-05 22:29:38', 11, 350, 'automatic'),
+(16, 'Consulta de promotoria fase 2', 'Continuación de Fase 1-', 5, 2, 'open', 0, 0, 0.00, '2025-08-05 22:08:59', '2025-08-06 23:34:59', 11, 250, 'automatic');
 
 -- --------------------------------------------------------
 
@@ -311,14 +419,6 @@ CREATE TABLE `Subtasks` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
--- Volcado de datos para la tabla `Subtasks`
---
-
-INSERT INTO `Subtasks` (`subtask_id`, `task_id`, `title`, `description`, `completion_percentage`, `estimated_hours`, `actual_hours`, `status`, `priority`, `due_date`, `assigned_to_user_id`, `created_by_user_id`, `subtask_order`, `created_at`, `updated_at`) VALUES
-(1, 8, '45554', '455454545454', 4.00, NULL, NULL, 'pending', 'medium', NULL, NULL, 2, 1, '2025-08-01 20:29:38', '2025-08-01 20:29:38'),
-(2, 9, '32r23r', '32r23r', 12.00, NULL, NULL, 'pending', 'medium', NULL, NULL, 2, 1, '2025-08-01 20:49:44', '2025-08-01 20:49:44');
-
---
 -- Disparadores `Subtasks`
 --
 DELIMITER $$
@@ -375,15 +475,23 @@ CREATE TABLE `Tasks` (
 --
 
 INSERT INTO `Tasks` (`task_id`, `parent_task_id`, `task_name`, `description`, `project_id`, `assigned_to_user_id`, `created_by_user_id`, `priority`, `due_date`, `estimated_hours`, `actual_hours`, `completion_percentage`, `automatic_points`, `assigned_percentage`, `color_tag`, `is_subtask`, `subtask_order`, `status`, `is_completed`, `completed_at`, `created_at`, `updated_at`) VALUES
-(1, NULL, 'hal', '', 6, NULL, 1, 'medium', NULL, NULL, NULL, 0.00, 166.67, 0.00, '#3B82F6', 0, 0, 'completed', 1, '2025-08-01 17:07:42', '2025-07-31 22:39:16', '2025-08-01 19:37:43'),
-(2, NULL, 'Prueba2', '', 5, NULL, 1, 'medium', NULL, NULL, NULL, 0.00, 500.00, 0.00, '#3B82F6', 0, 0, 'completed', 1, '2025-08-01 16:19:34', '2025-08-01 16:19:31', '2025-08-01 16:19:34'),
-(3, NULL, '2 RECLUTAS', '', 4, NULL, 1, 'medium', NULL, NULL, NULL, 0.00, 1000.00, 0.00, '#3B82F6', 0, 0, 'completed', 1, '2025-08-01 16:21:58', '2025-08-01 16:21:57', '2025-08-01 16:21:58'),
-(4, NULL, 'Convenci1', '', 3, NULL, 1, 'medium', NULL, NULL, NULL, 0.00, 1000.00, 0.00, '#3B82F6', 0, 0, 'completed', 1, '2025-08-01 16:32:25', '2025-08-01 16:28:06', '2025-08-01 16:32:25'),
-(5, NULL, 'Prueba2', 'Esto es una prueba3', 6, 2, NULL, 'medium', NULL, NULL, NULL, 0.00, 166.67, 0.00, '#3B82F6', 0, 0, 'completed', 0, '2025-08-01 20:42:11', '2025-08-01 19:36:24', '2025-08-01 20:42:11'),
-(6, NULL, 'Hola', 'dfsaf', 6, 4, NULL, 'medium', NULL, NULL, NULL, 0.00, 166.67, 0.00, '#3B82F6', 0, 0, 'completed', 0, '2025-08-01 20:42:14', '2025-08-01 19:37:43', '2025-08-01 20:42:14'),
-(7, NULL, 'adsfadsfas', 'asdfasdfas', 6, 2, NULL, 'medium', NULL, NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'completed', 0, '2025-08-01 20:14:28', '2025-08-01 19:52:23', '2025-08-01 20:14:28'),
-(8, NULL, '2332', '23232323', 6, 2, 2, 'medium', '2025-08-07', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'completed', 0, '2025-08-01 20:30:32', '2025-08-01 20:29:38', '2025-08-01 20:30:32'),
-(9, NULL, '234rt', 'r23r32r', 5, 2, 2, 'medium', '2025-08-15', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-01 20:49:44', '2025-08-01 20:49:44');
+(28, NULL, 'QA', 'Realizar pruebas de datos, estructura información, y schemas.', 14, 2, 2, 'medium', '2025-08-19', NULL, NULL, 0.00, 28.57, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-05 21:03:15', '2025-08-05 22:29:24'),
+(29, NULL, 'Nuevos accesos en interfaz para nueva logica de usuarios', 'Gestion de interfaz para manejar visualmente los accesos.', 14, 9, 2, 'medium', '2025-08-08', NULL, NULL, 0.00, 28.57, 0.00, '#3B82F6', 0, 0, 'completed', 1, '2025-08-05 22:33:37', '2025-08-05 21:08:13', '2025-08-05 22:33:37'),
+(30, NULL, 'Filtros por ROL', 'Nueva logica de filtro por rol', 14, 9, 2, 'medium', '2025-08-11', NULL, NULL, 0.00, 28.57, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-05 21:08:58', '2025-08-05 22:29:24'),
+(31, NULL, 'Selector de Usuario', 'Logica que de termina visualmente la forma en que los usuarios y claves se asignan bajo ciertas circunstancias.', 14, 5, 2, 'medium', '2025-08-15', NULL, NULL, 0.00, 28.57, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-05 21:10:31', '2025-08-05 22:29:24'),
+(32, NULL, 'Ajustes de integración', 'Ajustes de integración', 14, 6, 2, 'medium', '2025-08-15', NULL, NULL, 0.00, 28.57, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-05 21:16:51', '2025-08-05 22:29:24'),
+(33, NULL, 'Merge a la rama FEAT consulta nuevos resultados 2', 'Merge a la rama FEAT consulta nuevos resultados 2', 14, 6, 2, 'medium', '2025-08-07', NULL, NULL, 0.00, 28.57, 0.00, '#3B82F6', 0, 0, 'completed', 1, '2025-08-05 22:33:32', '2025-08-05 21:18:46', '2025-08-05 22:33:32'),
+(34, NULL, 'Implementar filtros de la rama (Nuevos filtros)', 'Implementar filtros de la rama (Nuevos filtros)', 14, 6, 2, 'medium', '2025-08-15', NULL, NULL, 0.00, 28.57, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-05 21:19:48', '2025-08-05 22:29:24'),
+(35, NULL, 'Gestión de agentes (Usuarios de gran volumen)', 'Gestión de agentes (Usuarios de gran volumen)', 14, 9, 2, 'medium', '2025-08-15', NULL, NULL, 0.00, 28.57, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-05 21:21:08', '2025-08-05 22:29:24'),
+(36, NULL, 'Separación resultados Eject. Agente.', 'Separación resultados Eject. Agente.', 14, 6, 2, 'medium', '2025-08-13', NULL, NULL, 0.00, 28.57, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-05 21:23:45', '2025-08-05 22:29:24'),
+(37, NULL, 'Resegmentación de Robots', 'Resegmentación de Robots', 14, 11, 2, 'medium', '2025-08-12', NULL, NULL, 0.00, 28.57, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-05 21:24:59', '2025-08-05 22:29:24'),
+(38, NULL, 'Filtros por mes API', 'Filtros por mes API', 14, 12, 2, 'medium', '2025-08-08', NULL, NULL, 0.00, 28.57, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-05 21:25:30', '2025-08-05 22:29:24'),
+(39, NULL, 'Relación usuarios Backend', 'Relación usuarios Backend', 14, 12, 2, 'medium', '2025-08-14', NULL, NULL, 0.00, 28.57, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-05 21:26:23', '2025-08-05 22:29:24'),
+(40, NULL, 'Administracion Usuarios', 'Administracion Usuarios', 14, 4, 2, 'medium', '2025-08-15', NULL, NULL, 0.00, 28.57, 0.00, '#3B82F6', 0, 0, 'completed', 1, '2025-08-05 22:33:52', '2025-08-05 21:27:36', '2025-08-05 22:33:52'),
+(41, NULL, 'Figmas de propuesta', '', 14, 5, 2, 'medium', '2025-08-05', NULL, NULL, 0.00, 28.57, 0.00, '#3B82F6', 0, 0, 'completed', 1, '2025-08-05 22:33:24', '2025-08-05 22:03:53', '2025-08-05 22:33:24'),
+(42, NULL, 'Investigación Indicadores estrella', 'Investigación Indicadores estrella', 15, 11, 2, 'medium', '2025-09-05', NULL, NULL, 0.00, 175.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-05 22:20:26', '2025-08-05 22:29:38'),
+(43, NULL, 'Elaboración de PHU', 'Crear PHU para su aprobación', 15, 2, 2, 'medium', '2025-08-15', NULL, NULL, 0.00, 175.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-05 22:21:59', '2025-08-05 22:29:38'),
+(44, NULL, 'Creación de PHU', 'Creación de PHU para su aprobación', 16, 2, 2, 'medium', '2025-08-29', NULL, NULL, 0.00, 250.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-05 22:22:38', '2025-08-05 22:30:14');
 
 --
 -- Disparadores `Tasks`
@@ -433,17 +541,41 @@ CREATE TABLE `Task_Assignments` (
 --
 
 INSERT INTO `Task_Assignments` (`assignment_id`, `task_id`, `user_id`, `assigned_percentage`, `assigned_at`, `assigned_by_user_id`, `status`, `notes`) VALUES
-(1, 8, 2, 33.33, '2025-08-01 20:29:38', 2, 'assigned', NULL),
-(2, 8, 4, 33.33, '2025-08-01 20:29:38', 2, 'assigned', NULL),
-(3, 8, 11, 33.33, '2025-08-01 20:29:38', 2, 'assigned', NULL),
-(4, 9, 2, 12.50, '2025-08-01 20:49:44', 2, 'assigned', NULL),
-(5, 9, 4, 12.50, '2025-08-01 20:49:44', 2, 'assigned', NULL),
-(6, 9, 6, 12.50, '2025-08-01 20:49:44', 2, 'assigned', NULL),
-(7, 9, 11, 12.50, '2025-08-01 20:49:44', 2, 'assigned', NULL),
-(8, 9, 10, 12.50, '2025-08-01 20:49:44', 2, 'assigned', NULL),
-(9, 9, 12, 12.50, '2025-08-01 20:49:44', 2, 'assigned', NULL),
-(10, 9, 9, 12.50, '2025-08-01 20:49:44', 2, 'assigned', NULL),
-(11, 9, 5, 12.50, '2025-08-01 20:49:44', 2, 'assigned', NULL);
+(49, 28, 2, 12.50, '2025-08-05 21:03:15', 2, 'assigned', NULL),
+(50, 28, 4, 12.50, '2025-08-05 21:03:15', 2, 'assigned', NULL),
+(51, 28, 6, 12.50, '2025-08-05 21:03:15', 2, 'assigned', NULL),
+(52, 28, 11, 12.50, '2025-08-05 21:03:15', 2, 'assigned', NULL),
+(53, 28, 10, 12.50, '2025-08-05 21:03:15', 2, 'assigned', NULL),
+(54, 28, 12, 12.50, '2025-08-05 21:03:15', 2, 'assigned', NULL),
+(55, 28, 9, 12.50, '2025-08-05 21:03:15', 2, 'assigned', NULL),
+(56, 28, 5, 12.50, '2025-08-05 21:03:15', 2, 'assigned', NULL),
+(57, 29, 9, 50.00, '2025-08-05 21:08:13', 2, 'assigned', NULL),
+(58, 29, 5, 50.00, '2025-08-05 21:08:13', 2, 'assigned', NULL),
+(59, 30, 9, 50.00, '2025-08-05 21:08:58', 2, 'assigned', NULL),
+(60, 30, 5, 50.00, '2025-08-05 21:08:58', 2, 'assigned', NULL),
+(61, 31, 5, 100.00, '2025-08-05 21:10:31', 2, 'assigned', NULL),
+(62, 32, 6, 33.33, '2025-08-05 21:16:51', 2, 'assigned', NULL),
+(63, 32, 10, 33.33, '2025-08-05 21:16:51', 2, 'assigned', NULL),
+(64, 32, 12, 33.33, '2025-08-05 21:16:51', 2, 'assigned', NULL),
+(65, 33, 6, 50.00, '2025-08-05 21:18:46', 2, 'assigned', NULL),
+(66, 33, 12, 50.00, '2025-08-05 21:18:46', 2, 'assigned', NULL),
+(67, 34, 6, 50.00, '2025-08-05 21:19:48', 2, 'assigned', NULL),
+(68, 34, 12, 50.00, '2025-08-05 21:19:48', 2, 'assigned', NULL),
+(69, 35, 9, 50.00, '2025-08-05 21:21:08', 2, 'assigned', NULL),
+(70, 35, 5, 50.00, '2025-08-05 21:21:08', 2, 'assigned', NULL),
+(71, 36, 6, 50.00, '2025-08-05 21:23:45', 2, 'assigned', NULL),
+(72, 36, 10, 50.00, '2025-08-05 21:23:45', 2, 'assigned', NULL),
+(73, 37, 11, 50.00, '2025-08-05 21:24:59', 2, 'assigned', NULL),
+(74, 37, 10, 50.00, '2025-08-05 21:24:59', 2, 'assigned', NULL),
+(75, 38, 12, 100.00, '2025-08-05 21:25:30', 2, 'assigned', NULL),
+(76, 39, 12, 100.00, '2025-08-05 21:26:23', 2, 'assigned', NULL),
+(77, 40, 4, 50.00, '2025-08-05 21:27:36', 2, 'assigned', NULL),
+(78, 40, 9, 50.00, '2025-08-05 21:27:36', 2, 'assigned', NULL),
+(79, 41, 5, 100.00, '2025-08-05 22:03:53', 2, 'assigned', NULL),
+(80, 42, 11, 50.00, '2025-08-05 22:20:26', 2, 'assigned', NULL),
+(81, 42, 10, 50.00, '2025-08-05 22:20:26', 2, 'assigned', NULL),
+(82, 43, 2, 100.00, '2025-08-05 22:21:59', 2, 'assigned', NULL),
+(83, 44, 2, 100.00, '2025-08-05 22:22:38', 2, 'assigned', NULL);
 
 -- --------------------------------------------------------
 
@@ -482,15 +614,6 @@ CREATE TABLE `Task_Comments` (
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
---
--- Volcado de datos para la tabla `Task_Comments`
---
-
-INSERT INTO `Task_Comments` (`comment_id`, `task_id`, `user_id`, `comment_text`, `comment_type`, `related_user_id`, `old_value`, `new_value`, `is_private`, `created_at`) VALUES
-(1, 9, 2, 'hasodm', 'comment', NULL, NULL, NULL, 0, '2025-08-01 20:51:38'),
-(2, 9, 2, 'Hola esto es un comentario 2', 'comment', NULL, NULL, NULL, 0, '2025-08-01 20:51:56'),
-(3, 9, 2, 'archi2', 'comment', NULL, NULL, NULL, 0, '2025-08-01 20:52:28');
-
 -- --------------------------------------------------------
 
 --
@@ -515,19 +638,44 @@ CREATE TABLE `Task_History` (
 --
 
 INSERT INTO `Task_History` (`history_id`, `task_id`, `user_id`, `action_type`, `field_name`, `old_value`, `new_value`, `related_user_id`, `notes`, `created_at`) VALUES
-(1, 7, 2, 'status_changed', 'status', 'pending', 'completed', NULL, 'Estado cambiado de pending a completed', '2025-08-01 20:14:25'),
-(2, 8, 2, 'assigned', 'assigned_users', NULL, '2,4,11', NULL, 'Múltiples usuarios asignados', '2025-08-01 20:29:38'),
-(3, 8, 2, 'created', 'subtask', NULL, '45554', NULL, 'Subtarea creada: 45554', '2025-08-01 20:29:38'),
-(4, 8, 2, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-08-01 20:29:38'),
-(5, 8, 2, 'status_changed', 'status', 'pending', 'completed', NULL, 'Estado cambiado de pending a completed', '2025-08-01 20:30:32'),
-(6, 5, 2, 'status_changed', 'status', 'pending', 'completed', NULL, 'Estado cambiado de pending a completed', '2025-08-01 20:42:11'),
-(7, 6, 4, 'status_changed', 'status', 'pending', 'completed', NULL, 'Estado cambiado de pending a completed', '2025-08-01 20:42:14'),
-(8, 9, 2, 'assigned', 'assigned_users', NULL, '2,4,6,11,10,12,9,5', NULL, 'Múltiples usuarios asignados', '2025-08-01 20:49:44'),
-(9, 9, 2, 'created', 'subtask', NULL, '32r23r', NULL, 'Subtarea creada: 32r23r', '2025-08-01 20:49:44'),
-(10, 9, 2, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-08-01 20:49:44'),
-(11, 9, 2, 'commented', 'comment', NULL, 'hasodm', NULL, 'Comentario agregado', '2025-08-01 20:51:38'),
-(12, 9, 2, 'commented', 'comment', NULL, 'Hola esto es un comentario 2', NULL, 'Comentario agregado', '2025-08-01 20:51:56'),
-(13, 9, 2, 'commented', 'comment', NULL, 'archi2', NULL, 'Comentario agregado', '2025-08-01 20:52:28');
+(79, 28, 2, 'assigned', 'assigned_users', NULL, '2,4,6,11,10,12,9,5', NULL, 'Múltiples usuarios asignados', '2025-08-05 21:03:15'),
+(80, 28, 2, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-08-05 21:03:15'),
+(81, 29, 2, 'assigned', 'assigned_users', NULL, '9,5', NULL, 'Múltiples usuarios asignados', '2025-08-05 21:08:13'),
+(82, 29, 2, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-08-05 21:08:13'),
+(83, 30, 2, 'assigned', 'assigned_users', NULL, '9,5', NULL, 'Múltiples usuarios asignados', '2025-08-05 21:08:58'),
+(84, 30, 2, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-08-05 21:08:58'),
+(85, 31, 2, 'assigned', 'assigned_users', NULL, '5', NULL, 'Múltiples usuarios asignados', '2025-08-05 21:10:31'),
+(86, 31, 2, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-08-05 21:10:31'),
+(87, 32, 2, 'assigned', 'assigned_users', NULL, '6,10,12', NULL, 'Múltiples usuarios asignados', '2025-08-05 21:16:51'),
+(88, 32, 2, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-08-05 21:16:51'),
+(89, 33, 2, 'assigned', 'assigned_users', NULL, '6,12', NULL, 'Múltiples usuarios asignados', '2025-08-05 21:18:46'),
+(90, 33, 2, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-08-05 21:18:46'),
+(91, 34, 2, 'assigned', 'assigned_users', NULL, '6,12', NULL, 'Múltiples usuarios asignados', '2025-08-05 21:19:48'),
+(92, 34, 2, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-08-05 21:19:48'),
+(93, 35, 2, 'assigned', 'assigned_users', NULL, '9,5', NULL, 'Múltiples usuarios asignados', '2025-08-05 21:21:08'),
+(94, 35, 2, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-08-05 21:21:08'),
+(95, 36, 2, 'assigned', 'assigned_users', NULL, '6,10', NULL, 'Múltiples usuarios asignados', '2025-08-05 21:23:45'),
+(96, 36, 2, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-08-05 21:23:45'),
+(97, 37, 2, 'assigned', 'assigned_users', NULL, '11,10', NULL, 'Múltiples usuarios asignados', '2025-08-05 21:24:59'),
+(98, 37, 2, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-08-05 21:24:59'),
+(99, 38, 2, 'assigned', 'assigned_users', NULL, '12', NULL, 'Múltiples usuarios asignados', '2025-08-05 21:25:30'),
+(100, 38, 2, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-08-05 21:25:30'),
+(101, 39, 2, 'assigned', 'assigned_users', NULL, '12', NULL, 'Múltiples usuarios asignados', '2025-08-05 21:26:23'),
+(102, 39, 2, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-08-05 21:26:23'),
+(103, 40, 2, 'assigned', 'assigned_users', NULL, '4,9', NULL, 'Múltiples usuarios asignados', '2025-08-05 21:27:36'),
+(104, 40, 2, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-08-05 21:27:36'),
+(105, 41, 2, 'assigned', 'assigned_users', NULL, '5', NULL, 'Múltiples usuarios asignados', '2025-08-05 22:03:53'),
+(106, 41, 2, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-08-05 22:03:53'),
+(107, 42, 2, 'assigned', 'assigned_users', NULL, '11,10', NULL, 'Múltiples usuarios asignados', '2025-08-05 22:20:26'),
+(108, 42, 2, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-08-05 22:20:26'),
+(109, 43, 2, 'assigned', 'assigned_users', NULL, '2', NULL, 'Múltiples usuarios asignados', '2025-08-05 22:21:59'),
+(110, 43, 2, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-08-05 22:21:59'),
+(111, 44, 2, 'assigned', 'assigned_users', NULL, '2', NULL, 'Múltiples usuarios asignados', '2025-08-05 22:22:38'),
+(112, 44, 2, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-08-05 22:22:38'),
+(113, 41, 5, 'status_changed', 'status', 'pending', 'completed', NULL, 'Estado cambiado de pending a completed', '2025-08-05 22:33:24'),
+(114, 33, 6, 'status_changed', 'status', 'pending', 'completed', NULL, 'Estado cambiado de pending a completed', '2025-08-05 22:33:32'),
+(115, 29, 9, 'status_changed', 'status', 'pending', 'completed', NULL, 'Estado cambiado de pending a completed', '2025-08-05 22:33:37'),
+(116, 40, 4, 'status_changed', 'status', 'pending', 'completed', NULL, 'Estado cambiado de pending a completed', '2025-08-05 22:33:52');
 
 -- --------------------------------------------------------
 
@@ -600,19 +748,63 @@ CREATE TABLE `Users` (
 --
 
 INSERT INTO `Users` (`user_id`, `username`, `password_hash`, `email`, `full_name`, `is_active`, `last_login`, `created_at`) VALUES
-(1, 'super', 'S4m3sg33k', 'desarrollo@rinorisk.com', 'Usuario Administrador', 1, '2025-08-01 17:18:27', '2025-07-29 22:45:12'),
-(2, 'abdielc', '123456', 'abdiel@astrasoft.mx', 'Abdiel Carrasco', 1, '2025-08-02 17:36:45', '2025-07-29 23:23:21'),
+(1, 'super', '123456', 'desarrollo@rinorisk.com', 'Usuario Administrador', 1, '2025-08-07 15:30:49', '2025-07-29 22:45:12'),
+(2, 'abdielc', '123456', 'abdiel@astrasoft.mx', 'Abdiel Carrasco', 1, '2025-08-07 15:28:03', '2025-07-29 23:23:21'),
 (3, 'usuario1', '123456', 'usuario1@ejemplo.com', 'Juan Pérez García', 1, '2025-07-30 16:14:52', '2025-07-29 23:23:21'),
-(4, 'franklinb', '$2y$10$LLd8V.r/yvPmvOKqzVcfDOubbOn10GumgRo2oeZeaLHQibe49ylZ6', 'desarollo2@rinorisk.com', 'Franklin Benitez', 1, NULL, '2025-07-30 17:10:05'),
-(5, 'Rubend', '$2y$10$CPSSW.WgnObJiJD1Q56breqkrpzNO5cz8lk787y7tqInrGhyrGz/C', 'desarrollo3@rinorisk.com', 'Ruben Dorado', 1, NULL, '2025-07-30 18:20:45'),
-(6, 'gaelh', '$2y$10$zzOHmc/fGsufawJpaFMybe/ZEmxFE.5ZJw4JapoxKj/MdyVxj5efW', 'desarrollo.fulstack@rinorisk.com', 'Gael Herrera', 1, NULL, '2025-07-30 19:36:11'),
-(7, 'test_user_1753904255', '$2y$12$5imeZBL6zfOj.tHxHzVyl.nItqT6jF6mu49PtP/VU8T4E1dzPuQRy', 'test1753904255@example.com', 'Usuario de Prueba', 0, NULL, '2025-07-30 19:37:36'),
-(9, 'manuels', '$2y$10$tcoYFWXaX1nbnBWosf5BD.YK5Tgdg3GeL9uqz9y75VtpfTr.WtOkq', 'desarrollo.frontjr@rinorisk.com', 'Manuel Saenz', 1, NULL, '2025-07-30 19:46:47'),
-(10, 'piña', '$2y$10$P1vRT7hTEjcjz2qSoYA.feIKunD/RlObvCO9p53rCvxMVHhXfmbny', 'desarrollo.dataanalyst@rinorisk.com', 'Jaen Piña', 1, NULL, '2025-07-30 19:47:38'),
-(11, 'isaccg', '$2y$10$GnU7HjvlBuZjURI45W2xCePOaroIXwx6RHkDvkJlQ8FryO/dSpaOG', 'desarrollo.backend@rinorisk.com', 'Isaac Garcia', 1, NULL, '2025-07-30 19:48:29'),
-(12, 'janathanm', '$2y$10$NKs3M1V9Mpva0PCkRn9M0uDuiliIUjO.bBvazpZtdwIJclHVnNshW', 'desarrollo.fullstack.2@rinorisk.com', 'Jonathan Martinez', 1, NULL, '2025-07-30 19:51:19'),
-(13, 'jessicam', '$2y$10$VNkjYILfSFR3.g2SLLX0YOXjbcUxmdAT3bwhO/tBvPrW9ETdUC/tm', 'gerente.mkt@rinorisk.com', 'Jessica Mejia', 1, NULL, '2025-07-30 19:54:06'),
-(14, 'bereniceh', '$2y$10$e3RgLtOf5qrPKf8opaUA.O2j9LYm/dT0oO6TG5CamkihhSk1kg.Tm', 'gerente.rh@rinorisk.com', 'Berenice Hernandez', 1, NULL, '2025-07-30 20:35:34');
+(4, 'franklinb', '123456', 'desarollo2@rinorisk.com', 'Franklin Benitez', 1, NULL, '2025-07-30 17:10:05'),
+(5, 'Rubend', '123456', 'desarrollo3@rinorisk.com', 'Ruben Dorado', 1, NULL, '2025-07-30 18:20:45'),
+(6, 'gaelh', '123456', 'desarrollo.fulstack@rinorisk.com', 'Gael Herrera', 1, NULL, '2025-07-30 19:36:11'),
+(7, 'test_user_1753904255', '123456', 'test1753904255@example.com', 'Usuario de Prueba', 0, NULL, '2025-07-30 19:37:36'),
+(9, 'manuels', '123456', 'desarrollo.frontjr@rinorisk.com', 'Manuel Saenz', 1, NULL, '2025-07-30 19:46:47'),
+(10, 'piña', '123456', 'desarrollo.dataanalyst@rinorisk.com', 'Jaen Piña', 1, NULL, '2025-07-30 19:47:38'),
+(11, 'isaccg', '123456', 'desarrollo.backend@rinorisk.com', 'Isaac Garcia', 1, NULL, '2025-07-30 19:48:29'),
+(12, 'janathanm', '123456', 'desarrollo.fullstack.2@rinorisk.com', 'Jonathan Martinez', 1, NULL, '2025-07-30 19:51:19'),
+(13, 'jessicam', '123456', 'gerente.mkt@rinorisk.com', 'Jessica Mejia', 1, '2025-08-07 15:28:31', '2025-07-30 19:54:06'),
+(14, 'bereniceh', '123456', 'gerente.rh@rinorisk.com', 'Berenice Hernandez', 1, '2025-08-07 15:29:26', '2025-07-30 20:35:34'),
+(15, 'Valeriag', '123456', 'cultura.organizacional@rinorisk.com', 'Valeria Garcia', 1, NULL, '2025-08-04 19:11:54'),
+(16, 'Nora', '123456', 'sincorreo1@rinorisk.com', 'Nora', 1, NULL, '2025-08-06 21:01:29'),
+(17, 'ricardov', '123456', 'redes@rinorisk.com', 'Ricardo Vidaño', 1, NULL, '2025-08-06 21:03:34'),
+(18, 'israell', '123456', 'publicidad@rinorisk.com', 'Israel Lovato', 1, NULL, '2025-08-06 21:04:17'),
+(19, 'arisbethc', '123456', 'supervisor.comercialtj@rinorisk.com', 'Arisbeth Cuevas', 1, '2025-08-07 15:28:49', '2025-08-06 21:05:25'),
+(20, 'marlenef', '123456', 'cobranza@rinorisk.com', 'Marlene Flores', 1, NULL, '2025-08-06 21:06:16'),
+(21, 'Beatrizi', '123456', 'servicio.vgmtj@rinorisk.com', 'Beatriz Ita', 1, NULL, '2025-08-06 21:07:46'),
+(22, 'sofiag', '123456', 'Sofia@rinorisk.com', 'Sofia Gallardo', 1, '2025-08-07 15:29:09', '2025-08-06 21:09:03'),
+(23, 'taniab', '123456', 'auxiliar.inmuebles@rinorisk.com', 'Tania Barboza', 1, NULL, '2025-08-06 21:09:43'),
+(24, 'angelicav', '123456', 'gerente.administrativo@rinorisk.com', 'Angelica Vallejo', 1, NULL, '2025-08-06 21:10:52'),
+(25, 'yazmint', '123456', 'contabilidad@rinorisk.com', 'Yazmin Trejo', 1, NULL, '2025-08-06 21:11:37'),
+(26, 'mitchellq', '123456', 'auxiliar.contable@rinorisk.com', 'Mitchellq', 1, NULL, '2025-08-06 21:12:36'),
+(27, 'evelynd', '123456', 'analista.financiero@rinorisk.com', 'Evelyn Duran', 1, NULL, '2025-08-06 21:13:10'),
+(28, 'thanias', '123456', 'legal@rinorisk.com', 'Thania Sanchez', 1, NULL, '2025-08-06 21:14:19'),
+(29, 'monsed', '123456', 'asistente.legal@rinorisk.com', 'Monserrat Diaz', 1, NULL, '2025-08-06 21:22:48'),
+(30, 'Ivanm', '123456', 'procesos.operativos@rinorisk.com', 'Ivan Mozqueda', 1, '2025-08-07 15:33:14', '2025-08-06 21:23:48'),
+(31, 'marisoll', '123456', 'sincorreo2@rinorisk.com', 'Marisol Lopez', 1, NULL, '2025-08-06 21:24:54'),
+(32, 'joseo', '123456', 'sincorreo3@rinorisk.com', 'Jose Ovando', 1, NULL, '2025-08-06 21:25:29'),
+(33, 'isidorob', '123456', 'sincorreo4@rinorisk.com', 'Isidoro Bravo', 1, NULL, '2025-08-06 21:26:07'),
+(34, 'vannesat', '123456', 'sincorreo5@rinorisk.com', 'Vanessa Torres', 1, NULL, '2025-08-06 21:26:40'),
+(35, 'hildan', '123456', 'sincorreo6@rinorisk.com', 'Hilda Nuñez', 1, NULL, '2025-08-06 21:27:48'),
+(36, 'porfiriog', '123456', 'sincorreo7@rinorisk.com', 'Porfirio Gonzales', 1, NULL, '2025-08-06 21:28:22'),
+(37, 'ronym', '123456', 'sincorreo8@rinorisk.com', 'Rony Marquez', 1, NULL, '2025-08-06 21:29:47'),
+(38, 'juanl', '123456', 'sistemas@rinorisk.com', 'Juan Lopez', 1, NULL, '2025-08-06 21:30:21'),
+(39, 'yesseniav', '123456', 'capacitacion@rinorisk.com', 'Yessenia', 1, NULL, '2025-08-06 21:46:27'),
+(40, 'karenv', '123456', 'sincorreo9@rinorisk.com', 'Karen Vazques', 1, NULL, '2025-08-06 21:47:02'),
+(41, 'angelr', '123456', 'sincorreo10@rinorisk.com', 'Angel Ramos', 1, NULL, '2025-08-06 21:47:43'),
+(42, 'fernandam', '123456', 'sincorreo11@rinorisk.com', 'Fernanda Moreno', 1, NULL, '2025-08-06 21:48:14'),
+(43, 'dulces', '123456', 'sincorreo12@rinorisk.com', 'Dulce de santiago', 1, NULL, '2025-08-06 21:48:55'),
+(44, 'Keyla', '123456', 'sincorreo13@rinorisk.com', 'Keyla', 1, NULL, '2025-08-06 21:49:46'),
+(45, 'samanthac', '123456', 'sincorrreo14@rinorisk.com', 'Samantha Carrizales', 1, NULL, '2025-08-06 21:50:22'),
+(46, 'lisbethv', '123456', 'sincorreo15@rinorisk.com', 'Lisbeth Vega', 1, NULL, '2025-08-06 21:50:57'),
+(47, 'alejandrar', '123456', 'sincorreo16@rinorisk.com', 'Alejandra Ramos', 1, NULL, '2025-08-06 21:51:48'),
+(48, 'myriamt', '123456', 'sincorreo17@rinorisk.com', 'Myriam Torres', 1, NULL, '2025-08-06 21:52:21'),
+(49, 'dianag', '123456', 'sincorreo18@rinorisk.com', 'Diana Gonzales', 1, NULL, '2025-08-06 21:52:51'),
+(50, 'karenf', '123456', 'sincorreo19@rinorisk.com', 'Karen Fletes', 1, '2025-08-07 15:29:47', '2025-08-06 21:54:25'),
+(51, 'lider_direccion', '$2y$10$6EeY1mJ2kZQB4wQwHsv/9O8XVGAHdSXF5Vby41xb4yoZWvBmsc0Ye', 'lider.direccion@rinorisk.com', 'Líder Dirección', 1, NULL, '2025-08-06 22:19:51'),
+(52, 'lider_gaia', '$2y$10$IckMuWz0zex8ycuGgVEAO./OWwjcS58zkWm4hAPgYR/ZUjxvZEtge', 'lider.gaia@rinorisk.com', 'Líder Gaia', 1, NULL, '2025-08-06 22:19:51'),
+(53, 'lider_operaciones', '$2y$10$GX/NOwNxP85LzDlKFftl6eeNFlLnIdh5m962zNqf95TanV.sL3i3q', 'lider.operaciones@rinorisk.com', 'Líder Operaciones', 1, NULL, '2025-08-06 22:19:51'),
+(54, 'lider_servicio', '$2y$10$X75nWRTaNskjIC7A5LM01uI37fCN2EYU7wthiPvUAk8p1leLkBo3S', 'lider.servicio@rinorisk.com', 'Líder Servicio', 1, NULL, '2025-08-06 22:19:52'),
+(55, 'rosaliae', '123456', 'sincorreo20@rinorisk.com', 'Rosalia Enriquez', 1, NULL, '2025-08-06 23:21:11'),
+(56, 'sonial', '123456', 'sincorreo21@rinorisk.com', 'Sonia Lopez', 1, NULL, '2025-08-06 23:24:15'),
+(57, 'ivan2', '123456', 'sincorreo23@rinorsik.com', 'Ivan Mosqueda', 1, '2025-08-07 15:31:57', '2025-08-06 23:25:11'),
+(58, 'ivan3', '123456', 'sincorreo24@rinorisk.com', 'Ivan Mozqueda', 1, '2025-08-07 15:32:18', '2025-08-06 23:29:06');
 
 -- --------------------------------------------------------
 
@@ -631,9 +823,19 @@ CREATE TABLE `User_Roles` (
 
 INSERT INTO `User_Roles` (`user_id`, `role_id`) VALUES
 (1, 1),
+(30, 1),
 (2, 3),
 (13, 3),
 (14, 3),
+(19, 3),
+(22, 3),
+(50, 3),
+(51, 3),
+(52, 3),
+(53, 3),
+(54, 3),
+(57, 3),
+(58, 3),
 (3, 4),
 (4, 4),
 (5, 4),
@@ -641,7 +843,41 @@ INSERT INTO `User_Roles` (`user_id`, `role_id`) VALUES
 (9, 4),
 (10, 4),
 (11, 4),
-(12, 4);
+(12, 4),
+(15, 4),
+(16, 4),
+(17, 4),
+(18, 4),
+(20, 4),
+(21, 4),
+(23, 4),
+(24, 4),
+(25, 4),
+(26, 4),
+(27, 4),
+(28, 4),
+(29, 4),
+(31, 4),
+(32, 4),
+(33, 4),
+(34, 4),
+(35, 4),
+(36, 4),
+(37, 4),
+(38, 4),
+(39, 4),
+(40, 4),
+(41, 4),
+(42, 4),
+(43, 4),
+(44, 4),
+(45, 4),
+(46, 4),
+(47, 4),
+(48, 4),
+(49, 4),
+(55, 4),
+(56, 4);
 
 -- --------------------------------------------------------
 
@@ -969,7 +1205,7 @@ ALTER TABLE `User_Roles`
 -- AUTO_INCREMENT de la tabla `Clans`
 --
 ALTER TABLE `Clans`
-  MODIFY `clan_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `clan_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT de la tabla `Clan_KPIs`
@@ -981,7 +1217,7 @@ ALTER TABLE `Clan_KPIs`
 -- AUTO_INCREMENT de la tabla `Clan_Members`
 --
 ALTER TABLE `Clan_Members`
-  MODIFY `clan_member_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `clan_member_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=89;
 
 --
 -- AUTO_INCREMENT de la tabla `KPI_History`
@@ -993,19 +1229,19 @@ ALTER TABLE `KPI_History`
 -- AUTO_INCREMENT de la tabla `KPI_Quarters`
 --
 ALTER TABLE `KPI_Quarters`
-  MODIFY `kpi_quarter_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `kpi_quarter_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT de la tabla `login_attempts`
 --
 ALTER TABLE `login_attempts`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=43;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=120;
 
 --
 -- AUTO_INCREMENT de la tabla `Projects`
 --
 ALTER TABLE `Projects`
-  MODIFY `project_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `project_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- AUTO_INCREMENT de la tabla `Roles`
@@ -1017,19 +1253,19 @@ ALTER TABLE `Roles`
 -- AUTO_INCREMENT de la tabla `Subtasks`
 --
 ALTER TABLE `Subtasks`
-  MODIFY `subtask_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `subtask_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT de la tabla `Tasks`
 --
 ALTER TABLE `Tasks`
-  MODIFY `task_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `task_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=45;
 
 --
 -- AUTO_INCREMENT de la tabla `Task_Assignments`
 --
 ALTER TABLE `Task_Assignments`
-  MODIFY `assignment_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `assignment_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=84;
 
 --
 -- AUTO_INCREMENT de la tabla `Task_Attachments`
@@ -1041,13 +1277,13 @@ ALTER TABLE `Task_Attachments`
 -- AUTO_INCREMENT de la tabla `Task_Comments`
 --
 ALTER TABLE `Task_Comments`
-  MODIFY `comment_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `comment_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT de la tabla `Task_History`
 --
 ALTER TABLE `Task_History`
-  MODIFY `history_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `history_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=117;
 
 --
 -- AUTO_INCREMENT de la tabla `Task_Labels`
@@ -1059,7 +1295,7 @@ ALTER TABLE `Task_Labels`
 -- AUTO_INCREMENT de la tabla `Users`
 --
 ALTER TABLE `Users`
-  MODIFY `user_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+  MODIFY `user_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=59;
 
 --
 -- Restricciones para tablas volcadas
