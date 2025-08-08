@@ -1679,6 +1679,200 @@ class ClanLeaderController {
     }
     
     /**
+     * Obtener estadísticas detalladas de un usuario específico
+     */
+    public function getUserDetailedStats() {
+        try {
+            // Verificar autenticación
+            if (!$this->auth->isLoggedIn()) {
+                Utils::jsonResponse(['success' => false, 'message' => 'No autenticado'], 401);
+                return;
+            }
+            
+            // Verificar permisos de líder de clan
+            if (!$this->hasClanLeaderAccess()) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos de líder de clan'], 403);
+                return;
+            }
+            
+            // Verificar que el usuario tiene clan asignado
+            if (!$this->userClan) {
+                Utils::jsonResponse(['success' => false, 'message' => 'No tienes un clan asignado'], 403);
+                return;
+            }
+            
+            // Verificar método HTTP
+            if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+                Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
+                return;
+            }
+            
+            $userId = (int)($_GET['user_id'] ?? 0);
+            
+            if ($userId <= 0) {
+                Utils::jsonResponse(['success' => false, 'message' => 'ID de usuario inválido'], 400);
+                return;
+            }
+            
+            // Verificar que el usuario pertenece al clan
+            $memberStmt = $this->db->prepare("
+                SELECT u.user_id, u.username, u.full_name, u.email, u.is_active, u.last_login
+                FROM Users u
+                JOIN Clan_Members cm ON u.user_id = cm.user_id
+                WHERE cm.clan_id = ? AND u.user_id = ?
+            ");
+            $memberStmt->execute([$this->userClan['clan_id'], $userId]);
+            $member = $memberStmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$member) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Usuario no encontrado en el clan'], 404);
+                return;
+            }
+            
+            // Obtener proyectos del clan
+            $projectStmt = $this->db->prepare("SELECT project_id, project_name FROM Projects WHERE clan_id = ?");
+            $projectStmt->execute([$this->userClan['clan_id']]);
+            $projects = $projectStmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            $projectIds = array_column($projects, 'project_id');
+            
+            // Estadísticas generales de tareas
+            $taskStats = [
+                'total_tasks' => 0,
+                'completed_tasks' => 0,
+                'pending_tasks' => 0,
+                'in_progress_tasks' => 0,
+                'overdue_tasks' => 0,
+                'completion_percentage' => 0
+            ];
+            
+            // Tareas por proyecto
+            $tasksByProject = [];
+            
+            if (!empty($projectIds)) {
+                $placeholders = str_repeat('?,', count($projectIds) - 1) . '?';
+                
+                // Estadísticas generales
+                $statsStmt = $this->db->prepare("
+                    SELECT 
+                        COUNT(*) as total_tasks,
+                        SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_tasks,
+                        SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_tasks,
+                        SUM(CASE WHEN status = 'in_progress' THEN 1 ELSE 0 END) as in_progress_tasks,
+                        SUM(CASE WHEN due_date < CURDATE() AND status != 'completed' THEN 1 ELSE 0 END) as overdue_tasks
+                    FROM Tasks 
+                    WHERE assigned_to_user_id = ? AND project_id IN ($placeholders) AND is_subtask = 0
+                ");
+                
+                $params = array_merge([$userId], $projectIds);
+                $statsStmt->execute($params);
+                $stats = $statsStmt->fetch(PDO::FETCH_ASSOC);
+                
+                $taskStats['total_tasks'] = (int)$stats['total_tasks'];
+                $taskStats['completed_tasks'] = (int)$stats['completed_tasks'];
+                $taskStats['pending_tasks'] = (int)$stats['pending_tasks'];
+                $taskStats['in_progress_tasks'] = (int)$stats['in_progress_tasks'];
+                $taskStats['overdue_tasks'] = (int)$stats['overdue_tasks'];
+                $taskStats['completion_percentage'] = $taskStats['total_tasks'] > 0 ? 
+                    round(($taskStats['completed_tasks'] / $taskStats['total_tasks']) * 100, 1) : 0;
+                
+                // Tareas por proyecto
+                foreach ($projects as $project) {
+                    $projectTaskStmt = $this->db->prepare("
+                        SELECT 
+                            t.task_id,
+                            t.task_name,
+                            t.description,
+                            t.status,
+                            t.priority,
+                            t.due_date,
+                            t.completed_at,
+                            t.assigned_percentage,
+                            t.automatic_points
+                        FROM Tasks t
+                        WHERE t.assigned_to_user_id = ? AND t.project_id = ? AND t.is_subtask = 0
+                        ORDER BY t.due_date ASC, t.created_at DESC
+                    ");
+                    $projectTaskStmt->execute([$userId, $project['project_id']]);
+                    $projectTasks = $projectTaskStmt->fetchAll(PDO::FETCH_ASSOC);
+                    
+                    if (!empty($projectTasks)) {
+                        $tasksByProject[] = [
+                            'project_id' => $project['project_id'],
+                            'project_name' => $project['project_name'],
+                            'tasks' => $projectTasks
+                        ];
+                    }
+                }
+            }
+            
+            // Obtener historial de actividad reciente
+            $activityStmt = $this->db->prepare("
+                SELECT 
+                    th.action_type,
+                    th.field_name,
+                    th.old_value,
+                    th.new_value,
+                    th.notes,
+                    th.created_at,
+                    t.task_name
+                FROM Task_History th
+                JOIN Tasks t ON th.task_id = t.task_id
+                WHERE th.user_id = ? AND t.project_id IN ($placeholders)
+                ORDER BY th.created_at DESC
+                LIMIT 10
+            ");
+            $params = array_merge([$userId], $projectIds);
+            $activityStmt->execute($params);
+            $recentActivity = $activityStmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Obtener comentarios recientes
+            $commentsStmt = $this->db->prepare("
+                SELECT 
+                    tc.comment_text,
+                    tc.comment_type,
+                    tc.created_at,
+                    t.task_name
+                FROM Task_Comments tc
+                JOIN Tasks t ON tc.task_id = t.task_id
+                WHERE tc.user_id = ? AND t.project_id IN ($placeholders)
+                ORDER BY tc.created_at DESC
+                LIMIT 5
+            ");
+            $params = array_merge([$userId], $projectIds);
+            $commentsStmt->execute($params);
+            $recentComments = $commentsStmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Generar color de avatar
+            $avatarColor = $this->getAvatarColor($userId);
+            
+            $response = [
+                'success' => true,
+                'user' => [
+                    'user_id' => $member['user_id'],
+                    'username' => $member['username'],
+                    'full_name' => $member['full_name'],
+                    'email' => $member['email'],
+                    'is_active' => (bool)$member['is_active'],
+                    'last_login' => $member['last_login'],
+                    'avatar_color' => $avatarColor,
+                    'initial' => strtoupper(substr($member['full_name'], 0, 1))
+                ],
+                'task_stats' => $taskStats,
+                'tasks_by_project' => $tasksByProject,
+                'recent_activity' => $recentActivity,
+                'recent_comments' => $recentComments
+            ];
+            
+            Utils::jsonResponse($response);
+            
+        } catch (Exception $e) {
+            error_log("Error en ClanLeaderController::getUserStats: " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor'], 500);
+        }
+    }
+    
+    /**
      * Obtener contribuciones por miembro del clan
      */
     private function getMemberContributions() {

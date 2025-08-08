@@ -83,7 +83,7 @@ ob_start();
                     $memberColor = $colors[$colorIndex % count($colors)];
                     $colorIndex++;
                 ?>
-                    <div class="contribution-card">
+                    <div class="contribution-card clickable" data-user-id="<?php echo $member['user_id']; ?>" onclick="showUserStats(<?php echo $member['user_id']; ?>)">
                         <div class="member-avatar">
                             <?php if ($member['profile_picture']): ?>
                                 <img src="<?php echo htmlspecialchars($member['profile_picture']); ?>" alt="<?php echo htmlspecialchars($member['full_name']); ?>">
@@ -207,6 +207,21 @@ ob_start();
                 </div>
             </div>
         </section>
+    </div>
+</div>
+
+<!-- Modal de Estadísticas de Usuario -->
+<div id="userStatsModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="userStatsTitle">Estadísticas del Usuario</h2>
+            <span class="close" onclick="closeUserStatsModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div id="userStatsContent">
+                <!-- El contenido se cargará dinámicamente -->
+            </div>
+        </div>
     </div>
 </div>
 

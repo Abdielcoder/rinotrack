@@ -419,24 +419,36 @@ class KPI {
                     c.clan_id,
                     c.clan_name,
                     c.clan_departamento,
-                    COALESCE(SUM(p.kpi_points), 0) as total_assigned,
-                    COALESCE(SUM(
+                    SUM(p.kpi_points) as total_assigned,
+                    SUM(
                         CASE 
                             WHEN p.task_distribution_mode = 'automatic' THEN 
-                                (SELECT COALESCE(SUM(t.automatic_points), 0) 
-                                 FROM Tasks t 
-                                 WHERE t.project_id = p.project_id AND t.is_completed = 1)
+                                COALESCE(t_auto.completed_points, 0)
                             ELSE 
-                                (SELECT COALESCE(SUM(t.assigned_percentage * p.kpi_points / 100), 0) 
-                                 FROM Tasks t 
-                                 WHERE t.project_id = p.project_id AND t.is_completed = 1)
+                                COALESCE(t_perc.completed_points, 0)
                         END
-                    ), 0) as earned_points,
+                    ) as earned_points,
                     COUNT(p.project_id) as total_projects
                 FROM Clans c
-                LEFT JOIN Projects p ON c.clan_id = p.clan_id AND p.kpi_quarter_id = ?
+                INNER JOIN Projects p ON c.clan_id = p.clan_id AND p.kpi_quarter_id = ?
+                LEFT JOIN (
+                    SELECT 
+                        project_id,
+                        SUM(automatic_points) as completed_points
+                    FROM Tasks 
+                    WHERE is_completed = 1
+                    GROUP BY project_id
+                ) t_auto ON p.project_id = t_auto.project_id
+                LEFT JOIN (
+                    SELECT 
+                        t.project_id,
+                        SUM(t.assigned_percentage * p.kpi_points / 100) as completed_points
+                    FROM Tasks t
+                    INNER JOIN Projects p ON t.project_id = p.project_id
+                    WHERE t.is_completed = 1
+                    GROUP BY t.project_id
+                ) t_perc ON p.project_id = t_perc.project_id
                 GROUP BY c.clan_id, c.clan_name, c.clan_departamento
-                HAVING total_assigned > 0
                 ORDER BY earned_points DESC, total_assigned DESC
             ");
             $stmt->execute([$quarterId]);
@@ -444,10 +456,10 @@ class KPI {
             
 
             
-            // Agregar porcentaje de eficiencia
+            // Agregar porcentaje de eficiencia basado en los 1000 puntos del trimestre
             foreach ($results as &$clan) {
-                $clan['efficiency_percentage'] = $clan['total_assigned'] > 0 ? 
-                    round(($clan['earned_points'] / $clan['total_assigned']) * 100, 1) : 0;
+                $clan['efficiency_percentage'] = 1000 > 0 ? 
+                    round(($clan['earned_points'] / 1000) * 100, 1) : 0;
             }
             
             return $results;

@@ -202,8 +202,8 @@ class AdminController {
             Utils::jsonResponse(['success' => false, 'message' => 'ID de usuario inválido'], 400);
         }
         
-        // Verificar que el usuario existe
-        $user = $this->userModel->findById($userId);
+        // Verificar que el usuario existe (incluyendo usuarios desactivados)
+        $user = $this->userModel->findByIdAnyStatus($userId);
         if (!$user) {
             Utils::jsonResponse(['success' => false, 'message' => 'Usuario no encontrado'], 404);
         }

@@ -747,6 +747,12 @@ class Task {
                 }
             }
             
+            // Actualizar progreso del proyecto si se cambió el estado
+            if ($status !== null) {
+                $projectModel = new Project();
+                $projectModel->updateProgress($task['project_id']);
+            }
+            
             $this->db->commit();
             return true;
             

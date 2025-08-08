@@ -399,6 +399,11 @@ try {
         $controller->updateUserPercentage();
         break;
         
+    case 'clan_leader/get-user-stats':
+        $controller = new ClanLeaderController();
+        $controller->getUserDetailedStats();
+        break;
+        
             case 'clan_leader/collaborator-availability':
             $controller = new ClanLeaderController();
             $controller->collaboratorAvailability();

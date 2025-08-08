@@ -152,8 +152,8 @@ ob_start();
                                 
                                 <div class="clan-progress">
                                     <?php 
-                                    $efficiency = $clan['total_points'] > 0 ? 
-                                        round((($clan['earned_points'] ?? 0) / $clan['total_points']) * 100, 1) : 0;
+                                    $efficiency = 1000 > 0 ? 
+                                        round((($clan['earned_points'] ?? 0) / 1000) * 100, 1) : 0;
                                     ?>
                                     <div class="progress-bar-small">
                                         <div class="progress-fill-small" style="width: <?php echo min($efficiency, 100); ?>%"></div>

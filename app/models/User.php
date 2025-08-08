@@ -44,6 +44,24 @@ class User {
     }
     
     /**
+     * Buscar usuario por ID sin importar su estado activo
+     */
+    public function findByIdAnyStatus($id) {
+        try {
+            $stmt = $this->db->prepare("
+                SELECT user_id, username, email, full_name, is_active, last_login, created_at 
+                FROM Users 
+                WHERE user_id = ?
+            ");
+            $stmt->execute([$id]);
+            return $stmt->fetch();
+        } catch (PDOException $e) {
+            error_log("Error al buscar usuario por ID (cualquier estado): " . $e->getMessage());
+            return false;
+        }
+    }
+    
+    /**
      * Actualizar último login del usuario
      */
     public function updateLastLogin($userId) {

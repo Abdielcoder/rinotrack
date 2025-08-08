@@ -733,4 +733,251 @@ const toastStyles = `
 `;
 
 // Agregar estilos al head
-document.head.insertAdjacentHTML('beforeend', toastStyles); 
+document.head.insertAdjacentHTML('beforeend', toastStyles);
+
+// Funciones para el modal de estadísticas de usuario
+function showUserStats(userId) {
+    // Mostrar loading en el modal
+    const modal = document.getElementById('userStatsModal');
+    const content = document.getElementById('userStatsContent');
+    
+    modal.style.display = 'block';
+    content.innerHTML = `
+        <div class="empty-state">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Cargando estadísticas del usuario...</p>
+        </div>
+    `;
+    
+    // Hacer petición AJAX para obtener estadísticas
+    fetch(`?route=clan_leader/get-user-stats&user_id=${userId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displayUserStats(data);
+            } else {
+                showErrorInModal(data.message || 'Error al cargar estadísticas');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showErrorInModal('Error de conexión al cargar estadísticas');
+        });
+}
+
+function displayUserStats(data) {
+    const content = document.getElementById('userStatsContent');
+    const user = data.user;
+    const stats = data.task_stats;
+    
+    // Actualizar título del modal
+    document.getElementById('userStatsTitle').textContent = `Estadísticas de ${user.full_name}`;
+    
+    // Generar HTML del contenido
+    const html = `
+        <div class="user-stats-container">
+            <!-- Header del usuario -->
+            <div class="user-header">
+                <div class="user-avatar-large" style="background-color: ${user.avatar_color}">
+                    ${user.initial}
+                </div>
+                <div class="user-info">
+                    <h3>${user.full_name}</h3>
+                    <p>${user.email}</p>
+                    <p><strong>Estado:</strong> ${user.is_active ? 'Activo' : 'Inactivo'}</p>
+                    ${user.last_login ? `<p><strong>Último acceso:</strong> ${formatDate(user.last_login)}</p>` : ''}
+                </div>
+            </div>
+            
+            <!-- Estadísticas generales -->
+            <div class="user-stats-grid">
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-icon completed">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-title">Tareas Completadas</div>
+                    </div>
+                    <div class="stat-value">${stats.completed_tasks}</div>
+                    <div class="stat-percentage">${stats.completion_percentage}% del total</div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-icon pending">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-title">Tareas Pendientes</div>
+                    </div>
+                    <div class="stat-value">${stats.pending_tasks}</div>
+                    <div class="stat-percentage">${stats.total_tasks > 0 ? Math.round((stats.pending_tasks / stats.total_tasks) * 100) : 0}% del total</div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-icon in-progress">
+                            <i class="fas fa-spinner"></i>
+                        </div>
+                        <div class="stat-title">En Progreso</div>
+                    </div>
+                    <div class="stat-value">${stats.in_progress_tasks}</div>
+                    <div class="stat-percentage">${stats.total_tasks > 0 ? Math.round((stats.in_progress_tasks / stats.total_tasks) * 100) : 0}% del total</div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-icon overdue">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="stat-title">Tareas Vencidas</div>
+                    </div>
+                    <div class="stat-value">${stats.overdue_tasks}</div>
+                    <div class="stat-percentage">${stats.total_tasks > 0 ? Math.round((stats.overdue_tasks / stats.total_tasks) * 100) : 0}% del total</div>
+                </div>
+            </div>
+            
+            <!-- Tareas por proyecto -->
+            ${data.tasks_by_project.length > 0 ? `
+                <div class="tasks-by-project">
+                    <div class="project-tasks-header">
+                        <h4><i class="fas fa-project-diagram"></i> Tareas por Proyecto</h4>
+                    </div>
+                    <div class="project-tasks-list">
+                        ${data.tasks_by_project.map(project => `
+                            <div class="project-task-item">
+                                <div class="task-item-header">
+                                    <div class="task-item-name">${project.project_name}</div>
+                                    <div class="task-item-status">${project.tasks.length} tareas</div>
+                                </div>
+                                <div class="task-item-meta">
+                                    ${project.tasks.map(task => `
+                                        <span>
+                                            <i class="fas fa-tasks"></i>
+                                            ${task.task_name}
+                                            <span class="task-item-status ${task.status}">${getStatusText(task.status)}</span>
+                                            ${task.due_date ? `<i class="fas fa-calendar"></i> ${formatDate(task.due_date)}` : ''}
+                                        </span>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            ` : `
+                <div class="empty-state">
+                    <i class="fas fa-tasks"></i>
+                    <p>No hay tareas asignadas a este usuario</p>
+                </div>
+            `}
+            
+            <!-- Actividad reciente -->
+            ${data.recent_activity.length > 0 ? `
+                <div class="activity-section">
+                    <div class="activity-header">
+                        <h4><i class="fas fa-history"></i> Actividad Reciente</h4>
+                    </div>
+                    <div class="activity-list">
+                        ${data.recent_activity.map(activity => `
+                            <div class="activity-item">
+                                <div class="activity-content">
+                                    <div class="activity-text">
+                                        <div class="activity-action">${getActivityText(activity)}</div>
+                                        <div class="activity-task">${activity.task_name}</div>
+                                    </div>
+                                    <div class="activity-time">${formatDate(activity.created_at)}</div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            ` : `
+                <div class="empty-state">
+                    <i class="fas fa-history"></i>
+                    <p>No hay actividad reciente</p>
+                </div>
+            `}
+        </div>
+    `;
+    
+    content.innerHTML = html;
+}
+
+function showErrorInModal(message) {
+    const content = document.getElementById('userStatsContent');
+    content.innerHTML = `
+        <div class="empty-state">
+            <i class="fas fa-exclamation-triangle"></i>
+            <p>${message}</p>
+        </div>
+    `;
+}
+
+function closeUserStatsModal() {
+    const modal = document.getElementById('userStatsModal');
+    modal.style.display = 'none';
+}
+
+function getStatusText(status) {
+    const statusMap = {
+        'completed': 'Completada',
+        'pending': 'Pendiente',
+        'in_progress': 'En Progreso',
+        'overdue': 'Vencida'
+    };
+    return statusMap[status] || status;
+}
+
+function getActivityText(activity) {
+    const actionMap = {
+        'created': 'Creó la tarea',
+        'updated': 'Actualizó la tarea',
+        'status_changed': 'Cambió el estado',
+        'assigned': 'Fue asignado',
+        'unassigned': 'Fue desasignado',
+        'commented': 'Agregó un comentario',
+        'completed': 'Completó la tarea',
+        'reopened': 'Reabrió la tarea',
+        'deleted': 'Eliminó la tarea'
+    };
+    
+    let text = actionMap[activity.action_type] || activity.action_type;
+    
+    if (activity.field_name && activity.old_value !== activity.new_value) {
+        text += ` (${activity.field_name}: ${activity.old_value || 'N/A'} → ${activity.new_value || 'N/A'})`;
+    }
+    
+    return text;
+}
+
+function formatDate(dateString) {
+    if (!dateString) return 'N/A';
+    
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now - date);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 1) {
+        return 'Hoy';
+    } else if (diffDays === 2) {
+        return 'Ayer';
+    } else if (diffDays <= 7) {
+        return `Hace ${diffDays - 1} días`;
+    } else {
+        return date.toLocaleDateString('es-ES', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+}
+
+// Cerrar modal al hacer clic fuera de él
+window.addEventListener('click', function(event) {
+    const modal = document.getElementById('userStatsModal');
+    if (event.target === modal) {
+        closeUserStatsModal();
+    }
+}); 

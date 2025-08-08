@@ -92,15 +92,49 @@ class Project {
                     ck.year as kpi_year,
                     ck.quarter as kpi_quarter,
                     ck.total_points as kpi_total_points,
-                    (ck.total_points - ck.assigned_points) as kpi_available_points
+                    (ck.total_points - ck.assigned_points) as kpi_available_points,
+                    COUNT(t.task_id) as total_tasks,
+                    SUM(CASE WHEN t.is_completed = 1 THEN 1 ELSE 0 END) as completed_tasks,
+                    CASE 
+                        WHEN p.task_distribution_mode = 'automatic' THEN 
+                            COALESCE(SUM(CASE WHEN t.is_completed = 1 THEN t.automatic_points ELSE 0 END), 0)
+                        ELSE 
+                            COALESCE(SUM(CASE WHEN t.is_completed = 1 THEN (t.assigned_percentage * p.kpi_points / 100) ELSE 0 END), 0)
+                    END as earned_points
                 FROM Projects p
                 LEFT JOIN Clans c ON p.clan_id = c.clan_id
                 LEFT JOIN Users u ON p.created_by_user_id = u.user_id
                 LEFT JOIN Clan_KPIs ck ON p.kpi_quarter_id = ck.kpi_id
+                LEFT JOIN Tasks t ON p.project_id = t.project_id AND t.is_subtask = 0
+                GROUP BY p.project_id, p.project_name, p.description, p.clan_id, p.created_by_user_id, 
+                         p.status, p.created_at, p.updated_at, p.kpi_quarter_id, p.kpi_points, 
+                         p.task_distribution_mode, c.clan_name, u.full_name, u.username, 
+                         ck.year, ck.quarter, ck.total_points, ck.assigned_points
                 ORDER BY p.created_at DESC
             ");
             $stmt->execute();
-            return $stmt->fetchAll();
+            $projects = $stmt->fetchAll();
+            
+            // Calcular el progreso para cada proyecto
+            foreach ($projects as &$project) {
+                $totalTasks = (int)$project['total_tasks'];
+                $completedTasks = (int)$project['completed_tasks'];
+                $kpiPoints = (float)$project['kpi_points'];
+                $earnedPoints = (float)$project['earned_points'];
+                
+                // Calcular el porcentaje de progreso
+                if ($kpiPoints > 0) {
+                    $project['progress_percentage'] = round(($earnedPoints / $kpiPoints) * 100, 1);
+                } else {
+                    // Si no hay KPI asignado, calcular basado en tareas completadas
+                    $project['progress_percentage'] = $totalTasks > 0 ? round(($completedTasks / $totalTasks) * 100, 1) : 0;
+                }
+                
+                // Asegurar que los valores estén en el rango correcto
+                $project['progress_percentage'] = max(0, min(100, $project['progress_percentage']));
+            }
+            
+            return $projects;
         } catch (PDOException $e) {
             error_log("Error al obtener proyectos: " . $e->getMessage());
             return [];
@@ -274,17 +308,61 @@ class Project {
      */
     public function getStats() {
         try {
+            // Obtener estadísticas básicas de proyectos
             $stmt = $this->db->prepare("
                 SELECT 
                     COUNT(*) as total_projects,
                     SUM(CASE WHEN status = 'open' THEN 1 ELSE 0 END) as open_projects,
                     SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_projects,
-                    SUM(CASE WHEN status = 'paused' THEN 1 ELSE 0 END) as paused_projects,
-                    COALESCE(AVG(progress_percentage), 0) as avg_progress
+                    SUM(CASE WHEN status = 'paused' THEN 1 ELSE 0 END) as paused_projects
                 FROM Projects
             ");
             $stmt->execute();
             $result = $stmt->fetch();
+            
+            // Calcular progreso promedio en tiempo real
+            $progressStmt = $this->db->prepare("
+                SELECT 
+                    p.project_id,
+                    p.kpi_points,
+                    p.task_distribution_mode,
+                    COUNT(t.task_id) as total_tasks,
+                    SUM(CASE WHEN t.is_completed = 1 THEN 1 ELSE 0 END) as completed_tasks,
+                    CASE 
+                        WHEN p.task_distribution_mode = 'automatic' THEN 
+                            COALESCE(SUM(CASE WHEN t.is_completed = 1 THEN t.automatic_points ELSE 0 END), 0)
+                        ELSE 
+                            COALESCE(SUM(CASE WHEN t.is_completed = 1 THEN (t.assigned_percentage * p.kpi_points / 100) ELSE 0 END), 0)
+                    END as earned_points
+                FROM Projects p
+                LEFT JOIN Tasks t ON p.project_id = t.project_id AND t.is_subtask = 0
+                GROUP BY p.project_id, p.kpi_points, p.task_distribution_mode
+            ");
+            $progressStmt->execute();
+            $projectsProgress = $progressStmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Calcular promedio de progreso
+            $totalProgress = 0;
+            $projectsWithProgress = 0;
+            
+            foreach ($projectsProgress as $project) {
+                $kpiPoints = (float)$project['kpi_points'];
+                $earnedPoints = (float)$project['earned_points'];
+                $totalTasks = (int)$project['total_tasks'];
+                $completedTasks = (int)$project['completed_tasks'];
+                
+                // Calcular progreso para este proyecto
+                if ($kpiPoints > 0) {
+                    $progress = ($earnedPoints / $kpiPoints) * 100;
+                } else {
+                    $progress = $totalTasks > 0 ? ($completedTasks / $totalTasks) * 100 : 0;
+                }
+                
+                $totalProgress += $progress;
+                $projectsWithProgress++;
+            }
+            
+            $avgProgress = $projectsWithProgress > 0 ? $totalProgress / $projectsWithProgress : 0;
             
             // Asegurar que todos los valores sean numéricos
             return [
@@ -292,7 +370,7 @@ class Project {
                 'open_projects' => (int)($result['open_projects'] ?? 0),
                 'completed_projects' => (int)($result['completed_projects'] ?? 0),
                 'paused_projects' => (int)($result['paused_projects'] ?? 0),
-                'avg_progress' => (float)($result['avg_progress'] ?? 0)
+                'avg_progress' => round($avgProgress, 1)
             ];
         } catch (PDOException $e) {
             error_log("Error al obtener estadísticas: " . $e->getMessage());

@@ -56,11 +56,23 @@ class KPIController {
         // Ranking de clanes
         $clanRanking = $this->kpiModel->getClanRankingByQuarterId($currentKPI['kpi_quarter_id'] ?? null);
         
-        // Agregar total_points a cada clan
+        // Debug: Log para verificar datos del ranking
+        error_log("DEBUG clanRanking raw data: " . print_r($clanRanking, true));
+        
+        // Eliminar duplicados por clan_id y agregar total_points
         if ($clanRanking && $currentKPI) {
-            foreach ($clanRanking as &$clan) {
-                $clan['total_points'] = $currentKPI['total_points'] ?? 1000;
+            $uniqueClans = [];
+            $seenClanIds = [];
+            
+            foreach ($clanRanking as $clan) {
+                if (!in_array($clan['clan_id'], $seenClanIds)) {
+                    $clan['total_points'] = 1000; // Base fija para el cálculo de porcentaje
+                    $uniqueClans[] = $clan;
+                    $seenClanIds[] = $clan['clan_id'];
+                }
             }
+            
+            $clanRanking = $uniqueClans;
         }
         
         // Proyectos con progreso
@@ -358,7 +370,10 @@ class KPIController {
             'assignedPoints' => $assignedPoints,
             'currentPage' => 'kpi',
             'user' => (new Auth())->getCurrentUser(),
-            'loadKpiProjectsJs' => true // Flag to load specific JS
+            'loadKpiProjectsJs' => true, // Flag to load specific JS
+            'additionalJS' => [
+                APP_URL . 'assets/js/kpi-projects.js'
+            ]
         ];
 
         // Extraer variables para la vista
@@ -1016,21 +1031,14 @@ class KPIController {
             $stmt->execute([$kpiQuarterId]);
             $clans = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
-            // Si no hay clanes con datos, obtener todos los clanes
+            // Solo incluir clanes que tienen proyectos asignados (total_assigned > 0)
+            $clans = array_filter($clans, function($clan) {
+                return $clan['total_assigned'] > 0;
+            });
+            
+            // Si no hay clanes con datos, retornar array vacío
             if (empty($clans)) {
-                $stmt = $this->db->prepare("
-                    SELECT 
-                        c.clan_id,
-                        c.clan_name,
-                        c.clan_departamento,
-                        0 as earned_points,
-                        0 as total_assigned,
-                        1000 as total_points
-                    FROM Clans c
-                    ORDER BY c.clan_name ASC
-                ");
-                $stmt->execute();
-                $clans = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                return [];
             }
             
             // Asignar colores e iconos específicos para cada clan
@@ -1100,12 +1108,12 @@ class KPIController {
                 // Asegurar que los valores numéricos sean correctos
                 $clan['earned_points'] = (int)($clan['earned_points'] ?? 0);
                 $clan['total_assigned'] = (int)($clan['total_assigned'] ?? 0);
-                $clan['total_points'] = (int)($clan['total_points'] ?? 1000);
+                $clan['total_points'] = 1000; // Base fija para el cálculo de porcentaje
                 
                 // Calcular posición en el camino (sin límite de 1000)
                 $clan['path_position'] = max(0, $clan['earned_points']);
-                $clan['progress_percentage'] = $clan['total_points'] > 0 ? 
-                    round(($clan['earned_points'] / $clan['total_points']) * 100, 1) : 0;
+                $clan['progress_percentage'] = 1000 > 0 ? 
+                    round(($clan['earned_points'] / 1000) * 100, 1) : 0;
                 
                 // Log para debugging
                 error_log("Clan {$clan['clan_name']}: earned_points={$clan['earned_points']}, total_assigned={$clan['total_assigned']}, path_position={$clan['path_position']}, icon={$clan['clan_icon']}");
