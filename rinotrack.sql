@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: localhost:8889
--- Tiempo de generación: 07-08-2025 a las 15:35:45
+-- Tiempo de generación: 08-08-2025 a las 18:05:08
 -- Versión del servidor: 8.0.40
 -- Versión de PHP: 8.3.14
 
@@ -65,7 +65,7 @@ CREATE TABLE `Clan_KPIs` (
   `status` enum('planning','active','completed','closed') DEFAULT 'planning',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -84,6 +84,7 @@ CREATE TABLE `Clan_Members` (
 --
 
 INSERT INTO `Clan_Members` (`clan_member_id`, `clan_id`, `user_id`) VALUES
+(89, 5, 1),
 (1, 5, 2),
 (2, 5, 4),
 (7, 5, 5),
@@ -163,11 +164,11 @@ CREATE TABLE `KPI_History` (
 
 CREATE TABLE `KPI_Quarters` (
   `kpi_quarter_id` int NOT NULL,
-  `quarter` enum('Q1','Q2','Q3','Q4') COLLATE utf8mb4_general_ci NOT NULL,
+  `quarter` enum('Q1','Q2','Q3','Q4') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
   `year` int NOT NULL,
   `total_points` int NOT NULL DEFAULT '1000',
   `is_active` tinyint(1) NOT NULL DEFAULT '0',
-  `status` varchar(50) COLLATE utf8mb4_general_ci DEFAULT 'planning',
+  `status` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT 'planning',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -176,7 +177,7 @@ CREATE TABLE `KPI_Quarters` (
 --
 
 INSERT INTO `KPI_Quarters` (`kpi_quarter_id`, `quarter`, `year`, `total_points`, `is_active`, `status`, `created_at`) VALUES
-(11, 'Q3', 2025, 20000, 1, 'active', '2025-08-05 15:55:52');
+(11, 'Q3', 2025, 8000, 1, 'active', '2025-08-05 15:55:52');
 
 -- --------------------------------------------------------
 
@@ -345,9 +346,17 @@ CREATE TABLE `Projects` (
 --
 
 INSERT INTO `Projects` (`project_id`, `project_name`, `description`, `clan_id`, `created_by_user_id`, `status`, `total_tasks`, `completed_tasks`, `progress_percentage`, `created_at`, `updated_at`, `kpi_quarter_id`, `kpi_points`, `task_distribution_mode`) VALUES
-(14, 'Consulta de promotoria Fase 1', 'Primera fase operativa de relaciones de colaboradores', 5, 2, 'open', 0, 0, 0.00, '2025-08-05 21:01:49', '2025-08-05 22:29:24', 11, 400, 'automatic'),
-(15, 'Nuevos indicadores / Procesos automaticos', 'Investigación y desarrollo de robots para obtener nuevas fuentes de información', 5, 2, 'open', 0, 0, 0.00, '2025-08-05 22:08:11', '2025-08-05 22:29:38', 11, 350, 'automatic'),
-(16, 'Consulta de promotoria fase 2', 'Continuación de Fase 1-', 5, 2, 'open', 0, 0, 0.00, '2025-08-05 22:08:59', '2025-08-06 23:34:59', 11, 250, 'automatic');
+(14, 'Consulta de promotoria Fase 1', 'Primera fase operativa de relaciones de colaboradores', 5, 2, 'open', 18, 7, 50.00, '2025-08-05 21:01:49', '2025-08-07 22:34:56', 11, 400, 'automatic'),
+(15, 'Nuevos indicadores / Procesos automaticos', 'Investigación y desarrollo de robots para obtener nuevas fuentes de información', 5, 2, 'open', 2, 0, 0.00, '2025-08-05 22:08:11', '2025-08-07 20:16:05', 11, 350, 'automatic'),
+(16, 'Consulta de promotoria fase /2', 'Continuación de Fase 1-', 5, 2, 'open', 0, 0, 0.00, '2025-08-05 22:08:59', '2025-08-07 18:06:52', 11, 250, 'automatic'),
+(19, 'Recluta de Agentes', 'Recluta de Agentes', 7, 14, 'open', 0, 0, 0.00, '2025-08-07 18:40:18', '2025-08-07 20:13:35', 11, 500, 'automatic'),
+(20, 'Proyecto Inicial', 'Proyecto Inicial', 10, 50, 'open', 0, 0, 0.00, '2025-08-07 20:20:23', '2025-08-07 20:20:23', NULL, 0, 'automatic'),
+(21, 'Proyecto Incial', 'Proyecto Incial', 8, 19, 'open', 0, 0, 0.00, '2025-08-07 20:20:51', '2025-08-07 20:20:51', NULL, 0, 'automatic'),
+(22, 'Proyecto Inicial', 'Proyecto inicial', 12, 22, 'open', 0, 0, 0.00, '2025-08-07 20:21:31', '2025-08-07 22:26:24', 11, 100, 'automatic'),
+(23, 'Proyecto Inicial', 'Proyecto Inicial', 6, 13, 'open', 0, 0, 0.00, '2025-08-07 20:22:19', '2025-08-07 22:23:37', 11, 200, 'automatic'),
+(24, 'Proyecto Inicial', 'Proyecto Inicial', 11, 57, 'open', 0, 0, 0.00, '2025-08-07 20:22:48', '2025-08-07 20:22:48', NULL, 0, 'automatic'),
+(25, 'prueba', 'prueba', 5, 2, 'open', 1, 0, 0.00, '2025-08-07 20:39:57', '2025-08-07 20:41:57', NULL, 0, 'automatic'),
+(26, 'capacitacion', 'capacitacion', 5, 2, 'open', 0, 0, 0.00, '2025-08-07 22:29:34', '2025-08-07 22:29:34', NULL, 0, 'automatic');
 
 -- --------------------------------------------------------
 
@@ -475,23 +484,29 @@ CREATE TABLE `Tasks` (
 --
 
 INSERT INTO `Tasks` (`task_id`, `parent_task_id`, `task_name`, `description`, `project_id`, `assigned_to_user_id`, `created_by_user_id`, `priority`, `due_date`, `estimated_hours`, `actual_hours`, `completion_percentage`, `automatic_points`, `assigned_percentage`, `color_tag`, `is_subtask`, `subtask_order`, `status`, `is_completed`, `completed_at`, `created_at`, `updated_at`) VALUES
-(28, NULL, 'QA', 'Realizar pruebas de datos, estructura información, y schemas.', 14, 2, 2, 'medium', '2025-08-19', NULL, NULL, 0.00, 28.57, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-05 21:03:15', '2025-08-05 22:29:24'),
+(28, NULL, 'QA', 'Realizar pruebas de datos, estructura información, y schemas.', 14, 2, 2, 'medium', '2025-08-19', NULL, NULL, 0.00, 28.57, 0.00, '#3B82F6', 0, 0, 'completed', 1, '2025-08-07 18:04:59', '2025-08-05 21:03:15', '2025-08-07 18:04:59'),
 (29, NULL, 'Nuevos accesos en interfaz para nueva logica de usuarios', 'Gestion de interfaz para manejar visualmente los accesos.', 14, 9, 2, 'medium', '2025-08-08', NULL, NULL, 0.00, 28.57, 0.00, '#3B82F6', 0, 0, 'completed', 1, '2025-08-05 22:33:37', '2025-08-05 21:08:13', '2025-08-05 22:33:37'),
-(30, NULL, 'Filtros por ROL', 'Nueva logica de filtro por rol', 14, 9, 2, 'medium', '2025-08-11', NULL, NULL, 0.00, 28.57, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-05 21:08:58', '2025-08-05 22:29:24'),
+(30, NULL, 'Filtros por ROL', 'Nueva logica de filtro por rol', 14, 9, 2, 'medium', '2025-08-11', NULL, NULL, 0.00, 28.57, 0.00, '#3B82F6', 0, 0, 'in_progress', 0, NULL, '2025-08-05 21:08:58', '2025-08-07 18:05:55'),
 (31, NULL, 'Selector de Usuario', 'Logica que de termina visualmente la forma en que los usuarios y claves se asignan bajo ciertas circunstancias.', 14, 5, 2, 'medium', '2025-08-15', NULL, NULL, 0.00, 28.57, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-05 21:10:31', '2025-08-05 22:29:24'),
-(32, NULL, 'Ajustes de integración', 'Ajustes de integración', 14, 6, 2, 'medium', '2025-08-15', NULL, NULL, 0.00, 28.57, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-05 21:16:51', '2025-08-05 22:29:24'),
+(32, NULL, 'Ajustes de integración', 'Ajustes de integración', 14, 6, 2, 'medium', '2025-08-15', NULL, NULL, 0.00, 28.57, 0.00, '#3B82F6', 0, 0, 'in_progress', 0, NULL, '2025-08-05 21:16:51', '2025-08-07 18:05:27'),
 (33, NULL, 'Merge a la rama FEAT consulta nuevos resultados 2', 'Merge a la rama FEAT consulta nuevos resultados 2', 14, 6, 2, 'medium', '2025-08-07', NULL, NULL, 0.00, 28.57, 0.00, '#3B82F6', 0, 0, 'completed', 1, '2025-08-05 22:33:32', '2025-08-05 21:18:46', '2025-08-05 22:33:32'),
-(34, NULL, 'Implementar filtros de la rama (Nuevos filtros)', 'Implementar filtros de la rama (Nuevos filtros)', 14, 6, 2, 'medium', '2025-08-15', NULL, NULL, 0.00, 28.57, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-05 21:19:48', '2025-08-05 22:29:24'),
+(34, NULL, 'Implementar filtros de la rama (Nuevos filtros)', 'Implementar filtros de la rama (Nuevos filtros)', 14, 6, 2, 'medium', '2025-08-15', NULL, NULL, 0.00, 28.57, 0.00, '#3B82F6', 0, 0, 'completed', 1, '2025-08-07 18:05:15', '2025-08-05 21:19:48', '2025-08-07 18:05:15'),
 (35, NULL, 'Gestión de agentes (Usuarios de gran volumen)', 'Gestión de agentes (Usuarios de gran volumen)', 14, 9, 2, 'medium', '2025-08-15', NULL, NULL, 0.00, 28.57, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-05 21:21:08', '2025-08-05 22:29:24'),
 (36, NULL, 'Separación resultados Eject. Agente.', 'Separación resultados Eject. Agente.', 14, 6, 2, 'medium', '2025-08-13', NULL, NULL, 0.00, 28.57, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-05 21:23:45', '2025-08-05 22:29:24'),
 (37, NULL, 'Resegmentación de Robots', 'Resegmentación de Robots', 14, 11, 2, 'medium', '2025-08-12', NULL, NULL, 0.00, 28.57, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-05 21:24:59', '2025-08-05 22:29:24'),
-(38, NULL, 'Filtros por mes API', 'Filtros por mes API', 14, 12, 2, 'medium', '2025-08-08', NULL, NULL, 0.00, 28.57, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-05 21:25:30', '2025-08-05 22:29:24'),
-(39, NULL, 'Relación usuarios Backend', 'Relación usuarios Backend', 14, 12, 2, 'medium', '2025-08-14', NULL, NULL, 0.00, 28.57, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-05 21:26:23', '2025-08-05 22:29:24'),
+(38, NULL, 'Filtros por mes API', 'Filtros por mes API', 14, 12, 2, 'medium', '2025-08-08', NULL, NULL, 0.00, 28.57, 0.00, '#3B82F6', 0, 0, 'in_progress', 0, NULL, '2025-08-05 21:25:30', '2025-08-07 18:05:44'),
+(39, NULL, 'Relación usuarios Backend', 'Relación usuarios Backend', 14, 12, 2, 'medium', '2025-08-14', NULL, NULL, 0.00, 28.57, 0.00, '#3B82F6', 0, 0, 'completed', 1, '2025-08-07 17:58:32', '2025-08-05 21:26:23', '2025-08-07 17:58:32'),
 (40, NULL, 'Administracion Usuarios', 'Administracion Usuarios', 14, 4, 2, 'medium', '2025-08-15', NULL, NULL, 0.00, 28.57, 0.00, '#3B82F6', 0, 0, 'completed', 1, '2025-08-05 22:33:52', '2025-08-05 21:27:36', '2025-08-05 22:33:52'),
-(41, NULL, 'Figmas de propuesta', '', 14, 5, 2, 'medium', '2025-08-05', NULL, NULL, 0.00, 28.57, 0.00, '#3B82F6', 0, 0, 'completed', 1, '2025-08-05 22:33:24', '2025-08-05 22:03:53', '2025-08-05 22:33:24'),
+(41, NULL, 'Figmas de propuesta', '', 14, 5, 2, 'medium', '2025-08-05', NULL, NULL, 0.00, 28.57, 0.00, '#3B82F6', 0, 0, 'completed', 1, '2025-08-07 22:34:56', '2025-08-05 22:03:53', '2025-08-07 22:34:56'),
 (42, NULL, 'Investigación Indicadores estrella', 'Investigación Indicadores estrella', 15, 11, 2, 'medium', '2025-09-05', NULL, NULL, 0.00, 175.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-05 22:20:26', '2025-08-05 22:29:38'),
-(43, NULL, 'Elaboración de PHU', 'Crear PHU para su aprobación', 15, 2, 2, 'medium', '2025-08-15', NULL, NULL, 0.00, 175.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-05 22:21:59', '2025-08-05 22:29:38'),
-(44, NULL, 'Creación de PHU', 'Creación de PHU para su aprobación', 16, 2, 2, 'medium', '2025-08-29', NULL, NULL, 0.00, 250.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-05 22:22:38', '2025-08-05 22:30:14');
+(43, NULL, 'Elaboración de PHU', 'Crear PHU para su aprobación', 15, 2, 2, 'medium', '2025-08-15', NULL, NULL, 0.00, 175.00, 0.00, '#3B82F6', 0, 0, 'in_progress', 0, NULL, '2025-08-05 22:21:59', '2025-08-07 20:16:05'),
+(44, NULL, 'Creación de PHU', 'Creación de PHU para su aprobación', 16, 2, 2, 'medium', '2025-08-29', NULL, NULL, 0.00, 250.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-05 22:22:38', '2025-08-05 22:30:14'),
+(46, NULL, 'Tarea de Prueba', 'Descripción de la tarea de prueba', 14, NULL, 2, 'medium', '2025-12-31', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-07 17:57:02', '2025-08-07 17:57:02'),
+(47, NULL, 'Tarea de Prueba Simple', 'Descripción de la tarea de prueba simple', 14, NULL, 2, 'medium', '2025-12-31', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-07 17:58:01', '2025-08-07 17:58:01'),
+(48, NULL, 'Distribución de tareas', 'Crear el backlog de tareas para todos los implicados en el proyecto', 16, NULL, 2, 'medium', '2025-08-29', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-07 18:07:44', '2025-08-07 18:07:44'),
+(49, NULL, 'Mi tarea de prueba', 'asfsfw', 25, NULL, 2, 'medium', '2025-08-29', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'in_progress', 0, NULL, '2025-08-07 20:40:50', '2025-08-07 20:41:57'),
+(50, NULL, 'pruebas de usuario', '....', 14, NULL, 2, 'medium', '2025-08-15', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-07 22:30:59', '2025-08-07 22:30:59'),
+(51, NULL, 'control', 'dsfdasfsadf', 14, NULL, 2, 'medium', '2025-08-15', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-07 22:32:59', '2025-08-07 22:32:59');
 
 --
 -- Disparadores `Tasks`
@@ -638,6 +653,7 @@ CREATE TABLE `Task_History` (
 --
 
 INSERT INTO `Task_History` (`history_id`, `task_id`, `user_id`, `action_type`, `field_name`, `old_value`, `new_value`, `related_user_id`, `notes`, `created_at`) VALUES
+(1, 39, 12, 'status_changed', 'status', 'pending', 'completed', NULL, 'Estado cambiado de pending a completed', '2025-08-07 17:58:32'),
 (79, 28, 2, 'assigned', 'assigned_users', NULL, '2,4,6,11,10,12,9,5', NULL, 'Múltiples usuarios asignados', '2025-08-05 21:03:15'),
 (80, 28, 2, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-08-05 21:03:15'),
 (81, 29, 2, 'assigned', 'assigned_users', NULL, '9,5', NULL, 'Múltiples usuarios asignados', '2025-08-05 21:08:13'),
@@ -675,7 +691,20 @@ INSERT INTO `Task_History` (`history_id`, `task_id`, `user_id`, `action_type`, `
 (113, 41, 5, 'status_changed', 'status', 'pending', 'completed', NULL, 'Estado cambiado de pending a completed', '2025-08-05 22:33:24'),
 (114, 33, 6, 'status_changed', 'status', 'pending', 'completed', NULL, 'Estado cambiado de pending a completed', '2025-08-05 22:33:32'),
 (115, 29, 9, 'status_changed', 'status', 'pending', 'completed', NULL, 'Estado cambiado de pending a completed', '2025-08-05 22:33:37'),
-(116, 40, 4, 'status_changed', 'status', 'pending', 'completed', NULL, 'Estado cambiado de pending a completed', '2025-08-05 22:33:52');
+(116, 40, 4, 'status_changed', 'status', 'pending', 'completed', NULL, 'Estado cambiado de pending a completed', '2025-08-05 22:33:52'),
+(117, 28, 2, 'status_changed', 'status', 'pending', 'completed', NULL, 'Estado cambiado de pending a completed', '2025-08-07 18:04:59'),
+(118, 34, 6, 'status_changed', 'status', 'pending', 'completed', NULL, 'Estado cambiado de pending a completed', '2025-08-07 18:05:15'),
+(119, 32, 6, 'status_changed', 'status', 'pending', 'in_progress', NULL, 'Estado cambiado de pending a in_progress', '2025-08-07 18:05:27'),
+(120, 38, 12, 'status_changed', 'status', 'pending', 'in_progress', NULL, 'Estado cambiado de pending a in_progress', '2025-08-07 18:05:44'),
+(121, 30, 9, 'status_changed', 'status', 'pending', 'in_progress', NULL, 'Estado cambiado de pending a in_progress', '2025-08-07 18:05:55'),
+(122, 48, 2, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-08-07 18:07:44'),
+(123, 43, 2, 'status_changed', 'status', 'pending', 'in_progress', NULL, 'Estado cambiado de pending a in_progress', '2025-08-07 20:16:05'),
+(124, 49, 2, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-08-07 20:40:50'),
+(125, 49, 2, 'status_changed', 'status', 'pending', 'in_progress', NULL, 'Estado cambiado de pending a in_progress', '2025-08-07 20:41:57'),
+(126, 41, 5, 'status_changed', 'status', 'completed', 'pending', NULL, 'Estado cambiado de completed a pending', '2025-08-07 22:24:41'),
+(127, 50, 2, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-08-07 22:30:59'),
+(128, 51, 2, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-08-07 22:32:59'),
+(129, 41, 5, 'status_changed', 'status', 'pending', 'completed', NULL, 'Estado cambiado de pending a completed', '2025-08-07 22:34:56');
 
 -- --------------------------------------------------------
 
@@ -748,8 +777,8 @@ CREATE TABLE `Users` (
 --
 
 INSERT INTO `Users` (`user_id`, `username`, `password_hash`, `email`, `full_name`, `is_active`, `last_login`, `created_at`) VALUES
-(1, 'super', '123456', 'desarrollo@rinorisk.com', 'Usuario Administrador', 1, '2025-08-07 15:30:49', '2025-07-29 22:45:12'),
-(2, 'abdielc', '123456', 'abdiel@astrasoft.mx', 'Abdiel Carrasco', 1, '2025-08-07 15:28:03', '2025-07-29 23:23:21'),
+(1, 'super', '123456', 'desarrollo@rinorisk.com', 'Usuario Administrador', 1, '2025-08-07 22:12:41', '2025-07-29 22:45:12'),
+(2, 'abdielc', '123456', 'abdiel@astrasoft.mx', 'Abdiel Carrasco', 1, '2025-08-07 22:27:30', '2025-07-29 23:23:21'),
 (3, 'usuario1', '123456', 'usuario1@ejemplo.com', 'Juan Pérez García', 1, '2025-07-30 16:14:52', '2025-07-29 23:23:21'),
 (4, 'franklinb', '123456', 'desarollo2@rinorisk.com', 'Franklin Benitez', 1, NULL, '2025-07-30 17:10:05'),
 (5, 'Rubend', '123456', 'desarrollo3@rinorisk.com', 'Ruben Dorado', 1, NULL, '2025-07-30 18:20:45'),
@@ -759,16 +788,16 @@ INSERT INTO `Users` (`user_id`, `username`, `password_hash`, `email`, `full_name
 (10, 'piña', '123456', 'desarrollo.dataanalyst@rinorisk.com', 'Jaen Piña', 1, NULL, '2025-07-30 19:47:38'),
 (11, 'isaccg', '123456', 'desarrollo.backend@rinorisk.com', 'Isaac Garcia', 1, NULL, '2025-07-30 19:48:29'),
 (12, 'janathanm', '123456', 'desarrollo.fullstack.2@rinorisk.com', 'Jonathan Martinez', 1, NULL, '2025-07-30 19:51:19'),
-(13, 'jessicam', '123456', 'gerente.mkt@rinorisk.com', 'Jessica Mejia', 1, '2025-08-07 15:28:31', '2025-07-30 19:54:06'),
-(14, 'bereniceh', '123456', 'gerente.rh@rinorisk.com', 'Berenice Hernandez', 1, '2025-08-07 15:29:26', '2025-07-30 20:35:34'),
+(13, 'jessicam', '123456', 'gerente.mkt@rinorisk.com', 'Jessica Mejia', 1, '2025-08-07 20:54:40', '2025-07-30 19:54:06'),
+(14, 'bereniceh', '123456', 'gerente.rh@rinorisk.com', 'Berenice Hernandez', 1, '2025-08-07 18:40:03', '2025-07-30 20:35:34'),
 (15, 'Valeriag', '123456', 'cultura.organizacional@rinorisk.com', 'Valeria Garcia', 1, NULL, '2025-08-04 19:11:54'),
 (16, 'Nora', '123456', 'sincorreo1@rinorisk.com', 'Nora', 1, NULL, '2025-08-06 21:01:29'),
 (17, 'ricardov', '123456', 'redes@rinorisk.com', 'Ricardo Vidaño', 1, NULL, '2025-08-06 21:03:34'),
 (18, 'israell', '123456', 'publicidad@rinorisk.com', 'Israel Lovato', 1, NULL, '2025-08-06 21:04:17'),
-(19, 'arisbethc', '123456', 'supervisor.comercialtj@rinorisk.com', 'Arisbeth Cuevas', 1, '2025-08-07 15:28:49', '2025-08-06 21:05:25'),
+(19, 'arisbethc', '123456', 'supervisor.comercialtj@rinorisk.com', 'Arisbeth Cuevas', 1, '2025-08-07 20:20:36', '2025-08-06 21:05:25'),
 (20, 'marlenef', '123456', 'cobranza@rinorisk.com', 'Marlene Flores', 1, NULL, '2025-08-06 21:06:16'),
 (21, 'Beatrizi', '123456', 'servicio.vgmtj@rinorisk.com', 'Beatriz Ita', 1, NULL, '2025-08-06 21:07:46'),
-(22, 'sofiag', '123456', 'Sofia@rinorisk.com', 'Sofia Gallardo', 1, '2025-08-07 15:29:09', '2025-08-06 21:09:03'),
+(22, 'sofiag', '123456', 'Sofia@rinorisk.com', 'Sofia Gallardo', 1, '2025-08-07 20:21:03', '2025-08-06 21:09:03'),
 (23, 'taniab', '123456', 'auxiliar.inmuebles@rinorisk.com', 'Tania Barboza', 1, NULL, '2025-08-06 21:09:43'),
 (24, 'angelicav', '123456', 'gerente.administrativo@rinorisk.com', 'Angelica Vallejo', 1, NULL, '2025-08-06 21:10:52'),
 (25, 'yazmint', '123456', 'contabilidad@rinorisk.com', 'Yazmin Trejo', 1, NULL, '2025-08-06 21:11:37'),
@@ -796,15 +825,15 @@ INSERT INTO `Users` (`user_id`, `username`, `password_hash`, `email`, `full_name
 (47, 'alejandrar', '123456', 'sincorreo16@rinorisk.com', 'Alejandra Ramos', 1, NULL, '2025-08-06 21:51:48'),
 (48, 'myriamt', '123456', 'sincorreo17@rinorisk.com', 'Myriam Torres', 1, NULL, '2025-08-06 21:52:21'),
 (49, 'dianag', '123456', 'sincorreo18@rinorisk.com', 'Diana Gonzales', 1, NULL, '2025-08-06 21:52:51'),
-(50, 'karenf', '123456', 'sincorreo19@rinorisk.com', 'Karen Fletes', 1, '2025-08-07 15:29:47', '2025-08-06 21:54:25'),
-(51, 'lider_direccion', '$2y$10$6EeY1mJ2kZQB4wQwHsv/9O8XVGAHdSXF5Vby41xb4yoZWvBmsc0Ye', 'lider.direccion@rinorisk.com', 'Líder Dirección', 1, NULL, '2025-08-06 22:19:51'),
-(52, 'lider_gaia', '$2y$10$IckMuWz0zex8ycuGgVEAO./OWwjcS58zkWm4hAPgYR/ZUjxvZEtge', 'lider.gaia@rinorisk.com', 'Líder Gaia', 1, NULL, '2025-08-06 22:19:51'),
-(53, 'lider_operaciones', '$2y$10$GX/NOwNxP85LzDlKFftl6eeNFlLnIdh5m962zNqf95TanV.sL3i3q', 'lider.operaciones@rinorisk.com', 'Líder Operaciones', 1, NULL, '2025-08-06 22:19:51'),
-(54, 'lider_servicio', '$2y$10$X75nWRTaNskjIC7A5LM01uI37fCN2EYU7wthiPvUAk8p1leLkBo3S', 'lider.servicio@rinorisk.com', 'Líder Servicio', 1, NULL, '2025-08-06 22:19:52'),
+(50, 'karenf', '123456', 'sincorreo19@rinorisk.com', 'Karen Fletes', 1, '2025-08-07 20:20:10', '2025-08-06 21:54:25'),
+(51, 'lider_direccion', '123456', 'lider.direccion@rinorisk.com', 'Líder Dirección', 1, NULL, '2025-08-06 22:19:51'),
+(52, 'lider_gaia', '123456', 'lider.gaia@rinorisk.com', 'Líder Gaia', 1, NULL, '2025-08-06 22:19:51'),
+(53, 'lider_operaciones', '123456', 'lider.operaciones@rinorisk.com', 'Líder Operaciones', 1, NULL, '2025-08-06 22:19:51'),
+(54, 'lider_servicio', '123456', 'lider.servicio@rinorisk.com', 'Líder Servicio', 1, NULL, '2025-08-06 22:19:52'),
 (55, 'rosaliae', '123456', 'sincorreo20@rinorisk.com', 'Rosalia Enriquez', 1, NULL, '2025-08-06 23:21:11'),
 (56, 'sonial', '123456', 'sincorreo21@rinorisk.com', 'Sonia Lopez', 1, NULL, '2025-08-06 23:24:15'),
-(57, 'ivan2', '123456', 'sincorreo23@rinorsik.com', 'Ivan Mosqueda', 1, '2025-08-07 15:31:57', '2025-08-06 23:25:11'),
-(58, 'ivan3', '123456', 'sincorreo24@rinorisk.com', 'Ivan Mozqueda', 1, '2025-08-07 15:32:18', '2025-08-06 23:29:06');
+(57, 'ivan2', '123456', 'sincorreo23@rinorsik.com', 'Ivan Mosqueda', 1, '2025-08-07 20:22:35', '2025-08-06 23:25:11'),
+(58, 'ivan3', '123456', 'sincorreo27@rinorisk.com', 'Ivan Mozqueda', 1, '2025-08-07 15:32:18', '2025-08-06 23:29:06');
 
 -- --------------------------------------------------------
 
@@ -827,6 +856,7 @@ INSERT INTO `User_Roles` (`user_id`, `role_id`) VALUES
 (2, 3),
 (13, 3),
 (14, 3),
+(15, 3),
 (19, 3),
 (22, 3),
 (50, 3),
@@ -844,7 +874,6 @@ INSERT INTO `User_Roles` (`user_id`, `role_id`) VALUES
 (10, 4),
 (11, 4),
 (12, 4),
-(15, 4),
 (16, 4),
 (17, 4),
 (18, 4),
@@ -1198,604 +1227,46 @@ ALTER TABLE `User_Roles`
   ADD KEY `role_id` (`role_id`);
 
 --
--- Indices de la tabla `Gamification_Badges`
---
-ALTER TABLE `Gamification_Badges`
-  ADD PRIMARY KEY (`badge_id`),
-  ADD KEY `idx_badge_category` (`badge_category`),
-  ADD KEY `idx_is_active` (`is_active`);
-
---
--- Indices de la tabla `Gamification_User_Badges`
---
-ALTER TABLE `Gamification_User_Badges`
-  ADD PRIMARY KEY (`user_badge_id`),
-  ADD UNIQUE KEY `unique_user_badge` (`user_id`,`badge_id`),
-  ADD KEY `idx_user_id` (`user_id`),
-  ADD KEY `idx_badge_id` (`badge_id`),
-  ADD KEY `idx_earned_at` (`earned_at`);
-
---
--- Indices de la tabla `Gamification_User_Points`
---
-ALTER TABLE `Gamification_User_Points`
-  ADD PRIMARY KEY (`user_points_id`),
-  ADD KEY `idx_user_id` (`user_id`),
-  ADD KEY `idx_points_type` (`points_type`),
-  ADD KEY `idx_earned_at` (`earned_at`),
-  ADD KEY `idx_source` (`source`);
-
---
--- Indices de la tabla `Gamification_Clan_Achievements`
---
-ALTER TABLE `Gamification_Clan_Achievements`
-  ADD PRIMARY KEY (`clan_achievement_id`),
-  ADD KEY `idx_clan_id` (`clan_id`),
-  ADD KEY `idx_achievement_category` (`achievement_category`),
-  ADD KEY `idx_is_active` (`is_active`);
-
---
--- Indices de la tabla `Gamification_Clan_Progress`
---
-ALTER TABLE `Gamification_Clan_Progress`
-  ADD PRIMARY KEY (`clan_progress_id`),
-  ADD UNIQUE KEY `unique_clan_achievement` (`clan_id`,`achievement_id`),
-  ADD KEY `idx_clan_id` (`clan_id`),
-  ADD KEY `idx_achievement_id` (`achievement_id`),
-  ADD KEY `idx_is_completed` (`is_completed`);
-
---
--- Indices de la tabla `Gamification_User_Progress`
---
-ALTER TABLE `Gamification_User_Progress`
-  ADD PRIMARY KEY (`user_progress_id`),
-  ADD UNIQUE KEY `unique_user_badge_progress` (`user_id`,`badge_id`),
-  ADD KEY `idx_user_id` (`user_id`),
-  ADD KEY `idx_badge_id` (`badge_id`),
-  ADD KEY `idx_is_completed` (`is_completed`);
-
---
--- Indices de la tabla `Gamification_Leaderboard`
---
-ALTER TABLE `Gamification_Leaderboard`
-  ADD PRIMARY KEY (`leaderboard_id`),
-  ADD UNIQUE KEY `unique_user_leaderboard` (`user_id`),
-  ADD KEY `idx_clan_id` (`clan_id`),
-  ADD KEY `idx_total_points` (`total_points`),
-  ADD KEY `idx_rank_position` (`rank_position`);
-
---
--- Indices de la tabla `Gamification_Events`
---
-ALTER TABLE `Gamification_Events`
-  ADD PRIMARY KEY (`event_id`),
-  ADD KEY `idx_event_type` (`event_type`),
-  ADD KEY `idx_start_date` (`start_date`),
-  ADD KEY `idx_end_date` (`end_date`),
-  ADD KEY `idx_is_active` (`is_active`);
-
---
--- Indices de la tabla `Gamification_Event_Participants`
---
-ALTER TABLE `Gamification_Event_Participants`
-  ADD PRIMARY KEY (`event_participant_id`),
-  ADD KEY `idx_event_id` (`event_id`),
-  ADD KEY `idx_user_id` (`user_id`),
-  ADD KEY `idx_clan_id` (`clan_id`),
-  ADD KEY `idx_rank_position` (`rank_position`);
-
---
 -- AUTO_INCREMENT de las tablas volcadas
 --
-
---
--- AUTO_INCREMENT de la tabla `Gamification_Badges`
---
-ALTER TABLE `Gamification_Badges`
-  MODIFY `badge_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
-
---
--- AUTO_INCREMENT de la tabla `Gamification_User_Badges`
---
-ALTER TABLE `Gamification_User_Badges`
-  MODIFY `user_badge_id` int NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT de la tabla `Gamification_User_Points`
---
-ALTER TABLE `Gamification_User_Points`
-  MODIFY `user_points_id` int NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT de la tabla `Gamification_Clan_Achievements`
---
-ALTER TABLE `Gamification_Clan_Achievements`
-  MODIFY `clan_achievement_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
-
---
--- AUTO_INCREMENT de la tabla `Gamification_Clan_Progress`
---
-ALTER TABLE `Gamification_Clan_Progress`
-  MODIFY `clan_progress_id` int NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT de la tabla `Gamification_User_Progress`
---
-ALTER TABLE `Gamification_User_Progress`
-  MODIFY `user_progress_id` int NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT de la tabla `Gamification_Leaderboard`
---
-ALTER TABLE `Gamification_Leaderboard`
-  MODIFY `leaderboard_id` int NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT de la tabla `Gamification_Events`
---
-ALTER TABLE `Gamification_Events`
-  MODIFY `event_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
-
---
--- AUTO_INCREMENT de la tabla `Gamification_Event_Participants`
---
-ALTER TABLE `Gamification_Event_Participants`
-  MODIFY `event_participant_id` int NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT de la tabla `Clans`
 --
 ALTER TABLE `Clans`
-  MODIFY `clan_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
-
---
--- AUTO_INCREMENT de la tabla `Clan_KPIs`
---
-ALTER TABLE `Clan_KPIs`
-  MODIFY `kpi_id` int NOT NULL AUTO_INCREMENT;
+  MODIFY `clan_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT de la tabla `Clan_Members`
 --
 ALTER TABLE `Clan_Members`
-  MODIFY `clan_member_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=89;
-
---
--- AUTO_INCREMENT de la tabla `KPI_History`
---
-ALTER TABLE `KPI_History`
-  MODIFY `history_id` int NOT NULL AUTO_INCREMENT;
+  MODIFY `clan_member_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=92;
 
 --
 -- AUTO_INCREMENT de la tabla `KPI_Quarters`
 --
 ALTER TABLE `KPI_Quarters`
-  MODIFY `kpi_quarter_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
-
---
--- AUTO_INCREMENT de la tabla `login_attempts`
---
-ALTER TABLE `login_attempts`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=120;
+  MODIFY `kpi_quarter_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- AUTO_INCREMENT de la tabla `Projects`
 --
 ALTER TABLE `Projects`
-  MODIFY `project_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
-
---
--- AUTO_INCREMENT de la tabla `Roles`
---
-ALTER TABLE `Roles`
-  MODIFY `role_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
-
---
--- AUTO_INCREMENT de la tabla `Subtasks`
---
-ALTER TABLE `Subtasks`
-  MODIFY `subtask_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `project_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
 
 --
 -- AUTO_INCREMENT de la tabla `Tasks`
 --
 ALTER TABLE `Tasks`
-  MODIFY `task_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=45;
-
---
--- AUTO_INCREMENT de la tabla `Task_Assignments`
---
-ALTER TABLE `Task_Assignments`
-  MODIFY `assignment_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=84;
-
---
--- AUTO_INCREMENT de la tabla `Task_Attachments`
---
-ALTER TABLE `Task_Attachments`
-  MODIFY `attachment_id` int NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT de la tabla `Task_Comments`
---
-ALTER TABLE `Task_Comments`
-  MODIFY `comment_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `task_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=52;
 
 --
 -- AUTO_INCREMENT de la tabla `Task_History`
 --
 ALTER TABLE `Task_History`
-  MODIFY `history_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=117;
-
---
--- AUTO_INCREMENT de la tabla `Task_Labels`
---
-ALTER TABLE `Task_Labels`
-  MODIFY `label_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
-
---
--- AUTO_INCREMENT de la tabla `Users`
---
-ALTER TABLE `Users`
-  MODIFY `user_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=59;
-
---
--- Restricciones para tablas volcadas
---
-
---
--- Filtros para la tabla `Clan_KPIs`
---
-ALTER TABLE `Clan_KPIs`
-  ADD CONSTRAINT `clan_kpis_ibfk_1` FOREIGN KEY (`clan_id`) REFERENCES `Clans` (`clan_id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `clan_kpis_quarter_fk` FOREIGN KEY (`kpi_quarter_id`) REFERENCES `KPI_Quarters` (`kpi_quarter_id`) ON DELETE CASCADE;
-
---
--- Filtros para la tabla `Clan_Members`
---
-ALTER TABLE `Clan_Members`
-  ADD CONSTRAINT `clan_members_ibfk_1` FOREIGN KEY (`clan_id`) REFERENCES `Clans` (`clan_id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `clan_members_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `Users` (`user_id`) ON DELETE CASCADE;
-
---
--- Filtros para la tabla `KPI_History`
---
-ALTER TABLE `KPI_History`
-  ADD CONSTRAINT `kpi_history_ibfk_1` FOREIGN KEY (`kpi_id`) REFERENCES `Clan_KPIs` (`kpi_id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `kpi_history_ibfk_2` FOREIGN KEY (`project_id`) REFERENCES `Projects` (`project_id`) ON DELETE SET NULL,
-  ADD CONSTRAINT `kpi_history_ibfk_3` FOREIGN KEY (`task_id`) REFERENCES `Tasks` (`task_id`) ON DELETE SET NULL,
-  ADD CONSTRAINT `kpi_history_ibfk_4` FOREIGN KEY (`user_id`) REFERENCES `Users` (`user_id`) ON DELETE SET NULL;
-
---
--- Filtros para la tabla `Projects`
---
-ALTER TABLE `Projects`
-  ADD CONSTRAINT `projects_ibfk_1` FOREIGN KEY (`clan_id`) REFERENCES `Clans` (`clan_id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `projects_ibfk_2` FOREIGN KEY (`created_by_user_id`) REFERENCES `Users` (`user_id`) ON DELETE RESTRICT,
-  ADD CONSTRAINT `projects_kpi_quarter_fk` FOREIGN KEY (`kpi_quarter_id`) REFERENCES `KPI_Quarters` (`kpi_quarter_id`) ON DELETE SET NULL;
-
---
--- Filtros para la tabla `Project_Participants`
---
-ALTER TABLE `Project_Participants`
-  ADD CONSTRAINT `project_participants_ibfk_1` FOREIGN KEY (`project_id`) REFERENCES `Projects` (`project_id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `project_participants_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `Users` (`user_id`) ON DELETE CASCADE;
-
---
--- Filtros para la tabla `Subtasks`
---
-ALTER TABLE `Subtasks`
-  ADD CONSTRAINT `fk_subtasks_assigned_user` FOREIGN KEY (`assigned_to_user_id`) REFERENCES `Users` (`user_id`) ON DELETE SET NULL,
-  ADD CONSTRAINT `fk_subtasks_created_by` FOREIGN KEY (`created_by_user_id`) REFERENCES `Users` (`user_id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_subtasks_task` FOREIGN KEY (`task_id`) REFERENCES `Tasks` (`task_id`) ON DELETE CASCADE;
-
---
--- Filtros para la tabla `Tasks`
---
-ALTER TABLE `Tasks`
-  ADD CONSTRAINT `fk_tasks_parent` FOREIGN KEY (`parent_task_id`) REFERENCES `Tasks` (`task_id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `tasks_created_by_fk` FOREIGN KEY (`created_by_user_id`) REFERENCES `Users` (`user_id`) ON DELETE SET NULL,
-  ADD CONSTRAINT `tasks_ibfk_1` FOREIGN KEY (`project_id`) REFERENCES `Projects` (`project_id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `tasks_ibfk_2` FOREIGN KEY (`assigned_to_user_id`) REFERENCES `Users` (`user_id`) ON DELETE SET NULL;
-
---
--- Filtros para la tabla `Task_Assignments`
---
-ALTER TABLE `Task_Assignments`
-  ADD CONSTRAINT `fk_task_assignments_assigned_by` FOREIGN KEY (`assigned_by_user_id`) REFERENCES `Users` (`user_id`) ON DELETE SET NULL,
-  ADD CONSTRAINT `fk_task_assignments_task` FOREIGN KEY (`task_id`) REFERENCES `Tasks` (`task_id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_task_assignments_user` FOREIGN KEY (`user_id`) REFERENCES `Users` (`user_id`) ON DELETE CASCADE;
-
---
--- Filtros para la tabla `Task_Attachments`
---
-ALTER TABLE `Task_Attachments`
-  ADD CONSTRAINT `fk_task_attachments_task` FOREIGN KEY (`task_id`) REFERENCES `Tasks` (`task_id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_task_attachments_user` FOREIGN KEY (`user_id`) REFERENCES `Users` (`user_id`) ON DELETE CASCADE;
-
---
--- Filtros para la tabla `Task_Comments`
---
-ALTER TABLE `Task_Comments`
-  ADD CONSTRAINT `fk_task_comments_related_user` FOREIGN KEY (`related_user_id`) REFERENCES `Users` (`user_id`) ON DELETE SET NULL,
-  ADD CONSTRAINT `fk_task_comments_task` FOREIGN KEY (`task_id`) REFERENCES `Tasks` (`task_id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_task_comments_user` FOREIGN KEY (`user_id`) REFERENCES `Users` (`user_id`) ON DELETE CASCADE;
-
---
--- Filtros para la tabla `Task_History`
---
-ALTER TABLE `Task_History`
-  ADD CONSTRAINT `fk_task_history_related_user` FOREIGN KEY (`related_user_id`) REFERENCES `Users` (`user_id`) ON DELETE SET NULL,
-  ADD CONSTRAINT `fk_task_history_task` FOREIGN KEY (`task_id`) REFERENCES `Tasks` (`task_id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_task_history_user` FOREIGN KEY (`user_id`) REFERENCES `Users` (`user_id`) ON DELETE CASCADE;
-
---
--- Filtros para la tabla `Task_Labels`
---
-ALTER TABLE `Task_Labels`
-  ADD CONSTRAINT `fk_task_labels_clan` FOREIGN KEY (`clan_id`) REFERENCES `Clans` (`clan_id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_task_labels_created_by` FOREIGN KEY (`created_by_user_id`) REFERENCES `Users` (`user_id`) ON DELETE CASCADE;
-
---
--- Filtros para la tabla `Task_Label_Assignments`
---
-ALTER TABLE `Task_Label_Assignments`
-  ADD CONSTRAINT `fk_task_label_assignments_assigned_by` FOREIGN KEY (`assigned_by_user_id`) REFERENCES `Users` (`user_id`) ON DELETE SET NULL,
-  ADD CONSTRAINT `fk_task_label_assignments_label` FOREIGN KEY (`label_id`) REFERENCES `Task_Labels` (`label_id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_task_label_assignments_task` FOREIGN KEY (`task_id`) REFERENCES `Tasks` (`task_id`) ON DELETE CASCADE;
-
---
--- Filtros para la tabla `User_Roles`
---
-ALTER TABLE `User_Roles`
-  ADD CONSTRAINT `user_roles_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `Users` (`user_id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `user_roles_ibfk_2` FOREIGN KEY (`role_id`) REFERENCES `Roles` (`role_id`) ON DELETE CASCADE;
-
---
--- Filtros para la tabla `Gamification_User_Badges`
---
-ALTER TABLE `Gamification_User_Badges`
-  ADD CONSTRAINT `fk_user_badges_user` FOREIGN KEY (`user_id`) REFERENCES `Users` (`user_id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_user_badges_badge` FOREIGN KEY (`badge_id`) REFERENCES `Gamification_Badges` (`badge_id`) ON DELETE CASCADE;
-
---
--- Filtros para la tabla `Gamification_User_Points`
---
-ALTER TABLE `Gamification_User_Points`
-  ADD CONSTRAINT `fk_user_points_user` FOREIGN KEY (`user_id`) REFERENCES `Users` (`user_id`) ON DELETE CASCADE;
-
---
--- Filtros para la tabla `Gamification_Clan_Achievements`
---
-ALTER TABLE `Gamification_Clan_Achievements`
-  ADD CONSTRAINT `fk_clan_achievements_clan` FOREIGN KEY (`clan_id`) REFERENCES `Clans` (`clan_id`) ON DELETE CASCADE;
-
---
--- Filtros para la tabla `Gamification_Clan_Progress`
---
-ALTER TABLE `Gamification_Clan_Progress`
-  ADD CONSTRAINT `fk_clan_progress_clan` FOREIGN KEY (`clan_id`) REFERENCES `Clans` (`clan_id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_clan_progress_achievement` FOREIGN KEY (`achievement_id`) REFERENCES `Gamification_Clan_Achievements` (`clan_achievement_id`) ON DELETE CASCADE;
-
---
--- Filtros para la tabla `Gamification_User_Progress`
---
-ALTER TABLE `Gamification_User_Progress`
-  ADD CONSTRAINT `fk_user_progress_user` FOREIGN KEY (`user_id`) REFERENCES `Users` (`user_id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_user_progress_badge` FOREIGN KEY (`badge_id`) REFERENCES `Gamification_Badges` (`badge_id`) ON DELETE CASCADE;
-
---
--- Filtros para la tabla `Gamification_Leaderboard`
---
-ALTER TABLE `Gamification_Leaderboard`
-  ADD CONSTRAINT `fk_leaderboard_user` FOREIGN KEY (`user_id`) REFERENCES `Users` (`user_id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_leaderboard_clan` FOREIGN KEY (`clan_id`) REFERENCES `Clans` (`clan_id`) ON DELETE SET NULL;
-
---
--- Filtros para la tabla `Gamification_Event_Participants`
---
-ALTER TABLE `Gamification_Event_Participants`
-  ADD CONSTRAINT `fk_event_participants_event` FOREIGN KEY (`event_id`) REFERENCES `Gamification_Events` (`event_id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_event_participants_user` FOREIGN KEY (`user_id`) REFERENCES `Users` (`user_id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_event_participants_clan` FOREIGN KEY (`clan_id`) REFERENCES `Clans` (`clan_id`) ON DELETE CASCADE;
+  MODIFY `history_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=130;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `Gamification_Badges`
---
-
-CREATE TABLE `Gamification_Badges` (
-  `badge_id` int NOT NULL,
-  `badge_name` varchar(100) NOT NULL,
-  `badge_description` text NOT NULL,
-  `badge_icon` varchar(255) DEFAULT NULL,
-  `badge_color` varchar(7) DEFAULT '#3B82F6',
-  `badge_category` enum('task_completion','project_milestone','clan_achievement','time_based','special_event','leadership','collaboration','innovation','quality','speed') NOT NULL,
-  `points_reward` int DEFAULT '0',
-  `required_criteria` json DEFAULT NULL,
-  `is_active` tinyint(1) DEFAULT '1',
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
---
--- Volcado de datos para la tabla `Gamification_Badges`
---
-
-INSERT INTO `Gamification_Badges` (`badge_id`, `badge_name`, `badge_description`, `badge_icon`, `badge_color`, `badge_category`, `points_reward`, `required_criteria`, `is_active`, `created_at`) VALUES
-(1, 'Héroe del Olimpo', 'Completa 10 tareas en un día', '🏛️', '#FFD700', 'task_completion', 100, '{\"tasks_completed\": 10, \"timeframe\": \"day\"}', 1, '2025-08-07 16:00:00'),
-(2, 'Guerrero de Esparta', 'Completa 50 tareas en total', '⚔️', '#DC2626', 'task_completion', 250, '{\"tasks_completed\": 50, \"timeframe\": \"total\"}', 1, '2025-08-07 16:00:00'),
-(3, 'Arquitecto del Olimpo', 'Completa 5 proyectos exitosamente', '🏗️', '#059669', 'project_milestone', 500, '{\"projects_completed\": 5}', 1, '2025-08-07 16:00:00'),
-(4, 'Líder de Clan', 'Dirige un clan por 30 días consecutivos', '👑', '#7C3AED', 'leadership', 300, '{\"clan_leadership_days\": 30}', 1, '2025-08-07 16:00:00'),
-(5, 'Colaborador Estelar', 'Ayuda a 20 compañeros con sus tareas', '🤝', '#0891B2', 'collaboration', 200, '{\"collaborations\": 20}', 1, '2025-08-07 16:00:00'),
-(6, 'Innovador Prometeo', 'Propone 3 mejoras que se implementan', '🔥', '#EA580C', 'innovation', 400, '{\"implemented_improvements\": 3}', 1, '2025-08-07 16:00:00'),
-(7, 'Velocista de Hermes', 'Completa tareas antes del tiempo estimado', '⚡', '#F59E0B', 'speed', 150, '{\"early_completions\": 10}', 1, '2025-08-07 16:00:00'),
-(8, 'Maestro de la Calidad', 'Recibe 5 evaluaciones perfectas', '⭐', '#10B981', 'quality', 300, '{\"perfect_ratings\": 5}', 1, '2025-08-07 16:00:00'),
-(9, 'Veterano del Olimpo', 'Pertenece al sistema por 100 días', '🏺', '#6B7280', 'time_based', 100, '{\"days_active\": 100}', 1, '2025-08-07 16:00:00'),
-(10, 'Campeón de Clan', 'Tu clan gana el ranking mensual', '🏆', '#DC2626', 'clan_achievement', 600, '{\"clan_ranking\": 1, \"timeframe\": \"month\"}', 1, '2025-08-07 16:00:00');
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `Gamification_User_Badges`
---
-
-CREATE TABLE `Gamification_User_Badges` (
-  `user_badge_id` int NOT NULL,
-  `user_id` int NOT NULL,
-  `badge_id` int NOT NULL,
-  `earned_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `earned_points` int DEFAULT '0',
-  `context_data` json DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `Gamification_User_Points`
---
-
-CREATE TABLE `Gamification_User_Points` (
-  `user_points_id` int NOT NULL,
-  `user_id` int NOT NULL,
-  `points` int NOT NULL,
-  `points_type` enum('earned','spent','bonus','penalty') NOT NULL,
-  `source` varchar(100) NOT NULL,
-  `description` text,
-  `related_id` int DEFAULT NULL,
-  `related_type` varchar(50) DEFAULT NULL,
-  `earned_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `Gamification_Clan_Achievements`
---
-
-CREATE TABLE `Gamification_Clan_Achievements` (
-  `clan_achievement_id` int NOT NULL,
-  `clan_id` int NOT NULL,
-  `achievement_name` varchar(100) NOT NULL,
-  `achievement_description` text NOT NULL,
-  `achievement_icon` varchar(255) DEFAULT NULL,
-  `achievement_color` varchar(7) DEFAULT '#3B82F6',
-  `achievement_category` enum('project_completion','team_collaboration','efficiency','innovation','quality','growth') NOT NULL,
-  `points_reward` int DEFAULT '0',
-  `required_criteria` json DEFAULT NULL,
-  `is_active` tinyint(1) DEFAULT '1',
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
---
--- Volcado de datos para la tabla `Gamification_Clan_Achievements`
---
-
-INSERT INTO `Gamification_Clan_Achievements` (`clan_achievement_id`, `clan_id`, `achievement_name`, `achievement_description`, `achievement_icon`, `achievement_color`, `achievement_category`, `points_reward`, `required_criteria`, `is_active`, `created_at`) VALUES
-(1, 5, 'Clan Kratos - Maestros del Desarrollo', 'Completa 20 proyectos de desarrollo en un trimestre', '⚔️', '#DC2626', 'project_completion', 1000, '{\"projects_completed\": 20, \"timeframe\": \"quarter\"}', 1, '2025-08-07 16:00:00'),
-(2, 6, 'Clan Artemisa - Estrategas del Marketing', 'Lanza 10 campañas exitosas en un mes', '🏹', '#059669', 'project_completion', 800, '{\"successful_campaigns\": 10, \"timeframe\": \"month\"}', 1, '2025-08-07 16:00:00'),
-(3, 7, 'Clan Afrodita - Guardianes del Talento', 'Contrata y capacita 15 nuevos colaboradores', '💝', '#EC4899', 'growth', 600, '{\"new_hires_trained\": 15}', 1, '2025-08-07 16:00:00'),
-(4, 8, 'Clan Persefone - Maestros del Servicio', 'Mantiene 95% de satisfacción del cliente por 3 meses', '🌺', '#8B5CF6', 'quality', 750, '{\"satisfaction_rate\": 95, \"duration_months\": 3}', 1, '2025-08-07 16:00:00'),
-(5, 10, 'Clan Aura - Innovadores de ZAX', 'Implementa 5 nuevas tecnologías o procesos', '💡', '#F59E0B', 'innovation', 900, '{\"new_technologies\": 5}', 1, '2025-08-07 16:00:00'),
-(6, 11, 'Clan Hermes - Comerciales Veloces', 'Cierra 50 ventas en una semana', '🚀', '#0891B2', 'efficiency', 1200, '{\"sales_closed\": 50, \"timeframe\": \"week\"}', 1, '2025-08-07 16:00:00'),
-(7, 12, 'Clan GAIA - Operadores Maestros', 'Optimiza 10 procesos operativos', '🌍', '#10B981', 'efficiency', 800, '{\"processes_optimized\": 10}', 1, '2025-08-07 16:00:00'),
-(8, 13, 'Clan ZEUS - Líderes Supremos', 'Dirige 5 iniciativas estratégicas exitosas', '⚡', '#FFD700', 'project_completion', 1500, '{\"strategic_initiatives\": 5}', 1, '2025-08-07 16:00:00');
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `Gamification_Clan_Progress`
---
-
-CREATE TABLE `Gamification_Clan_Progress` (
-  `clan_progress_id` int NOT NULL,
-  `clan_id` int NOT NULL,
-  `achievement_id` int NOT NULL,
-  `current_progress` int DEFAULT '0',
-  `target_progress` int NOT NULL,
-  `is_completed` tinyint(1) DEFAULT '0',
-  `completed_at` timestamp NULL DEFAULT NULL,
-  `last_updated` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `Gamification_User_Progress`
---
-
-CREATE TABLE `Gamification_User_Progress` (
-  `user_progress_id` int NOT NULL,
-  `user_id` int NOT NULL,
-  `badge_id` int NOT NULL,
-  `current_progress` int DEFAULT '0',
-  `target_progress` int NOT NULL,
-  `is_completed` tinyint(1) DEFAULT '0',
-  `completed_at` timestamp NULL DEFAULT NULL,
-  `last_updated` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `Gamification_Leaderboard`
---
-
-CREATE TABLE `Gamification_Leaderboard` (
-  `leaderboard_id` int NOT NULL,
-  `user_id` int NOT NULL,
-  `clan_id` int DEFAULT NULL,
-  `total_points` int DEFAULT '0',
-  `badges_earned` int DEFAULT '0',
-  `tasks_completed` int DEFAULT '0',
-  `projects_completed` int DEFAULT '0',
-  `rank_position` int DEFAULT NULL,
-  `last_updated` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `Gamification_Events`
---
-
-CREATE TABLE `Gamification_Events` (
-  `event_id` int NOT NULL,
-  `event_name` varchar(100) NOT NULL,
-  `event_description` text NOT NULL,
-  `event_type` enum('seasonal','special','milestone','competition') NOT NULL,
-  `start_date` date NOT NULL,
-  `end_date` date NOT NULL,
-  `bonus_multiplier` decimal(3,2) DEFAULT '1.00',
-  `is_active` tinyint(1) DEFAULT '1',
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
---
--- Volcado de datos para la tabla `Gamification_Events`
---
-
-INSERT INTO `Gamification_Events` (`event_id`, `event_name`, `event_description`, `event_type`, `start_date`, `end_date`, `bonus_multiplier`, `is_active`, `created_at`) VALUES
-(1, 'Festival del Olimpo', 'Evento especial de fin de año con bonificaciones dobles', 'seasonal', '2025-12-01', '2025-12-31', 2.00, 1, '2025-08-07 16:00:00'),
-(2, 'Guerra de Clanes', 'Competencia entre clanes por el título de campeón', 'competition', '2025-09-01', '2025-09-30', 1.50, 1, '2025-08-07 16:00:00'),
-(3, 'Semana de la Innovación', 'Bonificación especial por proyectos innovadores', 'special', '2025-10-15', '2025-10-21', 1.75, 1, '2025-08-07 16:00:00');
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `Gamification_Event_Participants`
---
-
-CREATE TABLE `Gamification_Event_Participants` (
-  `event_participant_id` int NOT NULL,
-  `event_id` int NOT NULL,
-  `user_id` int DEFAULT NULL,
-  `clan_id` int DEFAULT NULL,
-  `points_earned` int DEFAULT '0',
-  `rank_position` int DEFAULT NULL,
-  `joined_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
