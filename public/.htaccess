@@ -2,7 +2,7 @@
     RewriteEngine On
 
     # Establecer la base de la reescritura al directorio public
-    RewriteBase /RinoTrack/public/
+    RewriteBase /rinotrack/public/
 
     # EXCEPCIÓN: No aplicar las siguientes reglas a archivos existentes en el directorio 'assets'
     RewriteRule ^assets/ - [L]

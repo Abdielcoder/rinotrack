@@ -1,11 +1,11 @@
 <?php
 // Configurar archivos adicionales para layout
 $additionalCSS = [
-    '/RinoTrack/public/assets/css/kpi.css'
+    APP_URL . 'assets/css/kpi.css'
 ];
 
 $additionalJS = [
-    '/RinoTrack/public/assets/js/kpi-projects.js'
+    APP_URL . 'assets/js/kpi-projects.js'
 ];
 
 // Calcular puntos
