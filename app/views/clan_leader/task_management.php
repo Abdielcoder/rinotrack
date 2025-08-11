@@ -113,11 +113,23 @@ function getActiveTasksCount($userId) {
                 <div class="form-section">
                     <h3>Asignar colaboradores:</h3>
                     
+                    <!-- Checkbox para seleccionar todos -->
+                    <div class="select-all-container">
+                        <div class="select-all-checkbox">
+                            <input type="checkbox" id="select_all_members" name="select_all_members">
+                            <label for="select_all_members">
+                                <i class="fas fa-check"></i>
+                                Seleccionar todos los colaboradores
+                            </label>
+                        </div>
+                    </div>
+                    
                     <div class="collaborators-grid">
                         <?php foreach ($members as $member): ?>
                             <div class="collaborator-card" data-user-id="<?php echo $member['user_id']; ?>">
                                 <div class="collaborator-checkbox">
                                     <input type="checkbox" 
+                                           class="member-checkbox"
                                            id="member_<?php echo $member['user_id']; ?>" 
                                            name="assigned_members[]" 
                                            value="<?php echo $member['user_id']; ?>">

@@ -120,6 +120,61 @@ function closeTaskManagement() {
     });
 }
 
+/**
+ * Inicializa la funcionalidad de seleccionar/deseleccionar todos los colaboradores
+ */
+function initializeSelectAllCollaborators() {
+    const selectAllCheckbox = document.getElementById('select_all_members');
+    const memberCheckboxes = document.querySelectorAll('.member-checkbox');
+    
+    if (!selectAllCheckbox || memberCheckboxes.length === 0) {
+        return;
+    }
+    
+    // Evento para el checkbox "Seleccionar todos"
+    selectAllCheckbox.addEventListener('change', function() {
+        const isChecked = this.checked;
+        
+        // Seleccionar/deseleccionar todos los checkboxes de miembros
+        memberCheckboxes.forEach(checkbox => {
+            checkbox.checked = isChecked;
+        });
+        
+        // Actualizar el estado visual
+        updateSelectAllState();
+    });
+    
+    // Eventos para los checkboxes individuales
+    memberCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            updateSelectAllState();
+        });
+    });
+    
+    // Función para actualizar el estado del checkbox "Seleccionar todos"
+    function updateSelectAllState() {
+        const checkedCount = document.querySelectorAll('.member-checkbox:checked').length;
+        const totalCount = memberCheckboxes.length;
+        
+        if (checkedCount === 0) {
+            // Ninguno seleccionado
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = false;
+        } else if (checkedCount === totalCount) {
+            // Todos seleccionados
+            selectAllCheckbox.checked = true;
+            selectAllCheckbox.indeterminate = false;
+        } else {
+            // Algunos seleccionados (estado indeterminado)
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = true;
+        }
+    }
+    
+    // Estado inicial
+    updateSelectAllState();
+}
+
 function getMemberColor(userId) {
     const colors = ['#667eea', '#48bb78', '#ed8936', '#e53e3e', '#9f7aea', '#38b2ac', '#a0aec0', '#f6e05e'];
     return colors[userId % colors.length];
@@ -277,6 +332,9 @@ document.addEventListener('DOMContentLoaded', function() {
     if (dueDateInput) {
         dueDateInput.min = today;
     }
+    
+    // Inicializar funcionalidad de seleccionar todos los colaboradores
+    initializeSelectAllCollaborators();
     
     // Agregar primera subtarea por defecto - OCULTO
     // addSubtask();

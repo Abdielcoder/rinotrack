@@ -1621,6 +1621,141 @@ section {
 }
 
 /* Colaboradores */
+.select-all-container {
+    margin-bottom: 20px;
+    padding: 16px;
+    background: #f8fafc;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+}
+
+.select-all-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.select-all-checkbox input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #cbd5e0;
+    border-radius: 6px;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.select-all-checkbox input[type="checkbox"]:checked {
+    background: #667eea;
+    border-color: #667eea;
+}
+
+.select-all-checkbox input[type="checkbox"]:indeterminate {
+    background: #f6ad55;
+    border-color: #f6ad55;
+}
+
+.select-all-checkbox input[type="checkbox"]:checked::after,
+.select-all-checkbox input[type="checkbox"]:indeterminate::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 8px;
+    height: 8px;
+    background: white;
+    border-radius: 2px;
+}
+
+.select-all-checkbox input[type="checkbox"]:checked::after {
+    background: white;
+}
+
+.select-all-checkbox input[type="checkbox"]:indeterminate::after {
+    background: white;
+}
+
+.select-all-checkbox label {
+    font-weight: 600;
+    color: #4a5568;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.select-all-checkbox label i {
+    font-size: 16px;
+    color: #667eea;
+}
+
+.select-all-checkbox:hover input[type="checkbox"] {
+    border-color: #667eea;
+    transform: scale(1.05);
+}
+
+/* Estilos para los checkboxes de colaboradores individuales */
+.collaborator-checkbox {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    margin-right: 12px;
+    flex-shrink: 0;
+}
+
+.collaborator-checkbox input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #cbd5e0;
+    border-radius: 6px;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.collaborator-checkbox input[type="checkbox"]:checked {
+    background: #667eea;
+    border-color: #667eea;
+}
+
+.collaborator-checkbox input[type="checkbox"]:checked::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 8px;
+    height: 8px;
+    background: white;
+    border-radius: 2px;
+}
+
+.collaborator-checkbox input[type="checkbox"]:hover {
+    border-color: #667eea;
+    transform: scale(1.05);
+}
+
+.collaborator-checkbox label {
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .collaborators-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
