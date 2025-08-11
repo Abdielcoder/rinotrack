@@ -1648,6 +1648,11 @@ section {
     position: relative;
     appearance: none;
     -webkit-appearance: none;
+    /* Estilos de depuración */
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: block !important;
+    pointer-events: auto !important;
 }
 
 .select-all-checkbox input[type="checkbox"]:checked {
@@ -1723,6 +1728,11 @@ section {
     position: relative;
     appearance: none;
     -webkit-appearance: none;
+    /* Estilos de depuración */
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: block !important;
+    pointer-events: auto !important;
 }
 
 .collaborator-checkbox input[type="checkbox"]:checked {

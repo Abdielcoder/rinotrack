@@ -124,20 +124,33 @@ function closeTaskManagement() {
  * Inicializa la funcionalidad de seleccionar/deseleccionar todos los colaboradores
  */
 function initializeSelectAllCollaborators() {
+    console.log('🔍 Inicializando funcionalidad de seleccionar todos los colaboradores...');
+    
     const selectAllCheckbox = document.getElementById('select_all_members');
     const memberCheckboxes = document.querySelectorAll('.member-checkbox');
     
-    if (!selectAllCheckbox || memberCheckboxes.length === 0) {
+    console.log('📋 Checkbox principal encontrado:', selectAllCheckbox);
+    console.log('👥 Checkboxes de miembros encontrados:', memberCheckboxes.length);
+    
+    if (!selectAllCheckbox) {
+        console.error('❌ No se encontró el checkbox principal "select_all_members"');
+        return;
+    }
+    
+    if (memberCheckboxes.length === 0) {
+        console.error('❌ No se encontraron checkboxes de miembros con clase "member-checkbox"');
         return;
     }
     
     // Evento para el checkbox "Seleccionar todos"
     selectAllCheckbox.addEventListener('change', function() {
         const isChecked = this.checked;
+        console.log('🔄 Checkbox principal cambiado a:', isChecked);
         
         // Seleccionar/deseleccionar todos los checkboxes de miembros
-        memberCheckboxes.forEach(checkbox => {
+        memberCheckboxes.forEach((checkbox, index) => {
             checkbox.checked = isChecked;
+            console.log(`✅ Checkbox ${index + 1} establecido a:`, isChecked);
         });
         
         // Actualizar el estado visual
@@ -145,8 +158,9 @@ function initializeSelectAllCollaborators() {
     });
     
     // Eventos para los checkboxes individuales
-    memberCheckboxes.forEach(checkbox => {
+    memberCheckboxes.forEach((checkbox, index) => {
         checkbox.addEventListener('change', function() {
+            console.log(`👤 Checkbox de miembro ${index + 1} cambiado a:`, this.checked);
             updateSelectAllState();
         });
     });
@@ -156,23 +170,52 @@ function initializeSelectAllCollaborators() {
         const checkedCount = document.querySelectorAll('.member-checkbox:checked').length;
         const totalCount = memberCheckboxes.length;
         
+        console.log(`📊 Estado actual: ${checkedCount}/${totalCount} seleccionados`);
+        
         if (checkedCount === 0) {
             // Ninguno seleccionado
             selectAllCheckbox.checked = false;
             selectAllCheckbox.indeterminate = false;
+            console.log('🔘 Estado: Ninguno seleccionado');
         } else if (checkedCount === totalCount) {
             // Todos seleccionados
             selectAllCheckbox.checked = true;
             selectAllCheckbox.indeterminate = false;
+            console.log('✅ Estado: Todos seleccionados');
         } else {
             // Algunos seleccionados (estado indeterminado)
             selectAllCheckbox.checked = false;
             selectAllCheckbox.indeterminate = true;
+            console.log('⚠️ Estado: Algunos seleccionados (indeterminado)');
         }
     }
     
     // Estado inicial
     updateSelectAllState();
+    console.log('🎉 Funcionalidad de seleccionar todos inicializada correctamente');
+}
+
+/**
+ * Función de prueba para verificar la funcionalidad
+ */
+function testSelectAll() {
+    console.log('🧪 Ejecutando prueba de seleccionar todos...');
+    
+    const selectAllCheckbox = document.getElementById('select_all_members');
+    const memberCheckboxes = document.querySelectorAll('.member-checkbox');
+    
+    console.log('📋 Checkbox principal:', selectAllCheckbox);
+    console.log('👥 Checkboxes de miembros:', memberCheckboxes);
+    
+    if (selectAllCheckbox && memberCheckboxes.length > 0) {
+        // Simular clic en el checkbox principal
+        selectAllCheckbox.checked = !selectAllCheckbox.checked;
+        selectAllCheckbox.dispatchEvent(new Event('change'));
+        
+        console.log('✅ Prueba ejecutada. Estado del checkbox principal:', selectAllCheckbox.checked);
+    } else {
+        console.error('❌ Elementos no encontrados para la prueba');
+    }
 }
 
 function getMemberColor(userId) {
@@ -326,18 +369,47 @@ function getIconForType(type) {
 
 // Inicializar cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 DOM cargado, inicializando funcionalidades...');
+    
     // Establecer fecha mínima como hoy
     const today = new Date().toISOString().split('T')[0];
     const dueDateInput = document.getElementById('task_due_date');
     if (dueDateInput) {
         dueDateInput.min = today;
+        console.log('📅 Fecha mínima establecida:', today);
     }
     
     // Inicializar funcionalidad de seleccionar todos los colaboradores
+    console.log('🔧 Llamando a initializeSelectAllCollaborators...');
     initializeSelectAllCollaborators();
     
     // Agregar primera subtarea por defecto - OCULTO
     // addSubtask();
+    
+    console.log('✅ Todas las funcionalidades inicializadas');
+    
+    // Verificación adicional después de un breve delay
+    setTimeout(() => {
+        console.log('🔍 Verificación adicional después de 500ms...');
+        const selectAllCheckbox = document.getElementById('select_all_members');
+        const memberCheckboxes = document.querySelectorAll('.member-checkbox');
+        
+        console.log('📋 Checkbox principal (verificación tardía):', selectAllCheckbox);
+        console.log('👥 Checkboxes de miembros (verificación tardía):', memberCheckboxes.length);
+        
+        if (selectAllCheckbox) {
+            console.log('✅ Checkbox principal encontrado correctamente');
+            console.log('📍 Posición:', selectAllCheckbox.getBoundingClientRect());
+            console.log('🎨 Estilos computados:', window.getComputedStyle(selectAllCheckbox));
+        }
+        
+        if (memberCheckboxes.length > 0) {
+            console.log('✅ Checkboxes de miembros encontrados correctamente');
+            memberCheckboxes.forEach((checkbox, index) => {
+                console.log(`📍 Checkbox ${index + 1} posición:`, checkbox.getBoundingClientRect());
+            });
+        }
+    }, 500);
 });
 
 // Estilos para animaciones de toast
