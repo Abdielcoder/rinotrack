@@ -1088,15 +1088,21 @@ function addComment() {
         return;
     }
     
-    // Obtener el ID de la tarea del botón de eliminar que está en el HTML
-    const deleteButton = document.querySelector('button[onclick*="deleteTask"]');
+    // Obtener el ID de la tarea directamente del HTML usando PHP
+    const taskIdElement = document.querySelector('[data-task-id]');
     let taskId = null;
     
-    if (deleteButton) {
-        const onclickAttr = deleteButton.getAttribute('onclick');
-        const match = onclickAttr.match(/deleteTask\((\d+)\)/);
-        if (match) {
-            taskId = match[1];
+    if (taskIdElement) {
+        taskId = taskIdElement.getAttribute('data-task-id');
+    } else {
+        // Fallback: obtener del botón de eliminar
+        const deleteButton = document.querySelector('button[onclick*="deleteTask"]');
+        if (deleteButton) {
+            const onclickAttr = deleteButton.getAttribute('onclick');
+            const match = onclickAttr.match(/deleteTask\((\d+)\)/);
+            if (match) {
+                taskId = match[1];
+            }
         }
     }
     
@@ -1105,25 +1111,26 @@ function addComment() {
         return;
     }
     
-    // Por ahora, solo enviar comentario de texto sin archivos adjuntos
-    const formData = new URLSearchParams();
+    console.log('Enviando comentario para tarea:', taskId);
+    
+    // Enviar comentario usando FormData simple
+    const formData = new FormData();
     formData.append('task_id', taskId);
     formData.append('comment_text', commentText);
     
     fetch('?route=clan_leader/add-task-comment', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: formData.toString()
+        body: formData
     })
     .then(response => {
+        console.log('Respuesta del servidor:', response.status);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         return response.json();
     })
     .then(data => {
+        console.log('Datos de respuesta:', data);
         if (data.success) {
             document.getElementById('newComment').value = '';
             showNotification('Comentario agregado exitosamente', 'success');
@@ -1134,7 +1141,7 @@ function addComment() {
         }
     })
     .catch(error => {
-        console.error('Error:', error);
+        console.error('Error completo:', error);
         showNotification('Error al agregar comentario: ' + error.message, 'error');
     });
 }

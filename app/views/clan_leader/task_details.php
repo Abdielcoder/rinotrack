@@ -737,7 +737,7 @@ if (!isset($task) || !isset($subtasks) || !isset($comments) || !isset($history) 
     </style>
 </head>
 <body>
-            <div class="task-details-container <?= ($task['due_date'] && strtotime($task['due_date']) < time() && $task['status'] !== 'completed') ? 'overdue' : '' ?>">
+            <div class="task-details-container <?= ($task['due_date'] && strtotime($task['due_date']) < time() && $task['status'] !== 'completed') ? 'overdue' : '' ?>" data-task-id="<?= $task['task_id'] ?>">
         <!-- Header de la tarea -->
         <div class="task-header">
             <div class="task-title-section">
