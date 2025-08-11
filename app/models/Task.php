@@ -153,7 +153,9 @@ class Task {
                 $this->db->rollback();
             }
             error_log("Error al crear tarea avanzada: " . $e->getMessage());
-            return false;
+            error_log("Stack trace: " . $e->getTraceAsString());
+            // Temporalmente lanzar la excepción para ver el error exacto
+            throw new Exception("createAdvanced falló: " . $e->getMessage());
         }
     }
     
@@ -224,7 +226,9 @@ class Task {
             
         } catch (Exception $e) {
             error_log("Error al asignar múltiples usuarios: " . $e->getMessage());
-            return false;
+            error_log("Stack trace: " . $e->getTraceAsString());
+            // Temporalmente lanzar la excepción para ver el error exacto
+            throw new Exception("assignMultipleUsers falló: " . $e->getMessage());
         }
     }
     
@@ -255,7 +259,9 @@ class Task {
             
         } catch (Exception $e) {
             error_log("Error al crear subtarea avanzada: " . $e->getMessage());
-            return false;
+            error_log("Stack trace: " . $e->getTraceAsString());
+            // Temporalmente lanzar la excepción para ver el error exacto
+            throw new Exception("createSubtaskAdvanced falló: " . $e->getMessage());
         }
     }
     
