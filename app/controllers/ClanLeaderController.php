@@ -912,19 +912,40 @@ class ClanLeaderController {
         } else {
             $assignedMembers = $assignedMembersRaw;
         }
-        // Manejar subtasks que puede ser un array o JSON string
+        // Manejar subtasks que puede ser un array o JSON string y normalizar datos
         $subtasksRaw = $_POST['subtasks'] ?? [];
         if (is_string($subtasksRaw)) {
             $subtasks = json_decode($subtasksRaw, true) ?: [];
         } else {
             $subtasks = $subtasksRaw;
         }
+        if (!empty($subtasks) && is_array($subtasks)) {
+            $normalized = [];
+            foreach ($subtasks as $st) {
+                $title = trim($st['title'] ?? '');
+                if ($title === '') { continue; }
+                $desc = trim($st['description'] ?? '');
+                $perc = isset($st['percentage']) && $st['percentage'] !== '' ? (float)$st['percentage'] : 0.0;
+                $due  = isset($st['due_date']) && trim((string)$st['due_date']) !== '' ? trim($st['due_date']) : null;
+                $prio = in_array(($st['priority'] ?? 'medium'), ['low','medium','high','urgent'], true) ? $st['priority'] : 'medium';
+                $auid = isset($st['assigned_user_id']) && $st['assigned_user_id'] !== '' ? (int)$st['assigned_user_id'] : null;
+                $normalized[] = [
+                    'title' => $title,
+                    'description' => $desc,
+                    'percentage' => $perc,
+                    'due_date' => $due,
+                    'priority' => $prio,
+                    'assigned_user_id' => $auid,
+                ];
+            }
+            $subtasks = $normalized;
+        }
         
         $priority = Utils::sanitizeInput($_POST['priority'] ?? 'medium');
         
-        // Corregir valor de prioridad si es 'urgent' por 'critical'
-        if ($priority === 'urgent') {
-            $priority = 'critical';
+        // Corregir valor de prioridad al enum de Tasks
+        if (!in_array($priority, ['low','medium','high','critical'], true)) {
+            $priority = ($priority === 'urgent') ? 'critical' : 'medium';
         }
         
         // Manejar labels que puede ser un array o JSON string
