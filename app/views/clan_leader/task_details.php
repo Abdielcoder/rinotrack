@@ -12,7 +12,7 @@ if (!isset($task) || !isset($subtasks) || !isset($comments) || !isset($history) 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Detalles de Tarea - <?= htmlspecialchars($task['task_name']) ?></title>
-    <link rel="icon" type="image/x-icon" href="?route=favicon.ico">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
     <link rel="stylesheet" href="?route=assets/css/clan-leader.css">
     <link rel="stylesheet" href="?route=assets/css/styles.css">
     <style>
@@ -1160,34 +1160,35 @@ if (!isset($task) || !isset($subtasks) || !isset($comments) || !isset($history) 
         
         function deleteSubtask(subtaskId) {
             showConfirmationModal({
-            title: 'Confirmar Eliminación',
-            message: '¿Estás seguro de que quieres eliminar esta subtarea?',
-            type: 'warning',
-            confirmText: 'Eliminar',
-            cancelText: 'Cancelar',
-            onConfirm: () => {
-                fetch('?route=clan_leader/delete-subtask', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: `subtask_id=${subtaskId}`
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        const subtaskItem = document.querySelector(`[data-subtask-id="${subtaskId}"]`);
-                        if (subtaskItem) subtaskItem.remove();
-                        showNotification('Subtarea eliminada', 'success');
-                    } else {
-                        showNotification('Error al eliminar subtarea: ' + data.message, 'error');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showNotification('Error al eliminar subtarea', 'error');
-                });
-            }
+                title: 'Confirmar Eliminación',
+                message: '¿Estás seguro de que quieres eliminar esta subtarea?',
+                type: 'warning',
+                confirmText: 'Eliminar',
+                cancelText: 'Cancelar',
+                onConfirm: () => {
+                    fetch('?route=clan_leader/delete-subtask', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: `subtask_id=${subtaskId}`
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            const subtaskItem = document.querySelector(`[data-subtask-id="${subtaskId}"]`);
+                            if (subtaskItem) subtaskItem.remove();
+                            showNotification('Subtarea eliminada', 'success');
+                        } else {
+                            showNotification('Error al eliminar subtarea: ' + data.message, 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showNotification('Error al eliminar subtarea', 'error');
+                    });
+                }
+            });
         }
         
 
