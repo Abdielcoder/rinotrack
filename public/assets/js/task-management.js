@@ -1,27 +1,27 @@
-console.log('📜 Archivo task-management.js cargado correctamente');
+console.log('📜 Archivo task-management.js cargado correctamente - Versión:', Date.now());
 
 let subtaskCounter = 0;
 
-// function addSubtask() {
-//     const container = document.getElementById('subtasks-container');
-//     const template = document.getElementById('subtask-template');
-//     const subtaskHtml = template.innerHTML
-//         .replace(/{index}/g, subtaskCounter)
-//         .replace(/{number}/g, subtaskCounter + 1);
+/* function addSubtask() {
+    const container = document.getElementById('subtasks-container');
+    const template = document.getElementById('subtask-template');
+    const subtaskHtml = template.innerHTML
+        .replace(/{index}/g, subtaskCounter)
+        .replace(/{number}/g, subtaskCounter + 1);
     
-//     const subtaskElement = document.createElement('div');
-//     subtaskElement.innerHTML = subtaskHtml;
-//     container.appendChild(subtaskElement.firstElementChild);
+    const subtaskElement = document.createElement('div');
+    subtaskElement.innerHTML = subtaskHtml;
+    container.appendChild(subtaskElement.firstElementChild);
     
-//     subtaskCounter++;
-// }
+    subtaskCounter++;
+} */
 
-// function removeSubtask(index) {
-//     const subtaskElement = document.querySelector(`[data-subtask-index="${index}"]`);
-//     if (subtaskElement) {
-//         subtaskElement.remove();
-//     }
-// }
+/* function removeSubtask(index) {
+    const subtaskElement = document.querySelector(`[data-subtask-index="${index}"]`);
+    if (subtaskElement) {
+        subtaskElement.remove();
+    }
+} */
 
 function saveTask() {
     // Validar formulario

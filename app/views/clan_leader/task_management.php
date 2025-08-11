@@ -268,13 +268,13 @@ $content = ob_get_clean();
 
 // CSS adicional para Clan Leader
 $additionalCSS = [
-    APP_URL . 'assets/css/clan-leader.css'
+    APP_URL . 'assets/css/clan-leader.css?v=' . time()
 ];
 
 // JavaScript adicional para Clan Leader  
 $additionalJS = [
     APP_URL . 'assets/js/clan-leader.js',
-    APP_URL . 'assets/js/task-management.js'
+    APP_URL . 'assets/js/task-management.js?v=' . time()
 ];
 
 // Incluir el layout
