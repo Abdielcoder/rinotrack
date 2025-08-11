@@ -1,25 +1,25 @@
-let subtaskCounter = 0;
+// let subtaskCounter = 0;
 
-function addSubtask() {
-    const container = document.getElementById('subtasks-container');
-    const template = document.getElementById('subtask-template');
-    const subtaskHtml = template.innerHTML
-        .replace(/{index}/g, subtaskCounter)
-        .replace(/{number}/g, subtaskCounter + 1);
+// function addSubtask() {
+//     const container = document.getElementById('subtasks-container');
+//     const template = document.getElementById('subtask-template');
+//     const subtaskHtml = template.innerHTML
+//         .replace(/{index}/g, subtaskCounter)
+//         .replace(/{number}/g, subtaskCounter + 1);
     
-    const subtaskElement = document.createElement('div');
-    subtaskElement.innerHTML = subtaskHtml;
-    container.appendChild(subtaskElement.firstElementChild);
+//     const subtaskElement = document.createElement('div');
+//     subtaskElement.innerHTML = subtaskHtml;
+//     container.appendChild(subtaskElement.firstElementChild);
     
-    subtaskCounter++;
-}
+//     subtaskCounter++;
+// }
 
-function removeSubtask(index) {
-    const subtaskElement = document.querySelector(`[data-subtask-index="${index}"]`);
-    if (subtaskElement) {
-        subtaskElement.remove();
-    }
-}
+// function removeSubtask(index) {
+//     const subtaskElement = document.querySelector(`[data-subtask-index="${index}"]`);
+//     if (subtaskElement) {
+//         subtaskElement.remove();
+//     }
+// }
 
 function saveTask() {
     // Validar formulario
@@ -49,23 +49,23 @@ function saveTask() {
         formData.append('assigned_members[]', member.value);
     });
     
-    // Agregar subtareas
-    const subtasks = [];
-    document.querySelectorAll('.subtask-item').forEach((subtask, index) => {
-        const title = subtask.querySelector('input[name^="subtasks"][name$="[title]"]').value;
-        const percentage = subtask.querySelector('input[name^="subtasks"][name$="[percentage]"]').value;
-        const description = subtask.querySelector('textarea[name^="subtasks"][name$="[description]"]').value;
+    // Agregar subtareas - OCULTO
+    // const subtasks = [];
+    // document.querySelectorAll('.subtask-item').forEach((subtask, index) => {
+    //     const title = subtask.querySelector('input[name^="subtasks"][name$="[title]"]').value;
+    //     const percentage = subtask.querySelector('input[name^="subtasks"][name$="[percentage]"]').value;
+    //     const description = subtask.querySelector('textarea[name^="subtasks"][name$="[description]"]').value;
         
-        if (title && percentage) {
-            subtasks.push({
-                title: title,
-                percentage: percentage,
-                description: description
-            });
-        }
-    });
+    //     if (title && percentage) {
+    //         subtasks.push({
+    //             title: title,
+    //             percentage: percentage,
+    //             description: description
+    //         });
+    //     }
+    // });
     
-    formData.append('subtasks', JSON.stringify(subtasks));
+    // formData.append('subtasks', JSON.stringify(subtasks));
     
     // Log para debug
     console.log('Enviando tarea con datos:');
@@ -278,8 +278,8 @@ document.addEventListener('DOMContentLoaded', function() {
         dueDateInput.min = today;
     }
     
-    // Agregar primera subtarea por defecto
-    addSubtask();
+    // Agregar primera subtarea por defecto - OCULTO
+    // addSubtask();
 });
 
 // Estilos para animaciones de toast

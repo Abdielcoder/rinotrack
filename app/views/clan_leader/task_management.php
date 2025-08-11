@@ -94,8 +94,8 @@ function getActiveTasksCount($userId) {
                     </div>
                 </div>
 
-                <!-- Sección de Subtareas -->
-                <div class="form-section">
+                <!-- Sección de Subtareas - OCULTA -->
+                <!-- <div class="form-section">
                     <div class="section-header">
                         <h3>Subtareas</h3>
                         <button class="btn-minimal small" onclick="addSubtask()">
@@ -107,7 +107,7 @@ function getActiveTasksCount($userId) {
                     <div id="subtasks-container">
                         <!-- Las subtareas se agregarán dinámicamente aquí -->
                     </div>
-                </div>
+                </div> -->
 
                 <!-- Sección de Asignación de Colaboradores -->
                 <div class="form-section">
@@ -215,8 +215,8 @@ function getActiveTasksCount($userId) {
     </div>
 </div>
 
-<!-- Template para Subtareas -->
-<template id="subtask-template">
+<!-- Template para Subtareas - OCULTO -->
+<!-- <template id="subtask-template">
     <div class="subtask-item" data-subtask-index="{index}">
         <div class="subtask-header">
             <div class="subtask-number">Subtarea {number}</div>
@@ -246,7 +246,7 @@ function getActiveTasksCount($userId) {
             </div>
         </div>
     </div>
-</template>
+</template> -->
 
 
 
