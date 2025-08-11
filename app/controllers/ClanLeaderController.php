@@ -1051,6 +1051,31 @@ class ClanLeaderController {
             $createdByUserId = $_SESSION['user_id']; // Usar directamente la sesión
             error_log('createTask - createdByUserId desde SESSION: ' . $createdByUserId);
             
+            // Validar datos antes de la llamada
+            if (empty($taskTitle)) {
+                throw new Exception('taskTitle vacío');
+            }
+            if (empty($taskDueDate)) {
+                throw new Exception('taskDueDate vacío');
+            }
+            if (empty($assignedMembers) || !is_array($assignedMembers)) {
+                throw new Exception('assignedMembers inválido: ' . json_encode($assignedMembers));
+            }
+            if ($taskProject <= 0) {
+                throw new Exception('taskProject inválido: ' . $taskProject);
+            }
+            if (empty($createdByUserId)) {
+                throw new Exception('createdByUserId vacío');
+            }
+            
+            error_log('createTask - Validaciones pasadas, llamando createAdvanced...');
+            
+            if (!$this->taskModel) {
+                throw new Exception('taskModel no inicializado');
+            }
+            
+            error_log('createTask - taskModel OK, ejecutando createAdvanced...');
+            
             $taskId = $this->taskModel->createAdvanced(
                 $taskProject,
                 $taskTitle,
@@ -1064,9 +1089,10 @@ class ClanLeaderController {
                 $labels
             );
             
+            error_log("createTask - taskId retornado: " . ($taskId ? $taskId : 'FALSE/NULL'));
             if (!$taskId) {
                 error_log("createTask - ERROR: createAdvanced retornó false/null");
-                throw new Exception('createAdvanced retornó false');
+                throw new Exception('createAdvanced retornó false - revisar logs del servidor');
             }
             
             error_log("createTask - ÉXITO: Tarea creada con ID " . $taskId);
