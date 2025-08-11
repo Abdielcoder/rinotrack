@@ -1121,10 +1121,7 @@ class ClanLeaderController {
         
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             error_log("addTaskComment: Método no permitido");
-            header('Content-Type: application/json');
-            http_response_code(405);
-            echo json_encode(['success' => false, 'message' => 'Método no permitido']);
-            return;
+            Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
         }
         
         $taskId = (int)($_POST['task_id'] ?? 0);
@@ -1134,20 +1131,14 @@ class ClanLeaderController {
         
         if ($taskId <= 0 || empty($commentText)) {
             error_log("addTaskComment: Datos inválidos");
-            header('Content-Type: application/json');
-            http_response_code(400);
-            echo json_encode(['success' => false, 'message' => 'Datos inválidos']);
-            return;
+            Utils::jsonResponse(['success' => false, 'message' => 'Datos inválidos'], 400);
         }
         
         try {
             // Verificar autenticación básica
             if (!$this->currentUser) {
                 error_log("addTaskComment: Usuario no autenticado");
-                header('Content-Type: application/json');
-                http_response_code(401);
-                echo json_encode(['success' => false, 'message' => 'Usuario no autenticado']);
-                return;
+                Utils::jsonResponse(['success' => false, 'message' => 'Usuario no autenticado'], 401);
             }
             
             error_log("addTaskComment: Usuario autenticado, user_id: " . $this->currentUser['user_id']);
@@ -1179,21 +1170,16 @@ class ClanLeaderController {
                     }
                 }
                 error_log("addTaskComment: Comentario agregado exitosamente");
-                header('Content-Type: application/json');
-                echo json_encode(['success' => true, 'message' => 'Comentario agregado exitosamente']);
+                Utils::jsonResponse(['success' => true, 'message' => 'Comentario agregado exitosamente']);
             } else {
                 error_log("addTaskComment: Error al agregar comentario en la base de datos");
-                header('Content-Type: application/json');
-                http_response_code(500);
-                echo json_encode(['success' => false, 'message' => 'Error al agregar comentario']);
+                Utils::jsonResponse(['success' => false, 'message' => 'Error al agregar comentario'], 500);
             }
             
         } catch (Exception $e) {
             error_log("Error al agregar comentario: " . $e->getMessage());
             error_log("Stack trace: " . $e->getTraceAsString());
-            header('Content-Type: application/json');
-            http_response_code(500);
-            echo json_encode(['success' => false, 'message' => 'Error al agregar comentario: ' . $e->getMessage()]);
+            Utils::jsonResponse(['success' => false, 'message' => 'Error al agregar comentario: ' . $e->getMessage()], 500);
         }
     }
     

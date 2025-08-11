@@ -1128,10 +1128,17 @@ function addComment() {
     })
     .then(response => {
         console.log('Respuesta del servidor:', response.status);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
+        return response.text().then(text => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status} - ${text}`);
+            }
+            try {
+                return JSON.parse(text);
+            } catch (e) {
+                console.error('Respuesta no JSON:', text);
+                throw new Error('La respuesta del servidor no es JSON válido');
+            }
+        });
     })
     .then(data => {
         console.log('Datos de respuesta:', data);

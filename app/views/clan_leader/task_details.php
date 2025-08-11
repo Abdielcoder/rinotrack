@@ -897,8 +897,8 @@ if (!isset($task) || !isset($subtasks) || !isset($comments) || !isset($history) 
                         <?php if (!empty($comments)): ?>
                             <?php foreach ($comments as $comment): ?>
                             <div class="comment-item">
-                                <div class="comment-header">
-                                    <div class="comment-author">
+                            <div class="comment-header">
+                                <div class="comment-author">
                                         <div class="comment-author-avatar">
                                             <?= strtoupper(substr($comment['full_name'] ?? $comment['username'], 0, 1)) ?>
                                         </div>
@@ -906,20 +906,26 @@ if (!isset($task) || !isset($subtasks) || !isset($comments) || !isset($history) 
                                         <span class="comment-type comment-type-<?= $comment['comment_type'] ?>">
                                             <?= ucfirst(str_replace('_', ' ', $comment['comment_type'])) ?>
                                         </span>
+                                    <?php if (!empty($comment['attachments'])): ?>
+                                    <button class="btn-attachment" title="Ver adjuntos" onclick="toggleCommentAttachments(this)">
+                                        <i class="fas fa-paperclip"></i>
+                                        <?= count($comment['attachments']) ?> adjunto<?= count($comment['attachments'])>1?'s':'' ?>
+                                    </button>
+                                    <?php endif; ?>
                                     </div>
                                     <span class="comment-time"><?= date('d/m/Y H:i', strtotime($comment['created_at'])) ?></span>
                                 </div>
                                 <div class="comment-text"><?= nl2br(htmlspecialchars($comment['comment_text'])) ?></div>
-                                <?php if (!empty($comment['attachments'])): ?>
-                                <div class="comment-attachments">
-                                    <?php foreach ($comment['attachments'] as $attachment): ?>
-                                    <a href="<?= htmlspecialchars($attachment['file_path']) ?>" class="attachment-link" target="_blank">
-                                        <i class="fas fa-file"></i>
-                                        <?= htmlspecialchars($attachment['file_name']) ?>
-                                    </a>
-                                    <?php endforeach; ?>
-                                </div>
-                                <?php endif; ?>
+                            <?php if (!empty($comment['attachments'])): ?>
+                            <div class="comment-attachments" style="display: none;">
+                                <?php foreach ($comment['attachments'] as $attachment): ?>
+                                <a href="<?= htmlspecialchars($attachment['file_path']) ?>" class="attachment-link" target="_blank" onclick="event.preventDefault(); openPreview('<?= htmlspecialchars($attachment['file_path']) ?>','<?= htmlspecialchars($attachment['file_name']) ?>')">
+                                    <i class="fas fa-file"></i>
+                                    <?= htmlspecialchars($attachment['file_name']) ?>
+                                </a>
+                                <?php endforeach; ?>
+                            </div>
+                            <?php endif; ?>
                             </div>
                             <?php endforeach; ?>
                         <?php else: ?>
@@ -1082,6 +1088,46 @@ if (!isset($task) || !isset($subtasks) || !isset($comments) || !isset($history) 
     <script src="?route=assets/js/clan-leader.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
     <script>
+        // Modal de previsualización
+        function toggleCommentAttachments(button){
+            const container = button.closest('.comment-item').querySelector('.comment-attachments');
+            if (container) container.style.display = container.style.display==='none'?'block':'none';
+        }
+        function openPreview(url, name){
+            let modal = document.getElementById('previewModal');
+            if (!modal){
+                const html = `
+                <div id="previewModal" class="modal" style="display:none;">
+                  <div class="modal-content" style="max-width:800px;">
+                    <div class="modal-header">
+                      <h3 class="modal-title" id="previewTitle">Vista previa</h3>
+                      <span class="close" onclick="closePreview()">&times;</span>
+                    </div>
+                    <div id="previewBody" style="max-height:70vh;overflow:auto;"></div>
+                    <div class="modal-actions" style="margin-top:12px;text-align:right;">
+                      <a id="previewDownload" class="btn btn-primary" href="#" download>Descargar</a>
+                    </div>
+                  </div>
+                </div>`;
+                document.body.insertAdjacentHTML('beforeend', html);
+                modal = document.getElementById('previewModal');
+            }
+            const body = document.getElementById('previewBody');
+            const a = document.getElementById('previewDownload');
+            body.innerHTML = '';
+            a.href = url;
+            a.setAttribute('download', name || 'archivo');
+            const lower = (name||'').toLowerCase();
+            if (lower.endsWith('.png')||lower.endsWith('.jpg')||lower.endsWith('.jpeg')||lower.endsWith('.gif')||lower.endsWith('.webp')){
+                const img = document.createElement('img'); img.src = url; img.style.maxWidth='100%'; body.appendChild(img);
+            } else if (lower.endsWith('.pdf')){
+                const iframe = document.createElement('iframe'); iframe.src = url; iframe.style.width='100%'; iframe.style.height='70vh'; body.appendChild(iframe);
+            } else {
+                const p = document.createElement('p'); p.textContent = 'No hay vista previa para este formato. Usa Descargar.'; body.appendChild(p);
+            }
+            modal.style.display='block';
+        }
+        function closePreview(){ const modal = document.getElementById('previewModal'); if (modal) modal.style.display='none'; }
         // Variables globales
         let selectedFile = null;
         let selectedUsers = [];
