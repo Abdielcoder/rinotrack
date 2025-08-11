@@ -122,10 +122,6 @@ function getActiveTasksCount($userId) {
                                 Seleccionar todos los colaboradores
                             </label>
                         </div>
-                        <!-- Botón de prueba simple -->
-                        <button type="button" onclick="probarSeleccionarTodos()" style="margin-top: 10px; padding: 8px 16px; background: #48bb78; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px;">
-                            🧪 Probar Funcionalidad
-                        </button>
                     </div>
                     
                     <div class="collaborators-grid">
@@ -283,4 +279,44 @@ $additionalJS = [
 
 // Incluir el layout
 require_once __DIR__ . '/../admin/layout.php';
-?> 
+?>
+
+<!-- JavaScript inline para asegurar que funcione -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 DOM cargado desde script inline...');
+    
+    // Función simple para seleccionar/deseleccionar todos
+    function selectAllMembers(selectAll) {
+        const memberCheckboxes = document.querySelectorAll('.member-checkbox');
+        console.log('👥 Encontrados', memberCheckboxes.length, 'checkboxes de miembros');
+        
+        memberCheckboxes.forEach((checkbox, index) => {
+            checkbox.checked = selectAll;
+            console.log(`✅ Checkbox ${index + 1} establecido a:`, selectAll);
+        });
+    }
+    
+    // Buscar el checkbox principal
+    const selectAllCheckbox = document.getElementById('select_all_members');
+    console.log('📋 Checkbox principal encontrado:', selectAllCheckbox);
+    
+    if (selectAllCheckbox) {
+        // Agregar evento click simple
+        selectAllCheckbox.addEventListener('click', function() {
+            console.log('🖱️ Checkbox principal clickeado');
+            const isChecked = this.checked;
+            console.log('🔄 Estado del checkbox:', isChecked);
+            
+            // Seleccionar/deseleccionar todos
+            selectAllMembers(isChecked);
+        });
+        
+        console.log('✅ Evento click agregado al checkbox principal');
+    } else {
+        console.error('❌ No se encontró el checkbox principal');
+    }
+    
+    console.log('✅ Script inline ejecutado correctamente');
+});
+</script> 

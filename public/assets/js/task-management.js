@@ -160,32 +160,7 @@ function initializeSelectAllCollaborators() {
     }
 }
 
-/**
- * Función de prueba simple
- */
-function probarSeleccionarTodos() {
-    console.log('🧪 Probando funcionalidad...');
-    
-    // Buscar elementos
-    const selectAllCheckbox = document.getElementById('select_all_members');
-    const memberCheckboxes = document.querySelectorAll('.member-checkbox');
-    
-    console.log('📋 Checkbox principal:', selectAllCheckbox);
-    console.log('👥 Checkboxes de miembros:', memberCheckboxes.length);
-    
-    if (selectAllCheckbox && memberCheckboxes.length > 0) {
-        // Simular selección
-        selectAllCheckbox.checked = true;
-        memberCheckboxes.forEach((checkbox, index) => {
-            checkbox.checked = true;
-            console.log(`✅ Checkbox ${index + 1} seleccionado`);
-        });
-        
-        console.log('✅ Prueba completada - Todos los checkboxes seleccionados');
-    } else {
-        console.error('❌ Elementos no encontrados');
-    }
-}
+
 
 
 
