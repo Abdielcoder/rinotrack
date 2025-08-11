@@ -1088,30 +1088,11 @@ if (!isset($task) || !isset($subtasks) || !isset($comments) || !isset($history) 
         </div>
     </div>
     
-    <script src="?route=assets/js/clan-leader.js?v=<?= time() ?>"></script>
+    <script src="?route=assets/js/clan-leader.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
     <script>
-        console.log('📜 Script de task_details.php cargado correctamente');
-        
-        // Definir deleteTask inmediatamente para evitar errores
+        // Definir deleteTask globalmente para que funcione el botón eliminar
         window.deleteTask = function(taskId) {
-            console.log('🗑️ Función deleteTask llamada con taskId:', taskId);
-            
-            // Verificar que las funciones necesarias estén disponibles
-            if (typeof showConfirmationModal === 'undefined') {
-                console.error('❌ showConfirmationModal no está definida');
-                alert('Error: Función de confirmación no disponible. Recarga la página.');
-                return;
-            }
-            
-            if (typeof showNotification === 'undefined') {
-                console.error('❌ showNotification no está definida');
-                alert('Error: Función de notificación no disponible. Recarga la página.');
-                return;
-            }
-            
-            console.log('✅ Funciones disponibles, mostrando modal de confirmación...');
-            
             showConfirmationModal({
                 title: 'Confirmar Eliminación',
                 message: '¿Estás seguro de que quieres eliminar esta tarea?',
@@ -1119,8 +1100,6 @@ if (!isset($task) || !isset($subtasks) || !isset($comments) || !isset($history) 
                 confirmText: 'Eliminar',
                 cancelText: 'Cancelar',
                 onConfirm: () => {
-                    console.log('✅ Usuario confirmó eliminación, enviando petición...');
-                    
                     fetch('?route=clan_leader/delete-task', {
                         method: 'POST',
                         headers: {
@@ -1128,13 +1107,8 @@ if (!isset($task) || !isset($subtasks) || !isset($comments) || !isset($history) 
                         },
                         body: 'task_id=' + taskId
                     })
-                    .then(response => {
-                        console.log('📡 Respuesta del servidor:', response.status, response.statusText);
-                        return response.json();
-                    })
+                    .then(response => response.json())
                     .then(data => {
-                        console.log('📊 Datos de respuesta:', data);
-                        
                         if (data.success) {
                             showNotification('Tarea eliminada exitosamente', 'success');
                             setTimeout(() => {
@@ -1145,22 +1119,12 @@ if (!isset($task) || !isset($subtasks) || !isset($comments) || !isset($history) 
                         }
                     })
                     .catch(error => {
-                        console.error('❌ Error en la petición:', error);
+                        console.error('Error:', error);
                         showNotification('Error al eliminar la tarea', 'error');
                     });
                 }
             });
         };
-        
-        console.log('✅ Función deleteTask definida globalmente');
-        
-        // Verificar funciones disponibles
-        setTimeout(() => {
-            console.log('🔍 Verificando funciones disponibles...');
-            console.log('showConfirmationModal disponible:', typeof showConfirmationModal !== 'undefined');
-            console.log('showNotification disponible:', typeof showNotification !== 'undefined');
-            console.log('deleteTask disponible:', typeof window.deleteTask !== 'undefined');
-        }, 1000);
         
         // Modal de previsualización
         function toggleCommentAttachments(button){
