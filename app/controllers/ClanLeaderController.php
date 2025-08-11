@@ -1154,19 +1154,24 @@ class ClanLeaderController {
             if ($commentId) {
                 // Manejar adjunto si viene en la solicitud
                 if (!empty($_FILES['attachment']) && $_FILES['attachment']['error'] === UPLOAD_ERR_OK) {
-                    $uploadDir = __DIR__ . '/../../public/uploads/task_attachments';
-                    if (!is_dir($uploadDir)) {
-                        @mkdir($uploadDir, 0775, true);
-                    }
+                    // Base pública absoluta
+                    $publicRoot = dirname(__DIR__, 2) . '/public';
+                    $baseUploads = $publicRoot . '/uploads';
+                    $uploadDir = $baseUploads . '/task_attachments';
+                    // Crear rutas si no existen
+                    if (!is_dir($baseUploads)) { @mkdir($baseUploads, 0775, true); }
+                    if (!is_dir($uploadDir)) { @mkdir($uploadDir, 0775, true); }
                     $originalName = basename($_FILES['attachment']['name']);
                     $ext = pathinfo($originalName, PATHINFO_EXTENSION);
                     $safeName = uniqid('att_') . ($ext ? ('.' . $ext) : '');
                     $destPath = $uploadDir . '/' . $safeName;
-                    if (move_uploaded_file($_FILES['attachment']['tmp_name'], $destPath)) {
+                    if (@move_uploaded_file($_FILES['attachment']['tmp_name'], $destPath)) {
                         // Servir directamente desde /public/uploads/... sin router
                         $publicPath = 'uploads/task_attachments/' . $safeName;
                         // Guardar registro de adjunto (si existe comment_id en tabla se asociará al comentario)
                         $this->taskModel->saveAttachmentRecord($taskId, is_numeric($commentId) ? (int)$commentId : null, $this->currentUser['user_id'], $originalName, $publicPath, $_FILES['attachment']['type'] ?? null);
+                    } else {
+                        error_log('addTaskComment: No se pudo mover el archivo subido a ' . $destPath);
                     }
                 }
                 error_log("addTaskComment: Comentario agregado exitosamente");
