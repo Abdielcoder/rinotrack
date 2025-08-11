@@ -1078,6 +1078,7 @@ if (!isset($task) || !isset($subtasks) || !isset($comments) || !isset($history) 
         </div>
     </div>
     
+    <script src="?route=assets/js/clan-leader.js"></script>
     <script src="https://kit.fontawesome.com/your-fontawesome-kit.js"></script>
     <script>
         // Variables globales
@@ -1188,57 +1189,7 @@ if (!isset($task) || !isset($subtasks) || !isset($comments) || !isset($history) 
             }
         }
         
-        // Funciones para comentarios
-        function addComment() {
-            const commentText = document.getElementById('newComment').value.trim();
-            if (!commentText) {
-                showNotification('Por favor escribe un comentario', 'error');
-                return;
-            }
-            
-            const formData = new FormData();
-            formData.append('task_id', <?= $task['task_id'] ?>);
-            formData.append('comment_text', commentText);
-            if (selectedFile) {
-                formData.append('attachment', selectedFile);
-            }
-            
-            fetch('?route=clan_leader/add-task-comment', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    document.getElementById('newComment').value = '';
-                    removeAttachment();
-                    showNotification('Comentario agregado exitosamente', 'success');
-                    // Recargar la página para mostrar el nuevo comentario
-                    setTimeout(() => location.reload(), 1000);
-                } else {
-                    showNotification('Error al agregar comentario: ' + data.message, 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showNotification('Error al agregar comentario', 'error');
-            });
-        }
-        
-        function handleFileAttachment(input) {
-            const file = input.files[0];
-            if (file) {
-                selectedFile = file;
-                document.getElementById('attachmentName').textContent = file.name;
-                document.getElementById('attachmentPreview').style.display = 'block';
-            }
-        }
-        
-        function removeAttachment() {
-            selectedFile = null;
-            document.getElementById('fileAttachment').value = '';
-            document.getElementById('attachmentPreview').style.display = 'none';
-        }
+
         
         // Funciones para colaboradores
         function showAddCollaboratorModal() {
@@ -1402,44 +1353,6 @@ if (!isset($task) || !isset($subtasks) || !isset($comments) || !isset($history) 
             }
         }
         
-        function showNotification(message, type = 'info') {
-            // Crear notificación
-            const notification = document.createElement('div');
-            notification.className = `notification notification-${type}`;
-            notification.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                padding: 12px 20px;
-                border-radius: 6px;
-                color: white;
-                font-weight: 600;
-                z-index: 10000;
-                animation: slideIn 0.3s ease;
-            `;
-            
-            if (type === 'success') {
-                notification.style.background = '#10b981';
-            } else if (type === 'error') {
-                notification.style.background = '#ef4444';
-            } else {
-                notification.style.background = '#3b82f6';
-            }
-            
-            notification.textContent = message;
-            document.body.appendChild(notification);
-            
-            // Remover después de 3 segundos
-            setTimeout(() => {
-                notification.style.animation = 'slideOut 0.3s ease';
-                setTimeout(() => {
-                    if (notification.parentNode) {
-                        notification.parentNode.removeChild(notification);
-                    }
-                }, 300);
-            }, 3000);
-        }
-        
         // Cerrar modal al hacer clic fuera
         window.onclick = function(event) {
             const modal = document.getElementById('addCollaboratorModal');
@@ -1447,20 +1360,6 @@ if (!isset($task) || !isset($subtasks) || !isset($comments) || !isset($history) 
                 closeAddCollaboratorModal();
             }
         }
-        
-        // Estilos para animaciones
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes slideIn {
-                from { transform: translateX(100%); opacity: 0; }
-                to { transform: translateX(0); opacity: 1; }
-            }
-            @keyframes slideOut {
-                from { transform: translateX(0); opacity: 1; }
-                to { transform: translateX(100%); opacity: 0; }
-            }
-        `;
-        document.head.appendChild(style);
     </script>
 </body>
 </html> 
