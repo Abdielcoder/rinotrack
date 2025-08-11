@@ -1118,25 +1118,57 @@ class ClanLeaderController {
             Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
         }
         
+        // Debug: Log de la petición
+        error_log("addTaskComment: Iniciando petición");
+        error_log("POST data: " . json_encode($_POST));
+        
         $taskId = (int)($_POST['task_id'] ?? 0);
         $commentText = Utils::sanitizeInput($_POST['comment_text'] ?? '');
         $commentType = Utils::sanitizeInput($_POST['comment_type'] ?? 'comment');
         
+        error_log("addTaskComment: taskId = $taskId, commentText = $commentText");
+        
         if ($taskId <= 0 || empty($commentText)) {
+            error_log("addTaskComment: Datos inválidos");
             Utils::jsonResponse(['success' => false, 'message' => 'Datos inválidos'], 400);
         }
         
         try {
+            // Verificar autenticación
+            if (!$this->currentUser) {
+                error_log("addTaskComment: Usuario no autenticado");
+                Utils::jsonResponse(['success' => false, 'message' => 'Usuario no autenticado'], 401);
+            }
+            
+            // Verificar acceso al clan
+            if (!$this->userClan) {
+                error_log("addTaskComment: Usuario no tiene acceso al clan");
+                Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado al clan'], 403);
+            }
+            
+            error_log("addTaskComment: Usuario autenticado, clan ID: " . $this->userClan['clan_id']);
+            
             // Verificar que la tarea pertenece al clan del líder
             $task = $this->taskModel->findById($taskId);
             if (!$task) {
+                error_log("addTaskComment: Tarea no encontrada");
                 Utils::jsonResponse(['success' => false, 'message' => 'Tarea no encontrada'], 404);
             }
             
+            error_log("addTaskComment: Tarea encontrada, project_id: " . $task['project_id']);
+            
             $project = $this->projectModel->findById($task['project_id']);
-            if (!$project || $project['clan_id'] != $this->userClan['clan_id']) {
+            if (!$project) {
+                error_log("addTaskComment: Proyecto no encontrado");
+                Utils::jsonResponse(['success' => false, 'message' => 'Proyecto no encontrado'], 404);
+            }
+            
+            if ($project['clan_id'] != $this->userClan['clan_id']) {
+                error_log("addTaskComment: Acceso denegado - clan_id del proyecto: " . $project['clan_id'] . ", clan_id del usuario: " . $this->userClan['clan_id']);
                 Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
             }
+            
+            error_log("addTaskComment: Acceso verificado, agregando comentario");
             
             // Agregar comentario
             $result = $this->taskModel->addComment(
@@ -1147,14 +1179,17 @@ class ClanLeaderController {
             );
             
             if ($result) {
+                error_log("addTaskComment: Comentario agregado exitosamente");
                 Utils::jsonResponse(['success' => true, 'message' => 'Comentario agregado exitosamente']);
             } else {
+                error_log("addTaskComment: Error al agregar comentario en la base de datos");
                 Utils::jsonResponse(['success' => false, 'message' => 'Error al agregar comentario'], 500);
             }
             
         } catch (Exception $e) {
             error_log("Error al agregar comentario: " . $e->getMessage());
-            Utils::jsonResponse(['success' => false, 'message' => 'Error al agregar comentario'], 500);
+            error_log("Stack trace: " . $e->getTraceAsString());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error al agregar comentario: ' . $e->getMessage()], 500);
         }
     }
     

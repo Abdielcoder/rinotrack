@@ -1105,32 +1105,27 @@ function addComment() {
         return;
     }
     
-    const formData = new FormData();
+    // Por ahora, solo enviar comentario de texto sin archivos adjuntos
+    const formData = new URLSearchParams();
     formData.append('task_id', taskId);
     formData.append('comment_text', commentText);
     
-    // Verificar si hay archivo adjunto
-    const fileInput = document.getElementById('fileAttachment');
-    if (fileInput && fileInput.files[0]) {
-        formData.append('attachment', fileInput.files[0]);
-    }
-    
     fetch('?route=clan_leader/add-task-comment', {
         method: 'POST',
-        body: formData
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: formData.toString()
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
             document.getElementById('newComment').value = '';
-            // Limpiar archivo adjunto si existe
-            if (fileInput) {
-                fileInput.value = '';
-                const attachmentPreview = document.getElementById('attachmentPreview');
-                if (attachmentPreview) {
-                    attachmentPreview.style.display = 'none';
-                }
-            }
             showNotification('Comentario agregado exitosamente', 'success');
             // Recargar la página para mostrar el nuevo comentario
             setTimeout(() => location.reload(), 1000);
@@ -1140,7 +1135,7 @@ function addComment() {
     })
     .catch(error => {
         console.error('Error:', error);
-        showNotification('Error al agregar comentario', 'error');
+        showNotification('Error al agregar comentario: ' + error.message, 'error');
     });
 }
 

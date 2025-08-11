@@ -12,6 +12,7 @@ if (!isset($task) || !isset($subtasks) || !isset($comments) || !isset($history) 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Detalles de Tarea - <?= htmlspecialchars($task['task_name']) ?></title>
+    <link rel="icon" type="image/x-icon" href="?route=favicon.ico">
     <link rel="stylesheet" href="?route=assets/css/clan-leader.css">
     <link rel="stylesheet" href="?route=assets/css/styles.css">
     <style>
@@ -1079,7 +1080,7 @@ if (!isset($task) || !isset($subtasks) || !isset($comments) || !isset($history) 
     </div>
     
     <script src="?route=assets/js/clan-leader.js"></script>
-    <script src="https://kit.fontawesome.com/your-fontawesome-kit.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
     <script>
         // Variables globales
         let selectedFile = null;
@@ -1149,12 +1150,12 @@ if (!isset($task) || !isset($subtasks) || !isset($comments) || !isset($history) 
         function editSubtask(subtaskId) {
             // Implementar edición de subtarea
             showConfirmationModal({
-            title: 'Función en Desarrollo',
-            message: 'Función de edición de subtarea en desarrollo',
-            type: 'info',
-            confirmText: 'Entendido',
-            onConfirm: () => {}
-        });
+                title: 'Función en Desarrollo',
+                message: 'Función de edición de subtarea en desarrollo',
+                type: 'info',
+                confirmText: 'Entendido',
+                onConfirm: () => {}
+            });
         }
         
         function deleteSubtask(subtaskId) {
