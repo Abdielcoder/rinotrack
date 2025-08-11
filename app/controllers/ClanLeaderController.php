@@ -1152,15 +1152,32 @@ class ClanLeaderController {
             
             error_log("addTaskComment: Usuario autenticado, user_id: " . $this->currentUser['user_id']);
             
-            // Agregar comentario directamente sin verificar clan por ahora
-            $result = $this->taskModel->addComment(
+            // Agregar comentario y obtener comment_id
+            $commentId = $this->taskModel->addComment(
                 $taskId, 
                 $this->currentUser['user_id'], 
                 $commentText, 
                 'comment'
             );
             
-            if ($result) {
+            if ($commentId) {
+                // Manejar adjunto si viene en la solicitud
+                if (!empty($_FILES['attachment']) && $_FILES['attachment']['error'] === UPLOAD_ERR_OK) {
+                    $uploadDir = __DIR__ . '/../../public/uploads/task_attachments';
+                    if (!is_dir($uploadDir)) {
+                        @mkdir($uploadDir, 0775, true);
+                    }
+                    $originalName = basename($_FILES['attachment']['name']);
+                    $ext = pathinfo($originalName, PATHINFO_EXTENSION);
+                    $safeName = uniqid('att_') . ($ext ? ('.' . $ext) : '');
+                    $destPath = $uploadDir . '/' . $safeName;
+                    if (move_uploaded_file($_FILES['attachment']['tmp_name'], $destPath)) {
+                        // Servir directamente desde /public/uploads/... sin router
+                        $publicPath = 'uploads/task_attachments/' . $safeName;
+                        // Guardar registro de adjunto (si existe comment_id en tabla se asociará al comentario)
+                        $this->taskModel->saveAttachmentRecord($taskId, is_numeric($commentId) ? (int)$commentId : null, $this->currentUser['user_id'], $originalName, $publicPath, $_FILES['attachment']['type'] ?? null);
+                    }
+                }
                 error_log("addTaskComment: Comentario agregado exitosamente");
                 header('Content-Type: application/json');
                 echo json_encode(['success' => true, 'message' => 'Comentario agregado exitosamente']);

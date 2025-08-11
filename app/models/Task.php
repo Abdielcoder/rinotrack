@@ -301,7 +301,35 @@ class Task {
                 ORDER BY tc.created_at DESC
             ");
             $stmt->execute([$taskId]);
-            return $stmt->fetchAll();
+            $comments = $stmt->fetchAll();
+
+            // Enriquecer con adjuntos por comentario si existe Task_Attachments.comment_id
+            try {
+                $check = $this->db->query("SHOW COLUMNS FROM Task_Attachments LIKE 'comment_id'");
+                $hasCommentColumn = (bool)$check->fetch();
+            } catch (Exception $e) {
+                $hasCommentColumn = false;
+            }
+
+            if ($hasCommentColumn && !empty($comments)) {
+                $commentIds = array_column($comments, 'comment_id');
+                if (!empty($commentIds)) {
+                    $in = implode(',', array_fill(0, count($commentIds), '?'));
+                    $stmtA = $this->db->prepare("SELECT comment_id, file_name, file_path, file_type, uploaded_at FROM Task_Attachments WHERE comment_id IN ($in)");
+                    $stmtA->execute($commentIds);
+                    $rows = $stmtA->fetchAll();
+                    $byComment = [];
+                    foreach ($rows as $r) {
+                        $byComment[$r['comment_id']][] = $r;
+                    }
+                    foreach ($comments as &$c) {
+                        $c['attachments'] = $byComment[$c['comment_id']] ?? [];
+                        $c['attachments_count'] = isset($c['attachments']) ? count($c['attachments']) : 0;
+                    }
+                }
+            }
+
+            return $comments;
         } catch (Exception $e) {
             error_log("Error al obtener comentarios: " . $e->getMessage());
             return [];
@@ -321,11 +349,13 @@ class Task {
             $result = $stmt->execute([$taskId, $userId, $commentText, $commentType, $relatedUserId, $oldValue, $newValue]);
             
             if ($result) {
+                $commentId = (int)$this->db->lastInsertId();
                 // Registrar en el historial
                 $this->logTaskAction($taskId, $userId, 'commented', 'comment', null, $commentText, 'Comentario agregado');
+                return $commentId > 0 ? $commentId : true;
             }
-            
-            return $result;
+
+            return false;
             
         } catch (Exception $e) {
             error_log("Error al agregar comentario: " . $e->getMessage());
@@ -466,6 +496,33 @@ class Task {
             return $stmt->execute([$taskId, $userId, $actionType, $fieldName, $oldValue, $newValue, $notes]);
         } catch (Exception $e) {
             error_log("Error al registrar acción en historial: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Guardar registro de adjunto vinculado a un comentario (si existe columna comment_id)
+     */
+    public function saveAttachmentRecord($taskId, $commentId, $userId, $originalName, $publicPath, $fileType) {
+        try {
+            // Detectar si Task_Attachments tiene columna comment_id
+            $hasCommentId = false;
+            try {
+                $check = $this->db->query("SHOW COLUMNS FROM Task_Attachments LIKE 'comment_id'");
+                $hasCommentId = (bool)$check->fetch();
+            } catch (Exception $e) {
+                $hasCommentId = false;
+            }
+
+            if ($hasCommentId && $commentId) {
+                $stmt = $this->db->prepare("INSERT INTO Task_Attachments (task_id, user_id, file_name, file_path, file_type, comment_id) VALUES (?, ?, ?, ?, ?, ?)");
+                return $stmt->execute([$taskId, $userId, $originalName, $publicPath, $fileType, $commentId]);
+            } else {
+                $stmt = $this->db->prepare("INSERT INTO Task_Attachments (task_id, user_id, file_name, file_path, file_type) VALUES (?, ?, ?, ?, ?)");
+                return $stmt->execute([$taskId, $userId, $originalName, $publicPath, $fileType]);
+            }
+        } catch (Exception $e) {
+            error_log("Error al guardar adjunto: " . $e->getMessage());
             return false;
         }
     }

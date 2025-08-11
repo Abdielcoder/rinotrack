@@ -1113,10 +1113,14 @@ function addComment() {
     
     console.log('Enviando comentario para tarea:', taskId);
     
-    // Enviar comentario usando FormData simple
+    // Enviar comentario usando FormData (incluye adjunto si existe)
     const formData = new FormData();
     formData.append('task_id', taskId);
     formData.append('comment_text', commentText);
+    const fileInput = document.getElementById('fileAttachment');
+    if (fileInput && fileInput.files && fileInput.files[0]) {
+        formData.append('attachment', fileInput.files[0]);
+    }
     
     fetch('?route=clan_leader/add-task-comment', {
         method: 'POST',
@@ -1133,6 +1137,11 @@ function addComment() {
         console.log('Datos de respuesta:', data);
         if (data.success) {
             document.getElementById('newComment').value = '';
+            if (fileInput) {
+                fileInput.value = '';
+                const attachmentPreview = document.getElementById('attachmentPreview');
+                if (attachmentPreview) attachmentPreview.style.display = 'none';
+            }
             showNotification('Comentario agregado exitosamente', 'success');
             // Recargar la página para mostrar el nuevo comentario
             setTimeout(() => location.reload(), 1000);
