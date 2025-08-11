@@ -162,6 +162,17 @@ class Task {
      */
     public function assignMultipleUsers($taskId, $userIds, $assignedByUserId) {
         try {
+            error_log('Task::assignMultipleUsers - INICIO');
+            error_log('  taskId: ' . $taskId);
+            error_log('  userIds: ' . json_encode($userIds));
+            error_log('  assignedByUserId: ' . $assignedByUserId);
+            
+            // Validar que userIds es array y no está vacío
+            if (!is_array($userIds) || empty($userIds)) {
+                error_log('Task::assignMultipleUsers - Error: userIds no es array válido');
+                throw new Exception('userIds debe ser un array no vacío');
+            }
+            
             // Limpiar asignaciones existentes
             $stmt = $this->db->prepare("DELETE FROM Task_Assignments WHERE task_id = ?");
             if (!$stmt->execute([$taskId])) {
@@ -172,6 +183,7 @@ class Task {
             // Calcular porcentaje por usuario
             $userCount = count($userIds);
             $percentagePerUser = $userCount > 0 ? 100.00 / $userCount : 0;
+            error_log('Task::assignMultipleUsers - percentagePerUser: ' . $percentagePerUser);
             
             // Insertar nuevas asignaciones
             $stmt = $this->db->prepare("
@@ -180,17 +192,25 @@ class Task {
             ");
             
             foreach ($userIds as $userId) {
-                $ok = $stmt->execute([$taskId, $userId, $percentagePerUser, $assignedByUserId]);
+                // Convertir a entero para asegurar tipo correcto
+                $userIdInt = (int)$userId;
+                error_log('Task::assignMultipleUsers - Insertando usuario: ' . $userIdInt);
+                
+                $ok = $stmt->execute([$taskId, $userIdInt, $percentagePerUser, $assignedByUserId]);
                 if (!$ok) {
                     $err = $stmt->errorInfo();
-                    error_log('Task::assignMultipleUsers - Error insert assignment (user ' . $userId . '): ' . json_encode($err));
-                    throw new Exception('Error al asignar usuario ' . $userId . ' a la tarea');
+                    error_log('Task::assignMultipleUsers - Error insert assignment (user ' . $userIdInt . '): ' . json_encode($err));
+                    throw new Exception('Error al asignar usuario ' . $userIdInt . ' a la tarea');
                 }
+                error_log('Task::assignMultipleUsers - Usuario ' . $userIdInt . ' asignado exitosamente');
             }
             
             // Actualizar la tarea principal con el primer usuario asignado
+            $firstUserId = (int)$userIds[0];
+            error_log('Task::assignMultipleUsers - Actualizando assigned_to_user_id: ' . $firstUserId);
+            
             $stmt = $this->db->prepare("UPDATE Tasks SET assigned_to_user_id = ? WHERE task_id = ?");
-            if (!$stmt->execute([$userIds[0], $taskId])) {
+            if (!$stmt->execute([$firstUserId, $taskId])) {
                 $err = $stmt->errorInfo();
                 error_log('Task::assignMultipleUsers - Error al actualizar assigned_to_user_id: ' . json_encode($err));
                 throw new Exception('Error al actualizar assigned_to_user_id');
@@ -199,6 +219,7 @@ class Task {
             // Registrar en el historial
             $this->logTaskAction($taskId, $assignedByUserId, 'assigned', 'assigned_users', null, implode(',', $userIds), 'Múltiples usuarios asignados');
             
+            error_log('Task::assignMultipleUsers - COMPLETADO EXITOSAMENTE');
             return true;
             
         } catch (Exception $e) {

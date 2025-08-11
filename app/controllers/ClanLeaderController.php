@@ -1048,6 +1048,9 @@ class ClanLeaderController {
             error_log("currentUser: " . json_encode($this->currentUser));
             
             // Crear la tarea usando el nuevo método avanzado
+            $createdByUserId = $_SESSION['user_id']; // Usar directamente la sesión
+            error_log('createTask - createdByUserId desde SESSION: ' . $createdByUserId);
+            
             $taskId = $this->taskModel->createAdvanced(
                 $taskProject,
                 $taskTitle,
@@ -1055,7 +1058,7 @@ class ClanLeaderController {
                 $taskDueDate,
                 $this->userClan['clan_id'],
                 $priority,
-                $this->currentUser['user_id'],
+                $createdByUserId,
                 $assignedMembers,
                 $subtasks,
                 $labels
