@@ -906,17 +906,20 @@ if (!isset($task) || !isset($subtasks) || !isset($comments) || !isset($history) 
                                         <span class="comment-type comment-type-<?= $comment['comment_type'] ?>">
                                             <?= ucfirst(str_replace('_', ' ', $comment['comment_type'])) ?>
                                         </span>
-                                    <?php if (!empty($comment['attachments'])): ?>
+                                    <?php 
+                                        $attCount = (int)($comment['attachments_count'] ?? (is_array($comment['attachments'] ?? null) ? count($comment['attachments']) : 0));
+                                    ?>
+                                    <?php if ($attCount > 0): ?>
                                     <button class="btn-attachment" title="Ver adjuntos" onclick="toggleCommentAttachments(this)">
                                         <i class="fas fa-paperclip"></i>
-                                        <?= count($comment['attachments']) ?> adjunto<?= count($comment['attachments'])>1?'s':'' ?>
+                                        <?= $attCount ?> adjunto<?= $attCount>1?'s':'' ?>
                                     </button>
                                     <?php endif; ?>
                                     </div>
                                     <span class="comment-time"><?= date('d/m/Y H:i', strtotime($comment['created_at'])) ?></span>
                                 </div>
                                 <div class="comment-text"><?= nl2br(htmlspecialchars($comment['comment_text'])) ?></div>
-                            <?php if (!empty($comment['attachments'])): ?>
+                            <?php if ($attCount > 0): ?>
                             <div class="comment-attachments" style="display: none;">
                                 <?php foreach ($comment['attachments'] as $attachment): ?>
                                 <a href="<?= htmlspecialchars($attachment['file_path']) ?>" class="attachment-link" target="_blank" onclick="event.preventDefault(); openPreview('<?= htmlspecialchars($attachment['file_path']) ?>','<?= htmlspecialchars($attachment['file_name']) ?>')">
