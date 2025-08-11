@@ -98,20 +98,25 @@ class Task {
             $result = $stmt->execute([$projectId, $taskName, $description, $dueDate, $priority, $createdByUserId]);
             
             if (!$result) {
-                throw new Exception('Error al crear la tarea principal');
+                $err = $stmt->errorInfo();
+                error_log('Task::createAdvanced - Error al crear tarea principal: ' . json_encode($err));
+                throw new Exception('Error al crear la tarea principal: ' . ($err[2] ?? ''));
             }
             
             $taskId = $this->db->lastInsertId();
             
             // Asignar múltiples usuarios si se especifican
             if (!empty($assignedUsers)) {
-                $this->assignMultipleUsers($taskId, $assignedUsers, $createdByUserId);
+                $ok = $this->assignMultipleUsers($taskId, $assignedUsers, $createdByUserId);
+                if (!$ok) {
+                    throw new Exception('Error al asignar múltiples usuarios');
+                }
             }
             
             // Crear subtareas si se especifican
             if (!empty($subtasks)) {
                 foreach ($subtasks as $subtask) {
-                    $this->createSubtaskAdvanced(
+                    $subId = $this->createSubtaskAdvanced(
                         $taskId, 
                         $subtask['title'], 
                         $createdByUserId,
@@ -121,13 +126,19 @@ class Task {
                         $subtask['priority'] ?? self::PRIORITY_MEDIUM,
                         $subtask['assigned_user_id'] ?? null
                     );
+                    if (!$subId) {
+                        throw new Exception('Error al crear subtarea: ' . ($subtask['title'] ?? 'sin título'));
+                    }
                 }
             }
             
             // Asignar etiquetas si se especifican
             if (!empty($labels)) {
                 foreach ($labels as $labelId) {
-                    $this->assignLabel($taskId, $labelId, $createdByUserId);
+                    $ok = $this->assignLabel($taskId, $labelId, $createdByUserId);
+                    if (!$ok) {
+                        error_log('Task::createAdvanced - Error al asignar etiqueta: ' . $labelId);
+                    }
                 }
             }
             
@@ -153,7 +164,10 @@ class Task {
         try {
             // Limpiar asignaciones existentes
             $stmt = $this->db->prepare("DELETE FROM Task_Assignments WHERE task_id = ?");
-            $stmt->execute([$taskId]);
+            if (!$stmt->execute([$taskId])) {
+                $err = $stmt->errorInfo();
+                error_log('Task::assignMultipleUsers - Error al limpiar asignaciones: ' . json_encode($err));
+            }
             
             // Calcular porcentaje por usuario
             $userCount = count($userIds);
@@ -166,12 +180,21 @@ class Task {
             ");
             
             foreach ($userIds as $userId) {
-                $stmt->execute([$taskId, $userId, $percentagePerUser, $assignedByUserId]);
+                $ok = $stmt->execute([$taskId, $userId, $percentagePerUser, $assignedByUserId]);
+                if (!$ok) {
+                    $err = $stmt->errorInfo();
+                    error_log('Task::assignMultipleUsers - Error insert assignment (user ' . $userId . '): ' . json_encode($err));
+                    throw new Exception('Error al asignar usuario ' . $userId . ' a la tarea');
+                }
             }
             
             // Actualizar la tarea principal con el primer usuario asignado
             $stmt = $this->db->prepare("UPDATE Tasks SET assigned_to_user_id = ? WHERE task_id = ?");
-            $stmt->execute([$userIds[0], $taskId]);
+            if (!$stmt->execute([$userIds[0], $taskId])) {
+                $err = $stmt->errorInfo();
+                error_log('Task::assignMultipleUsers - Error al actualizar assigned_to_user_id: ' . json_encode($err));
+                throw new Exception('Error al actualizar assigned_to_user_id');
+            }
             
             // Registrar en el historial
             $this->logTaskAction($taskId, $assignedByUserId, 'assigned', 'assigned_users', null, implode(',', $userIds), 'Múltiples usuarios asignados');
@@ -205,6 +228,8 @@ class Task {
                 return $subtaskId;
             }
             
+            $err = $stmt->errorInfo();
+            error_log('Task::createSubtaskAdvanced - Error al crear subtarea: ' . json_encode($err));
             return false;
             
         } catch (Exception $e) {
