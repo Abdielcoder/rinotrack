@@ -1231,6 +1231,63 @@ function showNotification(message, type = 'info') {
     }, 3000);
 }
 
+// === Utilidades globales para adjuntos en comentarios ===
+// Asegurar disponibilidad global aunque la vista no declare estas funciones
+window.toggleCommentAttachments = function(button){
+  try {
+    const container = button.closest('.comment-item').querySelector('.comment-attachments');
+    if (container) {
+      container.style.display = container.style.display === 'none' ? 'block' : 'none';
+    }
+  } catch (e) {
+    console.error('toggleCommentAttachments error:', e);
+  }
+}
+
+window.openPreview = function(url, name){
+  try {
+    let modal = document.getElementById('previewModal');
+    if (!modal){
+      const html = `
+      <div id="previewModal" class="modal" style="display:none;">
+        <div class="modal-content" style="max-width:800px;">
+          <div class="modal-header">
+            <h3 class="modal-title" id="previewTitle">Vista previa</h3>
+            <span class="close" onclick="closePreview()">&times;</span>
+          </div>
+          <div id="previewBody" style="max-height:70vh;overflow:auto;"></div>
+          <div class="modal-actions" style="margin-top:12px;text-align:right;">
+            <a id="previewDownload" class="btn btn-primary" href="#" download>Descargar</a>
+          </div>
+        </div>
+      </div>`;
+      document.body.insertAdjacentHTML('beforeend', html);
+      modal = document.getElementById('previewModal');
+    }
+    const body = document.getElementById('previewBody');
+    const a = document.getElementById('previewDownload');
+    body.innerHTML = '';
+    a.href = url;
+    a.setAttribute('download', name || 'archivo');
+    const lower = (name||'').toLowerCase();
+    if (lower.endsWith('.png')||lower.endsWith('.jpg')||lower.endsWith('.jpeg')||lower.endsWith('.gif')||lower.endsWith('.webp')){
+      const img = document.createElement('img'); img.src = url; img.style.maxWidth='100%'; body.appendChild(img);
+    } else if (lower.endsWith('.pdf')){
+      const iframe = document.createElement('iframe'); iframe.src = url; iframe.style.width='100%'; iframe.style.height='70vh'; body.appendChild(iframe);
+    } else {
+      const p = document.createElement('p'); p.textContent = 'No hay vista previa para este formato. Usa Descargar.'; body.appendChild(p);
+    }
+    modal.style.display='block';
+  } catch (e) {
+    console.error('openPreview error:', e);
+  }
+}
+
+window.closePreview = function(){
+  const modal = document.getElementById('previewModal');
+  if (modal) modal.style.display='none';
+}
+
 // Estilos CSS para modales de confirmación
 const confirmationModalStyles = document.createElement('style');
 confirmationModalStyles.textContent = `
