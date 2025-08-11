@@ -1,4 +1,6 @@
-// let subtaskCounter = 0;
+console.log('📜 Archivo task-management.js cargado correctamente');
+
+let subtaskCounter = 0;
 
 // function addSubtask() {
 //     const container = document.getElementById('subtasks-container');
@@ -126,97 +128,92 @@ function closeTaskManagement() {
 function initializeSelectAllCollaborators() {
     console.log('🔍 Inicializando funcionalidad de seleccionar todos los colaboradores...');
     
-    const selectAllCheckbox = document.getElementById('select_all_members');
-    const memberCheckboxes = document.querySelectorAll('.member-checkbox');
-    
-    console.log('📋 Checkbox principal encontrado:', selectAllCheckbox);
-    console.log('👥 Checkboxes de miembros encontrados:', memberCheckboxes.length);
-    
-    if (!selectAllCheckbox) {
-        console.error('❌ No se encontró el checkbox principal "select_all_members"');
-        return;
-    }
-    
-    if (memberCheckboxes.length === 0) {
-        console.error('❌ No se encontraron checkboxes de miembros con clase "member-checkbox"');
-        return;
-    }
-    
-    // Evento para el checkbox "Seleccionar todos"
-    selectAllCheckbox.addEventListener('change', function() {
-        const isChecked = this.checked;
-        console.log('🔄 Checkbox principal cambiado a:', isChecked);
+    // Esperar un poco más para asegurar que el DOM esté completamente cargado
+    setTimeout(() => {
+        const selectAllCheckbox = document.getElementById('select_all_members');
+        const memberCheckboxes = document.querySelectorAll('.member-checkbox');
         
-        // Seleccionar/deseleccionar todos los checkboxes de miembros
-        memberCheckboxes.forEach((checkbox, index) => {
-            checkbox.checked = isChecked;
-            console.log(`✅ Checkbox ${index + 1} establecido a:`, isChecked);
-        });
+        console.log('📋 Checkbox principal encontrado:', selectAllCheckbox);
+        console.log('👥 Checkboxes de miembros encontrados:', memberCheckboxes.length);
         
-        // Actualizar el estado visual
-        updateSelectAllState();
-    });
-    
-    // Eventos para los checkboxes individuales
-    memberCheckboxes.forEach((checkbox, index) => {
-        checkbox.addEventListener('change', function() {
-            console.log(`👤 Checkbox de miembro ${index + 1} cambiado a:`, this.checked);
+        if (!selectAllCheckbox) {
+            console.error('❌ No se encontró el checkbox principal "select_all_members"');
+            console.log('🔍 Buscando elementos en el DOM...');
+            console.log('🔍 Elementos con ID "select_all_members":', document.querySelectorAll('#select_all_members'));
+            console.log('🔍 Elementos con clase "select-all-checkbox":', document.querySelectorAll('.select-all-checkbox'));
+            return;
+        }
+        
+        if (memberCheckboxes.length === 0) {
+            console.error('❌ No se encontraron checkboxes de miembros con clase "member-checkbox"');
+            console.log('🔍 Buscando elementos en el DOM...');
+            console.log('🔍 Elementos con clase "member-checkbox":', document.querySelectorAll('.member-checkbox'));
+            console.log('🔍 Elementos con clase "collaborator-checkbox":', document.querySelectorAll('.collaborator-checkbox'));
+            return;
+        }
+        
+        // Evento para el checkbox "Seleccionar todos"
+        selectAllCheckbox.addEventListener('change', function() {
+            const isChecked = this.checked;
+            console.log('🔄 Checkbox principal cambiado a:', isChecked);
+            
+            // Seleccionar/deseleccionar todos los checkboxes de miembros
+            memberCheckboxes.forEach((checkbox, index) => {
+                checkbox.checked = isChecked;
+                console.log(`✅ Checkbox ${index + 1} establecido a:`, isChecked);
+            });
+            
+            // Actualizar el estado visual
             updateSelectAllState();
         });
-    });
-    
-    // Función para actualizar el estado del checkbox "Seleccionar todos"
-    function updateSelectAllState() {
-        const checkedCount = document.querySelectorAll('.member-checkbox:checked').length;
-        const totalCount = memberCheckboxes.length;
         
-        console.log(`📊 Estado actual: ${checkedCount}/${totalCount} seleccionados`);
+        // Eventos para los checkboxes individuales
+        memberCheckboxes.forEach((checkbox, index) => {
+            checkbox.addEventListener('change', function() {
+                console.log(`👤 Checkbox de miembro ${index + 1} cambiado a:`, this.checked);
+                updateSelectAllState();
+            });
+        });
         
-        if (checkedCount === 0) {
-            // Ninguno seleccionado
-            selectAllCheckbox.checked = false;
-            selectAllCheckbox.indeterminate = false;
-            console.log('🔘 Estado: Ninguno seleccionado');
-        } else if (checkedCount === totalCount) {
-            // Todos seleccionados
-            selectAllCheckbox.checked = true;
-            selectAllCheckbox.indeterminate = false;
-            console.log('✅ Estado: Todos seleccionados');
-        } else {
-            // Algunos seleccionados (estado indeterminado)
-            selectAllCheckbox.checked = false;
-            selectAllCheckbox.indeterminate = true;
-            console.log('⚠️ Estado: Algunos seleccionados (indeterminado)');
+        // Función para actualizar el estado del checkbox "Seleccionar todos"
+        function updateSelectAllState() {
+            const checkedCount = document.querySelectorAll('.member-checkbox:checked').length;
+            const totalCount = memberCheckboxes.length;
+            
+            console.log(`📊 Estado actual: ${checkedCount}/${totalCount} seleccionados`);
+            
+            if (checkedCount === 0) {
+                // Ninguno seleccionado
+                selectAllCheckbox.checked = false;
+                selectAllCheckbox.indeterminate = false;
+                console.log('🔘 Estado: Ninguno seleccionado');
+            } else if (checkedCount === totalCount) {
+                // Todos seleccionados
+                selectAllCheckbox.checked = true;
+                selectAllCheckbox.indeterminate = false;
+                console.log('✅ Estado: Todos seleccionados');
+            } else {
+                // Algunos seleccionados (estado indeterminado)
+                selectAllCheckbox.checked = false;
+                selectAllCheckbox.indeterminate = true;
+                console.log('⚠️ Estado: Algunos seleccionados (indeterminado)');
+            }
         }
-    }
-    
-    // Estado inicial
-    updateSelectAllState();
-    console.log('🎉 Funcionalidad de seleccionar todos inicializada correctamente');
+        
+        // Estado inicial
+        updateSelectAllState();
+        console.log('🎉 Funcionalidad de seleccionar todos inicializada correctamente');
+        
+        // Verificación final
+        console.log('🔍 Verificación final:');
+        console.log('📍 Checkbox principal posición:', selectAllCheckbox.getBoundingClientRect());
+        console.log('📍 Checkbox principal visible:', selectAllCheckbox.offsetParent !== null);
+        console.log('📍 Checkbox principal clickeable:', selectAllCheckbox.style.pointerEvents !== 'none');
+        
+    }, 100); // Esperar 100ms para asegurar que el DOM esté listo
 }
 
-/**
- * Función de prueba para verificar la funcionalidad
- */
-function testSelectAll() {
-    console.log('🧪 Ejecutando prueba de seleccionar todos...');
-    
-    const selectAllCheckbox = document.getElementById('select_all_members');
-    const memberCheckboxes = document.querySelectorAll('.member-checkbox');
-    
-    console.log('📋 Checkbox principal:', selectAllCheckbox);
-    console.log('👥 Checkboxes de miembros:', memberCheckboxes);
-    
-    if (selectAllCheckbox && memberCheckboxes.length > 0) {
-        // Simular clic en el checkbox principal
-        selectAllCheckbox.checked = !selectAllCheckbox.checked;
-        selectAllCheckbox.dispatchEvent(new Event('change'));
-        
-        console.log('✅ Prueba ejecutada. Estado del checkbox principal:', selectAllCheckbox.checked);
-    } else {
-        console.error('❌ Elementos no encontrados para la prueba');
-    }
-}
+
 
 function getMemberColor(userId) {
     const colors = ['#667eea', '#48bb78', '#ed8936', '#e53e3e', '#9f7aea', '#38b2ac', '#a0aec0', '#f6e05e'];

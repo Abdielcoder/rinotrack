@@ -122,10 +122,6 @@ function getActiveTasksCount($userId) {
                                 Seleccionar todos los colaboradores
                             </label>
                         </div>
-                        <!-- Botón de prueba temporal -->
-                        <button type="button" onclick="testSelectAll()" style="margin-top: 10px; padding: 8px 16px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer;">
-                            🧪 Probar Seleccionar Todos
-                        </button>
                     </div>
                     
                     <div class="collaborators-grid">
