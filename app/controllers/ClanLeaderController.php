@@ -865,27 +865,37 @@ class ClanLeaderController {
      * Crear tarea con múltiples usuarios y subtareas
      */
     public function createTask() {
+        error_log('=== ClanLeaderController::createTask - INICIO ===');
+        error_log('POST data: ' . print_r($_POST, true));
+        error_log('FILES data: ' . print_r($_FILES, true));
+        error_log('SESSION user_id: ' . ($_SESSION['user_id'] ?? 'NO SESSION'));
+        error_log('Auth logged in: ' . ($this->auth->isLoggedIn() ? 'YES' : 'NO'));
+        
         try {
             // Verificar autenticación
             if (!$this->auth->isLoggedIn()) {
+                error_log('createTask - Error: No autenticado');
                 Utils::jsonResponse(['success' => false, 'message' => 'No autenticado'], 401);
                 return;
             }
             
             // Verificar permisos de líder de clan
             if (!$this->hasClanLeaderAccess()) {
+                error_log('createTask - Error: Sin permisos de líder de clan');
                 Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos de líder de clan'], 403);
                 return;
             }
             
             // Verificar que el usuario tiene clan asignado
             if (!$this->userClan) {
+                error_log('createTask - Error: No tiene clan asignado');
                 Utils::jsonResponse(['success' => false, 'message' => 'No tienes un clan asignado'], 403);
                 return;
             }
             
             // Verificar método HTTP
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                error_log('createTask - Error: Método no POST');
                 Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
                 return;
             }
@@ -894,6 +904,15 @@ class ClanLeaderController {
             if ($this->db->inTransaction()) {
                 $this->db->rollback();
             }
+        
+        // Logs detallados de los datos recibidos
+        error_log('createTask - Datos recibidos:');
+        error_log('  task_title: ' . ($_POST['task_title'] ?? 'NOT SET'));
+        error_log('  task_due_date: ' . ($_POST['task_due_date'] ?? 'NOT SET'));
+        error_log('  task_project: ' . ($_POST['task_project'] ?? 'NOT SET'));
+        error_log('  priority: ' . ($_POST['priority'] ?? 'NOT SET'));
+        error_log('  assigned_members: ' . print_r($_POST['assigned_members'] ?? 'NOT SET', true));
+        error_log('  subtasks: ' . print_r($_POST['subtasks'] ?? 'NOT SET', true));
         
         $taskTitle = Utils::sanitizeInput($_POST['task_title'] ?? '');
         $taskDueDate = $_POST['task_due_date'] ?? '';
@@ -956,18 +975,34 @@ class ClanLeaderController {
             $labels = $labelsRaw;
         }
         
+        error_log('createTask - Valores procesados:');
+        error_log('  taskTitle: "' . $taskTitle . '"');
+        error_log('  taskDueDate: ' . ($taskDueDate ?? 'NULL'));
+        error_log('  taskProject: ' . $taskProject);
+        error_log('  priority: ' . $priority);
+        error_log('  assignedMembers count: ' . count($assignedMembers));
+        error_log('  subtasks count: ' . count($subtasks));
+        
         if (empty($taskTitle) || empty($taskDueDate)) {
+            error_log('createTask - Error: Título o fecha vacíos');
             Utils::jsonResponse(['success' => false, 'message' => 'Título y fecha límite son requeridos'], 400);
         }
         
         if (empty($assignedMembers)) {
+            error_log('createTask - Error: Sin miembros asignados');
             Utils::jsonResponse(['success' => false, 'message' => 'Debe asignar al menos un colaborador'], 400);
         }
         
         // Verificar que el proyecto pertenece al clan (si se seleccionó)
         if ($taskProject > 0) {
+            error_log('createTask - Verificando proyecto ID: ' . $taskProject);
             $project = $this->projectModel->findById($taskProject);
-            if (!$project || $project['clan_id'] != $this->userClan['clan_id']) {
+            if (!$project) {
+                error_log('createTask - Error: Proyecto no encontrado');
+                Utils::jsonResponse(['success' => false, 'message' => 'Proyecto no encontrado'], 400);
+            }
+            if ($project['clan_id'] != $this->userClan['clan_id']) {
+                error_log('createTask - Error: Proyecto de otro clan. Project clan_id: ' . $project['clan_id'] . ', User clan_id: ' . $this->userClan['clan_id']);
                 Utils::jsonResponse(['success' => false, 'message' => 'Proyecto no válido'], 400);
             }
         } else {
@@ -980,24 +1015,32 @@ class ClanLeaderController {
         }
         
         // Verificar que todos los usuarios asignados pertenecen al clan
+        error_log('createTask - Verificando usuarios asignados...');
         foreach ($assignedMembers as $userId) {
+            error_log('  Verificando usuario ID: ' . $userId);
             $user = $this->userModel->findById($userId);
             if (!$user) {
+                error_log('  Error: Usuario ' . $userId . ' no encontrado');
                 Utils::jsonResponse(['success' => false, 'message' => 'Usuario no encontrado'], 404);
             }
             
             $userClan = $this->userModel->getUserClan($userId);
             if (!$userClan || $userClan['clan_id'] != $this->userClan['clan_id']) {
+                error_log('  Error: Usuario ' . $userId . ' no pertenece al clan');
                 Utils::jsonResponse(['success' => false, 'message' => 'Usuario no pertenece al clan'], 400);
             }
         }
         
         try {
             // Log para debugging
-            error_log("=== INICIO CREACIÓN TAREA ===");
+            error_log("=== LLAMANDO createAdvanced ===");
             error_log("projectId: " . $taskProject);
             error_log("title: " . $taskTitle);
+            error_log("description: " . $taskDescription);
+            error_log("dueDate: " . ($taskDueDate ?? 'NULL'));
             error_log("clanId: " . $this->userClan['clan_id']);
+            error_log("priority: " . $priority);
+            error_log("createdBy: " . $_SESSION['user_id']);
             error_log("assignedMembers: " . json_encode($assignedMembers));
             error_log("subtasks: " . json_encode($subtasks));
             error_log("priority: " . $priority);
@@ -1019,13 +1062,16 @@ class ClanLeaderController {
             );
             
             if (!$taskId) {
-                throw new Exception('Error al crear la tarea');
+                error_log("createTask - ERROR: createAdvanced retornó false/null");
+                throw new Exception('createAdvanced retornó false');
             }
             
+            error_log("createTask - ÉXITO: Tarea creada con ID " . $taskId);
             Utils::jsonResponse(['success' => true, 'message' => 'Tarea creada exitosamente', 'task_id' => $taskId]);
             
         } catch (Exception $e) {
-            error_log("Error al crear tarea: " . $e->getMessage());
+            error_log("createTask - EXCEPCIÓN en try interno: " . $e->getMessage());
+            error_log("createTask - Stack trace: " . $e->getTraceAsString());
             Utils::jsonResponse(['success' => false, 'message' => 'Error al crear la tarea: ' . $e->getMessage()], 500);
         }
         

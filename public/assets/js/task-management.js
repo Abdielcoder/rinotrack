@@ -67,24 +67,42 @@ function saveTask() {
     
     formData.append('subtasks', JSON.stringify(subtasks));
     
+    // Log para debug
+    console.log('Enviando tarea con datos:');
+    for (let [key, value] of formData.entries()) {
+        console.log(`${key}:`, value);
+    }
+    
     // Enviar datos al servidor
     fetch('?route=clan_leader/create-task', {
         method: 'POST',
         body: formData
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showToast('Tarea creada exitosamente', 'success');
-            setTimeout(() => {
-                window.location.href = '?route=clan_leader/tasks';
-            }, 1500);
-        } else {
-            showToast(data.message || 'Error al crear la tarea', 'error');
+    .then(response => {
+        console.log('Response status:', response.status);
+        return response.text(); // Primero obtener como texto
+    })
+    .then(text => {
+        console.log('Response body:', text);
+        try {
+            const data = JSON.parse(text);
+            if (data.success) {
+                showToast('Tarea creada exitosamente', 'success');
+                setTimeout(() => {
+                    window.location.href = '?route=clan_leader/tasks';
+                }, 1500);
+            } else {
+                showToast(data.message || 'Error al crear la tarea', 'error');
+                console.error('Error del servidor:', data.message);
+            }
+        } catch (e) {
+            console.error('Error parseando JSON:', e);
+            console.error('Respuesta no JSON:', text);
+            showToast('Error del servidor. Ver consola para detalles.', 'error');
         }
     })
     .catch(error => {
-        console.error('Error:', error);
+        console.error('Error completo:', error);
         showToast('Error al crear la tarea', 'error');
     });
 }
