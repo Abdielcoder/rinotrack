@@ -875,7 +875,7 @@ if (!isset($task) || !isset($subtasks) || !isset($comments) || !isset($history) 
                                     <i class="fas fa-paperclip"></i>
                                     Adjuntar archivo
                                 </label>
-                                <input type="file" id="fileAttachment" style="display: none;" onchange="handleFileAttachment(this)">
+                                <input type="file" id="fileAttachment" multiple style="display: none;" onchange="handleFileAttachment(this)">
                                 <button onclick="addComment()" class="btn btn-primary btn-sm">
                                     <i class="fas fa-paper-plane"></i>
                                     Enviar
