@@ -1133,9 +1133,7 @@ if (!isset($task) || !isset($subtasks) || !isset($comments) || !isset($history) 
             modal.style.display='block';
         }
         function closePreview(){ const modal = document.getElementById('previewModal'); if (modal) modal.style.display='none'; }
-        // Variables globales
-        let selectedFile = null;
-        let selectedUsers = [];
+        // Variables globales ahora están en clan-leader.js
         
         // Funciones para subtareas
         function updateSubtaskStatus(subtaskId, status) {

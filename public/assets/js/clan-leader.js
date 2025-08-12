@@ -1442,6 +1442,10 @@ confirmationModalStyles.textContent = `
 // Agregar estilos al head
 document.head.appendChild(confirmationModalStyles); 
 
+// Variables globales para task details
+let selectedFile = null;
+let selectedUsers = [];
+
 // Función para eliminar tarea
 function deleteTask(taskId) {
     showConfirmationModal({
@@ -1475,6 +1479,60 @@ function deleteTask(taskId) {
             });
         }
     });
+}
+
+// Función para agregar comentario
+function addComment() {
+    const commentText = document.getElementById('newComment').value.trim();
+    if (!commentText) {
+        showNotification('Por favor escribe un comentario', 'error');
+        return;
+    }
+
+    const taskId = document.querySelector('.task-details-container').dataset.taskId;
+    let formData = new FormData();
+    formData.append('task_id', taskId);
+    formData.append('comment_text', commentText);
+    
+    if (selectedFile) {
+        formData.append('attachment', selectedFile);
+    }
+
+    fetch('?route=clan_leader/add-comment', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Comentario agregado exitosamente', 'success');
+            document.getElementById('newComment').value = '';
+            removeAttachment();
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showNotification('Error al agregar comentario: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error al agregar comentario', 'error');
+    });
+}
+
+// Función para manejar adjuntos
+function handleFileAttachment(input) {
+    if (input.files && input.files[0]) {
+        selectedFile = input.files[0];
+        document.getElementById('attachmentName').textContent = selectedFile.name;
+        document.getElementById('attachmentPreview').style.display = 'block';
+    }
+}
+
+// Función para remover adjunto
+function removeAttachment() {
+    selectedFile = null;
+    document.getElementById('attachmentPreview').style.display = 'none';
+    document.getElementById('fileAttachment').value = '';
 }
 
 // Función para mostrar modal de confirmación

@@ -1431,6 +1431,64 @@ class ClanLeaderController {
     }
     
     /**
+     * Agregar comentario a una tarea
+     */
+    public function addComment() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
+        }
+        
+        $taskId = (int)($_POST['task_id'] ?? 0);
+        $commentText = trim($_POST['comment_text'] ?? '');
+        
+        if ($taskId <= 0 || empty($commentText)) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Datos inválidos'], 400);
+        }
+        
+        try {
+            // Verificar que la tarea pertenece al clan del líder
+            $task = $this->taskModel->findById($taskId);
+            if (!$task) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Tarea no encontrada'], 404);
+            }
+            
+            $project = $this->projectModel->findById($task['project_id']);
+            if (!$project || $project['clan_id'] != $this->userClan['clan_id']) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+            }
+            
+            // Agregar el comentario
+            $result = $this->taskModel->addComment($taskId, $this->currentUser['user_id'], $commentText, 'comment');
+            
+            if ($result) {
+                // Manejar archivo adjunto si existe
+                if (isset($_FILES['attachment']) && $_FILES['attachment']['error'] === UPLOAD_ERR_OK) {
+                    $uploadDir = 'uploads/task_attachments/';
+                    if (!is_dir($uploadDir)) {
+                        mkdir($uploadDir, 0755, true);
+                    }
+                    
+                    $fileName = time() . '_' . $_FILES['attachment']['name'];
+                    $filePath = $uploadDir . $fileName;
+                    
+                    if (move_uploaded_file($_FILES['attachment']['tmp_name'], $filePath)) {
+                        // Guardar información del archivo adjunto
+                        $this->taskModel->addCommentAttachment($result, $fileName, $filePath);
+                    }
+                }
+                
+                Utils::jsonResponse(['success' => true, 'message' => 'Comentario agregado exitosamente']);
+            } else {
+                Utils::jsonResponse(['success' => false, 'message' => 'Error al agregar el comentario'], 500);
+            }
+            
+        } catch (Exception $e) {
+            error_log("Error al agregar comentario: " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error al agregar el comentario'], 500);
+        }
+    }
+    
+    /**
      * Agregar colaboradores a una tarea
      */
     public function addCollaborators() {

@@ -416,6 +416,24 @@ class Task {
     }
     
     /**
+     * Agregar adjunto a un comentario
+     */
+    public function addCommentAttachment($commentId, $fileName, $filePath) {
+        try {
+            $stmt = $this->db->prepare("
+                INSERT INTO Task_Comment_Attachments (comment_id, file_name, file_path, uploaded_at) 
+                VALUES (?, ?, ?, NOW())
+            ");
+            
+            return $stmt->execute([$commentId, $fileName, $filePath]);
+            
+        } catch (Exception $e) {
+            error_log("Error al agregar adjunto al comentario: " . $e->getMessage());
+            return false;
+        }
+    }
+    
+    /**
      * Obtener historial de una tarea
      */
     public function getHistory($taskId) {

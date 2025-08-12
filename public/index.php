@@ -384,6 +384,11 @@ try {
         $controller->deleteSubtask();
         break;
         
+    case 'clan_leader/add-comment':
+        $controller = new ClanLeaderController();
+        $controller->addComment();
+        break;
+        
     case 'clan_leader/add-collaborators':
         $controller = new ClanLeaderController();
         $controller->addCollaborators();
