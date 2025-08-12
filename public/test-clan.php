@@ -129,13 +129,33 @@ try {
             echo "<p style='color: red;'>❌ Método hasAdminAccess NO existe</p>";
         }
         
+        // Probar simulación de POST
+        echo "<h3>6. Simulación de Creación de Clan</h3>";
+        
+        // Simular datos POST
+        $_POST['clanName'] = 'Clan de Prueba ' . date('Y-m-d H:i:s');
+        $_POST['clanDepartamento'] = 'Departamento de Prueba';
+        
+        echo "<p style='color: blue;'>📋 Datos simulados:</p>";
+        echo "<ul>";
+        echo "<li>clanName: " . htmlspecialchars($_POST['clanName']) . "</li>";
+        echo "<li>clanDepartamento: " . htmlspecialchars($_POST['clarDepartamento']) . "</li>";
+        echo "</ul>";
+        
+        // Verificar que los datos están disponibles
+        if (isset($_POST['clanName']) && isset($_POST['clanDepartamento'])) {
+            echo "<p style='color: green;'>✅ Datos POST simulados correctamente</p>";
+        } else {
+            echo "<p style='color: red;'>❌ Error al simular datos POST</p>";
+        }
+        
     } catch (Exception $e) {
         echo "<p style='color: red;'>❌ Error al cargar controlador: " . htmlspecialchars($e->getMessage()) . "</p>";
         echo "<p style='color: red;'>Stack trace: " . htmlspecialchars($e->getTraceAsString()) . "</p>";
     }
     
     // Verificar permisos de usuario
-    echo "<h2>6. Verificación de Usuario Actual</h2>";
+    echo "<h2>7. Verificación de Usuario Actual</h2>";
     
     session_start();
     if (isset($_SESSION['user_id'])) {
@@ -162,7 +182,7 @@ try {
     }
     
     // Verificar logs de error
-    echo "<h2>7. Verificación de Logs</h2>";
+    echo "<h2>8. Verificación de Logs</h2>";
     
     $errorLog = ini_get('error_log');
     if ($errorLog && file_exists($errorLog)) {

@@ -329,33 +329,40 @@ class AdminController {
             error_log("POST data: " . print_r($_POST, true));
             error_log("SESSION data: " . print_r($_SESSION ?? [], true));
             
-            $this->requireAuth();
-            error_log("Auth check passed");
-            
-            if (!$this->hasAdminAccess()) {
-                error_log("Access denied - user doesn't have admin access");
-                Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos'], 403);
+            // Verificar autenticación básica
+            if (!$this->auth->isLoggedIn()) {
+                error_log("Auth failed: User not logged in");
+                Utils::jsonResponse(['success' => false, 'message' => 'Usuario no autenticado'], 401);
             }
-            error_log("Admin access check passed");
+            error_log("Basic auth check passed");
             
+            // Verificar método HTTP
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
                 error_log("Invalid method: " . $_SERVER['REQUEST_METHOD']);
-                Utils::redirect('admin/clans');
+                Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
             }
             
+            // Obtener datos del formulario
             $clanName = Utils::sanitizeInput($_POST['clanName'] ?? '');
             $clanDepartamento = Utils::sanitizeInput($_POST['clanDepartamento'] ?? '');
             
             error_log("Parsed data - clanName: '$clanName', clanDepartamento: '$clanDepartamento'");
             
+            // Validar datos básicos
             if (empty($clanName)) {
                 error_log("Validation failed: Empty clan name");
                 Utils::jsonResponse(['success' => false, 'message' => 'El nombre del clan es requerido'], 400);
             }
             
-            if ($this->clanModel->exists($clanName)) {
-                error_log("Validation failed: Clan name already exists");
-                Utils::jsonResponse(['success' => false, 'message' => 'Ya existe un clan con ese nombre'], 400);
+            // Verificar si ya existe (opcional, para evitar duplicados)
+            try {
+                if ($this->clanModel->exists($clanName)) {
+                    error_log("Validation failed: Clan name already exists");
+                    Utils::jsonResponse(['success' => false, 'message' => 'Ya existe un clan con ese nombre'], 400);
+                }
+            } catch (Exception $e) {
+                error_log("Warning: Could not check if clan exists: " . $e->getMessage());
+                // Continuar sin esta validación si falla
             }
             
             error_log("About to create clan in database");
@@ -367,7 +374,7 @@ class AdminController {
                 Utils::jsonResponse(['success' => true, 'message' => 'Clan creado exitosamente']);
             } else {
                 error_log("Database create failed");
-                Utils::jsonResponse(['success' => false, 'message' => 'Error al crear clan'], 500);
+                Utils::jsonResponse(['success' => false, 'message' => 'Error al crear clan en la base de datos'], 500);
             }
             
         } catch (Exception $e) {

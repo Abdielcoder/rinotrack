@@ -693,8 +693,7 @@ $additionalCSS = [];
             const currentUrl = window.location.href;
             const urlObj = new URL(currentUrl);
             
-            // Si estamos en una ruta como /rinotrack/public/?route=admin/clans
-            // necesitamos extraer solo la parte del directorio
+            // Extraer solo la parte del pathname sin query string
             let basePath = urlObj.pathname;
             
             // Remover la parte de query string del path
@@ -707,9 +706,31 @@ $additionalCSS = [];
                 basePath = basePath.substring(0, basePath.lastIndexOf('/') + 1);
             }
             
+            // Detectar la ruta base correcta
+            let correctBasePath = '';
+            
+            // Si estamos en /rinotrack/public/, usar esa ruta
+            if (basePath.includes('/rinotrack/public/')) {
+                correctBasePath = '/rinotrack/public/';
+            }
+            // Si estamos en /public/, usar esa ruta
+            else if (basePath.includes('/public/')) {
+                correctBasePath = '/public/';
+            }
+            // Si estamos en la raíz, usar /
+            else if (basePath === '/' || basePath === '') {
+                correctBasePath = '/';
+            }
+            // Por defecto, usar la ruta actual pero limpiada
+            else {
+                correctBasePath = basePath.endsWith('/') ? basePath : basePath + '/';
+            }
+            
             // Construir la URL completa
-            const fileUrl = urlObj.origin + basePath + filename;
+            const fileUrl = urlObj.origin + correctBasePath + filename;
             console.log('URL construida para', filename, ':', fileUrl);
+            console.log('Path original:', basePath);
+            console.log('Path corregido:', correctBasePath);
             
             return fileUrl;
         }
@@ -751,14 +772,14 @@ $additionalCSS = [];
                     baseUrl = currentPath.endsWith('/') ? currentPath : currentPath + '/';
                 }
                 
-                // Para crear clanes, usar la función que construye la URL correcta
+                // Para crear clanes, usar siempre la ruta del router (más confiable)
                 let fullUrl;
                 if (isEditMode) {
                     // Para editar, usar la ruta del router
                     fullUrl = baseUrl + '?route=' + route;
                 } else {
-                    // Para crear, usar la función que construye la URL correcta
-                    fullUrl = buildFileUrl('create-clan-direct.php');
+                    // Para crear, usar también la ruta del router (más confiable)
+                    fullUrl = baseUrl + '?route=' + route;
                 }
                 
                 console.log('Enviando formulario a:', fullUrl);
@@ -767,6 +788,7 @@ $additionalCSS = [];
                 console.log('Modo:', isEditMode ? 'edición' : 'creación');
                 console.log('Ruta del archivo actual:', window.location.pathname);
                 console.log('URL completa del navegador:', window.location.href);
+                console.log('Usando ruta del router:', route);
                 
                 // Enviar petición
                 fetch(fullUrl, {
