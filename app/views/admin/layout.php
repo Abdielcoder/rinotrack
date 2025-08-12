@@ -22,8 +22,12 @@
                 const currentPath = window.location.pathname;
                 let baseUrl = '';
                 
+                // Si estamos en /desarrollo/rinotrack/public/, usar esa ruta
+                if (currentPath.includes('/desarrollo/rinotrack/public/')) {
+                    baseUrl = '/desarrollo/rinotrack/public/';
+                }
                 // Si estamos en /rinotrack/public/, usar esa ruta
-                if (currentPath.includes('/rinotrack/public/')) {
+                else if (currentPath.includes('/rinotrack/public/')) {
                     baseUrl = '/rinotrack/public/';
                 }
                 // Si estamos en /public/, usar esa ruta

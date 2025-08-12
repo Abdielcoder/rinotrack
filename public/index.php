@@ -71,6 +71,16 @@ foreach ($controllers as $controller) {
 // Obtener ruta
 $route = $_GET['route'] ?? '';
 
+// Normalizar APP_URL para despliegue en /desarrollo/
+if (defined('APP_URL')) {
+    // Si la URL actual contiene /desarrollo/rinotrack/public/ y APP_URL no, corregir
+    $requestUri = $_SERVER['REQUEST_URI'] ?? '';
+    if (strpos($requestUri, '/desarrollo/rinotrack/public/') !== false && strpos(APP_URL, '/desarrollo/rinotrack/public/') === false) {
+        // No se redefine la constante, pero sirve como recordatorio en logs
+        error_log('SUGERENCIA: Ajusta APP_URL a https://rinotrack.rinorisk.com/desarrollo/rinotrack/public/');
+    }
+}
+
 // Router simple
 try {
     switch ($route) {

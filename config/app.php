@@ -5,7 +5,7 @@
 
 // Configuración de la aplicación
 define('APP_NAME', 'RinoTrack');
-define('APP_URL', 'https://rinotrack.rinorisk.com/public/');
+define('APP_URL', 'https://rinotrack.rinorisk.com/desarrollo/rinotrack/public/');
 define('APP_DEBUG', true);
 
 // Configuración de zona horaria

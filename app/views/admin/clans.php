@@ -812,9 +812,13 @@ $additionalCSS = [];
             // Detectar la ruta base correcta
             let correctBasePath = '';
             
-            // Si estamos en /rinotrack/public/, usar esa ruta
-            if (basePath.includes('/rinotrack/public/')) {
-                correctBasePath = '/rinotrack/public/';
+                // Si estamos en /desarrollo/rinotrack/public/, usar esa ruta
+                if (basePath.includes('/desarrollo/rinotrack/public/')) {
+                    correctBasePath = '/desarrollo/rinotrack/public/';
+                }
+                // Si estamos en /rinotrack/public/, usar esa ruta
+                else if (basePath.includes('/rinotrack/public/')) {
+                    correctBasePath = '/rinotrack/public/';
             }
             // Si estamos en /public/, usar esa ruta
             else if (basePath.includes('/public/')) {
@@ -858,8 +862,12 @@ $additionalCSS = [];
                 const currentPath = window.location.pathname;
                 let baseUrl = '';
                 
+                // Si estamos en /desarrollo/rinotrack/public/, usar /desarrollo/rinotrack/public/
+                if (currentPath.includes('/desarrollo/rinotrack/public/')) {
+                    baseUrl = '/desarrollo/rinotrack/public/';
+                }
                 // Si estamos en /rinotrack/public/, usar /rinotrack/public/
-                if (currentPath.includes('/rinotrack/public/')) {
+                else if (currentPath.includes('/rinotrack/public/')) {
                     baseUrl = '/rinotrack/public/';
                 }
                 // Si estamos en /public/, usar /public/
