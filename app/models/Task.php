@@ -381,6 +381,43 @@ class Task {
                 }
             }
 
+            // Fallback/compatibilidad: si aún no hay adjuntos, intentar desde Task_Comment_Attachments
+            $needsFallback = empty($comments) ? false : (int)array_sum(array_map(function($c){ return (int)($c['attachments_count'] ?? 0); }, $comments)) === 0;
+            if ($needsFallback) {
+                try {
+                    // Verificar existencia de tabla
+                    $this->db->query("SELECT 1 FROM Task_Comment_Attachments LIMIT 1");
+                    $commentIds = array_column($comments, 'comment_id');
+                    if (!empty($commentIds)) {
+                        $in = implode(',', array_fill(0, count($commentIds), '?'));
+                        $stmtB = $this->db->prepare("SELECT comment_id, file_name, file_path, uploaded_at FROM Task_Comment_Attachments WHERE comment_id IN ($in)");
+                        $stmtB->execute($commentIds);
+                        $rowsB = $stmtB->fetchAll();
+                        $byCommentB = [];
+                        foreach ($rowsB as $r) {
+                            $byCommentB[$r['comment_id']][] = [
+                                'comment_id' => $r['comment_id'],
+                                'file_name' => $r['file_name'],
+                                'file_path' => $r['file_path'],
+                                'file_type' => $r['file_type'] ?? null,
+                                'uploaded_at' => $r['uploaded_at']
+                            ];
+                        }
+                        foreach ($comments as &$c) {
+                            $existing = $c['attachments'] ?? [];
+                            $fallback = $byCommentB[$c['comment_id']] ?? [];
+                            $merged = array_merge($existing, $fallback);
+                            if (!empty($merged)) {
+                                $c['attachments'] = $merged;
+                                $c['attachments_count'] = count($merged);
+                            }
+                        }
+                    }
+                } catch (Exception $e) {
+                    // Si no existe la tabla o falla, ignorar silenciosamente
+                }
+            }
+
             return $comments;
         } catch (Exception $e) {
             error_log("Error al obtener comentarios: " . $e->getMessage());

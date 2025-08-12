@@ -1498,7 +1498,7 @@ function addComment() {
         formData.append('attachment', selectedFile);
     }
 
-    fetch('?route=clan_leader/add-comment', {
+    fetch('?route=clan_leader/add-task-comment', {
         method: 'POST',
         body: formData
     })
