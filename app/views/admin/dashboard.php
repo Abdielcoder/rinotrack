@@ -262,7 +262,7 @@ ob_start();
     </main>
 </div>
 
-<!-- Estilos específicos para el dashboard están en admin.css -->
+
 
 <?php
 // Guardar el contenido en una variable
