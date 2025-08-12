@@ -116,10 +116,21 @@ class ClanLeaderController {
      * Gestión de miembros del clan
      */
     public function members() {
+        // Asegurar autenticación y permisos
+        $this->requireAuth();
+        if (!$this->hasClanLeaderAccess()) {
+            Utils::redirect('dashboard');
+            return;
+        }
+
         $search = $_GET['search'] ?? '';
-        $members = empty($search) ? 
-            $this->clanModel->getMembers($this->userClan['clan_id']) : 
-            $this->searchMembers($search);
+        if (!$this->userClan || !isset($this->userClan['clan_id'])) {
+            $members = [];
+        } else {
+            $members = empty($search)
+                ? $this->clanModel->getMembers($this->userClan['clan_id'])
+                : $this->searchMembers($search);
+        }
         
         $data = [
             'members' => $members,
@@ -136,6 +147,13 @@ class ClanLeaderController {
      * Dashboard de disponibilidad de colaboradores
      */
     public function availability() {
+        // Asegurar autenticación y permisos
+        $this->requireAuth();
+        if (!$this->hasClanLeaderAccess()) {
+            Utils::redirect('dashboard');
+            return;
+        }
+
         $availabilityData = $this->getCollaboratorAvailability();
         
         $data = [
