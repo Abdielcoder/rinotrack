@@ -164,9 +164,9 @@ ob_start();
                                     <button data-action="edit-project" data-project-id="<?php echo intval($project['project_id']); ?>">
                                         <i class="fas fa-edit"></i> Editar
                                     </button>
-                                    <button data-action="view-project" data-project-id="<?php echo intval($project['project_id']); ?>">
+                                    <a href="?route=admin/project-details&projectId=<?php echo intval($project['project_id']); ?>">
                                         <i class="fas fa-eye"></i> Ver Detalles
-                                    </button>
+                                    </a>
                                     <button data-action="delete-project" data-project-id="<?php echo intval($project['project_id']); ?>" class="danger">
                                         <i class="fas fa-trash"></i> Eliminar
                                     </button>

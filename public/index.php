@@ -134,6 +134,11 @@ try {
             $controller = new AdminController();
             $controller->projects();
             break;
+        
+        case 'admin/project-details':
+            $controller = new AdminController();
+            $controller->projectDetails();
+            break;
         case 'admin/delete-project':
             $controller = new AdminController();
             $controller->deleteProject();

@@ -249,6 +249,79 @@ class AdminController {
     }
 
     /**
+     * Detalles de un proyecto con estado de tareas
+     */
+    public function projectDetails() {
+        $this->requireAuth();
+        if (!$this->hasAdminAccess()) {
+            Utils::redirect('dashboard');
+        }
+
+        $projectId = (int)($_GET['projectId'] ?? 0);
+        if ($projectId <= 0) {
+            Utils::redirect('admin/projects');
+        }
+
+        // Obtener datos del proyecto
+        $project = $this->projectModel->findById($projectId);
+        if (!$project) {
+            Utils::redirect('admin/projects');
+        }
+
+        // Tareas del proyecto
+        $tasks = (new Task())->getByProject($projectId);
+
+        // Calcular métricas de tareas
+        $stats = [
+            'total' => 0,
+            'completed' => 0,
+            'pending' => 0,
+            'in_progress' => 0,
+            'overdue' => 0,
+        ];
+        $today = date('Y-m-d');
+        foreach ($tasks as $t) {
+            $stats['total']++;
+            $status = $t['status'] ?? 'pending';
+            if (isset($stats[$status])) $stats[$status]++;
+            if (!empty($t['due_date']) && $status !== 'completed' && $t['due_date'] < $today) {
+                $stats['overdue']++;
+            }
+        }
+        $stats['progress'] = $project['progress_percentage'] ?? 0;
+
+        // Actividad reciente (historial)
+        $db = Database::getConnection();
+        $history = [];
+        try {
+            $stmt = $db->prepare(
+                "SELECT th.*, t.task_name, u.full_name, u.username
+                 FROM Task_History th
+                 JOIN Tasks t ON th.task_id = t.task_id
+                 LEFT JOIN Users u ON th.user_id = u.user_id
+                 WHERE t.project_id = ?
+                 ORDER BY th.created_at DESC
+                 LIMIT 15"
+            );
+            $stmt->execute([$projectId]);
+            $history = $stmt->fetchAll();
+        } catch (Exception $e) {
+            error_log('Error al obtener actividad del proyecto: ' . $e->getMessage());
+        }
+
+        $data = [
+            'project' => $project,
+            'tasks' => $tasks,
+            'stats' => $stats,
+            'history' => $history,
+            'currentPage' => 'admin',
+            'user' => $this->auth->getCurrentUser()
+        ];
+
+        $this->loadView('admin/project_details', $data);
+    }
+
+    /**
      * Eliminar proyecto (ADMIN)
      */
     public function deleteProject() {
