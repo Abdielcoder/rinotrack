@@ -2382,7 +2382,12 @@ class ClanLeaderController {
             return false;
         }
         
-        return $this->roleModel->userHasRole($this->currentUser['user_id'], Role::LIDER_CLAN);
+        // Permitir acceso a Líder de Clan y también a Admin/Super Admin
+        if ($this->roleModel->userHasRole($this->currentUser['user_id'], Role::LIDER_CLAN)) {
+            return true;
+        }
+        // Admin o superior (usa jerarquía definida)
+        return $this->roleModel->userHasMinimumRole($this->currentUser['user_id'], Role::ADMIN);
     }
     
     /**
