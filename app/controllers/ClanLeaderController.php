@@ -1248,8 +1248,32 @@ class ClanLeaderController {
             );
             
             if ($commentId) {
-                // Manejar adjunto si viene en la solicitud
-                if (!empty($_FILES['attachment']) && $_FILES['attachment']['error'] === UPLOAD_ERR_OK) {
+                // Manejar adjuntos (soporta uno: 'attachment' y varios: 'attachments[]')
+                $files = [];
+                if (!empty($_FILES['attachments']) && isset($_FILES['attachments']['name']) && is_array($_FILES['attachments']['name'])) {
+                    // Normalizar arreglo de múltiples archivos
+                    $count = count($_FILES['attachments']['name']);
+                    for ($i = 0; $i < $count; $i++) {
+                        if (($_FILES['attachments']['error'][$i] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK) {
+                            $files[] = [
+                                'name' => $_FILES['attachments']['name'][$i] ?? null,
+                                'type' => $_FILES['attachments']['type'][$i] ?? null,
+                                'tmp_name' => $_FILES['attachments']['tmp_name'][$i] ?? null,
+                                'size' => $_FILES['attachments']['size'][$i] ?? null,
+                            ];
+                        }
+                    }
+                } elseif (!empty($_FILES['attachment']) && ($_FILES['attachment']['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK) {
+                    // Soporte legado de un solo archivo
+                    $files[] = [
+                        'name' => $_FILES['attachment']['name'] ?? null,
+                        'type' => $_FILES['attachment']['type'] ?? null,
+                        'tmp_name' => $_FILES['attachment']['tmp_name'] ?? null,
+                        'size' => $_FILES['attachment']['size'] ?? null,
+                    ];
+                }
+
+                if (!empty($files)) {
                     // Base pública absoluta
                     $publicRoot = dirname(__DIR__, 2) . '/public';
                     $baseUploads = $publicRoot . '/uploads';
@@ -1257,17 +1281,26 @@ class ClanLeaderController {
                     // Crear rutas si no existen
                     if (!is_dir($baseUploads)) { @mkdir($baseUploads, 0775, true); }
                     if (!is_dir($uploadDir)) { @mkdir($uploadDir, 0775, true); }
-                    $originalName = basename($_FILES['attachment']['name']);
-                    $ext = pathinfo($originalName, PATHINFO_EXTENSION);
-                    $safeName = uniqid('att_') . ($ext ? ('.' . $ext) : '');
-                    $destPath = $uploadDir . '/' . $safeName;
-                    if (@move_uploaded_file($_FILES['attachment']['tmp_name'], $destPath)) {
-                        // Servir directamente desde /public/uploads/... sin router
-                        $publicPath = 'uploads/task_attachments/' . $safeName;
-                        // Guardar registro de adjunto (si existe comment_id en tabla se asociará al comentario)
-                        $this->taskModel->saveAttachmentRecord($taskId, is_numeric($commentId) ? (int)$commentId : null, $this->currentUser['user_id'], $originalName, $publicPath, $_FILES['attachment']['type'] ?? null);
-                    } else {
-                        error_log('addTaskComment: No se pudo mover el archivo subido a ' . $destPath);
+
+                    foreach ($files as $file) {
+                        if (empty($file['tmp_name']) || !is_uploaded_file($file['tmp_name'])) { continue; }
+                        $originalName = basename($file['name'] ?? 'archivo');
+                        $ext = pathinfo($originalName, PATHINFO_EXTENSION);
+                        $safeName = uniqid('att_') . ($ext ? ('.' . $ext) : '');
+                        $destPath = $uploadDir . '/' . $safeName;
+                        if (@move_uploaded_file($file['tmp_name'], $destPath)) {
+                            $publicPath = 'uploads/task_attachments/' . $safeName;
+                            $this->taskModel->saveAttachmentRecord(
+                                $taskId,
+                                is_numeric($commentId) ? (int)$commentId : null,
+                                $this->currentUser['user_id'],
+                                $originalName,
+                                $publicPath,
+                                $file['type'] ?? null
+                            );
+                        } else {
+                            error_log('addTaskComment: No se pudo mover el archivo subido a ' . $destPath);
+                        }
                     }
                 }
                 error_log("addTaskComment: Comentario agregado exitosamente");
