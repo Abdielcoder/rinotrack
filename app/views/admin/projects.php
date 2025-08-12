@@ -606,15 +606,16 @@ function viewProject(projectId) {
 }
 
 function deleteProject(projectId) {
-            showConfirmationModal({
-            title: 'Confirmar Eliminación',
-            message: '¿Estás seguro de que quieres eliminar este proyecto?',
-            type: 'warning',
-            confirmText: 'Eliminar',
-            cancelText: 'Cancelar',
-            onConfirm: () => {
-        showToast('Función de eliminar en desarrollo', 'warning');
-    }
+    showConfirmationModal({
+        title: 'Confirmar Eliminación',
+        message: '¿Estás seguro de que quieres eliminar este proyecto?',
+        type: 'warning',
+        confirmText: 'Eliminar',
+        cancelText: 'Cancelar',
+        onConfirm: () => {
+            showToast('Función de eliminar en desarrollo', 'warning');
+        }
+    });
 }
 
 function toggleProjectMenu(projectId) {
