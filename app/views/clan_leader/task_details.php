@@ -1088,10 +1088,76 @@ if (!isset($task) || !isset($subtasks) || !isset($comments) || !isset($history) 
         </div>
     </div>
     
-    <script src="<?= APP_URL ?>assets/js/clan-leader.js"></script>
+    <script src="<?= APP_URL ?>assets/js/clan-leader.js?v=<?= time() ?>"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
     <script>
-        // La función deleteTask ahora está definida en clan-leader.js
+        // Fallback: si por alguna razón no se cargó deleteTask desde clan-leader.js
+        if (typeof deleteTask !== 'function') {
+            function deleteTask(taskId) {
+                if (typeof showConfirmationModal !== 'function') {
+                    // Fallback mínimo de confirmación si no existe el modal
+                    if (!confirm('¿Estás seguro de que quieres eliminar esta tarea?')) return;
+                    fetch('?route=clan_leader/delete-task', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: 'task_id=' + taskId
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success) {
+                            if (typeof showNotification === 'function') {
+                                showNotification('Tarea eliminada exitosamente', 'success');
+                            }
+                            setTimeout(() => { window.location.href = '?route=clan_leader/tasks'; }, 800);
+                        } else {
+                            alert('Error al eliminar la tarea: ' + (data.message || 'Error desconocido'));
+                        }
+                    })
+                    .catch(() => alert('Error al eliminar la tarea'));
+                    return;
+                }
+
+                // Flujo normal con modal bonito
+                showConfirmationModal({
+                    title: 'Confirmar Eliminación',
+                    message: '¿Estás seguro de que quieres eliminar esta tarea?',
+                    type: 'warning',
+                    confirmText: 'Eliminar',
+                    cancelText: 'Cancelar',
+                    onConfirm: () => {
+                        fetch('?route=clan_leader/delete-task', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                            body: 'task_id=' + taskId
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                if (typeof showNotification === 'function') {
+                                    showNotification('Tarea eliminada exitosamente', 'success');
+                                }
+                                setTimeout(() => { window.location.href = '?route=clan_leader/tasks'; }, 800);
+                            } else {
+                                if (typeof showNotification === 'function') {
+                                    showNotification('Error al eliminar la tarea: ' + data.message, 'error');
+                                } else {
+                                    alert('Error al eliminar la tarea: ' + (data.message || 'Error desconocido'));
+                                }
+                            }
+                        })
+                        .catch(error => {
+                            if (typeof showNotification === 'function') {
+                                showNotification('Error al eliminar la tarea', 'error');
+                            } else {
+                                alert('Error al eliminar la tarea');
+                            }
+                        });
+                    }
+                });
+            }
+        }
+
+        // La función deleteTask ahora está definida (global o fallback)
         
         // Modal de previsualización
         function toggleCommentAttachments(button){
