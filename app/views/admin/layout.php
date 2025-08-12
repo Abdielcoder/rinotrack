@@ -27,13 +27,6 @@
     <script>
         const APP_URL = '<?php echo APP_URL; ?>';
     </script>
-    <script>
-        // Fallback temprano para evitar ReferenceError en handlers inline
-        window.openCreateProjectModal = window.openCreateProjectModal || function() {
-            var modal = document.getElementById('projectModal');
-            if (modal) { modal.style.display = 'block'; }
-        };
-    </script>
     
     <!-- JavaScript con rutas absolutas -->
     <script src="<?php echo APP_URL; ?>assets/js/script.js"></script>
@@ -49,6 +42,16 @@
             <?php endif; ?>
         <?php endforeach; ?>
     <?php endif; ?>
+    
+    <script>
+        // Asegurar que las funciones estén disponibles después de cargar todos los scripts
+        if (typeof openCreateProjectModal === 'undefined') {
+            window.openCreateProjectModal = function() {
+                var modal = document.getElementById('projectModal');
+                if (modal) { modal.style.display = 'block'; }
+            };
+        }
+    </script>
 </head>
 <body>
     <?php echo $content ?? ''; ?>
