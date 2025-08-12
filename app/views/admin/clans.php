@@ -563,13 +563,68 @@ $additionalCSS = [];
             });
         }
         
+        // Función para renderizar la lista de miembros
+        function renderMembersList(members) {
+            const membersList = document.getElementById('membersList');
+            if (!membersList) return;
+            
+            if (!Array.isArray(members) || members.length === 0) {
+                membersList.innerHTML = '<p>No hay miembros en este clan.</p>';
+                return;
+            }
+            
+            const rows = members.map(m => `
+                <tr>
+                    <td>${m.full_name ? m.full_name : (m.username || '-')}</td>
+                    <td>${m.email || '-'}</td>
+                    <td>${m.role_name || 'Sin rol'}</td>
+                    <td>${m.is_active ? 'Activo' : 'Inactivo'}</td>
+                    <td style="text-align:right;">
+                        <button class="btn btn-secondary" data-action="remove-member" data-user-id="${m.user_id}">
+                            <i class="fas fa-user-minus"></i> Remover
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+            
+            membersList.innerHTML = `
+                <div class="table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Usuario</th>
+                                <th>Email</th>
+                                <th>Rol</th>
+                                <th>Estado</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                </div>
+            `;
+        }
+
         // Función para cargar miembros del clan
         function loadClanMembers(clanId) {
             const membersList = document.getElementById('membersList');
             if (!membersList) return;
-            
-            // TODO: Implementar carga de miembros
             membersList.innerHTML = '<p>Cargando miembros...</p>';
+            
+            const url = `?route=admin/clan-members&clanId=${encodeURIComponent(clanId)}`;
+            fetch(url)
+                .then(res => res.json())
+                .then(data => {
+                    if (data && data.success) {
+                        renderMembersList(data.members || []);
+                    } else {
+                        membersList.innerHTML = `<p>${(data && data.message) ? data.message : 'Error al cargar miembros'}</p>`;
+                    }
+                })
+                .catch(err => {
+                    console.error('Error al cargar miembros:', err);
+                    membersList.innerHTML = '<p>Error de conexión al cargar miembros.</p>';
+                });
         }
         
         // Event delegation para manejar todos los clicks
@@ -659,9 +714,57 @@ $additionalCSS = [];
                         alert('Error: Clan no seleccionado');
                         return;
                     }
+                    // Ejecutar alta de miembro
+                    const fd = new FormData();
+                    fd.append('clanId', currentClanId);
+                    fd.append('userId', userId);
                     
-                    // TODO: Implementar agregar miembro
-                    alert('Función de agregar miembro en desarrollo');
+                    fetch('?route=admin/add-clan-member', {
+                        method: 'POST',
+                        body: fd
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data && data.success) {
+                            // Recargar lista y limpiar selección
+                            if (userSelect) userSelect.value = '';
+                            loadClanMembers(currentClanId);
+                        } else {
+                            alert((data && data.message) ? data.message : 'Error al agregar miembro');
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Error al agregar miembro:', err);
+                        alert('Error de conexión al agregar miembro');
+                    });
+                    break;
+
+                case 'remove-member':
+                    e.preventDefault();
+                    const userIdToRemove = target.dataset.userId;
+                    if (!userIdToRemove || !currentClanId) return;
+                    if (!confirm('¿Remover este usuario del clan?')) return;
+                    
+                    const fdRemove = new FormData();
+                    fdRemove.append('clanId', currentClanId);
+                    fdRemove.append('userId', userIdToRemove);
+                    
+                    fetch('?route=admin/remove-clan-member', {
+                        method: 'POST',
+                        body: fdRemove
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data && data.success) {
+                            loadClanMembers(currentClanId);
+                        } else {
+                            alert((data && data.message) ? data.message : 'Error al remover miembro');
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Error al remover miembro:', err);
+                        alert('Error de conexión al remover miembro');
+                    });
                     break;
             }
         });
