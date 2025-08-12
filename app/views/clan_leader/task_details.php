@@ -4,13 +4,18 @@ if (!isset($task) || !isset($subtasks) || !isset($comments) || !isset($history) 
     echo "<div class='error'>Error: Datos de tarea no disponibles</div>";
     return;
 }
-
-// Capturar el contenido
-ob_start();
 ?>
 
-<!-- Estilos específicos para task details -->
-<style>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalles de Tarea - <?= htmlspecialchars($task['task_name']) ?></title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="stylesheet" href="<?= APP_URL ?>assets/css/clan-leader.css">
+    <link rel="stylesheet" href="<?= APP_URL ?>assets/css/styles.css">
+    <style>
         .task-details-container {
             max-width: 1200px;
             margin: 0 auto;
@@ -730,6 +735,8 @@ ob_start();
             margin: 0;
         }
     </style>
+</head>
+<body>
             <div class="task-details-container <?= ($task['due_date'] && strtotime($task['due_date']) < time() && $task['status'] !== 'completed') ? 'overdue' : '' ?>" data-task-id="<?= $task['task_id'] ?>">
         <!-- Header de la tarea -->
         <div class="task-header">
@@ -1080,28 +1087,10 @@ ob_start();
             </div>
         </div>
     </div>
-
-<?php
-// Capturar el contenido de la vista
-$content = ob_get_clean();
-
-// CSS adicional para Clan Leader
-$additionalCSS = [
-    APP_URL . 'assets/css/clan-leader.css'
-];
-
-// JavaScript adicional para Clan Leader  
-$additionalJS = [
-    APP_URL . 'assets/js/clan-leader.js',
-    'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js'
-];
-
-// Incluir el layout
-require_once __DIR__ . '/../admin/layout.php';
-?>
-
-<!-- JavaScript específico para task details -->
-<script>
+    
+    <script src="<?= APP_URL ?>assets/js/clan-leader.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <script>
         // La función deleteTask ahora está definida en clan-leader.js
         
         // Modal de previsualización
@@ -1390,4 +1379,6 @@ require_once __DIR__ . '/../admin/layout.php';
                 closeAddCollaboratorModal();
             }
         }
-    </script> 
+    </script>
+</body>
+</html> 
