@@ -90,7 +90,7 @@ ob_start();
                     Gestión de Proyectos
                 </h1>
                 <div class="header-actions">
-                    <button class="btn btn-primary" id="openCreateProjectBtnHeader" onclick="openCreateProjectModal()">
+                    <button class="btn btn-primary" id="openCreateProjectBtnHeader" data-action="create-project">
                         <i class="fas fa-plus"></i>
                         Crear Proyecto
                     </button>
@@ -103,13 +103,13 @@ ob_start();
             <div class="projects-header">
                 <h3>Proyectos Activos (<?php echo count($projects); ?>)</h3>
                 <div class="filter-options">
-                    <select id="statusFilter" onchange="filterProjects()">
+                    <select id="statusFilter" data-action="filter-projects">
                         <option value="">Todos los estados</option>
                         <option value="open">Abiertos</option>
                         <option value="completed">Completados</option>
                         <option value="paused">Pausados</option>
                     </select>
-                    <select id="clanFilter" onchange="filterProjects()">
+                    <select id="clanFilter" data-action="filter-projects">
                         <option value="">Todos los clanes</option>
                         <?php foreach ($clans as $clan): ?>
                         <option value="<?php echo intval($clan['clan_id']); ?>">
@@ -126,7 +126,7 @@ ob_start();
                     <i class="fas fa-project-diagram"></i>
                     <h3>No hay proyectos</h3>
                     <p>Comienza creando tu primer proyecto</p>
-                    <button class="btn btn-primary" id="openCreateProjectBtnEmpty" onclick="openCreateProjectModal()">
+                    <button class="btn btn-primary" id="openCreateProjectBtnEmpty" data-action="create-project">
                         <i class="fas fa-plus"></i>
                         Crear Primer Proyecto
                     </button>
@@ -154,17 +154,17 @@ ob_start();
                                 ?>
                             </span>
                             <div class="action-menu">
-                                <button class="btn-icon" onclick="toggleProjectMenu(<?php echo intval($project['project_id']); ?>)">
+                                <button class="btn-icon" data-action="toggle-menu" data-project-id="<?php echo intval($project['project_id']); ?>">
                                     <i class="fas fa-ellipsis-v"></i>
                                 </button>
                                 <div class="menu-dropdown" id="menu-<?php echo intval($project['project_id']); ?>">
-                                    <button onclick="editProject(<?php echo intval($project['project_id']); ?>)">
+                                    <button data-action="edit-project" data-project-id="<?php echo intval($project['project_id']); ?>">
                                         <i class="fas fa-edit"></i> Editar
                                     </button>
-                                    <button onclick="viewProject(<?php echo intval($project['project_id']); ?>)">
+                                    <button data-action="view-project" data-project-id="<?php echo intval($project['project_id']); ?>">
                                         <i class="fas fa-eye"></i> Ver Detalles
                                     </button>
-                                    <button onclick="deleteProject(<?php echo intval($project['project_id']); ?>)" class="danger">
+                                    <button data-action="delete-project" data-project-id="<?php echo intval($project['project_id']); ?>" class="danger">
                                         <i class="fas fa-trash"></i> Eliminar
                                     </button>
                                 </div>
@@ -218,7 +218,7 @@ ob_start();
     <div class="modal-content">
         <div class="modal-header">
             <h3 id="modalTitle">Crear Proyecto</h3>
-            <button class="modal-close" onclick="closeProjectModal()">
+            <button class="modal-close" data-action="close-modal">
                 <i class="fas fa-times"></i>
             </button>
         </div>
@@ -253,7 +253,7 @@ ob_start();
             </div>
             
             <div class="modal-actions">
-                <button type="button" class="btn btn-secondary" onclick="closeProjectModal()">
+                <button type="button" class="btn btn-secondary" data-action="close-modal">
                     Cancelar
                 </button>
                 <button type="submit" class="btn btn-primary" id="submitBtn">
@@ -570,7 +570,222 @@ textarea {
 }
 </style>
 
-<?php // El JS de esta página se inyecta en <head> para garantizar disponibilidad inmediata de las funciones ?>
+<!-- JavaScript Inline con todas las funciones necesarias -->
+<script>
+(function() {
+    'use strict';
+    
+    // Sistema de gestión de proyectos con event delegation
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Inicializando gestión de proyectos...');
+        
+        // Referencias a elementos del DOM
+        const modal = document.getElementById('projectModal');
+        const form = document.getElementById('projectForm');
+        const modalTitle = document.getElementById('modalTitle');
+        const submitText = document.getElementById('submitText');
+        const submitLoader = document.getElementById('submitLoader');
+        const submitBtn = document.getElementById('submitBtn');
+        const projectIdField = document.getElementById('projectId');
+        
+        // Función para abrir el modal de crear/editar
+        function openProjectModal(isEdit = false, projectId = null) {
+            if (!modal) {
+                console.error('Modal no encontrado');
+                return;
+            }
+            
+            if (isEdit && projectId) {
+                modalTitle.textContent = 'Editar Proyecto';
+                submitText.textContent = 'Actualizar Proyecto';
+                projectIdField.value = projectId;
+                // TODO: Cargar datos del proyecto
+            } else {
+                modalTitle.textContent = 'Crear Proyecto';
+                submitText.textContent = 'Crear Proyecto';
+                if (form) form.reset();
+                projectIdField.value = '';
+            }
+            
+            modal.style.display = 'block';
+            clearErrors();
+        }
+        
+        // Función para cerrar el modal
+        function closeProjectModal() {
+            if (modal) {
+                modal.style.display = 'none';
+                clearErrors();
+            }
+        }
+        
+        // Función para limpiar errores
+        function clearErrors() {
+            document.querySelectorAll('.error-message').forEach(function(el) {
+                el.classList.remove('show');
+                el.textContent = '';
+            });
+        }
+        
+        // Función para mostrar errores
+        function showFormErrors(errors) {
+            clearErrors();
+            Object.keys(errors).forEach(function(field) {
+                const errorElement = document.getElementById(field + 'Error');
+                if (errorElement) {
+                    errorElement.textContent = errors[field];
+                    errorElement.classList.add('show');
+                }
+            });
+        }
+        
+        // Función para filtrar proyectos
+        function filterProjects() {
+            const statusFilter = document.getElementById('statusFilter');
+            const clanFilter = document.getElementById('clanFilter');
+            const projectCards = document.querySelectorAll('.project-card');
+            
+            const status = statusFilter ? statusFilter.value : '';
+            const clan = clanFilter ? clanFilter.value : '';
+            
+            projectCards.forEach(function(card) {
+                const projectStatus = card.dataset.status;
+                const projectClan = card.dataset.clan;
+                let showCard = true;
+                
+                if (status && projectStatus !== status) showCard = false;
+                if (clan && projectClan !== clan) showCard = false;
+                
+                card.style.display = showCard ? 'block' : 'none';
+            });
+        }
+        
+        // Event delegation para manejar todos los clicks
+        document.addEventListener('click', function(e) {
+            const target = e.target.closest('[data-action]');
+            if (!target) return;
+            
+            const action = target.dataset.action;
+            const projectId = target.dataset.projectId;
+            
+            switch(action) {
+                case 'create-project':
+                    e.preventDefault();
+                    openProjectModal(false);
+                    break;
+                    
+                case 'edit-project':
+                    e.preventDefault();
+                    openProjectModal(true, projectId);
+                    break;
+                    
+                case 'view-project':
+                    e.preventDefault();
+                    alert('Función de ver detalles en desarrollo');
+                    break;
+                    
+                case 'delete-project':
+                    e.preventDefault();
+                    if (confirm('¿Estás seguro de que quieres eliminar este proyecto?')) {
+                        alert('Función de eliminar en desarrollo');
+                    }
+                    break;
+                    
+                case 'toggle-menu':
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const menu = document.getElementById('menu-' + projectId);
+                    if (menu) {
+                        // Cerrar otros menús
+                        document.querySelectorAll('.menu-dropdown').forEach(function(m) {
+                            if (m !== menu) m.classList.remove('show');
+                        });
+                        menu.classList.toggle('show');
+                    }
+                    break;
+                    
+                case 'close-modal':
+                    e.preventDefault();
+                    closeProjectModal();
+                    break;
+            }
+        });
+        
+        // Event listener para cambios en filtros
+        document.addEventListener('change', function(e) {
+            if (e.target.dataset.action === 'filter-projects') {
+                filterProjects();
+            }
+        });
+        
+        // Cerrar menús al hacer clic fuera
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.action-menu')) {
+                document.querySelectorAll('.menu-dropdown').forEach(function(menu) {
+                    menu.classList.remove('show');
+                });
+            }
+        });
+        
+        // Cerrar modal al hacer clic fuera
+        window.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closeProjectModal();
+            }
+        });
+        
+        // Manejar envío del formulario
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Mostrar loader
+                if (submitBtn) submitBtn.disabled = true;
+                if (submitText) submitText.style.display = 'none';
+                if (submitLoader) submitLoader.style.display = 'inline-block';
+                
+                // Preparar datos
+                const formData = new FormData(form);
+                
+                // Enviar petición
+                fetch('?route=admin/create-project', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(function(response) {
+                    return response.json();
+                })
+                .then(function(data) {
+                    if (data.success) {
+                        closeProjectModal();
+                        setTimeout(function() {
+                            window.location.reload();
+                        }, 1500);
+                    } else {
+                        if (data.errors) {
+                            showFormErrors(data.errors);
+                        } else {
+                            alert(data.message || 'Error al crear el proyecto');
+                        }
+                    }
+                })
+                .catch(function(error) {
+                    console.error('Error:', error);
+                    alert('Error de conexión');
+                })
+                .finally(function() {
+                    // Ocultar loader
+                    if (submitBtn) submitBtn.disabled = false;
+                    if (submitText) submitText.style.display = 'inline';
+                    if (submitLoader) submitLoader.style.display = 'none';
+                });
+            });
+        }
+        
+        console.log('Gestión de proyectos inicializada correctamente');
+    });
+})();
+</script>
 
 <?php
 // Guardar el contenido en una variable
@@ -578,10 +793,7 @@ $content = ob_get_clean();
 
 // Configurar variables para el layout
 $title = 'Gestión de Proyectos - ' . APP_NAME;
-// Inyectar JS externo en <head> para evitar errores de sintaxis en inline y asegurar disponibilidad
-$additionalJS = isset($additionalJS) ? $additionalJS : [];
-$additionalJS[] = APP_URL . 'assets/js/admin-projects.js';
 
-// Incluir el layout del admin
+// Incluir el layout del admin (sin JavaScript adicional porque ya está inline)
 include __DIR__ . '/layout.php';
 ?>

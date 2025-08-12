@@ -42,16 +42,6 @@
             <?php endif; ?>
         <?php endforeach; ?>
     <?php endif; ?>
-    
-    <script>
-        // Asegurar que las funciones estén disponibles después de cargar todos los scripts
-        if (typeof openCreateProjectModal === 'undefined') {
-            window.openCreateProjectModal = function() {
-                var modal = document.getElementById('projectModal');
-                if (modal) { modal.style.display = 'block'; }
-            };
-        }
-    </script>
 </head>
 <body>
     <?php echo $content ?? ''; ?>
