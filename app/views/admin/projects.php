@@ -90,7 +90,7 @@ ob_start();
                     Gestión de Proyectos
                 </h1>
                 <div class="header-actions">
-                    <button class="btn btn-primary" id="openCreateProjectBtnHeader">
+                    <button class="btn btn-primary" id="openCreateProjectBtnHeader" onclick="openCreateProjectModal()">
                         <i class="fas fa-plus"></i>
                         Crear Proyecto
                     </button>
@@ -112,7 +112,7 @@ ob_start();
                     <select id="clanFilter" onchange="filterProjects()">
                         <option value="">Todos los clanes</option>
                         <?php foreach ($clans as $clan): ?>
-                        <option value="<?php echo $clan['clan_id']; ?>">
+                        <option value="<?php echo intval($clan['clan_id']); ?>">
                             <?php echo Utils::escape($clan['clan_name']); ?>
                         </option>
                         <?php endforeach; ?>
@@ -126,7 +126,7 @@ ob_start();
                     <i class="fas fa-project-diagram"></i>
                     <h3>No hay proyectos</h3>
                     <p>Comienza creando tu primer proyecto</p>
-                    <button class="btn btn-primary" id="openCreateProjectBtnEmpty">
+                    <button class="btn btn-primary" id="openCreateProjectBtnEmpty" onclick="openCreateProjectModal()">
                         <i class="fas fa-plus"></i>
                         Crear Primer Proyecto
                     </button>
@@ -135,7 +135,7 @@ ob_start();
             <?php else: ?>
             <div class="projects-grid">
                 <?php foreach ($projects as $project): ?>
-                <div class="project-card" data-status="<?php echo $project['status']; ?>" data-clan="<?php echo $project['clan_id']; ?>">
+                <div class="project-card" data-status="<?php echo htmlspecialchars($project['status']); ?>" data-clan="<?php echo intval($project['clan_id']); ?>">
                     <div class="project-header">
                         <div class="project-info">
                             <h4 class="project-name"><?php echo Utils::escape($project['project_name']); ?></h4>
@@ -154,17 +154,17 @@ ob_start();
                                 ?>
                             </span>
                             <div class="action-menu">
-                                <button class="btn-icon" onclick="toggleProjectMenu(<?php echo $project['project_id']; ?>)">
+                                <button class="btn-icon" onclick="toggleProjectMenu(<?php echo intval($project['project_id']); ?>)">
                                     <i class="fas fa-ellipsis-v"></i>
                                 </button>
-                                <div class="menu-dropdown" id="menu-<?php echo $project['project_id']; ?>">
-                                    <button onclick="editProject(<?php echo $project['project_id']; ?>)">
+                                <div class="menu-dropdown" id="menu-<?php echo intval($project['project_id']); ?>">
+                                    <button onclick="editProject(<?php echo intval($project['project_id']); ?>)">
                                         <i class="fas fa-edit"></i> Editar
                                     </button>
-                                    <button onclick="viewProject(<?php echo $project['project_id']; ?>)">
+                                    <button onclick="viewProject(<?php echo intval($project['project_id']); ?>)">
                                         <i class="fas fa-eye"></i> Ver Detalles
                                     </button>
-                                    <button onclick="deleteProject(<?php echo $project['project_id']; ?>)" class="danger">
+                                    <button onclick="deleteProject(<?php echo intval($project['project_id']); ?>)" class="danger">
                                         <i class="fas fa-trash"></i> Eliminar
                                     </button>
                                 </div>
@@ -243,9 +243,9 @@ ob_start();
                 <select id="clanId" name="clanId" required>
                     <option value="">Seleccionar clan</option>
                     <?php foreach ($clans as $clan): ?>
-                    <option value="<?php echo $clan['clan_id']; ?>">
+                    <option value="<?php echo intval($clan['clan_id']); ?>">
                         <?php echo Utils::escape($clan['clan_name']); ?>
-                        (<?php echo $clan['member_count']; ?> miembros)
+                        (<?php echo intval($clan['member_count']); ?> miembros)
                     </option>
                     <?php endforeach; ?>
                 </select>
