@@ -1091,40 +1091,7 @@ if (!isset($task) || !isset($subtasks) || !isset($comments) || !isset($history) 
     <script src="?route=assets/js/clan-leader.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
     <script>
-        // Definir deleteTask globalmente para que funcione el botón eliminar
-        window.deleteTask = function(taskId) {
-            showConfirmationModal({
-                title: 'Confirmar Eliminación',
-                message: '¿Estás seguro de que quieres eliminar esta tarea?',
-                type: 'warning',
-                confirmText: 'Eliminar',
-                cancelText: 'Cancelar',
-                onConfirm: () => {
-                    fetch('?route=clan_leader/delete-task', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                        },
-                        body: 'task_id=' + taskId
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            showNotification('Tarea eliminada exitosamente', 'success');
-                            setTimeout(() => {
-                                window.location.href = '?route=clan_leader/tasks';
-                            }, 1000);
-                        } else {
-                            showNotification('Error al eliminar la tarea: ' + data.message, 'error');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        showNotification('Error al eliminar la tarea', 'error');
-                    });
-                }
-            });
-        };
+        // La función deleteTask ahora está definida en clan-leader.js
         
         // Modal de previsualización
         function toggleCommentAttachments(button){
