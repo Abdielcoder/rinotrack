@@ -714,6 +714,7 @@ class Task {
             $stmt = $this->db->prepare("
                 SELECT 
                     t.*,
+                    p.project_name AS project_name,
                     p.task_distribution_mode,
                     p.kpi_points,
                     u_assigned.username as assigned_to_username,
