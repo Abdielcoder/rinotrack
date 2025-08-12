@@ -704,11 +704,35 @@ $additionalCSS = [];
                 // Determinar la ruta según el modo
                 const route = isEditMode ? 'admin/update-clan' : 'admin/create-clan';
                 
-                console.log('Enviando formulario a:', route);
+                // Detectar la URL base correcta
+                const currentPath = window.location.pathname;
+                let baseUrl = '';
+                
+                if (currentPath.includes('/rinotrack/public/')) {
+                    baseUrl = '/rinotrack/public/';
+                } else if (currentPath.includes('/public/')) {
+                    baseUrl = '/public/';
+                } else if (currentPath === '/' || currentPath === '') {
+                    baseUrl = '/';
+                } else {
+                    baseUrl = currentPath.endsWith('/') ? currentPath : currentPath + '/';
+                }
+                
+                // Usar endpoint directo para crear clanes (evita problemas de routing)
+                let fullUrl;
+                if (isEditMode) {
+                    fullUrl = baseUrl + '?route=' + route;
+                } else {
+                    fullUrl = baseUrl + 'create-clan-direct.php';
+                }
+                
+                console.log('Enviando formulario a:', fullUrl);
                 console.log('Datos del formulario:', Object.fromEntries(formData));
+                console.log('URL base detectada:', baseUrl);
+                console.log('Modo:', isEditMode ? 'edición' : 'creación');
                 
                 // Enviar petición
-                fetch('?route=' + route, {
+                fetch(fullUrl, {
                     method: 'POST',
                     body: formData
                 })

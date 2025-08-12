@@ -323,32 +323,61 @@ class AdminController {
      * Crear nuevo clan
      */
     public function createClan() {
-        $this->requireAuth();
-        if (!$this->hasAdminAccess()) {
-            Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos'], 403);
-        }
-        
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            Utils::redirect('admin/clans');
-        }
-        
-        $clanName = Utils::sanitizeInput($_POST['clanName'] ?? '');
-        $clanDepartamento = Utils::sanitizeInput($_POST['clanDepartamento'] ?? '');
-        
-        if (empty($clanName)) {
-            Utils::jsonResponse(['success' => false, 'message' => 'El nombre del clan es requerido'], 400);
-        }
-        
-        if ($this->clanModel->exists($clanName)) {
-            Utils::jsonResponse(['success' => false, 'message' => 'Ya existe un clan con ese nombre'], 400);
-        }
-        
-        $clanId = $this->clanModel->create($clanName, $clanDepartamento);
-        
-        if ($clanId) {
-            Utils::jsonResponse(['success' => true, 'message' => 'Clan creado exitosamente']);
-        } else {
-            Utils::jsonResponse(['success' => false, 'message' => 'Error al crear clan'], 500);
+        try {
+            error_log("=== CREATE CLAN DEBUG ===");
+            error_log("createClan called - Method: " . $_SERVER['REQUEST_METHOD']);
+            error_log("POST data: " . print_r($_POST, true));
+            error_log("SESSION data: " . print_r($_SESSION ?? [], true));
+            
+            $this->requireAuth();
+            error_log("Auth check passed");
+            
+            if (!$this->hasAdminAccess()) {
+                error_log("Access denied - user doesn't have admin access");
+                Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos'], 403);
+            }
+            error_log("Admin access check passed");
+            
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                error_log("Invalid method: " . $_SERVER['REQUEST_METHOD']);
+                Utils::redirect('admin/clans');
+            }
+            
+            $clanName = Utils::sanitizeInput($_POST['clanName'] ?? '');
+            $clanDepartamento = Utils::sanitizeInput($_POST['clanDepartamento'] ?? '');
+            
+            error_log("Parsed data - clanName: '$clanName', clanDepartamento: '$clanDepartamento'");
+            
+            if (empty($clanName)) {
+                error_log("Validation failed: Empty clan name");
+                Utils::jsonResponse(['success' => false, 'message' => 'El nombre del clan es requerido'], 400);
+            }
+            
+            if ($this->clanModel->exists($clanName)) {
+                error_log("Validation failed: Clan name already exists");
+                Utils::jsonResponse(['success' => false, 'message' => 'Ya existe un clan con ese nombre'], 400);
+            }
+            
+            error_log("About to create clan in database");
+            $clanId = $this->clanModel->create($clanName, $clanDepartamento);
+            error_log("Database create result: " . ($clanId ? $clanId : 'false'));
+            
+            if ($clanId) {
+                error_log("Clan created successfully with ID: $clanId");
+                Utils::jsonResponse(['success' => true, 'message' => 'Clan creado exitosamente']);
+            } else {
+                error_log("Database create failed");
+                Utils::jsonResponse(['success' => false, 'message' => 'Error al crear clan'], 500);
+            }
+            
+        } catch (Exception $e) {
+            error_log("Exception in createClan: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor: ' . $e->getMessage()], 500);
+        } catch (Error $e) {
+            error_log("Fatal error in createClan: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error fatal del servidor: ' . $e->getMessage()], 500);
         }
     }
     

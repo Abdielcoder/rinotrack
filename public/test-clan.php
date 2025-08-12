@@ -95,8 +95,47 @@ try {
         echo "<p style='color: red;'>❌ Error en inserción manual: " . htmlspecialchars($e->getMessage()) . "</p>";
     }
     
+    // Probar el controlador AdminController
+    echo "<h2>5. Prueba del Controlador AdminController</h2>";
+    
+    try {
+        // Incluir el controlador
+        require_once '../app/controllers/AdminController.php';
+        require_once '../app/models/Auth.php';
+        require_once '../app/models/User.php';
+        require_once '../app/models/Clan.php';
+        require_once '../app/models/Role.php';
+        require_once '../app/models/Utils.php';
+        
+        echo "<p style='color: green;'>✅ Controladores y modelos cargados correctamente</p>";
+        
+        // Simular sesión de usuario admin
+        $_SESSION['user_id'] = 1; // Asumiendo que el usuario 1 es admin
+        
+        // Crear instancia del controlador
+        $adminController = new AdminController();
+        echo "<p style='color: green;'>✅ AdminController instanciado correctamente</p>";
+        
+        // Verificar métodos
+        if (method_exists($adminController, 'createClan')) {
+            echo "<p style='color: green;'>✅ Método createClan existe</p>";
+        } else {
+            echo "<p style='color: red;'>❌ Método createClan NO existe</p>";
+        }
+        
+        if (method_exists($adminController, 'hasAdminAccess')) {
+            echo "<p style='color: green;'>✅ Método hasAdminAccess existe</p>";
+        } else {
+            echo "<p style='color: red;'>❌ Método hasAdminAccess NO existe</p>";
+        }
+        
+    } catch (Exception $e) {
+        echo "<p style='color: red;'>❌ Error al cargar controlador: " . htmlspecialchars($e->getMessage()) . "</p>";
+        echo "<p style='color: red;'>Stack trace: " . htmlspecialchars($e->getTraceAsString()) . "</p>";
+    }
+    
     // Verificar permisos de usuario
-    echo "<h2>5. Verificación de Usuario Actual</h2>";
+    echo "<h2>6. Verificación de Usuario Actual</h2>";
     
     session_start();
     if (isset($_SESSION['user_id'])) {
@@ -123,7 +162,7 @@ try {
     }
     
     // Verificar logs de error
-    echo "<h2>6. Verificación de Logs</h2>";
+    echo "<h2>7. Verificación de Logs</h2>";
     
     $errorLog = ini_get('error_log');
     if ($errorLog && file_exists($errorLog)) {
