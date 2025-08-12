@@ -465,6 +465,72 @@ $additionalCSS = [];
 }
 </style>
 
+<style>
+/* Mejora modal miembros - diseño minimalista y amplio */
+#membersModal .modal-content {
+    max-width: 820px;
+    width: 92vw;
+    padding-bottom: 0;
+}
+
+#membersModal .modal-header {
+    padding: var(--spacing-lg) var(--spacing-xl);
+}
+
+#membersModal .modal-body {
+    padding: var(--spacing-xl);
+}
+
+.user-picker {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: var(--spacing-md);
+    align-items: center;
+}
+
+.user-picker input,
+.user-picker select {
+    height: 44px;
+}
+
+.user-picker button {
+    height: 44px;
+    padding: 0 var(--spacing-lg);
+}
+
+#availableCount.hint-text {
+    display: block;
+    margin-top: var(--spacing-sm);
+    color: var(--text-muted);
+}
+
+#membersList .table-wrapper {
+    margin-top: var(--spacing-lg);
+}
+
+#membersList table.data-table th,
+#membersList table.data-table td {
+    padding: 14px 18px;
+}
+
+/* Mejor espaciado entre filas */
+#membersList .data-table tr td {
+    border-bottom: 1px solid var(--bg-accent);
+}
+
+/* Botón remover más sutil */
+#membersList .btn.btn-secondary {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+@media (max-width: 768px) {
+    .user-picker {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
 <!-- JavaScript Inline con todas las funciones necesarias -->
 <script>
 (function() {
