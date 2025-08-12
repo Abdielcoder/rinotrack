@@ -1445,7 +1445,41 @@ document.head.appendChild(confirmationModalStyles);
 // Variables globales para task details
 let selectedFile = null;
 let selectedUsers = [];
+let isCommentSubmitting = false;
 
+function setCommentSubmitting(isLoading) {
+    const form = document.querySelector('.add-comment-form');
+    const sendBtn = document.querySelector('.add-comment-form .btn.btn-primary');
+    const textarea = document.getElementById('newComment');
+    const fileInput = document.getElementById('fileAttachment');
+    const attachBtn = document.querySelector('.add-comment-form .btn-attachment');
+    if (!sendBtn) return;
+
+    if (isLoading) {
+        isCommentSubmitting = true;
+        // Guardar HTML original para restaurar después
+        if (!sendBtn.dataset.originalHtml) {
+            sendBtn.dataset.originalHtml = sendBtn.innerHTML;
+        }
+        sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+        sendBtn.disabled = true;
+        if (textarea) textarea.disabled = true;
+        if (fileInput) fileInput.disabled = true;
+        if (attachBtn) attachBtn.classList.add('disabled');
+        if (form) form.style.opacity = '0.7';
+    } else {
+        isCommentSubmitting = false;
+        if (sendBtn.dataset.originalHtml) {
+            sendBtn.innerHTML = sendBtn.dataset.originalHtml;
+        }
+        sendBtn.disabled = false;
+        if (textarea) textarea.disabled = false;
+        if (fileInput) fileInput.disabled = false;
+        if (attachBtn) attachBtn.classList.remove('disabled');
+        if (form) form.style.opacity = '';
+    }
+}
+ 
 // Función para eliminar tarea
 function deleteTask(taskId) {
     showConfirmationModal({
@@ -1483,6 +1517,7 @@ function deleteTask(taskId) {
 
 // Función para agregar comentario
 function addComment() {
+    if (isCommentSubmitting) return;
     const commentText = document.getElementById('newComment').value.trim();
     if (!commentText) {
         showNotification('Por favor escribe un comentario', 'error');
@@ -1498,6 +1533,7 @@ function addComment() {
         formData.append('attachment', selectedFile);
     }
 
+    setCommentSubmitting(true);
     fetch('?route=clan_leader/add-task-comment', {
         method: 'POST',
         body: formData
@@ -1516,6 +1552,9 @@ function addComment() {
     .catch(error => {
         console.error('Error:', error);
         showNotification('Error al agregar comentario', 'error');
+    })
+    .finally(() => {
+        setCommentSubmitting(false);
     });
 }
 
