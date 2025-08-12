@@ -90,7 +90,7 @@ ob_start();
                     Gestión de Proyectos
                 </h1>
                 <div class="header-actions">
-                    <button class="btn btn-primary" onclick="openCreateProjectModal()">
+                    <button class="btn btn-primary" id="openCreateProjectBtnHeader">
                         <i class="fas fa-plus"></i>
                         Crear Proyecto
                     </button>
@@ -126,7 +126,7 @@ ob_start();
                     <i class="fas fa-project-diagram"></i>
                     <h3>No hay proyectos</h3>
                     <p>Comienza creando tu primer proyecto</p>
-                    <button class="btn btn-primary" onclick="openCreateProjectModal()">
+                    <button class="btn btn-primary" id="openCreateProjectBtnEmpty">
                         <i class="fas fa-plus"></i>
                         Crear Primer Proyecto
                     </button>
@@ -570,173 +570,7 @@ textarea {
 }
 </style>
 
-<script>
-// JavaScript para gestión de proyectos
-let currentProjectId = null;
-let isEditMode = false;
-
-window.openCreateProjectModal = function() {
-    isEditMode = false;
-    currentProjectId = null;
-    document.getElementById('modalTitle').textContent = 'Crear Proyecto';
-    document.getElementById('submitText').textContent = 'Crear Proyecto';
-    document.getElementById('projectForm').reset();
-    document.getElementById('projectId').value = '';
-    document.getElementById('projectModal').style.display = 'block';
-}
-
-window.closeProjectModal = function() {
-    document.getElementById('projectModal').style.display = 'none';
-    clearErrors();
-}
-
-window.editProject = function(projectId) {
-    // Placeholder para edición
-    isEditMode = true;
-    currentProjectId = projectId;
-    document.getElementById('modalTitle').textContent = 'Editar Proyecto';
-    document.getElementById('submitText').textContent = 'Actualizar Proyecto';
-    document.getElementById('projectId').value = projectId;
-    document.getElementById('projectModal').style.display = 'block';
-}
-
-window.viewProject = function(projectId) {
-    // Placeholder para ver detalles
-    showToast('Función de ver detalles en desarrollo', 'info');
-}
-
-window.deleteProject = function(projectId) {
-    showConfirmationModal({
-        title: 'Confirmar Eliminación',
-        message: '¿Estás seguro de que quieres eliminar este proyecto?',
-        type: 'warning',
-        confirmText: 'Eliminar',
-        cancelText: 'Cancelar',
-        onConfirm: () => {
-            showToast('Función de eliminar en desarrollo', 'warning');
-        }
-    });
-}
-
-window.toggleProjectMenu = function(projectId) {
-    const menu = document.getElementById('menu-' + projectId);
-    const allMenus = document.querySelectorAll('.menu-dropdown');
-    
-    // Cerrar otros menús
-    allMenus.forEach(m => {
-        if (m !== menu) {
-            m.classList.remove('show');
-        }
-    });
-    
-    menu.classList.toggle('show');
-}
-
-window.filterProjects = function() {
-    const statusFilter = document.getElementById('statusFilter').value;
-    const clanFilter = document.getElementById('clanFilter').value;
-    const projectCards = document.querySelectorAll('.project-card');
-    
-    projectCards.forEach(card => {
-        const projectStatus = card.dataset.status;
-        const projectClan = card.dataset.clan;
-        
-        let showCard = true;
-        
-        if (statusFilter && projectStatus !== statusFilter) {
-            showCard = false;
-        }
-        
-        if (clanFilter && projectClan !== clanFilter) {
-            showCard = false;
-        }
-        
-        card.style.display = showCard ? 'block' : 'none';
-    });
-}
-
-// Manejar envío del formulario
-document.getElementById('projectForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const submitBtn = document.getElementById('submitBtn');
-    const submitText = document.getElementById('submitText');
-    const submitLoader = document.getElementById('submitLoader');
-    
-    // Mostrar loader
-    submitBtn.disabled = true;
-    submitText.style.display = 'none';
-    submitLoader.style.display = 'inline-block';
-    
-    const formData = new FormData(this);
-    
-    fetch('?route=admin/create-project', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showToast(data.message, 'success');
-            closeProjectModal();
-            setTimeout(() => {
-                window.location.reload();
-            }, 1500);
-        } else {
-            if (data.errors) {
-                showFormErrors(data.errors);
-            } else {
-                showToast(data.message, 'error');
-            }
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showToast('Error de conexión', 'error');
-    })
-    .finally(() => {
-        submitBtn.disabled = false;
-        submitText.style.display = 'inline';
-        submitLoader.style.display = 'none';
-    });
-});
-
-function showFormErrors(errors) {
-    clearErrors();
-    Object.keys(errors).forEach(field => {
-        const errorElement = document.getElementById(field + 'Error');
-        if (errorElement) {
-            errorElement.textContent = errors[field];
-            errorElement.classList.add('show');
-        }
-    });
-}
-
-function clearErrors() {
-    const errorElements = document.querySelectorAll('.error-message');
-    errorElements.forEach(element => {
-        element.classList.remove('show');
-        element.textContent = '';
-    });
-}
-
-// Cerrar menús al hacer clic fuera
-document.addEventListener('click', function(e) {
-    if (!e.target.closest('.action-menu')) {
-        document.querySelectorAll('.menu-dropdown').forEach(menu => {
-            menu.classList.remove('show');
-        });
-    }
-});
-
-// Cerrar modal al hacer clic fuera
-window.onclick = function(event) {
-    const modal = document.getElementById('projectModal');
-    if (event.target === modal) {
-        closeProjectModal();
-    }
-}
-</script>
+<?php // El JS de esta página se inyecta en <head> para garantizar disponibilidad inmediata de las funciones ?>
 
 <?php
 // Guardar el contenido en una variable
@@ -744,6 +578,83 @@ $content = ob_get_clean();
 
 // Configurar variables para el layout
 $title = 'Gestión de Proyectos - ' . APP_NAME;
+// Inyectar JS en <head> para evitar errores de funciones no definidas en onclick inline
+$additionalJS = isset($additionalJS) ? $additionalJS : [];
+$additionalJS[] = '<script>\n'
+    . 'let currentProjectId = null; let isEditMode = false;\n'
+    . 'window.openCreateProjectModal = function() {\n'
+    . '  isEditMode = false; currentProjectId = null;\n'
+    . '  document.getElementById(\'modalTitle\').textContent = \"Crear Proyecto\";\n'
+    . '  document.getElementById(\'submitText\').textContent = \"Crear Proyecto\";\n'
+    . '  const form = document.getElementById(\'projectForm\'); if (form) form.reset();\n'
+    . '  const pid = document.getElementById(\'projectId\'); if (pid) pid.value = \"\";\n'
+    . '  const modal = document.getElementById(\'projectModal\'); if (modal) modal.style.display = \"block\";\n'
+    . '}\n'
+    . 'window.closeProjectModal = function() {\n'
+    . '  const modal = document.getElementById(\'projectModal\'); if (modal) modal.style.display = \"none\";\n'
+    . '  if (typeof clearErrors === \"function\") { clearErrors(); }\n'
+    . '}\n'
+    . 'window.editProject = function(projectId) {\n'
+    . '  isEditMode = true; currentProjectId = projectId;\n'
+    . '  const t = document.getElementById(\'modalTitle\'); if (t) t.textContent = \"Editar Proyecto\";\n'
+    . '  const s = document.getElementById(\'submitText\'); if (s) s.textContent = \"Actualizar Proyecto\";\n'
+    . '  const pid = document.getElementById(\'projectId\'); if (pid) pid.value = projectId;\n'
+    . '  const modal = document.getElementById(\'projectModal\'); if (modal) modal.style.display = \"block\";\n'
+    . '}\n'
+    . 'window.viewProject = function(projectId) {\n'
+    . '  if (typeof showToast === \"function\") showToast(\"Función de ver detalles en desarrollo\", \"info\");\n'
+    . '}\n'
+    . 'window.deleteProject = function(projectId) {\n'
+    . '  if (typeof showConfirmationModal === \"function\") {\n'
+    . '    showConfirmationModal({ title: \"Confirmar Eliminación\", message: \"¿Estás seguro de que quieres eliminar este proyecto?\", type: \"warning\", confirmText: \"Eliminar\", cancelText: \"Cancelar\", onConfirm: () => { if (typeof showToast === \"function\") showToast(\"Función de eliminar en desarrollo\", \"warning\"); } });\n'
+    . '  }\n'
+    . '}\n'
+    . 'window.toggleProjectMenu = function(projectId) {\n'
+    . '  const menu = document.getElementById(\'menu-\' + projectId); if (!menu) return;\n'
+    . '  document.querySelectorAll(\'.menu-dropdown\').forEach(m => { if (m !== menu) m.classList.remove(\'show\'); });\n'
+    . '  menu.classList.toggle(\'show\');\n'
+    . '}\n'
+    . 'window.filterProjects = function() {\n'
+    . '  const statusFilter = document.getElementById(\'statusFilter\');\n'
+    . '  const clanFilter = document.getElementById(\'clanFilter\');\n'
+    . '  const projectCards = document.querySelectorAll(\'.project-card\');\n'
+    . '  const status = statusFilter ? statusFilter.value : \"\";\n'
+    . '  const clan = clanFilter ? clanFilter.value : \"\";\n'
+    . '  projectCards.forEach(card => {\n'
+    . '    const projectStatus = card.dataset.status;\n'
+    . '    const projectClan = card.dataset.clan;\n'
+    . '    let showCard = true;\n'
+    . '    if (status && projectStatus !== status) showCard = false;\n'
+    . '    if (clan && projectClan !== clan) showCard = false;\n'
+    . '    card.style.display = showCard ? \"block\" : \"none\";\n'
+    . '  });\n'
+    . '}\n'
+    . 'document.addEventListener(\'DOMContentLoaded\', function() {\n'
+    . '  const btn1 = document.getElementById(\'openCreateProjectBtnHeader\'); if (btn1) btn1.addEventListener(\'click\', openCreateProjectModal);\n'
+    . '  const btn2 = document.getElementById(\'openCreateProjectBtnEmpty\'); if (btn2) btn2.addEventListener(\'click\', openCreateProjectModal);\n'
+    . '  const form = document.getElementById(\'projectForm\'); if (!form) return;\n'
+    . '  form.addEventListener(\'submit\', function(e) {\n'
+    . '    e.preventDefault();\n'
+    . '    const submitBtn = document.getElementById(\'submitBtn\');\n'
+    . '    const submitText = document.getElementById(\'submitText\');\n'
+    . '    const submitLoader = document.getElementById(\'submitLoader\');\n'
+    . '    if (submitBtn && submitText && submitLoader) { submitBtn.disabled = true; submitText.style.display = \"none\"; submitLoader.style.display = \"inline-block\"; }\n'
+    . '    const formData = new FormData(form);\n'
+    . '    fetch(\'?route=admin/create-project\', { method: \"POST\", body: formData })\n'
+    . '      .then(response => response.json())\n'
+    . '      .then(data => {\n'
+    . '        if (data.success) { if (typeof showToast === \"function\") showToast(data.message, \"success\"); closeProjectModal(); setTimeout(() => window.location.reload(), 1500); }\n'
+    . '        else { if (data.errors) { if (typeof showFormErrors === \"function\") showFormErrors(data.errors); } else { if (typeof showToast === \"function\") showToast(data.message, \"error\"); } }\n'
+    . '      })\n'
+    . '      .catch(error => { console.error(error); if (typeof showToast === \"function\") showToast(\"Error de conexión\", \"error\"); })\n'
+    . '      .finally(() => { if (submitBtn && submitText && submitLoader) { submitBtn.disabled = false; submitText.style.display = \"inline\"; submitLoader.style.display = \"none\"; } });\n'
+    . '  });\n'
+    . '  document.addEventListener(\'click\', function(e) { if (!e.target.closest(\'.action-menu\')) { document.querySelectorAll(\'.menu-dropdown\').forEach(menu => menu.classList.remove(\'show\')); } });\n'
+    . '  window.addEventListener(\'click\', function(event) { const modal = document.getElementById(\'projectModal\'); if (event.target === modal) { closeProjectModal(); } });\n'
+    . '});\n'
+    . 'function showFormErrors(errors) { clearErrors(); Object.keys(errors).forEach(field => { const el = document.getElementById(field + \"Error\"); if (el) { el.textContent = errors[field]; el.classList.add(\"show\"); } }); }\n'
+    . 'function clearErrors() { document.querySelectorAll(\'.error-message\').forEach(el => { el.classList.remove(\'show\'); el.textContent = \"\"; }); }\n'
+    . '</script>';
 
 // Incluir el layout del admin
 include __DIR__ . '/layout.php';
