@@ -1446,6 +1446,14 @@ if (!isset($task) || !isset($subtasks) || !isset($comments) || !isset($history) 
                 closeAddCollaboratorModal();
             }
         }
+
+        // Activar visualización de adjuntos por defecto (sin cambiar la lógica existente)
+        (function(){
+            try {
+                var lists = document.querySelectorAll('.comment-attachments');
+                lists.forEach(function(list){ list.style.display = 'block'; });
+            } catch(e) {}
+        })();
     </script>
 </body>
 </html> 
