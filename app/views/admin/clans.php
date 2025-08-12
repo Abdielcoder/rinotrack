@@ -237,6 +237,9 @@ $additionalCSS = [];
                     <select id="userSelect">
                         <option value="">Seleccionar usuario</option>
                     </select>
+                </div>
+                <div id="selectedUserLabel" class="hint-text" style="margin-top:6px;"></div>
+                <div style="margin-top:10px;">
                     <button type="button" class="btn btn-primary" data-action="add-member" id="addMemberBtn" disabled>
                         <i class="fas fa-plus"></i> Agregar
                     </button>
@@ -727,6 +730,7 @@ $additionalCSS = [];
                         const opt = document.createElement('option');
                         opt.value = u.user_id;
                         opt.textContent = `${label} [${u.role_name || 'sin rol'}]`;
+                        opt.dataset.display = `${u.full_name || u.username}`;
                         userSelect.appendChild(opt);
                         count++;
                     }
@@ -741,7 +745,12 @@ $additionalCSS = [];
                 userSearch.oninput = () => populate(userSearch.value);
             }
             if (userSelect) {
-                userSelect.onchange = () => { if (addBtn) addBtn.disabled = (userSelect.value === ''); };
+                userSelect.onchange = () => {
+                    if (addBtn) addBtn.disabled = (userSelect.value === '');
+                    const selLabel = document.getElementById('selectedUserLabel');
+                    const opt = userSelect.options[userSelect.selectedIndex];
+                    selLabel.textContent = opt && opt.value ? `Seleccionado: ${opt.dataset.display}` : '';
+                };
             }
         }
         
