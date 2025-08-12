@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $title ?? APP_NAME . ' - Admin'; ?></title>
-    <link rel="icon" href="<?php echo APP_URL; ?>favicon.ico">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230965f7'/%3E%3Ctext x='50%' y='50%' dy='.35em' text-anchor='middle' font-family='Inter, Arial, sans-serif' font-size='32' fill='white'%3ER%3C/text%3E%3C/svg%3E">
     
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -26,6 +26,13 @@
     
     <script>
         const APP_URL = '<?php echo APP_URL; ?>';
+    </script>
+    <script>
+        // Fallback temprano para evitar ReferenceError en handlers inline
+        window.openCreateProjectModal = window.openCreateProjectModal || function() {
+            var modal = document.getElementById('projectModal');
+            if (modal) { modal.style.display = 'block'; }
+        };
     </script>
     
     <!-- JavaScript con rutas absolutas -->
