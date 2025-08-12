@@ -686,9 +686,27 @@ textarea {
                     
                 case 'delete-project':
                     e.preventDefault();
-                    if (confirm('¿Estás seguro de que quieres eliminar este proyecto?')) {
-                        alert('Función de eliminar en desarrollo');
-                    }
+                    if (!projectId) return;
+                    if (!confirm('¿Estás seguro de que quieres eliminar este proyecto? Esta acción no se puede deshacer.')) return;
+                    const fd = new FormData();
+                    fd.append('projectId', projectId);
+                    fetch('?route=admin/delete-project', {
+                        method: 'POST',
+                        body: fd
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data && data.success) {
+                            alert('Proyecto eliminado exitosamente');
+                            setTimeout(() => window.location.reload(), 800);
+                        } else {
+                            alert((data && data.message) ? data.message : 'Error al eliminar proyecto');
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Error al eliminar proyecto:', err);
+                        alert('Error de conexión al eliminar proyecto');
+                    });
                     break;
                     
                 case 'toggle-menu':

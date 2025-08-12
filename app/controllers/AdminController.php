@@ -247,6 +247,52 @@ class AdminController {
         
         $this->loadView('admin/projects', $data);
     }
+
+    /**
+     * Eliminar proyecto (ADMIN)
+     */
+    public function deleteProject() {
+        $this->requireAuth();
+        if (!$this->hasAdminAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos'], 403);
+        }
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Utils::redirect('admin/projects');
+        }
+
+        $projectId = (int)($_POST['projectId'] ?? 0);
+        if ($projectId <= 0) {
+            Utils::jsonResponse(['success' => false, 'message' => 'ID de proyecto inválido'], 400);
+        }
+
+        try {
+            // Validar existencia
+            $projects = $this->projectModel->getByClan(0); // placeholder para mantener interfaz
+            // El modelo Project no tiene findById visible aquí; eliminamos por SQL directo seguro
+            $db = Database::getConnection();
+            $check = $db->prepare('SELECT project_id FROM Projects WHERE project_id = ?');
+            $check->execute([$projectId]);
+            if (!$check->fetch()) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Proyecto no encontrado'], 404);
+            }
+
+            // Eliminar dependencias básicas
+            $db->beginTransaction();
+            $db->prepare('DELETE FROM Task_Attachments WHERE task_id IN (SELECT task_id FROM Tasks WHERE project_id = ?)')->execute([$projectId]);
+            $db->prepare('DELETE FROM Task_Comments WHERE task_id IN (SELECT task_id FROM Tasks WHERE project_id = ?)')->execute([$projectId]);
+            $db->prepare('DELETE FROM Task_Assignments WHERE task_id IN (SELECT task_id FROM Tasks WHERE project_id = ?)')->execute([$projectId]);
+            $db->prepare('DELETE FROM Task_History WHERE task_id IN (SELECT task_id FROM Tasks WHERE project_id = ?)')->execute([$projectId]);
+            $db->prepare('DELETE FROM Tasks WHERE project_id = ?')->execute([$projectId]);
+            $db->prepare('DELETE FROM Projects WHERE project_id = ?')->execute([$projectId]);
+            $db->commit();
+
+            Utils::jsonResponse(['success' => true, 'message' => 'Proyecto eliminado exitosamente']);
+        } catch (Exception $e) {
+            if ($db && $db->inTransaction()) { $db->rollBack(); }
+            error_log('Error al eliminar proyecto: ' . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error al eliminar proyecto'], 500);
+        }
+    }
     
     /**
      * Crear nuevo proyecto
