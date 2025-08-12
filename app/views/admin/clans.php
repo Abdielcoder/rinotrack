@@ -688,6 +688,32 @@ $additionalCSS = [];
             }
         });
         
+        // Función para construir la URL correcta del archivo
+        function buildFileUrl(filename) {
+            const currentUrl = window.location.href;
+            const urlObj = new URL(currentUrl);
+            
+            // Si estamos en una ruta como /rinotrack/public/?route=admin/clans
+            // necesitamos extraer solo la parte del directorio
+            let basePath = urlObj.pathname;
+            
+            // Remover la parte de query string del path
+            if (basePath.includes('?')) {
+                basePath = basePath.split('?')[0];
+            }
+            
+            // Si el path termina con un archivo (como index.php), removerlo
+            if (basePath.includes('.php')) {
+                basePath = basePath.substring(0, basePath.lastIndexOf('/') + 1);
+            }
+            
+            // Construir la URL completa
+            const fileUrl = urlObj.origin + basePath + filename;
+            console.log('URL construida para', filename, ':', fileUrl);
+            
+            return fileUrl;
+        }
+        
         // Manejar envío del formulario de clan
         if (clanForm) {
             clanForm.addEventListener('submit', function(e) {
@@ -704,32 +730,43 @@ $additionalCSS = [];
                 // Determinar la ruta según el modo
                 const route = isEditMode ? 'admin/update-clan' : 'admin/create-clan';
                 
-                // Detectar la URL base correcta
+                // Detectar la URL base correcta para los archivos
                 const currentPath = window.location.pathname;
                 let baseUrl = '';
                 
+                // Si estamos en /rinotrack/public/, usar /rinotrack/public/
                 if (currentPath.includes('/rinotrack/public/')) {
                     baseUrl = '/rinotrack/public/';
-                } else if (currentPath.includes('/public/')) {
+                }
+                // Si estamos en /public/, usar /public/
+                else if (currentPath.includes('/public/')) {
                     baseUrl = '/public/';
-                } else if (currentPath === '/' || currentPath === '') {
+                }
+                // Si estamos en la raíz, usar /
+                else if (currentPath === '/' || currentPath === '') {
                     baseUrl = '/';
-                } else {
+                }
+                // Por defecto, usar la ruta actual
+                else {
                     baseUrl = currentPath.endsWith('/') ? currentPath : currentPath + '/';
                 }
                 
-                // Usar endpoint directo para crear clanes (evita problemas de routing)
+                // Para crear clanes, usar la función que construye la URL correcta
                 let fullUrl;
                 if (isEditMode) {
+                    // Para editar, usar la ruta del router
                     fullUrl = baseUrl + '?route=' + route;
                 } else {
-                    fullUrl = baseUrl + 'create-clan-direct.php';
+                    // Para crear, usar la función que construye la URL correcta
+                    fullUrl = buildFileUrl('create-clan-direct.php');
                 }
                 
                 console.log('Enviando formulario a:', fullUrl);
                 console.log('Datos del formulario:', Object.fromEntries(formData));
                 console.log('URL base detectada:', baseUrl);
                 console.log('Modo:', isEditMode ? 'edición' : 'creación');
+                console.log('Ruta del archivo actual:', window.location.pathname);
+                console.log('URL completa del navegador:', window.location.href);
                 
                 // Enviar petición
                 fetch(fullUrl, {
