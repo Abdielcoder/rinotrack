@@ -1080,117 +1080,7 @@ function getIconForType(type) {
     return icons[type] || 'exclamation-triangle';
 }
 
-// Función para agregar comentarios a tareas
-function addComment() {
-    const commentText = document.getElementById('newComment').value.trim();
-    if (!commentText) {
-        showNotification('Por favor escribe un comentario', 'error');
-        return;
-    }
-    
-    // Obtener el ID de la tarea directamente del HTML usando PHP
-    const taskIdElement = document.querySelector('[data-task-id]');
-    let taskId = null;
-    
-    if (taskIdElement) {
-        taskId = taskIdElement.getAttribute('data-task-id');
-    } else {
-        // Fallback: obtener del botón de eliminar
-        const deleteButton = document.querySelector('button[onclick*="deleteTask"]');
-        if (deleteButton) {
-            const onclickAttr = deleteButton.getAttribute('onclick');
-            const match = onclickAttr.match(/deleteTask\((\d+)\)/);
-            if (match) {
-                taskId = match[1];
-            }
-        }
-    }
-    
-    if (!taskId) {
-        showNotification('Error: No se pudo obtener el ID de la tarea', 'error');
-        return;
-    }
-    
-    console.log('Enviando comentario para tarea:', taskId);
-    
-    // Enviar comentario usando FormData (incluye adjunto si existe)
-    const formData = new FormData();
-    formData.append('task_id', taskId);
-    formData.append('comment_text', commentText);
-    const fileInput = document.getElementById('fileAttachment');
-    if (fileInput && fileInput.files && fileInput.files[0]) {
-        formData.append('attachment', fileInput.files[0]);
-    }
-    
-    fetch('?route=clan_leader/add-task-comment', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => {
-        console.log('Respuesta del servidor:', response.status);
-        return response.text().then(text => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status} - ${text}`);
-            }
-            try {
-                return JSON.parse(text);
-            } catch (e) {
-                console.error('Respuesta no JSON:', text);
-                throw new Error('La respuesta del servidor no es JSON válido');
-            }
-        });
-    })
-    .then(data => {
-        console.log('Datos de respuesta:', data);
-        if (data.success) {
-            document.getElementById('newComment').value = '';
-            if (fileInput) {
-                fileInput.value = '';
-                const attachmentPreview = document.getElementById('attachmentPreview');
-                if (attachmentPreview) attachmentPreview.style.display = 'none';
-            }
-            showNotification('Comentario agregado exitosamente', 'success');
-            // Recargar la página para mostrar el nuevo comentario
-            setTimeout(() => location.reload(), 1000);
-        } else {
-            showNotification('Error al agregar comentario: ' + data.message, 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Error completo:', error);
-        showNotification('Error al agregar comentario: ' + error.message, 'error');
-    });
-}
-
-
-
-// Función para manejar archivos adjuntos
-function handleFileAttachment(input) {
-    const file = input.files[0];
-    if (file) {
-        const attachmentPreview = document.getElementById('attachmentPreview');
-        const attachmentName = document.getElementById('attachmentName');
-        
-        if (attachmentPreview && attachmentName) {
-            attachmentName.textContent = file.name;
-            attachmentPreview.style.display = 'block';
-        }
-    }
-}
-
-// Función para remover archivo adjunto
-function removeAttachment() {
-    const fileInput = document.getElementById('fileAttachment');
-    const attachmentPreview = document.getElementById('attachmentPreview');
-    
-    if (fileInput) {
-        fileInput.value = '';
-    }
-    
-    if (attachmentPreview) {
-        attachmentPreview.style.display = 'none';
-    }
-}
+// (Obsoleto) Versión anterior de comentarios y adjuntos eliminada para evitar duplicados.
 
 // Función para mostrar notificaciones
 function showNotification(message, type = 'info') {
@@ -1515,55 +1405,105 @@ function deleteTask(taskId) {
     });
 }
 
-// Función para agregar comentario
+// Función para agregar comentario con progreso de subida
 function addComment() {
     if (isCommentSubmitting) return;
-    const commentText = document.getElementById('newComment').value.trim();
+    const commentTextarea = document.getElementById('newComment');
+    const commentText = (commentTextarea ? commentTextarea.value : '').trim();
     if (!commentText) {
         showNotification('Por favor escribe un comentario', 'error');
         return;
     }
 
-    const taskId = document.querySelector('.task-details-container').dataset.taskId;
-    let formData = new FormData();
+    const container = document.querySelector('.task-details-container');
+    const taskId = container ? container.dataset.taskId : null;
+    if (!taskId) {
+        showNotification('No se pudo obtener el ID de la tarea', 'error');
+        return;
+    }
+
+    const formData = new FormData();
     formData.append('task_id', taskId);
     formData.append('comment_text', commentText);
-    
-    // Adjuntar múltiples archivos si existen
     if (selectedFiles && selectedFiles.length > 0) {
         selectedFiles.forEach(file => formData.append('attachments[]', file));
     }
 
-    setCommentSubmitting(true);
-    fetch('?route=clan_leader/add-task-comment', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showNotification('Comentario agregado exitosamente', 'success');
-            document.getElementById('newComment').value = '';
-            removeAttachment();
-            setTimeout(() => location.reload(), 1000);
-        } else {
-            showNotification('Error al agregar comentario: ' + data.message, 'error');
+    // Crear/asegurar UI de progreso
+    let progressWrap = document.getElementById('uploadProgressWrap');
+    if (!progressWrap) {
+        const form = document.querySelector('.add-comment-form');
+        if (form) {
+            form.insertAdjacentHTML('beforeend', `
+                <div id="uploadProgressWrap" style="margin-top:8px; display:none;">
+                  <div style="height:6px;background:#e5e7eb;border-radius:999px;overflow:hidden;">
+                    <div id="uploadProgressBar" style="height:6px;width:0%;background:#3b82f6;transition:width .2s ease;"></div>
+                  </div>
+                  <div id="uploadProgressText" style="margin-top:6px;font-size:12px;color:#6b7280;">Preparando subida...</div>
+                </div>
+            `);
+            progressWrap = document.getElementById('uploadProgressWrap');
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showNotification('Error al agregar comentario', 'error');
-    })
-    .finally(() => {
+    }
+    const progressBar = document.getElementById('uploadProgressBar');
+    const progressText = document.getElementById('uploadProgressText');
+    if (progressWrap && progressBar && progressText) {
+        progressBar.style.width = '0%';
+        progressText.textContent = 'Iniciando subida...';
+        progressWrap.style.display = 'block';
+    }
+
+    setCommentSubmitting(true);
+
+    // Usar XHR para obtener progreso de subida
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '?route=clan_leader/add-task-comment', true);
+
+    xhr.upload.onprogress = function (e) {
+        if (e.lengthComputable && progressBar && progressText) {
+            const percent = Math.round((e.loaded / e.total) * 100);
+            progressBar.style.width = percent + '%';
+            progressText.textContent = `Subiendo archivos... ${percent}%`;
+        }
+    };
+
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4) {
+            try {
+                const data = JSON.parse(xhr.responseText || '{}');
+                if (xhr.status >= 200 && xhr.status < 300 && data.success) {
+                    showNotification('Comentario agregado exitosamente', 'success');
+                    if (commentTextarea) commentTextarea.value = '';
+                    removeAttachment();
+                    setTimeout(() => location.reload(), 800);
+                } else {
+                    const message = (data && data.message) ? data.message : 'Error al agregar comentario';
+                    showNotification(message, 'error');
+                }
+            } catch (err) {
+                showNotification('Error de respuesta del servidor', 'error');
+            } finally {
+                setCommentSubmitting(false);
+                if (progressWrap) progressWrap.style.display = 'none';
+            }
+        }
+    };
+
+    xhr.onerror = function () {
+        showNotification('Error de red al enviar el comentario', 'error');
         setCommentSubmitting(false);
-    });
+        if (progressWrap) progressWrap.style.display = 'none';
+    };
+
+    xhr.send(formData);
 }
 
-// Función para manejar adjuntos
+// Función para manejar adjuntos (múltiples)
 function handleFileAttachment(input) {
     if (input.files && input.files.length > 0) {
         selectedFiles = Array.from(input.files);
         const nameSpan = document.getElementById('attachmentName');
+        const preview = document.getElementById('attachmentPreview');
         if (nameSpan) {
             if (selectedFiles.length === 1) {
                 nameSpan.textContent = selectedFiles[0].name;
@@ -1573,16 +1513,17 @@ function handleFileAttachment(input) {
                 nameSpan.textContent = `${selectedFiles.length} archivos: ${previewNames}${more}`;
             }
         }
-        document.getElementById('attachmentPreview').style.display = 'block';
+        if (preview) preview.style.display = 'block';
     }
 }
 
-// Función para remover adjunto
+// Función para remover adjuntos
 function removeAttachment() {
     selectedFiles = [];
-    document.getElementById('attachmentPreview').style.display = 'none';
-    document.getElementById('fileAttachment').value = '';
+    const preview = document.getElementById('attachmentPreview');
+    const input = document.getElementById('fileAttachment');
+    if (preview) preview.style.display = 'none';
+    if (input) input.value = '';
 }
 
-// Función para mostrar modal de confirmación
-``` 
+// Fin del archivo
