@@ -1443,7 +1443,7 @@ confirmationModalStyles.textContent = `
 document.head.appendChild(confirmationModalStyles); 
 
 // Variables globales para task details
-let selectedFile = null;
+let selectedFiles = [];
 let selectedUsers = [];
 let isCommentSubmitting = false;
 
@@ -1529,8 +1529,9 @@ function addComment() {
     formData.append('task_id', taskId);
     formData.append('comment_text', commentText);
     
-    if (selectedFile) {
-        formData.append('attachment', selectedFile);
+    // Adjuntar múltiples archivos si existen
+    if (selectedFiles && selectedFiles.length > 0) {
+        selectedFiles.forEach(file => formData.append('attachments[]', file));
     }
 
     setCommentSubmitting(true);
@@ -1560,16 +1561,25 @@ function addComment() {
 
 // Función para manejar adjuntos
 function handleFileAttachment(input) {
-    if (input.files && input.files[0]) {
-        selectedFile = input.files[0];
-        document.getElementById('attachmentName').textContent = selectedFile.name;
+    if (input.files && input.files.length > 0) {
+        selectedFiles = Array.from(input.files);
+        const nameSpan = document.getElementById('attachmentName');
+        if (nameSpan) {
+            if (selectedFiles.length === 1) {
+                nameSpan.textContent = selectedFiles[0].name;
+            } else {
+                const previewNames = selectedFiles.slice(0, 3).map(f => f.name).join(', ');
+                const more = selectedFiles.length > 3 ? ` y ${selectedFiles.length - 3} más` : '';
+                nameSpan.textContent = `${selectedFiles.length} archivos: ${previewNames}${more}`;
+            }
+        }
         document.getElementById('attachmentPreview').style.display = 'block';
     }
 }
 
 // Función para remover adjunto
 function removeAttachment() {
-    selectedFile = null;
+    selectedFiles = [];
     document.getElementById('attachmentPreview').style.display = 'none';
     document.getElementById('fileAttachment').value = '';
 }
