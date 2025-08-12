@@ -1434,6 +1434,7 @@ if (!isset($task) || !isset($subtasks) || !isset($comments) || !isset($history) 
                     showNotification('Error al remover colaborador', 'error');
                 });
             }
+        });
         }
         
         // Función deleteTask ya está definida globalmente arriba
