@@ -12,9 +12,75 @@
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
-    <!-- CSS con rutas absolutas -->
-    <link rel="stylesheet" href="<?php echo APP_URL; ?>assets/css/theme.css">
-    <link rel="stylesheet" href="<?php echo APP_URL; ?>assets/css/admin.css">
+    <script>
+        // Detectar automáticamente la URL base correcta
+        (function() {
+            'use strict';
+            
+            // Función para detectar la URL base
+            function detectBaseUrl() {
+                const currentPath = window.location.pathname;
+                let baseUrl = '';
+                
+                // Si estamos en /rinotrack/public/, usar esa ruta
+                if (currentPath.includes('/rinotrack/public/')) {
+                    baseUrl = '/rinotrack/public/';
+                }
+                // Si estamos en /public/, usar esa ruta
+                else if (currentPath.includes('/public/')) {
+                    baseUrl = '/public/';
+                }
+                // Si estamos en la raíz, usar /
+                else if (currentPath === '/' || currentPath === '') {
+                    baseUrl = '/';
+                }
+                // Por defecto, usar la ruta actual
+                else {
+                    baseUrl = currentPath.endsWith('/') ? currentPath : currentPath + '/';
+                }
+                
+                console.log('URL base detectada:', baseUrl);
+                return baseUrl;
+            }
+            
+            // Función para cargar CSS
+            function loadCSS(href, onError) {
+                const link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.href = href;
+                link.onerror = onError;
+                document.head.appendChild(link);
+            }
+            
+            // Función para cargar JavaScript
+            function loadJS(src, onError) {
+                const script = document.createElement('script');
+                script.src = src;
+                script.onerror = onError;
+                document.head.appendChild(script);
+            }
+            
+            // Cargar assets con fallback
+            const baseUrl = detectBaseUrl();
+            
+            // Cargar CSS
+            loadCSS(baseUrl + 'assets/css/theme.css', function() {
+                console.log('CSS theme.css cargado desde:', baseUrl + 'assets/css/theme.css');
+            });
+            
+            loadCSS(baseUrl + 'assets/css/admin.css', function() {
+                console.log('CSS admin.css cargado desde:', baseUrl + 'assets/css/admin.css');
+            });
+            
+            // Cargar JavaScript
+            loadJS(baseUrl + 'assets/js/script.js', function() {
+                console.log('JS script.js cargado desde:', baseUrl + 'assets/js/script.js');
+            });
+            
+            // Hacer la URL base disponible globalmente
+            window.APP_BASE_URL = baseUrl;
+        })();
+    </script>
     
     <!-- Additional CSS files -->
     <?php if (isset($additionalCSS)): ?>
@@ -27,9 +93,6 @@
     <script>
         const APP_URL = '<?php echo APP_URL; ?>';
     </script>
-    
-    <!-- JavaScript con rutas absolutas -->
-    <script src="<?php echo APP_URL; ?>assets/js/script.js"></script>
     
     <?php if (isset($additionalJS)): ?>
         <?php foreach ($additionalJS as $js): ?>
