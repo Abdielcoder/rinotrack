@@ -575,7 +575,7 @@ textarea {
 let currentProjectId = null;
 let isEditMode = false;
 
-function openCreateProjectModal() {
+window.openCreateProjectModal = function() {
     isEditMode = false;
     currentProjectId = null;
     document.getElementById('modalTitle').textContent = 'Crear Proyecto';
@@ -585,12 +585,12 @@ function openCreateProjectModal() {
     document.getElementById('projectModal').style.display = 'block';
 }
 
-function closeProjectModal() {
+window.closeProjectModal = function() {
     document.getElementById('projectModal').style.display = 'none';
     clearErrors();
 }
 
-function editProject(projectId) {
+window.editProject = function(projectId) {
     // Placeholder para edición
     isEditMode = true;
     currentProjectId = projectId;
@@ -600,12 +600,12 @@ function editProject(projectId) {
     document.getElementById('projectModal').style.display = 'block';
 }
 
-function viewProject(projectId) {
+window.viewProject = function(projectId) {
     // Placeholder para ver detalles
     showToast('Función de ver detalles en desarrollo', 'info');
 }
 
-function deleteProject(projectId) {
+window.deleteProject = function(projectId) {
     showConfirmationModal({
         title: 'Confirmar Eliminación',
         message: '¿Estás seguro de que quieres eliminar este proyecto?',
@@ -618,7 +618,7 @@ function deleteProject(projectId) {
     });
 }
 
-function toggleProjectMenu(projectId) {
+window.toggleProjectMenu = function(projectId) {
     const menu = document.getElementById('menu-' + projectId);
     const allMenus = document.querySelectorAll('.menu-dropdown');
     
@@ -632,7 +632,7 @@ function toggleProjectMenu(projectId) {
     menu.classList.toggle('show');
 }
 
-function filterProjects() {
+window.filterProjects = function() {
     const statusFilter = document.getElementById('statusFilter').value;
     const clanFilter = document.getElementById('clanFilter').value;
     const projectCards = document.querySelectorAll('.project-card');
