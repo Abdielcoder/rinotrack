@@ -423,6 +423,29 @@ ob_start();
     background: var(--bg-tertiary);
 }
 
+/* Estilos consistentes para enlaces dentro del menú (evitar colores de visitado) */
+.menu-dropdown a {
+    width: 100%;
+    padding: var(--spacing-sm) var(--spacing-md);
+    text-decoration: none;
+    background: transparent;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.menu-dropdown a:hover {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+.menu-dropdown a:visited,
+.menu-dropdown a:active,
+.menu-dropdown a:focus {
+    color: var(--text-primary);
+}
+
 .menu-dropdown button.danger {
     color: var(--error);
 }
