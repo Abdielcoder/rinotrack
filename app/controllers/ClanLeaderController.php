@@ -185,7 +185,8 @@ class ClanLeaderController {
             
             // Verificar que el usuario tiene clan asignado
             if (!$this->userClan) {
-                Utils::jsonResponse(['success' => false, 'message' => 'No tienes un clan asignado'], 403);
+                // Responder vacío para evitar errores en UI
+                Utils::jsonResponse(['success' => true, 'users' => []]);
                 return;
             }
             
