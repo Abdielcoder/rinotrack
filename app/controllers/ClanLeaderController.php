@@ -1250,17 +1250,21 @@ class ClanLeaderController {
             if ($commentId) {
                 // Manejar adjuntos (soporta uno: 'attachment' y varios: 'attachments[]')
                 $files = [];
+                $receivedNames = [];
+                $savedNames = [];
                 if (!empty($_FILES['attachments']) && isset($_FILES['attachments']['name']) && is_array($_FILES['attachments']['name'])) {
                     // Normalizar arreglo de múltiples archivos
                     $count = count($_FILES['attachments']['name']);
                     for ($i = 0; $i < $count; $i++) {
                         if (($_FILES['attachments']['error'][$i] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK) {
+                            $currentName = $_FILES['attachments']['name'][$i] ?? null;
                             $files[] = [
                                 'name' => $_FILES['attachments']['name'][$i] ?? null,
                                 'type' => $_FILES['attachments']['type'][$i] ?? null,
                                 'tmp_name' => $_FILES['attachments']['tmp_name'][$i] ?? null,
                                 'size' => $_FILES['attachments']['size'][$i] ?? null,
                             ];
+                            if ($currentName) { $receivedNames[] = $currentName; }
                         }
                     }
                 } elseif (!empty($_FILES['attachment']) && ($_FILES['attachment']['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK) {
@@ -1271,6 +1275,7 @@ class ClanLeaderController {
                         'tmp_name' => $_FILES['attachment']['tmp_name'] ?? null,
                         'size' => $_FILES['attachment']['size'] ?? null,
                     ];
+                    if (!empty($_FILES['attachment']['name'])) { $receivedNames[] = $_FILES['attachment']['name']; }
                 }
 
                 if (!empty($files)) {
@@ -1298,13 +1303,19 @@ class ClanLeaderController {
                                 $publicPath,
                                 $file['type'] ?? null
                             );
+                            $savedNames[] = $originalName;
                         } else {
                             error_log('addTaskComment: No se pudo mover el archivo subido a ' . $destPath);
                         }
                     }
                 }
-                error_log("addTaskComment: Comentario agregado exitosamente");
-                Utils::jsonResponse(['success' => true, 'message' => 'Comentario agregado exitosamente']);
+                error_log("addTaskComment: Comentario agregado exitosamente. Archivos recibidos: " . json_encode($receivedNames) . ", guardados: " . json_encode($savedNames));
+                Utils::jsonResponse([
+                    'success' => true,
+                    'message' => 'Comentario agregado exitosamente',
+                    'attachments_received' => $receivedNames,
+                    'attachments_saved' => $savedNames
+                ]);
             } else {
                 error_log("addTaskComment: Error al agregar comentario en la base de datos");
                 Utils::jsonResponse(['success' => false, 'message' => 'Error al agregar comentario'], 500);

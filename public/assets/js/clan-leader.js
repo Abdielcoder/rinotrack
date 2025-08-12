@@ -1472,7 +1472,14 @@ function addComment() {
             try {
                 const data = JSON.parse(xhr.responseText || '{}');
                 if (xhr.status >= 200 && xhr.status < 300 && data.success) {
-                    showNotification('Comentario agregado exitosamente', 'success');
+                    if (Array.isArray(data.attachments_saved)) {
+                        const savedCount = data.attachments_saved.length;
+                        const receivedCount = Array.isArray(data.attachments_received) ? data.attachments_received.length : savedCount;
+                        const msg = savedCount > 0 ? `Comentario y ${savedCount}/${receivedCount} adjuntos guardados` : 'Comentario agregado';
+                        showNotification(msg, 'success');
+                    } else {
+                        showNotification('Comentario agregado exitosamente', 'success');
+                    }
                     if (commentTextarea) commentTextarea.value = '';
                     removeAttachment();
                     setTimeout(() => location.reload(), 800);
@@ -1501,7 +1508,20 @@ function addComment() {
 // Función para manejar adjuntos (múltiples)
 function handleFileAttachment(input) {
     if (input.files && input.files.length > 0) {
-        selectedFiles = Array.from(input.files);
+        // Acumular archivos seleccionados en múltiples clics
+        const incoming = Array.from(input.files);
+        const existingKeys = new Set(selectedFiles.map(f => `${f.name}|${f.size}|${f.lastModified || 0}`));
+        incoming.forEach(f => {
+            const key = `${f.name}|${f.size}|${f.lastModified || 0}`;
+            if (!existingKeys.has(key)) {
+                selectedFiles.push(f);
+                existingKeys.add(key);
+            }
+        });
+
+        // Limpiar el input para permitir volver a seleccionar el mismo archivo si se desea
+        try { input.value = ''; } catch (e) { /* ignore */ }
+
         const nameSpan = document.getElementById('attachmentName');
         const preview = document.getElementById('attachmentPreview');
         if (nameSpan) {
