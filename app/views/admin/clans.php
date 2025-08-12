@@ -793,10 +793,24 @@ $additionalCSS = [];
                     
                 case 'delete-clan':
                     e.preventDefault();
-                    if (clanId && confirm('¿Estás seguro de que quieres eliminar este clan?')) {
-                        // TODO: Implementar eliminación
-                        alert('Función de eliminar en desarrollo');
-                    }
+                    if (!clanId) return;
+                    if (!confirm('¿Eliminar este clan? Esta acción no se puede deshacer.')) return;
+                    const fdDel = new FormData();
+                    fdDel.append('clanId', clanId);
+                    fetch('?route=admin/delete-clan', { method: 'POST', body: fdDel })
+                      .then(r => r.json())
+                      .then(data => {
+                          if (data && data.success) {
+                              alert('Clan eliminado exitosamente');
+                              setTimeout(() => window.location.reload(), 800);
+                          } else {
+                              alert((data && data.message) ? data.message : 'No se pudo eliminar el clan');
+                          }
+                      })
+                      .catch(err => {
+                          console.error('Error al eliminar clan:', err);
+                          alert('Error de conexión al eliminar clan');
+                      });
                     break;
                     
                 case 'toggle-clan-menu':
