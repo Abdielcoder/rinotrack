@@ -232,18 +232,16 @@ $additionalCSS = [];
         <div class="modal-body">
             <div class="form-group">
                 <label for="userSelect">Agregar Usuario</label>
-                <select id="userSelect">
-                    <option value="">Seleccionar usuario</option>
-                    <?php foreach ($users as $user): ?>
-                    <option value="<?php echo intval($user['user_id']); ?>">
-                        <?php echo Utils::escape($user['full_name'] ?: $user['username']); ?>
-                        (<?php echo Utils::escape($user['role_name']); ?>)
-                    </option>
-                    <?php endforeach; ?>
-                </select>
-                <button type="button" class="btn btn-primary" data-action="add-member">
-                    <i class="fas fa-plus"></i> Agregar
-                </button>
+                <div class="user-picker">
+                    <input type="text" id="userSearch" placeholder="Buscar por nombre, usuario o email" />
+                    <select id="userSelect">
+                        <option value="">Seleccionar usuario</option>
+                    </select>
+                    <button type="button" class="btn btn-primary" data-action="add-member" id="addMemberBtn" disabled>
+                        <i class="fas fa-plus"></i> Agregar
+                    </button>
+                </div>
+                <small id="availableCount" class="hint-text"></small>
             </div>
             
             <div id="membersList">
@@ -475,6 +473,17 @@ $additionalCSS = [];
     // Variables globales
     let currentClanId = null;
     let isEditMode = false;
+    const ALL_USERS = <?php echo json_encode(array_map(function($u){
+        return [
+            'user_id' => (int)$u['user_id'],
+            'username' => $u['username'],
+            'full_name' => $u['full_name'],
+            'email' => $u['email'],
+            'is_active' => (int)$u['is_active'],
+            'role_name' => $u['role_name']
+        ];
+    }, $users ?? [])); ?>;
+    let availableUsersCache = [];
     
     // Sistema de gestión de clanes con event delegation
     document.addEventListener('DOMContentLoaded', function() {
@@ -617,14 +626,57 @@ $additionalCSS = [];
                 .then(data => {
                     if (data && data.success) {
                         renderMembersList(data.members || []);
+                        updateAvailableUserSelect(data.members || []);
                     } else {
                         membersList.innerHTML = `<p>${(data && data.message) ? data.message : 'Error al cargar miembros'}</p>`;
+                        updateAvailableUserSelect([]);
                     }
                 })
                 .catch(err => {
                     console.error('Error al cargar miembros:', err);
                     membersList.innerHTML = '<p>Error de conexión al cargar miembros.</p>';
+                    updateAvailableUserSelect([]);
                 });
+        }
+
+        // Calcular usuarios disponibles y poblar el select
+        function updateAvailableUserSelect(currentMembers) {
+            const userSelect = document.getElementById('userSelect');
+            const userSearch = document.getElementById('userSearch');
+            const addBtn = document.getElementById('addMemberBtn');
+            const availableCount = document.getElementById('availableCount');
+            if (!userSelect) return;
+            
+            const memberIds = new Set((currentMembers || []).map(m => parseInt(m.user_id)));
+            // Filtrar activos y que no estén en el clan
+            availableUsersCache = (ALL_USERS || []).filter(u => u.is_active === 1 && !memberIds.has(parseInt(u.user_id)));
+            
+            function populate(filterText = '') {
+                const text = (filterText || '').toLowerCase();
+                userSelect.innerHTML = '<option value="">Seleccionar usuario</option>';
+                let count = 0;
+                availableUsersCache.forEach(u => {
+                    const label = `${u.full_name || u.username} (@${u.username}) - ${u.email || ''}`;
+                    if (!text || label.toLowerCase().includes(text)) {
+                        const opt = document.createElement('option');
+                        opt.value = u.user_id;
+                        opt.textContent = `${label} [${u.role_name || 'sin rol'}]`;
+                        userSelect.appendChild(opt);
+                        count++;
+                    }
+                });
+                if (availableCount) availableCount.textContent = count > 0 ? `${count} usuarios disponibles` : 'Sin usuarios disponibles';
+                if (addBtn) addBtn.disabled = (userSelect.value === '');
+            }
+            
+            populate('');
+            if (userSearch) {
+                userSearch.value = '';
+                userSearch.oninput = () => populate(userSearch.value);
+            }
+            if (userSelect) {
+                userSelect.onchange = () => { if (addBtn) addBtn.disabled = (userSelect.value === ''); };
+            }
         }
         
         // Event delegation para manejar todos los clicks
