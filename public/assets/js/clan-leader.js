@@ -1194,41 +1194,42 @@ function removeAttachment() {
 
 // Función para mostrar notificaciones
 function showNotification(message, type = 'info') {
-    // Crear notificación
-    const notification = document.createElement('div');
-    notification.className = `notification notification-${type}`;
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        padding: 12px 20px;
-        border-radius: 6px;
-        color: white;
-        font-weight: 600;
-        z-index: 10000;
-        animation: slideIn 0.3s ease;
-    `;
-    
-    if (type === 'success') {
-        notification.style.background = '#10b981';
-    } else if (type === 'error') {
-        notification.style.background = '#ef4444';
-    } else {
-        notification.style.background = '#3b82f6';
+    // Crear notificación si no existe
+    let notification = document.getElementById('notification');
+    if (!notification) {
+        const notificationHTML = `
+            <div id="notification" class="notification" style="display: none;">
+                <div class="notification-content">
+                    <span id="notificationMessage"></span>
+                    <button onclick="closeNotification()" class="notification-close">&times;</button>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', notificationHTML);
+        notification = document.getElementById('notification');
     }
     
-    notification.textContent = message;
-    document.body.appendChild(notification);
+    // Configurar notificación
+    document.getElementById('notificationMessage').textContent = message;
     
-    // Remover después de 3 segundos
+    // Configurar estilos según tipo
+    notification.className = `notification notification-${type}`;
+    
+    // Mostrar notificación
+    notification.style.display = 'block';
+    
+    // Ocultar automáticamente después de 5 segundos
     setTimeout(() => {
-        notification.style.animation = 'slideOut 0.3s ease';
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.parentNode.removeChild(notification);
-            }
-        }, 300);
-    }, 3000);
+        closeNotification();
+    }, 5000);
+}
+
+// Función para cerrar notificación
+function closeNotification() {
+    const notification = document.getElementById('notification');
+    if (notification) {
+        notification.style.display = 'none';
+    }
 }
 
 // === Utilidades globales para adjuntos en comentarios ===
