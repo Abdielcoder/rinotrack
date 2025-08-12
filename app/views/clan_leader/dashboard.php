@@ -8,9 +8,9 @@ ob_start();
     <header class="minimal-header">
         <div class="header-row">
             <div class="title-minimal">
-                <div class="clan-icon-large"><?php echo $clanIcon; ?></div>
-                <h1><?php echo htmlspecialchars($clan['clan_name']); ?></h1>
-                <span class="subtitle"><?php echo htmlspecialchars($clan['clan_departamento']); ?></span>
+                <div class="clan-icon-large"><?php echo $clanIcon ?? ''; ?></div>
+                <h1><?php echo htmlspecialchars($clan['clan_name'] ?? ''); ?></h1>
+                <span class="subtitle"><?php echo htmlspecialchars($clan['clan_departamento'] ?? ''); ?></span>
             </div>
             
             <div class="actions-minimal">

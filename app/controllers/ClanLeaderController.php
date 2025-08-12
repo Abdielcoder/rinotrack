@@ -54,27 +54,61 @@ class ClanLeaderController {
      * Dashboard principal del líder de clan
      */
     public function index() {
+        // Requerir autenticación
+        $this->requireAuth();
+
+        // Verificar permisos mínimos
+        if (!$this->hasClanLeaderAccess()) {
+            Utils::redirect('dashboard');
+            return;
+        }
+
+        // Si el usuario no tiene clan asignado, mostrar dashboard vacío seguro
+        if (!$this->userClan || !isset($this->userClan['clan_id'])) {
+            $emptyStats = [
+                'total_tasks' => 0,
+                'completed_tasks' => 0,
+                'pending_tasks' => 0,
+                'in_progress_tasks' => 0,
+                'completion_percentage' => 0
+            ];
+
+            $data = [
+                'userStats' => ['total_members' => 0, 'active_members' => 0, 'recent_members' => 0],
+                'projectStats' => ['total_projects' => 0, 'active_projects' => 0, 'kpi_projects' => 0],
+                'clanStats' => ['member_count' => 0, 'project_count' => 0, 'active_projects' => 0, 'completed_projects' => 0],
+                'taskStats' => $emptyStats,
+                'memberContributions' => [],
+                'clanIcon' => $this->getClanIcon(''),
+                'currentPage' => 'clan_leader',
+                'user' => $this->currentUser,
+                'clan' => ['clan_name' => 'Sin clan asignado', 'clan_departamento' => '-', 'clan_id' => null]
+            ];
+            $this->loadView('clan_leader/dashboard', $data);
+            return;
+        }
+
         $taskStats = $this->getTaskStats();
         $memberContributions = $this->getMemberContributions();
-        
-        // Debug: Log de información para verificar datos
+
+        // Debug seguro
         error_log("Clan Leader Dashboard Debug:");
         error_log("Clan ID: " . $this->userClan['clan_id']);
         error_log("Task Stats: " . json_encode($taskStats));
         error_log("Member Contributions Count: " . count($memberContributions));
-        
+
         $data = [
             'userStats' => $this->getUserStats(),
             'projectStats' => $this->projectModel->getStatsByClan($this->userClan['clan_id']),
             'clanStats' => $this->getClanStats(),
             'taskStats' => $taskStats,
             'memberContributions' => $memberContributions,
-            'clanIcon' => $this->getClanIcon($this->userClan['clan_name']),
+            'clanIcon' => $this->getClanIcon($this->userClan['clan_name'] ?? ''),
             'currentPage' => 'clan_leader',
             'user' => $this->currentUser,
             'clan' => $this->userClan
         ];
-        
+
         $this->loadView('clan_leader/dashboard', $data);
     }
     
@@ -1798,6 +1832,13 @@ class ClanLeaderController {
      * Obtener estadísticas de usuarios del clan
      */
     private function getUserStats() {
+        if (!$this->userClan || !isset($this->userClan['clan_id'])) {
+            return [
+                'total_members' => 0,
+                'active_members' => 0,
+                'recent_members' => 0
+            ];
+        }
         $members = $this->clanModel->getMembers($this->userClan['clan_id']);
         
         return [
@@ -1817,6 +1858,14 @@ class ClanLeaderController {
      * Obtener estadísticas del clan
      */
     private function getClanStats() {
+        if (!$this->userClan || !isset($this->userClan['clan_id'])) {
+            return [
+                'member_count' => 0,
+                'project_count' => 0,
+                'active_projects' => 0,
+                'completed_projects' => 0
+            ];
+        }
         $members = $this->clanModel->getMembers($this->userClan['clan_id']);
         $projects = $this->projectModel->getByClan($this->userClan['clan_id']);
         
@@ -1837,6 +1886,15 @@ class ClanLeaderController {
      */
     private function getTaskStats() {
         try {
+            if (!$this->userClan || !isset($this->userClan['clan_id'])) {
+                return [
+                    'total_tasks' => 0,
+                    'completed_tasks' => 0,
+                    'pending_tasks' => 0,
+                    'in_progress_tasks' => 0,
+                    'completion_percentage' => 0
+                ];
+            }
             // Primero verificar si hay proyectos en el clan
             $projectStmt = $this->db->prepare("SELECT project_id FROM Projects WHERE clan_id = ?");
             $projectStmt->execute([$this->userClan['clan_id']]);
@@ -2105,6 +2163,9 @@ class ClanLeaderController {
      */
     private function getMemberContributions() {
         try {
+            if (!$this->userClan || !isset($this->userClan['clan_id'])) {
+                return [];
+            }
             // Obtener todos los miembros del clan usando el modelo Clan
             $members = $this->clanModel->getMembers($this->userClan['clan_id']);
             
