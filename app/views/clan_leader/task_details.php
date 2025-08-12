@@ -15,7 +15,7 @@ if (!isset($task) || !isset($subtasks) || !isset($comments) || !isset($history) 
     <link rel="icon" type="image/x-icon" href="favicon.ico">
     <link rel="stylesheet" href="<?= APP_URL ?>assets/css/clan-leader.css">
     <link rel="stylesheet" href="<?= APP_URL ?>assets/css/styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-pbVvYJfN2P0xwGm6J5vY0QwV7S1n5nQZ7VfV+f0qKk2C1oV9Q+fQf7cZrXo7Xv7w3PPGQw0s1V+z1R6jYv5R5g==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
         .task-details-container {
             max-width: 1200px;
