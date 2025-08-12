@@ -515,6 +515,61 @@ class AdminController {
             Utils::jsonResponse(['success' => false, 'message' => 'Error al eliminar clan'], 500);
         }
     }
+
+    /**
+     * Agregar tarea a un proyecto (ADMIN)
+     * Respeta miembros del clan del proyecto
+     */
+    public function addTask() {
+        $this->requireAuth();
+        if (!$this->hasAdminAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos'], 403);
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Utils::redirect('admin/projects');
+        }
+
+        $projectId = (int)($_POST['projectId'] ?? 0);
+        $taskName = Utils::sanitizeInput($_POST['taskName'] ?? '');
+        $description = Utils::sanitizeInput($_POST['description'] ?? '');
+        $assignedToUserId = isset($_POST['assignedToUserId']) && $_POST['assignedToUserId'] !== ''
+            ? (int)$_POST['assignedToUserId'] : null;
+
+        if ($projectId <= 0 || $taskName === '') {
+            Utils::jsonResponse(['success' => false, 'message' => 'Datos inválidos'], 400);
+        }
+
+        // Validar proyecto y obtener clan
+        $db = Database::getConnection();
+        $stmt = $db->prepare('SELECT clan_id FROM Projects WHERE project_id = ?');
+        $stmt->execute([$projectId]);
+        $project = $stmt->fetch();
+        if (!$project) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Proyecto no encontrado'], 404);
+        }
+        $clanId = (int)$project['clan_id'];
+
+        // Si hay usuario asignado, validar que pertenece al clan
+        if ($assignedToUserId) {
+            $stmt = $db->prepare('SELECT 1 FROM Clan_Members WHERE clan_id = ? AND user_id = ?');
+            $stmt->execute([$clanId, $assignedToUserId]);
+            if (!$stmt->fetch()) {
+                Utils::jsonResponse(['success' => false, 'message' => 'El usuario asignado no pertenece al clan del proyecto'], 400);
+            }
+        }
+
+        // Crear tarea
+        $taskModel = new Task();
+        $currentUser = $this->auth->getCurrentUser();
+        $taskId = $taskModel->create($projectId, $taskName, $description, $assignedToUserId, Task::PRIORITY_MEDIUM, null, $currentUser['user_id'] ?? null);
+
+        if ($taskId) {
+            Utils::jsonResponse(['success' => true, 'message' => 'Tarea creada exitosamente', 'task_id' => (int)$taskId]);
+        } else {
+            Utils::jsonResponse(['success' => false, 'message' => 'Error al crear tarea'], 500);
+        }
+    }
     
     /**
      * Obtener miembros de un clan

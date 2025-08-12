@@ -158,6 +158,9 @@ ob_start();
                                     <i class="fas fa-ellipsis-v"></i>
                                 </button>
                                 <div class="menu-dropdown" id="menu-<?php echo intval($project['project_id']); ?>">
+                                     <button data-action="add-task" data-project-id="<?php echo intval($project['project_id']); ?>">
+                                         <i class="fas fa-plus-circle"></i> Agregar Tarea
+                                     </button>
                                     <button data-action="edit-project" data-project-id="<?php echo intval($project['project_id']); ?>">
                                         <i class="fas fa-edit"></i> Editar
                                     </button>
@@ -677,6 +680,30 @@ textarea {
                 case 'edit-project':
                     e.preventDefault();
                     openProjectModal(true, projectId);
+                    break;
+
+                case 'add-task':
+                    e.preventDefault();
+                    const taskName = prompt('Nombre de la tarea:');
+                    if (!taskName) return;
+                    const description = prompt('Descripción (opcional):') || '';
+                    const assignedToUserId = prompt('ID de usuario asignado (opcional, debe pertenecer al clan del proyecto):');
+                    const fdTask = new FormData();
+                    fdTask.append('projectId', projectId);
+                    fdTask.append('taskName', taskName);
+                    fdTask.append('description', description);
+                    if (assignedToUserId) fdTask.append('assignedToUserId', assignedToUserId);
+                    fetch('?route=admin/add-task', { method: 'POST', body: fdTask })
+                      .then(r => r.json())
+                      .then(data => {
+                          if (data && data.success) {
+                              alert('Tarea creada');
+                              setTimeout(() => window.location.reload(), 600);
+                          } else {
+                              alert((data && data.message) ? data.message : 'Error al crear tarea');
+                          }
+                      })
+                      .catch(err => { console.error('Error add-task:', err); alert('Error de conexión'); });
                     break;
                     
                 case 'view-project':

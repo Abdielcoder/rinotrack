@@ -143,6 +143,11 @@ try {
             $controller = new AdminController();
             $controller->createProject();
             break;
+        
+        case 'admin/add-task':
+            $controller = new AdminController();
+            $controller->addTask();
+            break;
             
         case 'admin/clans':
             $controller = new AdminController();
