@@ -9,7 +9,7 @@ ob_start();
         <div class="header-row">
             <div class="title-minimal">
                 <h1>Gestionar Miembros</h1>
-                <span class="subtitle"><?php echo htmlspecialchars($clan['clan_name']); ?></span>
+                <span class="subtitle"><?php echo htmlspecialchars($clan['clan_name'] ?? ''); ?></span>
             </div>
             
             <div class="actions-minimal">
@@ -29,7 +29,7 @@ ob_start();
             <form method="GET" action="?route=clan_leader/members">
                 <div class="search-input">
                     <i class="fas fa-search"></i>
-                    <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" 
+                    <input type="text" name="search" value="<?php echo htmlspecialchars($search ?? ''); ?>" 
                            placeholder="Buscar miembros...">
                 </div>
                 <button type="submit" class="btn-minimal">Buscar</button>
