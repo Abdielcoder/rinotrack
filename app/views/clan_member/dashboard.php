@@ -89,7 +89,7 @@ ob_start();
 
 <?php
 $content = ob_get_clean();
-$additionalCSS = [APP_URL . 'assets/css/clan-leader.css'];
+$additionalCSS = [APP_URL . 'assets/css/clan-leader.css', APP_URL . 'assets/css/clan-member.css'];
 $additionalJS = [APP_URL . 'assets/js/clan-leader.js'];
 // Inyectar los datos de la contribución propia para el modal
 $content .= '<script>window.ownContributionDetails = ' . json_encode($ownContributionDetails ?? []) . ';</script>';

@@ -115,7 +115,7 @@ function toggleTaskStatus(taskId, currentStatus, allowed){
 
 <?php
 $content = ob_get_clean();
-$additionalCSS = [APP_URL . 'assets/css/clan-leader.css'];
+$additionalCSS = [APP_URL . 'assets/css/clan-leader.css', APP_URL . 'assets/css/clan-member.css'];
 $additionalJS = [APP_URL . 'assets/js/clan-leader.js'];
 require_once __DIR__ . '/../layout.php';
 ?>

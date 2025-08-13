@@ -1,0 +1,104 @@
+/* Clan Member - UI refinada alineada al sistema */
+
+:root {
+  --cm-bg: #ffffff;
+  --cm-surface: #ffffff;
+  --cm-text: #1f2937;
+  --cm-muted: #6b7280;
+  --cm-border: #e5e7eb;
+  --cm-soft: #f3f4f6;
+  --cm-primary: #6366f1;
+  --cm-primary-600: #5458e9;
+  --cm-danger: #ef4444;
+  --cm-success: #10b981;
+  --cm-warning: #f59e0b;
+  --cm-info: #3b82f6;
+  --cm-radius: 12px;
+  --cm-radius-sm: 8px;
+  --cm-shadow: 0 6px 18px rgba(17, 24, 39, 0.06);
+}
+
+/* Header minimal */
+.minimal-header { background: var(--cm-surface); border-bottom: 1px solid var(--cm-border); padding: 16px 20px; position: sticky; top: 0; z-index: 10; }
+.minimal-header .header-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; max-width: 1200px; margin: 0 auto; }
+.minimal-header .title-minimal h1 { margin: 0; font-size: 1.25rem; color: var(--cm-text); }
+.minimal-header .subtitle { color: var(--cm-muted); font-size: .9rem; }
+
+/* Botones minimal */
+.btn-minimal { display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: var(--cm-radius-sm); border: 1px solid var(--cm-border); background: var(--cm-surface); color: var(--cm-text); text-decoration: none; font-weight: 600; transition: .2s ease; }
+.btn-minimal:hover { transform: translateY(-1px); box-shadow: var(--cm-shadow); }
+.btn-minimal.primary { background: var(--cm-primary); color: #fff; border-color: var(--cm-primary); }
+.btn-minimal.primary:hover { background: var(--cm-primary-600); }
+.btn-minimal.danger { background: var(--cm-danger); color: #fff; border-color: var(--cm-danger); }
+.btn-minimal.secondary { background: var(--cm-soft); }
+
+/* Contenido */
+.content-minimal { max-width: 1200px; margin: 20px auto; padding: 0 16px; }
+
+/* Tarjetas y grids */
+.progress-card, .rules-card, .summary-card, .project-kpi-item, .project-no-kpi-item, .task-item, .contribution-card, .project-card { background: var(--cm-surface); border: 1px solid var(--cm-border); border-radius: var(--cm-radius); box-shadow: var(--cm-shadow); }
+.progress-card { padding: 16px; }
+.contributions-grid, .projects-grid, .actions-grid, .summary-grid { display: grid; gap: 16px; }
+.projects-grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+.contribution-card { padding: 14px; display: flex; align-items: center; justify-content: space-between; cursor: default; }
+.contribution-card.clickable { cursor: pointer; }
+.contribution-card:hover { border-color: var(--cm-primary); box-shadow: 0 8px 24px rgba(99,102,241,.16); }
+
+/* Proyectos */
+.project-card { padding: 16px; text-decoration: none; color: inherit; display: flex; flex-direction: column; gap: 8px; }
+.project-card:hover { border-color: var(--cm-primary); box-shadow: 0 8px 24px rgba(99,102,241,.16); transform: translateY(-1px); }
+.project-name { font-weight: 700; color: var(--cm-text); }
+.project-meta { display: flex; gap: 12px; color: var(--cm-muted); font-size: .9rem; }
+
+/* Tareas */
+.tasks-list { display: grid; gap: 12px; }
+.task-item { padding: 14px; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.task-item .task-title { font-weight: 700; color: var(--cm-text); }
+.task-item .task-meta { color: var(--cm-muted); display: flex; gap: 12px; flex-wrap: wrap; font-size: .92rem; }
+.task-actions .btn-minimal[disabled] { opacity: .5; cursor: not-allowed; box-shadow: none; transform: none; }
+
+/* Progreso */
+.progress-bar-container { margin-top: 12px; }
+.progress-bar-main { width: 100%; height: 12px; background: var(--cm-soft); border-radius: 999px; overflow: hidden; position: relative; }
+.progress-segment { height: 100%; background: linear-gradient(90deg, var(--cm-primary), #8b5cf6); transition: width .6s ease; }
+.completion-box { background: var(--cm-soft); padding: 10px 12px; border-radius: var(--cm-radius-sm); text-align: center; min-width: 92px; }
+.completion-percentage { font-size: 1.1rem; font-weight: 800; color: var(--cm-text); }
+
+/* Filtros y paginación */
+.filters-minimal { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+.filters-minimal input[type="text"], .filters-minimal select { padding: 10px 12px; border-radius: var(--cm-radius-sm); border: 1px solid var(--cm-border); background: #fff; min-width: 220px; }
+.pagination-minimal { display: flex; gap: 6px; justify-content: center; margin-top: 16px; }
+.pagination-minimal .page-link { padding: 8px 12px; border: 1px solid var(--cm-border); background: #fff; border-radius: 8px; text-decoration: none; color: var(--cm-text); font-weight: 600; }
+.pagination-minimal .page-link.active { background: var(--cm-primary); border-color: var(--cm-primary); color: #fff; }
+
+/* Secciones */
+section h3 { margin: 6px 0 12px; color: var(--cm-text); font-size: 1.05rem; }
+.empty-minimal { color: var(--cm-muted); padding: 18px; text-align: center; border: 1px dashed var(--cm-border); border-radius: var(--cm-radius); background: #fff; }
+
+/* Modal básico */
+.modal { position: fixed; inset: 0; background: rgba(17,24,39,.45); display: none; align-items: center; justify-content: center; padding: 16px; z-index: 50; }
+.modal-content { background: var(--cm-surface); border-radius: var(--cm-radius); border: 1px solid var(--cm-border); box-shadow: 0 20px 48px rgba(17,24,39,.18); width: 100%; max-width: 720px; overflow: hidden; }
+.modal-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--cm-border); }
+.modal-header h3 { margin: 0; font-size: 1.05rem; }
+.modal-body { padding: 16px; }
+.modal-close { border: none; background: transparent; font-size: 20px; cursor: pointer; color: var(--cm-muted); }
+.modal-close:hover { color: var(--cm-text); }
+
+/* KPI projects */
+.project-kpi-item { padding: 16px; display: grid; gap: 10px; }
+.project-kpi-item .project-info { display: flex; gap: 12px; }
+.kpi-points { display: inline-flex; gap: 8px; align-items: center; font-weight: 600; color: var(--cm-text); }
+.progress-container { display: flex; align-items: center; gap: 10px; }
+.progress-text { font-weight: 700; color: var(--cm-text); }
+
+/* Disponibilidad */
+.summary-card { padding: 16px; display: grid; gap: 6px; }
+.summary-value { font-size: 1.4rem; font-weight: 800; color: var(--cm-text); }
+
+/* Responsive tweaks */
+@media (max-width: 640px) {
+  .minimal-header .actions-minimal { display: flex; flex-wrap: wrap; gap: 8px; }
+  .task-item { flex-direction: column; }
+}
+
+
