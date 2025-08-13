@@ -2060,18 +2060,9 @@ class ClanLeaderController {
                 $placeholders = str_repeat('?,', count($projectIds) - 1) . '?';
                 
                 // Estadísticas generales
-                $statsStmt = $this->db->prepare("
-                    SELECT 
-                        COUNT(*) as total_tasks,
-                        SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_tasks,
-                        SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_tasks,
-                        SUM(CASE WHEN status = 'in_progress' THEN 1 ELSE 0 END) as in_progress_tasks,
-                        SUM(CASE WHEN due_date < CURDATE() AND status != 'completed' THEN 1 ELSE 0 END) as overdue_tasks
-                    FROM Tasks 
-                    WHERE assigned_to_user_id = ? AND project_id IN ($placeholders) AND is_subtask = 0
-                ");
+                $statsStmt = $this->db->prepare("\n                    SELECT \n                        COUNT(DISTINCT t.task_id) as total_tasks,\n                        SUM(CASE WHEN t.status = 'completed' THEN 1 ELSE 0 END) as completed_tasks,\n                        SUM(CASE WHEN t.status = 'pending' THEN 1 ELSE 0 END) as pending_tasks,\n                        SUM(CASE WHEN t.status = 'in_progress' THEN 1 ELSE 0 END) as in_progress_tasks,\n                        SUM(CASE WHEN t.due_date < CURDATE() AND t.status != 'completed' THEN 1 ELSE 0 END) as overdue_tasks\n                    FROM Tasks t\n                    WHERE t.project_id IN ($placeholders) AND t.is_subtask = 0\n                      AND (t.assigned_to_user_id = ? OR t.task_id IN (SELECT ta.task_id FROM Task_Assignments ta WHERE ta.user_id = ?))\n                ");
                 
-                $params = array_merge([$userId], $projectIds);
+                $params = array_merge($projectIds, [$userId, $userId]);
                 $statsStmt->execute($params);
                 $stats = $statsStmt->fetch(PDO::FETCH_ASSOC);
                 
@@ -2085,22 +2076,8 @@ class ClanLeaderController {
                 
                 // Tareas por proyecto
                 foreach ($projects as $project) {
-                    $projectTaskStmt = $this->db->prepare("
-                        SELECT 
-                            t.task_id,
-                            t.task_name,
-                            t.description,
-                            t.status,
-                            t.priority,
-                            t.due_date,
-                            t.completed_at,
-                            t.assigned_percentage,
-                            t.automatic_points
-                        FROM Tasks t
-                        WHERE t.assigned_to_user_id = ? AND t.project_id = ? AND t.is_subtask = 0
-                        ORDER BY t.due_date ASC, t.created_at DESC
-                    ");
-                    $projectTaskStmt->execute([$userId, $project['project_id']]);
+                    $projectTaskStmt = $this->db->prepare("\n                        SELECT \n                            t.task_id,\n                            t.task_name,\n                            t.description,\n                            t.status,\n                            t.priority,\n                            t.due_date,\n                            t.completed_at,\n                            t.assigned_percentage,\n                            t.automatic_points\n                        FROM Tasks t\n                        WHERE t.project_id = ? AND t.is_subtask = 0\n                          AND (t.assigned_to_user_id = ? OR t.task_id IN (SELECT ta.task_id FROM Task_Assignments ta WHERE ta.user_id = ?))\n                        ORDER BY t.due_date ASC, t.created_at DESC\n                    ");
+                    $projectTaskStmt->execute([$project['project_id'], $userId, $userId]);
                     $projectTasks = $projectTaskStmt->fetchAll(PDO::FETCH_ASSOC);
                     
                     if (!empty($projectTasks)) {
@@ -2209,17 +2186,9 @@ class ClanLeaderController {
                 
                 if (!empty($projects)) {
                     $placeholders = str_repeat('?,', count($projects) - 1) . '?';
-                    $taskStmt = $this->db->prepare("
-                        SELECT 
-                            COUNT(*) as total_tasks,
-                            SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_tasks,
-                            SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_tasks,
-                            SUM(CASE WHEN status = 'in_progress' THEN 1 ELSE 0 END) as in_progress_tasks
-                        FROM Tasks 
-                        WHERE assigned_to_user_id = ? AND project_id IN ($placeholders) AND is_subtask = 0
-                    ");
+                    $taskStmt = $this->db->prepare("\n                        SELECT\n                            COUNT(DISTINCT t.task_id) as total_tasks,\n                            SUM(CASE WHEN t.status = 'completed' THEN 1 ELSE 0 END) as completed_tasks,\n                            SUM(CASE WHEN t.status = 'pending' THEN 1 ELSE 0 END) as pending_tasks,\n                            SUM(CASE WHEN t.status = 'in_progress' THEN 1 ELSE 0 END) as in_progress_tasks\n                        FROM Tasks t\n                        WHERE t.project_id IN ($placeholders)\n                          AND t.is_subtask = 0\n                          AND (\n                            t.assigned_to_user_id = ?\n                            OR t.task_id IN (SELECT ta.task_id FROM Task_Assignments ta WHERE ta.user_id = ?)\n                          )\n                    ");
                     
-                    $params = array_merge([$member['user_id']], $projects);
+                    $params = array_merge($projects, [$member['user_id'], $member['user_id']]);
                     $taskStmt->execute($params);
                     $taskStats = $taskStmt->fetch(PDO::FETCH_ASSOC);
                     
