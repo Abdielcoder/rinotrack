@@ -196,6 +196,23 @@ document.addEventListener("DOMContentLoaded", function() {
             closeUserModal();
         }
     };
+
+    window.deleteUser = function(userId) {
+        if (!confirm('¿Deseas eliminar definitivamente este usuario? Esta acción no se puede deshacer.')) return;
+        const formData = new FormData();
+        formData.append('userId', userId);
+        fetch('?route=admin/delete-user', { method: 'POST', body: formData })
+            .then(r=>r.json())
+            .then(data=>{
+                if (data && data.success) {
+                    alert('Usuario eliminado');
+                    location.reload();
+                } else {
+                    alert((data && data.message) ? data.message : 'Error al eliminar');
+                }
+            })
+            .catch(err=>{ console.error('deleteUser error:', err); alert('Error de conexión'); });
+    };
 });
 </script>';
 
@@ -381,6 +398,11 @@ $additionalJS[] = $inlineJS;
                                                 onclick="toggleUserStatus(<?php echo $userItem['user_id']; ?>)"
                                                 title="<?php echo $userItem['is_active'] ? 'Desactivar' : 'Activar'; ?>">
                                             <i class="fas fa-<?php echo $userItem['is_active'] ? 'ban' : 'check'; ?>"></i>
+                                        </button>
+                                        <button class="btn-icon btn-delete" 
+                                                onclick="deleteUser(<?php echo $userItem['user_id']; ?>)"
+                                                title="Eliminar">
+                                            <i class="fas fa-trash"></i>
                                         </button>
                                     </div>
                                 </td>
@@ -694,6 +716,16 @@ $additionalJS[] = $inlineJS;
 
 .btn-toggle:hover {
     background: #e0a800;
+    transform: translateY(-1px);
+}
+
+.btn-delete {
+    background: var(--error);
+    color: white;
+}
+
+.btn-delete:hover {
+    filter: brightness(0.9);
     transform: translateY(-1px);
 }
 

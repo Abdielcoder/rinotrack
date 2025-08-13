@@ -133,6 +133,11 @@ try {
             $controller = new AdminController();
             $controller->toggleUserStatus();
             break;
+        
+        case 'admin/delete-user':
+            $controller = new AdminController();
+            $controller->deleteUser();
+            break;
             
         case 'admin/projects':
             $controller = new AdminController();

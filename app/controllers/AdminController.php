@@ -845,6 +845,57 @@ class AdminController {
     }
 
     /**
+     * Eliminar usuario (ADMIN)
+     */
+    public function deleteUser() {
+        $this->requireAuth();
+        if (!$this->hasAdminAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos'], 403);
+        }
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Utils::redirect('admin/users');
+        }
+
+        $userId = (int)($_POST['userId'] ?? 0);
+        if ($userId <= 0) {
+            Utils::jsonResponse(['success' => false, 'message' => 'ID de usuario inválido'], 400);
+        }
+
+        // No permitir eliminar al super admin (opcional) ni a sí mismo
+        $currentUser = $this->auth->getCurrentUser();
+        if ($currentUser && (int)$currentUser['user_id'] === $userId) {
+            Utils::jsonResponse(['success' => false, 'message' => 'No puedes eliminar tu propio usuario'], 400);
+        }
+        $userRole = $this->roleModel->getUserRole($userId);
+        if ($userRole && $userRole['role_name'] === 'super_admin') {
+            Utils::jsonResponse(['success' => false, 'message' => 'No se puede eliminar al super administrador'], 403);
+        }
+
+        // Verificar existencia
+        $exists = $this->userModel->findByIdAnyStatus($userId);
+        if (!$exists) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Usuario no encontrado'], 404);
+        }
+
+        // Eliminar en cascada mínima (roles y pertenencias)
+        $db = Database::getConnection();
+        try {
+            $db->beginTransaction();
+            $db->prepare('DELETE FROM User_Roles WHERE user_id = ?')->execute([$userId]);
+            $db->prepare('DELETE FROM Clan_Members WHERE user_id = ?')->execute([$userId]);
+            $db->prepare('DELETE FROM Task_Assignments WHERE user_id = ?')->execute([$userId]);
+            // Opcional: mantener historial, no borrar Task_History/Comments
+            $ok = $this->userModel->delete($userId);
+            if (!$ok) { throw new Exception('Error al eliminar usuario'); }
+            $db->commit();
+            Utils::jsonResponse(['success' => true, 'message' => 'Usuario eliminado exitosamente']);
+        } catch (Exception $e) {
+            if ($db && $db->inTransaction()) { $db->rollBack(); }
+            Utils::jsonResponse(['success' => false, 'message' => 'Error al eliminar: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
      * Ejecutar trabajos de notificación manualmente (debug)
      */
     public function runNotificationJobs() {
