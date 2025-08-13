@@ -107,8 +107,10 @@ ob_start();
                         <div class="form-actions">
                             <button type="button" id="saveSettingsBtn" class="btn btn-primary"><i class="fas fa-save"></i> Guardar</button>
                             <div class="spacer"></div>
-                            <input type="email" id="testEmail" placeholder="Correo de prueba" value="<?php echo Utils::escape($user['email'] ?? ''); ?>">
-                            <button type="button" id="sendTestBtn" class="btn btn-secondary"><i class="fas fa-paper-plane"></i> Enviar prueba</button>
+                            <div style="display:none">
+                                <input type="email" id="testEmail" placeholder="Correo de prueba" value="<?php echo Utils::escape($user['email'] ?? ''); ?>">
+                                <button type="button" id="sendTestBtn" class="btn btn-secondary"><i class="fas fa-paper-plane"></i> Enviar prueba</button>
+                            </div>
                         </div>
                         <div id="settingsMsg" class="form-message" style="display:none"></div>
                     </form>
@@ -159,14 +161,18 @@ ob_start();
         msg.style.color = res.success ? '#10b981' : '#ef4444';
         msg.textContent = res.message || (res.success ? 'Guardado' : 'Error al guardar');
     });
-    document.getElementById('sendTestBtn').addEventListener('click', async () => {
-        const to = document.getElementById('testEmail').value.trim();
-        if (!to) { alert('Ingresa un correo'); return; }
-        const res = await post('?route=admin/test-notification', { to });
-        msg.style.display = 'block';
-        msg.style.color = res.success ? '#10b981' : '#ef4444';
-        msg.textContent = res.message || (res.success ? 'Enviado' : 'Error al enviar');
-    });
+    const sendBtn = document.getElementById('sendTestBtn');
+    if (sendBtn) {
+        sendBtn.addEventListener('click', async () => {
+            const emailInput = document.getElementById('testEmail');
+            const to = emailInput ? emailInput.value.trim() : '';
+            if (!to) { return; }
+            const res = await post('?route=admin/test-notification', { to });
+            msg.style.display = 'block';
+            msg.style.color = res.success ? '#10b981' : '#ef4444';
+            msg.textContent = res.message || (res.success ? 'Enviado' : 'Error al enviar');
+        });
+    }
 })();
 </script>
 
