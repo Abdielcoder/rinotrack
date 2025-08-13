@@ -270,6 +270,48 @@ ob_start();
     </div>
 </div>
 
+<!-- Modal para crear tarea -->
+<div id="taskModal" class="modal" style="display:none">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="taskModalTitle">Crear Tarea</h3>
+            <button class="modal-close" data-action="close-task-modal">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <form id="taskForm" class="modal-form">
+            <input type="hidden" id="taskProjectId" name="projectId">
+
+            <div class="form-group">
+                <label for="taskName">Nombre de la tarea *</label>
+                <input type="text" id="taskName" name="taskName" required>
+            </div>
+
+            <div class="form-group">
+                <label for="taskDescription">Descripción</label>
+                <textarea id="taskDescription" name="description" rows="3" placeholder="Describe la tarea..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Asignar a colaboradores del clan</label>
+                <div id="taskMembers" class="checkbox-list" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"></div>
+                <span class="error-message" id="taskMembersError"></span>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" data-action="close-task-modal">
+                    Cancelar
+                </button>
+                <button type="submit" class="btn btn-primary" id="taskSubmitBtn">
+                    <span id="taskSubmitText">Crear Tarea</span>
+                    <span id="taskSubmitLoader" class="btn-loader" style="display:none"><i class="fas fa-spinner fa-spin"></i></span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <style>
 /* Estilos específicos para gestión de proyectos */
 .projects-header {
@@ -644,6 +686,51 @@ textarea {
                 clearErrors();
             }
         }
+
+        // -------- Modal de Tarea --------
+        const taskModal = document.getElementById('taskModal');
+        const taskForm = document.getElementById('taskForm');
+        const taskProjectId = document.getElementById('taskProjectId');
+        const taskMembers = document.getElementById('taskMembers');
+        const taskSubmitBtn = document.getElementById('taskSubmitBtn');
+        const taskSubmitText = document.getElementById('taskSubmitText');
+        const taskSubmitLoader = document.getElementById('taskSubmitLoader');
+
+        function openTaskModal(projectId, clanId) {
+            if (!taskModal) return;
+            // reset form
+            if (taskForm) taskForm.reset();
+            if (taskMembers) taskMembers.innerHTML = '<div class="empty">Cargando miembros...</div>';
+            taskProjectId.value = projectId || '';
+            taskModal.style.display = 'block';
+            // cargar miembros del clan por AJAX
+            if (clanId) {
+                fetch('?route=admin/clan-members&clanId=' + encodeURIComponent(clanId))
+                    .then(r => r.json())
+                    .then(data => {
+                        if (!data || !data.success) {
+                            taskMembers.innerHTML = '<div class="empty">No se pudieron cargar miembros</div>';
+                            return;
+                        }
+                        const members = data.members || [];
+                        if (!members.length) {
+                            taskMembers.innerHTML = '<div class="empty">No hay miembros en el clan</div>';
+                            return;
+                        }
+                        taskMembers.innerHTML = members.map(m => {
+                            const full = (m.full_name || m.username || '').replace(/</g,'&lt;');
+                            const role = (m.role_name || '').replace(/</g,'&lt;');
+                            return `<label style="display:flex;align-items:center;gap:8px;border:1px solid var(--bg-accent);padding:8px;border-radius:10px;background:var(--bg-primary)">
+                                <input type="checkbox" name="assignedUsers[]" value="${m.user_id}">
+                                <span>${full} ${role?`(${role})`:''}</span>
+                            </label>`;
+                        }).join('');
+                    })
+                    .catch(() => { taskMembers.innerHTML = '<div class="empty">Error cargando miembros</div>'; });
+            }
+        }
+
+        function closeTaskModal() { if (taskModal) taskModal.style.display = 'none'; }
         
         // Función para limpiar errores
         function clearErrors() {
@@ -707,26 +794,10 @@ textarea {
 
                 case 'add-task':
                     e.preventDefault();
-                    const taskName = prompt('Nombre de la tarea:');
-                    if (!taskName) return;
-                    const description = prompt('Descripción (opcional):') || '';
-                    const assignedToUserId = prompt('ID de usuario asignado (opcional, debe pertenecer al clan del proyecto):');
-                    const fdTask = new FormData();
-                    fdTask.append('projectId', projectId);
-                    fdTask.append('taskName', taskName);
-                    fdTask.append('description', description);
-                    if (assignedToUserId) fdTask.append('assignedToUserId', assignedToUserId);
-                    fetch('?route=admin/add-task', { method: 'POST', body: fdTask })
-                      .then(r => r.json())
-                      .then(data => {
-                          if (data && data.success) {
-                              alert('Tarea creada');
-                              setTimeout(() => window.location.reload(), 600);
-                          } else {
-                              alert((data && data.message) ? data.message : 'Error al crear tarea');
-                          }
-                      })
-                      .catch(err => { console.error('Error add-task:', err); alert('Error de conexión'); });
+                    // Buscar clan desde la tarjeta del proyecto
+                    const card = target.closest('.project-card');
+                    const clanId = card ? card.dataset.clan : '';
+                    openTaskModal(projectId, clanId);
                     break;
                     
                 case 'view-project':
@@ -776,6 +847,10 @@ textarea {
                     e.preventDefault();
                     closeProjectModal();
                     break;
+                case 'close-task-modal':
+                    e.preventDefault();
+                    closeTaskModal();
+                    break;
             }
         });
         
@@ -799,6 +874,9 @@ textarea {
         window.addEventListener('click', function(e) {
             if (e.target === modal) {
                 closeProjectModal();
+            }
+            if (e.target === taskModal) {
+                closeTaskModal();
             }
         });
         
@@ -850,6 +928,34 @@ textarea {
             });
         }
         
+        // Envío del formulario de tarea
+        if (taskForm) {
+            taskForm.addEventListener('submit', function(e){
+                e.preventDefault();
+                if (taskSubmitBtn) taskSubmitBtn.disabled = true;
+                if (taskSubmitText) taskSubmitText.style.display = 'none';
+                if (taskSubmitLoader) taskSubmitLoader.style.display = 'inline-block';
+
+                const formData = new FormData(taskForm);
+                fetch('?route=admin/add-task', { method: 'POST', body: formData })
+                    .then(r=>r.json())
+                    .then(data=>{
+                        if (data && data.success) {
+                            closeTaskModal();
+                            setTimeout(()=>window.location.reload(), 600);
+                        } else {
+                            alert((data && data.message) ? data.message : 'Error al crear tarea');
+                        }
+                    })
+                    .catch(err=>{ console.error('Error add-task:', err); alert('Error de conexión'); })
+                    .finally(()=>{
+                        if (taskSubmitBtn) taskSubmitBtn.disabled = false;
+                        if (taskSubmitText) taskSubmitText.style.display = 'inline';
+                        if (taskSubmitLoader) taskSubmitLoader.style.display = 'none';
+                    });
+            });
+        }
+
         console.log('Gestión de proyectos inicializada correctamente');
     });
 })();
