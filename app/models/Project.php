@@ -210,15 +210,44 @@ class Project {
                 SELECT 
                     p.*,
                     c.clan_name,
-                    u.full_name as created_by_name
+                    u.full_name as created_by_name,
+                    COUNT(t.task_id) as total_tasks,
+                    SUM(CASE WHEN t.is_completed = 1 THEN 1 ELSE 0 END) as completed_tasks,
+                    CASE 
+                        WHEN p.task_distribution_mode = 'automatic' THEN 
+                            COALESCE(SUM(CASE WHEN t.is_completed = 1 THEN t.automatic_points ELSE 0 END), 0)
+                        ELSE 
+                            COALESCE(SUM(CASE WHEN t.is_completed = 1 THEN (t.assigned_percentage * p.kpi_points / 100) ELSE 0 END), 0)
+                    END as earned_points
                 FROM Projects p
                 LEFT JOIN Clans c ON p.clan_id = c.clan_id
                 LEFT JOIN Users u ON p.created_by_user_id = u.user_id
+                LEFT JOIN Tasks t ON p.project_id = t.project_id AND t.is_subtask = 0
                 WHERE p.clan_id = ?
+                GROUP BY p.project_id, p.project_name, p.description, p.clan_id, p.created_by_user_id, 
+                         p.status, p.created_at, p.updated_at, p.kpi_quarter_id, p.kpi_points, 
+                         p.task_distribution_mode, c.clan_name, u.full_name
                 ORDER BY p.created_at DESC
             ");
             $stmt->execute([$clanId]);
-            return $stmt->fetchAll();
+            $projects = $stmt->fetchAll();
+
+            foreach ($projects as &$project) {
+                $totalTasks = (int)($project['total_tasks'] ?? 0);
+                $completedTasks = (int)($project['completed_tasks'] ?? 0);
+                $kpiPoints = (float)($project['kpi_points'] ?? 0);
+                $earnedPoints = (float)($project['earned_points'] ?? 0);
+
+                if ($kpiPoints > 0) {
+                    $project['progress_percentage'] = round(($earnedPoints / $kpiPoints) * 100, 1);
+                } else {
+                    $project['progress_percentage'] = $totalTasks > 0 ? round(($completedTasks / $totalTasks) * 100, 1) : 0;
+                }
+
+                $project['progress_percentage'] = max(0, min(100, $project['progress_percentage']));
+            }
+
+            return $projects;
         } catch (PDOException $e) {
             error_log("Error al obtener proyectos del clan: " . $e->getMessage());
             return [];
