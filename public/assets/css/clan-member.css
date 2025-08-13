@@ -42,7 +42,7 @@
 
 /* Contenido */
 .projects-strip { width: 100%; padding: 10px 20px; margin: 10px auto 0; max-width: 100vw; }
-.content-minimal { max-width: 1600px; margin: 12px auto 28px; padding: 0 20px; }
+.content-minimal { max-width: 1200px; margin: 12px auto 28px; padding: 0 20px; width: 75vw; min-width: min(95vw, 1200px); }
 
 /* Tarjetas y grids */
 .progress-card, .rules-card, .summary-card, .project-kpi-item, .project-no-kpi-item, .task-item, .contribution-card, .project-card { background: var(--cm-surface); border: 1px solid var(--cm-border); border-radius: var(--cm-radius); box-shadow: var(--cm-shadow); }
@@ -100,7 +100,7 @@
 .cc-actions { display: flex; }
 
 /* Hero de proyecto (similar al ejemplo de referencia) */
-.project-hero { background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); border-radius: 14px; margin: 18px auto; max-width: 1220px; }
+.project-hero { background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); border-radius: 14px; margin: 18px auto; max-width: 1200px; width: 75vw; min-width: min(95vw, 1200px); }
 .project-hero .hero-inner { padding: 22px; color: #fff; display: grid; gap: 12px; }
 .project-hero .hero-back { color: rgba(255,255,255,.9); text-decoration: none; display: inline-flex; align-items:center; gap:8px; font-weight:600; }
 .project-hero .hero-title { font-size: 1.6rem; margin: 0; }
@@ -115,6 +115,14 @@
 
 @media (max-width: 760px){
   .project-hero .hero-stats { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* Ajustes responsivos para 3/4 de pantalla */
+@media (max-width: 1280px){
+  .project-hero, .content-minimal { width: 90vw; }
+}
+@media (max-width: 768px){
+  .project-hero, .content-minimal { width: 96vw; }
 }
 
 /* Tareas */

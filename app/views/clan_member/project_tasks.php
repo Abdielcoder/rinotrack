@@ -34,7 +34,7 @@ ob_start();
         </div>
     </div>
 
-    <div class="content-minimal" style="max-width:1200px;">
+    <div class="content-minimal">
 
         <?php if (!empty($project['description'])): ?>
         <section class="summary-card">
