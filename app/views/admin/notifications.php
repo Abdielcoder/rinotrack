@@ -80,9 +80,9 @@ ob_start();
                     </div>
                     <form id="notificationSettingsForm" class="settings-form">
                         <?php
+                        // Base toggles
                         $configList = [
                             'project_assigned_to_clan' => 'Proyecto asignado a un clan',
-                            'task_due_soon' => 'Tareas próximas a vencer',
                             'task_overdue' => 'Tareas vencidas'
                         ];
                         foreach ($configList as $key => $label):
@@ -103,6 +103,34 @@ ob_start();
                             </div>
                         </div>
                         <?php endforeach; ?>
+
+                        <?php 
+                        // Próximas a vencer: hasta 3 slots configurables de días
+                        for ($i=1; $i<=3; $i++):
+                            $key = 'task_due_soon_' . $i;
+                            $label = 'Tareas próximas a vencer (' . $i . ')';
+                            $enabled = (int)($settings[$key]['is_enabled'] ?? 0);
+                            $rec = $settings[$key]['recipients'] ?? '';
+                            $days = (int)($settings[$key]['value'] ?? ( $i===1?5:($i===2?3:1) ));
+                        ?>
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <h4><?php echo Utils::escape($label); ?></h4>
+                                <p>Correos adicionales (opcional) y días antes del vencimiento</p>
+                            </div>
+                            <div class="setting-controls" style="gap:8px">
+                                <label class="switch">
+                                    <input type="checkbox" name="<?php echo $key; ?>" <?php echo $enabled ? 'checked' : ''; ?>>
+                                    <span class="slider"></span>
+                                </label>
+                                <div style="display:flex;align-items:center;gap:6px">
+                                    <input type="number" min="0" max="365" step="1" style="width:90px;padding:10px;border:1px solid #e5e7eb;border-radius:8px" name="<?php echo $key; ?>_days" value="<?php echo (int)$days; ?>">
+                                    <span style="color:#6b7280;font-size:12px">días</span>
+                                </div>
+                                <input class="recipients-input" type="text" name="<?php echo $key; ?>_recipients" placeholder="email1@dominio.com, email2@dominio.com" value="<?php echo Utils::escape($rec); ?>">
+                            </div>
+                        </div>
+                        <?php endfor; ?>
 
                         <div class="form-actions">
                             <button type="button" id="saveSettingsBtn" class="btn btn-primary"><i class="fas fa-save"></i> Guardar</button>
@@ -155,7 +183,7 @@ ob_start();
         const obj = {};
         for (const [k, v] of data.entries()) obj[k] = v;
         // checkboxes no marcados no vienen; agregamos claves en 0
-        ['project_assigned_to_clan','task_due_soon','task_overdue'].forEach(k => { if (!obj[k]) obj[k] = ''; });
+        ['project_assigned_to_clan','task_overdue','task_due_soon_1','task_due_soon_2','task_due_soon_3'].forEach(k => { if (!obj[k]) obj[k] = ''; });
         const res = await post('?route=admin/update-notification-settings', obj);
         msg.style.display = 'block';
         msg.style.color = res.success ? '#10b981' : '#ef4444';

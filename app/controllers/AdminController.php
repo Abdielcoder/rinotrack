@@ -853,15 +853,24 @@ class AdminController {
         }
 
         $keys = [
-            'project_assigned_to_clan',
-            'task_due_soon',
-            'task_overdue'
+            'project_assigned_to_clan' => null,
+            'task_due_soon' => null,
+            'task_overdue' => null,
+            // slots configurables de días
+            'task_due_soon_1' => 'task_due_soon_1_days',
+            'task_due_soon_2' => 'task_due_soon_2_days',
+            'task_due_soon_3' => 'task_due_soon_3_days'
         ];
 
-        foreach ($keys as $key) {
+        foreach ($keys as $key => $daysField) {
             $enabled = isset($_POST[$key]) ? 1 : 0;
             $recipients = isset($_POST[$key . '_recipients']) ? trim($_POST[$key . '_recipients']) : null;
-            Notification::setSetting($key, $enabled, $recipients ?: null);
+            $valueInt = null;
+            if ($daysField) {
+                $val = isset($_POST[$daysField]) ? (int)$_POST[$daysField] : null;
+                $valueInt = ($val !== null && $val >= 0 && $val <= 365) ? $val : null;
+            }
+            Notification::setSetting($key, $enabled, $recipients ?: null, $valueInt);
         }
 
         Utils::jsonResponse(['success' => true, 'message' => 'Ajustes guardados']);

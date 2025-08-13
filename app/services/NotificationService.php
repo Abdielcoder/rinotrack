@@ -59,34 +59,40 @@ class NotificationService {
         }
     }
 
-    public function notifyTaskDueSoon($daysAhead = 2) {
-        $setting = Notification::getSetting('task_due_soon');
-        if (!(int)$setting['is_enabled']) return 0;
+    public function notifyTaskDueSoonMulti() {
         $db = Database::getConnection();
-        $sql = "SELECT t.task_id, t.task_name, t.due_date, t.project_id, p.project_name, t.assigned_to_user_id, u.full_name, u.email FROM Tasks t JOIN Projects p ON t.project_id = p.project_id LEFT JOIN Users u ON t.assigned_to_user_id = u.user_id WHERE t.status != 'completed' AND t.due_date IS NOT NULL AND t.due_date = DATE_ADD(CURDATE(), INTERVAL ? DAY) AND u.email IS NOT NULL AND u.email != ''";
-        $stmt = $db->prepare($sql);
-        $stmt->execute([$daysAhead]);
-        $rows = $stmt->fetchAll();
-        $count = 0;
-        foreach ($rows as $r) {
-            $to = $r['email'];
-            if (Notification::alreadySent('task_due_soon_' . $daysAhead, $r['task_id'], $r['assigned_to_user_id'], $to)) continue;
-            $html = EmailTemplate::render(
-                'Recordatorio: tarea próxima a vencer',
-                '<p>Tienes una tarea próxima a vencer.</p>',
-                [
-                    ['label' => 'Tarea', 'value' => $r['task_name']],
-                    ['label' => 'Proyecto', 'value' => $r['project_name']],
-                    ['label' => 'Vence', 'value' => $r['due_date']]
-                ],
-                ['label' => 'Ver proyecto', 'url' => APP_URL . '?route=admin/project-details&projectId=' . urlencode($r['project_id'])]
-            );
-            if ($this->mailer->sendHtml($to, 'RinoTrack • Tarea próxima a vencer', $html)) {
-                Notification::logSent('task_due_soon_' . $daysAhead, $r['task_id'], $r['assigned_to_user_id'], $to);
-                $count++;
+        $total = 0;
+        for ($i=1; $i<=3; $i++) {
+            $key = 'task_due_soon_' . $i;
+            $setting = Notification::getSetting($key);
+            if (!(int)($setting['is_enabled'] ?? 0)) continue;
+            $daysAhead = (int)($setting['value'] ?? 0);
+            if ($daysAhead < 0 || $daysAhead > 365) continue;
+            $sql = "SELECT t.task_id, t.task_name, t.due_date, t.project_id, p.project_name, t.assigned_to_user_id, u.full_name, u.email FROM Tasks t JOIN Projects p ON t.project_id = p.project_id LEFT JOIN Users u ON t.assigned_to_user_id = u.user_id WHERE t.status != 'completed' AND t.due_date IS NOT NULL AND t.due_date = DATE_ADD(CURDATE(), INTERVAL ? DAY) AND u.email IS NOT NULL AND u.email != ''";
+            $stmt = $db->prepare($sql);
+            $stmt->execute([$daysAhead]);
+            $rows = $stmt->fetchAll();
+            foreach ($rows as $r) {
+                $to = $r['email'];
+                if (Notification::alreadySent('task_due_soon_' . $daysAhead, $r['task_id'], $r['assigned_to_user_id'], $to)) continue;
+                $html = EmailTemplate::render(
+                    'Recordatorio: tarea próxima a vencer',
+                    '<p>Tienes una tarea próxima a vencer.</p>',
+                    [
+                        ['label' => 'Tarea', 'value' => $r['task_name']],
+                        ['label' => 'Proyecto', 'value' => $r['project_name']],
+                        ['label' => 'Vence', 'value' => $r['due_date']],
+                        ['label' => 'Aviso', 'value' => 'En ' . $daysAhead . ' día(s)']
+                    ],
+                    ['label' => 'Ver proyecto', 'url' => APP_URL . '?route=admin/project-details&projectId=' . urlencode($r['project_id'])]
+                );
+                if ($this->mailer->sendHtml($to, 'RinoTrack • Tarea próxima a vencer (' . $daysAhead . ' días)', $html)) {
+                    Notification::logSent('task_due_soon_' . $daysAhead, $r['task_id'], $r['assigned_to_user_id'], $to);
+                    $total++;
+                }
             }
         }
-        return $count;
+        return $total;
     }
 
     public function notifyTaskOverdue() {

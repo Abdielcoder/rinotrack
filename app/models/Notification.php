@@ -8,10 +8,20 @@ class Notification {
                 setting_key VARCHAR(100) PRIMARY KEY,
                 is_enabled TINYINT(1) NOT NULL DEFAULT 0,
                 recipients TEXT NULL,
+                value_int INT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
         );
+        // Asegurar columna value_int para instalaciones existentes
+        try {
+            $check = $db->query("SHOW COLUMNS FROM Notification_Settings LIKE 'value_int'");
+            if (!$check->fetch()) {
+                $db->exec("ALTER TABLE Notification_Settings ADD COLUMN value_int INT NULL");
+            }
+        } catch (Exception $e) {
+            // ignorar
+        }
         $db->exec(
             "CREATE TABLE IF NOT EXISTS Notification_Log (
                 id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
@@ -29,20 +39,24 @@ class Notification {
     public static function getAllSettings() {
         self::ensureTables();
         $db = Database::getConnection();
-        $stmt = $db->query('SELECT setting_key, is_enabled, recipients FROM Notification_Settings');
+        $stmt = $db->query('SELECT setting_key, is_enabled, recipients, value_int FROM Notification_Settings');
         $rows = $stmt->fetchAll();
         $settings = [];
         foreach ($rows as $r) {
             $settings[$r['setting_key']] = [
                 'is_enabled' => (int)$r['is_enabled'],
-                'recipients' => $r['recipients']
+                'recipients' => $r['recipients'],
+                'value' => isset($r['value_int']) ? (int)$r['value_int'] : null
             ];
         }
         // Asegurar claves por defecto
         $defaults = [
             'project_assigned_to_clan' => ['is_enabled' => 1, 'recipients' => null],
             'task_due_soon' => ['is_enabled' => 1, 'recipients' => null],
-            'task_overdue' => ['is_enabled' => 1, 'recipients' => null]
+            'task_overdue' => ['is_enabled' => 1, 'recipients' => null],
+            'task_due_soon_1' => ['is_enabled' => 0, 'recipients' => null, 'value' => 5],
+            'task_due_soon_2' => ['is_enabled' => 0, 'recipients' => null, 'value' => 3],
+            'task_due_soon_3' => ['is_enabled' => 0, 'recipients' => null, 'value' => 1]
         ];
         foreach ($defaults as $k => $v) {
             if (!isset($settings[$k])) {
@@ -76,11 +90,11 @@ class Notification {
         return (bool)$stmt->fetchColumn();
     }
 
-    public static function setSetting($key, $isEnabled, $recipients = null) {
+    public static function setSetting($key, $isEnabled, $recipients = null, $valueInt = null) {
         self::ensureTables();
         $db = Database::getConnection();
-        $stmt = $db->prepare('INSERT INTO Notification_Settings (setting_key, is_enabled, recipients) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE is_enabled = VALUES(is_enabled), recipients = VALUES(recipients)');
-        return $stmt->execute([$key, (int)$isEnabled, $recipients]);
+        $stmt = $db->prepare('INSERT INTO Notification_Settings (setting_key, is_enabled, recipients, value_int) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE is_enabled = VALUES(is_enabled), recipients = VALUES(recipients), value_int = VALUES(value_int)');
+        return $stmt->execute([$key, (int)$isEnabled, $recipients, $valueInt]);
     }
 }
 

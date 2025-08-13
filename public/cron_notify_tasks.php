@@ -13,7 +13,7 @@ require_once __DIR__ . '/../app/services/NotificationService.php';
 
 try {
     $service = new NotificationService();
-    $dueSoon = $service->notifyTaskDueSoon(2); // 2 días antes
+    $dueSoon = $service->notifyTaskDueSoonMulti();
     $overdue = $service->notifyTaskOverdue();
     echo json_encode(['ok' => true, 'due_soon' => $dueSoon, 'overdue' => $overdue]) . "\n";
 } catch (Exception $e) {
