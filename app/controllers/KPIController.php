@@ -967,6 +967,22 @@ class KPIController {
                     $userPoints[$uid]['earned'] += $perUser;
                 }
             }
+            // Traer todos los miembros del clan y completar con 0 puntos si no aparecen
+            $mstmt = $this->db->prepare("SELECT u.user_id, u.full_name FROM Clan_Members cm JOIN Users u ON u.user_id = cm.user_id WHERE cm.clan_id = ? AND u.is_active = 1 ORDER BY u.full_name");
+            $mstmt->execute([$clanId]);
+            $members = $mstmt->fetchAll(PDO::FETCH_ASSOC);
+            foreach ($members as $m) {
+                $uid = (int)$m['user_id'];
+                if (!isset($userPoints[$uid])) {
+                    $userPoints[$uid] = ['user_id' => $uid, 'name' => ($m['full_name'] ?? ('Usuario ' . $uid)), 'earned' => 0.0];
+                } else {
+                    // Asegurar nombre legible
+                    if (empty($userPoints[$uid]['name'])) {
+                        $userPoints[$uid]['name'] = $m['full_name'] ?? ('Usuario ' . $uid);
+                    }
+                }
+            }
+
             $list = array_values($userPoints);
             usort($list, function($a,$b){ return $b['earned'] <=> $a['earned']; });
             echo json_encode(['success' => true, 'users' => $list]);
