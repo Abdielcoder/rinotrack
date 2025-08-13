@@ -200,6 +200,13 @@ ob_start();
     </div>
 
 <script>
+function fetchJSON(url, options){
+  return fetch(url, options).then(async function(r){
+    const text = await r.text();
+    try { return JSON.parse(text); }
+    catch(e){ console.error('Respuesta no JSON:', text); return { success:false, message:'Respuesta inválida del servidor' }; }
+  });
+}
 function openCommentModal(taskId){
   var modal = document.getElementById('commentModal');
   document.getElementById('commentTaskId').value = taskId;
@@ -231,8 +238,8 @@ function toggleTaskStatus(taskId, currentStatus, allowed){
   if(!allowed){ alert('No puedes cambiar el estado de esta tarea'); return; }
   const isCompleted = currentStatus !== 'completed';
   const fd = new FormData(); fd.append('task_id', taskId); fd.append('is_completed', isCompleted ? 'true' : 'false');
-  fetch('?route=clan_member/toggle-task-status', { method: 'POST', body: fd, credentials: 'same-origin' })
-    .then(r=>r.json()).then(d=>{ alert(d.message|| (d.success?'OK':'Error')); if(d.success){ location.reload(); } });
+  fetchJSON('?route=clan_member/toggle-task-status', { method: 'POST', body: fd, credentials: 'same-origin' })
+    .then(d=>{ if(!d.success){ alert(d.message||'Error'); } location.reload(); });
 }
 
 function setTaskStatus(taskId, newStatus, allowed){
@@ -241,14 +248,14 @@ function setTaskStatus(taskId, newStatus, allowed){
   if(newStatus === 'completed' || newStatus === 'pending'){
     const isCompleted = newStatus === 'completed';
     const fd = new FormData(); fd.append('task_id', taskId); fd.append('is_completed', isCompleted ? 'true' : 'false');
-    fetch('?route=clan_member/toggle-task-status', { method: 'POST', body: fd, credentials: 'same-origin' })
-      .then(r=>r.json()).then(d=>{ if(!d.success){ alert(d.message||'Error'); } location.reload(); });
+    fetchJSON('?route=clan_member/toggle-task-status', { method: 'POST', body: fd, credentials: 'same-origin' })
+      .then(d=>{ if(!d.success){ alert(d.message||'Error'); } location.reload(); });
     return;
   }
   // Para in_progress, usar update-task del miembro
   const fd2 = new FormData(); fd2.append('task_id', taskId); fd2.append('status', 'in_progress');
-  fetch('?route=clan_member/update-task', { method: 'POST', body: fd2, credentials: 'same-origin' })
-    .then(r=>r.json()).then(d=>{ if(!d.success){ alert(d.message||'Error'); } location.reload(); });
+  fetchJSON('?route=clan_member/update-task', { method: 'POST', body: fd2, credentials: 'same-origin' })
+    .then(d=>{ if(!d.success){ alert(d.message||'Error'); } location.reload(); });
 }
 
 function loadTaskComments(taskId){
