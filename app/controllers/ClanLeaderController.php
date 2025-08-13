@@ -1149,6 +1149,8 @@ class ClanLeaderController {
             }
             
             error_log("createTask - ÉXITO: Tarea creada con ID " . $taskId);
+            // Notificación de asignación si está activa
+            try { (new NotificationService())->notifyTaskAssigned((int)$taskId, $assignedMembers); } catch (Exception $e) { error_log('Notif error (clan_leader task_assigned): ' . $e->getMessage()); }
             Utils::jsonResponse(['success' => true, 'message' => 'Tarea creada exitosamente', 'task_id' => $taskId]);
             
         } catch (Exception $e) {

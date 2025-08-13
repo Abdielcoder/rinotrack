@@ -198,6 +198,11 @@ try {
             $controller->removeClanMember();
             break;
 
+        case 'admin/run-notification-jobs':
+            $controller = new AdminController();
+            $controller->runNotificationJobs();
+            break;
+
         // Notificaciones - Admin
         case 'admin/notifications':
             $controller = new AdminController();

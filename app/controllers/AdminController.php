@@ -845,6 +845,24 @@ class AdminController {
     }
 
     /**
+     * Ejecutar trabajos de notificación manualmente (debug)
+     */
+    public function runNotificationJobs() {
+        $this->requireAuth();
+        if (!$this->hasAdminAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos'], 403);
+        }
+        try {
+            $service = new NotificationService();
+            $due = $service->notifyTaskDueSoonMulti();
+            $over = $service->notifyTaskOverdue();
+            Utils::jsonResponse(['success' => true, 'dueSoonSent' => (int)$due, 'overdueSent' => (int)$over]);
+        } catch (Exception $e) {
+            Utils::jsonResponse(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
      * Panel de notificaciones (Admin)
      */
     public function notifications() {
