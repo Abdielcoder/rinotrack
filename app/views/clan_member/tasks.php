@@ -28,6 +28,38 @@ ob_start();
     </nav>
 
     <div class="content-minimal">
+        <?php if (!empty($projectsSummary)): ?>
+        <section>
+            <div class="cards-compact">
+                <?php foreach ($projectsSummary as $p): ?>
+                    <div class="card-compact">
+                        <div class="cc-head">
+                            <span><?php echo htmlspecialchars($p['project_name']); ?></span>
+                            <span class="chip"><?php echo htmlspecialchars(strtoupper($p['status'])); ?></span>
+                        </div>
+                        <div class="cc-kpis">
+                            <div class="cc-kpi">
+                                <span class="label">Total</span>
+                                <span class="value"><?php echo (int)$p['total_tasks']; ?></span>
+                            </div>
+                            <div class="cc-kpi">
+                                <span class="label">Completadas</span>
+                                <span class="value"><?php echo (int)$p['completed_tasks']; ?></span>
+                            </div>
+                            <div class="cc-kpi">
+                                <span class="label">Progreso</span>
+                                <span class="value"><?php echo (float)$p['progress_percentage']; ?>%</span>
+                            </div>
+                            <div class="cc-actions">
+                                <a class="btn-minimal" href="?route=clan_member/tasks&project_id=<?php echo $p['project_id']; ?>"><i class="fas fa-eye"></i> Ver Tareas</a>
+                            </div>
+                        </div>
+                        <div class="cc-progress"><span style="width: <?php echo (float)$p['progress_percentage']; ?>%"></span></div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        </section>
+        <?php endif; ?>
         <form method="get" class="filters-minimal">
             <input type="hidden" name="route" value="clan_member/tasks" />
             <input type="text" name="search" placeholder="Buscar" value="<?php echo htmlspecialchars($search ?? ''); ?>" />
@@ -54,7 +86,11 @@ ob_start();
                             <div class="task-title"><?php echo htmlspecialchars($t['task_name']); ?></div>
                             <div class="task-meta">
                                 <span>Proyecto: <?php echo htmlspecialchars($t['project_name']); ?></span>
-                                <span>Asignado a: <?php echo htmlspecialchars($t['assigned_user_name'] ?? 'N/D'); ?></span>
+                                <?php if (!empty($t['all_assigned_users'])): ?>
+                                    <span>Asignado a: <?php echo htmlspecialchars($t['all_assigned_users']); ?></span>
+                                <?php elseif (!empty($t['assigned_user_name'])): ?>
+                                    <span>Asignado a: <?php echo htmlspecialchars($t['assigned_user_name']); ?></span>
+                                <?php endif; ?>
                                 <?php if (!empty($t['due_date'])): ?>
                                     <span>Vence: <?php echo date('d/m/Y', strtotime($t['due_date'])); ?></span>
                                 <?php endif; ?>

@@ -92,13 +92,38 @@ class ClanMemberController {
 
         $result = $this->userClan ? $this->taskModel->getAllTasksByClan($this->userClan['clan_id'], $page, $perPage, $search, $status) : ['tasks' => [], 'total' => 0, 'page' => 1, 'per_page' => $perPage, 'total_pages' => 0];
 
+        // Resumen de proyectos para la cabecera
+        $projectsSummary = [];
+        if ($this->userClan) {
+            $projects = $this->projectModel->getByClan($this->userClan['clan_id']);
+            foreach ($projects as $p) {
+                $total = (int)($p['total_tasks'] ?? 0);
+                $completed = (int)($p['completed_tasks'] ?? 0);
+                $progress = isset($p['progress_percentage']) ? (float)$p['progress_percentage'] : null;
+                if ($progress === null) {
+                    // Fallback rápido si no hay columnas calculadas
+                    $progress = ($total > 0) ? round(($completed / $total) * 100, 1) : 0;
+                }
+                $projectsSummary[] = [
+                    'project_id' => $p['project_id'],
+                    'project_name' => $p['project_name'],
+                    'status' => $p['status'],
+                    'total_tasks' => $total,
+                    'completed_tasks' => $completed,
+                    'progress_percentage' => $progress
+                ];
+            }
+        }
+
         $data = [
             'currentPage' => 'clan_member',
             'user' => $this->currentUser,
             'clan' => $this->userClan,
             'tasksData' => $result,
             'search' => $search,
-            'status' => $status
+            'status' => $status,
+            'perPage' => $perPage,
+            'projectsSummary' => $projectsSummary
         ];
         $this->loadView('clan_member/tasks', $data);
     }

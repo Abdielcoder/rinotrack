@@ -58,6 +58,18 @@
 .project-name { font-weight: 700; color: var(--cm-text); }
 .project-meta { display: flex; gap: 12px; color: var(--cm-muted); font-size: .9rem; }
 
+/* Cabecera mínima con tarjetas compactas */
+.cards-compact { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+.card-compact { border: 1px solid var(--cm-border); background: #fff; border-radius: var(--cm-radius); padding: 14px; box-shadow: var(--cm-shadow); display: grid; gap: 10px; }
+.card-compact .cc-head { display: flex; justify-content: space-between; align-items: center; color: var(--cm-muted); font-weight: 700; font-size: .9rem; }
+.cc-kpis { display: flex; gap: 14px; align-items: center; }
+.cc-kpi { display: grid; gap: 4px; }
+.cc-kpi .label { color: var(--cm-muted); font-size: .82rem; }
+.cc-kpi .value { font-weight: 800; color: var(--cm-text); }
+.cc-progress { width: 100%; height: 8px; background: var(--cm-soft); border-radius: 999px; overflow: hidden; }
+.cc-progress > span { height: 100%; display: block; background: linear-gradient(90deg, var(--cm-primary), #8b5cf6); }
+.cc-actions { display: flex; }
+
 /* Tareas */
 .tasks-list { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(520px, 1fr)); }
 .tasks-list > .task-item { height: 100%; }
