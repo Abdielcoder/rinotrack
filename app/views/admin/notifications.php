@@ -47,30 +47,7 @@ ob_start();
             </div>
         </header>
 
-        <section class="stats-section animate-fade-in">
-            <div class="stats-grid">
-                <div class="stat-card gradient-bg">
-                    <div class="stat-content">
-                        <div class="stat-header">
-                            <h3>Estados</h3>
-                            <i class="fas fa-bell"></i>
-                        </div>
-                        <div class="stat-number">3</div>
-                        <div class="stat-trend"><i class="fas fa-toggle-on"></i><span>Notificaciones disponibles</span></div>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-content">
-                        <div class="stat-header">
-                            <h3>Plantilla</h3>
-                            <i class="fas fa-envelope-open-text"></i>
-                        </div>
-                        <div class="stat-number">HTML</div>
-                        <div class="stat-trend positive"><i class="fas fa-paint-brush"></i><span>Diseño moderno</span></div>
-                    </div>
-                </div>
-            </div>
-        </section>
+        
 
         <section class="content-section animate-fade-in">
             <div class="content-grid">
