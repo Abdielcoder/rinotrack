@@ -206,6 +206,12 @@ ob_start();
                             <i class="fas fa-check-circle"></i>
                             <span><?php echo $project['completed_tasks']; ?> completadas</span>
                         </div>
+                        <?php if (!empty($project['time_limit'])): ?>
+                        <div class="stat-item" title="Fecha límite">
+                            <i class="fas fa-hourglass-end"></i>
+                            <span>Límite: <?php echo date('d/m/Y', strtotime($project['time_limit'])); ?></span>
+                        </div>
+                        <?php endif; ?>
                         <?php if(!$isAssigned): ?>
                         <div class="stat-item" title="Proyecto sin KPI/OKR asignado">
                             <i class="fas fa-exclamation-triangle" style="color:var(--warning)"></i>
@@ -265,6 +271,11 @@ ob_start();
                     <?php endforeach; ?>
                 </select>
                 <span class="error-message" id="clanIdError"></span>
+            </div>
+
+            <div class="form-group">
+                <label for="timeLimit">Fecha límite del proyecto</label>
+                <input type="date" id="timeLimit" name="timeLimit">
             </div>
             
             <div class="modal-actions">

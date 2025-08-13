@@ -251,6 +251,32 @@ class AdminController {
     }
 
     /**
+     * Obtener datos de un proyecto (JSON)
+     */
+    public function getProject() {
+        $this->requireAuth();
+        if (!$this->hasAdminAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos'], 403);
+        }
+        $projectId = (int)($_GET['projectId'] ?? 0);
+        if ($projectId <= 0) {
+            Utils::jsonResponse(['success' => false, 'message' => 'ID inválido'], 400);
+        }
+        $project = $this->projectModel->findById($projectId);
+        if (!$project) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Proyecto no encontrado'], 404);
+        }
+        Utils::jsonResponse(['success' => true, 'project' => [
+            'project_id' => (int)$project['project_id'],
+            'project_name' => $project['project_name'],
+            'description' => $project['description'],
+            'clan_id' => (int)$project['clan_id'],
+            'status' => $project['status'],
+            'time_limit' => $project['time_limit'] ?? null
+        ]]);
+    }
+
+    /**
      * Detalles de un proyecto con estado de tareas
      */
     public function projectDetails() {
@@ -410,7 +436,11 @@ class AdminController {
             Utils::jsonResponse(['success' => false, 'errors' => $errors], 400);
         }
         
-        $projectId = $this->projectModel->create($projectName, $description, $clanId, $currentUser['user_id']);
+        // Fecha límite opcional
+        $timeLimitRaw = trim($_POST['timeLimit'] ?? '');
+        $timeLimit = ($timeLimitRaw !== '' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $timeLimitRaw)) ? $timeLimitRaw : null;
+
+        $projectId = $this->projectModel->create($projectName, $description, $clanId, $currentUser['user_id'], null, 0, 'automatic', $timeLimit);
         
         if ($projectId) {
             // Disparar notificación: proyecto asignado a un clan
@@ -423,6 +453,43 @@ class AdminController {
         } else {
             Utils::jsonResponse(['success' => false, 'message' => 'Error al crear proyecto'], 500);
         }
+    }
+
+    /**
+     * Actualizar proyecto (ADMIN)
+     */
+    public function updateProject() {
+        $this->requireAuth();
+        if (!$this->hasAdminAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos'], 403);
+        }
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Utils::redirect('admin/projects');
+        }
+
+        $projectId = (int)($_POST['projectId'] ?? 0);
+        $projectName = Utils::sanitizeInput($_POST['projectName'] ?? '');
+        $description = Utils::sanitizeInput($_POST['description'] ?? '');
+        $clanId = (int)($_POST['clanId'] ?? 0);
+        $status = isset($_POST['status']) ? Utils::sanitizeInput($_POST['status']) : null;
+        $timeLimitRaw = trim($_POST['timeLimit'] ?? '');
+        $timeLimit = ($timeLimitRaw !== '' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $timeLimitRaw)) ? $timeLimitRaw : null;
+
+        if ($projectId <= 0) {
+            Utils::jsonResponse(['success' => false, 'message' => 'ID inválido'], 400);
+        }
+        if (empty($projectName)) {
+            Utils::jsonResponse(['success' => false, 'errors' => ['projectName' => 'El nombre del proyecto es requerido']], 400);
+        }
+        if ($clanId <= 0) {
+            Utils::jsonResponse(['success' => false, 'errors' => ['clanId' => 'Debe seleccionar un clan válido']], 400);
+        }
+
+        $ok = $this->projectModel->update($projectId, $projectName, $description, $clanId, $status, $timeLimit);
+        if ($ok) {
+            Utils::jsonResponse(['success' => true, 'message' => 'Proyecto actualizado exitosamente']);
+        }
+        Utils::jsonResponse(['success' => false, 'message' => 'Error al actualizar proyecto'], 500);
     }
     
     /**

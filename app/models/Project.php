@@ -10,13 +10,14 @@ class Project {
     /**
      * Crear nuevo proyecto
      */
-    public function create($projectName, $description, $clanId, $createdByUserId, $kpiQuarterId = null, $kpiPoints = 0, $taskDistributionMode = 'automatic') {
+    public function create($projectName, $description, $clanId, $createdByUserId, $kpiQuarterId = null, $kpiPoints = 0, $taskDistributionMode = 'automatic', $timeLimit = null) {
         try {
+            $timeLimitValue = (is_string($timeLimit) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $timeLimit)) ? $timeLimit : null;
             $stmt = $this->db->prepare("
-                INSERT INTO Projects (project_name, description, clan_id, created_by_user_id, kpi_quarter_id, kpi_points, task_distribution_mode, status, created_at) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, 'open', NOW())
+                INSERT INTO Projects (project_name, description, clan_id, created_by_user_id, kpi_quarter_id, kpi_points, task_distribution_mode, time_limit, status, created_at) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'open', NOW())
             ");
-            $result = $stmt->execute([$projectName, $description, $clanId, $createdByUserId, $kpiQuarterId, $kpiPoints, $taskDistributionMode]);
+            $result = $stmt->execute([$projectName, $description, $clanId, $createdByUserId, $kpiQuarterId, $kpiPoints, $taskDistributionMode, $timeLimitValue]);
             
             if ($result) {
                 return $this->db->lastInsertId();
@@ -31,7 +32,7 @@ class Project {
     /**
      * Crear proyecto con KPI asignado
      */
-    public function createWithKPI($projectName, $description, $clanId, $createdByUserId, $kpiQuarterId, $kpiPoints, $taskDistributionMode = 'automatic') {
+    public function createWithKPI($projectName, $description, $clanId, $createdByUserId, $kpiQuarterId, $kpiPoints, $taskDistributionMode = 'automatic', $timeLimit = null) {
         try {
             $this->db->beginTransaction();
             
@@ -54,7 +55,7 @@ class Project {
             }
             
             // Crear proyecto
-            $projectId = $this->create($projectName, $description, $clanId, $createdByUserId, $kpiQuarterId, $kpiPoints, $taskDistributionMode);
+            $projectId = $this->create($projectName, $description, $clanId, $createdByUserId, $kpiQuarterId, $kpiPoints, $taskDistributionMode, $timeLimit);
             
             if (!$projectId) {
                 throw new Exception("Error al crear proyecto");
@@ -265,10 +266,16 @@ class Project {
     /**
      * Actualizar proyecto
      */
-    public function update($projectId, $projectName, $description, $clanId, $status = null) {
+    public function update($projectId, $projectName, $description, $clanId, $status = null, $timeLimit = null) {
         try {
             $sql = "UPDATE Projects SET project_name = ?, description = ?, clan_id = ?, updated_at = NOW()";
             $params = [$projectName, $description, $clanId];
+
+            if ($timeLimit !== null) {
+                $timeLimitValue = (is_string($timeLimit) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $timeLimit)) ? $timeLimit : null;
+                $sql .= ", time_limit = ?";
+                $params[] = $timeLimitValue;
+            }
             
             if ($status !== null) {
                 $sql .= ", status = ?";
