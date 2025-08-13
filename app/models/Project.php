@@ -239,7 +239,11 @@ class Project {
                 $earnedPoints = (float)($project['earned_points'] ?? 0);
 
                 if ($kpiPoints > 0) {
-                    $project['progress_percentage'] = round(($earnedPoints / $kpiPoints) * 100, 1);
+                    if ($earnedPoints > 0) {
+                        $project['progress_percentage'] = round(($earnedPoints / $kpiPoints) * 100, 1);
+                    } else {
+                        $project['progress_percentage'] = $totalTasks > 0 ? round(($completedTasks / $totalTasks) * 100, 1) : 0;
+                    }
                 } else {
                     $project['progress_percentage'] = $totalTasks > 0 ? round(($completedTasks / $totalTasks) * 100, 1) : 0;
                 }
