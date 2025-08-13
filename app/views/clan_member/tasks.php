@@ -170,7 +170,7 @@ ob_start();
     </div>
 </div>
 
-<div class="modal" id="commentModal" style="display:none;">
+<div class="modal" id="commentModal">
     <div class="modal-content">
         <div class="modal-header">
             <h3>Agregar comentario</h3>
@@ -196,18 +196,27 @@ ob_start();
 
 <script>
 function openCommentModal(taskId){
+  var modal = document.getElementById('commentModal');
   document.getElementById('commentTaskId').value = taskId;
-  document.getElementById('commentModal').style.display = 'flex';
+  modal.classList.add('open');
 }
 function closeCommentModal(){
-  document.getElementById('commentModal').style.display = 'none';
+  var modal = document.getElementById('commentModal');
+  modal.classList.remove('open');
   document.getElementById('commentForm').reset();
 }
 document.getElementById('commentForm').addEventListener('submit', function(e){
   e.preventDefault();
   const fd = new FormData(this);
   fetch('?route=clan_member/add-task-comment', { method: 'POST', body: fd, credentials: 'same-origin' })
-    .then(r=>r.json()).then(d=>{ alert(d.message|| (d.success?'OK':'Error')); if(d.success){ closeCommentModal(); } });
+    .then(r=>r.json()).then(d=>{ 
+      alert(d.message|| (d.success?'OK':'Error')); 
+      if(d.success){ 
+        // Mantener modal abierto para permitir más comentarios; limpiar el campo
+        this.reset();
+        document.getElementById('commentTaskId').value = fd.get('task_id');
+      }
+    });
 });
 
 function toggleTaskStatus(taskId, currentStatus, allowed){
