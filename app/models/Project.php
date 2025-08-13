@@ -122,9 +122,13 @@ class Project {
                 $kpiPoints = (float)$project['kpi_points'];
                 $earnedPoints = (float)$project['earned_points'];
                 
-                // Calcular el porcentaje de progreso
+                // Calcular el porcentaje de progreso con fallback
                 if ($kpiPoints > 0) {
-                    $project['progress_percentage'] = round(($earnedPoints / $kpiPoints) * 100, 1);
+                    if ($earnedPoints > 0) {
+                        $project['progress_percentage'] = round(($earnedPoints / $kpiPoints) * 100, 1);
+                    } else {
+                        $project['progress_percentage'] = $totalTasks > 0 ? round(($completedTasks / $totalTasks) * 100, 1) : 0;
+                    }
                 } else {
                     // Si no hay KPI asignado, calcular basado en tareas completadas
                     $project['progress_percentage'] = $totalTasks > 0 ? round(($completedTasks / $totalTasks) * 100, 1) : 0;
