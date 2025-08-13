@@ -7,6 +7,64 @@ class NotificationService {
         $this->mailer = new Mailer();
     }
 
+    public function notifyTaskAssigned($taskId, $assignedUserIds) {
+        $setting = Notification::getSetting('task_assigned');
+        if (!(int)($setting['is_enabled'] ?? 0)) return 0;
+
+        if (empty($assignedUserIds)) return 0;
+        $assignedUserIds = array_values(array_unique(array_map('intval', $assignedUserIds)));
+        $db = Database::getConnection();
+        $placeholders = implode(',', array_fill(0, count($assignedUserIds), '?'));
+
+        $stmt = $db->prepare(
+            "SELECT t.task_id, t.task_name, t.due_date, t.project_id, p.project_name, u.user_id, u.full_name, u.email
+             FROM Tasks t
+             JOIN Projects p ON t.project_id = p.project_id
+             JOIN Users u ON u.user_id IN ($placeholders)
+             WHERE t.task_id = ? AND u.email IS NOT NULL AND u.email != ''"
+        );
+        $params = array_merge($assignedUserIds, [$taskId]);
+        $stmt->execute($params);
+        $rows = $stmt->fetchAll();
+        $count = 0;
+        foreach ($rows as $r) {
+            $to = $r['email'];
+            if (Notification::alreadySent('task_assigned', $taskId, $r['user_id'], $to)) continue;
+            $html = EmailTemplate::render(
+                'Nueva tarea asignada',
+                '<p>Se te ha asignado una nueva tarea.</p>',
+                [
+                    ['label' => 'Tarea', 'value' => $r['task_name']],
+                    ['label' => 'Proyecto', 'value' => $r['project_name']],
+                    ['label' => 'Fecha de entrega', 'value' => $r['due_date'] ?: 'No definida']
+                ],
+                ['label' => 'Ver proyecto', 'url' => APP_URL . '?route=admin/project-details&projectId=' . urlencode($r['project_id'])]
+            );
+            if ($this->mailer->sendHtml($to, 'RinoTrack • Tarea asignada', $html)) {
+                Notification::logSent('task_assigned', $taskId, $r['user_id'], $to);
+                $count++;
+            }
+        }
+        // Extras globales para notificación
+        $extra = $this->parseRecipients($setting['recipients'] ?? null);
+        if (!empty($extra)) {
+            $info = reset($rows);
+            if ($info) {
+                $html = EmailTemplate::render(
+                    'Tarea asignada (copia)',
+                    '<p>Se ha asignado una tarea.</p>',
+                    [
+                        ['label' => 'Tarea', 'value' => $info['task_name']],
+                        ['label' => 'Proyecto', 'value' => $info['project_name']]
+                    ],
+                    ['label' => 'Ver proyecto', 'url' => APP_URL . '?route=admin/project-details&projectId=' . urlencode($info['project_id'])]
+                );
+                foreach ($extra as $mail) { $this->mailer->sendHtml($mail, 'RinoTrack • Tarea asignada', $html); }
+            }
+        }
+        return $count;
+    }
+
     public function notifyProjectAssignedToClan($projectId) {
         $setting = Notification::getSetting('project_assigned_to_clan');
         if (!(int)$setting['is_enabled']) return;

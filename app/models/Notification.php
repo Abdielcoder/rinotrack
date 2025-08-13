@@ -54,6 +54,7 @@ class Notification {
             'project_assigned_to_clan' => ['is_enabled' => 1, 'recipients' => null],
             'task_due_soon' => ['is_enabled' => 1, 'recipients' => null],
             'task_overdue' => ['is_enabled' => 1, 'recipients' => null],
+            'task_assigned' => ['is_enabled' => 1, 'recipients' => null],
             'task_due_soon_1' => ['is_enabled' => 0, 'recipients' => null, 'value' => 5],
             'task_due_soon_2' => ['is_enabled' => 0, 'recipients' => null, 'value' => 3],
             'task_due_soon_3' => ['is_enabled' => 0, 'recipients' => null, 'value' => 1]

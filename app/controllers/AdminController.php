@@ -658,6 +658,12 @@ class AdminController {
             }
 
             if ($taskId) {
+                // Notificar asignación si aplica
+                try {
+                    if (!empty($assignedUsers)) {
+                        (new NotificationService())->notifyTaskAssigned((int)$taskId, $assignedUsers);
+                    }
+                } catch (Exception $e) { error_log('Notif error (task_assigned): ' . $e->getMessage()); }
                 Utils::jsonResponse(['success' => true, 'message' => 'Tarea creada exitosamente', 'task_id' => (int)$taskId]);
             } else {
                 Utils::jsonResponse(['success' => false, 'message' => 'Error al crear tarea'], 500);

@@ -60,7 +60,8 @@ ob_start();
                         // Base toggles
                         $configList = [
                             'project_assigned_to_clan' => 'Proyecto asignado a un clan',
-                            'task_overdue' => 'Tareas vencidas'
+                            'task_overdue' => 'Tareas vencidas',
+                            'task_assigned' => 'Tareas asignadas (cuando se asignan a usuarios)'
                         ];
                         foreach ($configList as $key => $label):
                             $enabled = (int)($settings[$key]['is_enabled'] ?? 0);
