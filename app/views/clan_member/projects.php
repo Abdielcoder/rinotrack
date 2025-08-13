@@ -15,6 +15,17 @@ ob_start();
             </div>
         </div>
     </header>
+    <nav class="cm-subnav">
+        <div class="nav-inner">
+            <ul>
+                <li><a class="cm-subnav-link" href="?route=clan_member/dashboard"><i class="fas fa-home"></i> Dashboard</a></li>
+                <li><a class="cm-subnav-link active" href="?route=clan_member/projects"><i class="fas fa-project-diagram"></i> Proyectos</a></li>
+                <li><a class="cm-subnav-link" href="?route=clan_member/tasks"><i class="fas fa-tasks"></i> Tareas</a></li>
+                <li><a class="cm-subnav-link" href="?route=clan_member/kpi-dashboard"><i class="fas fa-chart-bar"></i> KPI</a></li>
+                <li><a class="cm-subnav-link" href="?route=clan_member/availability"><i class="fas fa-user-clock"></i> Disponibilidad</a></li>
+            </ul>
+        </div>
+    </nav>
 
     <div class="content-minimal">
         <?php if (empty($projects)): ?>

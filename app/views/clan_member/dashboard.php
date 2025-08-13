@@ -26,6 +26,17 @@ ob_start();
             </div>
         </div>
     </header>
+    <nav class="cm-subnav">
+        <div class="nav-inner">
+            <ul>
+                <li><a class="cm-subnav-link active" href="?route=clan_member/dashboard"><i class="fas fa-home"></i> Dashboard</a></li>
+                <li><a class="cm-subnav-link" href="?route=clan_member/projects"><i class="fas fa-project-diagram"></i> Proyectos</a></li>
+                <li><a class="cm-subnav-link" href="?route=clan_member/tasks"><i class="fas fa-tasks"></i> Tareas</a></li>
+                <li><a class="cm-subnav-link" href="?route=clan_member/kpi-dashboard"><i class="fas fa-chart-bar"></i> KPI</a></li>
+                <li><a class="cm-subnav-link" href="?route=clan_member/availability"><i class="fas fa-user-clock"></i> Disponibilidad</a></li>
+            </ul>
+        </div>
+    </nav>
 
     <div class="content-minimal">
         <section class="team-progress-section">
@@ -100,11 +111,11 @@ function openOwnContributionModal(){
   var data = window.ownContributionDetails || {stats:{},tasks:[]};
   var modal = document.getElementById("ownContributionModal");
   if(!modal){
-    var html = "\n<div id=\"ownContributionModal\" class=\"modal\" style=\"display:flex\">\n  <div class=\"modal-content\" style=\"max-width:700px;\">\n    <div class=\"modal-header\">\n      <h3>Mis tareas</h3>\n      <button class=\"modal-close\" onclick=\"closeOwnContributionModal()\">&times;</button>\n    </div>\n    <div class=\"modal-body\">\n      <div id=\"ownContributionStats\" style=\"margin-bottom:12px;\"></div>\n      <div id=\"ownContributionList\" class=\"tasks-list\"></div>\n    </div>\n  </div>\n</div>\n";
+    var html = "\n<div id=\"ownContributionModal\" class=\"modal open\">\n  <div class=\"modal-content modal-lg\">\n    <div class=\"modal-header\">\n      <h3>Mis tareas</h3>\n      <button class=\"modal-close\" onclick=\"closeOwnContributionModal()\">&times;</button>\n    </div>\n    <div class=\"modal-toolbar\">\n      <input type=\"text\" id=\"ownSearch\" placeholder=\"Buscar tarea...\" oninput=\"filterOwnTasks()\"/>\n      <select id=\"ownStatus\" onchange=\"filterOwnTasks()\">\n        <option value=\"\">Todos</option>\n        <option value=\"completed\">Completadas</option>\n        <option value=\"in_progress\">En progreso</option>\n        <option value=\"pending\">Pendientes</option>\n      </select>\n    </div>\n    <div class=\"modal-body\">\n      <div id=\"ownContributionStats\" style=\"margin-bottom:12px;\"></div>\n      <div id=\"ownContributionList\" class=\"tasks-list-modal\"></div>\n    </div>\n  </div>\n</div>\n";
     document.body.insertAdjacentHTML('beforeend', html);
     modal = document.getElementById("ownContributionModal");
   } else {
-    modal.style.display = "flex";
+    modal.classList.add('open');
   }
   var stats = data.stats||{};
   document.getElementById("ownContributionStats").innerHTML = 
@@ -112,19 +123,46 @@ function openOwnContributionModal(){
   var list = document.getElementById("ownContributionList");
   if(!list) return;
   if(!data.tasks || data.tasks.length===0){ list.innerHTML = '<div class="empty-minimal">Sin tareas</div>'; return; }
-  list.innerHTML = data.tasks.map(function(t){
-    var due = t.due_date ? new Date(t.due_date).toLocaleDateString() : "";
-    return '<div class="task-item">'
-      +'<div class="task-title">'+(t.task_name||"")+'</div>'
-      +'<div class="task-meta"><span>Proyecto: '+(t.project_name||"")+'</span> '
-      + (due? '<span>Vence: '+due+'</span> ' : '')
-      + '<span>Estado: '+(t.status||"")+'</span></div>'
-      +'</div>';
-  }).join("");
+  window._ownTasksRaw = data.tasks.slice();
+  renderOwnTasks(_ownTasksRaw);
 }
 function closeOwnContributionModal(){
   var modal = document.getElementById("ownContributionModal");
-  if(modal) modal.style.display = "none";
+  if(modal) modal.classList.remove('open');
+}
+
+function filterOwnTasks(){
+  var q = (document.getElementById('ownSearch')?.value || '').toLowerCase();
+  var st = document.getElementById('ownStatus')?.value || '';
+  var tasks = (window._ownTasksRaw||[]).filter(function(t){
+    var okQ = !q || (t.task_name||'').toLowerCase().includes(q) || (t.project_name||'').toLowerCase().includes(q);
+    var okS = !st || (t.status===st);
+    return okQ && okS;
+  });
+  renderOwnTasks(tasks);
+}
+
+function renderOwnTasks(tasks){
+  var list = document.getElementById('ownContributionList');
+  if(!list) return;
+  if(tasks.length===0){ list.innerHTML = '<div class="empty-minimal">Sin resultados</div>'; return; }
+  list.innerHTML = tasks.map(function(t){
+    var due = t.due_date ? new Date(t.due_date).toLocaleDateString() : '';
+    var chip = '<span class="chip chip-status '+(t.status||'')+'">'+(t.status||'')+'</span>';
+    return '<div class="task-row">'
+      + '<div class="row-main">'
+      +   '<div class="task-title-strong">'+(t.task_name||'')+'</div>'
+      +   '<div class="row-meta">'
+      +     '<span class="task-project"><i class="fas fa-project-diagram"></i> '+(t.project_name||'')+'</span>'
+      +     + (due? '<span><i class="fas fa-calendar"></i> Vence: '+due+'</span>' : '')
+      +   '</div>'
+      +   '<div class="divider-soft"></div>'
+      +   '<div>'+chip+'</div>'
+      + '</div>'
+      + '<div class="row-actions">'
+      + '</div>'
+      + '</div>';
+  }).join('');
 }
 </script>
 JS;
