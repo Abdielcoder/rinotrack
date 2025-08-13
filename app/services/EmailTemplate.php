@@ -1,32 +1,76 @@
 <?php
 
 class EmailTemplate {
-    public static function render($title, $introHtml, $bodyRows = [], $cta = null) {
-        $year = date('Y');
-        $brand = 'RinoTrack';
-        $logo = 'https://rinorisk.com/wp-content/uploads/2023/05/rinorisk_logo.png';
-        $primary = '#1e40af';
-        $accent = '#2563eb';
-        $muted = '#6b7280';
-        $lines = '';
+    /**
+     * Renderiza un correo con estilo moderno/tecnológico.
+     * $options opcional: ['accent' => '#2563eb', 'emoji' => '🚀', 'footerNote' => '']
+     */
+    public static function render($title, $introHtml, $bodyRows = [], $cta = null, $options = []) {
+        $year   = date('Y');
+        $brand  = 'RinoTrack';
+        $logo   = 'https://rinorisk.com/wp-content/uploads/2023/05/rinorisk_logo.png';
+        $accent = $options['accent'] ?? '#2563eb';
+        $emoji  = $options['emoji']  ?? '✨';
+        $muted  = '#6b7280';
+        $chipBg = 'linear-gradient(135deg, rgba(37,99,235,.15), rgba(16,185,129,.15))';
+        $glow   = '0 10px 30px rgba(37,99,235,.15)';
+
+        $rowsHtml = '';
         foreach ($bodyRows as $row) {
             $label = htmlspecialchars($row['label'] ?? '', ENT_QUOTES, 'UTF-8');
             $value = htmlspecialchars($row['value'] ?? '', ENT_QUOTES, 'UTF-8');
-            $lines .= "<tr><td style=\"padding:10px 0;color:{$muted};font-size:12px;\">{$label}</td><td style=\"padding:10px 0;color:#111827;font-weight:600;\">{$value}</td></tr>";
-            $lines .= "<tr><td colspan=\"2\" style=\"border-bottom:1px solid #e5e7eb\"></td></tr>";
+            $rowsHtml .= "<tr>
+                <td style=\"padding:12px 0;color:{$muted};font-size:12px;letter-spacing:.2px\">{$label}</td>
+                <td style=\"padding:12px 0;color:#0f172a;font-weight:700\">{$value}</td>
+            </tr>
+            <tr><td colspan=\"2\" style=\"border-bottom:1px solid #e5e7eb\"></td></tr>";
         }
+
         $ctaHtml = '';
         if ($cta && isset($cta['label'], $cta['url'])) {
-            $ctaHtml = "<div style=\"text-align:center;margin-top:22px\"><a href=\"" . htmlspecialchars($cta['url'], ENT_QUOTES, 'UTF-8') . "\" style=\"display:inline-block;background:{$accent};color:#fff;padding:12px 20px;border-radius:10px;text-decoration:none;font-weight:600\">" . htmlspecialchars($cta['label'], ENT_QUOTES, 'UTF-8') . "</a></div>";
+            $ctaHtml = "<div style=\"text-align:center;margin-top:24px\">
+                <a href=\"" . htmlspecialchars($cta['url'], ENT_QUOTES, 'UTF-8') . "\" style=\"
+                    display:inline-block;background:{$accent};color:#fff;padding:12px 22px;border-radius:12px;
+                    text-decoration:none;font-weight:700;box-shadow:{$glow};letter-spacing:.2px\">"
+                . htmlspecialchars($cta['label'], ENT_QUOTES, 'UTF-8') .
+                "</a>
+            </div>";
         }
-        return "<html><body style=\"background:#f3f4f6;margin:0;padding:24px;font-family:Inter,Arial,sans-serif\">"
-            . "<div style=\"max-width:640px;margin:0 auto\">"
-            . "<div style=\"text-align:center;margin-bottom:16px\"><img src=\"{$logo}\" alt=\"RinoRisk\" style=\"height:36px\"/></div>"
-            . "<div style=\"background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 10px 30px rgba(2,6,23,.08)\">"
-            . "<div style=\"border-bottom:3px solid {$accent};padding:16px 20px\"><div style=\"display:flex;align-items:center;gap:10px\"><div style=\"background:{$accent};color:#fff;border-radius:10px;padding:8px 10px;display:inline-flex;align-items:center\"><span style=\"font-size:12px;font-weight:700\">{$brand}</span></div><div style=\"color:#111827;font-size:16px;font-weight:700\">" . htmlspecialchars($title, ENT_QUOTES, 'UTF-8') . "</div></div></div>"
-            . "<div style=\"padding:20px\">{$introHtml}<table style=\"width:100%;border-collapse:collapse;margin-top:10px\">{$lines}</table>{$ctaHtml}</div>"
-            . "<div style=\"padding:14px 20px;color:{$muted};font-size:12px;border-top:1px solid #e5e7eb\">© {$year} RinoRisk • Sistema RinoTrack</div>"
-            . "</div></div></body></html>";
+
+        $footerNote = '';
+        if (!empty($options['footerNote'])) {
+            $footerNote = '<div style="margin-top:8px">' . htmlspecialchars($options['footerNote'], ENT_QUOTES, 'UTF-8') . '</div>';
+        }
+
+        // Cabecera con efecto glass y chip de marca
+        $header = "<div style=\"position:relative;padding:18px 22px;border-bottom:1px solid #e5e7eb;\">
+            <div style=\"display:flex;align-items:center;gap:12px\">
+                <div style=\"background:{$chipBg};backdrop-filter:saturate(160%) blur(2px);padding:8px 10px;border-radius:10px;color:#0f172a;font-weight:800;\">{$brand}</div>
+                <div style=\"font-size:18px;font-weight:800;color:#0f172a\">" . $emoji . ' ' . htmlspecialchars($title, ENT_QUOTES, 'UTF-8') . "</div>
+            </div>
+        </div>";
+
+        // Intro + tabla
+        $content = "<div style=\"padding:20px\">{$introHtml}
+            <table style=\"width:100%;border-collapse:collapse;margin-top:12px\">{$rowsHtml}</table>
+            {$ctaHtml}
+        </div>";
+
+        // Ensamble completo
+        return "<html><body style=\"margin:0;padding:24px;background:#0b1020;\">"
+            . "<div style=\"max-width:680px;margin:0 auto\">"
+            . "<div style=\"text-align:center;margin-bottom:14px\"><img src=\"{$logo}\" alt=\"RinoRisk\" style=\"height:34px;filter:drop-shadow(0 2px 6px rgba(0,0,0,.25))\"/></div>"
+            . "<div style=\"border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(0,10,40,.35);background:#fff;\">"
+            . $header
+            . $content
+            . "<div style=\"padding:14px 20px;color:{$muted};font-size:12px;border-top:1px solid #e5e7eb;background:#fafafa\">"
+                . "© {$year} RinoRisk • Sistema RinoTrack"
+                . $footerNote
+              . "</div>"
+            . "</div>"
+            . "<div style=\"text-align:center;color:#94a3b8;font-size:11px;margin-top:10px\">Enviado de forma segura • «Rendimiento sin fricción» ⚡</div>"
+            . "</div>"
+            . "</body></html>";
     }
 }
 
