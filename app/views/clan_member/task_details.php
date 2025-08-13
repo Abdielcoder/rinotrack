@@ -72,10 +72,12 @@ ob_start();
           </div>
         </div>
 
-        <div class="footer-actions" style="display:flex; gap:10px;">
+        <div class="footer-actions" style="display:flex; gap:10px; margin-top:12px;">
           <a href="?route=clan_member/project-tasks&project_id=<?php echo (int)$project['project_id']; ?>" class="btn-minimal"><i class="fas fa-arrow-left"></i> Volver a Tareas</a>
           <?php if ($canEdit): ?>
             <a href="?route=clan_member/project-tasks&project_id=<?php echo (int)$project['project_id']; ?>#edit" class="btn-minimal primary"><i class="fas fa-edit"></i> Editar Tarea</a>
+          <?php else: ?>
+            <button class="btn-minimal" onclick="noPermissionModal()"><i class="fas fa-edit"></i> Editar Tarea</button>
           <?php endif; ?>
         </div>
       </div>
@@ -132,6 +134,14 @@ document.getElementById('tdCommentForm')?.addEventListener('submit', function(e)
     .then(async r=>{ const t = await r.text(); try{ return JSON.parse(t); } catch(e){ console.error(t); return {success:false,message:'Respuesta inválida'}; } })
     .then(d=>{ if(!d.success){ alert(d.message||'Error'); return; } location.reload(); });
 });
+
+function noPermissionModal(){
+  if (window.confirmInfo) {
+    window.confirmInfo('No tienes permisos para modificar esta tarea.', function(){}, function(){});
+  } else {
+    alert('No tienes permisos para modificar esta tarea.');
+  }
+}
 </script>
 
 <?php
