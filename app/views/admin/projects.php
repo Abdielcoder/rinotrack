@@ -299,6 +299,11 @@ ob_start();
                 <span class="error-message" id="taskMembersError"></span>
             </div>
 
+            <div class="form-group">
+                <label for="taskDueDate">Fecha estimada de entrega</label>
+                <input type="date" id="taskDueDate" name="dueDate">
+            </div>
+
             <div class="modal-actions">
                 <button type="button" class="btn btn-secondary" data-action="close-task-modal">
                     Cancelar
@@ -946,8 +951,9 @@ textarea {
                     .then(resp=>{
                         const data = resp.data || {};
                         if (resp.ok && data.success) {
+                            // Cerrar inmediatamente y refrescar rápido
                             closeTaskModal();
-                            setTimeout(()=>window.location.reload(), 600);
+                            window.location.reload();
                         } else {
                             alert(data.message || 'Error al crear tarea');
                         }

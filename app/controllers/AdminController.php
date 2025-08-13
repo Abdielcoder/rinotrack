@@ -615,6 +615,8 @@ class AdminController {
         $projectId = (int)($_POST['projectId'] ?? 0);
         $taskName = Utils::sanitizeInput($_POST['taskName'] ?? '');
         $description = Utils::sanitizeInput($_POST['description'] ?? '');
+        $dueDateRaw = trim($_POST['dueDate'] ?? '');
+        $dueDate = ($dueDateRaw !== '' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $dueDateRaw)) ? $dueDateRaw : null;
         // Nueva interfaz: lista de checkboxes "assignedUsers[]" (opcional)
         $assignedUsers = [];
         if (isset($_POST['assignedUsers'])) {
@@ -635,13 +637,14 @@ class AdminController {
         }
         $clanId = (int)$project['clan_id'];
 
-        // Si hay usuario asignado, validar que pertenece al clan
-        if ($assignedToUserId) {
-            $stmt = $db->prepare('SELECT 1 FROM Clan_Members WHERE clan_id = ? AND user_id = ?');
-            $stmt->execute([$clanId, $assignedToUserId]);
-            if (!$stmt->fetch()) {
-                Utils::jsonResponse(['success' => false, 'message' => 'El usuario asignado no pertenece al clan del proyecto'], 400);
-            }
+        // validación de assignedUsers contra clan
+        if (!empty($assignedUsers)) {
+            $placeholders = implode(',', array_fill(0, count($assignedUsers), '?'));
+            $check = $db->prepare("SELECT user_id FROM Clan_Members WHERE clan_id = ? AND user_id IN ($placeholders)");
+            $params = array_merge([$clanId], $assignedUsers);
+            $check->execute($params);
+            $validIds = array_column($check->fetchAll(), 'user_id');
+            $assignedUsers = array_values(array_intersect($assignedUsers, $validIds));
         }
 
         // Crear tarea y asignar múltiples usuarios si se enviaron
@@ -649,9 +652,9 @@ class AdminController {
         $currentUser = $this->auth->getCurrentUser();
         try {
             if (!empty($assignedUsers)) {
-                $taskId = $taskModel->createAdvanced($projectId, $taskName, $description, null, $clanId, Task::PRIORITY_MEDIUM, $currentUser['user_id'] ?? null, $assignedUsers);
+                $taskId = $taskModel->createAdvanced($projectId, $taskName, $description, $dueDate, $clanId, Task::PRIORITY_MEDIUM, $currentUser['user_id'] ?? null, $assignedUsers);
             } else {
-                $taskId = $taskModel->create($projectId, $taskName, $description, null, Task::PRIORITY_MEDIUM, null, $currentUser['user_id'] ?? null);
+                $taskId = $taskModel->create($projectId, $taskName, $description, null, Task::PRIORITY_MEDIUM, $dueDate, $currentUser['user_id'] ?? null);
             }
 
             if ($taskId) {
