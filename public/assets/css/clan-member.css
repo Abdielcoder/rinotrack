@@ -256,6 +256,14 @@ section h3 { margin: 6px 0 14px; color: var(--cm-text); font-size: 1.08rem; }
   .task-details-grid { grid-template-columns: 1fr; }
 }
 
+/* Separaciones suaves para evitar amontonamiento */
+.summary-card > * + * { margin-top: 8px; }
+.left-pane > .summary-card + .summary-card { margin-top: 12px; }
+.right-pane > .summary-card + .summary-card { margin-top: 12px; }
+.comments-list .comment-item + .comment-item { margin-top: 8px; }
+.comment-composer > * + * { margin-top: 8px; }
+.assignees-list .assignee-item + .assignee-item { margin-top: 8px; }
+
 /* Mejoras UI del modal Crear Tarea */
 .modal .form-group { display: grid; gap: 6px; }
 .modal .form-group label { font-weight: 700; color: var(--cm-text); font-size: .92rem; }
