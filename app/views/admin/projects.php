@@ -117,6 +117,11 @@ ob_start();
                         </option>
                         <?php endforeach; ?>
                     </select>
+                    <select id="assignmentFilter" data-action="filter-projects" title="Asignación KPI">
+                        <option value="">Todas las asignaciones</option>
+                        <option value="assigned">Asignados</option>
+                        <option value="unassigned">Sin asignar</option>
+                    </select>
                 </div>
             </div>
 
@@ -135,7 +140,8 @@ ob_start();
             <?php else: ?>
             <div class="projects-grid">
                 <?php foreach ($projects as $project): ?>
-                <div class="project-card" data-status="<?php echo htmlspecialchars($project['status']); ?>" data-clan="<?php echo intval($project['clan_id']); ?>">
+                <?php $isAssigned = ((float)($project['kpi_points'] ?? 0) > 0) && !empty($project['kpi_quarter_id']); ?>
+                <div class="project-card" data-status="<?php echo htmlspecialchars($project['status']); ?>" data-clan="<?php echo intval($project['clan_id']); ?>" data-assigned="<?php echo $isAssigned ? 'assigned' : 'unassigned'; ?>">
                     <div class="project-header">
                         <div class="project-info">
                             <h4 class="project-name"><?php echo Utils::escape($project['project_name']); ?></h4>
@@ -184,10 +190,10 @@ ob_start();
                     <div class="project-progress">
                         <div class="progress-info">
                             <span>Progreso</span>
-                            <span class="progress-value"><?php echo number_format($project['progress_percentage'], 1); ?>%</span>
+                            <span class="progress-value <?php echo $isAssigned ? '' : 'unassigned'; ?>"><?php echo number_format($project['progress_percentage'], 1); ?>%</span>
                         </div>
                         <div class="progress-bar">
-                            <div class="progress-fill" style="width: <?php echo $project['progress_percentage']; ?>%"></div>
+                            <div class="progress-fill <?php echo $isAssigned ? '' : 'unassigned'; ?>" style="width: <?php echo $project['progress_percentage']; ?>%"></div>
                         </div>
                     </div>
 
@@ -200,6 +206,12 @@ ob_start();
                             <i class="fas fa-check-circle"></i>
                             <span><?php echo $project['completed_tasks']; ?> completadas</span>
                         </div>
+                        <?php if(!$isAssigned): ?>
+                        <div class="stat-item" title="Proyecto sin KPI/OKR asignado">
+                            <i class="fas fa-exclamation-triangle" style="color:var(--warning)"></i>
+                            <span>Sin KPI</span>
+                        </div>
+                        <?php endif; ?>
                     </div>
 
                     <div class="project-footer">
@@ -546,6 +558,14 @@ ob_start();
     transition: width var(--transition-normal);
 }
 
+.progress-fill.unassigned {
+    background: var(--warning);
+}
+
+.progress-value.unassigned {
+    color: var(--warning);
+}
+
 .project-stats {
     display: flex;
     gap: var(--spacing-lg);
@@ -761,18 +781,22 @@ textarea {
         function filterProjects() {
             const statusFilter = document.getElementById('statusFilter');
             const clanFilter = document.getElementById('clanFilter');
+            const assignmentFilter = document.getElementById('assignmentFilter');
             const projectCards = document.querySelectorAll('.project-card');
             
             const status = statusFilter ? statusFilter.value : '';
             const clan = clanFilter ? clanFilter.value : '';
+            const assignment = assignmentFilter ? assignmentFilter.value : '';
             
             projectCards.forEach(function(card) {
                 const projectStatus = card.dataset.status;
                 const projectClan = card.dataset.clan;
+                const projectAssigned = card.dataset.assigned || '';
                 let showCard = true;
                 
                 if (status && projectStatus !== status) showCard = false;
                 if (clan && projectClan !== clan) showCard = false;
+                if (assignment && projectAssigned !== assignment) showCard = false;
                 
                 card.style.display = showCard ? 'block' : 'none';
             });
