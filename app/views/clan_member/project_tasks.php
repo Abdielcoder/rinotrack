@@ -104,23 +104,27 @@ ob_start();
 </div>
 
 <!-- Modal crear tarea -->
-<div class="modal" id="createTaskModal">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h3>Nueva Tarea</h3>
+<div class="modal create-task-modal" id="createTaskModal">
+  <div class="modal-content modal-lg">
+    <div class="modal-header modal-header-gradient">
+      <div class="modal-title-wrap">
+        <h3>Nueva Tarea</h3>
+        <span class="modal-subtitle">Agrega una tarea al proyecto y define su prioridad y fecha</span>
+      </div>
       <button class="modal-close" onclick="closeCreateTaskModal()">&times;</button>
     </div>
-    <form id="createTaskForm" class="modal-body" style="display:grid;gap:10px;">
+    <form id="createTaskForm" class="modal-body create-task-body">
       <input type="hidden" name="project_id" value="<?php echo (int)$project['project_id']; ?>" />
-      <div class="form-group">
-        <label>Título</label>
-        <input type="text" name="task_name" required />
-      </div>
-      <div class="form-group">
-        <label>Descripción</label>
-        <textarea name="description" rows="3"></textarea>
-      </div>
-      <div class="form-row" style="display:flex;gap:10px;flex-wrap:wrap;">
+      <div class="form-grid">
+        <div class="form-group form-span-2">
+          <label>Título</label>
+          <input type="text" name="task_name" placeholder="Escribe un título claro y conciso" required />
+          <small class="field-help">Ejemplo: Implementar autenticación con tokens</small>
+        </div>
+        <div class="form-group form-span-2">
+          <label>Descripción</label>
+          <textarea name="description" rows="4" placeholder="Contexto, entregables y consideraciones"></textarea>
+        </div>
         <div class="form-group">
           <label>Prioridad</label>
           <select name="priority">
@@ -129,17 +133,23 @@ ob_start();
             <option value="high">Alta</option>
             <option value="urgent">Urgente</option>
           </select>
+          <small class="field-help">Afecta la visibilidad en las listas</small>
         </div>
         <div class="form-group">
           <label>Fecha límite</label>
           <input type="date" name="due_date" />
+          <small class="field-help">Opcional</small>
         </div>
       </div>
+      <div class="form-actions">
+        <button class="action-btn secondary" type="button" onclick="closeCreateTaskModal()">Cancelar</button>
+        <button id="createTaskSubmitBtn" class="action-btn primary" type="submit">
+          <span class="btn-text">Crear</span>
+          <span class="btn-loader" aria-hidden="true"></span>
+        </button>
+      </div>
+      <div id="createTaskErrors" class="form-errors" style="display:none;"></div>
     </form>
-    <div class="modal-footer">
-      <button class="action-btn secondary" onclick="closeCreateTaskModal()">Cancelar</button>
-      <button class="action-btn primary" form="createTaskForm" type="submit">Crear</button>
-    </div>
   </div>
 </div>
 
@@ -149,10 +159,21 @@ function closeCreateTaskModal(){ document.getElementById('createTaskModal').clas
 
 document.getElementById('createTaskForm').addEventListener('submit', function(e){
   e.preventDefault();
+  const title = this.querySelector('input[name="task_name"]').value.trim();
+  const errorBox = document.getElementById('createTaskErrors');
+  if(!title){
+    errorBox.style.display = 'block';
+    errorBox.textContent = 'El título es requerido.';
+    return;
+  }
+  errorBox.style.display = 'none';
+  const submitBtn = document.getElementById('createTaskSubmitBtn');
+  submitBtn.classList.add('is-loading');
   const fd = new FormData(this);
   fetch('?route=clan_member/create-task', { method:'POST', body: fd, credentials:'same-origin' })
     .then(async r=>{ const t = await r.text(); try{ return JSON.parse(t); } catch(e){ console.error(t); return {success:false,message:'Respuesta inválida'}; } })
-    .then(d=>{ if(!d.success){ alert(d.message||'Error'); return; } location.reload(); });
+    .then(d=>{ if(!d.success){ errorBox.style.display='block'; errorBox.textContent=d.message||'Error al crear la tarea'; submitBtn.classList.remove('is-loading'); return; } location.reload(); })
+    .catch(()=>{ errorBox.style.display='block'; errorBox.textContent='Error de red'; submitBtn.classList.remove('is-loading'); });
 });
 
 function filterCards(){
