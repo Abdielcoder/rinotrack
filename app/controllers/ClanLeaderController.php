@@ -2394,37 +2394,12 @@ class ClanLeaderController {
      */
     private function getMembersSnakePathData($kpiQuarterId) {
         try {
-            // Consulta para obtener miembros del clan con sus puntos ganados
-            $stmt = $this->db->prepare("
-                SELECT 
-                    u.user_id,
-                    u.full_name,
-                    u.email,
-                    COALESCE(SUM(p.kpi_points), 0) as total_assigned,
-                    COALESCE(SUM(
-                        CASE 
-                            WHEN p.task_distribution_mode = 'automatic' THEN 
-                                (SELECT COALESCE(SUM(t.automatic_points), 0) 
-                                 FROM Tasks t 
-                                 WHERE t.project_id = p.project_id AND t.is_completed = 1 AND t.assigned_to_user_id = u.user_id)
-                            ELSE 
-                                (SELECT COALESCE(SUM(t.assigned_percentage * p.kpi_points / 100), 0) 
-                                 FROM Tasks t 
-                                 WHERE t.project_id = p.project_id AND t.is_completed = 1 AND t.assigned_to_user_id = u.user_id)
-                        END
-                    ), 0) as earned_points,
-                    COUNT(DISTINCT p.project_id) as total_projects
-                FROM Users u
-                JOIN Clan_Members cm ON u.user_id = cm.user_id
-                LEFT JOIN Projects p ON cm.clan_id = p.clan_id AND p.kpi_quarter_id = ?
-                WHERE cm.clan_id = ? AND u.is_active = 1
-                GROUP BY u.user_id, u.full_name, u.email
-                ORDER BY earned_points DESC, total_assigned DESC
-            ");
-            $stmt->execute([$kpiQuarterId, $this->userClan['clan_id']]);
+            // Consulta revisada para calcular puntos por usuario considerando múltiples asignaciones
+            $stmt = $this->db->prepare("\n                SELECT \n                    u.user_id,\n                    u.full_name,\n                    u.email,\n                    0 as total_assigned,\n                    (\n                        -- Puntos por tareas con asignaciones múltiples (Task_Assignments)\n                        COALESCE((\n                            SELECT SUM(\n                                CASE \n                                    WHEN p.task_distribution_mode = 'automatic' THEN \n                                        t.automatic_points / NULLIF((SELECT COUNT(*) FROM Task_Assignments ta2 WHERE ta2.task_id = t.task_id), 0)\n                                    ELSE \n                                        (ta.assigned_percentage * p.kpi_points / 100)\n                                END\n                            )\n                            FROM Tasks t\n                            JOIN Projects p ON p.project_id = t.project_id\n                            JOIN Task_Assignments ta ON ta.task_id = t.task_id AND ta.user_id = u.user_id\n                            WHERE p.kpi_quarter_id = ?\n                              AND p.clan_id = ?\n                              AND t.is_completed = 1\n                              AND t.is_subtask = 0\n                        ), 0)\n                        +\n                        -- Puntos por tareas con asignación directa (sin Task_Assignments)\n                        COALESCE((\n                            SELECT SUM(\n                                CASE \n                                    WHEN p.task_distribution_mode = 'automatic' THEN t.automatic_points\n                                    ELSE (t.assigned_percentage * p.kpi_points / 100)\n                                END\n                            )\n                            FROM Tasks t\n                            JOIN Projects p ON p.project_id = t.project_id\n                            WHERE p.kpi_quarter_id = ?\n                              AND p.clan_id = ?\n                              AND t.is_completed = 1\n                              AND t.is_subtask = 0\n                              AND t.assigned_to_user_id = u.user_id\n                              AND NOT EXISTS (SELECT 1 FROM Task_Assignments ta WHERE ta.task_id = t.task_id)\n                        ), 0)\n                    ) AS earned_points,\n                    0 as total_projects\n                FROM Users u\n                JOIN Clan_Members cm ON u.user_id = cm.user_id\n                WHERE cm.clan_id = ? AND u.is_active = 1\n                ORDER BY earned_points DESC\n            ");
+            $stmt->execute([$kpiQuarterId, $this->userClan['clan_id'], $kpiQuarterId, $this->userClan['clan_id'], $this->userClan['clan_id']]);
             $members = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
-            // Asignar colores e iconos específicos para cada miembro
+            // Asignar colores, iconos y normalizar valores
             $memberIcons = [
                 'default' => 'fas fa-user',
                 'admin' => 'fas fa-crown',
@@ -2441,18 +2416,11 @@ class ClanLeaderController {
             ];
             
             foreach ($members as &$member) {
-                // Asignar color específico para el miembro
                 $member['member_color'] = $memberColors[array_rand($memberColors)];
-                
-                // Asignar icono específico para el miembro
                 $member['member_icon'] = $memberIcons['default'];
-                
-                // Asegurar que los valores numéricos sean correctos
-                $member['earned_points'] = (int)($member['earned_points'] ?? 0);
+                $member['earned_points'] = (int)round($member['earned_points'] ?? 0);
                 $member['total_assigned'] = (int)($member['total_assigned'] ?? 0);
-                $member['total_points'] = 1000; // Límite por miembro
-                
-                // Calcular posición en el camino (sin límite de 1000)
+                $member['total_points'] = 1000;
                 $member['path_position'] = max(0, $member['earned_points']);
                 $member['progress_percentage'] = $member['total_points'] > 0 ? 
                     round(($member['earned_points'] / $member['total_points']) * 100, 1) : 0;
