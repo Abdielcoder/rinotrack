@@ -567,6 +567,11 @@ try {
             $controller->tasks();
             break;
 
+        case 'clan_member/project-tasks':
+            $controller = new ClanMemberController();
+            $controller->projectTasks();
+            break;
+
         case 'clan_member/toggle-task-status':
             $controller = new ClanMemberController();
             $controller->toggleTaskStatus();
@@ -580,6 +585,11 @@ try {
         case 'clan_member/add-task-comment':
             $controller = new ClanMemberController();
             $controller->addTaskComment();
+            break;
+
+        case 'clan_member/create-task':
+            $controller = new ClanMemberController();
+            $controller->createTask();
             break;
 
         case 'clan_member/task-comments':

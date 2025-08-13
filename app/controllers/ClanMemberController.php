@@ -79,6 +79,57 @@ class ClanMemberController {
         $this->loadView('clan_member/projects', $data);
     }
 
+    public function projectTasks() {
+        $this->requireAuth();
+        if (!$this->hasMemberAccess()) {
+            Utils::redirect('dashboard');
+            return;
+        }
+        $projectId = (int)($_GET['project_id'] ?? 0);
+        if ($projectId <= 0) { die('Proyecto inválido'); }
+        $project = $this->projectModel->findById($projectId);
+        if (!$project || (int)$project['clan_id'] !== (int)$this->userClan['clan_id']) {
+            die('Acceso denegado al proyecto');
+        }
+        $tasks = $this->taskModel->getByProject($projectId);
+        $data = [
+            'currentPage' => 'clan_member',
+            'user' => $this->currentUser,
+            'clan' => $this->userClan,
+            'project' => $project,
+            'tasks' => $tasks
+        ];
+        $this->loadView('clan_member/project_tasks', $data);
+    }
+
+    public function createTask() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
+        }
+        $this->requireAuth();
+        if (!$this->hasMemberAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+        }
+        $projectId = (int)($_POST['project_id'] ?? 0);
+        $taskName = trim($_POST['task_name'] ?? '');
+        $description = trim($_POST['description'] ?? '');
+        $priority = $_POST['priority'] ?? Task::PRIORITY_MEDIUM;
+        $dueDate = $_POST['due_date'] ?? null;
+        if ($projectId <= 0 || $taskName === '') {
+            Utils::jsonResponse(['success' => false, 'message' => 'Datos inválidos'], 400);
+        }
+        $project = $this->projectModel->findById($projectId);
+        if (!$project || (int)$project['clan_id'] !== (int)$this->userClan['clan_id']) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado al proyecto'], 403);
+        }
+        $taskId = $this->taskModel->create($projectId, $taskName, $description, $this->currentUser['user_id'], $priority, $dueDate, $this->currentUser['user_id']);
+        if ($taskId) {
+            Utils::jsonResponse(['success' => true, 'message' => 'Tarea creada', 'task_id' => (int)$taskId]);
+        } else {
+            Utils::jsonResponse(['success' => false, 'message' => 'No se pudo crear la tarea'], 500);
+        }
+    }
+
     public function tasks() {
         $this->requireAuth();
         if (!$this->hasMemberAccess()) {

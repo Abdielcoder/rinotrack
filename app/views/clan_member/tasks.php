@@ -50,7 +50,7 @@ ob_start();
                             <span class="value"><?php echo (float)$p['progress_percentage']; ?>%</span>
                         </div>
                         <div class="cc-actions">
-                            <a class="btn-minimal" href="?route=clan_member/tasks&project_id=<?php echo $p['project_id']; ?>"><i class="fas fa-eye"></i> Ver Tareas</a>
+                                <a class="btn-minimal" href="?route=clan_member/project-tasks&project_id=<?php echo $p['project_id']; ?>"><i class="fas fa-eye"></i> Ver Tareas</a>
                         </div>
                     </div>
                     <div class="cc-progress"><span style="width: <?php echo (float)$p['progress_percentage']; ?>%"></span></div>
