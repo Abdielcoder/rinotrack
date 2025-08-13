@@ -153,7 +153,11 @@ ob_start();
                                 <td class="cell-actions">
                                     <button class="icon-btn" onclick="openCommentModal(<?php echo $t['task_id']; ?>)" title="Comentar"><i class="fas fa-comment"></i></button>
                                     <?php $own = in_array((string)($user['user_id'] ?? 0), explode(',', (string)($t['all_assigned_user_ids'] ?? ''))) || (int)($t['assigned_to_user_id'] ?? 0) === (int)($user['user_id'] ?? -1); ?>
-                                    <button class="icon-btn" <?php echo $own ? '' : 'disabled'; ?> title="Cambiar estado" onclick="toggleTaskStatus(<?php echo $t['task_id']; ?>, '<?php echo $t['status']; ?>', <?php echo $own ? 'true' : 'false'; ?>)"><i class="fas fa-check"></i></button>
+                                    <select class="status-select" <?php echo $own ? '' : 'disabled'; ?> onchange="setTaskStatus(<?php echo $t['task_id']; ?>, this.value, <?php echo $own ? 'true' : 'false'; ?>)" title="Cambiar estado">
+                                        <option value="pending" <?php echo ($t['status']==='pending')?'selected':''; ?>>Pendiente</option>
+                                        <option value="in_progress" <?php echo ($t['status']==='in_progress')?'selected':''; ?>>En progreso</option>
+                                        <option value="completed" <?php echo ($t['status']==='completed')?'selected':''; ?>>Completada</option>
+                                    </select>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -229,6 +233,22 @@ function toggleTaskStatus(taskId, currentStatus, allowed){
   const fd = new FormData(); fd.append('task_id', taskId); fd.append('is_completed', isCompleted ? 'true' : 'false');
   fetch('?route=clan_member/toggle-task-status', { method: 'POST', body: fd, credentials: 'same-origin' })
     .then(r=>r.json()).then(d=>{ alert(d.message|| (d.success?'OK':'Error')); if(d.success){ location.reload(); } });
+}
+
+function setTaskStatus(taskId, newStatus, allowed){
+  if(!allowed){ alert('No puedes cambiar el estado de esta tarea'); return; }
+  // Si seleccionó completada, usa el endpoint existente para mantener lógica de progreso
+  if(newStatus === 'completed' || newStatus === 'pending'){
+    const isCompleted = newStatus === 'completed';
+    const fd = new FormData(); fd.append('task_id', taskId); fd.append('is_completed', isCompleted ? 'true' : 'false');
+    fetch('?route=clan_member/toggle-task-status', { method: 'POST', body: fd, credentials: 'same-origin' })
+      .then(r=>r.json()).then(d=>{ if(!d.success){ alert(d.message||'Error'); } location.reload(); });
+    return;
+  }
+  // Para in_progress, usar update-task del miembro
+  const fd2 = new FormData(); fd2.append('task_id', taskId); fd2.append('status', 'in_progress');
+  fetch('?route=clan_member/update-task', { method: 'POST', body: fd2, credentials: 'same-origin' })
+    .then(r=>r.json()).then(d=>{ if(!d.success){ alert(d.message||'Error'); } location.reload(); });
 }
 
 function loadTaskComments(taskId){

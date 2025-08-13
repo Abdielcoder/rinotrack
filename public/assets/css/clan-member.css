@@ -123,6 +123,7 @@
 /* Botones de acción compactos */
 .icon-btn { display:inline-flex; align-items:center; justify-content:center; width:36px; height:36px; border-radius:10px; border:1px solid var(--cm-border); background:#fff; color:var(--cm-text); transition:.18s ease; }
 .icon-btn:hover { box-shadow: var(--cm-shadow); transform: translateY(-1px); }
+.status-select { padding: 8px 10px; border: 1px solid var(--cm-border); border-radius: 8px; background:#fff; font-weight:700; }
 
 /* Puntos y badges */
 .status-dot { width:10px; height:10px; border-radius:999px; display:inline-block; }
