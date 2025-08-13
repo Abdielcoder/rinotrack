@@ -94,12 +94,13 @@ $additionalJS = [APP_URL . 'assets/js/clan-leader.js'];
 // Inyectar los datos de la contribución propia para el modal
 $content .= '<script>window.ownContributionDetails = ' . json_encode($ownContributionDetails ?? []) . ';</script>';
 // Script mínimo para modal propio
-$content .= '<script>
+$modalScript = <<<'JS'
+<script>
 function openOwnContributionModal(){
   var data = window.ownContributionDetails || {stats:{},tasks:[]};
   var modal = document.getElementById("ownContributionModal");
   if(!modal){
-    var html = '\n<div id="ownContributionModal" class="modal" style="display:flex">\n  <div class="modal-content" style="max-width:700px;">\n    <div class="modal-header">\n      <h3>Mis tareas</h3>\n      <button class="modal-close" onclick="closeOwnContributionModal()">&times;</button>\n    </div>\n    <div class="modal-body">\n      <div id="ownContributionStats" style="margin-bottom:12px;"></div>\n      <div id="ownContributionList" class="tasks-list"></div>\n    </div>\n  </div>\n</div>\n';
+    var html = "\n<div id=\"ownContributionModal\" class=\"modal\" style=\"display:flex\">\n  <div class=\"modal-content\" style=\"max-width:700px;\">\n    <div class=\"modal-header\">\n      <h3>Mis tareas</h3>\n      <button class=\"modal-close\" onclick=\"closeOwnContributionModal()\">&times;</button>\n    </div>\n    <div class=\"modal-body\">\n      <div id=\"ownContributionStats\" style=\"margin-bottom:12px;\"></div>\n      <div id=\"ownContributionList\" class=\"tasks-list\"></div>\n    </div>\n  </div>\n</div>\n";
     document.body.insertAdjacentHTML('beforeend', html);
     modal = document.getElementById("ownContributionModal");
   } else {
@@ -107,25 +108,27 @@ function openOwnContributionModal(){
   }
   var stats = data.stats||{};
   document.getElementById("ownContributionStats").innerHTML = 
-    'Total: '+(stats.total||0)+' | Completadas: '+(stats.completed||0)+' | En progreso: '+(stats.in_progress||0)+' | Pendientes: '+(stats.pending||0);
+    "Total: "+(stats.total||0)+" | Completadas: "+(stats.completed||0)+" | En progreso: "+(stats.in_progress||0)+" | Pendientes: "+(stats.pending||0);
   var list = document.getElementById("ownContributionList");
   if(!list) return;
   if(!data.tasks || data.tasks.length===0){ list.innerHTML = '<div class="empty-minimal">Sin tareas</div>'; return; }
   list.innerHTML = data.tasks.map(function(t){
-    var due = t.due_date ? new Date(t.due_date).toLocaleDateString() : '';
+    var due = t.due_date ? new Date(t.due_date).toLocaleDateString() : "";
     return '<div class="task-item">'
-      +'<div class="task-title">'+(t.task_name||'')+'</div>'
-      +'<div class="task-meta"><span>Proyecto: '+(t.project_name||'')+'</span> '
-      + (due? '<span>Vence: '+due+'</span> ':'')
-      + '<span>Estado: '+(t.status||'')+'</span></div>'
+      +'<div class="task-title">'+(t.task_name||"")+'</div>'
+      +'<div class="task-meta"><span>Proyecto: '+(t.project_name||"")+'</span> '
+      + (due? '<span>Vence: '+due+'</span> ' : '')
+      + '<span>Estado: '+(t.status||"")+'</span></div>'
       +'</div>';
-  }).join('');
+  }).join("");
 }
 function closeOwnContributionModal(){
   var modal = document.getElementById("ownContributionModal");
   if(modal) modal.style.display = "none";
 }
-</script>';
+</script>
+JS;
+$content .= $modalScript;
 require_once __DIR__ . '/../layout.php';
 ?>
 
