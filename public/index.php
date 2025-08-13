@@ -592,6 +592,11 @@ try {
             $controller->createTask();
             break;
 
+        case 'clan_member/task-details':
+            $controller = new ClanMemberController();
+            $controller->taskDetails();
+            break;
+
         case 'clan_member/task-comments':
             $controller = new ClanMemberController();
             $controller->taskComments();

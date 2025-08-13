@@ -93,7 +93,7 @@ ob_start();
                     <div class="task-actions">
                         <span class="status-badge <?php echo htmlspecialchars($t['status']); ?>"><?php echo strtoupper(str_replace('_',' ', (string)$t['status'])); ?></span>
                         <div class="actions-right">
-                            <button class="btn-chip info" onclick="openCommentModal(<?php echo (int)$t['task_id']; ?>)"><i class="fas fa-eye"></i> Ver</button>
+                            <a class="btn-chip info" href="?route=clan_member/task-details&task_id=<?php echo (int)$t['task_id']; ?>"><i class="fas fa-eye"></i> Ver</a>
                         </div>
                     </div>
                 </div>

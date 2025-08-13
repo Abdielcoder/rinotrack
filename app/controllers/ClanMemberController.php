@@ -102,6 +102,41 @@ class ClanMemberController {
         $this->loadView('clan_member/project_tasks', $data);
     }
 
+    public function taskDetails() {
+        $this->requireAuth();
+        if (!$this->hasMemberAccess()) {
+            Utils::redirect('dashboard');
+            return;
+        }
+        $taskId = (int)($_GET['task_id'] ?? 0);
+        if ($taskId <= 0) { die('Tarea inválida'); }
+        $task = $this->taskModel->findById($taskId);
+        if (!$task) { die('Tarea no encontrada'); }
+        $project = $this->projectModel->findById($task['project_id']);
+        if (!$project || (int)$project['clan_id'] !== (int)$this->userClan['clan_id']) { die('Acceso denegado'); }
+
+        $subtasks = $this->taskModel->getSubtasks($taskId);
+        $comments = $this->taskModel->getComments($taskId);
+        $history = $this->taskModel->getHistory($taskId);
+        $assignedUsers = $this->taskModel->getAssignedUsers($taskId);
+
+        $canEdit = $this->isTaskAssignedToUser($taskId, $this->currentUser['user_id']);
+
+        $data = [
+            'currentPage' => 'clan_member',
+            'user' => $this->currentUser,
+            'clan' => $this->userClan,
+            'task' => $task,
+            'project' => $project,
+            'subtasks' => $subtasks,
+            'comments' => $comments,
+            'history' => $history,
+            'assignedUsers' => $assignedUsers,
+            'canEdit' => $canEdit
+        ];
+        $this->loadView('clan_member/task_details', $data);
+    }
+
     public function createTask() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);

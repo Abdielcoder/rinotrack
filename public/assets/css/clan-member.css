@@ -241,6 +241,21 @@ section h3 { margin: 6px 0 14px; color: var(--cm-text); font-size: 1.08rem; }
 .btn-chip { display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius: 999px; border:1px solid var(--cm-border); background:#fff; color:var(--cm-text); font-weight:700; cursor:pointer; }
 .btn-chip.info { background:#e0ecff; color:#1e40af; border-color:#bfdbfe; }
 
+/* Task details layout */
+.task-details-grid { display:grid; grid-template-columns: 2fr 1fr; gap:14px; }
+.task-details-grid .meta-row { display:flex; gap:14px; color: var(--cm-text); font-weight:600; }
+.task-details-grid .meta-row .meta { display:flex; align-items:center; gap:6px; }
+.right-pane .assignees-list { display:grid; gap:8px; }
+.assignee-item { display:flex; align-items:center; gap:10px; }
+.avatar-initial { width:28px; height:28px; border-radius:999px; background:#e5e7eb; display:inline-flex; align-items:center; justify-content:center; font-weight:800; }
+.history-list { display:grid; gap:8px; }
+.history-item { border:1px solid var(--cm-border); border-radius:10px; padding:10px; background:#fff; }
+.info-grid { display:grid; gap:6px; color: var(--cm-text); }
+
+@media (max-width: 960px){
+  .task-details-grid { grid-template-columns: 1fr; }
+}
+
 /* Mejoras UI del modal Crear Tarea */
 .modal .form-group { display: grid; gap: 6px; }
 .modal .form-group label { font-weight: 700; color: var(--cm-text); font-size: .92rem; }
