@@ -582,6 +582,11 @@ try {
             $controller->addTaskComment();
             break;
 
+        case 'clan_member/task-comments':
+            $controller = new ClanMemberController();
+            $controller->taskComments();
+            break;
+
         case 'clan_member/availability':
             $controller = new ClanMemberController();
             $controller->availability();

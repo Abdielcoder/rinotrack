@@ -236,9 +236,14 @@ function loadTaskComments(taskId){
   const toolbar = document.getElementById('commentToolbar');
   if(list){ list.innerHTML = '<div class="empty-minimal">Cargando comentarios...</div>'; }
   fetch('?route=clan_member/task-comments&task_id='+encodeURIComponent(taskId), { credentials:'same-origin' })
-    .then(r=>r.json()).then(d=>{
-      if(!d.success){ list.innerHTML = '<div class="empty-minimal">No se pudieron cargar comentarios</div>'; return; }
-      const comments = d.comments || [];
+    .then(async r=>{
+      const text = await r.text();
+      try { return JSON.parse(text); }
+      catch(e){ console.error('Respuesta no JSON:', text); throw e; }
+    })
+    .then(d=>{
+      if(!d || !d.success){ list.innerHTML = '<div class="empty-minimal">No se pudieron cargar comentarios</div>'; return; }
+      const comments = Array.isArray(d.comments) ? d.comments : [];
       toolbar.style.display = 'block';
       toolbar.innerHTML = '<strong>'+comments.length+' comentario(s)</strong>';
       list.innerHTML = comments.map(function(c){
@@ -263,6 +268,10 @@ function loadTaskComments(taskId){
           +  (atts ? '<div class="comment-atts">'+atts+'</div>' : '')
           +'</div>';
       }).join('');
+    })
+    .catch(err=>{
+      console.error('Error cargando comentarios:', err);
+      if(list){ list.innerHTML = '<div class="empty-minimal">Error cargando comentarios</div>'; }
     });
 }
 </script>
