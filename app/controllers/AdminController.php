@@ -647,16 +647,21 @@ class AdminController {
         // Crear tarea y asignar múltiples usuarios si se enviaron
         $taskModel = new Task();
         $currentUser = $this->auth->getCurrentUser();
-        if (!empty($assignedUsers)) {
-            $taskId = $taskModel->createAdvanced($projectId, $taskName, $description, null, $clanId, Task::PRIORITY_MEDIUM, $currentUser['user_id'] ?? null, $assignedUsers);
-        } else {
-            $taskId = $taskModel->create($projectId, $taskName, $description, null, Task::PRIORITY_MEDIUM, null, $currentUser['user_id'] ?? null);
-        }
+        try {
+            if (!empty($assignedUsers)) {
+                $taskId = $taskModel->createAdvanced($projectId, $taskName, $description, null, $clanId, Task::PRIORITY_MEDIUM, $currentUser['user_id'] ?? null, $assignedUsers);
+            } else {
+                $taskId = $taskModel->create($projectId, $taskName, $description, null, Task::PRIORITY_MEDIUM, null, $currentUser['user_id'] ?? null);
+            }
 
-        if ($taskId) {
-            Utils::jsonResponse(['success' => true, 'message' => 'Tarea creada exitosamente', 'task_id' => (int)$taskId]);
-        } else {
-            Utils::jsonResponse(['success' => false, 'message' => 'Error al crear tarea'], 500);
+            if ($taskId) {
+                Utils::jsonResponse(['success' => true, 'message' => 'Tarea creada exitosamente', 'task_id' => (int)$taskId]);
+            } else {
+                Utils::jsonResponse(['success' => false, 'message' => 'Error al crear tarea'], 500);
+            }
+        } catch (Exception $e) {
+            error_log('addTask exception: ' . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno: ' . $e->getMessage()], 500);
         }
     }
     

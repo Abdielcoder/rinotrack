@@ -937,17 +937,22 @@ textarea {
                 if (taskSubmitLoader) taskSubmitLoader.style.display = 'inline-block';
 
                 const formData = new FormData(taskForm);
-                fetch('?route=admin/add-task', { method: 'POST', body: formData })
-                    .then(r=>r.json())
-                    .then(data=>{
-                        if (data && data.success) {
+                fetch('?route=admin/add-task', { method: 'POST', body: formData, headers: { 'Accept': 'application/json' } })
+                    .then(async r=>{
+                        const text = await r.text();
+                        try { return { ok: r.ok, data: JSON.parse(text) }; }
+                        catch(_) { throw new Error(text); }
+                    })
+                    .then(resp=>{
+                        const data = resp.data || {};
+                        if (resp.ok && data.success) {
                             closeTaskModal();
                             setTimeout(()=>window.location.reload(), 600);
                         } else {
-                            alert((data && data.message) ? data.message : 'Error al crear tarea');
+                            alert(data.message || 'Error al crear tarea');
                         }
                     })
-                    .catch(err=>{ console.error('Error add-task:', err); alert('Error de conexión'); })
+                    .catch(err=>{ console.error('Error add-task:', err); alert('Error: ' + (err && err.message ? err.message.substring(0, 300) : 'conexión')); })
                     .finally(()=>{
                         if (taskSubmitBtn) taskSubmitBtn.disabled = false;
                         if (taskSubmitText) taskSubmitText.style.display = 'inline';
