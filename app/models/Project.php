@@ -94,12 +94,12 @@ class Project {
                     ck.total_points as kpi_total_points,
                     (ck.total_points - ck.assigned_points) as kpi_available_points,
                     COUNT(t.task_id) as total_tasks,
-                    SUM(CASE WHEN t.is_completed = 1 THEN 1 ELSE 0 END) as completed_tasks,
+                    SUM(CASE WHEN (t.status = 'completed' OR t.is_completed = 1) THEN 1 ELSE 0 END) as completed_tasks,
                     CASE 
                         WHEN p.task_distribution_mode = 'automatic' THEN 
-                            COALESCE(SUM(CASE WHEN t.is_completed = 1 THEN t.automatic_points ELSE 0 END), 0)
+                            COALESCE(SUM(CASE WHEN (t.status = 'completed' OR t.is_completed = 1) THEN t.automatic_points ELSE 0 END), 0)
                         ELSE 
-                            COALESCE(SUM(CASE WHEN t.is_completed = 1 THEN (t.assigned_percentage * p.kpi_points / 100) ELSE 0 END), 0)
+                            COALESCE(SUM(CASE WHEN (t.status = 'completed' OR t.is_completed = 1) THEN (t.assigned_percentage * p.kpi_points / 100) ELSE 0 END), 0)
                     END as earned_points
                 FROM Projects p
                 LEFT JOIN Clans c ON p.clan_id = c.clan_id
@@ -156,12 +156,12 @@ class Project {
                     c.clan_name,
                     u.full_name as created_by_name,
                     COUNT(t.task_id) as total_tasks_count,
-                    SUM(CASE WHEN t.is_completed = 1 THEN 1 ELSE 0 END) as completed_tasks_count,
+                    SUM(CASE WHEN (t.status = 'completed' OR t.is_completed = 1) THEN 1 ELSE 0 END) as completed_tasks_count,
                     CASE 
                         WHEN p.task_distribution_mode = 'automatic' THEN 
-                            COALESCE(SUM(CASE WHEN t.is_completed = 1 THEN t.automatic_points ELSE 0 END), 0)
+                            COALESCE(SUM(CASE WHEN (t.status = 'completed' OR t.is_completed = 1) THEN t.automatic_points ELSE 0 END), 0)
                         ELSE 
-                            COALESCE(SUM(CASE WHEN t.is_completed = 1 THEN (t.assigned_percentage * p.kpi_points / 100) ELSE 0 END), 0)
+                            COALESCE(SUM(CASE WHEN (t.status = 'completed' OR t.is_completed = 1) THEN (t.assigned_percentage * p.kpi_points / 100) ELSE 0 END), 0)
                     END as earned_points
                 FROM Projects p
                 LEFT JOIN Clans c ON p.clan_id = c.clan_id
@@ -216,12 +216,12 @@ class Project {
                     c.clan_name,
                     u.full_name as created_by_name,
                     COUNT(t.task_id) as total_tasks,
-                    SUM(CASE WHEN t.is_completed = 1 THEN 1 ELSE 0 END) as completed_tasks,
+                    SUM(CASE WHEN (t.status = 'completed' OR t.is_completed = 1) THEN 1 ELSE 0 END) as completed_tasks,
                     CASE 
                         WHEN p.task_distribution_mode = 'automatic' THEN 
-                            COALESCE(SUM(CASE WHEN t.is_completed = 1 THEN t.automatic_points ELSE 0 END), 0)
+                            COALESCE(SUM(CASE WHEN (t.status = 'completed' OR t.is_completed = 1) THEN t.automatic_points ELSE 0 END), 0)
                         ELSE 
-                            COALESCE(SUM(CASE WHEN t.is_completed = 1 THEN (t.assigned_percentage * p.kpi_points / 100) ELSE 0 END), 0)
+                            COALESCE(SUM(CASE WHEN (t.status = 'completed' OR t.is_completed = 1) THEN (t.assigned_percentage * p.kpi_points / 100) ELSE 0 END), 0)
                     END as earned_points
                 FROM Projects p
                 LEFT JOIN Clans c ON p.clan_id = c.clan_id
@@ -364,12 +364,12 @@ class Project {
                     p.kpi_points,
                     p.task_distribution_mode,
                     COUNT(t.task_id) as total_tasks,
-                    SUM(CASE WHEN t.is_completed = 1 THEN 1 ELSE 0 END) as completed_tasks,
+                    SUM(CASE WHEN (t.status = 'completed' OR t.is_completed = 1) THEN 1 ELSE 0 END) as completed_tasks,
                     CASE 
                         WHEN p.task_distribution_mode = 'automatic' THEN 
-                            COALESCE(SUM(CASE WHEN t.is_completed = 1 THEN t.automatic_points ELSE 0 END), 0)
+                            COALESCE(SUM(CASE WHEN (t.status = 'completed' OR t.is_completed = 1) THEN t.automatic_points ELSE 0 END), 0)
                         ELSE 
-                            COALESCE(SUM(CASE WHEN t.is_completed = 1 THEN (t.assigned_percentage * p.kpi_points / 100) ELSE 0 END), 0)
+                            COALESCE(SUM(CASE WHEN (t.status = 'completed' OR t.is_completed = 1) THEN (t.assigned_percentage * p.kpi_points / 100) ELSE 0 END), 0)
                     END as earned_points
                 FROM Projects p
                 LEFT JOIN Tasks t ON p.project_id = t.project_id AND t.is_subtask = 0
@@ -505,12 +505,12 @@ class Project {
                     p.kpi_points,
                     p.task_distribution_mode,
                     COUNT(t.task_id) as total_tasks,
-                    SUM(CASE WHEN t.is_completed = 1 THEN 1 ELSE 0 END) as completed_tasks,
+                    SUM(CASE WHEN (t.status = 'completed' OR t.is_completed = 1) THEN 1 ELSE 0 END) as completed_tasks,
                     CASE 
                         WHEN p.task_distribution_mode = 'automatic' THEN 
-                            COALESCE(SUM(CASE WHEN t.is_completed = 1 THEN t.automatic_points ELSE 0 END), 0)
+                            COALESCE(SUM(CASE WHEN (t.status = 'completed' OR t.is_completed = 1) THEN t.automatic_points ELSE 0 END), 0)
                         ELSE 
-                            COALESCE(SUM(CASE WHEN t.is_completed = 1 THEN (t.assigned_percentage * p.kpi_points / 100) ELSE 0 END), 0)
+                            COALESCE(SUM(CASE WHEN (t.status = 'completed' OR t.is_completed = 1) THEN (t.assigned_percentage * p.kpi_points / 100) ELSE 0 END), 0)
                     END as earned_points
                 FROM Projects p
                 LEFT JOIN Tasks t ON p.project_id = t.project_id
@@ -622,12 +622,12 @@ class Project {
                     p.kpi_points,
                     p.task_distribution_mode,
                     COUNT(t.task_id) as total_tasks,
-                    SUM(CASE WHEN t.is_completed = 1 THEN 1 ELSE 0 END) as completed_tasks,
+                    SUM(CASE WHEN (t.status = 'completed' OR t.is_completed = 1) THEN 1 ELSE 0 END) as completed_tasks,
                     CASE 
                         WHEN p.task_distribution_mode = 'automatic' THEN 
-                            COALESCE(SUM(CASE WHEN t.is_completed = 1 THEN t.automatic_points ELSE 0 END), 0)
+                            COALESCE(SUM(CASE WHEN (t.status = 'completed' OR t.is_completed = 1) THEN t.automatic_points ELSE 0 END), 0)
                         ELSE 
-                            COALESCE(SUM(CASE WHEN t.is_completed = 1 THEN (t.assigned_percentage * p.kpi_points / 100) ELSE 0 END), 0)
+                            COALESCE(SUM(CASE WHEN (t.status = 'completed' OR t.is_completed = 1) THEN (t.assigned_percentage * p.kpi_points / 100) ELSE 0 END), 0)
                     END as earned_points
                 FROM Projects p
                 LEFT JOIN Tasks t ON p.project_id = t.project_id
