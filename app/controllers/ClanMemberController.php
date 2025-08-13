@@ -120,7 +120,9 @@ class ClanMemberController {
         $history = $this->taskModel->getHistory($taskId);
         $assignedUsers = $this->taskModel->getAssignedUsers($taskId);
 
-        $canEdit = $this->isTaskAssignedToUser($taskId, $this->currentUser['user_id']);
+        $canEdit = $this->isTaskAssignedToUser($taskId, $this->currentUser['user_id'])
+            || (int)($task['assigned_to_user_id'] ?? 0) === (int)$this->currentUser['user_id']
+            || (int)($task['created_by_user_id'] ?? 0) === (int)$this->currentUser['user_id'];
 
         $data = [
             'currentPage' => 'clan_member',
@@ -278,9 +280,12 @@ class ClanMemberController {
             Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
         }
 
-        // Solo permitir actualizar tareas propias
-        if (!$this->isTaskAssignedToUser($taskId, $this->currentUser['user_id'])) {
-            Utils::jsonResponse(['success' => false, 'message' => 'Solo puedes actualizar tus tareas'], 403);
+        // Solo permitir actualizar si está asignado, es dueño (assigned_to_user_id) o creador
+        $isAssigned = $this->isTaskAssignedToUser($taskId, $this->currentUser['user_id']);
+        $isOwner = (int)($task['assigned_to_user_id'] ?? 0) === (int)$this->currentUser['user_id'];
+        $isCreator = (int)($task['created_by_user_id'] ?? 0) === (int)$this->currentUser['user_id'];
+        if (!($isAssigned || $isOwner || $isCreator)) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Solo puedes actualizar tareas que te corresponden'], 403);
         }
 
         $taskName = Utils::sanitizeInput($_POST['task_name'] ?? null);
