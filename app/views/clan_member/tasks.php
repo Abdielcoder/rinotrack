@@ -176,20 +176,21 @@ ob_start();
             <h3>Agregar comentario</h3>
             <button class="modal-close" onclick="closeCommentModal()">&times;</button>
         </div>
-        <form id="commentForm" class="modal-body" enctype="multipart/form-data">
-            <input type="hidden" name="task_id" id="commentTaskId" />
-            <div class="form-group">
-                <label>Comentario</label>
-                <textarea name="comment_text" required></textarea>
-            </div>
-            <div class="form-group">
-                <label>Adjunto (opcional)</label>
-                <input type="file" name="attachment" />
-            </div>
-        </form>
-        <div class="modal-footer">
-            <button class="action-btn secondary" onclick="closeCommentModal()">Cancelar</button>
-            <button class="action-btn primary" type="submit" form="commentForm">Guardar</button>
+        <div class="modal-toolbar" id="commentToolbar" style="display:none;"></div>
+        <div class="modal-body comments-layout">
+            <div class="comments-list" id="taskCommentsList"></div>
+            <form id="commentForm" class="comment-composer" enctype="multipart/form-data">
+                <input type="hidden" name="task_id" id="commentTaskId" />
+                <div class="form-group">
+                    <label>Comentario</label>
+                    <textarea name="comment_text" required></textarea>
+                </div>
+                <div class="form-group inline">
+                    <label class="sr-only">Adjunto</label>
+                    <input type="file" name="attachment" />
+                    <button class="action-btn primary" type="submit">Guardar</button>
+                </div>
+            </form>
         </div>
     </div>
     </div>
@@ -199,6 +200,8 @@ function openCommentModal(taskId){
   var modal = document.getElementById('commentModal');
   document.getElementById('commentTaskId').value = taskId;
   modal.classList.add('open');
+  // Cargar comentarios
+  loadTaskComments(taskId);
 }
 function closeCommentModal(){
   var modal = document.getElementById('commentModal');
@@ -215,6 +218,7 @@ document.getElementById('commentForm').addEventListener('submit', function(e){
         // Mantener modal abierto para permitir más comentarios; limpiar el campo
         this.reset();
         document.getElementById('commentTaskId').value = fd.get('task_id');
+        loadTaskComments(fd.get('task_id'));
       }
     });
 });
@@ -225,6 +229,41 @@ function toggleTaskStatus(taskId, currentStatus, allowed){
   const fd = new FormData(); fd.append('task_id', taskId); fd.append('is_completed', isCompleted ? 'true' : 'false');
   fetch('?route=clan_member/toggle-task-status', { method: 'POST', body: fd, credentials: 'same-origin' })
     .then(r=>r.json()).then(d=>{ alert(d.message|| (d.success?'OK':'Error')); if(d.success){ location.reload(); } });
+}
+
+function loadTaskComments(taskId){
+  const list = document.getElementById('taskCommentsList');
+  const toolbar = document.getElementById('commentToolbar');
+  if(list){ list.innerHTML = '<div class="empty-minimal">Cargando comentarios...</div>'; }
+  fetch('?route=clan_member/task-comments&task_id='+encodeURIComponent(taskId), { credentials:'same-origin' })
+    .then(r=>r.json()).then(d=>{
+      if(!d.success){ list.innerHTML = '<div class="empty-minimal">No se pudieron cargar comentarios</div>'; return; }
+      const comments = d.comments || [];
+      toolbar.style.display = 'block';
+      toolbar.innerHTML = '<strong>'+comments.length+' comentario(s)</strong>';
+      list.innerHTML = comments.map(function(c){
+        const when = c.created_at ? new Date(c.created_at).toLocaleString() : '';
+        const author = (c.full_name || c.username || '');
+        const text = (c.comment_text || '').replace(/</g,'&lt;');
+        const atts = (c.attachments||[]).map(function(a){
+          const url = a.url || a.file_path || '#';
+          const name = a.file_name || 'archivo';
+          const type = (a.file_type||'').toLowerCase();
+          if(type.startsWith('image') || ['png','jpg','jpeg','gif','webp','bmp','svg'].includes(type)){
+            return '<a class="att att-img" href="'+url+'" target="_blank" rel="noopener"><img src="'+url+'" alt="'+name+'"/></a>';
+          }
+          if(['pdf'].includes(type) || type==='application/pdf'){
+            return '<a class="att att-file" href="'+url+'" target="_blank" rel="noopener"><i class="fas fa-file-pdf"></i> '+name+'</a>';
+          }
+          return '<a class="att att-file" href="'+url+'" target="_blank" rel="noopener"><i class="fas fa-paperclip"></i> '+name+'</a>';
+        }).join('');
+        return '<div class="comment-item">'
+          +  '<div class="comment-meta"><span class="author">'+author+'</span><span class="date">'+when+'</span></div>'
+          +  '<div class="comment-text">'+text+'</div>'
+          +  (atts ? '<div class="comment-atts">'+atts+'</div>' : '')
+          +'</div>';
+      }).join('');
+    });
 }
 </script>
 

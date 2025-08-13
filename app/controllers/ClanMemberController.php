@@ -260,6 +260,46 @@ class ClanMemberController {
         }
     }
 
+    public function taskComments() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
+        }
+        $this->requireAuth();
+        if (!$this->hasMemberAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+        }
+
+        $taskId = (int)($_GET['task_id'] ?? 0);
+        if ($taskId <= 0) {
+            Utils::jsonResponse(['success' => false, 'message' => 'ID de tarea inválido'], 400);
+        }
+
+        $task = $this->taskModel->findById($taskId);
+        if (!$task) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Tarea no encontrada'], 404);
+        }
+        // Validar que pertenece al clan del usuario
+        $project = $this->projectModel->findById($task['project_id']);
+        if (!$project || (int)$project['clan_id'] !== (int)$this->userClan['clan_id']) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+        }
+
+        $comments = $this->taskModel->getComments($taskId);
+        // Normalizar URLs de adjuntos
+        foreach ($comments as &$c) {
+            $c['attachments'] = $c['attachments'] ?? [];
+            foreach ($c['attachments'] as &$a) {
+                $path = $a['file_path'] ?? '';
+                $a['url'] = $path ? Utils::asset($path) : null;
+                if (empty($a['file_type']) && $path) {
+                    $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+                    $a['file_type'] = $ext;
+                }
+            }
+        }
+        Utils::jsonResponse(['success' => true, 'comments' => $comments]);
+    }
+
     public function availability() {
         $this->requireAuth();
         if (!$this->hasMemberAccess()) {
