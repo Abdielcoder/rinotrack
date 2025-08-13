@@ -229,7 +229,7 @@ $additionalCSS = [];
             </button>
         </div>
         
-        <div class="modal-body" style="padding-right: 500px !important; padding-left: 500px !important;">
+        <div class="modal-body">
             <div class="form-group">
                 <label for="userSelect">Agregar Usuario</label>
                 <div class="user-picker">
