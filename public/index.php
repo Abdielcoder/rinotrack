@@ -39,7 +39,9 @@ $models = [
     __DIR__ . '/../app/models/Role.php',
     __DIR__ . '/../app/models/KPI.php',
     __DIR__ . '/../app/models/Task.php',
-    __DIR__ . '/../app/models/Gamification.php'
+    __DIR__ . '/../app/models/Gamification.php',
+    __DIR__ . '/../app/models/Notification.php',
+    __DIR__ . '/../app/services/Mailer.php'
 ];
 
 foreach ($models as $model) {
@@ -192,6 +194,22 @@ try {
         case 'admin/remove-clan-member':
             $controller = new AdminController();
             $controller->removeClanMember();
+            break;
+
+        // Notificaciones - Admin
+        case 'admin/notifications':
+            $controller = new AdminController();
+            $controller->notifications();
+            break;
+
+        case 'admin/update-notification-settings':
+            $controller = new AdminController();
+            $controller->updateNotificationSettings();
+            break;
+
+        case 'admin/test-notification':
+            $controller = new AdminController();
+            $controller->sendTestNotification();
             break;
         
     // Rutas KPI

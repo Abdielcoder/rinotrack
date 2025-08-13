@@ -6,6 +6,7 @@ class AdminController {
     private $projectModel;
     private $clanModel;
     private $roleModel;
+    private $notificationModel;
     
     public function __construct() {
         $this->auth = new Auth();
@@ -13,6 +14,7 @@ class AdminController {
         $this->projectModel = new Project();
         $this->clanModel = new Clan();
         $this->roleModel = new Role();
+        $this->notificationModel = new Notification();
     }
     
     /**
@@ -811,5 +813,93 @@ class AdminController {
         } else {
             die('Vista no encontrada: ' . $view);
         }
+    }
+
+    /**
+     * Panel de notificaciones (Admin)
+     */
+    public function notifications() {
+        $this->requireAuth();
+        if (!$this->hasAdminAccess()) {
+            Utils::redirect('dashboard');
+        }
+
+        $settings = Notification::getAllSettings();
+
+        $data = [
+            'currentPage' => 'admin',
+            'user' => $this->auth->getCurrentUser(),
+            'settings' => $settings
+        ];
+        $this->loadView('admin/notifications', $data);
+    }
+
+    /**
+     * Guardar ajustes de notificaciones
+     */
+    public function updateNotificationSettings() {
+        $this->requireAuth();
+        if (!$this->hasAdminAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos'], 403);
+        }
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Utils::redirect('admin/notifications');
+        }
+
+        $keys = [
+            'project_assigned_to_clan',
+            'task_due_soon',
+            'task_overdue'
+        ];
+
+        foreach ($keys as $key) {
+            $enabled = isset($_POST[$key]) ? 1 : 0;
+            $recipients = isset($_POST[$key . '_recipients']) ? trim($_POST[$key . '_recipients']) : null;
+            Notification::setSetting($key, $enabled, $recipients ?: null);
+        }
+
+        Utils::jsonResponse(['success' => true, 'message' => 'Ajustes guardados']);
+    }
+
+    /**
+     * Enviar correo de prueba
+     */
+    public function sendTestNotification() {
+        $this->requireAuth();
+        if (!$this->hasAdminAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos'], 403);
+        }
+
+        $to = Utils::sanitizeInput($_POST['to'] ?? $this->auth->getCurrentUser()['email'] ?? '');
+        if (!$to || !Utils::isValidEmail($to)) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Email destino inválido'], 400);
+        }
+
+        $mailer = new Mailer();
+        $html = $this->renderEmailTemplate('Prueba de Notificación', '<p>Este es un correo de prueba de RinoTrack.</p>');
+        $ok = $mailer->sendHtml($to, 'Prueba de Notificación - RinoTrack', $html);
+
+        if ($ok) {
+            Utils::jsonResponse(['success' => true, 'message' => 'Correo enviado correctamente']);
+        }
+        Utils::jsonResponse(['success' => false, 'message' => 'Fallo al enviar: ' . $mailer->getLastError()], 500);
+    }
+
+    private function renderEmailTemplate($title, $contentHtml) {
+        $year = date('Y');
+        $brand = 'RinoTrack';
+        $primary = '#0ea5e9';
+        $secondary = '#111827';
+        return "<html><body style=\"font-family:Inter,Arial,sans-serif;background:#f3f4f6;padding:24px;\">" .
+            "<div style=\"max-width:640px;margin:0 auto;background:#ffffff;border-radius:12px;box-shadow:0 10px 30px rgba(2,6,23,.08);overflow:hidden;\">" .
+            "<div style=\"background:linear-gradient(45deg,#22d3ee,#3b82f6);padding:20px 24px;color:#fff;\">" .
+            "<h2 style=\"margin:0;font-size:20px;\">{$brand} • Notificaciones</h2>" .
+            "</div>" .
+            "<div style=\"padding:24px 24px 8px;color:{$secondary};\">" .
+            "<h1 style=\"font-size:22px;margin:0 0 12px 0;color:{$secondary};\">{$title}</h1>" .
+            $contentHtml .
+            "</div>" .
+            "<div style=\"padding:16px 24px;color:#6b7280;border-top:1px solid #e5e7eb;font-size:12px;\">© {$year} RinoRisk • Sistema RinoTrack</div>" .
+            "</div></body></html>";
     }
 }

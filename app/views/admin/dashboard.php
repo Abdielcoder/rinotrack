@@ -39,6 +39,12 @@ ob_start();
                         <span>Clanes</span>
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a href="?route=admin/notifications" class="nav-link">
+                        <i class="fas fa-bell"></i>
+                        <span>Notificaciones</span>
+                    </a>
+                </li>
                 <li class="nav-item dropdown">
                     <a href="#" class="nav-link dropdown-toggle">
                         <i class="fas fa-chart-line"></i>

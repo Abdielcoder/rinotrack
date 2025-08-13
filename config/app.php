@@ -28,6 +28,8 @@ if (APP_DEBUG) {
 
 // Incluir archivos de configuración
 require_once __DIR__ . '/database.php';
+// Configuración de correo (SMTP)
+require_once __DIR__ . '/mail.php';
 
 // Iniciar sesión si no está iniciada
 if (session_status() === PHP_SESSION_NONE) {
