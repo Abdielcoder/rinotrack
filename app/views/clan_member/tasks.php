@@ -85,54 +85,79 @@ ob_start();
         <?php if (empty($tasksData['tasks'])): ?>
             <div class="empty-minimal">No hay tareas</div>
         <?php else: ?>
-            <div class="tasks-list">
-                <?php foreach ($tasksData['tasks'] as $t): ?>
-                    <?php 
-                        $statusClass = 'pending';
-                        if (($t['status'] ?? '') === 'completed') { $statusClass = 'completed'; }
-                        elseif (($t['status'] ?? '') === 'in_progress') { $statusClass = 'in_progress'; }
-                        $priorityClass = strtolower((string)($t['priority'] ?? 'medium'));
-                        $days = isset($t['days_until_due']) ? (int)$t['days_until_due'] : null;
-                        $dueLabel = '';
-                        $dueCls = '';
-                        if (!empty($t['due_date'])) {
-                            if ($days !== null) {
-                                if ($days < 0) { $dueLabel = 'Vencida'; $dueCls = 'overdue'; }
-                                elseif ($days === 0) { $dueLabel = 'Vence hoy'; $dueCls = 'due-soon'; }
-                                elseif ($days === 1) { $dueLabel = 'Vence mañana'; $dueCls = 'due-soon'; }
-                                else { $dueLabel = 'Vence en ' . $days . ' días'; }
-                            } else {
-                                $dueLabel = 'Vence: ' . date('d/m/Y', strtotime($t['due_date']));
-                            }
-                        }
-                    ?>
-                    <div class="task-item" data-task-id="<?php echo $t['task_id']; ?>">
-                        <div class="task-main">
-                            <div class="task-title">
-                                <span class="status-dot <?php echo $statusClass; ?>" title="Estado"></span>
-                                <?php echo htmlspecialchars($t['task_name']); ?>
-                            </div>
-                            <div class="task-meta">
-                                <span class="task-project"><i class="fas fa-project-diagram"></i> <?php echo htmlspecialchars($t['project_name']); ?></span>
-                                <?php if (!empty($t['all_assigned_users'])): ?>
-                                    <span title="Asignados"><i class="fas fa-users"></i> <?php echo htmlspecialchars($t['all_assigned_users']); ?></span>
-                                <?php elseif (!empty($t['assigned_user_name'])): ?>
-                                    <span title="Asignado a"><i class="fas fa-user"></i> <?php echo htmlspecialchars($t['assigned_user_name']); ?></span>
-                                <?php endif; ?>
-                                <?php if ($dueLabel): ?>
-                                    <span class="badge badge-due <?php echo $dueCls; ?>" title="Fecha límite"><i class="fas fa-calendar"></i> <?php echo $dueLabel; ?></span>
-                                <?php endif; ?>
-                                <span class="badge badge-priority <?php echo $priorityClass; ?>" title="Prioridad"><i class="fas fa-flag"></i></span>
-                                <span class="chip chip-status <?php echo $statusClass; ?>" title="Estado"><?php echo str_replace('_',' ', (string)$t['status']); ?></span>
-                            </div>
-                        </div>
-                        <div class="task-actions">
-                            <button class="icon-btn" onclick="openCommentModal(<?php echo $t['task_id']; ?>)" title="Comentar"><i class="fas fa-comment"></i></button>
-                            <?php $own = in_array((string)($user['user_id'] ?? 0), explode(',', (string)($t['all_assigned_user_ids'] ?? ''))) || (int)($t['assigned_to_user_id'] ?? 0) === (int)($user['user_id'] ?? -1); ?>
-                            <button class="icon-btn" <?php echo $own ? '' : 'disabled'; ?> title="Cambiar estado" onclick="toggleTaskStatus(<?php echo $t['task_id']; ?>, '<?php echo $t['status']; ?>', <?php echo $own ? 'true' : 'false'; ?>)"><i class="fas fa-check"></i></button>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
+            <div class="table-container">
+                <table class="table-minimal tasks-table">
+                    <thead>
+                        <tr>
+                            <th>Prioridad</th>
+                            <th>Tarea</th>
+                            <th>Proyecto</th>
+                            <th>Asignado(s)</th>
+                            <th>Fecha límite</th>
+                            <th>Estado</th>
+                            <th>Puntos</th>
+                            <th class="col-actions">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($tasksData['tasks'] as $t): ?>
+                            <?php 
+                                $statusClass = 'pending';
+                                if (($t['status'] ?? '') === 'completed') { $statusClass = 'completed'; }
+                                elseif (($t['status'] ?? '') === 'in_progress') { $statusClass = 'in_progress'; }
+                                $priorityClass = strtolower((string)($t['priority'] ?? 'medium'));
+                                $priorityLabel = ucfirst(str_replace(['_'], ' ', (string)($t['priority'] ?? 'medium')));
+                                $days = isset($t['days_until_due']) ? (int)$t['days_until_due'] : null;
+                                $dueLabel = '';
+                                $dueCls = '';
+                                if (!empty($t['due_date'])) {
+                                    if ($days !== null) {
+                                        if ($days < 0) { $dueLabel = 'Vencida'; $dueCls = 'overdue'; }
+                                        elseif ($days === 0) { $dueLabel = 'Vence hoy'; $dueCls = 'due-soon'; }
+                                        elseif ($days === 1) { $dueLabel = 'Vence mañana'; $dueCls = 'due-soon'; }
+                                        else { $dueLabel = 'En ' . $days . ' días'; }
+                                    } else {
+                                        $dueLabel = date('d/m/Y', strtotime($t['due_date']));
+                                    }
+                                }
+                            ?>
+                            <tr data-task-id="<?php echo $t['task_id']; ?>">
+                                <td>
+                                    <span class="badge badge-priority <?php echo $priorityClass; ?>" title="Prioridad"><i class="fas fa-flag"></i> <?php echo $priorityLabel; ?></span>
+                                </td>
+                                <td class="cell-task">
+                                    <div class="cell-title"><span class="status-dot <?php echo $statusClass; ?>"></span><?php echo htmlspecialchars($t['task_name']); ?></div>
+                                </td>
+                                <td class="cell-project"><?php echo htmlspecialchars($t['project_name']); ?></td>
+                                <td class="cell-assignees">
+                                    <?php if (!empty($t['all_assigned_users'])): ?>
+                                        <?php echo htmlspecialchars($t['all_assigned_users']); ?>
+                                    <?php elseif (!empty($t['assigned_user_name'])): ?>
+                                        <?php echo htmlspecialchars($t['assigned_user_name']); ?>
+                                    <?php else: ?>
+                                        –
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <?php if ($dueLabel): ?>
+                                        <span class="badge badge-due <?php echo $dueCls; ?>"><i class="fas fa-calendar"></i> <?php echo $dueLabel; ?></span>
+                                    <?php else: ?>
+                                        –
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <span class="chip chip-status <?php echo $statusClass; ?>"><?php echo str_replace('_',' ', (string)$t['status']); ?></span>
+                                </td>
+                                <td class="cell-points"><?php echo isset($t['automatic_points']) ? number_format((float)$t['automatic_points'], 2) : '–'; ?></td>
+                                <td class="cell-actions">
+                                    <button class="icon-btn" onclick="openCommentModal(<?php echo $t['task_id']; ?>)" title="Comentar"><i class="fas fa-comment"></i></button>
+                                    <?php $own = in_array((string)($user['user_id'] ?? 0), explode(',', (string)($t['all_assigned_user_ids'] ?? ''))) || (int)($t['assigned_to_user_id'] ?? 0) === (int)($user['user_id'] ?? -1); ?>
+                                    <button class="icon-btn" <?php echo $own ? '' : 'disabled'; ?> title="Cambiar estado" onclick="toggleTaskStatus(<?php echo $t['task_id']; ?>, '<?php echo $t['status']; ?>', <?php echo $own ? 'true' : 'false'; ?>)"><i class="fas fa-check"></i></button>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
             </div>
 
             <div class="pagination-minimal">

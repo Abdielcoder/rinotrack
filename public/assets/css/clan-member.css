@@ -41,7 +41,7 @@
 .btn-minimal.secondary { background: var(--cm-soft); }
 
 /* Contenido */
-.content-minimal { max-width: 1200px; margin: 24px auto 28px; padding: 0 20px; }
+.content-minimal { max-width: 1600px; margin: 24px auto 28px; padding: 0 20px; }
 
 /* Tarjetas y grids */
 .progress-card, .rules-card, .summary-card, .project-kpi-item, .project-no-kpi-item, .task-item, .contribution-card, .project-card { background: var(--cm-surface); border: 1px solid var(--cm-border); border-radius: var(--cm-radius); box-shadow: var(--cm-shadow); }
@@ -73,13 +73,18 @@
 .cc-actions { display: flex; }
 
 /* Tareas */
-.tasks-list { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(480px, 1fr)); }
-.tasks-list > .task-item { height: 100%; }
-.clan-member-tasks .content-minimal { max-width: 1280px; }
-.task-item { padding: 12px; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 10px; }
-.task-item .task-title { font-weight: 700; color: var(--cm-text); display:inline-flex; align-items:center; gap:8px; }
-.task-item .task-meta { color: var(--cm-muted); display: flex; gap: 10px; flex-wrap: wrap; font-size: .9rem; }
-.task-actions .btn-minimal[disabled], .task-actions .icon-btn[disabled] { opacity: .45; cursor: not-allowed; box-shadow: none; transform: none; }
+/* Tabla de tareas de ancho completo */
+.table-container { background: #fff; border: 1px solid var(--cm-border); border-radius: var(--cm-radius); box-shadow: var(--cm-shadow); overflow: hidden; }
+.table-minimal { width: 100%; border-collapse: separate; border-spacing: 0; }
+.table-minimal thead th { position: sticky; top: 0; background: #fff; z-index: 1; text-align: left; padding: 12px 14px; font-size: .85rem; color: var(--cm-muted); border-bottom: 1px solid var(--cm-border); }
+.table-minimal tbody td { padding: 12px 14px; border-bottom: 1px solid var(--cm-border); vertical-align: middle; }
+.table-minimal tbody tr:nth-child(odd) { background: #fcfcfd; }
+.table-minimal tbody tr:hover { background: #f8fafc; }
+.tasks-table .cell-title { display:flex; align-items:center; gap:8px; font-weight: 700; color: var(--cm-text); }
+.tasks-table .cell-actions { display:flex; gap:8px; }
+.tasks-table .col-actions { width: 120px; }
+.tasks-table .cell-project, .tasks-table .cell-assignees { color: var(--cm-text); font-weight: 600; }
+.tasks-table .cell-points { text-align: right; font-weight: 700; color: var(--cm-text); }
 
 /* Botones de acción compactos */
 .icon-btn { display:inline-flex; align-items:center; justify-content:center; width:36px; height:36px; border-radius:10px; border:1px solid var(--cm-border); background:#fff; color:var(--cm-text); transition:.18s ease; }
@@ -167,7 +172,7 @@ section h3 { margin: 6px 0 14px; color: var(--cm-text); font-size: 1.08rem; }
 /* Responsive tweaks */
 @media (max-width: 640px) {
   .minimal-header .actions-minimal { display: flex; flex-wrap: wrap; gap: 8px; }
-  .task-item { flex-direction: column; }
+  .table-container { overflow-x: auto; }
 }
 
 
