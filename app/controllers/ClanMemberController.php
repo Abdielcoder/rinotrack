@@ -38,25 +38,23 @@ class ClanMemberController {
                 'currentPage' => 'clan_member',
                 'user' => $this->currentUser,
                 'clan' => ['clan_name' => 'Sin clan asignado', 'clan_departamento' => '-', 'clan_id' => null],
-                'teamProgress' => ['total_tasks' => 0, 'completed_tasks' => 0, 'completion_percentage' => 0],
-                'memberContributions' => [],
-                'projects' => []
+                'userTaskStats' => ['total_tasks' => 0, 'completed_tasks' => 0, 'completion_percentage' => 0],
+                'ownContribution' => []
             ];
             $this->loadView('clan_member/dashboard', $data);
             return;
         }
 
-        $teamProgress = $this->getTeamProgress($this->userClan['clan_id']);
-        $memberContributions = $this->getMemberContributions($this->userClan['clan_id']);
-        $projects = $this->projectModel->getByClan($this->userClan['clan_id']);
+        // Solo estadísticas del usuario
+        $userTaskStats = $this->getUserTaskStats($this->currentUser['user_id'], $this->userClan['clan_id']);
+        $ownContribution = $this->getOwnContribution($this->currentUser, $userTaskStats);
 
         $data = [
             'currentPage' => 'clan_member',
             'user' => $this->currentUser,
             'clan' => $this->userClan,
-            'teamProgress' => $teamProgress,
-            'memberContributions' => $memberContributions,
-            'projects' => $projects
+            'userTaskStats' => $userTaskStats,
+            'ownContribution' => $ownContribution
         ];
         $this->loadView('clan_member/dashboard', $data);
     }
@@ -349,6 +347,48 @@ class ClanMemberController {
             error_log('Error getMemberContributions: ' . $e->getMessage());
             return [];
         }
+    }
+
+    private function getUserTaskStats($userId, $clanId) {
+        try {
+            $stmt = $this->db->prepare(
+                "SELECT 
+                    COUNT(DISTINCT t.task_id) AS total_tasks,
+                    SUM(CASE WHEN t.is_completed = 1 THEN 1 ELSE 0 END) AS completed_tasks
+                 FROM Tasks t
+                 INNER JOIN Projects p ON p.project_id = t.project_id
+                 LEFT JOIN Task_Assignments ta ON ta.task_id = t.task_id
+                 WHERE p.clan_id = ?
+                   AND t.is_subtask = 0
+                   AND (t.assigned_to_user_id = ? OR ta.user_id = ?)"
+            );
+            $stmt->execute([$clanId, $userId, $userId]);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC) ?: ['total_tasks' => 0, 'completed_tasks' => 0];
+            $total = (int)($row['total_tasks'] ?? 0);
+            $completed = (int)($row['completed_tasks'] ?? 0);
+            $pct = $total > 0 ? round(($completed / $total) * 100, 1) : 0;
+            return [
+                'total_tasks' => $total,
+                'completed_tasks' => $completed,
+                'completion_percentage' => $pct
+            ];
+        } catch (Exception $e) {
+            error_log('Error getUserTaskStats: ' . $e->getMessage());
+            return ['total_tasks' => 0, 'completed_tasks' => 0, 'completion_percentage' => 0];
+        }
+    }
+
+    private function getOwnContribution($currentUser, $userTaskStats) {
+        $fullName = $currentUser['full_name'] ?? ($currentUser['username'] ?? 'Usuario');
+        $initial = strtoupper(substr($fullName, 0, 1));
+        return [
+            'user_id' => $currentUser['user_id'] ?? 0,
+            'full_name' => $fullName,
+            'completed_tasks' => $userTaskStats['completed_tasks'] ?? 0,
+            'total_tasks' => $userTaskStats['total_tasks'] ?? 0,
+            'contribution_percentage' => ($userTaskStats['total_tasks'] ?? 0) > 0 ? 100 : 0,
+            'initial' => $initial
+        ];
     }
 
     private function hasMemberAccess() {

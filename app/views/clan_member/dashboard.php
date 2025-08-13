@@ -29,64 +29,41 @@ ob_start();
 
     <div class="content-minimal">
         <section class="team-progress-section">
-            <h3>Progreso general del equipo</h3>
+            <h3>Mis indicadores</h3>
             <div class="progress-card">
                 <div class="progress-info">
                     <div class="progress-left">
                         <span class="progress-label">Tareas completadas</span>
-                        <span class="progress-value"><?php echo (int)$teamProgress['completed_tasks']; ?> / <?php echo (int)$teamProgress['total_tasks']; ?></span>
+                        <span class="progress-value"><?php echo (int)($userTaskStats['completed_tasks'] ?? 0); ?> / <?php echo (int)($userTaskStats['total_tasks'] ?? 0); ?></span>
                     </div>
                     <div class="progress-right">
                         <div class="completion-box">
-                            <span class="completion-percentage"><?php echo $teamProgress['completion_percentage']; ?>%</span>
+                            <span class="completion-percentage"><?php echo $userTaskStats['completion_percentage'] ?? 0; ?>%</span>
                             <span class="completion-label">Completado</span>
                         </div>
                     </div>
                 </div>
                 <div class="progress-bar-container">
                     <div class="progress-bar-main">
-                        <div class="progress-segment" style="width: <?php echo $teamProgress['completion_percentage']; ?>%"></div>
+                        <div class="progress-segment" style="width: <?php echo $userTaskStats['completion_percentage'] ?? 0; ?>%"></div>
                     </div>
-                    <span class="remaining-text"><?php echo 100 - $teamProgress['completion_percentage']; ?>% restante</span>
+                    <span class="remaining-text"><?php echo 100 - ($userTaskStats['completion_percentage'] ?? 0); ?>% restante</span>
                 </div>
             </div>
         </section>
 
         <section class="contributions-section">
-            <h3>Contribuciones por colaborador</h3>
+            <h3>Mi contribución</h3>
             <div class="contributions-grid">
-                <?php if (empty($memberContributions)): ?>
-                    <div style="text-align:center;color:#666;padding:20px;">Sin datos</div>
-                <?php else: foreach ($memberContributions as $member): ?>
-                    <div class="contribution-card">
-                        <div class="member-info">
-                            <div class="member-name"><?php echo htmlspecialchars($member['full_name']); ?></div>
-                            <div class="member-tasks">
-                                <span class="task-count"><?php echo (int)$member['completed_tasks']; ?> tareas (<?php echo $member['contribution_percentage']; ?>%)</span>
-                            </div>
+                <div class="contribution-card">
+                    <div class="member-info">
+                        <div class="member-name"><?php echo htmlspecialchars($ownContribution['full_name'] ?? ($user['full_name'] ?? '')); ?></div>
+                        <div class="member-tasks">
+                            <span class="task-count"><?php echo (int)($ownContribution['completed_tasks'] ?? 0); ?> tareas</span>
                         </div>
                     </div>
-                <?php endforeach; endif; ?>
-            </div>
-        </section>
-
-        <section class="projects-list">
-            <h3>Proyectos del clan</h3>
-            <?php if (empty($projects)): ?>
-                <div class="empty-minimal">No hay proyectos</div>
-            <?php else: ?>
-                <div class="projects-grid">
-                    <?php foreach ($projects as $p): ?>
-                        <a class="project-card" href="?route=clan_member/tasks&project_id=<?php echo $p['project_id']; ?>">
-                            <div class="project-name"><?php echo htmlspecialchars($p['project_name']); ?></div>
-                            <div class="project-meta">
-                                <span class="status">Estado: <?php echo htmlspecialchars($p['status']); ?></span>
-                                <span class="date"><?php echo date('d/m/Y', strtotime($p['created_at'])); ?></span>
-                            </div>
-                        </a>
-                    <?php endforeach; ?>
                 </div>
-            <?php endif; ?>
+            </div>
         </section>
     </div>
 </div>
