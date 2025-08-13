@@ -6,9 +6,17 @@ class Utils {
      * Limpiar datos de entrada
      */
     public static function sanitizeInput($data) {
+        // Tolerar nulls y arreglos; evitar deprecations en PHP 8.1+
+        if ($data === null) {
+            return '';
+        }
+        if (is_array($data)) {
+            return array_map([self::class, 'sanitizeInput'], $data);
+        }
+        $data = (string)$data;
         $data = trim($data);
         $data = stripslashes($data);
-        $data = htmlspecialchars($data);
+        $data = htmlspecialchars($data, ENT_QUOTES, 'UTF-8');
         return $data;
     }
     
