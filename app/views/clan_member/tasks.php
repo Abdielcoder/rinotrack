@@ -38,6 +38,9 @@ ob_start();
                 <option value="completed" <?php echo ($status === 'completed') ? 'selected' : ''; ?>>Completado</option>
             </select>
             <button class="btn-minimal" type="submit"><i class="fas fa-filter"></i> Filtrar</button>
+            <span class="spacer"></span>
+            <?php $total = (int)($tasksData['total'] ?? 0); ?>
+            <span class="result-count"><?php echo $total; ?> resultados</span>
         </form>
 
         <?php $tasksData = $tasksData ?? ['tasks'=>[], 'page'=>1, 'total_pages'=>0]; ?>

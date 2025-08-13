@@ -59,7 +59,9 @@
 .project-meta { display: flex; gap: 12px; color: var(--cm-muted); font-size: .9rem; }
 
 /* Tareas */
-.tasks-list { display: grid; gap: 14px; }
+.tasks-list { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(520px, 1fr)); }
+.tasks-list > .task-item { height: 100%; }
+.clan-member-tasks .content-minimal { max-width: 1280px; }
 .task-item { padding: 16px; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .task-item .task-title { font-weight: 700; color: var(--cm-text); }
 .task-item .task-meta { color: var(--cm-muted); display: flex; gap: 12px; flex-wrap: wrap; font-size: .92rem; }
@@ -73,7 +75,9 @@
 .completion-percentage { font-size: 1.1rem; font-weight: 800; color: var(--cm-text); }
 
 /* Filtros y paginación */
-.filters-minimal { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; }
+.filters-minimal { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; align-items: center; }
+.filters-minimal .spacer { flex: 1 1 auto; }
+.filters-minimal .result-count { color: var(--cm-muted); font-weight: 600; }
 .filters-minimal input[type="text"], .filters-minimal select { padding: 10px 12px; border-radius: var(--cm-radius-sm); border: 1px solid var(--cm-border); background: #fff; min-width: 220px; }
 .pagination-minimal { display: flex; gap: 8px; justify-content: center; margin-top: 18px; }
 .pagination-minimal .page-link { padding: 8px 12px; border: 1px solid var(--cm-border); background: #fff; border-radius: 8px; text-decoration: none; color: var(--cm-text); font-weight: 600; }

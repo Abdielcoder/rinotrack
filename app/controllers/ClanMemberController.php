@@ -86,7 +86,7 @@ class ClanMemberController {
             return;
         }
         $page = (int)($_GET['page'] ?? 1);
-        $perPage = (int)($_GET['per_page'] ?? 10);
+        $perPage = (int)($_GET['per_page'] ?? 8);
         $search = trim($_GET['search'] ?? '');
         $status = trim($_GET['status'] ?? '');
 
