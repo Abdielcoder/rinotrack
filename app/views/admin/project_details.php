@@ -57,7 +57,10 @@ ob_start();
 
       <div class="two-cols">
         <div class="col">
-          <h4>Tareas</h4>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+            <h4 style="margin:0">Tareas</h4>
+            <button class="btn btn-primary" id="openAddTaskModal"><i class="fas fa-plus"></i> Agregar tarea</button>
+          </div>
           <div class="table-wrapper">
             <table class="data-table">
               <thead>
@@ -137,6 +140,93 @@ ob_start();
 .empty{color:var(--text-muted);text-align:center;padding:16px}
 @media(max-width:900px){.project-overview{grid-template-columns:1fr}.two-cols{grid-template-columns:1fr}}
 </style>
+
+<!-- Modal Crear Tarea -->
+<div id="addTaskModal" class="modal" style="display:none">
+  <div class="modal-content" style="max-width:600px">
+    <div class="modal-header">
+      <h3><i class="fas fa-tasks"></i> Crear nueva tarea</h3>
+      <button class="modal-close" id="closeAddTaskModal">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="addTaskForm">
+        <input type="hidden" name="projectId" value="<?php echo (int)$project['project_id']; ?>">
+        <div class="form-group">
+          <label>Nombre de la tarea</label>
+          <input type="text" name="taskName" class="input" required>
+        </div>
+        <div class="form-group">
+          <label>Descripción</label>
+          <textarea name="description" class="textarea" rows="3"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Asignar a colaboradores del clan</label>
+          <div class="checkbox-list" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <?php foreach (($clanMembers ?? []) as $m): ?>
+              <label style="display:flex;align-items:center;gap:8px;border:1px solid var(--bg-accent);padding:8px;border-radius:10px;background:var(--bg-primary)">
+                <input type="checkbox" name="assignedUsers[]" value="<?php echo (int)$m['user_id']; ?>">
+                <span><?php echo Utils::escape($m['full_name'] ?: $m['username']); ?> (<?php echo Utils::escape($m['role_name'] ?? ''); ?>)</span>
+              </label>
+            <?php endforeach; ?>
+            <?php if (empty($clanMembers)): ?>
+              <div class="empty">No hay miembros en el clan</div>
+            <?php endif; ?>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="closeAddTaskModal2">Cancelar</button>
+      <button class="btn btn-primary" id="submitAddTask">Crear</button>
+    </div>
+  </div>
+  <div class="modal-backdrop" id="addTaskBackdrop"></div>
+  <style>
+    .modal{position:fixed;inset:0;z-index:1000}
+    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.35)}
+    .modal-content{position:relative;margin:8vh auto;background:#fff;border-radius:14px;overflow:hidden;border:1px solid var(--bg-accent)}
+    .modal-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--bg-tertiary);border-bottom:1px solid var(--bg-accent)}
+    .modal-body{padding:16px}
+    .modal-footer{display:flex;justify-content:flex-end;gap:10px;padding:12px 16px;background:var(--bg-tertiary);border-top:1px solid var(--bg-accent)}
+    .modal-close{background:transparent;border:none;font-size:22px;cursor:pointer}
+    .form-group{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+    .input,.textarea{border:1px solid #e5e7eb;border-radius:10px;padding:10px;width:100%}
+  </style>
+</div>
+
+<script>
+(function(){
+  const openBtn = document.getElementById('openAddTaskModal');
+  const modal = document.getElementById('addTaskModal');
+  const closers = [document.getElementById('closeAddTaskModal'), document.getElementById('closeAddTaskModal2'), document.getElementById('addTaskBackdrop')];
+  const submitBtn = document.getElementById('submitAddTask');
+  function open(){ modal.style.display='block'; }
+  function close(){ modal.style.display='none'; }
+  if(openBtn) openBtn.addEventListener('click', open);
+  closers.forEach(el=>{ if(el) el.addEventListener('click', close); });
+  async function post(url, data){
+    return fetch(url, { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:new URLSearchParams(data)}).then(r=>r.json());
+  }
+  if(submitBtn){
+    submitBtn.addEventListener('click', async ()=>{
+      const form = document.getElementById('addTaskForm');
+      const data = new FormData(form);
+      const obj = {};
+      for (const [k,v] of data.entries()){
+        if (obj[k]){
+          if(!Array.isArray(obj[k])) obj[k] = [obj[k]];
+          obj[k].push(v);
+        } else {
+          obj[k] = v;
+        }
+      }
+      const res = await post('?route=admin/add-task', obj);
+      if(res.success){ location.reload(); }
+      else { alert(res.message || 'Error al crear tarea'); }
+    });
+  }
+})();
+</script>
 
 <?php
 $content = ob_get_clean();

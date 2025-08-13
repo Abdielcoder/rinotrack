@@ -316,6 +316,7 @@ class AdminController {
             'tasks' => $tasks,
             'stats' => $stats,
             'history' => $history,
+            'clanMembers' => $this->clanModel->getMembers((int)$project['clan_id']),
             'currentPage' => 'admin',
             'user' => $this->auth->getCurrentUser()
         ];
@@ -614,8 +615,11 @@ class AdminController {
         $projectId = (int)($_POST['projectId'] ?? 0);
         $taskName = Utils::sanitizeInput($_POST['taskName'] ?? '');
         $description = Utils::sanitizeInput($_POST['description'] ?? '');
-        $assignedToUserId = isset($_POST['assignedToUserId']) && $_POST['assignedToUserId'] !== ''
-            ? (int)$_POST['assignedToUserId'] : null;
+        // Nueva interfaz: lista de checkboxes "assignedUsers[]" (opcional)
+        $assignedUsers = [];
+        if (isset($_POST['assignedUsers'])) {
+            $assignedUsers = is_array($_POST['assignedUsers']) ? array_map('intval', $_POST['assignedUsers']) : [ (int)$_POST['assignedUsers'] ];
+        }
 
         if ($projectId <= 0 || $taskName === '') {
             Utils::jsonResponse(['success' => false, 'message' => 'Datos inválidos'], 400);
@@ -640,10 +644,14 @@ class AdminController {
             }
         }
 
-        // Crear tarea
+        // Crear tarea y asignar múltiples usuarios si se enviaron
         $taskModel = new Task();
         $currentUser = $this->auth->getCurrentUser();
-        $taskId = $taskModel->create($projectId, $taskName, $description, $assignedToUserId, Task::PRIORITY_MEDIUM, null, $currentUser['user_id'] ?? null);
+        if (!empty($assignedUsers)) {
+            $taskId = $taskModel->createAdvanced($projectId, $taskName, $description, null, $clanId, Task::PRIORITY_MEDIUM, $currentUser['user_id'] ?? null, $assignedUsers);
+        } else {
+            $taskId = $taskModel->create($projectId, $taskName, $description, null, Task::PRIORITY_MEDIUM, null, $currentUser['user_id'] ?? null);
+        }
 
         if ($taskId) {
             Utils::jsonResponse(['success' => true, 'message' => 'Tarea creada exitosamente', 'task_id' => (int)$taskId]);
