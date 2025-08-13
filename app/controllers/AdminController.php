@@ -412,6 +412,12 @@ class AdminController {
         $projectId = $this->projectModel->create($projectName, $description, $clanId, $currentUser['user_id']);
         
         if ($projectId) {
+            // Disparar notificación: proyecto asignado a un clan
+            try {
+                (new NotificationService())->notifyProjectAssignedToClan($projectId);
+            } catch (Exception $e) {
+                error_log('Notif error (project_assigned_to_clan): ' . $e->getMessage());
+            }
             Utils::jsonResponse(['success' => true, 'message' => 'Proyecto creado exitosamente']);
         } else {
             Utils::jsonResponse(['success' => false, 'message' => 'Error al crear proyecto'], 500);
@@ -876,8 +882,16 @@ class AdminController {
         }
 
         $mailer = new Mailer();
-        $html = $this->renderEmailTemplate('Prueba de Notificación', '<p>Este es un correo de prueba de RinoTrack.</p>');
-        $ok = $mailer->sendHtml($to, 'Prueba de Notificación - RinoTrack', $html);
+        $html = EmailTemplate::render(
+            'Notificación de prueba',
+            '<p>Este es un correo de prueba con el nuevo diseño.</p>',
+            [
+                ['label' => 'Sistema', 'value' => 'RinoTrack'],
+                ['label' => 'Fecha', 'value' => date('Y-m-d H:i')]
+            ],
+            ['label' => 'Ir al panel', 'url' => APP_URL . '?route=admin']
+        );
+        $ok = $mailer->sendHtml($to, 'RinoTrack • Notificación de prueba', $html);
 
         if ($ok) {
             Utils::jsonResponse(['success' => true, 'message' => 'Correo enviado correctamente']);
@@ -885,21 +899,5 @@ class AdminController {
         Utils::jsonResponse(['success' => false, 'message' => 'Fallo al enviar: ' . $mailer->getLastError()], 500);
     }
 
-    private function renderEmailTemplate($title, $contentHtml) {
-        $year = date('Y');
-        $brand = 'RinoTrack';
-        $primary = '#0ea5e9';
-        $secondary = '#111827';
-        return "<html><body style=\"font-family:Inter,Arial,sans-serif;background:#f3f4f6;padding:24px;\">" .
-            "<div style=\"max-width:640px;margin:0 auto;background:#ffffff;border-radius:12px;box-shadow:0 10px 30px rgba(2,6,23,.08);overflow:hidden;\">" .
-            "<div style=\"background:linear-gradient(45deg,#22d3ee,#3b82f6);padding:20px 24px;color:#fff;\">" .
-            "<h2 style=\"margin:0;font-size:20px;\">{$brand} • Notificaciones</h2>" .
-            "</div>" .
-            "<div style=\"padding:24px 24px 8px;color:{$secondary};\">" .
-            "<h1 style=\"font-size:22px;margin:0 0 12px 0;color:{$secondary};\">{$title}</h1>" .
-            $contentHtml .
-            "</div>" .
-            "<div style=\"padding:16px 24px;color:#6b7280;border-top:1px solid #e5e7eb;font-size:12px;\">© {$year} RinoRisk • Sistema RinoTrack</div>" .
-            "</div></body></html>";
-    }
+    // Ya no se usa: se reemplazó por EmailTemplate::render
 }
