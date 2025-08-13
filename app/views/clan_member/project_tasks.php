@@ -189,6 +189,14 @@ document.getElementById('createTaskForm').addEventListener('submit', function(e)
     .catch(()=>{ errorBox.style.display='block'; errorBox.textContent='Error de red'; submitBtn.classList.remove('is-loading'); });
 });
 
+// Auto abrir modal si viene desde dashboard con open_create=1
+(function(){
+  try {
+    var params = new URLSearchParams(window.location.search);
+    if (params.get('open_create') === '1') { openCreateTaskModal(); }
+  } catch(e){}
+})();
+
 function filterCards(){
   var st = document.getElementById('statusFilter').value;
   var pr = document.getElementById('priorityFilter').value;
