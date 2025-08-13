@@ -234,7 +234,7 @@ $additionalCSS = [];
                 <label for="userSelect">Agregar Usuario</label>
                 <div class="user-picker">
                     <input type="text" id="userSearch" placeholder="Buscar por nombre, usuario o email" />
-                    <select id="userSelect">
+                    <select id="userSelect" style="height: 44px;">
                         <option value="">Seleccionar usuario</option>
                     </select>
                 </div>
