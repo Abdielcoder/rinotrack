@@ -241,23 +241,72 @@ class ClanMemberController {
             Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
         }
 
-        $result = $this->taskModel->addComment($taskId, $this->currentUser['user_id'], $commentText, 'comment');
-        if ($result) {
-            if (isset($_FILES['attachment']) && $_FILES['attachment']['error'] === UPLOAD_ERR_OK) {
-                $uploadDir = 'uploads/task_attachments/';
-                if (!is_dir($uploadDir)) {
-                    mkdir($uploadDir, 0755, true);
-                }
-                $fileName = time() . '_' . $_FILES['attachment']['name'];
-                $filePath = $uploadDir . $fileName;
-                if (move_uploaded_file($_FILES['attachment']['tmp_name'], $filePath)) {
-                    $this->taskModel->addCommentAttachment((int)$result, $fileName, $filePath);
-                }
-            }
-            Utils::jsonResponse(['success' => true, 'message' => 'Comentario agregado']);
-        } else {
+        // Agregar comentario y recibir comment_id (o true)
+        $commentId = $this->taskModel->addComment($taskId, $this->currentUser['user_id'], $commentText, 'comment');
+        if (!$commentId) {
             Utils::jsonResponse(['success' => false, 'message' => 'Error al agregar comentario'], 500);
         }
+
+        // Manejar adjuntos: soportar uno (attachment) o múltiples (attachments[])
+        $files = [];
+        $received = [];
+        $saved = [];
+        if (!empty($_FILES['attachments']) && is_array($_FILES['attachments']['name'] ?? null)) {
+            $count = count($_FILES['attachments']['name']);
+            for ($i=0; $i<$count; $i++) {
+                if (($_FILES['attachments']['error'][$i] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK) {
+                    $files[] = [
+                        'name' => $_FILES['attachments']['name'][$i] ?? null,
+                        'type' => $_FILES['attachments']['type'][$i] ?? null,
+                        'tmp_name' => $_FILES['attachments']['tmp_name'][$i] ?? null,
+                    ];
+                    if (!empty($_FILES['attachments']['name'][$i])) { $received[] = $_FILES['attachments']['name'][$i]; }
+                }
+            }
+        } elseif (!empty($_FILES['attachment']) && ($_FILES['attachment']['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK) {
+            $files[] = [
+                'name' => $_FILES['attachment']['name'] ?? null,
+                'type' => $_FILES['attachment']['type'] ?? null,
+                'tmp_name' => $_FILES['attachment']['tmp_name'] ?? null,
+            ];
+            if (!empty($_FILES['attachment']['name'])) { $received[] = $_FILES['attachment']['name']; }
+        }
+
+        if (!empty($files)) {
+            $publicRoot = dirname(__DIR__, 2) . '/public';
+            $baseUploads = $publicRoot . '/uploads';
+            $uploadDir = $baseUploads . '/task_attachments';
+            if (!is_dir($baseUploads)) { @mkdir($baseUploads, 0775, true); }
+            if (!is_dir($uploadDir)) { @mkdir($uploadDir, 0775, true); }
+
+            foreach ($files as $file) {
+                if (empty($file['tmp_name']) || !is_uploaded_file($file['tmp_name'])) { continue; }
+                $originalName = basename($file['name'] ?? 'archivo');
+                $ext = pathinfo($originalName, PATHINFO_EXTENSION);
+                $safeName = uniqid('att_') . ($ext ? ('.' . $ext) : '');
+                $destPath = $uploadDir . '/' . $safeName;
+                if (@move_uploaded_file($file['tmp_name'], $destPath)) {
+                    $publicPath = 'uploads/task_attachments/' . $safeName;
+                    // Guardar con vínculo a comment_id si es numérico
+                    $this->taskModel->saveAttachmentRecord(
+                        $taskId,
+                        is_numeric($commentId) ? (int)$commentId : null,
+                        $this->currentUser['user_id'],
+                        $originalName,
+                        $publicPath,
+                        $file['type'] ?? null
+                    );
+                    $saved[] = $originalName;
+                }
+            }
+        }
+
+        Utils::jsonResponse([
+            'success' => true,
+            'message' => 'Comentario agregado',
+            'attachments_received' => $received,
+            'attachments_saved' => $saved
+        ]);
     }
 
     public function taskComments() {

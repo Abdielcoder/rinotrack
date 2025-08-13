@@ -186,8 +186,8 @@ ob_start();
                     <textarea name="comment_text" required></textarea>
                 </div>
                 <div class="form-group inline">
-                    <label class="sr-only">Adjunto</label>
-                    <input type="file" name="attachment" />
+                    <label class="sr-only">Adjunto(s)</label>
+                    <input type="file" name="attachments[]" multiple />
                     <button class="action-btn primary" type="submit">Guardar</button>
                 </div>
             </form>
