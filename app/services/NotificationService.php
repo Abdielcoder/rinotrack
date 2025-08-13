@@ -31,13 +31,14 @@ class NotificationService {
             if (Notification::alreadySent('task_assigned', $taskId, $r['user_id'], $to)) continue;
             $html = EmailTemplate::render(
                 'Nueva tarea asignada',
-                '<p>Se te ha asignado una nueva tarea.</p>',
+                '<p>Se te ha asignado una nueva tarea ✅.</p>',
                 [
                     ['label' => 'Tarea', 'value' => $taskInfo['task_name']],
                     ['label' => 'Proyecto', 'value' => $taskInfo['project_name']],
                     ['label' => 'Fecha de entrega', 'value' => ($taskInfo['due_date'] ?? null) ?: 'No definida']
                 ],
-                ['label' => 'Ver proyecto', 'url' => APP_URL . '?route=admin/project-details&projectId=' . urlencode($taskInfo['project_id'])]
+                null,
+                ['emoji' => '🧩']
             );
             if ($this->mailer->sendHtml($to, 'RinoTrack • Tarea asignada', $html)) {
                 Notification::logSent('task_assigned', $taskId, $r['user_id'], $to);
@@ -57,7 +58,8 @@ class NotificationService {
                         ['label' => 'Tarea', 'value' => $taskInfo['task_name']],
                         ['label' => 'Proyecto', 'value' => $taskInfo['project_name']]
                     ],
-                    ['label' => 'Ver proyecto', 'url' => APP_URL . '?route=admin/project-details&projectId=' . urlencode($taskInfo['project_id'])]
+                    null,
+                    ['emoji' => '🧩']
                 );
                 foreach ($extra as $mail) { $this->mailer->sendHtml($mail, 'RinoTrack • Tarea asignada', $html); }
             }
@@ -95,7 +97,7 @@ class NotificationService {
                     ['label' => 'Creado por', 'value' => $project['creator_name'] ?? ''],
                     ['label' => 'Descripción', 'value' => $project['description'] ?? '']
                 ],
-                ['label' => 'Ver proyecto', 'url' => APP_URL . '?route=admin/project-details&projectId=' . urlencode($projectId)],
+                null,
                 ['emoji' => '📁']
             );
             if ($this->mailer->sendHtml($to, 'RinoTrack • Proyecto asignado', $html)) {
@@ -134,18 +136,18 @@ class NotificationService {
             foreach ($rows as $r) {
                 $to = $r['email'];
                 if (Notification::alreadySent('task_due_soon_' . $daysAhead, $r['task_id'], $r['assigned_to_user_id'], $to)) continue;
-                $html = EmailTemplate::render(
-                    'Recordatorio: tarea próxima a vencer',
-                    '<p>Tienes una tarea próxima a vencer ⏰.</p>',
-                    [
-                        ['label' => 'Tarea', 'value' => $r['task_name']],
-                        ['label' => 'Proyecto', 'value' => $r['project_name']],
-                        ['label' => 'Vence', 'value' => $r['due_date']],
-                        ['label' => 'Aviso', 'value' => 'En ' . $daysAhead . ' día(s)']
-                    ],
-                    ['label' => 'Ver proyecto', 'url' => APP_URL . '?route=admin/project-details&projectId=' . urlencode($r['project_id'])],
-                    ['emoji' => '⏳']
-                );
+            $html = EmailTemplate::render(
+                'Recordatorio: tarea próxima a vencer',
+                '<p>Tienes una tarea próxima a vencer ⏰.</p>',
+                [
+                    ['label' => 'Tarea', 'value' => $r['task_name']],
+                    ['label' => 'Proyecto', 'value' => $r['project_name']],
+                    ['label' => 'Vence', 'value' => $r['due_date']],
+                    ['label' => 'Aviso', 'value' => 'En ' . $daysAhead . ' día(s)']
+                ],
+                null,
+                ['emoji' => '⏳']
+            );
                 if ($this->mailer->sendHtml($to, 'RinoTrack • Tarea próxima a vencer (' . $daysAhead . ' días)', $html)) {
                     Notification::logSent('task_due_soon_' . $daysAhead, $r['task_id'], $r['assigned_to_user_id'], $to);
                     $total++;
@@ -173,7 +175,7 @@ class NotificationService {
                     ['label' => 'Proyecto', 'value' => $r['project_name']],
                     ['label' => 'Venció', 'value' => $r['due_date']]
                 ],
-                ['label' => 'Ver proyecto', 'url' => APP_URL . '?route=admin/project-details&projectId=' . urlencode($r['project_id'])],
+                null,
                 ['emoji' => '⚠️']
             );
             if ($this->mailer->sendHtml($to, 'RinoTrack • Tarea vencida', $html)) {
