@@ -917,6 +917,65 @@ class KPIController {
     }
 
     /**
+     * API: Puntos ganados por usuario dentro de un clan (para el trimestre activo)
+     */
+    public function getClanUserPoints() {
+        if (!$this->hasAdminAccess()) {
+            echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
+            return;
+        }
+        $clanId = (int)($_GET['clan_id'] ?? 0);
+        $currentKPI = $this->kpiModel->getCurrentQuarter();
+        if ($clanId <= 0 || !$currentKPI) {
+            echo json_encode(['success' => false, 'message' => 'Parámetros inválidos']);
+            return;
+        }
+        try {
+            // Calcular puntos por usuario basados en tareas completadas del clan en el trimestre activo
+            $stmt = $this->db->prepare("SELECT p.project_id FROM Projects p WHERE p.clan_id = ? AND p.kpi_quarter_id = ?");
+            $stmt->execute([$clanId, $currentKPI['kpi_quarter_id']]);
+            $projectIds = array_column($stmt->fetchAll(), 'project_id');
+            if (empty($projectIds)) {
+                echo json_encode(['success' => true, 'users' => []]);
+                return;
+            }
+            $in = implode(',', array_fill(0, count($projectIds), '?'));
+            // Traer tareas completadas con datos de asignación y porcentaje
+            $q = $this->db->prepare("SELECT t.task_id, t.project_id, t.status, t.automatic_points, t.assigned_percentage, p.kpi_points,
+                                             GROUP_CONCAT(DISTINCT ta.user_id) AS user_ids,
+                                             GROUP_CONCAT(DISTINCT u.full_name ORDER BY u.full_name SEPARATOR ', ') AS user_names
+                                      FROM Tasks t
+                                      JOIN Projects p ON p.project_id = t.project_id
+                                      LEFT JOIN Task_Assignments ta ON ta.task_id = t.task_id
+                                      LEFT JOIN Users u ON u.user_id = ta.user_id
+                                      WHERE t.project_id IN ($in) AND t.is_completed = 1
+                                      GROUP BY t.task_id");
+            $q->execute($projectIds);
+            $rows = $q->fetchAll(PDO::FETCH_ASSOC);
+            $userPoints = [];
+            foreach ($rows as $r) {
+                $ids = array_filter(array_map('intval', explode(',', $r['user_ids'] ?? '')));
+                if (empty($ids)) { continue; }
+                $points = ($r['automatic_points'] !== null && $r['automatic_points'] !== '') ? (float)$r['automatic_points']
+                          : ((float)$r['assigned_percentage'] * (float)$r['kpi_points'] / 100.0);
+                $perUser = $points / max(1, count($ids));
+                $names = array_map('trim', explode(',', $r['user_names'] ?? ''));
+                foreach ($ids as $idx => $uid) {
+                    if (!isset($userPoints[$uid])) {
+                        $userPoints[$uid] = ['user_id' => $uid, 'name' => ($names[$idx] ?? ('Usuario ' . $uid)), 'earned' => 0.0];
+                    }
+                    $userPoints[$uid]['earned'] += $perUser;
+                }
+            }
+            $list = array_values($userPoints);
+            usort($list, function($a,$b){ return $b['earned'] <=> $a['earned']; });
+            echo json_encode(['success' => true, 'users' => $list]);
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+
+    /**
      * Obtener datos para el camino tipo serpiente
      */
     private function getSnakePathData($currentKPI) {

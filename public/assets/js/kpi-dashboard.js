@@ -858,35 +858,18 @@ function showClanDetails(clan) {
     });
     
     document.body.appendChild(modal);
-    // Cargar resumen por usuario
-    fetch(`?route=kpi/get-projects-data`)
+    // Cargar resumen por usuario (API dedicada)
+    fetch(`?route=kpi/get-clan-user-points&clan_id=${encodeURIComponent(clan.clan_id)}`)
         .then(r => r.json())
         .then(data => {
             const cont = modal.querySelector('#clan-users-points');
             if (!cont) return;
-            if (!data || !data.success || !Array.isArray(data.projects)) { cont.innerHTML = '<div class="empty">Sin datos</div>'; return; }
-            const projects = data.projects.filter(p => Number(p.clan_id) === Number(clan.clan_id));
-            const userMap = new Map();
-            projects.forEach(p => {
-                (p.tasks || []).forEach(t => {
-                    const assigned = (t.all_assigned_user_ids || '').split(',').filter(Boolean).map(n => Number(n));
-                    const names = (t.all_assigned_users || '').split(',').map(s => s.trim());
-                    const completed = String(t.status) === 'completed';
-                    if (!completed) return;
-                    const points = Number(t.automatic_points || 0) || Number((t.assigned_percentage || 0) * (p.kpi_points || 0) / 100) || 0;
-                    assigned.forEach((uid, idx) => {
-                        const name = names[idx] || `Usuario ${uid}`;
-                        const prev = userMap.get(uid) || { name, earned: 0 };
-                        prev.earned += points / (assigned.length || 1);
-                        userMap.set(uid, prev);
-                    });
-                });
-            });
-            if (userMap.size === 0) { cont.innerHTML = '<div class="empty">Sin puntos aún</div>'; return; }
-            const items = Array.from(userMap.values()).sort((a,b)=>b.earned-a.earned).slice(0,20)
+            if (!data || !data.success || !Array.isArray(data.users)) { cont.innerHTML = '<div class="empty">Sin datos</div>'; return; }
+            if (data.users.length === 0) { cont.innerHTML = '<div class="empty">Sin puntos aún</div>'; return; }
+            const items = data.users.slice(0,20)
                 .map(u => `<div class="user-point-item" style="display:flex;justify-content:space-between;padding:8px;border:1px solid #e5e7eb;border-radius:10px;margin-bottom:6px">
                     <span style="font-weight:600">${u.name}</span>
-                    <span>${u.earned.toFixed(1)} pts</span>
+                    <span>${(u.earned||0).toFixed(1)} pts</span>
                 </div>`).join('');
             cont.innerHTML = items;
         })

@@ -310,6 +310,11 @@ try {
         $controller = new KPIController();
         $controller->getProjectsData();
         break;
+
+    case 'kpi/get-clan-user-points':
+        $controller = new KPIController();
+        $controller->getClanUserPoints();
+        break;
         
     // Rutas del Líder de Clan
     case 'clan_leader':
