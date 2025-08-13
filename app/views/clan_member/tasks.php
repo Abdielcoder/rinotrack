@@ -27,39 +27,40 @@ ob_start();
         </div>
     </nav>
 
-    <div class="content-minimal">
-        <?php if (!empty($projectsSummary)): ?>
-        <section>
-            <div class="cards-compact">
-                <?php foreach ($projectsSummary as $p): ?>
-                    <div class="card-compact">
-                        <div class="cc-head">
-                            <span><?php echo htmlspecialchars($p['project_name']); ?></span>
-                            <span class="chip"><?php echo htmlspecialchars(strtoupper($p['status'])); ?></span>
-                        </div>
-                        <div class="cc-kpis">
-                            <div class="cc-kpi">
-                                <span class="label">Total</span>
-                                <span class="value"><?php echo (int)$p['total_tasks']; ?></span>
-                            </div>
-                            <div class="cc-kpi">
-                                <span class="label">Completadas</span>
-                                <span class="value"><?php echo (int)$p['completed_tasks']; ?></span>
-                            </div>
-                            <div class="cc-kpi">
-                                <span class="label">Progreso</span>
-                                <span class="value"><?php echo (float)$p['progress_percentage']; ?>%</span>
-                            </div>
-                            <div class="cc-actions">
-                                <a class="btn-minimal" href="?route=clan_member/tasks&project_id=<?php echo $p['project_id']; ?>"><i class="fas fa-eye"></i> Ver Tareas</a>
-                            </div>
-                        </div>
-                        <div class="cc-progress"><span style="width: <?php echo (float)$p['progress_percentage']; ?>%"></span></div>
+    <?php if (!empty($projectsSummary)): ?>
+    <div class="projects-strip">
+        <div class="cards-compact">
+            <?php foreach ($projectsSummary as $p): ?>
+                <div class="card-compact">
+                    <div class="cc-head">
+                        <span class="truncate"><?php echo htmlspecialchars($p['project_name']); ?></span>
+                        <span class="chip"><?php echo htmlspecialchars(strtoupper($p['status'])); ?></span>
                     </div>
-                <?php endforeach; ?>
-            </div>
-        </section>
-        <?php endif; ?>
+                    <div class="cc-kpis">
+                        <div class="cc-kpi">
+                            <span class="label">Total</span>
+                            <span class="value"><?php echo (int)$p['total_tasks']; ?></span>
+                        </div>
+                        <div class="cc-kpi">
+                            <span class="label">Completadas</span>
+                            <span class="value"><?php echo (int)$p['completed_tasks']; ?></span>
+                        </div>
+                        <div class="cc-kpi">
+                            <span class="label">Progreso</span>
+                            <span class="value"><?php echo (float)$p['progress_percentage']; ?>%</span>
+                        </div>
+                        <div class="cc-actions">
+                            <a class="btn-minimal" href="?route=clan_member/tasks&project_id=<?php echo $p['project_id']; ?>"><i class="fas fa-eye"></i> Ver Tareas</a>
+                        </div>
+                    </div>
+                    <div class="cc-progress"><span style="width: <?php echo (float)$p['progress_percentage']; ?>%"></span></div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+    <?php endif; ?>
+
+    <div class="content-minimal">
         <form method="get" class="filters-minimal">
             <input type="hidden" name="route" value="clan_member/tasks" />
             <input type="text" name="search" placeholder="Buscar" value="<?php echo htmlspecialchars($search ?? ''); ?>" />
@@ -89,13 +90,13 @@ ob_start();
                 <table class="table-minimal tasks-table">
                     <thead>
                         <tr>
-                            <th>Prioridad</th>
-                            <th>Tarea</th>
-                            <th>Proyecto</th>
-                            <th>Asignado(s)</th>
-                            <th>Fecha límite</th>
-                            <th>Estado</th>
-                            <th>Puntos</th>
+                            <th class="col-priority">Prioridad</th>
+                            <th class="col-task">Tarea</th>
+                            <th class="col-project">Proyecto</th>
+                            <th class="col-assignees">Asignado(s)</th>
+                            <th class="col-due">Fecha límite</th>
+                            <th class="col-status">Estado</th>
+                            <th class="col-points">Puntos</th>
                             <th class="col-actions">Acciones</th>
                         </tr>
                     </thead>

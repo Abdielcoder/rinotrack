@@ -41,7 +41,8 @@
 .btn-minimal.secondary { background: var(--cm-soft); }
 
 /* Contenido */
-.content-minimal { max-width: 1600px; margin: 24px auto 28px; padding: 0 20px; }
+.projects-strip { width: 100%; padding: 10px 20px; margin: 10px auto 0; max-width: 100vw; }
+.content-minimal { max-width: 1600px; margin: 12px auto 28px; padding: 0 20px; }
 
 /* Tarjetas y grids */
 .progress-card, .rules-card, .summary-card, .project-kpi-item, .project-no-kpi-item, .task-item, .contribution-card, .project-card { background: var(--cm-surface); border: 1px solid var(--cm-border); border-radius: var(--cm-radius); box-shadow: var(--cm-shadow); }
@@ -64,6 +65,7 @@
 .cards-compact::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 999px; }
 .card-compact { border: 1px solid var(--cm-border); background: #fff; border-radius: var(--cm-radius); padding: 12px; box-shadow: var(--cm-shadow); display: grid; gap: 8px; min-width: 300px; scroll-snap-align: start; }
 .card-compact .cc-head { display: flex; justify-content: space-between; align-items: center; color: var(--cm-muted); font-weight: 700; font-size: .9rem; }
+.truncate { max-width: 220px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .cc-kpis { display: flex; gap: 12px; align-items: center; }
 .cc-kpi { display: grid; gap: 4px; }
 .cc-kpi .label { color: var(--cm-muted); font-size: .82rem; }
@@ -74,15 +76,22 @@
 
 /* Tareas */
 /* Tabla de tareas de ancho completo */
-.table-container { background: #fff; border: 1px solid var(--cm-border); border-radius: var(--cm-radius); box-shadow: var(--cm-shadow); overflow: hidden; }
+.table-container { background: #fff; border: 1px solid var(--cm-border); border-radius: var(--cm-radius); box-shadow: var(--cm-shadow); overflow: auto; }
 .table-minimal { width: 100%; border-collapse: separate; border-spacing: 0; }
-.table-minimal thead th { position: sticky; top: 0; background: #fff; z-index: 1; text-align: left; padding: 12px 14px; font-size: .85rem; color: var(--cm-muted); border-bottom: 1px solid var(--cm-border); }
+.table-minimal thead th { position: sticky; top: 0; background: #fff; z-index: 1; text-align: left; padding: 12px 14px; font-size: .85rem; color: var(--cm-muted); border-bottom: 1px solid var(--cm-border); white-space: nowrap; }
 .table-minimal tbody td { padding: 12px 14px; border-bottom: 1px solid var(--cm-border); vertical-align: middle; }
 .table-minimal tbody tr:nth-child(odd) { background: #fcfcfd; }
 .table-minimal tbody tr:hover { background: #f8fafc; }
 .tasks-table .cell-title { display:flex; align-items:center; gap:8px; font-weight: 700; color: var(--cm-text); }
 .tasks-table .cell-actions { display:flex; gap:8px; }
 .tasks-table .col-actions { width: 120px; }
+.tasks-table .col-priority { width: 150px; }
+.tasks-table .col-task { min-width: 260px; }
+.tasks-table .col-project { min-width: 200px; }
+.tasks-table .col-assignees { min-width: 220px; }
+.tasks-table .col-due { width: 160px; }
+.tasks-table .col-status { width: 140px; }
+.tasks-table .col-points { width: 110px; text-align: right; }
 .tasks-table .cell-project, .tasks-table .cell-assignees { color: var(--cm-text); font-weight: 600; }
 .tasks-table .cell-points { text-align: right; font-weight: 700; color: var(--cm-text); }
 
@@ -170,6 +179,21 @@ section h3 { margin: 6px 0 14px; color: var(--cm-text); font-size: 1.08rem; }
 .summary-value { font-size: 1.4rem; font-weight: 800; color: var(--cm-text); }
 
 /* Responsive tweaks */
+@media (max-width: 1200px) {
+  .tasks-table .col-project { min-width: 180px; }
+  .tasks-table .col-assignees { min-width: 180px; }
+}
+
+@media (max-width: 900px) {
+  .tasks-table .col-points, .tasks-table .col-assignees { display: none; }
+}
+
+@media (max-width: 720px) {
+  .tasks-table .col-project { display: none; }
+  .tasks-table .col-actions { width: 90px; }
+  .badge, .chip { transform: scale(.95); }
+}
+
 @media (max-width: 640px) {
   .minimal-header .actions-minimal { display: flex; flex-wrap: wrap; gap: 8px; }
   .table-container { overflow-x: auto; }
