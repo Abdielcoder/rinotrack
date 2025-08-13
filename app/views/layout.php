@@ -17,7 +17,7 @@
     <!-- JavaScript crítico en el head -->
     <?php if (isset($additionalJS)): ?>
         <?php foreach ($additionalJS as $js): ?>
-            <?php echo $js; ?>
+            <script src="<?php echo $js; ?>"></script>
         <?php endforeach; ?>
     <?php endif; ?>
     
