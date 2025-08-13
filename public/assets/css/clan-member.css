@@ -237,6 +237,7 @@ section h3 { margin: 6px 0 14px; color: var(--cm-text); font-size: 1.08rem; }
 .cm-project-tasks .status-badge.in_progress { background: rgba(59,130,246,.18); color:#1e3a8a; }
 .cm-project-tasks .status-badge.pending { background: rgba(245,158,11,.18); color:#7c2d12; }
 .cm-project-tasks .actions-right { display:flex; gap:8px; }
+.cm-project-tasks .task-actions { display:flex; align-items:center; gap:12px; justify-content:flex-end; }
 .btn-chip { display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius: 999px; border:1px solid var(--cm-border); background:#fff; color:var(--cm-text); font-weight:700; cursor:pointer; }
 .btn-chip.info { background:#e0ecff; color:#1e40af; border-color:#bfdbfe; }
 
