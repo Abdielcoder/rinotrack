@@ -222,7 +222,7 @@ section h3 { margin: 6px 0 14px; color: var(--cm-text); font-size: 1.08rem; }
 .cm-project-tasks .summary-label { color: var(--cm-muted); font-weight: 700; font-size: .85rem; }
 
 /* Cards de tareas dentro del proyecto */
-.cm-project-tasks .task-card { border: 1px solid var(--cm-border); border-left: 4px solid var(--cm-border); border-radius: var(--cm-radius); box-shadow: var(--cm-shadow); padding: 14px; background: #fff; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 10px; }
+.cm-project-tasks .task-card { border: 1px solid var(--cm-border); border-left: 4px solid var(--cm-border); border-radius: var(--cm-radius); box-shadow: var(--cm-shadow); padding: 14px; background: #fff; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 10px; margin-bottom: 10px; }
 .cm-project-tasks .task-card.low { border-left-color: var(--cm-success); }
 .cm-project-tasks .task-card.medium { border-left-color: var(--cm-info); }
 .cm-project-tasks .task-card.high { border-left-color: var(--cm-warning); }
