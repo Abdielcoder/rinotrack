@@ -48,13 +48,17 @@ class ClanMemberController {
         // Solo estadísticas del usuario
         $userTaskStats = $this->getUserTaskStats($this->currentUser['user_id'], $this->userClan['clan_id']);
         $ownContribution = $this->getOwnContribution($this->currentUser, $userTaskStats);
+        $projects = $this->projectModel->getByClan($this->userClan['clan_id']);
+        $ownTasksDetails = $this->getUserTasksForModal($this->currentUser['user_id'], $this->userClan['clan_id']);
 
         $data = [
             'currentPage' => 'clan_member',
             'user' => $this->currentUser,
             'clan' => $this->userClan,
             'userTaskStats' => $userTaskStats,
-            'ownContribution' => $ownContribution
+            'ownContribution' => $ownContribution,
+            'projects' => $projects,
+            'ownContributionDetails' => $ownTasksDetails
         ];
         $this->loadView('clan_member/dashboard', $data);
     }
@@ -389,6 +393,51 @@ class ClanMemberController {
             'contribution_percentage' => ($userTaskStats['total_tasks'] ?? 0) > 0 ? 100 : 0,
             'initial' => $initial
         ];
+    }
+
+    private function getUserTasksForModal($userId, $clanId) {
+        try {
+            $stmt = $this->db->prepare(
+                "SELECT 
+                    t.task_id,
+                    t.task_name,
+                    t.status,
+                    t.due_date,
+                    t.created_at,
+                    p.project_name
+                 FROM Tasks t
+                 INNER JOIN Projects p ON p.project_id = t.project_id
+                 LEFT JOIN Task_Assignments ta ON ta.task_id = t.task_id
+                 WHERE p.clan_id = ?
+                   AND t.is_subtask = 0
+                   AND (t.assigned_to_user_id = ? OR ta.user_id = ?)
+                 GROUP BY t.task_id
+                 ORDER BY t.created_at DESC
+                 LIMIT 50"
+            );
+            $stmt->execute([$clanId, $userId, $userId]);
+            $tasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            $stats = [
+                'total' => 0,
+                'completed' => 0,
+                'in_progress' => 0,
+                'pending' => 0
+            ];
+            foreach ($tasks as $t) {
+                $stats['total']++;
+                if ($t['status'] === 'completed') $stats['completed']++;
+                elseif ($t['status'] === 'in_progress') $stats['in_progress']++;
+                else $stats['pending']++;
+            }
+            return [
+                'stats' => $stats,
+                'tasks' => $tasks
+            ];
+        } catch (Exception $e) {
+            error_log('Error getUserTasksForModal: ' . $e->getMessage());
+            return ['stats' => ['total' => 0,'completed' => 0,'in_progress' => 0,'pending' => 0], 'tasks' => []];
+        }
     }
 
     private function hasMemberAccess() {
