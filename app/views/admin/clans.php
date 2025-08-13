@@ -220,7 +220,7 @@ $additionalCSS = [];
 </div>
 
 <!-- Modal para gestionar miembros -->
-<div id="membersModal" class="modal" style="width: 500px; !important">
+<div id="membersModal" class="modal" style="padding: 500px; !important">
     <div class="modal-content">
         <div class="modal-header">
             <h3 id="membersModalTitle">Gestionar Miembros del Clan</h3>
