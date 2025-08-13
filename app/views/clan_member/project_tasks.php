@@ -75,7 +75,12 @@ ob_start();
                 <div class="task-item task-card <?php echo htmlspecialchars($t['priority']); ?>" data-status="<?php echo htmlspecialchars($t['status']); ?>" data-priority="<?php echo htmlspecialchars($t['priority']); ?>">
                     <div class="task-main">
                         <div class="task-title">
-                            <span class="task-check"><input type="checkbox" <?php echo (($t['status'] ?? '')==='completed')?'checked':''; ?> disabled /></span>
+                            <?php 
+                                $userId = (int)($user['user_id'] ?? 0);
+                                $assignedIds = array_filter(explode(',', (string)($t['all_assigned_user_ids'] ?? '')));
+                                $canEditTask = in_array((string)$userId, $assignedIds, true) || (int)($t['assigned_to_user_id'] ?? 0) === $userId || (int)($t['created_by_user_id'] ?? 0) === $userId;
+                            ?>
+                            <span class="task-check"><input type="checkbox" <?php echo (($t['status'] ?? '')==='completed')?'checked':''; ?> <?php echo $canEditTask? '' : 'disabled'; ?> onchange="toggleCardStatus(<?php echo (int)$t['task_id']; ?>, this.checked, <?php echo $canEditTask? 'true':'false'; ?>)" /></span>
                             <div class="title-text"><?php echo htmlspecialchars($t['task_name']); ?></div>
                         </div>
                         <div class="task-meta">
@@ -91,7 +96,15 @@ ob_start();
                         </div>
                     </div>
                     <div class="task-actions">
-                        <span class="status-badge <?php echo htmlspecialchars($t['status']); ?>"><?php echo strtoupper(str_replace('_',' ', (string)$t['status'])); ?></span>
+                        <?php if ($canEditTask): ?>
+                            <select class="status-select" onchange="setCardTaskStatus(<?php echo (int)$t['task_id']; ?>, this.value, true)">
+                                <option value="pending" <?php echo ($t['status']==='pending')?'selected':''; ?>>Pendiente</option>
+                                <option value="in_progress" <?php echo ($t['status']==='in_progress')?'selected':''; ?>>En progreso</option>
+                                <option value="completed" <?php echo ($t['status']==='completed')?'selected':''; ?>>Completada</option>
+                            </select>
+                        <?php else: ?>
+                            <span class="status-badge <?php echo htmlspecialchars($t['status']); ?>"><?php echo strtoupper(str_replace('_',' ', (string)$t['status'])); ?></span>
+                        <?php endif; ?>
                         <div class="actions-right">
                             <a class="btn-chip info" href="?route=clan_member/task-details&task_id=<?php echo (int)$t['task_id']; ?>"><i class="fas fa-eye"></i> Ver</a>
                         </div>
@@ -183,6 +196,26 @@ function filterCards(){
     var ok = (!st || el.getAttribute('data-status')===st) && (!pr || el.getAttribute('data-priority')===pr);
     el.style.display = ok ? '' : 'none';
   });
+}
+
+function toggleCardStatus(taskId, isChecked, allowed){
+  if(!allowed){ noPermissionModal && noPermissionModal(); return; }
+  const fd = new FormData(); fd.append('task_id', taskId); fd.append('is_completed', isChecked ? 'true' : 'false');
+  fetch('?route=clan_member/toggle-task-status', { method:'POST', body: fd, credentials:'same-origin' })
+    .then(async r=>{ const t = await r.text(); try{ return JSON.parse(t); } catch(e){ console.error(t); return {success:false, message:'Respuesta inválida'}; } })
+    .then(d=>{ if(!d.success){ alert(d.message||'Error'); location.reload(); } else { location.reload(); } });
+}
+
+function setCardTaskStatus(taskId, newStatus, allowed){
+  if(!allowed){ noPermissionModal && noPermissionModal(); return; }
+  if(newStatus==='completed' || newStatus==='pending'){
+    toggleCardStatus(taskId, newStatus==='completed', allowed);
+    return;
+  }
+  const fd = new FormData(); fd.append('task_id', taskId); fd.append('status', 'in_progress');
+  fetch('?route=clan_member/update-task', { method:'POST', body: fd, credentials:'same-origin' })
+    .then(async r=>{ const t = await r.text(); try{ return JSON.parse(t); } catch(e){ console.error(t); return {success:false, message:'Respuesta inválida'}; } })
+    .then(d=>{ if(!d.success){ alert(d.message||'Error'); } location.reload(); });
 }
 </script>
 
