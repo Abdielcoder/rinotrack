@@ -14,18 +14,17 @@ class NotificationService {
         if (empty($assignedUserIds)) return 0;
         $assignedUserIds = array_values(array_unique(array_map('intval', $assignedUserIds)));
         $db = Database::getConnection();
-        $placeholders = implode(',', array_fill(0, count($assignedUserIds), '?'));
+        // Obtener info de tarea/proyecto
+        $taskStmt = $db->prepare("SELECT t.task_id, t.task_name, t.due_date, t.project_id, p.project_name FROM Tasks t JOIN Projects p ON t.project_id = p.project_id WHERE t.task_id = ?");
+        $taskStmt->execute([$taskId]);
+        $taskInfo = $taskStmt->fetch();
+        if (!$taskInfo) { return 0; }
 
-        $stmt = $db->prepare(
-            "SELECT t.task_id, t.task_name, t.due_date, t.project_id, p.project_name, u.user_id, u.full_name, u.email
-             FROM Tasks t
-             JOIN Projects p ON t.project_id = p.project_id
-             JOIN Users u ON u.user_id IN ($placeholders)
-             WHERE t.task_id = ? AND u.email IS NOT NULL AND u.email != ''"
-        );
-        $params = array_merge($assignedUserIds, [$taskId]);
-        $stmt->execute($params);
-        $rows = $stmt->fetchAll();
+        // Obtener usuarios destino con email
+        $placeholders = implode(',', array_fill(0, count($assignedUserIds), '?'));
+        $userStmt = $db->prepare("SELECT user_id, full_name, email FROM Users WHERE user_id IN ($placeholders) AND email IS NOT NULL AND email != '' AND is_active = 1");
+        $userStmt->execute($assignedUserIds);
+        $rows = $userStmt->fetchAll();
         $count = 0;
         foreach ($rows as $r) {
             $to = $r['email'];
@@ -34,30 +33,31 @@ class NotificationService {
                 'Nueva tarea asignada',
                 '<p>Se te ha asignado una nueva tarea.</p>',
                 [
-                    ['label' => 'Tarea', 'value' => $r['task_name']],
-                    ['label' => 'Proyecto', 'value' => $r['project_name']],
-                    ['label' => 'Fecha de entrega', 'value' => $r['due_date'] ?: 'No definida']
+                    ['label' => 'Tarea', 'value' => $taskInfo['task_name']],
+                    ['label' => 'Proyecto', 'value' => $taskInfo['project_name']],
+                    ['label' => 'Fecha de entrega', 'value' => ($taskInfo['due_date'] ?? null) ?: 'No definida']
                 ],
-                ['label' => 'Ver proyecto', 'url' => APP_URL . '?route=admin/project-details&projectId=' . urlencode($r['project_id'])]
+                ['label' => 'Ver proyecto', 'url' => APP_URL . '?route=admin/project-details&projectId=' . urlencode($taskInfo['project_id'])]
             );
             if ($this->mailer->sendHtml($to, 'RinoTrack • Tarea asignada', $html)) {
                 Notification::logSent('task_assigned', $taskId, $r['user_id'], $to);
                 $count++;
+            } else {
+                error_log('task_assigned mail fail to ' . $to . ' - ' . $this->mailer->getLastError());
             }
         }
         // Extras globales para notificación
         $extra = $this->parseRecipients($setting['recipients'] ?? null);
         if (!empty($extra)) {
-            $info = reset($rows);
-            if ($info) {
+            if ($taskInfo) {
                 $html = EmailTemplate::render(
                     'Tarea asignada (copia)',
                     '<p>Se ha asignado una tarea.</p>',
                     [
-                        ['label' => 'Tarea', 'value' => $info['task_name']],
-                        ['label' => 'Proyecto', 'value' => $info['project_name']]
+                        ['label' => 'Tarea', 'value' => $taskInfo['task_name']],
+                        ['label' => 'Proyecto', 'value' => $taskInfo['project_name']]
                     ],
-                    ['label' => 'Ver proyecto', 'url' => APP_URL . '?route=admin/project-details&projectId=' . urlencode($info['project_id'])]
+                    ['label' => 'Ver proyecto', 'url' => APP_URL . '?route=admin/project-details&projectId=' . urlencode($taskInfo['project_id'])]
                 );
                 foreach ($extra as $mail) { $this->mailer->sendHtml($mail, 'RinoTrack • Tarea asignada', $html); }
             }
