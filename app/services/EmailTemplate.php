@@ -8,7 +8,8 @@ class EmailTemplate {
     public static function render($title, $introHtml, $bodyRows = [], $cta = null, $options = []) {
         $year   = date('Y');
         $brand  = 'RinoTrack';
-        $logo   = 'https://rinorisk.com/wp-content/uploads/2023/05/rinorisk_logo.png';
+        // Usar logo local servido desde public/assets/img/logo.png para evitar enlaces rotos en correo
+        $logo   = (defined('APP_URL') ? APP_URL : '/') . 'assets/img/logo.png';
         $accent = $options['accent'] ?? '#2563eb';
         $emoji  = $options['emoji']  ?? '✨';
         $muted  = '#6b7280';
@@ -57,7 +58,9 @@ class EmailTemplate {
         </div>";
 
         // Ensamble completo
-        return "<html><body style=\"margin:0;padding:24px;background:#0b1020;\">"
+        // Fondo claro con degradado sutil (con fallback a color sólido)
+        $bodyBg = 'background:#eef2ff; background-image:linear-gradient(135deg,#eef2ff 0%, #f8fafc 100%);';
+        return "<html><body style=\"margin:0;padding:24px;{$bodyBg}\">"
             . "<div style=\"max-width:680px;margin:0 auto\">"
             . "<div style=\"text-align:center;margin-bottom:14px\"><img src=\"{$logo}\" alt=\"RinoRisk\" style=\"height:34px;filter:drop-shadow(0 2px 6px rgba(0,0,0,.25))\"/></div>"
             . "<div style=\"border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(0,10,40,.35);background:#fff;\">"
