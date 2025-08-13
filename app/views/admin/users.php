@@ -198,20 +198,20 @@ document.addEventListener("DOMContentLoaded", function() {
     };
 
     window.deleteUser = function(userId) {
-        if (!confirm('¿Deseas eliminar definitivamente este usuario? Esta acción no se puede deshacer.')) return;
+        if (!confirm("¿Deseas eliminar definitivamente este usuario? Esta acción no se puede deshacer.")) return;
         const formData = new FormData();
-        formData.append('userId', userId);
-        fetch('?route=admin/delete-user', { method: 'POST', body: formData })
-            .then(r=>r.json())
-            .then(data=>{
+        formData.append("userId", userId);
+        fetch("?route=admin/delete-user", { method: "POST", body: formData })
+            .then(r => r.json())
+            .then(data => {
                 if (data && data.success) {
-                    alert('Usuario eliminado');
+                    alert("Usuario eliminado");
                     location.reload();
                 } else {
-                    alert((data && data.message) ? data.message : 'Error al eliminar');
+                    alert((data && data.message) ? data.message : "Error al eliminar");
                 }
             })
-            .catch(err=>{ console.error('deleteUser error:', err); alert('Error de conexión'); });
+            .catch(err => { console.error("deleteUser error:", err); alert("Error de conexión"); });
     };
 });
 </script>';
