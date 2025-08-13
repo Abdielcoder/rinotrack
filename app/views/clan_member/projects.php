@@ -33,7 +33,7 @@ ob_start();
         <?php else: ?>
             <div class="projects-grid">
                 <?php foreach ($projects as $p): ?>
-                    <a class="project-card" href="?route=clan_member/tasks&project_id=<?php echo $p['project_id']; ?>">
+                    <a class="project-card" href="?route=clan_member/project-tasks&project_id=<?php echo $p['project_id']; ?>&open_create=1">
                         <div class="project-name"><?php echo htmlspecialchars($p['project_name']); ?></div>
                         <div class="project-description"><?php echo htmlspecialchars($p['description']); ?></div>
                         <div class="project-meta">
