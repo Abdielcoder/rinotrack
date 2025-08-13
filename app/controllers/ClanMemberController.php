@@ -471,6 +471,7 @@ class ClanMemberController {
         $projects = [];
         $clanTotalPoints = 0;
         $clanCompletedPoints = 0;
+        $userKPI = ['target_points' => 1000, 'earned_points' => 0, 'progress_percentage' => 0, 'completed_tasks' => 0, 'total_tasks' => 0];
         if ($currentKPI && $this->userClan && isset($this->userClan['clan_id'])) {
             $all = $this->projectModel->getByKPIQuarter($currentKPI['kpi_quarter_id']);
             foreach ($all as $p) {
@@ -481,6 +482,61 @@ class ClanMemberController {
                     $clanCompletedPoints += (float)$progress['earned_points'];
                 }
             }
+
+            // KPI personal del usuario (puntos ganados en el trimestre actual del clan)
+            try {
+                $db = Database::getConnection();
+                $sql = "
+                    SELECT 
+                        SUM(
+                            CASE WHEN (t.status='completed' OR t.is_completed=1) THEN
+                                CASE 
+                                    WHEN p.task_distribution_mode = 'automatic' THEN 
+                                        CASE 
+                                            WHEN ta.user_id IS NOT NULL THEN t.automatic_points * (ta.assigned_percentage/100.0)
+                                            WHEN t.assigned_to_user_id = ? THEN t.automatic_points
+                                            ELSE 0
+                                        END
+                                    ELSE 
+                                        (COALESCE(t.assigned_percentage,0) * p.kpi_points / 100.0) *
+                                        (CASE 
+                                            WHEN ta.user_id IS NOT NULL THEN (ta.assigned_percentage/100.0)
+                                            WHEN t.assigned_to_user_id = ? THEN 1
+                                            ELSE 0
+                                        END)
+                                END
+                            ELSE 0 END
+                        ) AS earned_points,
+                        SUM(CASE WHEN (t.status='completed' OR t.is_completed=1) AND (ta.user_id IS NOT NULL OR t.assigned_to_user_id = ?) THEN 1 ELSE 0 END) AS completed_tasks,
+                        COUNT(DISTINCT CASE WHEN (ta.user_id IS NOT NULL OR t.assigned_to_user_id = ?) THEN t.task_id END) AS total_tasks
+                    FROM Tasks t
+                    JOIN Projects p ON p.project_id = t.project_id
+                    LEFT JOIN Task_Assignments ta ON ta.task_id = t.task_id AND ta.user_id = ?
+                    WHERE p.clan_id = ?
+                      AND p.kpi_quarter_id = ?
+                      AND t.is_subtask = 0
+                ";
+                $params = [
+                    $this->currentUser['user_id'],
+                    $this->currentUser['user_id'],
+                    $this->currentUser['user_id'],
+                    $this->currentUser['user_id'],
+                    $this->currentUser['user_id'],
+                    $this->userClan['clan_id'],
+                    $currentKPI['kpi_quarter_id']
+                ];
+                $stmt = $db->prepare($sql);
+                $stmt->execute($params);
+                $row = $stmt->fetch(PDO::FETCH_ASSOC) ?: ['earned_points'=>0,'completed_tasks'=>0,'total_tasks'=>0];
+                $earned = (float)($row['earned_points'] ?? 0);
+                $target = 1000.0;
+                $userKPI['earned_points'] = round($earned, 2);
+                $userKPI['progress_percentage'] = $target > 0 ? round(min(($earned / $target) * 100, 100), 1) : 0;
+                $userKPI['completed_tasks'] = (int)($row['completed_tasks'] ?? 0);
+                $userKPI['total_tasks'] = (int)($row['total_tasks'] ?? 0);
+            } catch (Exception $e) {
+                error_log('ClanMember userKPI calc error: ' . $e->getMessage());
+            }
         }
         $data = [
             'currentPage' => 'clan_member',
@@ -489,7 +545,8 @@ class ClanMemberController {
             'currentKPI' => $currentKPI,
             'projects' => $projects,
             'clanTotalPoints' => $clanTotalPoints,
-            'clanCompletedPoints' => $clanCompletedPoints
+            'clanCompletedPoints' => $clanCompletedPoints,
+            'userKPI' => $userKPI
         ];
         $this->loadView('clan_member/kpi_dashboard', $data);
     }

@@ -31,6 +31,27 @@ ob_start();
         <?php if (!$currentKPI): ?>
             <div class="empty-minimal">No hay trimestre KPI activo</div>
         <?php else: ?>
+            <section class="user-kpi-summary" style="margin-bottom:14px;">
+                <div class="quarter-card" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:center;">
+                    <div>
+                        <h3 style="margin:0 0 6px;">Mis indicadores</h3>
+                        <div style="display:flex;gap:14px;color:#475569;font-size:.95rem;">
+                            <div><strong>Meta trimestral:</strong> <?php echo number_format($userKPI['target_points'] ?? 1000); ?> pts</div>
+                            <div><strong>Ganados:</strong> <?php echo number_format((float)($userKPI['earned_points'] ?? 0),2); ?> pts</div>
+                            <div><strong>Tareas:</strong> <?php echo (int)($userKPI['completed_tasks'] ?? 0); ?>/<?php echo (int)($userKPI['total_tasks'] ?? 0); ?></div>
+                        </div>
+                    </div>
+                    <div class="progress-container" style="justify-self:end; width:100%; max-width:420px;">
+                        <div class="progress-bar" style="height:10px;background:#e5e7eb;border-radius:999px;overflow:hidden;">
+                            <div class="progress-fill" style="height:100%;width: <?php echo (float)($userKPI['progress_percentage'] ?? 0); ?>%;background:linear-gradient(90deg,#10b981,#22c55e);"></div>
+                        </div>
+                        <div style="text-align:right;font-weight:600;color:#0f766e;margin-top:6px;">
+                            <?php echo number_format((float)($userKPI['progress_percentage'] ?? 0),1); ?>%
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <section class="kpi-quarter-info">
                 <div class="quarter-card">
                     <div class="quarter-header">
