@@ -61,7 +61,8 @@ $controllers = [
     __DIR__ . '/../app/controllers/AdminController.php',
     __DIR__ . '/../app/controllers/KPIController.php',
     __DIR__ . '/../app/controllers/ClanLeaderController.php',
-    __DIR__ . '/../app/controllers/GamificationController.php'
+    __DIR__ . '/../app/controllers/GamificationController.php',
+    __DIR__ . '/../app/controllers/ClanMemberController.php'
 ];
 
 foreach ($controllers as $controller) {
@@ -547,6 +548,48 @@ try {
         case 'perfil':
             // Por ahora redirigir al dashboard
             Utils::redirect('dashboard');
+            break;
+
+        // Rutas Miembro de Clan
+        case 'clan_member':
+        case 'clan_member/dashboard':
+            $controller = new ClanMemberController();
+            $controller->index();
+            break;
+
+        case 'clan_member/projects':
+            $controller = new ClanMemberController();
+            $controller->projects();
+            break;
+
+        case 'clan_member/tasks':
+            $controller = new ClanMemberController();
+            $controller->tasks();
+            break;
+
+        case 'clan_member/toggle-task-status':
+            $controller = new ClanMemberController();
+            $controller->toggleTaskStatus();
+            break;
+
+        case 'clan_member/update-task':
+            $controller = new ClanMemberController();
+            $controller->updateTask();
+            break;
+
+        case 'clan_member/add-task-comment':
+            $controller = new ClanMemberController();
+            $controller->addTaskComment();
+            break;
+
+        case 'clan_member/availability':
+            $controller = new ClanMemberController();
+            $controller->availability();
+            break;
+
+        case 'clan_member/kpi-dashboard':
+            $controller = new ClanMemberController();
+            $controller->kpiDashboard();
             break;
             
         default:
