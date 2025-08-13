@@ -220,7 +220,7 @@ $additionalCSS = [];
 </div>
 
 <!-- Modal para gestionar miembros -->
-<div id="membersModal" class="modal">
+<div id="membersModal" class="modal" style="width: 500px; !important">
     <div class="modal-content">
         <div class="modal-header">
             <h3 id="membersModalTitle">Gestionar Miembros del Clan</h3>
@@ -229,7 +229,7 @@ $additionalCSS = [];
             </button>
         </div>
         
-        <div class="modal-body" style="width: 500px; !important">
+        <div class="modal-body">
             <div class="form-group">
                 <label for="userSelect">Agregar Usuario</label>
                 <div class="user-picker">
