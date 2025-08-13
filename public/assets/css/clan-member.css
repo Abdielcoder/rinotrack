@@ -188,6 +188,41 @@ section h3 { margin: 6px 0 14px; color: var(--cm-text); font-size: 1.08rem; }
 .modal-close { border: none; background: transparent; font-size: 20px; cursor: pointer; color: var(--cm-muted); }
 .modal-close:hover { color: var(--cm-text); }
 
+/* ===================== */
+/*  Project tasks (CM)   */
+/* ===================== */
+.cm-project-tasks .summary-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+.cm-project-tasks .summary-card { background: #fff; border: 1px solid var(--cm-border); border-radius: var(--cm-radius); box-shadow: var(--cm-shadow); padding: 14px; display: grid; gap: 6px; }
+.cm-project-tasks .summary-label { color: var(--cm-muted); font-weight: 700; font-size: .85rem; }
+
+/* Cards de tareas dentro del proyecto */
+.cm-project-tasks .task-card { border: 1px solid var(--cm-border); border-left: 4px solid var(--cm-border); border-radius: var(--cm-radius); box-shadow: var(--cm-shadow); padding: 14px; background: #fff; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 10px; }
+.cm-project-tasks .task-card.low { border-left-color: var(--cm-success); }
+.cm-project-tasks .task-card.medium { border-left-color: var(--cm-info); }
+.cm-project-tasks .task-card.high { border-left-color: var(--cm-warning); }
+.cm-project-tasks .task-card.urgent { border-left-color: var(--cm-danger); }
+.cm-project-tasks .task-card:hover { transform: translateY(-1px); box-shadow: 0 12px 30px rgba(31,41,55,.08); }
+
+/* Mejoras UI del modal Crear Tarea */
+.modal .form-group { display: grid; gap: 6px; }
+.modal .form-group label { font-weight: 700; color: var(--cm-text); font-size: .92rem; }
+.modal .form-group input[type="text"],
+.modal .form-group input[type="date"],
+.modal .form-group select,
+.modal .form-group textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--cm-border); border-radius: 10px; background: #fff; font-size: .95rem; color: var(--cm-text); transition: border-color .15s ease, box-shadow .15s ease; }
+.modal .form-group textarea { min-height: 100px; resize: vertical; }
+.modal .form-group input:focus,
+.modal .form-group select:focus,
+.modal .form-group textarea:focus { outline: none; border-color: var(--cm-primary); box-shadow: 0 0 0 3px rgba(99,102,241,.15); }
+.modal .form-row { display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* Botones de acción refinados */
+.action-btn { display:inline-flex; align-items:center; gap:8px; padding:10px 14px; border-radius: 10px; border: 1px solid var(--cm-border); background:#fff; color:var(--cm-text); font-weight:700; cursor:pointer; transition: .15s ease; }
+.action-btn:hover { transform: translateY(-1px); box-shadow: var(--cm-shadow); }
+.action-btn.primary { background: var(--cm-primary); color:#fff; border-color: var(--cm-primary); }
+.action-btn.primary:hover { background: var(--cm-primary-600); }
+.action-btn.secondary { background: var(--cm-soft); }
+
 @keyframes cmModalIn {
   to { transform: scale(1); }
 }
