@@ -64,8 +64,33 @@
 .cards-compact::-webkit-scrollbar { height: 6px; }
 .cards-compact::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 999px; }
 .card-compact { border: 1px solid var(--cm-border); background: #fff; border-radius: var(--cm-radius); padding: 12px; box-shadow: var(--cm-shadow); display: grid; gap: 8px; min-width: 300px; scroll-snap-align: start; }
+.card-compact .cc-kpis { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.card-compact .cc-actions { margin-left: auto; }
 .card-compact .cc-head { display: flex; justify-content: space-between; align-items: center; color: var(--cm-muted); font-weight: 700; font-size: .9rem; }
 .truncate { max-width: 220px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+
+/* Grid fijo de proyectos (3 por fila) sin scroll */
+.projects-strip .cards-compact { 
+  display: grid; 
+  grid-template-columns: repeat(3, minmax(0, 1fr)); 
+  gap: 12px; 
+  overflow: visible; 
+  padding-bottom: 0; 
+  scroll-snap-type: none; 
+  align-items: stretch;
+}
+.projects-strip .card-compact { min-width: 0; display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+.projects-strip .card-compact * { min-width: 0; }
+.projects-strip .card-compact .cc-kpis { flex-wrap: wrap; }
+.projects-strip .truncate { max-width: 100%; }
+
+@media (max-width: 1100px) {
+  .projects-strip .cards-compact { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 720px) {
+  .projects-strip .cards-compact { grid-template-columns: 1fr; }
+}
 .cc-kpis { display: flex; gap: 12px; align-items: center; }
 .cc-kpi { display: grid; gap: 4px; }
 .cc-kpi .label { color: var(--cm-muted); font-size: .82rem; }
