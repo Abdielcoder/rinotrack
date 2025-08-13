@@ -99,6 +99,24 @@
 .cc-progress > span { height: 100%; display: block; background: linear-gradient(90deg, var(--cm-primary), #8b5cf6); }
 .cc-actions { display: flex; }
 
+/* Hero de proyecto (similar al ejemplo de referencia) */
+.project-hero { background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); border-radius: 14px; margin: 18px auto; max-width: 1220px; }
+.project-hero .hero-inner { padding: 22px; color: #fff; display: grid; gap: 12px; }
+.project-hero .hero-back { color: rgba(255,255,255,.9); text-decoration: none; display: inline-flex; align-items:center; gap:8px; font-weight:600; }
+.project-hero .hero-title { font-size: 1.6rem; margin: 0; }
+.project-hero .hero-subtitle { opacity: .95; }
+.project-hero .hero-actions { margin-top: 6px; }
+.project-hero .btn-hero { display:inline-flex; align-items:center; gap:8px; padding:10px 14px; border-radius:10px; border:2px solid rgba(255,255,255,.35); background: rgba(255,255,255,.18); color:#fff; font-weight:800; cursor:pointer; }
+.project-hero .btn-hero:hover { background: rgba(255,255,255,.28); }
+.project-hero .hero-stats { display:grid; grid-template-columns: repeat(4, minmax(140px,1fr)); gap:14px; margin-top: 8px; }
+.project-hero .hero-stat { background: rgba(255,255,255,.16); padding: 16px; border-radius: 10px; text-align:center; }
+.project-hero .hero-stat .num { font-size: 1.4rem; font-weight: 800; }
+.project-hero .hero-stat .label { opacity: .95; font-weight: 700; }
+
+@media (max-width: 760px){
+  .project-hero .hero-stats { grid-template-columns: repeat(2, 1fr); }
+}
+
 /* Tareas */
 /* Tabla de tareas de ancho completo */
 .table-container { background: #fff; border: 1px solid var(--cm-border); border-radius: var(--cm-radius); box-shadow: var(--cm-shadow); overflow: auto; }
@@ -202,6 +220,17 @@ section h3 { margin: 6px 0 14px; color: var(--cm-text); font-size: 1.08rem; }
 .cm-project-tasks .task-card.high { border-left-color: var(--cm-warning); }
 .cm-project-tasks .task-card.urgent { border-left-color: var(--cm-danger); }
 .cm-project-tasks .task-card:hover { transform: translateY(-1px); box-shadow: 0 12px 30px rgba(31,41,55,.08); }
+.cm-project-tasks .task-title { display:flex; align-items:center; gap:10px; font-weight:800; color: var(--cm-text); }
+.cm-project-tasks .task-title .title-text { font-size: 1rem; }
+.cm-project-tasks .task-meta .desc { color: var(--cm-muted); margin: 6px 0; font-size: .92rem; }
+.cm-project-tasks .task-meta .meta-row { display:flex; gap: 14px; color: var(--cm-muted); }
+.cm-project-tasks .status-badge { display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; font-weight:800; font-size:.75rem; }
+.cm-project-tasks .status-badge.completed { background: rgba(16,185,129,.18); color:#064e3b; }
+.cm-project-tasks .status-badge.in_progress { background: rgba(59,130,246,.18); color:#1e3a8a; }
+.cm-project-tasks .status-badge.pending { background: rgba(245,158,11,.18); color:#7c2d12; }
+.cm-project-tasks .actions-right { display:flex; gap:8px; }
+.btn-chip { display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius: 999px; border:1px solid var(--cm-border); background:#fff; color:var(--cm-text); font-weight:700; cursor:pointer; }
+.btn-chip.info { background:#e0ecff; color:#1e40af; border-color:#bfdbfe; }
 
 /* Mejoras UI del modal Crear Tarea */
 .modal .form-group { display: grid; gap: 6px; }

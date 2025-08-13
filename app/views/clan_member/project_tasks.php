@@ -3,40 +3,38 @@ ob_start();
 ?>
 
 <div class="cm-project-tasks minimal">
-    <header class="minimal-header">
-        <div class="header-row">
-            <div class="title-minimal">
-                <a href="?route=clan_member/tasks" class="btn-minimal"><i class="fas fa-arrow-left"></i> Volver a Proyectos</a>
-                <h1>Tareas del Proyecto</h1>
-                <span class="subtitle"><?php echo htmlspecialchars($project['project_name']); ?></span>
+    <div class="project-hero">
+        <div class="hero-inner">
+            <a href="?route=clan_member/tasks" class="hero-back"><i class="fas fa-arrow-left"></i> Volver a Proyectos</a>
+            <h1 class="hero-title">Tareas del Proyecto</h1>
+            <div class="hero-subtitle"><?php echo htmlspecialchars($project['project_name']); ?></div>
+            <div class="hero-actions">
+                <button class="btn-hero" onclick="openCreateTaskModal()"><i class="fas fa-plus"></i> Nueva Tarea</button>
             </div>
-            <div class="actions-minimal">
-                <button class="btn-minimal primary" onclick="openCreateTaskModal()"><i class="fas fa-plus"></i> Nueva Tarea</button>
+            <div class="hero-stats">
+                <div class="hero-stat">
+                    <div class="num"><?php echo count($tasks ?? []); ?></div>
+                    <div class="label">Total Tareas</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="num"><?php echo count(array_filter($tasks ?? [], function($t){ return ($t['status'] ?? '')==='completed'; })); ?></div>
+                    <div class="label">Completadas</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="num"><?php echo count(array_filter($tasks ?? [], function($t){ return ($t['status'] ?? '')==='pending'; })); ?></div>
+                    <div class="label">Pendientes</div>
+                </div>
+                <?php if (!empty($project['kpi_points'])): ?>
+                <div class="hero-stat">
+                    <div class="num"><?php echo number_format((float)$project['kpi_points']); ?></div>
+                    <div class="label">Puntos KPI</div>
+                </div>
+                <?php endif; ?>
             </div>
         </div>
-    </header>
+    </div>
 
     <div class="content-minimal" style="max-width:1200px;">
-        <section class="summary-grid">
-            <div class="summary-card">
-                <div class="summary-label">Total Tareas</div>
-                <div class="summary-value"><?php echo count($tasks ?? []); ?></div>
-            </div>
-            <div class="summary-card">
-                <div class="summary-label">Completadas</div>
-                <div class="summary-value"><?php echo count(array_filter($tasks ?? [], function($t){ return ($t['status'] ?? '')==='completed'; })); ?></div>
-            </div>
-            <div class="summary-card">
-                <div class="summary-label">Pendientes</div>
-                <div class="summary-value"><?php echo count(array_filter($tasks ?? [], function($t){ return ($t['status'] ?? '')==='pending'; })); ?></div>
-            </div>
-            <?php if (!empty($project['kpi_points'])): ?>
-            <div class="summary-card">
-                <div class="summary-label">Puntos KPI</div>
-                <div class="summary-value"><?php echo number_format((float)$project['kpi_points']); ?></div>
-            </div>
-            <?php endif; ?>
-        </section>
 
         <?php if (!empty($project['description'])): ?>
         <section class="summary-card">
@@ -77,21 +75,26 @@ ob_start();
                 <div class="task-item task-card <?php echo htmlspecialchars($t['priority']); ?>" data-status="<?php echo htmlspecialchars($t['status']); ?>" data-priority="<?php echo htmlspecialchars($t['priority']); ?>">
                     <div class="task-main">
                         <div class="task-title">
-                            <span class="status-dot <?php echo htmlspecialchars($t['status']); ?>"></span>
-                            <?php echo htmlspecialchars($t['task_name']); ?>
+                            <span class="task-check"><input type="checkbox" <?php echo (($t['status'] ?? '')==='completed')?'checked':''; ?> disabled /></span>
+                            <div class="title-text"><?php echo htmlspecialchars($t['task_name']); ?></div>
                         </div>
                         <div class="task-meta">
-                            <?php if (!empty($t['assigned_to_fullname'])): ?>
-                                <span><i class="fas fa-user"></i> <?php echo htmlspecialchars($t['assigned_to_fullname']); ?></span>
-                            <?php endif; ?>
-                            <?php if (!empty($t['due_date'])): ?>
-                                <span><i class="fas fa-calendar"></i> <?php echo date('d/m/Y', strtotime($t['due_date'])); ?></span>
-                            <?php endif; ?>
-                            <span class="chip chip-status <?php echo htmlspecialchars($t['status']); ?>"><?php echo str_replace('_',' ', (string)$t['status']); ?></span>
+                            <?php if (!empty($t['description'])): ?><div class="desc"><?php echo htmlspecialchars($t['description']); ?></div><?php endif; ?>
+                            <div class="meta-row">
+                                <?php if (!empty($t['assigned_to_fullname'])): ?>
+                                    <span class="meta"><i class="fas fa-user"></i> <?php echo htmlspecialchars($t['assigned_to_fullname']); ?></span>
+                                <?php endif; ?>
+                                <?php if (!empty($t['due_date'])): ?>
+                                    <span class="meta"><i class="fas fa-calendar"></i> <?php echo date('d/m/Y', strtotime($t['due_date'])); ?></span>
+                                <?php endif; ?>
+                            </div>
                         </div>
                     </div>
                     <div class="task-actions">
-                        <button class="icon-btn" onclick="openCommentModal(<?php echo (int)$t['task_id']; ?>)" title="Comentar"><i class="fas fa-comment"></i></button>
+                        <span class="status-badge <?php echo htmlspecialchars($t['status']); ?>"><?php echo strtoupper(str_replace('_',' ', (string)$t['status'])); ?></span>
+                        <div class="actions-right">
+                            <button class="btn-chip info" onclick="openCommentModal(<?php echo (int)$t['task_id']; ?>)"><i class="fas fa-eye"></i> Ver</button>
+                        </div>
                     </div>
                 </div>
                 <?php endforeach; ?>
