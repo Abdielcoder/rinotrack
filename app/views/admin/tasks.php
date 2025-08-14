@@ -185,6 +185,24 @@ ob_start();
 					<div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
 						<h4 style="margin:0">Tareas</h4>
 					</div>
+					<!-- Filtros -->
+					<div class="filters" style="display:flex;gap:10px;align-items:center;margin:12px 0">
+						<input type="text" id="taskSearch" class="search-input" placeholder="Buscar tarea, descripción, proyecto..." value="<?php echo Utils::escape($filters['search'] ?? ''); ?>" style="min-width:260px">
+						<select id="statusFilter" class="filter-select">
+							<option value="" <?php echo empty($filters['status']) ? 'selected' : ''; ?>>Todos los estados</option>
+							<option value="pending" <?php echo (($filters['status'] ?? '')==='pending')?'selected':''; ?>>Pendientes</option>
+							<option value="in_progress" <?php echo (($filters['status'] ?? '')==='in_progress')?'selected':''; ?>>En progreso</option>
+							<option value="completed" <?php echo (($filters['status'] ?? '')==='completed')?'selected':''; ?>>Completadas</option>
+							<option value="cancelled" <?php echo (($filters['status'] ?? '')==='cancelled')?'selected':''; ?>>Canceladas</option>
+						</select>
+						<select id="perPage" class="filter-select">
+							<?php foreach ([10,20,50,100] as $pp): ?>
+							<option value="<?php echo $pp; ?>" <?php echo ((int)($pagination['per_page'] ?? 20) === $pp) ? 'selected' : ''; ?>><?php echo $pp; ?>/página</option>
+							<?php endforeach; ?>
+						</select>
+						<button id="applyFilters" class="btn btn-secondary">Aplicar</button>
+					</div>
+
 					<div class="table-wrapper">
 						<table class="data-table">
 							<thead>
@@ -205,6 +223,17 @@ ob_start();
 							</tbody>
 						</table>
 					</div>
+
+					<!-- Paginación -->
+					<?php 
+					$pg = $pagination ?? ['page'=>1,'total_pages'=>1,'total'=>count($tasks),'per_page'=>20];
+					if (($pg['total_pages'] ?? 1) > 1): ?>
+					<div class="pagination" style="display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-top:10px">
+						<button class="btn btn-secondary" id="prevPage" <?php echo ($pg['page'] <= 1) ? 'disabled' : ''; ?>>Anterior</button>
+						<span>Página <?php echo (int)$pg['page']; ?> de <?php echo (int)$pg['total_pages']; ?></span>
+						<button class="btn btn-secondary" id="nextPage" <?php echo ($pg['page'] >= $pg['total_pages']) ? 'disabled' : ''; ?>>Siguiente</button>
+					</div>
+					<?php endif; ?>
 				</div>
 				<div class="col">
 					<h4>Actividad Reciente</h4>
@@ -252,6 +281,7 @@ ob_start();
 		.stat .cap{display:block;color:var(--admin-text-muted);font-size:.85rem;margin-top:4px}
 		.two-cols{display:grid;grid-template-columns:2fr 1fr;gap:var(--admin-spacing-xl)}
 		.table-wrapper{border:1px solid var(--admin-border);border-radius:12px;overflow:hidden;background:var(--admin-bg-primary)}
+		.filter-select{padding:8px 10px;border:1px solid var(--admin-border);border-radius:8px;background:var(--admin-bg-tertiary);color:var(--admin-text-primary)}
 		.data-table{width:100%;border-collapse:collapse}
 		.data-table th,.data-table td{padding:12px 14px;border-bottom:1px solid var(--admin-border)}
 		.data-table th{background:var(--admin-bg-tertiary);text-align:left}
@@ -294,6 +324,57 @@ document.getElementById('adminCreateTaskForm')?.addEventListener('submit', async
         alert('Error de red');
     }
 });
+
+// Manejo de filtros y paginación
+(function(){
+    const q = new URLSearchParams(window.location.search);
+    function apply(newParams){
+        const base = new URL(window.location.href);
+        // Mantener la ruta actual
+        newParams.forEach((v,k)=>{ if (v===null) base.searchParams.delete(k); else base.searchParams.set(k, v); });
+        // Forzar route
+        base.searchParams.set('route','admin/tasks');
+        window.location.href = base.toString();
+    }
+    const btn = document.getElementById('applyFilters');
+    if (btn){
+        btn.addEventListener('click', function(){
+            const search = document.getElementById('taskSearch')?.value || '';
+            const status = document.getElementById('statusFilter')?.value || '';
+            const perPage = document.getElementById('perPage')?.value || '20';
+            apply(new Map([
+                ['search', search ? search : null],
+                ['status', status ? status : null],
+                ['perPage', perPage],
+                ['page', 1]
+            ]));
+        });
+    }
+    const prev = document.getElementById('prevPage');
+    const next = document.getElementById('nextPage');
+    if (prev){
+        prev.addEventListener('click', function(){
+            const page = Math.max(1, parseInt(q.get('page')||'1',10) - 1);
+            apply(new Map([
+                ['search', document.getElementById('taskSearch')?.value || q.get('search') || null],
+                ['status', document.getElementById('statusFilter')?.value || q.get('status') || null],
+                ['perPage', document.getElementById('perPage')?.value || q.get('perPage') || '20'],
+                ['page', page]
+            ]));
+        });
+    }
+    if (next){
+        next.addEventListener('click', function(){
+            const page = Math.max(1, parseInt(q.get('page')||'1',10) + 1);
+            apply(new Map([
+                ['search', document.getElementById('taskSearch')?.value || q.get('search') || null],
+                ['status', document.getElementById('statusFilter')?.value || q.get('status') || null],
+                ['perPage', document.getElementById('perPage')?.value || q.get('perPage') || '20'],
+                ['page', page]
+            ]));
+        });
+    }
+})();
 </script>
 
 <?php

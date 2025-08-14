@@ -280,14 +280,25 @@ class AdminController {
         // Miembros del clan Olympo
         $members = $this->clanModel->getMembers((int)$olympo['clan_id']);
 
-        // Obtener tareas del clan Olympo, estadísticas e historial
+        // Obtener filtros desde la URL
+        $search = trim($_GET['search'] ?? '');
+        $statusFilter = trim($_GET['status'] ?? '');
+        $page = max(1, (int)($_GET['page'] ?? 1));
+        $perPage = min(100, max(10, (int)($_GET['perPage'] ?? 20)));
+
+        // Obtener tareas del clan Olympo (todas para stats, filtradas para listado)
         $taskModel = new Task();
         $clanId = (int)$olympo['clan_id'];
-        // Traer hasta 500 tareas para el tablero (paginación simple)
-        $tasksResult = $taskModel->getAllTasksByClanStrict($clanId, 1, 500, '', '');
+
+        // Para estadísticas usamos todas
+        $allForStats = $taskModel->getAllTasksByClanStrict($clanId, 1, 2000, '', '');
+        $allTasks = $allForStats['tasks'] ?? [];
+
+        // Para listado usamos filtros y paginación
+        $tasksResult = $taskModel->getAllTasksByClanStrict($clanId, $page, $perPage, $search, $statusFilter);
         $tasks = $tasksResult['tasks'] ?? [];
 
-        // Calcular métricas de tareas del clan
+        // Calcular métricas de tareas del clan (sobre todas)
         $stats = [
             'total' => 0,
             'completed' => 0,
@@ -297,7 +308,7 @@ class AdminController {
             'progress' => 0.0,
         ];
         $today = date('Y-m-d');
-        foreach ($tasks as $t) {
+        foreach ($allTasks as $t) {
             $stats['total']++;
             $status = $t['status'] ?? 'pending';
             if (isset($stats[$status])) { $stats[$status]++; }
@@ -335,6 +346,18 @@ class AdminController {
             'eventualProject' => $eventualProject,
             'members' => $members,
             'tasks' => $tasks,
+            'pagination' => [
+                'page' => (int)($tasksResult['page'] ?? $page),
+                'per_page' => (int)($tasksResult['per_page'] ?? $perPage),
+                'total' => (int)($tasksResult['total'] ?? count($tasks)),
+                'total_pages' => (int)($tasksResult['total_pages'] ?? 1),
+            ],
+            'filters' => [
+                'search' => $search,
+                'status' => $statusFilter,
+                'page' => $page,
+                'perPage' => $perPage,
+            ],
             'stats' => $stats,
             'history' => $history
         ];
