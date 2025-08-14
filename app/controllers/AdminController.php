@@ -283,6 +283,9 @@ class AdminController {
         // Obtener filtros desde la URL
         $search = trim($_GET['search'] ?? '');
         $statusFilter = trim($_GET['status'] ?? '');
+        $assignedId = isset($_GET['assigned']) && $_GET['assigned'] !== '' ? (int)$_GET['assigned'] : null;
+        $fromDate = isset($_GET['from']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $_GET['from']) ? $_GET['from'] : null;
+        $toDate = isset($_GET['to']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $_GET['to']) ? $_GET['to'] : null;
         $page = max(1, (int)($_GET['page'] ?? 1));
         $perPage = min(100, max(10, (int)($_GET['perPage'] ?? 20)));
 
@@ -295,7 +298,7 @@ class AdminController {
         $allTasks = $allForStats['tasks'] ?? [];
 
         // Para listado usamos filtros y paginación
-        $tasksResult = $taskModel->getAllTasksByClanStrict($clanId, $page, $perPage, $search, $statusFilter);
+        $tasksResult = $taskModel->getAllTasksByClanStrict($clanId, $page, $perPage, $search, $statusFilter, $assignedId, $fromDate, $toDate);
         $tasks = $tasksResult['tasks'] ?? [];
 
         // Calcular métricas de tareas del clan (sobre todas)
@@ -355,6 +358,9 @@ class AdminController {
             'filters' => [
                 'search' => $search,
                 'status' => $statusFilter,
+                'assigned' => $assignedId,
+                'from' => $fromDate,
+                'to' => $toDate,
                 'page' => $page,
                 'perPage' => $perPage,
             ],

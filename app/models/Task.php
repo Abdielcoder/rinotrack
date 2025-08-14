@@ -1191,7 +1191,7 @@ class Task {
     /**
      * Obtener todas las tareas del clan (estricto: solo proyectos del clan)
      */
-    public function getAllTasksByClanStrict($clanId, $page = 1, $perPage = 5, $search = '', $statusFilter = '') {
+    public function getAllTasksByClanStrict($clanId, $page = 1, $perPage = 5, $search = '', $statusFilter = '', $assignedUserId = null, $fromDate = null, $toDate = null) {
         try {
             $offset = ($page - 1) * $perPage;
 
@@ -1215,6 +1215,20 @@ class Task {
             if (!empty($statusFilter)) {
                 $baseQuery .= " AND t.status = ?";
                 $params[] = $statusFilter;
+            }
+            if (!empty($assignedUserId)) {
+                // Coincidencia por asignación directa o por tabla Task_Assignments
+                $baseQuery .= " AND (t.assigned_to_user_id = ? OR EXISTS (SELECT 1 FROM Task_Assignments ta3 WHERE ta3.task_id = t.task_id AND ta3.user_id = ?))";
+                $params[] = (int)$assignedUserId;
+                $params[] = (int)$assignedUserId;
+            }
+            if (!empty($fromDate)) {
+                $baseQuery .= " AND (t.due_date IS NOT NULL AND t.due_date >= ?)";
+                $params[] = $fromDate;
+            }
+            if (!empty($toDate)) {
+                $baseQuery .= " AND (t.due_date IS NOT NULL AND t.due_date <= ?)";
+                $params[] = $toDate;
             }
             $baseQuery .= " GROUP BY t.task_id";
 

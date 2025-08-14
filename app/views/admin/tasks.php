@@ -186,7 +186,7 @@ ob_start();
 						<h4 style="margin:0">Tareas</h4>
 					</div>
 					<!-- Filtros -->
-					<div class="filters" style="display:flex;gap:10px;align-items:center;margin:12px 0">
+					<div class="filters" style="display:flex;gap:10px;align-items:center;margin:12px 0;flex-wrap:wrap">
 						<input type="text" id="taskSearch" class="search-input" placeholder="Buscar tarea, descripción, proyecto..." value="<?php echo Utils::escape($filters['search'] ?? ''); ?>" style="min-width:260px">
 						<select id="statusFilter" class="filter-select">
 							<option value="" <?php echo empty($filters['status']) ? 'selected' : ''; ?>>Todos los estados</option>
@@ -195,6 +195,16 @@ ob_start();
 							<option value="completed" <?php echo (($filters['status'] ?? '')==='completed')?'selected':''; ?>>Completadas</option>
 							<option value="cancelled" <?php echo (($filters['status'] ?? '')==='cancelled')?'selected':''; ?>>Canceladas</option>
 						</select>
+						<!-- Asignado -->
+						<select id="assignedFilter" class="filter-select">
+							<option value="">Asignado: todos</option>
+							<?php foreach (($members ?? []) as $m): ?>
+								<option value="<?php echo (int)$m['user_id']; ?>" <?php echo ((int)($filters['assigned'] ?? 0) === (int)$m['user_id']) ? 'selected' : ''; ?>><?php echo Utils::escape($m['full_name'] ?: $m['username']); ?></option>
+							<?php endforeach; ?>
+						</select>
+						<!-- Rango de fechas -->
+						<input type="date" id="fromDate" class="filter-select" value="<?php echo Utils::escape($filters['from'] ?? ''); ?>" title="Desde">
+						<input type="date" id="toDate" class="filter-select" value="<?php echo Utils::escape($filters['to'] ?? ''); ?>" title="Hasta">
 						<select id="perPage" class="filter-select">
 							<?php foreach ([10,20,50,100] as $pp): ?>
 							<option value="<?php echo $pp; ?>" <?php echo ((int)($pagination['per_page'] ?? 20) === $pp) ? 'selected' : ''; ?>><?php echo $pp; ?>/página</option>
@@ -342,9 +352,15 @@ document.getElementById('adminCreateTaskForm')?.addEventListener('submit', async
             const search = document.getElementById('taskSearch')?.value || '';
             const status = document.getElementById('statusFilter')?.value || '';
             const perPage = document.getElementById('perPage')?.value || '20';
+            const assigned = document.getElementById('assignedFilter')?.value || '';
+            const from = document.getElementById('fromDate')?.value || '';
+            const to = document.getElementById('toDate')?.value || '';
             apply(new Map([
                 ['search', search ? search : null],
                 ['status', status ? status : null],
+                ['assigned', assigned ? assigned : null],
+                ['from', from ? from : null],
+                ['to', to ? to : null],
                 ['perPage', perPage],
                 ['page', 1]
             ]));
@@ -358,6 +374,9 @@ document.getElementById('adminCreateTaskForm')?.addEventListener('submit', async
             apply(new Map([
                 ['search', document.getElementById('taskSearch')?.value || q.get('search') || null],
                 ['status', document.getElementById('statusFilter')?.value || q.get('status') || null],
+                ['assigned', document.getElementById('assignedFilter')?.value || q.get('assigned') || null],
+                ['from', document.getElementById('fromDate')?.value || q.get('from') || null],
+                ['to', document.getElementById('toDate')?.value || q.get('to') || null],
                 ['perPage', document.getElementById('perPage')?.value || q.get('perPage') || '20'],
                 ['page', page]
             ]));
@@ -369,6 +388,9 @@ document.getElementById('adminCreateTaskForm')?.addEventListener('submit', async
             apply(new Map([
                 ['search', document.getElementById('taskSearch')?.value || q.get('search') || null],
                 ['status', document.getElementById('statusFilter')?.value || q.get('status') || null],
+                ['assigned', document.getElementById('assignedFilter')?.value || q.get('assigned') || null],
+                ['from', document.getElementById('fromDate')?.value || q.get('from') || null],
+                ['to', document.getElementById('toDate')?.value || q.get('to') || null],
                 ['perPage', document.getElementById('perPage')?.value || q.get('perPage') || '20'],
                 ['page', page]
             ]));
