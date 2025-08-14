@@ -35,8 +35,9 @@ ob_start();
 		.cm-subnav .cm-subnav-link { padding: 6px 10px; font-size: .9rem; }
 
 		.projects-strip { margin: 8px 0 14px; }
-		.cards-compact { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(240px, 280px); overflow-x: auto; gap: 10px; padding-bottom: 4px; }
-		.card-compact { border: 1px solid #e8e8ef; background: #fff; border-radius: 12px; padding: 10px; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+		/* Cards en grid responsivo (no carrusel horizontal) */
+		.cards-compact { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; padding-bottom: 4px; }
+		.card-compact { border: 1px solid #e8e8ef; background: #fff; border-radius: 12px; padding: 10px; box-shadow: 0 1px 2px rgba(0,0,0,.04); height: 100%; }
 		.card-compact .cc-head { display:flex; align-items:center; justify-content:space-between; margin-bottom: 6px; }
 		.card-compact .chip { font-size: .7rem; padding: 2px 6px; border-radius: 999px; background:#eef2ff; color:#3949ab; }
 		.cc-kpis { display:grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 8px; align-items:center; }
