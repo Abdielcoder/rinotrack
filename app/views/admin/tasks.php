@@ -211,6 +211,7 @@ ob_start();
 							<?php endforeach; ?>
 						</select>
 						<button id="applyFilters" class="btn btn-secondary">Aplicar</button>
+						<button id="resetFilters" class="btn btn-secondary">Reset</button>
 					</div>
 
 					<div class="table-wrapper">
@@ -347,6 +348,7 @@ document.getElementById('adminCreateTaskForm')?.addEventListener('submit', async
         window.location.href = base.toString();
     }
     const btn = document.getElementById('applyFilters');
+    const reset = document.getElementById('resetFilters');
     if (btn){
         btn.addEventListener('click', function(){
             const search = document.getElementById('taskSearch')?.value || '';
@@ -368,6 +370,19 @@ document.getElementById('adminCreateTaskForm')?.addEventListener('submit', async
     }
     const prev = document.getElementById('prevPage');
     const next = document.getElementById('nextPage');
+    if (reset){
+        reset.addEventListener('click', function(){
+            apply(new Map([
+                ['search', null],
+                ['status', null],
+                ['assigned', null],
+                ['from', null],
+                ['to', null],
+                ['perPage', document.getElementById('perPage')?.value || '20'],
+                ['page', 1]
+            ]));
+        });
+    }
     if (prev){
         prev.addEventListener('click', function(){
             const page = Math.max(1, parseInt(q.get('page')||'1',10) - 1);
