@@ -770,15 +770,20 @@ class ClanLeaderController {
             foreach ($clanProjects as $p) {
                 $pid = (int)$p['project_id'];
                 $presentIds[$pid] = true;
-                $ownTotal = $ownByProject[$pid]['total'] ?? 0;
-                $ownCompleted = $ownByProject[$pid]['completed'] ?? 0;
-                $progress = $ownTotal > 0 ? round(($ownCompleted / $ownTotal) * 100, 2) : 0;
+                // Para proyectos del clan: mostrar métricas de TODO el proyecto
+                $projectTasks = $this->taskModel->getByProject($pid);
+                $total = count($projectTasks);
+                $completed = 0;
+                foreach ($projectTasks as $t) {
+                    if (($t['status'] ?? '') === 'completed' || ($t['is_completed'] ?? 0) == 1) { $completed++; }
+                }
+                $progress = $total > 0 ? round(($completed / $total) * 100, 2) : 0;
                 $projects[] = [
                     'project_id' => $pid,
                     'project_name' => $p['project_name'],
                     'status' => $p['status'],
-                    'total_tasks' => $ownTotal,
-                    'completed_tasks' => $ownCompleted,
+                    'total_tasks' => $total,
+                    'completed_tasks' => $completed,
                     'progress_percentage' => $progress
                 ];
             }
