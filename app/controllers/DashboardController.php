@@ -2,6 +2,7 @@
 
 class DashboardController {
     private $auth;
+    private $roleModel;
     
     public function __construct() {
         $this->auth = new Auth();
@@ -52,14 +53,22 @@ class DashboardController {
         $taskModel = new Task();
         $user = $this->auth->getCurrentUser();
 
-        $projectStats = $projectModel->getStats();
-        $taskStats = $taskModel->getStats(null, $user['user_id']);
+        // getStats no existe en Task; usar datos disponibles del modelo
+        $projectStats = method_exists($projectModel, 'getStats') ? $projectModel->getStats() : ['total_projects'=>0,'completed_projects'=>0];
+        // Contar tareas del usuario con métodos existentes
+        $userTasksData = $taskModel->getUserTasks($user['user_id'], 1, 1, '', '');
+        $totalTasks = (int)($userTasksData['total'] ?? 0);
+        // Aproximación: contar pendientes del usuario
+        $pendingData = $taskModel->getUserTasks($user['user_id'], 1, 1, '', 'pending');
+        $pendingTasks = (int)($pendingData['total'] ?? 0);
 
         return [
-            'projects' => $projectStats['total_projects'],
-            'tasks' => $taskStats['total_tasks'],
-            'completed' => $projectStats['total_projects'] > 0 ? round($projectStats['completed_projects'] / $projectStats['total_projects'] * 100) . '%' : '0%',
-            'in_progress' => $taskStats['pending_tasks']
+            'projects' => (int)($projectStats['total_projects'] ?? 0),
+            'tasks' => $totalTasks,
+            'completed' => ((int)($projectStats['total_projects'] ?? 0) > 0)
+                ? (round(((int)($projectStats['completed_projects'] ?? 0) / (int)$projectStats['total_projects']) * 100) . '%')
+                : '0%',
+            'in_progress' => $pendingTasks
         ];
     }
     
