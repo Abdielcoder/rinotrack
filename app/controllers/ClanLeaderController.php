@@ -807,8 +807,25 @@ class ClanLeaderController {
             // Validar perPage para evitar valores muy altos
             $perPage = max(1, min($perPage, 100));
             
-            // Obtener SOLO tareas del líder (sin mezclar otros usuarios)
-            $allTasksData = $this->taskModel->getUserTasks($this->currentUser['user_id'], $page, $perPage, $search, $statusFilter);
+            // Tabla: combinar
+            // - Tareas de TODOS del clan (estricto a proyectos del clan)
+            // - MÁS tareas del líder SOLO de proyectos lógicos (Recurrentes/Eventuales)
+            $clanTasks = $this->taskModel->getAllTasksByClanStrict($this->userClan['clan_id'], $page, $perPage, $search, $statusFilter);
+
+            $ownLogical = $this->taskModel->getUserTasksByProjectNames(
+                $this->currentUser['user_id'],
+                ['Tareas Recurrentes', 'Tareas Eventuales']
+            );
+
+            // Fusionar evitando duplicados por task_id
+            $merged = [];
+            foreach ($clanTasks['tasks'] as $t) { $merged[$t['task_id']] = $t; }
+            foreach ($ownLogical as $t) { $merged[$t['task_id']] = $t; }
+            $mergedTasks = array_values($merged);
+
+            // Reusar estructura de paginación del estricta
+            $allTasksData = $clanTasks;
+            $allTasksData['tasks'] = $mergedTasks;
             
             $data = [
                 'projects' => $projects,

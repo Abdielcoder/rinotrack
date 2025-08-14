@@ -1189,6 +1189,128 @@ class Task {
     }
 
     /**
+     * Obtener todas las tareas del clan (estricto: solo proyectos del clan)
+     */
+    public function getAllTasksByClanStrict($clanId, $page = 1, $perPage = 5, $search = '', $statusFilter = '') {
+        try {
+            $offset = ($page - 1) * $perPage;
+
+            $baseQuery = "
+                FROM Tasks t
+                JOIN Projects p ON t.project_id = p.project_id
+                LEFT JOIN Users u ON t.assigned_to_user_id = u.user_id
+                LEFT JOIN Users creator ON t.created_by_user_id = creator.user_id
+                LEFT JOIN Task_Assignments ta ON t.task_id = ta.task_id
+                LEFT JOIN Users ta_users ON ta.user_id = ta_users.user_id
+                WHERE p.clan_id = ? 
+                AND t.is_subtask = 0
+            ";
+
+            $params = [$clanId];
+            if (!empty($search)) {
+                $baseQuery .= " AND (t.task_name LIKE ? OR t.description LIKE ? OR p.project_name LIKE ? OR u.full_name LIKE ? OR creator.full_name LIKE ?)";
+                $term = "%{$search}%";
+                $params = array_merge($params, [$term, $term, $term, $term, $term]);
+            }
+            if (!empty($statusFilter)) {
+                $baseQuery .= " AND t.status = ?";
+                $params[] = $statusFilter;
+            }
+            $baseQuery .= " GROUP BY t.task_id";
+
+            $countSql = "SELECT COUNT(DISTINCT t.task_id) as total " . $baseQuery;
+            $countStmt = $this->db->prepare($countSql);
+            $countStmt->execute($params);
+            $total = (int)$countStmt->fetchColumn();
+
+            $mainSql = "
+                SELECT 
+                    t.task_id,
+                    t.task_name,
+                    t.description,
+                    t.due_date,
+                    t.priority,
+                    t.status,
+                    t.completion_percentage,
+                    t.automatic_points,
+                    p.project_name,
+                    p.project_id,
+                    u.full_name as assigned_user_name,
+                    u.username as assigned_username,
+                    creator.full_name as created_by_name,
+                    creator.username as created_by_username,
+                    DATEDIFF(t.due_date, CURDATE()) as days_until_due,
+                    GROUP_CONCAT(DISTINCT ta_users.full_name ORDER BY ta_users.full_name SEPARATOR ', ') as all_assigned_users,
+                    GROUP_CONCAT(DISTINCT ta_users.user_id ORDER BY ta_users.full_name SEPARATOR ',') as all_assigned_user_ids
+                " . $baseQuery . "
+                ORDER BY 
+                    CASE t.priority 
+                        WHEN 'urgent' THEN 1 
+                        WHEN 'high' THEN 2 
+                        WHEN 'medium' THEN 3 
+                        WHEN 'low' THEN 4 
+                    END,
+                    t.due_date ASC,
+                    t.created_at DESC
+                LIMIT ? OFFSET ?
+            ";
+            $stmt = $this->db->prepare($mainSql);
+            $execParams = array_merge($params, [$perPage, $offset]);
+            $stmt->execute($execParams);
+            $tasks = $stmt->fetchAll();
+
+            return [
+                'tasks' => $tasks,
+                'total' => $total,
+                'page' => $page,
+                'per_page' => $perPage,
+                'total_pages' => $perPage > 0 ? (int)ceil($total / $perPage) : 0
+            ];
+        } catch (PDOException $e) {
+            error_log("Error al obtener tareas del clan (estricto): " . $e->getMessage());
+            return ['tasks' => [], 'total' => 0, 'page' => $page, 'per_page' => $perPage, 'total_pages' => 0];
+        }
+    }
+
+    /**
+     * Obtener tareas del usuario limitadas a proyectos con nombres dados
+     */
+    public function getUserTasksByProjectNames($userId, array $projectNames) {
+        try {
+            if (empty($projectNames)) { return []; }
+            $placeholders = implode(',', array_fill(0, count($projectNames), '?'));
+            $params = $projectNames;
+            array_unshift($params, $userId, $userId); // userId twice
+
+            $sql = "
+                SELECT 
+                    t.task_id,
+                    t.task_name,
+                    t.description,
+                    t.due_date,
+                    t.priority,
+                    t.status,
+                    t.completion_percentage,
+                    t.automatic_points,
+                    p.project_name,
+                    p.project_id,
+                    DATEDIFF(t.due_date, CURDATE()) as days_until_due
+                FROM Tasks t
+                JOIN Projects p ON t.project_id = p.project_id
+                LEFT JOIN Task_Assignments ta ON ta.task_id = t.task_id
+                WHERE t.is_subtask = 0
+                  AND (t.assigned_to_user_id = ? OR ta.user_id = ?)
+                  AND p.project_name IN ($placeholders)
+            ";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute($params);
+            return $stmt->fetchAll();
+        } catch (PDOException $e) {
+            error_log("Error al obtener tareas del usuario por proyectos: " . $e->getMessage());
+            return [];
+        }
+    }
+    /**
      * Obtener todas las tareas del usuario (incluye asignación directa y por Task_Assignments)
      */
     public function getUserTasks($userId, $page = 1, $perPage = 10, $search = '', $statusFilter = '') {
