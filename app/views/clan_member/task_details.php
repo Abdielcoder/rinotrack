@@ -19,6 +19,15 @@ ob_start();
   <div class="content-minimal" style="max-width:1100px;">
     <div class="task-details-grid">
       <div class="left-pane">
+        <div class="summary-card motivational-card">
+          <div class="motivation">
+            <div class="motivation-icon"><i class="fas fa-lightbulb"></i></div>
+            <div class="motivation-text">
+              <div id="motQuote" class="mot-quote">Cargando frase motivacional...</div>
+              <div id="motAuthor" class="mot-author"></div>
+            </div>
+          </div>
+        </div>
         <div class="summary-card">
           <div class="meta-row">
             <?php if (!empty($task['due_date'])): ?>
@@ -142,6 +151,62 @@ function noPermissionModal(){
     alert('No tienes permisos para modificar esta tarea.');
   }
 }
+</script>
+
+<style>
+.motivational-card{background:linear-gradient(90deg, rgba(99,102,241,.12), rgba(59,130,246,.10)); border:1px solid var(--bg-accent)}
+.motivation{display:flex; align-items:center; gap:12px}
+.motivation-icon{width:42px; height:42px; border-radius:10px; display:flex; align-items:center; justify-content:center; background:var(--primary-gradient); color:#fff}
+.mot-quote{font-weight:600; color:var(--text-primary)}
+.mot-author{font-size:.9rem; color:var(--text-secondary); margin-top:2px}
+</style>
+
+<script>
+// Frase motivacional por sesión
+(function(){
+  const qEl = document.getElementById('motQuote');
+  const aEl = document.getElementById('motAuthor');
+  if (!qEl || !aEl) return;
+
+  const SS_KEY = 'rt_motivational_quote';
+  const cached = sessionStorage.getItem(SS_KEY);
+  if (cached) {
+    try { const obj = JSON.parse(cached); qEl.textContent = '“'+(obj.text||'')+'”'; aEl.textContent = obj.author? ('— '+obj.author) : ''; return; } catch(_){}
+  }
+
+  const apis = [
+    { url: 'https://api.quotable.io/random', map: d => ({ text: d.content, author: d.author }) },
+    { url: 'https://zenquotes.io/api/random', map: d => { const x=(Array.isArray(d)?d[0]:{})||{}; return { text: x.q, author: x.a }; } },
+    { url: 'https://type.fit/api/quotes', map: d => { const arr = Array.isArray(d)? d : []; const r = arr[Math.floor(Math.random()*arr.length)]||{}; return { text: r.text, author: r.author||'Anónimo' }; } }
+  ];
+
+  const localFallback = [
+    { text:'La excelencia no es un acto, es un hábito.', author:'Aristóteles' },
+    { text:'La disciplina es el puente entre metas y logros.', author:'Jim Rohn' },
+    { text:'Haz hoy lo que otros no harán y mañana vivirás como otros no pueden.', author:'Jerry Rice' }
+  ];
+
+  function applyQuote(q){
+    if (!q || !q.text) q = localFallback[Math.floor(Math.random()*localFallback.length)];
+    qEl.textContent = '“'+(q.text||'')+'”';
+    aEl.textContent = q.author ? ('— '+q.author) : '';
+    try { sessionStorage.setItem(SS_KEY, JSON.stringify(q)); } catch(_){ }
+  }
+
+  // Intentar en cadena con fallback
+  (async function(){
+    for (const api of apis){
+      try {
+        const res = await fetch(api.url, { credentials:'omit' });
+        if (!res.ok) continue;
+        const data = await res.json();
+        const q = api.map(data) || {};
+        if (q && q.text) { applyQuote(q); return; }
+      } catch(_){ /* siguiente */ }
+    }
+    applyQuote(null);
+  })();
+})();
 </script>
 
 <!-- Modal editar tarea -->
