@@ -79,6 +79,10 @@
   --glass-backdrop: blur(10px);
 }
 
+/* Normalización de enlaces para que no cambien por estado visitado */
+a, a:link, a:visited { color: inherit; text-decoration: none; }
+a:hover { text-decoration: none; }
+
 /* === TEMA OSCURO === */
 [data-theme="dark"] {
   --bg-primary: #0f172a;

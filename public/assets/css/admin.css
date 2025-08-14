@@ -38,6 +38,12 @@ body {
     --admin-spacing-xl: 2rem;
 }
 
+/* Enlaces: unificar estado visitado/no-visitado en todo el sistema admin */
+a, a:link, a:visited { color: inherit; text-decoration: none; }
+a:hover { text-decoration: none; }
+a.nav-link, .nav-link:visited { color: var(--admin-text-secondary); }
+.nav-item.active .nav-link, .nav-item.active .nav-link:visited { color: #fff; }
+
 /* Dashboard moderno */
 .modern-dashboard {
     min-height: 100vh;
