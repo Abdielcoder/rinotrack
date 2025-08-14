@@ -148,7 +148,7 @@ ob_start();
                         </div>
 
                         <div class="modal-actions">
-                            <button type="submit" class="btn btn-primary">
+                            <button type="submit" id="createTaskBtn" class="btn btn-primary">
                                 <i class="fas fa-plus"></i>
                                 Crear Tarea
                             </button>
@@ -308,6 +308,38 @@ ob_start();
 		.empty{color:var(--admin-text-muted);text-align:center;padding:16px}
 		@media(max-width:900px){.project-overview{grid-template-columns:1fr}.two-cols{grid-template-columns:1fr}}
 		</style>
+
+        <!-- Modal de estado (éxito/error) -->
+        <div id="statusModal" class="modal" style="display:none">
+            <div class="modal-content" style="max-width:480px">
+                <div class="modal-header">
+                    <h3 id="statusModalTitle">Resultado</h3>
+                    <button class="modal-close" id="statusModalCloseX">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div style="display:flex;align-items:center;gap:12px">
+                        <i id="statusModalIcon" class="fas fa-check-circle" style="font-size:28px;color:var(--success,#10b981)"></i>
+                        <div id="statusModalMessage">Operación completada correctamente.</div>
+                    </div>
+                </div>
+                <div class="modal-footer" style="display:flex;justify-content:flex-end;gap:10px;padding:12px 16px;background:var(--admin-bg-tertiary);border-top:1px solid var(--admin-border)">
+                    <button class="btn btn-secondary" id="statusModalOk">Aceptar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Overlay de procesamiento -->
+        <div id="processingOverlay" class="modal" style="display:none">
+            <div class="modal-content" style="max-width:360px">
+                <div class="modal-header">
+                    <h3>Procesando</h3>
+                </div>
+                <div class="modal-body" style="text-align:center;padding:22px">
+                    <i class="fas fa-spinner fa-spin" style="font-size:28px;color:var(--admin-primary)"></i>
+                    <p style="margin-top:10px;color:var(--admin-text-secondary)">Creando tarea, por favor espera...</p>
+                </div>
+            </div>
+        </div>
     </main>
 </div>
 
@@ -327,6 +359,29 @@ document.getElementById('adminCreateTaskForm')?.addEventListener('submit', async
     const form = e.currentTarget;
     const data = new FormData(form);
     // Generar duplicados semanales si es recurrente
+    const createBtn = document.getElementById('createTaskBtn');
+    const overlay = document.getElementById('processingOverlay');
+    const statusModal = document.getElementById('statusModal');
+    const statusOk = document.getElementById('statusModalOk');
+    const statusCloseX = document.getElementById('statusModalCloseX');
+    const statusTitle = document.getElementById('statusModalTitle');
+    const statusIcon = document.getElementById('statusModalIcon');
+    const statusMsg = document.getElementById('statusModalMessage');
+
+    function openOverlay(){ if(overlay) overlay.style.display='block'; if(createBtn) createBtn.disabled = true; }
+    function closeOverlay(){ if(overlay) overlay.style.display='none'; if(createBtn) createBtn.disabled = false; }
+    function openStatus(opts){
+        if (!statusModal) return;
+        statusTitle.textContent = opts.title || 'Resultado';
+        statusMsg.textContent = opts.message || '';
+        statusIcon.className = `fas ${opts.icon || 'fa-check-circle'}`;
+        statusIcon.style.color = opts.color || 'var(--success,#10b981)';
+        statusModal.style.display = 'block';
+    }
+    function closeStatus(){ if(statusModal) statusModal.style.display='none'; }
+    statusOk?.addEventListener('click', closeStatus);
+    statusCloseX?.addEventListener('click', closeStatus);
+
     try {
         const type = document.getElementById('taskType')?.value || 'eventual';
         if (type === 'recurrent') {
@@ -369,16 +424,19 @@ document.getElementById('adminCreateTaskForm')?.addEventListener('submit', async
         }
     } catch (_) { /* silencioso */ }
     try {
+        openOverlay();
         const resp = await fetch('?route=admin/add-task', { method: 'POST', body: data });
         const json = await resp.json();
+        closeOverlay();
         if (json.success) {
-            alert('Tarea creada exitosamente');
             form.reset();
+            openStatus({ title:'Tarea creada', message:'La tarea se creó correctamente.', icon:'fa-check-circle', color:'var(--success,#10b981)' });
         } else {
-            alert(json.message || 'Error al crear tarea');
+            openStatus({ title:'Error', message: json.message || 'Error al crear tarea', icon:'fa-triangle-exclamation', color:'#ef4444' });
         }
     } catch (err) {
-        alert('Error de red');
+        closeOverlay();
+        openStatus({ title:'Error de red', message: 'No se pudo completar la operación.', icon:'fa-wifi', color:'#ef4444' });
     }
 });
 
