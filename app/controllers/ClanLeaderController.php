@@ -746,26 +746,38 @@ class ClanLeaderController {
             
             $this->loadView('clan_leader/project_tasks', $data);
         } else {
-            // Lista de proyectos del clan con estadísticas de tareas
-            $projects = $this->projectModel->getByClan($this->userClan['clan_id']);
-            
-            // Calcular estadísticas de tareas para cada proyecto
-            foreach ($projects as &$project) {
-                $projectTasks = $this->taskModel->getByProject($project['project_id']);
-                $totalTasks = count($projectTasks);
-                $completedTasks = 0;
-                
-                foreach ($projectTasks as $task) {
-                    if ($task['status'] === 'completed') {
-                        $completedTasks++;
-                    }
+            // Construir tarjetas de proyectos visibles SOLO para tareas del líder (no mezclar otros usuarios)
+            $ownTasksData = $this->taskModel->getUserTasks($this->currentUser['user_id'], 1, 10000, '', '');
+            $ownTasks = $ownTasksData['tasks'] ?? [];
+            $byProject = [];
+            foreach ($ownTasks as $t) {
+                $pid = (int)$t['project_id'];
+                if (!isset($byProject[$pid])) {
+                    $byProject[$pid] = [
+                        'project_id' => $pid,
+                        'project_name' => $t['project_name'],
+                        'status' => 'open',
+                        'total_tasks' => 0,
+                        'completed_tasks' => 0
+                    ];
                 }
-                
-                $progressPercentage = $totalTasks > 0 ? round(($completedTasks / $totalTasks) * 100, 2) : 0;
-                
-                $project['total_tasks'] = $totalTasks;
-                $project['completed_tasks'] = $completedTasks;
-                $project['progress_percentage'] = $progressPercentage;
+                $byProject[$pid]['total_tasks']++;
+                if (($t['status'] ?? '') === 'completed') { $byProject[$pid]['completed_tasks']++; }
+            }
+
+            // Proyectos del clan (propios) también pueden mostrarse si el líder tiene tareas en ellos
+            $projects = [];
+            foreach ($byProject as $pid => $info) {
+                // Opcional: podríamos filtrar a solo proyectos del clan; el requerimiento dice ver tarjeta cuando tenga tareas (incluye lógicos)
+                $progress = $info['total_tasks'] > 0 ? round(($info['completed_tasks'] / $info['total_tasks']) * 100, 2) : 0;
+                $projects[] = [
+                    'project_id' => $pid,
+                    'project_name' => $info['project_name'],
+                    'status' => $info['status'],
+                    'total_tasks' => $info['total_tasks'],
+                    'completed_tasks' => $info['completed_tasks'],
+                    'progress_percentage' => $progress
+                ];
             }
             
             // Obtener parámetros de paginación, búsqueda y filtros
