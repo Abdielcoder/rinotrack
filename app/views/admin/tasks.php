@@ -184,7 +184,6 @@ ob_start();
 				<div class="col">
 					<div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
 						<h4 style="margin:0">Tareas</h4>
-						<a class="btn btn-primary" href="#adminCreateTaskForm"><i class="fas fa-plus"></i> Agregar tarea</a>
 					</div>
 					<div class="table-wrapper">
 						<table class="data-table">
@@ -256,7 +255,7 @@ ob_start();
 		.data-table{width:100%;border-collapse:collapse}
 		.data-table th,.data-table td{padding:12px 14px;border-bottom:1px solid var(--admin-border)}
 		.data-table th{background:var(--admin-bg-tertiary);text-align:left}
-		.activity-list{display:flex;flex-direction:column;gap:12px}
+		.activity-list{display:flex;flex-direction:column;gap:12px;max-height:420px;overflow-y:auto;padding-right:6px}
 		.activity-item{background:var(--admin-bg-primary);border:1px solid var(--admin-border);border-radius:12px;padding:12px}
 		.activity-item .meta{display:flex;justify-content:space-between;margin-bottom:6px;color:var(--admin-text-muted)}
 		.activity-item .desc{display:flex;gap:8px;flex-wrap:wrap;color:var(--admin-text-secondary)}
