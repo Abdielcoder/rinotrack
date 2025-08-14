@@ -108,6 +108,7 @@ ob_start();
                         <option value="open">Abiertos</option>
                         <option value="completed">Completados</option>
                         <option value="paused">Pausados</option>
+                        <option value="overdue">Vencidos</option>
                     </select>
                     <select id="clanFilter" data-action="filter-projects">
                         <option value="">Todos los clanes</option>
@@ -139,9 +140,13 @@ ob_start();
             </div>
             <?php else: ?>
             <div class="projects-grid">
-                <?php foreach ($projects as $project): ?>
+                <?php 
+                $today = date('Y-m-d');
+                foreach ($projects as $project): 
+                    $isOverdue = !empty($project['time_limit']) && $project['time_limit'] < $today && !in_array($project['status'], ['completed','cancelled']);
+                ?>
                 <?php $isAssigned = ((float)($project['kpi_points'] ?? 0) > 0) && !empty($project['kpi_quarter_id']); ?>
-                <div class="project-card" data-status="<?php echo htmlspecialchars($project['status']); ?>" data-clan="<?php echo intval($project['clan_id']); ?>" data-assigned="<?php echo $isAssigned ? 'assigned' : 'unassigned'; ?>">
+                <div class="project-card" data-status="<?php echo htmlspecialchars($project['status']); ?>" data-clan="<?php echo intval($project['clan_id']); ?>" data-assigned="<?php echo $isAssigned ? 'assigned' : 'unassigned'; ?>" data-overdue="<?php echo $isOverdue ? '1' : '0'; ?>">
                     <div class="project-header">
                         <div class="project-info">
                             <h4 class="project-name"><?php echo Utils::escape($project['project_name']); ?></h4>
@@ -789,7 +794,7 @@ textarea {
         }
         
         // Función para filtrar proyectos
-        function filterProjects() {
+            function filterProjects() {
             const statusFilter = document.getElementById('statusFilter');
             const clanFilter = document.getElementById('clanFilter');
             const assignmentFilter = document.getElementById('assignmentFilter');
@@ -803,9 +808,16 @@ textarea {
                 const projectStatus = card.dataset.status;
                 const projectClan = card.dataset.clan;
                 const projectAssigned = card.dataset.assigned || '';
+                    const projectOverdue = card.dataset.overdue === '1';
                 let showCard = true;
                 
-                if (status && projectStatus !== status) showCard = false;
+                    if (status) {
+                        if (status === 'overdue') {
+                            if (!projectOverdue) showCard = false;
+                        } else if (projectStatus !== status) {
+                            showCard = false;
+                        }
+                    }
                 if (clan && projectClan !== clan) showCard = false;
                 if (assignment && projectAssigned !== assignment) showCard = false;
                 
