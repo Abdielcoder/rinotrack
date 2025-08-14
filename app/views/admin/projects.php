@@ -104,6 +104,79 @@ ob_start();
             </div>
         </header>
 
+        <!-- Minicards: Estados generales de tareas (todos los clanes) -->
+        <section class="stats-section animate-fade-in">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <h3><i class="fas fa-list-ul"></i> Tareas totales</h3>
+                    </div>
+                    <div class="stat-number"><?php echo (int)($taskStats['total'] ?? 0); ?></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <h3><i class="fas fa-hourglass-half"></i> Pendientes</h3>
+                    </div>
+                    <div class="stat-number"><?php echo (int)($taskStats['pending'] ?? 0); ?></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <h3><i class="fas fa-spinner"></i> En progreso</h3>
+                    </div>
+                    <div class="stat-number"><?php echo (int)($taskStats['in_progress'] ?? 0); ?></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <h3><i class="fas fa-check-circle"></i> Completadas</h3>
+                    </div>
+                    <div class="stat-number"><?php echo (int)($taskStats['completed'] ?? 0); ?></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <h3><i class="fas fa-exclamation-triangle"></i> Vencidas</h3>
+                    </div>
+                    <div class="stat-number" style="color:#ef4444"><?php echo (int)($taskStats['overdue'] ?? 0); ?></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Actividad reciente global -->
+        <section class="content-section animate-fade-in">
+            <div class="content-card">
+                <div class="card-header">
+                    <h3><i class="fas fa-bolt"></i> Actividad Reciente</h3>
+                </div>
+                <div class="activity-list">
+                    <?php if (empty($recentActivity ?? [])): ?>
+                        <div class="empty">Sin actividad reciente</div>
+                    <?php else: foreach (($recentActivity ?? []) as $h): ?>
+                        <div class="activity-item" style="display:flex;flex-direction:column;gap:4px;padding:10px 0;border-bottom:1px solid var(--admin-border)">
+                            <div class="meta" style="display:flex;justify-content:space-between;color:var(--admin-text-muted)">
+                                <span class="task"><?php echo Utils::escape(($h['task_name'] ?? '')); ?></span>
+                                <span class="time"><?php echo date('d/m/Y H:i', strtotime($h['created_at'])); ?></span>
+                            </div>
+                            <div class="desc" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">
+                                <span class="user"><?php echo Utils::escape(($h['full_name'] ?: $h['username'] ?: 'Sistema')); ?></span>
+                                <span>→</span>
+                                <strong><?php echo Utils::escape($h['action_type']); ?></strong>
+                                <?php if (!empty($h['field_name'])): ?>
+                                    <span class="field" style="color:var(--admin-text-muted)">(<?php echo Utils::escape($h['field_name']); ?>)</span>
+                                <?php endif; ?>
+                                <?php if (!empty($h['project_name'])): ?>
+                                    <span>•</span>
+                                    <span class="project" style="color:var(--admin-text-secondary)"><?php echo Utils::escape($h['project_name']); ?></span>
+                                <?php endif; ?>
+                                <?php if (!empty($h['clan_name'])): ?>
+                                    <span>•</span>
+                                    <span class="clan" style="color:var(--admin-text-secondary)"><?php echo Utils::escape($h['clan_name']); ?></span>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    <?php endforeach; endif; ?>
+                </div>
+            </div>
+        </section>
+
         <!-- Grid de proyectos -->
         <section class="content-section animate-fade-in">
             <div class="projects-header">

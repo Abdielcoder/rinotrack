@@ -245,9 +245,59 @@ class AdminController {
         }));
         $clans = $this->clanModel->getAll();
         
+        // Estadísticas globales de tareas (todos los clanes)
+        $taskStats = [
+            'total' => 0,
+            'pending' => 0,
+            'in_progress' => 0,
+            'completed' => 0,
+            'overdue' => 0,
+        ];
+        $recentActivity = [];
+        try {
+            $db = Database::getConnection();
+            $stmt = $db->query(
+                "SELECT 
+                    COUNT(*) AS total,
+                    SUM(CASE WHEN t.status = 'pending' THEN 1 ELSE 0 END) AS pending,
+                    SUM(CASE WHEN t.status = 'in_progress' THEN 1 ELSE 0 END) AS in_progress,
+                    SUM(CASE WHEN t.status = 'completed' THEN 1 ELSE 0 END) AS completed,
+                    SUM(CASE WHEN t.status != 'completed' AND t.due_date IS NOT NULL AND t.due_date < CURDATE() THEN 1 ELSE 0 END) AS overdue
+                 FROM Tasks t
+                 JOIN Projects p ON t.project_id = p.project_id
+                 JOIN Clans c ON p.clan_id = c.clan_id
+                 WHERE t.is_subtask = 0"
+            );
+            $row = $stmt ? $stmt->fetch() : null;
+            if ($row) {
+                $taskStats['total'] = (int)($row['total'] ?? 0);
+                $taskStats['pending'] = (int)($row['pending'] ?? 0);
+                $taskStats['in_progress'] = (int)($row['in_progress'] ?? 0);
+                $taskStats['completed'] = (int)($row['completed'] ?? 0);
+                $taskStats['overdue'] = (int)($row['overdue'] ?? 0);
+            }
+            
+            $stmt2 = $db->prepare(
+                "SELECT th.*, t.task_name, p.project_name, c.clan_name, u.full_name, u.username
+                 FROM Task_History th
+                 JOIN Tasks t ON th.task_id = t.task_id
+                 JOIN Projects p ON t.project_id = p.project_id
+                 LEFT JOIN Clans c ON p.clan_id = c.clan_id
+                 LEFT JOIN Users u ON th.user_id = u.user_id
+                 ORDER BY th.created_at DESC
+                 LIMIT 20"
+            );
+            $stmt2->execute();
+            $recentActivity = $stmt2->fetchAll();
+        } catch (Exception $e) {
+            error_log('Error al calcular stats o actividad reciente en admin/projects: ' . $e->getMessage());
+        }
+        
         $data = [
             'projects' => $projects,
             'clans' => $clans,
+            'taskStats' => $taskStats,
+            'recentActivity' => $recentActivity,
             'currentPage' => 'admin',
             'user' => $this->auth->getCurrentUser()
         ];
