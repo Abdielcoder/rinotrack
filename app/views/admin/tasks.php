@@ -134,12 +134,20 @@ ob_start();
                                 <input type="date" name="dueDate">
                             </div>
                             <div class="form-group">
-                                <label>Asignar a miembros (multiple)</label>
-                                <select name="assignedUsers[]" id="assignedUsers" multiple>
+                                <label>Asignar a miembros (múltiple)</label>
+                                <input type="text" id="memberSearch" class="filter-select" placeholder="Buscar colaborador..." style="width:100%;max-width:420px">
+                                <div id="memberList" class="checkbox-list" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(240px, 1fr));gap:10px;margin-top:10px">
                                     <?php foreach ($members as $m): ?>
-                                        <option value="<?php echo (int)$m['user_id']; ?>"><?php echo Utils::escape($m['full_name'] ?: $m['username']); ?></option>
+                                        <?php $n = trim(($m['full_name'] ?: $m['username'] ?: '')); ?>
+                                        <label class="member-item" data-name="<?php echo strtolower(Utils::escape($n)); ?>" style="display:flex;align-items:center;gap:8px;border:1px solid var(--admin-border);padding:10px;border-radius:10px;background:var(--admin-bg-primary)">
+                                            <input type="checkbox" class="member-checkbox" name="assignedUsers[]" value="<?php echo (int)$m['user_id']; ?>">
+                                            <span><?php echo Utils::escape($n); ?></span>
+                                        </label>
                                     <?php endforeach; ?>
-                                </select>
+                                    <?php if (empty($members)): ?>
+                                        <div class="empty">No hay miembros en el clan</div>
+                                    <?php endif; ?>
+                                </div>
                             </div>
                         </div>
 
@@ -411,6 +419,21 @@ document.getElementById('adminCreateTaskForm')?.addEventListener('submit', async
             ]));
         });
     }
+})();
+
+// Buscador de miembros con coincidencias
+(function(){
+    const input = document.getElementById('memberSearch');
+    const list = document.getElementById('memberList');
+    if (!input || !list) return;
+    input.addEventListener('input', function(){
+        const term = (this.value || '').toLowerCase().trim();
+        const items = list.querySelectorAll('.member-item');
+        items.forEach(el => {
+            const name = el.dataset.name || '';
+            el.style.display = (!term || name.includes(term)) ? 'flex' : 'none';
+        });
+    });
 })();
 </script>
 
