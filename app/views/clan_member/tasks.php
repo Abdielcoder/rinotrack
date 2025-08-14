@@ -187,14 +187,7 @@ ob_start();
 								</td>
 								<td class="cell-points"><?php echo isset($t['automatic_points']) ? number_format((float)$t['automatic_points'], 2) : '–'; ?></td>
 								<td class="cell-actions">
-									<a class="icon-btn" href="?route=clan_member/task-details&task_id=<?php echo (int)$t['task_id']; ?>" title="Ver detalles"><i class="fas fa-eye"></i></a>
 									<a class="icon-btn" href="?route=clan_member/task-details&task_id=<?php echo (int)$t['task_id']; ?>&action=edit" title="Editar tarea"><i class="fas fa-edit"></i></a>
-									<?php $own = in_array((string)($user['user_id'] ?? 0), explode(',', (string)($t['all_assigned_user_ids'] ?? ''))) || (int)($t['assigned_to_user_id'] ?? 0) === (int)($user['user_id'] ?? -1); ?>
-									<select class="status-select" <?php echo $own ? '' : 'disabled'; ?> onchange="setTaskStatus(<?php echo $t['task_id']; ?>, this.value, <?php echo $own ? 'true' : 'false'; ?>)" title="Cambiar estado">
-										<option value="pending" <?php echo ($t['status']==='pending')?'selected':''; ?>>Pendiente</option>
-										<option value="in_progress" <?php echo ($t['status']==='in_progress')?'selected':''; ?>>En progreso</option>
-										<option value="completed" <?php echo ($t['status']==='completed')?'selected':''; ?>>Completada</option>
-									</select>
 								</td>
 							</tr>
 						<?php endforeach; ?>
