@@ -162,9 +162,9 @@ ob_start();
 								<td>
 									<span class="badge badge-priority <?php echo $priorityClass; ?>" title="Prioridad"><i class="fas fa-flag"></i> <?php echo $priorityLabel; ?></span>
 								</td>
-								<td class="cell-task">
-									<div class="cell-title"><span class="status-dot <?php echo $statusClass; ?>"></span><?php echo htmlspecialchars($t['task_name']); ?></div>
-								</td>
+							<td class="cell-task">
+								<div class="cell-title"><span class="status-dot <?php echo $statusClass; ?>"></span><a href="?route=clan_member/task-details&task_id=<?php echo (int)$t['task_id']; ?>" title="Ver detalles"><?php echo htmlspecialchars($t['task_name']); ?></a></div>
+							</td>
 								<td class="cell-project"><?php echo htmlspecialchars($t['project_name']); ?></td>
 								<td class="cell-assignees">
 									<?php if (!empty($t['all_assigned_users'])): ?>
@@ -187,6 +187,7 @@ ob_start();
 								</td>
 								<td class="cell-points"><?php echo isset($t['automatic_points']) ? number_format((float)$t['automatic_points'], 2) : '–'; ?></td>
 								<td class="cell-actions">
+									<a class="icon-btn" href="?route=clan_member/task-details&task_id=<?php echo (int)$t['task_id']; ?>" title="Ver detalles"><i class="fas fa-eye"></i></a>
 									<button class="icon-btn" onclick="openCommentModal(<?php echo $t['task_id']; ?>)" title="Comentar"><i class="fas fa-comment"></i></button>
 									<?php $own = in_array((string)($user['user_id'] ?? 0), explode(',', (string)($t['all_assigned_user_ids'] ?? ''))) || (int)($t['assigned_to_user_id'] ?? 0) === (int)($user['user_id'] ?? -1); ?>
 									<select class="status-select" <?php echo $own ? '' : 'disabled'; ?> onchange="setTaskStatus(<?php echo $t['task_id']; ?>, this.value, <?php echo $own ? 'true' : 'false'; ?>)" title="Cambiar estado">
@@ -343,7 +344,6 @@ function loadTaskComments(taskId){
 <?php
 $content = ob_get_clean();
 $additionalCSS = [APP_URL . 'assets/css/clan-leader.css', APP_URL . 'assets/css/clan-member.css'];
-$additionalJS = [APP_URL . 'assets/js/clan-leader.js'];
 require_once __DIR__ . '/../layout.php';
 ?>
 

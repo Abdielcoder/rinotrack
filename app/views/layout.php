@@ -17,7 +17,7 @@
     <!-- JavaScript crítico en el head -->
     <?php if (isset($additionalJS)): ?>
         <?php foreach ($additionalJS as $js): ?>
-            <script src="<?php echo $js; ?>"></script>
+            <script src="<?php echo $js; ?>" defer></script>
         <?php endforeach; ?>
     <?php endif; ?>
     
@@ -49,7 +49,7 @@
         }
     };
     
-    console.log("✅ Función deleteClan cargada desde layout global");
+    // console.log("✅ Función deleteClan cargada desde layout global");
     </script>
 </head>
 <body>
