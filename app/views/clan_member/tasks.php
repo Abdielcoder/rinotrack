@@ -55,6 +55,40 @@ ob_start();
             </div>
         </header>
 
+        <?php if (!empty($projectsSummary)): ?>
+        <section class="content-section animate-fade-in">
+            <div class="content-card">
+                <div class="card-header"><h3><i class="fas fa-diagram-project icon-gradient"></i> Proyectos del Clan</h3></div>
+                <div class="cm-project-cards">
+                    <?php foreach ($projectsSummary as $p): ?>
+                        <?php 
+                            $pid = (int)$p['project_id'];
+                            $prog = (float)($p['progress_percentage'] ?? 0);
+                            $status = strtoupper($p['status'] ?? 'open');
+                        ?>
+                        <div class="cm-project-card">
+                            <div class="pc-top">
+                                <div class="pc-title"><?php echo Utils::escape($p['project_name']); ?></div>
+                                <div class="pc-status"><?php echo Utils::escape($status); ?></div>
+                            </div>
+                            <div class="pc-metrics">
+                                <div class="pc-metric"><i class="fas fa-list"></i><div><div class="num"><?php echo (int)$p['total_tasks']; ?></div><div class="cap">Total</div></div></div>
+                                <div class="pc-metric"><i class="fas fa-check-circle"></i><div><div class="num"><?php echo (int)$p['completed_tasks']; ?></div><div class="cap">Completadas</div></div></div>
+                                <div class="pc-metric"><i class="fas fa-chart-line"></i><div><div class="num"><?php echo number_format($prog, 2); ?>%</div><div class="cap">Progreso</div></div></div>
+                            </div>
+                            <div class="pc-progress"><span style="width: <?php echo $prog; ?>%"></span></div>
+                            <div class="pc-actions">
+                                <a class="btn btn-secondary" href="?route=clan_member/project-tasks&project_id=<?php echo $pid; ?>">
+                                    <i class="fas fa-eye"></i> Ver Tareas
+                                </a>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        </section>
+        <?php endif; ?>
+
         <section class="content-section animate-fade-in">
             <div class="content-card">
                 <div class="card-header">
@@ -166,6 +200,19 @@ ob_start();
 .chip-status.completed{background:#dcfce7;color:#166534}
 .chip-status.in_progress{background:#dbeafe;color:#1e40af}
 .chip-status.pending{background:#f1f5f9;color:#334155}
+/* Cards de proyectos (resumen) */
+.cm-project-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px}
+.cm-project-card{border:1px solid var(--bg-accent);background:#fff;border-radius:16px;box-shadow:0 10px 20px rgba(2,6,23,.06);padding:16px;display:grid;gap:14px}
+.pc-top{display:flex;justify-content:space-between;align-items:flex-start}
+.pc-title{font-weight:800;color:var(--text-primary)}
+.pc-status{font-size:.8rem;font-weight:800;color:var(--text-secondary)}
+.pc-metrics{display:flex;gap:16px;align-items:center}
+.pc-metric{display:flex;gap:10px;align-items:center;color:var(--text-secondary)}
+.pc-metric .num{font-weight:800;color:var(--text-primary)}
+.pc-metric .cap{font-size:.8rem;color:var(--text-secondary)}
+.pc-progress{width:100%;height:8px;background:var(--bg-tertiary);border-radius:9999px;overflow:hidden}
+.pc-progress>span{display:block;height:100%;background:linear-gradient(90deg,#10b981,#22c55e)}
+.pc-actions{display:flex;justify-content:center}
 @media (max-width:768px){.nav-menu{display:none}.main-content{padding:var(--spacing-lg) var(--spacing-md)}}
 </style>
 
