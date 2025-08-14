@@ -79,7 +79,7 @@ ob_start();
                         </div>
                         
                         <div class="project-actions">
-                            <a href="?route=clan_leader/tasks&project_id=<?= $project['project_id'] ?>" class="btn-view-tasks">
+                            <a href="<?= APP_URL ?>?route=clan_leader/tasks&project_id=<?= $project['project_id'] ?>" class="btn-view-tasks">
                                 <i class="fas fa-eye"></i>
                                 Ver Tareas
                             </a>
@@ -257,12 +257,12 @@ ob_start();
                                 </td>
                                 <td class="td-actions">
                                     <div class="action-buttons">
-                                        <a href="?route=clan_leader/tasks&project_id=<?= $task['project_id'] ?>" class="btn-action btn-view" title="Ver proyecto">
+                                        <a href="<?= APP_URL ?>?route=clan_leader/tasks&project_id=<?= $task['project_id'] ?>" class="btn-action btn-view" title="Ver proyecto">
                                             <i class="fas fa-eye"></i>
                                         </a>
-                                        <button class="btn-action btn-edit" onclick="editTask(<?= $task['task_id'] ?>)" title="Editar tarea">
+                                        <a href="<?= APP_URL ?>?route=clan_leader/tasks&action=edit&task_id=<?= $task['task_id'] ?>" class="btn-action btn-edit" title="Editar tarea">
                                             <i class="fas fa-edit"></i>
-                                        </button>
+                                        </a>
                                     </div>
                                 </td>
                             </tr>
