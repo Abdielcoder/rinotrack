@@ -600,6 +600,74 @@ class ClanMemberController {
         $this->loadView('clan_member/kpi_dashboard', $data);
     }
 
+    // Vista de perfil del miembro
+    public function profile() {
+        $this->requireAuth();
+        if (!$this->hasMemberAccess()) { Utils::redirect('dashboard'); return; }
+        $user = $this->currentUser;
+        $data = [
+            'currentPage' => 'clan_member',
+            'user' => $user,
+            'clan' => $this->userClan,
+        ];
+        $this->loadView('clan_member/profile', $data);
+    }
+
+    // Actualiza datos básicos (nombre, email, username)
+    public function updateProfile() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { Utils::jsonResponse(['success'=>false,'message'=>'Método no permitido'],405); }
+        $this->requireAuth();
+        if (!$this->hasMemberAccess()) { Utils::jsonResponse(['success'=>false,'message'=>'Acceso denegado'],403); }
+        $username = trim($_POST['username'] ?? '');
+        $email = trim($_POST['email'] ?? '');
+        $fullName = trim($_POST['full_name'] ?? '');
+        if ($username==='' || $email==='' || $fullName==='') { Utils::jsonResponse(['success'=>false,'message'=>'Campos requeridos'],400); }
+        $ok = $this->userModel->update($this->currentUser['user_id'], $username, $email, $fullName, 1);
+        if ($ok) {
+            // refrescar sesión en memoria
+            $_SESSION['username'] = $username; $_SESSION['email'] = $email; $_SESSION['full_name'] = $fullName;
+            Utils::jsonResponse(['success'=>true,'message'=>'Perfil actualizado']);
+        }
+        Utils::jsonResponse(['success'=>false,'message'=>'No se pudo actualizar']);
+    }
+
+    // Actualiza contraseña en texto plano (según requerimiento)
+    public function updatePasswordPlain() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { Utils::jsonResponse(['success'=>false,'message'=>'Método no permitido'],405); }
+        $this->requireAuth();
+        if (!$this->hasMemberAccess()) { Utils::jsonResponse(['success'=>false,'message'=>'Acceso denegado'],403); }
+        $new = (string)($_POST['new_password'] ?? '');
+        $confirm = (string)($_POST['confirm_password'] ?? '');
+        if ($new === '' || $new !== $confirm) { Utils::jsonResponse(['success'=>false,'message'=>'La confirmación no coincide'],400); }
+        $ok = $this->userModel->updatePasswordPlain($this->currentUser['user_id'], $new);
+        Utils::jsonResponse(['success'=>$ok,'message'=>$ok?'Contraseña actualizada':'No se pudo actualizar la contraseña']);
+    }
+
+    // Subida de avatar al directorio public/uploads y guarda en Users.avatar_path
+    public function uploadAvatar() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { Utils::jsonResponse(['success'=>false,'message'=>'Método no permitido'],405); }
+        $this->requireAuth();
+        if (!$this->hasMemberAccess()) { Utils::jsonResponse(['success'=>false,'message'=>'Acceso denegado'],403); }
+        if (empty($_FILES['avatar']) || ($_FILES['avatar']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+            Utils::jsonResponse(['success'=>false,'message'=>'Archivo no recibido'],400);
+        }
+        $file = $_FILES['avatar'];
+        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        $allowed = ['jpg','jpeg','png','gif','webp'];
+        if (!in_array($ext, $allowed)) { Utils::jsonResponse(['success'=>false,'message'=>'Formato no permitido'],400); }
+        $uploads = dirname(__DIR__,2) . '/public/uploads';
+        if (!is_dir($uploads)) { @mkdir($uploads, 0775, true); }
+        $safe = 'avatar_' . $this->currentUser['user_id'] . '_' . time() . '.' . $ext;
+        $dest = $uploads . '/' . $safe;
+        if (!move_uploaded_file($file['tmp_name'], $dest)) { Utils::jsonResponse(['success'=>false,'message'=>'Error al guardar archivo'],500); }
+        $publicPath = 'uploads/' . $safe;
+        $ok = $this->userModel->updateAvatarPath($this->currentUser['user_id'], $publicPath);
+        if ($ok) {
+            Utils::jsonResponse(['success'=>true,'message'=>'Avatar actualizado','avatar_url'=>Utils::asset($publicPath)]);
+        }
+        Utils::jsonResponse(['success'=>false,'message'=>'No se pudo actualizar avatar']);
+    }
+
     private function isTaskAssignedToUser($taskId, $userId) {
         try {
             // Verificar asignación principal o en Task_Assignments

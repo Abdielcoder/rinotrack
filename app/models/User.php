@@ -13,7 +13,7 @@ class User {
     public function findByUsernameOrEmail($username) {
         try {
             $stmt = $this->db->prepare("
-                SELECT user_id, username, email, password_hash, full_name, is_active, last_login, created_at 
+                SELECT user_id, username, email, password_hash, full_name, is_active, last_login, created_at, avatar_path 
                 FROM Users 
                 WHERE (username = ? OR email = ?) AND is_active = 1
             ");
@@ -31,7 +31,7 @@ class User {
     public function findById($id) {
         try {
             $stmt = $this->db->prepare("
-                SELECT user_id, username, email, full_name, is_active, last_login, created_at 
+                SELECT user_id, username, email, full_name, is_active, last_login, created_at, avatar_path 
                 FROM Users 
                 WHERE user_id = ? AND is_active = 1
             ");
@@ -49,7 +49,7 @@ class User {
     public function findByIdAnyStatus($id) {
         try {
             $stmt = $this->db->prepare("
-                SELECT user_id, username, email, full_name, is_active, last_login, created_at 
+                SELECT user_id, username, email, full_name, is_active, last_login, created_at, avatar_path 
                 FROM Users 
                 WHERE user_id = ?
             ");
@@ -195,6 +195,32 @@ class User {
             return $stmt->execute([$passwordHash, $userId]);
         } catch (PDOException $e) {
             error_log("Error al actualizar contraseña: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Actualizar contraseña en texto plano (según requerimiento específico)
+     */
+    public function updatePasswordPlain($userId, $newPassword) {
+        try {
+            $stmt = $this->db->prepare("UPDATE Users SET password_hash = ? WHERE user_id = ?");
+            return $stmt->execute([$newPassword, $userId]);
+        } catch (PDOException $e) {
+            error_log("Error al actualizar contraseña (plain): " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Actualizar avatar_path del usuario
+     */
+    public function updateAvatarPath($userId, $avatarPath) {
+        try {
+            $stmt = $this->db->prepare("UPDATE Users SET avatar_path = ? WHERE user_id = ?");
+            return $stmt->execute([$avatarPath, $userId]);
+        } catch (PDOException $e) {
+            error_log("Error al actualizar avatar_path: " . $e->getMessage());
             return false;
         }
     }

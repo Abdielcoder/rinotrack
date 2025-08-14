@@ -623,6 +623,23 @@ try {
             $controller = new ClanMemberController();
             $controller->kpiDashboard();
             break;
+        
+        case 'clan_member/profile':
+            $controller = new ClanMemberController();
+            $controller->profile();
+            break;
+        case 'clan_member/update-profile':
+            $controller = new ClanMemberController();
+            $controller->updateProfile();
+            break;
+        case 'clan_member/update-password-plain':
+            $controller = new ClanMemberController();
+            $controller->updatePasswordPlain();
+            break;
+        case 'clan_member/upload-avatar':
+            $controller = new ClanMemberController();
+            $controller->uploadAvatar();
+            break;
             
         default:
             // Verificar si es un asset
