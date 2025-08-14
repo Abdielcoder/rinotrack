@@ -200,7 +200,13 @@ function noPermissionModal(){
 
 <script>
 function openEditTaskModal(){ document.getElementById('editTaskModal').classList.add('open'); }
-function closeEditTaskModal(){ document.getElementById('editTaskModal').classList.remove('open'); }
+function closeEditTaskModal(){
+  const params = new URLSearchParams(location.search);
+  const goBackToList = params.get('action') === 'edit';
+  const modal = document.getElementById('editTaskModal');
+  if (modal) { modal.classList.remove('open'); }
+  if (goBackToList) { window.location.href='?route=clan_member/tasks'; }
+}
 
 document.getElementById('editTaskForm')?.addEventListener('submit', function(e){
   e.preventDefault();
@@ -211,9 +217,21 @@ document.getElementById('editTaskForm')?.addEventListener('submit', function(e){
   const fd = new FormData(this);
   fetch('?route=clan_member/update-task', { method:'POST', body: fd, credentials:'same-origin' })
     .then(async r=>{ const t = await r.text(); try{ return JSON.parse(t); } catch(e){ console.error(t); return {success:false,message:'Respuesta inválida'}; } })
-    .then(d=>{ if(!d.success){ errorBox.style.display='block'; errorBox.textContent=d.message||'No se pudo guardar'; btn.classList.remove('is-loading'); return; } location.reload(); })
+    .then(d=>{
+      if(!d.success){
+        errorBox.style.display='block'; errorBox.textContent=d.message||'No se pudo guardar'; btn.classList.remove('is-loading'); return;
+      }
+      // Siempre regresar al listado después de guardar
+      window.location.href='?route=clan_member/tasks';
+    })
     .catch(()=>{ errorBox.style.display='block'; errorBox.textContent='Error de red'; btn.classList.remove('is-loading'); });
 });
+
+// Si la URL trae action=edit, abrir el modal al cargar
+try {
+  const params = new URLSearchParams(location.search);
+  if (params.get('action') === 'edit') { openEditTaskModal(); }
+} catch (e) { /* noop */ }
 </script>
 
 <?php
