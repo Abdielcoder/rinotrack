@@ -218,11 +218,7 @@ document.getElementById('editTaskForm')?.addEventListener('submit', function(e){
     .catch(()=>{ errorBox.style.display='block'; errorBox.textContent='Error de red'; btn.classList.remove('is-loading'); });
 });
 
-// Si la URL trae action=edit, mostrar el panel inline al cargar
-try {
-  const params = new URLSearchParams(location.search);
-  if (params.get('action') === 'edit') { openEditTaskPanel(); }
-} catch (e) { /* noop */ }
+// Ya no auto-abrimos el panel al cargar, solo al presionar "Editar Tarea"
 </script>
 
 <?php
