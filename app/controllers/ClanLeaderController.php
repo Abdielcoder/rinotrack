@@ -746,38 +746,56 @@ class ClanLeaderController {
             
             $this->loadView('clan_leader/project_tasks', $data);
         } else {
-            // Construir tarjetas de proyectos visibles SOLO para tareas del líder (no mezclar otros usuarios)
+            // Tareas propias del líder
             $ownTasksData = $this->taskModel->getUserTasks($this->currentUser['user_id'], 1, 10000, '', '');
             $ownTasks = $ownTasksData['tasks'] ?? [];
-            $byProject = [];
+            $ownByProject = [];
             foreach ($ownTasks as $t) {
                 $pid = (int)$t['project_id'];
-                if (!isset($byProject[$pid])) {
-                    $byProject[$pid] = [
-                        'project_id' => $pid,
+                if (!isset($ownByProject[$pid])) {
+                    $ownByProject[$pid] = [
                         'project_name' => $t['project_name'],
-                        'status' => 'open',
-                        'total_tasks' => 0,
-                        'completed_tasks' => 0
+                        'total' => 0,
+                        'completed' => 0
                     ];
                 }
-                $byProject[$pid]['total_tasks']++;
-                if (($t['status'] ?? '') === 'completed') { $byProject[$pid]['completed_tasks']++; }
+                $ownByProject[$pid]['total']++;
+                if (($t['status'] ?? '') === 'completed') { $ownByProject[$pid]['completed']++; }
             }
 
-            // Proyectos del clan (propios) también pueden mostrarse si el líder tiene tareas en ellos
+            // 1) Proyectos del clan: SIEMPRE mostrar, con métricas filtradas a tareas del líder
+            $clanProjects = $this->projectModel->getByClan($this->userClan['clan_id']);
             $projects = [];
-            foreach ($byProject as $pid => $info) {
-                // Opcional: podríamos filtrar a solo proyectos del clan; el requerimiento dice ver tarjeta cuando tenga tareas (incluye lógicos)
-                $progress = $info['total_tasks'] > 0 ? round(($info['completed_tasks'] / $info['total_tasks']) * 100, 2) : 0;
+            $presentIds = [];
+            foreach ($clanProjects as $p) {
+                $pid = (int)$p['project_id'];
+                $presentIds[$pid] = true;
+                $ownTotal = $ownByProject[$pid]['total'] ?? 0;
+                $ownCompleted = $ownByProject[$pid]['completed'] ?? 0;
+                $progress = $ownTotal > 0 ? round(($ownCompleted / $ownTotal) * 100, 2) : 0;
                 $projects[] = [
                     'project_id' => $pid,
-                    'project_name' => $info['project_name'],
-                    'status' => $info['status'],
-                    'total_tasks' => $info['total_tasks'],
-                    'completed_tasks' => $info['completed_tasks'],
+                    'project_name' => $p['project_name'],
+                    'status' => $p['status'],
+                    'total_tasks' => $ownTotal,
+                    'completed_tasks' => $ownCompleted,
                     'progress_percentage' => $progress
                 ];
+            }
+
+            // 2) Proyectos adicionales (p. ej., lógicos de Olympo) SOLO si el líder tiene tareas
+            foreach ($ownByProject as $pid => $info) {
+                if (!isset($presentIds[$pid])) {
+                    $progress = $info['total'] > 0 ? round(($info['completed'] / $info['total']) * 100, 2) : 0;
+                    $projects[] = [
+                        'project_id' => (int)$pid,
+                        'project_name' => $info['project_name'],
+                        'status' => 'open',
+                        'total_tasks' => $info['total'],
+                        'completed_tasks' => $info['completed'],
+                        'progress_percentage' => $progress
+                    ];
+                }
             }
             
             // Obtener parámetros de paginación, búsqueda y filtros
@@ -789,8 +807,8 @@ class ClanLeaderController {
             // Validar perPage para evitar valores muy altos
             $perPage = max(1, min($perPage, 100));
             
-            // Obtener todas las tareas del clan con paginación dinámica
-            $allTasksData = $this->taskModel->getAllTasksByClan($this->userClan['clan_id'], $page, $perPage, $search, $statusFilter);
+            // Obtener SOLO tareas del líder (sin mezclar otros usuarios)
+            $allTasksData = $this->taskModel->getUserTasks($this->currentUser['user_id'], $page, $perPage, $search, $statusFilter);
             
             $data = [
                 'projects' => $projects,
