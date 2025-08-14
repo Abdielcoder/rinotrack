@@ -179,21 +179,33 @@ class ClanMemberController {
         $search = trim($_GET['search'] ?? '');
         $status = trim($_GET['status'] ?? '');
 
-        $result = $this->userClan ? $this->taskModel->getAllTasksByClan($this->userClan['clan_id'], $page, $perPage, $search, $status) : ['tasks' => [], 'total' => 0, 'page' => 1, 'per_page' => $perPage, 'total_pages' => 0];
+        // Tabla: mismas reglas que líder
+        // - Proyectos del clan: tareas de todo el clan
+        // - Proyectos lógicos: solo sus propias tareas
+        $clanPart = $this->userClan ? $this->taskModel->getAllTasksByClanStrict($this->userClan['clan_id'], $page, $perPage, $search, $status) : ['tasks' => [], 'total' => 0, 'page' => 1, 'per_page' => $perPage, 'total_pages' => 0];
+        $ownLogical = $this->taskModel->getUserTasksByProjectNames($this->currentUser['user_id'], ['Tareas Recurrentes','Tareas Eventuales']);
+        $merged = [];
+        foreach ($clanPart['tasks'] as $t) { $merged[$t['task_id']] = $t; }
+        foreach ($ownLogical as $t) { $merged[$t['task_id']] = $t; }
+        $result = $clanPart;
+        $result['tasks'] = array_values($merged);
 
         // Resumen de proyectos: incluir también los proyectos de tareas lógicas si hay tareas asignadas a miembros
         $projectsSummary = [];
         if ($this->userClan) {
-            $projects = $this->projectModel->getByClan($this->userClan['clan_id']);
-            foreach ($projects as $p) {
-                $total = (int)($p['total_tasks'] ?? 0);
-                $completed = (int)($p['completed_tasks'] ?? 0);
-                $progress = isset($p['progress_percentage']) ? (float)$p['progress_percentage'] : null;
-                if ($progress === null) {
-                    $progress = ($total > 0) ? round(($completed / $total) * 100, 1) : 0;
+            // Cards: proyectos del clan SIEMPRE con métricas totales del proyecto
+            $clanProjects = $this->projectModel->getByClan($this->userClan['clan_id']);
+            foreach ($clanProjects as $p) {
+                $pid = (int)$p['project_id'];
+                $projectTasks = $this->taskModel->getByProject($pid);
+                $total = count($projectTasks);
+                $completed = 0;
+                foreach ($projectTasks as $t) {
+                    if (($t['status'] ?? '') === 'completed' || ($t['is_completed'] ?? 0) == 1) { $completed++; }
                 }
+                $progress = $total > 0 ? round(($completed / $total) * 100, 2) : 0;
                 $projectsSummary[] = [
-                    'project_id' => $p['project_id'],
+                    'project_id' => $pid,
                     'project_name' => $p['project_name'],
                     'status' => $p['status'],
                     'total_tasks' => $total,
