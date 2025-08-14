@@ -285,7 +285,7 @@ class AdminController {
                  LEFT JOIN Clans c ON p.clan_id = c.clan_id
                  LEFT JOIN Users u ON th.user_id = u.user_id
                  ORDER BY th.created_at DESC
-                 LIMIT 20"
+                 LIMIT 10"
             );
             $stmt2->execute();
             $recentActivity = $stmt2->fetchAll();

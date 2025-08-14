@@ -270,6 +270,11 @@ body {
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: var(--admin-spacing-xl);
 }
+/* Versión compacta en una línea */
+.stats-grid.one-line {
+    grid-template-columns: repeat(5, minmax(160px, 1fr));
+    gap: var(--admin-spacing);
+}
 
 .stat-card {
     background: var(--admin-bg-primary);
@@ -278,6 +283,10 @@ body {
     box-shadow: var(--admin-shadow);
     border: 1px solid var(--admin-border);
     transition: all 0.3s ease;
+}
+
+.stat-card.compact {
+    padding: var(--admin-spacing);
 }
 
 .stat-card:hover {
@@ -304,7 +313,7 @@ body {
 }
 
 .stat-number {
-    font-size: 3rem;
+    font-size: 2rem;
     font-weight: 700;
     margin-bottom: var(--admin-spacing);
     line-height: 1;

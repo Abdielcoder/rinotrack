@@ -106,32 +106,32 @@ ob_start();
 
         <!-- Minicards: Estados generales de tareas (todos los clanes) -->
         <section class="stats-section animate-fade-in">
-            <div class="stats-grid">
-                <div class="stat-card">
+            <div class="stats-grid stats-compact one-line">
+                <div class="stat-card compact">
                     <div class="stat-header">
                         <h3><i class="fas fa-list-ul"></i> Tareas totales</h3>
                     </div>
                     <div class="stat-number"><?php echo (int)($taskStats['total'] ?? 0); ?></div>
                 </div>
-                <div class="stat-card">
+                <div class="stat-card compact">
                     <div class="stat-header">
                         <h3><i class="fas fa-hourglass-half"></i> Pendientes</h3>
                     </div>
                     <div class="stat-number"><?php echo (int)($taskStats['pending'] ?? 0); ?></div>
                 </div>
-                <div class="stat-card">
+                <div class="stat-card compact">
                     <div class="stat-header">
                         <h3><i class="fas fa-spinner"></i> En progreso</h3>
                     </div>
                     <div class="stat-number"><?php echo (int)($taskStats['in_progress'] ?? 0); ?></div>
                 </div>
-                <div class="stat-card">
+                <div class="stat-card compact">
                     <div class="stat-header">
                         <h3><i class="fas fa-check-circle"></i> Completadas</h3>
                     </div>
                     <div class="stat-number"><?php echo (int)($taskStats['completed'] ?? 0); ?></div>
                 </div>
-                <div class="stat-card">
+                <div class="stat-card compact">
                     <div class="stat-header">
                         <h3><i class="fas fa-exclamation-triangle"></i> Vencidas</h3>
                     </div>
@@ -145,8 +145,9 @@ ob_start();
             <div class="content-card">
                 <div class="card-header">
                     <h3><i class="fas fa-bolt"></i> Actividad Reciente</h3>
+                    <button class="btn btn-secondary" id="toggleRecentActivity">Mostrar/Ocultar</button>
                 </div>
-                <div class="activity-list">
+                <div class="activity-list" id="recentActivityContent">
                     <?php if (empty($recentActivity ?? [])): ?>
                         <div class="empty">Sin actividad reciente</div>
                     <?php else: foreach (($recentActivity ?? []) as $h): ?>
@@ -176,6 +177,22 @@ ob_start();
                 </div>
             </div>
         </section>
+
+        <script>
+        (function(){
+            var btn = document.getElementById('toggleRecentActivity');
+            var content = document.getElementById('recentActivityContent');
+            if (btn && content) {
+                btn.addEventListener('click', function(){
+                    if (content.style.display === 'none') {
+                        content.style.display = '';
+                    } else {
+                        content.style.display = 'none';
+                    }
+                });
+            }
+        })();
+        </script>
 
         <!-- Grid de proyectos -->
         <section class="content-section animate-fade-in">
