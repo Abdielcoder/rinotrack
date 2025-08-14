@@ -113,7 +113,8 @@ class ClanMemberController {
         $task = $this->taskModel->findById($taskId);
         if (!$task) { die('Tarea no encontrada'); }
         $project = $this->projectModel->findById($task['project_id']);
-        if (!$project || (int)$project['clan_id'] !== (int)$this->userClan['clan_id']) { die('Acceso denegado'); }
+        $isAssigned = $this->isTaskAssignedToUser($taskId, $this->currentUser['user_id']);
+        if (!$project || ((int)$project['clan_id'] !== (int)$this->userClan['clan_id'] && !$isAssigned)) { die('Acceso denegado'); }
 
         $subtasks = $this->taskModel->getSubtasks($taskId);
         $comments = $this->taskModel->getComments($taskId);
@@ -180,7 +181,7 @@ class ClanMemberController {
 
         $result = $this->userClan ? $this->taskModel->getAllTasksByClan($this->userClan['clan_id'], $page, $perPage, $search, $status) : ['tasks' => [], 'total' => 0, 'page' => 1, 'per_page' => $perPage, 'total_pages' => 0];
 
-        // Resumen de proyectos para la cabecera
+        // Resumen de proyectos: incluir también los proyectos de tareas lógicas si hay tareas asignadas a miembros
         $projectsSummary = [];
         if ($this->userClan) {
             $projects = $this->projectModel->getByClan($this->userClan['clan_id']);
@@ -189,7 +190,6 @@ class ClanMemberController {
                 $completed = (int)($p['completed_tasks'] ?? 0);
                 $progress = isset($p['progress_percentage']) ? (float)$p['progress_percentage'] : null;
                 if ($progress === null) {
-                    // Fallback rápido si no hay columnas calculadas
                     $progress = ($total > 0) ? round(($completed / $total) * 100, 1) : 0;
                 }
                 $projectsSummary[] = [
@@ -200,6 +200,39 @@ class ClanMemberController {
                     'completed_tasks' => $completed,
                     'progress_percentage' => $progress
                 ];
+            }
+            // Agregar proyectos con tareas asignadas a miembros aunque pertenezcan a otro clan (ej. Olympo)
+            $tasks = $result['tasks'] ?? [];
+            $byProject = [];
+            foreach ($tasks as $t) {
+                $pid = (int)$t['project_id'];
+                if (!isset($byProject[$pid])) {
+                    $byProject[$pid] = [
+                        'project_id' => $pid,
+                        'project_name' => $t['project_name'],
+                        'status' => 'open',
+                        'total_tasks' => 0,
+                        'completed_tasks' => 0
+                    ];
+                }
+                $byProject[$pid]['total_tasks']++;
+                if (($t['status'] ?? '') === 'completed') { $byProject[$pid]['completed_tasks']++; }
+            }
+            foreach ($byProject as $pid => $info) {
+                // Evitar duplicar si ya existe en projectsSummary
+                $exists = false;
+                foreach ($projectsSummary as $ps) { if ((int)$ps['project_id'] === $pid) { $exists = true; break; } }
+                if (!$exists) {
+                    $progress = $info['total_tasks'] > 0 ? round(($info['completed_tasks'] / $info['total_tasks']) * 100, 1) : 0;
+                    $projectsSummary[] = [
+                        'project_id' => $pid,
+                        'project_name' => $info['project_name'],
+                        'status' => $info['status'],
+                        'total_tasks' => $info['total_tasks'],
+                        'completed_tasks' => $info['completed_tasks'],
+                        'progress_percentage' => $progress
+                    ];
+                }
             }
         }
 
@@ -236,9 +269,10 @@ class ClanMemberController {
             Utils::jsonResponse(['success' => false, 'message' => 'Tarea no encontrada'], 404);
         }
 
-        // Verificar que la tarea sea del clan del usuario
+        // Permitir si pertenece al clan o está asignada al usuario
         $project = $this->projectModel->findById($task['project_id']);
-        if (!$project || $project['clan_id'] != $this->userClan['clan_id']) {
+        $isAssigned = $this->isTaskAssignedToUser($taskId, $this->currentUser['user_id']);
+        if (!$project || ($project['clan_id'] != $this->userClan['clan_id'] && !$isAssigned)) {
             Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
         }
 
@@ -274,9 +308,10 @@ class ClanMemberController {
             Utils::jsonResponse(['success' => false, 'message' => 'Tarea no encontrada'], 404);
         }
 
-        // Verificar clan
+        // Verificar clan o asignación
         $project = $this->projectModel->findById($task['project_id']);
-        if (!$project || $project['clan_id'] != $this->userClan['clan_id']) {
+        $isAssignedToUser = $this->isTaskAssignedToUser($taskId, $this->currentUser['user_id']);
+        if (!$project || ($project['clan_id'] != $this->userClan['clan_id'] && !$isAssignedToUser)) {
             Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
         }
 

@@ -1087,12 +1087,23 @@ class Task {
                 LEFT JOIN Users creator ON t.created_by_user_id = creator.user_id
                 LEFT JOIN Task_Assignments ta ON t.task_id = ta.task_id
                 LEFT JOIN Users ta_users ON ta.user_id = ta_users.user_id
-                WHERE p.clan_id = ? 
+                WHERE (
+                    p.clan_id = ?
+                    OR t.assigned_to_user_id IN (
+                        SELECT user_id FROM Clan_Members WHERE clan_id = ?
+                    )
+                    OR EXISTS (
+                        SELECT 1
+                        FROM Task_Assignments ta2
+                        JOIN Clan_Members cm2 ON cm2.user_id = ta2.user_id
+                        WHERE ta2.task_id = t.task_id AND cm2.clan_id = ?
+                    )
+                )
                 AND t.is_subtask = 0
             ";
             
             // Agregar filtro de búsqueda si se proporciona
-            $searchParams = [$clanId];
+            $searchParams = [$clanId, $clanId, $clanId];
             if (!empty($search)) {
                 $baseQuery .= " AND (
                     t.task_name LIKE ? OR 
@@ -1192,12 +1203,23 @@ class Task {
                 LEFT JOIN Users creator ON t.created_by_user_id = creator.user_id
                 LEFT JOIN Task_Assignments ta ON t.task_id = ta.task_id
                 LEFT JOIN Users ta_users ON ta.user_id = ta_users.user_id
-                WHERE p.clan_id = ? 
+                WHERE (
+                    p.clan_id = ?
+                    OR t.assigned_to_user_id IN (
+                        SELECT user_id FROM Clan_Members WHERE clan_id = ?
+                    )
+                    OR EXISTS (
+                        SELECT 1
+                        FROM Task_Assignments ta2
+                        JOIN Clan_Members cm2 ON cm2.user_id = ta2.user_id
+                        WHERE ta2.task_id = t.task_id AND cm2.clan_id = ?
+                    )
+                )
                 AND t.status IN ('pending', 'in_progress')
             ";
             
             // Agregar filtro de búsqueda si se proporciona
-            $searchParams = [$clanId];
+            $searchParams = [$clanId, $clanId, $clanId];
             if (!empty($search)) {
                 $baseQuery .= " AND (
                     t.task_name LIKE ? OR 

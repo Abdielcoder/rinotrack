@@ -1916,43 +1916,26 @@ class ClanLeaderController {
                     'completion_percentage' => 0
                 ];
             }
-            // Primero verificar si hay proyectos en el clan
-            $projectStmt = $this->db->prepare("SELECT project_id FROM Projects WHERE clan_id = ?");
-            $projectStmt->execute([$this->userClan['clan_id']]);
-            $projects = $projectStmt->fetchAll(PDO::FETCH_COLUMN);
-            
-            if (empty($projects)) {
-                return [
-                    'total_tasks' => 0,
-                    'completed_tasks' => 0,
-                    'pending_tasks' => 0,
-                    'in_progress_tasks' => 0,
-                    'completion_percentage' => 0
-                ];
+            // Incluir tareas del clan y las asignadas a sus miembros aunque pertenezcan a proyectos de otro clan (ej. Olympo)
+            $allTasksData = $this->taskModel->getAllTasksByClan($this->userClan['clan_id'], 1, 10000, '', '');
+            $tasks = $allTasksData['tasks'] ?? [];
+
+            $totalTasks = count($tasks);
+            $completedTasks = 0;
+            $pendingTasks = 0;
+            $inProgressTasks = 0;
+            foreach ($tasks as $t) {
+                $status = $t['status'] ?? 'pending';
+                if ($status === 'completed') { $completedTasks++; }
+                elseif ($status === 'in_progress') { $inProgressTasks++; }
+                elseif ($status === 'pending') { $pendingTasks++; }
             }
-            
-            $placeholders = str_repeat('?,', count($projects) - 1) . '?';
-            $stmt = $this->db->prepare("
-                SELECT 
-                    COUNT(*) as total_tasks,
-                    SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_tasks,
-                    SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_tasks,
-                    SUM(CASE WHEN status = 'in_progress' THEN 1 ELSE 0 END) as in_progress_tasks
-                FROM Tasks 
-                WHERE project_id IN ($placeholders) AND is_subtask = 0
-            ");
-            
-            $stmt->execute($projects);
-            $stats = $stmt->fetch(PDO::FETCH_ASSOC);
-            
-            $totalTasks = (int)$stats['total_tasks'];
-            $completedTasks = (int)$stats['completed_tasks'];
-            
+
             return [
                 'total_tasks' => $totalTasks,
                 'completed_tasks' => $completedTasks,
-                'pending_tasks' => (int)$stats['pending_tasks'],
-                'in_progress_tasks' => (int)$stats['in_progress_tasks'],
+                'pending_tasks' => $pendingTasks,
+                'in_progress_tasks' => $inProgressTasks,
                 'completion_percentage' => $totalTasks > 0 ? round(($completedTasks / $totalTasks) * 100, 1) : 0
             ];
         } catch (Exception $e) {
@@ -2282,29 +2265,28 @@ class ClanLeaderController {
             }
         }
         
-        // Obtener todas las tareas del clan para el calendario
+        // Obtener todas las tareas (incluyendo asignadas desde proyectos de otros clanes) para el calendario
         $allTasks = [];
         $projects = $this->projectModel->getByClan($this->userClan['clan_id']);
-        
-        foreach ($projects as $project) {
-            $projectTasks = $this->taskModel->getByProject($project['project_id']);
-            foreach ($projectTasks as $task) {
-                // Incluir tareas que no estén canceladas y tengan fecha de vencimiento
-                if ($task['status'] !== 'cancelled' && $task['due_date']) {
-                    $allTasks[] = [
-                        'task' => $task,
-                        'project' => $project,
-                        'assigned_user' => null
-                    ];
-                    
-                    // Obtener usuario asignado si existe
-                    if ($task['assigned_to_user_id']) {
-                        $assignedUser = $this->userModel->findById($task['assigned_to_user_id']);
-                        if ($assignedUser) {
-                            $allTasks[count($allTasks) - 1]['assigned_user'] = $assignedUser;
-                        }
-                    }
-                }
+
+        $allTasksData = $this->taskModel->getAllTasksByClan($this->userClan['clan_id'], 1, 10000, '', '');
+        $calendarTasks = $allTasksData['tasks'] ?? [];
+        foreach ($calendarTasks as $t) {
+            if (($t['status'] ?? '') !== 'cancelled' && !empty($t['due_date'])) {
+                $allTasks[] = [
+                    'task' => [
+                        'task_id' => $t['task_id'],
+                        'task_name' => $t['task_name'],
+                        'description' => $t['description'],
+                        'due_date' => $t['due_date'],
+                        'status' => $t['status'],
+                    ],
+                    'project' => [
+                        'project_id' => $t['project_id'],
+                        'project_name' => $t['project_name']
+                    ],
+                    'assigned_user' => null
+                ];
             }
         }
         
