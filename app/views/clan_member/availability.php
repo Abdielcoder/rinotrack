@@ -157,14 +157,14 @@ function generateCalendar(){
     if (d.getMonth()!==month) day.classList.add('other-month');
     if (d.getTime()===today.getTime()) day.classList.add('today');
     const ds = d.toISOString().split('T')[0];
-    const dayTasks = tasksData.filter(t=>t.task && t.task.due_date===ds);
+    const dayTasks = tasksData.filter(t=>t && t.due_date && t.due_date===ds);
     if (dayTasks.length>0) day.classList.add('has-tasks');
     const num = document.createElement('div'); num.className='day-number'; num.textContent=d.getDate();
     const info = document.createElement('div'); info.className='day-tasks'; info.textContent = dayTasks.length+' tarea'+(dayTasks.length!==1?'s':'');
     day.appendChild(num); day.appendChild(info);
     if (dayTasks.length>0){
       const indicators=document.createElement('div');
-      const counts={}; dayTasks.forEach(td=>{ const st=td.task.status; counts[st]=(counts[st]||0)+1; });
+      const counts={}; dayTasks.forEach(td=>{ const st=td.status; counts[st]=(counts[st]||0)+1; });
       Object.keys(counts).forEach(st=>{ const b=document.createElement('span'); b.className='task-indicator '+st; b.title=counts[st]+' '+st; indicators.appendChild(b); });
       day.appendChild(indicators);
     }
@@ -179,13 +179,12 @@ function showTasksForDate(date, list){
   if(!modal||!title||!body) return; body.innerHTML='';
   title.textContent = 'Tareas del '+ date.toLocaleDateString('es-ES',{weekday:'long', year:'numeric', month:'long', day:'numeric'});
   if(!list||list.length===0){ body.innerHTML='<p>No hay tareas programadas para este día.</p>'; modal.classList.add('show'); return; }
-  list.forEach(td=>{
-    const t=td.task||{}; const p=td.project||{};
+  list.forEach(t=>{
     const overdue = t.due_date && (new Date(t.due_date) < new Date()) && t.status!=='completed';
     const st = overdue? 'overdue' : (t.status||'');
     const el=document.createElement('div'); el.className='task-item';
-    el.innerHTML = `<div class="task-header"><h4 class="task-title">${(t.task_name||'')}</h4><span class="task-status ${st}">${overdue?'Vencida':(t.status||'')}</span></div>
-    <div class="task-details"><div class="task-project"><i class="fas fa-folder"></i> ${(p.project_name||'')}</div>${t.description?`<div style='margin-top:.5rem'><i class='fas fa-align-left'></i> ${t.description}</div>`:''}</div>`;
+    el.innerHTML = `<div class=\"task-header\"><h4 class=\"task-title\">${(t.task_name||'')}</h4><span class=\"task-status ${st}\">${overdue?'Vencida':(t.status||'')}</span></div>
+    <div class=\"task-details\"><div class=\"task-project\"><i class=\"fas fa-folder\"></i> ${(t.project_name||'')}</div>${t.description?`<div style='margin-top:.5rem'><i class='fas fa-align-left'></i> ${t.description}</div>`:''}</div>`;
     body.appendChild(el);
   });
   modal.classList.add('show');
