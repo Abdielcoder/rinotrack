@@ -63,7 +63,12 @@ ob_start();
 							<tbody>
 								<?php foreach ($projects as $p): ?>
 								<tr>
-									<td><a href="?route=clan_member/project-tasks&project_id=<?php echo (int)$p['project_id']; ?>"><?php echo Utils::escape($p['project_name']); ?></a></td>
+									<td>
+										<a class="btn btn-secondary btn-sm" href="?route=clan_member/project-tasks&project_id=<?php echo (int)$p['project_id']; ?>">
+											<i class="fas fa-eye"></i>
+											<?php echo Utils::escape($p['project_name']); ?>
+										</a>
+									</td>
 									<td><?php echo Utils::escape($p['description'] ?? ''); ?></td>
 									<td><?php echo date('d/m/Y', strtotime($p['created_at'])); ?></td>
 									<td><span class="badge status-<?php echo Utils::escape($p['status']); ?>"><?php echo Utils::escape($p['status']); ?></span></td>
@@ -111,6 +116,7 @@ ob_start();
 .data-table th{background:var(--bg-tertiary);padding:var(--spacing-lg);text-align:left;font-weight:600;color:var(--text-primary);border-bottom:1px solid var(--bg-accent)}
 .data-table td{padding:var(--spacing-lg);border-bottom:1px solid var(--bg-accent);color:var(--text-secondary)}
 .badge{padding:4px 8px;border-radius:6px;font-size:.8rem;text-transform:uppercase}
+.btn-sm{padding:6px 10px;font-size:.85rem}
 @media (max-width:1024px){.nav-container{flex-wrap:wrap;gap:var(--spacing-md)}.user-menu{order:-1;width:100%;justify-content:space-between}}
 @media (max-width:768px){.welcome-header{flex-direction:column;text-align:center;gap:var(--spacing-lg)}.nav-menu{display:none}.main-content{padding:var(--spacing-lg) var(--spacing-md)}}
 </style>
