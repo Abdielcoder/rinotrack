@@ -5,7 +5,7 @@ ob_start();
 <div class="cm-task-details minimal">
   <div class="project-hero" style="max-width:1100px;">
     <div class="hero-inner">
-      <a href="?route=clan_member/project-tasks&project_id=<?php echo (int)$project['project_id']; ?>" class="hero-back"><i class="fas fa-arrow-left"></i> Volver a Tareas</a>
+      <a href="?route=clan_member/tasks" class="hero-back"><i class="fas fa-arrow-left"></i> Volver a Tareas</a>
       <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
         <div>
           <h1 class="hero-title" style="margin-bottom:4px;"><?php echo htmlspecialchars($task['task_name']); ?></h1>
