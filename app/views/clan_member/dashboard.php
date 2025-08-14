@@ -48,6 +48,15 @@ ob_start();
             <div class="welcome-content">
                 <h1 class="welcome-title">¡Hola, <?php echo Utils::escape($user['full_name'] ?: $user['username']); ?>! 👋</h1>
                 <p class="welcome-subtitle">Clan: <?php echo Utils::escape($clan['clan_name'] ?? 'Sin clan'); ?></p>
+                <div class="motivation" style="display:flex;align-items:center;gap:10px;margin-top:10px">
+                    <div class="motivation-icon" style="width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:var(--primary-gradient);color:#fff">
+                        <i class="fas fa-lightbulb"></i>
+                    </div>
+                    <div class="motivation-text">
+                        <div id="motQuote" style="font-weight:600;color:var(--text-primary)">Cargando frase motivacional...</div>
+                        <div id="motAuthor" style="font-size:.9rem;color:var(--text-secondary)"></div>
+                    </div>
+                </div>
                 <a href="?route=clan_member/tasks" class="btn btn-primary" style="margin-top: 1rem;">
                     <i class="fas fa-list-check"></i>
                     Ver mis tareas
@@ -179,6 +188,35 @@ ob_start();
 @media (max-width:1024px){.nav-container{flex-wrap:wrap;gap:var(--spacing-md)}.user-menu{order:-1;width:100%;justify-content:space-between}.content-grid{grid-template-columns:1fr}}
 @media (max-width:768px){.welcome-header{flex-direction:column;text-align:center;gap:var(--spacing-lg)}.stats-grid{grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:var(--spacing-md)}.nav-menu{display:none}.main-content{padding:var(--spacing-lg) var(--spacing-md)}}
 </style>
+
+<script>
+// Frase motivacional en dashboard (una por sesión)
+(function(){
+  const qEl = document.getElementById('motQuote');
+  const aEl = document.getElementById('motAuthor');
+  if (!qEl || !aEl) return;
+  const SS_KEY = 'rt_motivational_quote';
+  const cached = sessionStorage.getItem(SS_KEY);
+  if (cached) { try{ const o=JSON.parse(cached); qEl.textContent='“'+(o.text||'')+'”'; aEl.textContent=o.author?('— '+o.author):''; return; }catch(_){} }
+  const apis=[
+    {url:'https://api.quotable.io/random', map:d=>({text:d.content, author:d.author})},
+    {url:'https://zenquotes.io/api/random', map:d=>{const x=(Array.isArray(d)?d[0]:{})||{}; return {text:x.q, author:x.a};}},
+    {url:'https://type.fit/api/quotes', map:d=>{const arr=Array.isArray(d)?d:[]; const r=arr[Math.floor(Math.random()*arr.length)]||{}; return {text:r.text, author:r.author||'Anónimo'};}}
+  ];
+  const localFallback=[
+    {text:'La excelencia no es un acto, es un hábito.', author:'Aristóteles'},
+    {text:'La disciplina es el puente entre metas y logros.', author:'Jim Rohn'},
+    {text:'Haz hoy lo que otros no harán y mañana vivirás como otros no pueden.', author:'Jerry Rice'}
+  ];
+  function applyQuote(q){ if(!q||!q.text) q=localFallback[Math.floor(Math.random()*localFallback.length)]; qEl.textContent='“'+(q.text||'')+'”'; aEl.textContent=q.author?('— '+q.author):''; try{sessionStorage.setItem(SS_KEY, JSON.stringify(q));}catch(_){} }
+  (async function(){
+    for(const api of apis){
+      try { const r=await fetch(api.url,{credentials:'omit'}); if(!r.ok) continue; const d=await r.json(); const q=api.map(d); if(q&&q.text){ applyQuote(q); return; } } catch(_){ }
+    }
+    applyQuote(null);
+  })();
+})();
+</script>
 
 <?php
 $content = ob_get_clean();
