@@ -238,6 +238,11 @@ class AdminController {
         }
         
         $projects = $this->projectModel->getAllWithClanInfo();
+        // Ocultar proyectos lógicos de tareas
+        $hiddenNames = ['Tareas Recurrentes', 'Tareas Eventuales'];
+        $projects = array_values(array_filter($projects, function($p) use ($hiddenNames) {
+            return !in_array($p['project_name'], $hiddenNames, true);
+        }));
         $clans = $this->clanModel->getAll();
         
         $data = [
@@ -248,6 +253,54 @@ class AdminController {
         ];
         
         $this->loadView('admin/projects', $data);
+    }
+
+    /**
+     * Gestión de tareas globales (ADMIN) usando clan Olympo
+     */
+    public function tasks() {
+        $this->requireAuth();
+        if (!$this->hasAdminAccess()) {
+            Utils::redirect('dashboard');
+        }
+
+        $currentUser = $this->auth->getCurrentUser();
+
+        // Asegurar clan "Olympo"
+        $olympo = $this->clanModel->findByName('Olympo');
+        if (!$olympo) {
+            $clanId = $this->clanModel->create('Olympo', 'Dirección');
+            $olympo = $this->clanModel->findById($clanId);
+        }
+
+        // Asegurar proyectos lógicos en Olympo
+        $recurrentProject = $this->ensureProjectForClan($olympo['clan_id'], 'Tareas Recurrentes', $currentUser['user_id'] ?? 1);
+        $eventualProject = $this->ensureProjectForClan($olympo['clan_id'], 'Tareas Eventuales', $currentUser['user_id'] ?? 1);
+
+        // Miembros del clan Olympo
+        $members = $this->clanModel->getMembers((int)$olympo['clan_id']);
+
+        $data = [
+            'currentPage' => 'admin',
+            'user' => $currentUser,
+            'olympo' => $olympo,
+            'recurrentProject' => $recurrentProject,
+            'eventualProject' => $eventualProject,
+            'members' => $members
+        ];
+
+        $this->loadView('admin/tasks', $data);
+    }
+
+    private function ensureProjectForClan($clanId, $projectName, $createdByUserId) {
+        $db = Database::getConnection();
+        $stmt = $db->prepare("SELECT * FROM Projects WHERE clan_id = ? AND project_name = ? LIMIT 1");
+        $stmt->execute([$clanId, $projectName]);
+        $project = $stmt->fetch();
+        if ($project) { return $project; }
+
+        $projectId = $this->projectModel->create($projectName, $projectName, (int)$clanId, (int)$createdByUserId, null, 0, 'automatic', null);
+        return $this->projectModel->findById($projectId);
     }
 
     /**

@@ -37,7 +37,7 @@ class Clan {
                 SELECT 
                     c.*,
                     COUNT(DISTINCT cm.user_id) as member_count,
-                    COUNT(DISTINCT p.project_id) as project_count
+                    COUNT(DISTINCT CASE WHEN p.project_name NOT IN ('Tareas Recurrentes','Tareas Eventuales') THEN p.project_id END) as project_count
                 FROM Clans c
                 LEFT JOIN Clan_Members cm ON c.clan_id = cm.clan_id
                 LEFT JOIN Projects p ON c.clan_id = p.clan_id
@@ -265,6 +265,20 @@ class Clan {
                 'max_members' => 0,
                 'min_members' => 0
             ];
+        }
+    }
+
+    /**
+     * Buscar clan por nombre exacto
+     */
+    public function findByName($clanName) {
+        try {
+            $stmt = $this->db->prepare("SELECT * FROM Clans WHERE clan_name = ? LIMIT 1");
+            $stmt->execute([$clanName]);
+            return $stmt->fetch();
+        } catch (PDOException $e) {
+            error_log("Error al buscar clan por nombre: " . $e->getMessage());
+            return false;
         }
     }
 }

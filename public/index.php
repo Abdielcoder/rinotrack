@@ -144,6 +144,10 @@ try {
             $controller = new AdminController();
             $controller->projects();
             break;
+        case 'admin/tasks':
+            $controller = new AdminController();
+            $controller->tasks();
+            break;
         case 'admin/get-project':
             $controller = new AdminController();
             $controller->getProject();

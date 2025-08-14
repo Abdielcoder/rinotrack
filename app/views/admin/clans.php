@@ -40,6 +40,12 @@ $additionalCSS = [];
                         <span>Proyectos</span>
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a href="?route=admin/tasks" class="nav-link">
+                        <i class="fas fa-tasks"></i>
+                        <span>Tareas</span>
+                    </a>
+                </li>
                 <li class="nav-item active">
                     <a href="?route=admin/clans" class="nav-link">
                         <i class="fas fa-users-cog"></i>
