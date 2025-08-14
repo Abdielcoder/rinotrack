@@ -94,61 +94,62 @@ ob_start();
         </header>
 
         <section class="content-section animate-fade-in">
-            <div class="grid">
-                <div class="card">
+            <div class="content-grid">
+                <div class="content-card">
                     <div class="card-header">
                         <h3>Crear tarea recurrente/eventual</h3>
                     </div>
-                    <div class="card-body">
-                        <form id="adminCreateTaskForm">
-                            <input type="hidden" name="route" value="admin/add-task">
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label>Tipo</label>
-                                    <select id="taskType" class="input" onchange="onTaskTypeChange()">
-                                        <option value="recurrent">Recurrente</option>
-                                        <option value="eventual">Eventual</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label>Proyecto lógico</label>
-                                    <select id="projectId" name="projectId" class="input">
-                                        <option value="<?php echo (int)$recurrentProject['project_id']; ?>">Tareas Recurrentes</option>
-                                        <option value="<?php echo (int)$eventualProject['project_id']; ?>">Tareas Eventuales</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label>Nombre de la tarea</label>
-                                    <input type="text" name="taskName" class="input" required>
-                                </div>
+                    <form id="adminCreateTaskForm" class="modal-form">
+                        <input type="hidden" name="route" value="admin/add-task">
+
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Tipo</label>
+                                <select id="taskType" onchange="onTaskTypeChange()">
+                                    <option value="recurrent">Recurrente</option>
+                                    <option value="eventual">Eventual</option>
+                                </select>
                             </div>
-                            <div class="form-row">
-                                <div class="form-group full">
-                                    <label>Descripción</label>
-                                    <textarea name="description" class="input"></textarea>
-                                </div>
+                            <div class="form-group">
+                                <label>Proyecto lógico</label>
+                                <select id="projectId" name="projectId">
+                                    <option value="<?php echo (int)$recurrentProject['project_id']; ?>">Tareas Recurrentes</option>
+                                    <option value="<?php echo (int)$eventualProject['project_id']; ?>">Tareas Eventuales</option>
+                                </select>
                             </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label>Fecha límite</label>
-                                    <input type="date" name="dueDate" class="input">
-                                </div>
-                                <div class="form-group">
-                                    <label>Asignar a miembros (multiple)</label>
-                                    <select name="assignedUsers[]" id="assignedUsers" class="input" multiple>
-                                        <?php foreach ($members as $m): ?>
-                                            <option value="<?php echo (int)$m['user_id']; ?>"><?php echo Utils::escape($m['full_name'] ?: $m['username']); ?></option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </div>
+                            <div class="form-group">
+                                <label>Nombre de la tarea</label>
+                                <input type="text" name="taskName" required>
                             </div>
-                            <div class="form-actions">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-plus"></i> Crear Tarea
-                                </button>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Descripción</label>
+                            <textarea name="description" rows="4" placeholder="Describe la tarea..."></textarea>
+                        </div>
+
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Fecha límite</label>
+                                <input type="date" name="dueDate">
                             </div>
-                        </form>
-                    </div>
+                            <div class="form-group">
+                                <label>Asignar a miembros (multiple)</label>
+                                <select name="assignedUsers[]" id="assignedUsers" multiple>
+                                    <?php foreach ($members as $m): ?>
+                                        <option value="<?php echo (int)$m['user_id']; ?>"><?php echo Utils::escape($m['full_name'] ?: $m['username']); ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="modal-actions">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-plus"></i>
+                                Crear Tarea
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </section>
@@ -187,7 +188,8 @@ document.getElementById('adminCreateTaskForm')?.addEventListener('submit', async
 
 <?php
 $content = ob_get_clean();
-include __DIR__ . '/../layout.php';
+$title = 'Gestión de Tareas - ' . APP_NAME;
+include __DIR__ . '/layout.php';
 ?>
 
 
