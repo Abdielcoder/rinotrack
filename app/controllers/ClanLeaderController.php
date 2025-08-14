@@ -664,6 +664,12 @@ class ClanLeaderController {
      * Gestión de tareas del clan
      */
     public function tasks() {
+        // Asegurar autenticación y permisos para evitar accesos nulos
+        $this->requireAuth();
+        if (!$this->hasClanLeaderAccess()) {
+            Utils::redirect('dashboard');
+            return;
+        }
         $projectId = $_GET['project_id'] ?? null;
         $action = $_GET['action'] ?? null;
         
@@ -703,15 +709,25 @@ class ClanLeaderController {
                 Utils::redirect('clan_leader/tasks');
             }
             
-            // Verificar que la tarea pertenece a un proyecto del clan
+            // Verificar acceso: proyecto del clan O tarea asignada/creada por el líder
             $project = $this->projectModel->findById($task['project_id']);
-            if (!$project || $project['clan_id'] != $this->userClan['clan_id']) {
+            if (!$project) { Utils::redirect('clan_leader/tasks'); }
+            $isAssigned = $this->isTaskAssignedToUser($taskId, $this->currentUser['user_id'])
+                || (int)($task['assigned_to_user_id'] ?? 0) === (int)$this->currentUser['user_id']
+                || (int)($task['created_by_user_id'] ?? 0) === (int)$this->currentUser['user_id'];
+            if (!($this->userClan && (int)$project['clan_id'] === (int)$this->userClan['clan_id']) && !$isAssigned) {
                 Utils::redirect('clan_leader/tasks');
             }
             
             // Obtener datos necesarios para el formulario
-            $projects = $this->projectModel->getByClan($this->userClan['clan_id']);
-            $members = $this->clanModel->getMembers($this->userClan['clan_id']);
+            if ($this->userClan && (int)$project['clan_id'] === (int)$this->userClan['clan_id']) {
+                $projects = $this->projectModel->getByClan($this->userClan['clan_id']);
+                $members = $this->clanModel->getMembers($this->userClan['clan_id']);
+            } else {
+                // Proyecto externo: limitar selección
+                $projects = [$project];
+                $members = [];
+            }
             
             // Obtener usuarios asignados a la tarea
             $assignedUsers = $this->taskModel->getAssignedUsers($taskId);
@@ -729,13 +745,22 @@ class ClanLeaderController {
             
             $this->loadView('clan_leader/task_edit', $data);
         } elseif ($projectId) {
-            // Verificar que el proyecto pertenece al clan
+            // Permitir ver proyecto si es del clan del líder o si el líder tiene tareas asignadas en ese proyecto
             $project = $this->projectModel->findById($projectId);
-            if (!$project || $project['clan_id'] != $this->userClan['clan_id']) {
-                Utils::redirect('clan_leader/tasks');
-            }
-            
+            if (!$project) { Utils::redirect('clan_leader/tasks'); }
+
+            $isLeaderClanProject = $this->userClan && ((int)$project['clan_id'] === (int)$this->userClan['clan_id']);
             $tasks = $this->taskModel->getByProject($projectId);
+            if (!$isLeaderClanProject) {
+                $uid = (int)$this->currentUser['user_id'];
+                $tasks = array_values(array_filter($tasks, function($t) use ($uid){
+                    $primary = (int)($t['assigned_to_user_id'] ?? 0) === $uid;
+                    $list = isset($t['all_assigned_user_ids']) ? array_filter(explode(',', (string)$t['all_assigned_user_ids'])) : [];
+                    $inList = in_array((string)$uid, $list, true);
+                    return $primary || $inList;
+                }));
+                if (empty($tasks)) { Utils::redirect('clan_leader/tasks'); }
+            }
             $data = [
                 'project' => $project,
                 'tasks' => $tasks,
