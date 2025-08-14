@@ -88,7 +88,7 @@ ob_start();
             <div class="header-content">
                 <h1 class="page-title">
                     <i class="fas fa-tasks"></i>
-                    Asignación de Tareas (Clan Olympo)
+                    Asignación de Tareas
                 </h1>
             </div>
         </header>
