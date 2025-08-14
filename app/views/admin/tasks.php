@@ -136,7 +136,7 @@ ob_start();
                             <div class="form-group">
                                 <label>Asignar a miembros (múltiple)</label>
                                 <input type="text" id="memberSearch" class="filter-select" placeholder="Buscar colaborador..." style="width:100%;max-width:420px">
-                                <div id="memberList" class="checkbox-list" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(240px, 1fr));gap:10px;margin-top:10px">
+                                <div id="memberList" class="checkbox-list" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(240px, 1fr));gap:10px;margin-top:10px;max-height:260px;overflow-y:auto;padding-right:6px">
                                     <?php foreach ($members as $m): ?>
                                         <?php $n = trim(($m['full_name'] ?: $m['username'] ?: '')); ?>
                                         <label class="member-item" data-name="<?php echo strtolower(Utils::escape($n)); ?>" style="display:flex;align-items:center;gap:8px;border:1px solid var(--admin-border);padding:10px;border-radius:10px;background:var(--admin-bg-primary)">
