@@ -160,8 +160,8 @@ ob_start();
 				<div class="overview-card">
 					<h4>Resumen</h4>
 					<div class="overview-grid">
-						<div><span class="label">Clan:</span> <span class="value"><?php echo Utils::escape($olympo['clan_name'] ?? 'Olympo'); ?></span></div>
-\t\t\t\t\t\t<div><span class="label">Progreso:</span> <span class="value"><?php echo number_format((float)($stats['progress'] ?? 0), 1); ?>%</span></div>
+						
+<div><span class="label">Progreso:</span> <span class="value"><?php echo number_format((float)($stats['progress'] ?? 0), 1); ?>%</span></div>
 						<div><span class="label">Tareas totales:</span> <span class="value"><?php echo (int)($stats['total'] ?? 0); ?></span></div>
 						<div><span class="label">Completadas:</span> <span class="value"><?php echo (int)($stats['completed'] ?? 0); ?></span></div>
 					</div>
