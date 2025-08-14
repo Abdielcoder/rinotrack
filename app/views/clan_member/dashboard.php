@@ -195,9 +195,6 @@ ob_start();
   const qEl = document.getElementById('motQuote');
   const aEl = document.getElementById('motAuthor');
   if (!qEl || !aEl) return;
-  const SS_KEY = 'rt_motivational_quote';
-  const cached = sessionStorage.getItem(SS_KEY);
-  if (cached) { try{ const o=JSON.parse(cached); qEl.textContent='“'+(o.text||'')+'”'; aEl.textContent=o.author?('— '+o.author):''; return; }catch(_){} }
   const apis=[
     {url:'https://api.quotable.io/random', map:d=>({text:d.content, author:d.author})},
     {url:'https://zenquotes.io/api/random', map:d=>{const x=(Array.isArray(d)?d[0]:{})||{}; return {text:x.q, author:x.a};}},
@@ -208,7 +205,7 @@ ob_start();
     {text:'La disciplina es el puente entre metas y logros.', author:'Jim Rohn'},
     {text:'Haz hoy lo que otros no harán y mañana vivirás como otros no pueden.', author:'Jerry Rice'}
   ];
-  function applyQuote(q){ if(!q||!q.text) q=localFallback[Math.floor(Math.random()*localFallback.length)]; qEl.textContent='“'+(q.text||'')+'”'; aEl.textContent=q.author?('— '+q.author):''; try{sessionStorage.setItem(SS_KEY, JSON.stringify(q));}catch(_){} }
+  function applyQuote(q){ if(!q||!q.text) q=localFallback[Math.floor(Math.random()*localFallback.length)]; qEl.textContent='“'+(q.text||'')+'”'; aEl.textContent=q.author?('— '+q.author):''; }
   (async function(){
     for(const api of apis){
       try { const r=await fetch(api.url,{credentials:'omit'}); if(!r.ok) continue; const d=await r.json(); const q=api.map(d); if(q&&q.text){ applyQuote(q); return; } } catch(_){ }
