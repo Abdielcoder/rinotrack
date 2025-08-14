@@ -280,13 +280,63 @@ class AdminController {
         // Miembros del clan Olympo
         $members = $this->clanModel->getMembers((int)$olympo['clan_id']);
 
+        // Obtener tareas del clan Olympo, estadísticas e historial
+        $taskModel = new Task();
+        $clanId = (int)$olympo['clan_id'];
+        // Traer hasta 500 tareas para el tablero (paginación simple)
+        $tasksResult = $taskModel->getAllTasksByClanStrict($clanId, 1, 500, '', '');
+        $tasks = $tasksResult['tasks'] ?? [];
+
+        // Calcular métricas de tareas del clan
+        $stats = [
+            'total' => 0,
+            'completed' => 0,
+            'pending' => 0,
+            'in_progress' => 0,
+            'overdue' => 0,
+            'progress' => 0.0,
+        ];
+        $today = date('Y-m-d');
+        foreach ($tasks as $t) {
+            $stats['total']++;
+            $status = $t['status'] ?? 'pending';
+            if (isset($stats[$status])) { $stats[$status]++; }
+            if (!empty($t['due_date']) && $status !== 'completed' && $t['due_date'] < $today) {
+                $stats['overdue']++;
+            }
+        }
+        $stats['progress'] = $stats['total'] > 0 ? round(($stats['completed'] / $stats['total']) * 100, 1) : 0.0;
+
+        // Actividad reciente del clan
+        $db = Database::getConnection();
+        $history = [];
+        try {
+            $stmt = $db->prepare(
+                "SELECT th.*, t.task_name, u.full_name, u.username
+                 FROM Task_History th
+                 JOIN Tasks t ON th.task_id = t.task_id
+                 JOIN Projects p ON t.project_id = p.project_id
+                 LEFT JOIN Users u ON th.user_id = u.user_id
+                 WHERE p.clan_id = ?
+                 ORDER BY th.created_at DESC
+                 LIMIT 20"
+            );
+            $stmt->execute([$clanId]);
+            $history = $stmt->fetchAll();
+        } catch (Exception $e) {
+            error_log('Error al obtener actividad del clan: ' . $e->getMessage());
+        }
+
         $data = [
             'currentPage' => 'admin',
             'user' => $currentUser,
             'olympo' => $olympo,
             'recurrentProject' => $recurrentProject,
             'eventualProject' => $eventualProject,
-            'members' => $members
+            'members' => $members,
+            'tasks' => $tasks,
+            'stats' => $stats,
+            'history' => $history
         ];
 
         $this->loadView('admin/tasks', $data);
