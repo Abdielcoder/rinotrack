@@ -75,7 +75,7 @@ ob_start();
         <div class="footer-actions" style="display:flex; gap:10px; margin-top:12px;">
           <a href="?route=clan_member/tasks" class="btn-minimal"><i class="fas fa-arrow-left"></i> Volver a Tareas</a>
           <?php if ($canEdit): ?>
-            <button class="btn-minimal primary" onclick="openEditTaskModal()"><i class="fas fa-edit"></i> Editar Tarea</button>
+            <button class="btn-minimal primary" onclick="openEditTaskPanel()"><i class="fas fa-edit"></i> Editar Tarea</button>
           <?php else: ?>
             <button class="btn-minimal" onclick="noPermissionModal()"><i class="fas fa-edit"></i> Editar Tarea</button>
           <?php endif; ?>
@@ -144,68 +144,59 @@ function noPermissionModal(){
 }
 </script>
 
-<!-- Modal editar tarea -->
 <?php if ($canEdit): ?>
-<div class="modal" id="editTaskModal">
-  <div class="modal-content modal-lg">
-    <div class="modal-header modal-header-gradient">
-      <div class="modal-title-wrap">
-        <h3>Editar Tarea</h3>
-        <span class="modal-subtitle">Actualiza los campos permitidos</span>
+<div class="summary-card" id="editTaskPanel" style="display:none;">
+  <h3>Editar Tarea</h3>
+  <form id="editTaskForm" class="create-task-body">
+    <input type="hidden" name="task_id" value="<?php echo (int)$task['task_id']; ?>" />
+    <div class="form-grid">
+      <div class="form-group form-span-2">
+        <label>Título</label>
+        <input type="text" name="task_name" value="<?php echo htmlspecialchars($task['task_name']); ?>" required />
       </div>
-      <button class="modal-close" onclick="closeEditTaskModal()">&times;</button>
+      <div class="form-group form-span-2">
+        <label>Descripción</label>
+        <textarea name="description" rows="4"><?php echo htmlspecialchars($task['description'] ?? ''); ?></textarea>
+      </div>
+      <div class="form-group">
+        <label>Prioridad</label>
+        <select name="priority">
+          <option value="low" <?php echo ($task['priority']==='low')?'selected':''; ?>>Baja</option>
+          <option value="medium" <?php echo ($task['priority']==='medium')?'selected':''; ?>>Media</option>
+          <option value="high" <?php echo ($task['priority']==='high')?'selected':''; ?>>Alta</option>
+          <option value="urgent" <?php echo ($task['priority']==='urgent')?'selected':''; ?>>Urgente</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Fecha límite</label>
+        <input type="date" name="due_date" value="<?php echo !empty($task['due_date']) ? date('Y-m-d', strtotime($task['due_date'])) : ''; ?>" />
+      </div>
+      <div class="form-group">
+        <label>Estado</label>
+        <select name="status">
+          <option value="pending" <?php echo ($task['status']==='pending')?'selected':''; ?>>Pendiente</option>
+          <option value="in_progress" <?php echo ($task['status']==='in_progress')?'selected':''; ?>>En progreso</option>
+          <option value="completed" <?php echo ($task['status']==='completed')?'selected':''; ?>>Completada</option>
+        </select>
+      </div>
     </div>
-    <form id="editTaskForm" class="modal-body create-task-body">
-      <input type="hidden" name="task_id" value="<?php echo (int)$task['task_id']; ?>" />
-      <div class="form-grid">
-        <div class="form-group form-span-2">
-          <label>Título</label>
-          <input type="text" name="task_name" value="<?php echo htmlspecialchars($task['task_name']); ?>" required />
-        </div>
-        <div class="form-group form-span-2">
-          <label>Descripción</label>
-          <textarea name="description" rows="4"><?php echo htmlspecialchars($task['description'] ?? ''); ?></textarea>
-        </div>
-        <div class="form-group">
-          <label>Prioridad</label>
-          <select name="priority">
-            <option value="low" <?php echo ($task['priority']==='low')?'selected':''; ?>>Baja</option>
-            <option value="medium" <?php echo ($task['priority']==='medium')?'selected':''; ?>>Media</option>
-            <option value="high" <?php echo ($task['priority']==='high')?'selected':''; ?>>Alta</option>
-            <option value="urgent" <?php echo ($task['priority']==='urgent')?'selected':''; ?>>Urgente</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Fecha límite</label>
-          <input type="date" name="due_date" value="<?php echo !empty($task['due_date']) ? date('Y-m-d', strtotime($task['due_date'])) : ''; ?>" />
-        </div>
-        <div class="form-group">
-          <label>Estado</label>
-          <select name="status">
-            <option value="pending" <?php echo ($task['status']==='pending')?'selected':''; ?>>Pendiente</option>
-            <option value="in_progress" <?php echo ($task['status']==='in_progress')?'selected':''; ?>>En progreso</option>
-            <option value="completed" <?php echo ($task['status']==='completed')?'selected':''; ?>>Completada</option>
-          </select>
-        </div>
-      </div>
-      <div class="form-actions">
-        <button class="action-btn secondary" type="button" onclick="closeEditTaskModal()">Cancelar</button>
-        <button id="editTaskSubmitBtn" class="action-btn primary" type="submit"><span class="btn-text">Guardar</span><span class="btn-loader" aria-hidden="true"></span></button>
-      </div>
-      <div id="editTaskErrors" class="form-errors" style="display:none;"></div>
-    </form>
-  </div>
-  </div>
+    <div class="form-actions">
+      <button class="action-btn secondary" type="button" onclick="closeEditTaskPanel()">Cancelar</button>
+      <button id="editTaskSubmitBtn" class="action-btn primary" type="submit"><span class="btn-text">Guardar</span><span class="btn-loader" aria-hidden="true"></span></button>
+    </div>
+    <div id="editTaskErrors" class="form-errors" style="display:none;"></div>
+  </form>
+</div>
 <?php endif; ?>
 
 <script>
-function openEditTaskModal(){ document.getElementById('editTaskModal').classList.add('open'); }
-function closeEditTaskModal(){
-  const params = new URLSearchParams(location.search);
-  const goBackToList = params.get('action') === 'edit';
-  const modal = document.getElementById('editTaskModal');
-  if (modal) { modal.classList.remove('open'); }
-  if (goBackToList) { window.location.href='?route=clan_member/tasks'; }
+function openEditTaskPanel(){
+  var panel = document.getElementById('editTaskPanel');
+  if (panel) { panel.style.display = ''; panel.scrollIntoView({behavior:'smooth', block:'start'}); }
+}
+function closeEditTaskPanel(){
+  var panel = document.getElementById('editTaskPanel');
+  if (panel) { panel.style.display = 'none'; }
 }
 
 document.getElementById('editTaskForm')?.addEventListener('submit', function(e){
@@ -227,10 +218,10 @@ document.getElementById('editTaskForm')?.addEventListener('submit', function(e){
     .catch(()=>{ errorBox.style.display='block'; errorBox.textContent='Error de red'; btn.classList.remove('is-loading'); });
 });
 
-// Si la URL trae action=edit, abrir el modal al cargar
+// Si la URL trae action=edit, mostrar el panel inline al cargar
 try {
   const params = new URLSearchParams(location.search);
-  if (params.get('action') === 'edit') { openEditTaskModal(); }
+  if (params.get('action') === 'edit') { openEditTaskPanel(); }
 } catch (e) { /* noop */ }
 </script>
 
