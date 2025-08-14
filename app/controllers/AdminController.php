@@ -821,6 +821,11 @@ class AdminController {
         if (isset($_POST['assignedUsers'])) {
             $assignedUsers = is_array($_POST['assignedUsers']) ? array_map('intval', $_POST['assignedUsers']) : [ (int)$_POST['assignedUsers'] ];
         }
+        // Repeticiones para tareas recurrentes (opcional, fechas AAAA-MM-DD)
+        $repeatDates = [];
+        if (isset($_POST['repeatDates'])) {
+            $repeatDates = is_array($_POST['repeatDates']) ? array_values(array_filter($_POST['repeatDates'], function($d){ return is_string($d) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $d); })) : [];
+        }
 
         if ($projectId <= 0 || $taskName === '') {
             Utils::jsonResponse(['success' => false, 'message' => 'Datos inválidos'], 400);
@@ -854,6 +859,18 @@ class AdminController {
                 $taskId = $taskModel->createAdvanced($projectId, $taskName, $description, $dueDate, $clanId, Task::PRIORITY_MEDIUM, $currentUser['user_id'] ?? null, $assignedUsers);
             } else {
                 $taskId = $taskModel->create($projectId, $taskName, $description, null, Task::PRIORITY_MEDIUM, $dueDate, $currentUser['user_id'] ?? null);
+            }
+
+            // Si se recibieron repeatDates válidas, crear duplicados
+            if ($taskId && !empty($repeatDates)) {
+                foreach ($repeatDates as $rDate) {
+                    if ($rDate === $dueDate) { continue; } // evitar duplicar la base
+                    if (!empty($assignedUsers)) {
+                        $taskModel->createAdvanced($projectId, $taskName, $description, $rDate, $clanId, Task::PRIORITY_MEDIUM, $currentUser['user_id'] ?? null, $assignedUsers);
+                    } else {
+                        $taskModel->create($projectId, $taskName, $description, null, Task::PRIORITY_MEDIUM, $rDate, $currentUser['user_id'] ?? null);
+                    }
+                }
             }
 
             if ($taskId) {

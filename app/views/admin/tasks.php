@@ -102,7 +102,7 @@ ob_start();
                     <form id="adminCreateTaskForm" class="modal-form">
                         <input type="hidden" name="route" value="admin/add-task">
 
-                        <div class="form-grid">
+                            <div class="form-grid">
                             <div class="form-group">
                                 <label>Tipo</label>
                                 <select id="taskType" onchange="onTaskTypeChange()">
@@ -110,13 +110,9 @@ ob_start();
                                     <option value="eventual">Eventual</option>
                                 </select>
                             </div>
-                            <div class="form-group">
-                                <label>Proyecto lógico</label>
-                                <select id="projectId" name="projectId">
-                                    <option value="<?php echo (int)$recurrentProject['project_id']; ?>">Tareas Recurrentes</option>
-                                    <option value="<?php echo (int)$eventualProject['project_id']; ?>">Tareas Eventuales</option>
-                                </select>
-                            </div>
+                            <!-- Proyecto lógico oculto (se asigna automáticamente) -->
+                            <input type="hidden" id="projectId" name="projectId" value="<?php echo (int)$recurrentProject['project_id']; ?>">
+                            <input type="hidden" id="repeatMode" name="repeat" value="weekly_until_quarter_end">
                             <div class="form-group">
                                 <label>Nombre de la tarea</label>
                                 <input type="text" name="taskName" required>
@@ -330,6 +326,48 @@ document.getElementById('adminCreateTaskForm')?.addEventListener('submit', async
     e.preventDefault();
     const form = e.currentTarget;
     const data = new FormData(form);
+    // Generar duplicados semanales si es recurrente
+    try {
+        const type = document.getElementById('taskType')?.value || 'eventual';
+        if (type === 'recurrent') {
+            const dueInput = form.querySelector('input[name="dueDate"]');
+            const dateStr = dueInput && dueInput.value ? dueInput.value : '';
+            if (dateStr) {
+                const start = new Date(dateStr + 'T00:00:00');
+                if (!isNaN(start.getTime())) {
+                    // Calcular fin del trimestre actual
+                    const now = new Date();
+                    const y = now.getFullYear();
+                    const m = now.getMonth(); // 0-11
+                    const qEndMonth = m <= 2 ? 2 : (m <= 5 ? 5 : (m <= 8 ? 8 : 11));
+                    const qEnd = new Date(y, qEndMonth + 1, 0); // último día del mes fin de trimestre
+                    // Generar fechas semanales > fecha base
+                    const repeats = [];
+                    const baseDow = start.getDay();
+                    let next = new Date(start);
+                    next.setDate(next.getDate() + 7); // siguiente semana
+                    while (next <= qEnd) {
+                        // Asegurar mismo día de semana
+                        const d = new Date(next);
+                        if (d.getDay() !== baseDow) {
+                            // ajustar por si el calendario cambió (poco probable)
+                            const diff = baseDow - d.getDay();
+                            d.setDate(d.getDate() + diff);
+                        }
+                        const y2 = d.getFullYear();
+                        const m2 = (d.getMonth() + 1).toString().padStart(2,'0');
+                        const d2 = d.getDate().toString().padStart(2,'0');
+                        repeats.push(`${y2}-${m2}-${d2}`);
+                        next.setDate(next.getDate() + 7);
+                    }
+                    if (repeats.length > 0) {
+                        data.append('repeatDates[]', dateStr); // incluir la fecha base también por claridad
+                        repeats.forEach(dt => data.append('repeatDates[]', dt));
+                    }
+                }
+            }
+        }
+    } catch (_) { /* silencioso */ }
     try {
         const resp = await fetch('?route=admin/add-task', { method: 'POST', body: data });
         const json = await resp.json();
