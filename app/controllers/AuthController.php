@@ -25,7 +25,8 @@ class AuthController {
             elseif ($roleModel->userHasRole($currentUser['user_id'], Role::LIDER_CLAN)) {
                 Utils::redirect('clan_leader');
             } else {
-                Utils::redirect('dashboard');
+                // Miembro de clan (usuario normal)
+                Utils::redirect('clan_member');
             }
         }
         
@@ -46,7 +47,7 @@ class AuthController {
         if ($this->auth->isLoggedIn()) {
             $currentUser = $this->auth->getCurrentUser();
             $roleModel = new Role();
-            $redirectUrl = 'dashboard'; // Por defecto
+            $redirectUrl = 'clan_member'; // Por defecto para miembros de clan
             
             // Si es super administrador o administrador, redirigir al panel de administración
             if ($roleModel->userHasRole($currentUser['user_id'], Role::SUPER_ADMIN) || 
@@ -126,7 +127,7 @@ class AuthController {
             
             // Determinar la redirección basada en el rol del usuario
             $roleModel = new Role();
-            $redirectUrl = 'dashboard'; // Por defecto
+            $redirectUrl = 'clan_member'; // Por defecto para miembros de clan
             
             // Si es super administrador o administrador, redirigir al panel de administración
             if ($roleModel->userHasRole($user['user_id'], Role::SUPER_ADMIN) || 
