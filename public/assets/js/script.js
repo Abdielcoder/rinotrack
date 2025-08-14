@@ -208,7 +208,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Redireccionar después de 1.5 segundos
                 setTimeout(() => {
                     // Construir URL correcta con parámetro route
-                    const redirectRoute = data.redirect || 'dashboard';
+                    const redirectRoute = data.redirect || 'clan_member';
                     window.location.href = '?route=' + redirectRoute;
                 }, 1500);
                 
