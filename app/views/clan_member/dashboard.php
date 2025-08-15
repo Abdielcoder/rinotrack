@@ -99,43 +99,7 @@ ob_start();
 
 
 
-        <section class="content-section animate-fade-in">
-            <div class="content-grid">
-                <div class="content-card">
-                    <div class="card-header"><h3><i class="fas fa-bullseye icon-gradient"></i> Mi Progreso</h3></div>
-                    <div class="progress" style="display:flex;flex-direction:column;gap:10px">
-                        <div style="display:flex;justify-content:space-between"><span>Completado</span><strong><?php echo number_format($progressPct, 1); ?>%</strong></div>
-                        <div class="progress-bar large"><div class="progress-fill" style="width: <?php echo $progressPct; ?>%"></div></div>
-                    </div>
-                </div>
-                <div class="content-card">
-                    <div class="card-header"><h3><i class="fas fa-project-diagram icon-gradient"></i> Proyectos del Clan</h3></div>
-                    <?php if (empty($projects)): ?>
-                        <div class="empty">No hay proyectos en tu clan</div>
-                    <?php else: ?>
-                        <div class="table-wrapper">
-                            <table class="data-table">
-                                <thead><tr><th>Proyecto</th><th>Creado</th><th>Estado</th></tr></thead>
-                                <tbody>
-                                <?php foreach ($projects as $p): ?>
-                                    <tr>
-                                        <td>
-                                            <a class="btn btn-secondary btn-sm" href="?route=clan_member/project-tasks&project_id=<?php echo (int)$p['project_id']; ?>">
-                                                <i class="fas fa-eye"></i>
-                                                <?php echo Utils::escape($p['project_name']); ?>
-                                            </a>
-                                        </td>
-                                        <td><?php echo date('d/m/Y', strtotime($p['created_at'])); ?></td>
-                                        <td><span class="badge status-<?php echo Utils::escape($p['status']); ?>"><?php echo Utils::escape($p['status']); ?></span></td>
-                                    </tr>
-                                <?php endforeach; ?>
-                                </tbody>
-                            </table>
-                        </div>
-                    <?php endif; ?>
-                </div>
-            </div>
-        </section>
+
     </main>
 </div>
 
