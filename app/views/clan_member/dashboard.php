@@ -547,7 +547,7 @@ ob_start();
 
 .btn-edit {
     background: var(--primary-color);
-    color: var(--text-white);
+    color: var(--primary-dark);
     padding: var(--spacing-xs);
     border-radius: var(--radius-md);
     text-decoration: none;
