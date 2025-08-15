@@ -18,7 +18,7 @@ ob_start();
                 <div class="brand-icon gradient-bg">
                     <i class="fas fa-star"></i>
                 </div>
-                <span class="brand-text">Polaris</span>
+                <span class="brand-text" style="color: #ffffff; !important">Polaris</span>
             </div>
             <ul class="nav-menu">
                 <li class="nav-item active"><a href="?route=clan_member" class="nav-link"><i class="fas fa-home"></i><span>Dashboard</span></a></li>
