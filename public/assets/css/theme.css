@@ -25,8 +25,8 @@
   --bg-glass-dark: rgba(15, 23, 42, 0.9);
   
   /* === COLORES DE TEXTO === */
-  --text-primary: #1e293b;
-  --text-secondary: #475569;
+  --text-primary: #eff1f5;
+  --text-secondary: #ffffff;
   --text-muted: #64748b;
   --text-light: #94a3b8;
   --text-white: #ffffff;
@@ -173,6 +173,19 @@ body {
   background: var(--glass-bg);
   backdrop-filter: var(--glass-backdrop);
   border: 1px solid var(--glass-border);
+}
+
+/* === FONDOS AZULES GLOBALES === */
+html, body {
+  background: var(--bg-primary) !important;
+}
+
+.main-content, .content-section, .stats-section {
+  background: var(--bg-primary);
+}
+
+.modern-dashboard {
+  background: var(--bg-primary);
 }
 
 .gradient-bg {
