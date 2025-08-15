@@ -92,20 +92,6 @@ ob_start();
             </div>
         </header>
 
-        <!-- Animación de estrellas -->
-        <div class="stars-container">
-            <div class="star star-1"></div>
-            <div class="star star-2"></div>
-            <div class="star star-3"></div>
-            <div class="star star-4"></div>
-            <div class="star star-5"></div>
-            <div class="star star-6"></div>
-            <div class="star star-7"></div>
-            <div class="star star-8"></div>
-            <div class="star star-9"></div>
-            <div class="star star-10"></div>
-        </div>
-
         <!-- Tablero Kanban de Tareas -->
         <section class="kanban-section animate-fade-in">
             <div class="kanban-header">
@@ -250,6 +236,20 @@ ob_start();
             </div>
         </section>
 
+        <!-- Animación de estrellas de fondo -->
+        <div class="stars-container">
+            <div class="star star-1"></div>
+            <div class="star star-2"></div>
+            <div class="star star-3"></div>
+            <div class="star star-4"></div>
+            <div class="star star-5"></div>
+            <div class="star star-6"></div>
+            <div class="star star-7"></div>
+            <div class="star star-8"></div>
+            <div class="star star-9"></div>
+            <div class="star star-10"></div>
+        </div>
+
 
 
 
@@ -296,9 +296,13 @@ ob_start();
 
 /* === ANIMACIÓN DE ESTRELLAS === */
 .stars-container {
-    position: relative;
-    height: 100px;
-    margin: var(--spacing-lg) 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    pointer-events: none;
+    z-index: -1;
     overflow: hidden;
 }
 
@@ -311,16 +315,16 @@ ob_start();
     animation: twinkle 3s infinite ease-in-out;
 }
 
-.star-1 { top: 20px; left: 10%; animation-delay: 0s; }
-.star-2 { top: 40px; left: 20%; animation-delay: 0.3s; }
-.star-3 { top: 15px; left: 30%; animation-delay: 0.6s; }
-.star-4 { top: 60px; left: 40%; animation-delay: 0.9s; }
-.star-5 { top: 25px; left: 50%; animation-delay: 1.2s; }
-.star-6 { top: 70px; left: 60%; animation-delay: 1.5s; }
-.star-7 { top: 35px; left: 70%; animation-delay: 1.8s; }
-.star-8 { top: 80px; left: 80%; animation-delay: 2.1s; }
-.star-9 { top: 45px; left: 90%; animation-delay: 2.4s; }
-.star-10 { top: 55px; left: 95%; animation-delay: 2.7s; }
+.star-1 { top: 15%; left: 10%; animation-delay: 0s; }
+.star-2 { top: 25%; left: 25%; animation-delay: 0.3s; }
+.star-3 { top: 35%; left: 40%; animation-delay: 0.6s; }
+.star-4 { top: 45%; left: 55%; animation-delay: 0.9s; }
+.star-5 { top: 55%; left: 70%; animation-delay: 1.2s; }
+.star-6 { top: 65%; left: 85%; animation-delay: 1.5s; }
+.star-7 { top: 75%; left: 15%; animation-delay: 1.8s; }
+.star-8 { top: 85%; left: 30%; animation-delay: 2.1s; }
+.star-9 { top: 20%; left: 80%; animation-delay: 2.4s; }
+.star-10 { top: 60%; left: 5%; animation-delay: 2.7s; }
 
 @keyframes twinkle {
     0%, 100% { 
