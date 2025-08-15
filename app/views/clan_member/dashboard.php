@@ -26,10 +26,15 @@ ob_start();
                 <li class="nav-item"><a href="?route=clan_member/tasks" class="nav-link"><i class="fas fa-tasks"></i><span>Tareas</span></a></li>
                 <li class="nav-item"><a href="?route=clan_member/kpi-dashboard" class="nav-link"><i class="fas fa-chart-line"></i><span>KPI</span></a></li>
                 <li class="nav-item"><a href="?route=clan_member/availability" class="nav-link"><i class="fas fa-user-clock"></i><span>Disponibilidad</span></a></li>
+                <li class="nav-item"><a href="?route=clan_member/profile" class="nav-link"><i class="fas fa-user"></i><span>Perfil</span></a></li>
             </ul>
             <div class="user-menu">
                 <div class="user-avatar modern-avatar">
-                    <span class="avatar-text"><?php echo strtoupper(substr($user['full_name'] ?: $user['username'], 0, 1)); ?></span>
+                    <?php if (!empty($user['avatar_path'])): ?>
+                        <img src="<?php echo Utils::asset($user['avatar_path']); ?>" alt="avatar" style="width:100%;height:100%;object-fit:cover;border-radius:999px"/>
+                    <?php else: ?>
+                        <span class="avatar-text"><?php echo strtoupper(substr($user['full_name'] ?: $user['username'], 0, 1)); ?></span>
+                    <?php endif; ?>
                     <div class="status-dot"></div>
                 </div>
                 <div class="user-info">
@@ -169,11 +174,13 @@ ob_start();
 .stat-icon{width:50px;height:50px;border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;color:var(--text-white);font-size:1.2rem}
 .stat-icon.success{background:var(--success)}
 .stats-section{margin-bottom:var(--spacing-2xl)}
-.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:var(--spacing-xl)}
-.stat-card{background:var(--bg-primary);border-radius:var(--radius-xl);padding:var(--spacing-xl);box-shadow:var(--shadow-md);border:1px solid var(--bg-accent);transition:all var(--transition-normal)}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:var(--spacing-md)}
+.stat-card{background:var(--bg-primary);border-radius:var(--radius-lg);padding:var(--spacing-lg);box-shadow:var(--shadow-md);border:1px solid var(--bg-accent);transition:all var(--transition-normal)}
 .stat-card.gradient-bg{background:var(--primary-gradient);color:var(--text-white)}
-.stat-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--spacing-lg)}
-.stat-number{font-size:2.6rem;font-weight:var(--font-weight-bold);margin-bottom:var(--spacing-md);line-height:1}
+.stat-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--spacing-md)}
+.stat-header h3{font-size:1rem;margin:0}
+.stat-header i{font-size:1.1rem}
+.stat-number{font-size:2rem;font-weight:var(--font-weight-bold);margin-bottom:var(--spacing-sm);line-height:1}
 .content-section{margin-bottom:var(--spacing-2xl)}
 .content-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(400px,1fr));gap:var(--spacing-xl)}
 .content-card{background:var(--bg-primary);border-radius:var(--radius-xl);padding:var(--spacing-xl);box-shadow:var(--shadow-md);border:1px solid var(--bg-accent);transition:all var(--transition-normal)}
@@ -186,7 +193,7 @@ ob_start();
 .progress-bar.large{width:100%;height:14px;background:var(--bg-tertiary);border-radius:9999px;overflow:hidden}
 .progress-fill{height:100%;background:var(--primary-gradient)}
 @media (max-width:1024px){.nav-container{flex-wrap:wrap;gap:var(--spacing-md)}.user-menu{order:-1;width:100%;justify-content:space-between}.content-grid{grid-template-columns:1fr}}
-@media (max-width:768px){.welcome-header{flex-direction:column;text-align:center;gap:var(--spacing-lg)}.stats-grid{grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:var(--spacing-md)}.nav-menu{display:none}.main-content{padding:var(--spacing-lg) var(--spacing-md)}}
+@media (max-width:768px){.welcome-header{flex-direction:column;text-align:center;gap:var(--spacing-lg)}.stats-grid{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:var(--spacing-sm)}.nav-menu{display:none}.main-content{padding:var(--spacing-lg) var(--spacing-md)}}
 </style>
 
 <script>
