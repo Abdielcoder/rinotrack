@@ -5,30 +5,30 @@
 
 :root {
   /* === COLORES PRINCIPALES === */
-  --primary-color: #6366f1;
-  --primary-light: #8b5cf6;
-  --primary-dark: #4f46e5;
-  --primary-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  --primary-color: #1e3a8a;
+  --primary-light: #3b82f6;
+  --primary-dark: #1e40af;
+  --primary-gradient: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
   
   /* === COLORES SECUNDARIOS === */
-  --secondary-color: #10b981;
-  --secondary-light: #34d399;
-  --secondary-dark: #059669;
+  --secondary-color: #60a5fa;
+  --secondary-light: #93c5fd;
+  --secondary-dark: #2563eb;
   
   /* === COLORES DE FONDO === */
   --bg-primary: #ffffff;
-  --bg-secondary: #f8fafc;
-  --bg-tertiary: #f1f5f9;
-  --bg-accent: #e2e8f0;
+  --bg-secondary: #1e3a8a;
+  --bg-tertiary: #dbeafe;
+  --bg-accent: #bfdbfe;
   --bg-dark: #0f172a;
-  --bg-glass: rgba(255, 255, 255, 0.8);
-  --bg-glass-dark: rgba(15, 23, 42, 0.8);
+  --bg-glass: rgba(30, 58, 138, 0.9);
+  --bg-glass-dark: rgba(15, 23, 42, 0.9);
   
   /* === COLORES DE TEXTO === */
   --text-primary: #1e293b;
-  --text-secondary: #64748b;
-  --text-muted: #94a3b8;
-  --text-light: #cbd5e1;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --text-light: #94a3b8;
   --text-white: #ffffff;
   
   /* === COLORES DE ESTADO === */
@@ -86,18 +86,32 @@ a:hover { text-decoration: none; }
 /* === TEMA OSCURO === */
 [data-theme="dark"] {
   --bg-primary: #0f172a;
-  --bg-secondary: #1e293b;
-  --bg-tertiary: #334155;
-  --bg-accent: #475569;
-  --bg-glass: rgba(15, 23, 42, 0.8);
+  --bg-secondary: #1e3a8a;
+  --bg-tertiary: #1e40af;
+  --bg-accent: #3b82f6;
+  --bg-glass: rgba(30, 58, 138, 0.9);
   
   --text-primary: #f1f5f9;
-  --text-secondary: #cbd5e1;
-  --text-muted: #94a3b8;
-  --text-light: #64748b;
+  --text-secondary: #dbeafe;
+  --text-muted: #bfdbfe;
+  --text-light: #93c5fd;
   
-  --glass-bg: rgba(0, 0, 0, 0.2);
-  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-bg: rgba(30, 58, 138, 0.2);
+  --glass-border: rgba(219, 234, 254, 0.3);
+  
+  /* === COLORES TRANSLÚCIDOS PROYECTA === */
+  --translucent-blue: rgba(59, 130, 246, 0.3);
+  --translucent-dark-blue: rgba(30, 58, 138, 0.4);
+  --accent-blue: #dbeafe;
+  --accent-light-blue: #eff6ff;
+}
+
+/* === COLORES TRANSLÚCIDOS PROYECTA (TEMA PRINCIPAL) === */
+:root {
+  --translucent-blue: rgba(59, 130, 246, 0.3);
+  --translucent-dark-blue: rgba(30, 58, 138, 0.4);
+  --accent-blue: #dbeafe;
+  --accent-light-blue: #eff6ff;
 }
 
 /* === TEMA TECH BLUE === */
