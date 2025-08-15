@@ -1324,6 +1324,40 @@ class Task {
             return [];
         }
     }
+
+    /**
+     * Obtener tareas del usuario en un proyecto específico
+     */
+    public function getUserTasksByProject($userId, $projectId) {
+        try {
+            $sql = "
+                SELECT 
+                    t.task_id,
+                    t.task_name,
+                    t.description,
+                    t.due_date,
+                    t.priority,
+                    t.status,
+                    t.completion_percentage,
+                    t.automatic_points,
+                    p.project_name,
+                    p.project_id,
+                    DATEDIFF(t.due_date, CURDATE()) as days_until_due
+                FROM Tasks t
+                JOIN Projects p ON t.project_id = p.project_id
+                LEFT JOIN Task_Assignments ta ON ta.task_id = t.task_id
+                WHERE t.is_subtask = 0
+                  AND t.project_id = ?
+                  AND (t.assigned_to_user_id = ? OR ta.user_id = ?)
+            ";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$projectId, $userId, $userId]);
+            return $stmt->fetchAll();
+        } catch (PDOException $e) {
+            error_log("Error al obtener tareas del usuario por proyecto: " . $e->getMessage());
+            return [];
+        }
+    }
     /**
      * Obtener todas las tareas del usuario (incluye asignación directa y por Task_Assignments)
      */

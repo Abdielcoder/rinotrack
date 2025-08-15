@@ -179,10 +179,10 @@ class ClanMemberController {
         $search = trim($_GET['search'] ?? '');
         $status = trim($_GET['status'] ?? '');
 
-        // Tabla: mismas reglas que líder
-        // - Proyectos del clan: tareas de todo el clan
+        // Tabla: SOLO tareas donde el usuario esté asignado
+        // - Proyectos del clan: solo tareas asignadas al usuario
         // - Proyectos lógicos: solo sus propias tareas
-        $clanPart = $this->userClan ? $this->taskModel->getAllTasksByClanStrict($this->userClan['clan_id'], $page, $perPage, $search, $status) : ['tasks' => [], 'total' => 0, 'page' => 1, 'per_page' => $perPage, 'total_pages' => 0];
+        $clanPart = $this->userClan ? $this->taskModel->getUserTasks($this->currentUser['user_id'], $page, $perPage, $search, $status) : ['tasks' => [], 'total' => 0, 'page' => 1, 'per_page' => $perPage, 'total_pages' => 0];
         $ownLogical = $this->taskModel->getUserTasksByProjectNames($this->currentUser['user_id'], ['Tareas Recurrentes','Tareas Eventuales']);
         $merged = [];
         foreach ($clanPart['tasks'] as $t) { $merged[$t['task_id']] = $t; }
@@ -190,30 +190,34 @@ class ClanMemberController {
         $result = $clanPart;
         $result['tasks'] = array_values($merged);
 
-        // Resumen de proyectos: incluir también los proyectos de tareas lógicas si hay tareas asignadas a miembros
+        // Resumen de proyectos: SOLO proyectos donde el usuario esté asignado a tareas
         $projectsSummary = [];
         if ($this->userClan) {
-            // Cards: proyectos del clan SIEMPRE con métricas totales del proyecto
+            // Solo proyectos del clan donde el usuario tenga tareas asignadas
             $clanProjects = $this->projectModel->getByClan($this->userClan['clan_id']);
             foreach ($clanProjects as $p) {
                 $pid = (int)$p['project_id'];
-                $projectTasks = $this->taskModel->getByProject($pid);
-                $total = count($projectTasks);
-                $completed = 0;
-                foreach ($projectTasks as $t) {
-                    if (($t['status'] ?? '') === 'completed' || ($t['is_completed'] ?? 0) == 1) { $completed++; }
+                // Verificar si el usuario tiene tareas asignadas en este proyecto
+                $userTasksInProject = $this->taskModel->getUserTasksByProject($this->currentUser['user_id'], $pid);
+                if (!empty($userTasksInProject)) {
+                    $projectTasks = $this->taskModel->getByProject($pid);
+                    $total = count($projectTasks);
+                    $completed = 0;
+                    foreach ($projectTasks as $t) {
+                        if (($t['status'] ?? '') === 'completed' || ($t['is_completed'] ?? 0) == 1) { $completed++; }
+                    }
+                    $progress = $total > 0 ? round(($completed / $total) * 100, 2) : 0;
+                    $projectsSummary[] = [
+                        'project_id' => $pid,
+                        'project_name' => $p['project_name'],
+                        'status' => $p['status'],
+                        'total_tasks' => $total,
+                        'completed_tasks' => $completed,
+                        'progress_percentage' => $progress
+                    ];
                 }
-                $progress = $total > 0 ? round(($completed / $total) * 100, 2) : 0;
-                $projectsSummary[] = [
-                    'project_id' => $pid,
-                    'project_name' => $p['project_name'],
-                    'status' => $p['status'],
-                    'total_tasks' => $total,
-                    'completed_tasks' => $completed,
-                    'progress_percentage' => $progress
-                ];
             }
-            // Agregar proyectos con tareas asignadas a miembros aunque pertenezcan a otro clan (ej. Olympo)
+            // Agregar proyectos lógicos donde el usuario tenga tareas asignadas
             $tasks = $result['tasks'] ?? [];
             $byProject = [];
             foreach ($tasks as $t) {
