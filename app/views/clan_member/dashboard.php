@@ -123,8 +123,8 @@ ob_start();
                                     Vencida hace <?php echo abs((int)$task['days_until_due']); ?> días
                                 </div>
                                 <div class="task-actions">
-                                    <a href="?route=clan_member/task-details&task_id=<?php echo $task['task_id']; ?>" class="btn-edit">
-                                        <i class="fas fa-edit"></i> Editar Tarea
+                                    <a href="?route=clan_member/task-details&task_id=<?php echo $task['task_id']; ?>" class="btn-edit" title="Editar Tarea">
+                                        <i class="fas fa-edit"></i>
                                     </a>
                                 </div>
                             </div>
@@ -157,8 +157,8 @@ ob_start();
                                     Vence hoy
                                 </div>
                                 <div class="task-actions">
-                                    <a href="?route=clan_member/task-details&task_id=<?php echo $task['task_id']; ?>" class="btn-edit">
-                                        <i class="fas fa-edit"></i> Editar Tarea
+                                    <a href="?route=clan_member/task-details&task_id=<?php echo $task['task_id']; ?>" class="btn-edit" title="Editar Tarea">
+                                        <i class="fas fa-edit"></i>
                                     </a>
                                 </div>
                             </div>
@@ -191,8 +191,8 @@ ob_start();
                                     En <?php echo (int)$task['days_until_due']; ?> días
                                 </div>
                                 <div class="task-actions">
-                                    <a href="?route=clan_member/task-details&task_id=<?php echo $task['task_id']; ?>" class="btn-edit">
-                                        <i class="fas fa-edit"></i> Editar Tarea
+                                    <a href="?route=clan_member/task-details&task_id=<?php echo $task['task_id']; ?>" class="btn-edit" title="Editar Tarea">
+                                        <i class="fas fa-edit"></i>
                                     </a>
                                 </div>
                             </div>
@@ -225,8 +225,8 @@ ob_start();
                                     En <?php echo (int)$task['days_until_due']; ?> días
                                 </div>
                                 <div class="task-actions">
-                                    <a href="?route=clan_member/task-details&task_id=<?php echo $task['task_id']; ?>" class="btn-edit">
-                                        <i class="fas fa-edit"></i> Editar Tarea
+                                    <a href="?route=clan_member/task-details&task_id=<?php echo $task['task_id']; ?>" class="btn-edit" title="Editar Tarea">
+                                        <i class="fas fa-edit"></i>
                                     </a>
                                 </div>
                             </div>
@@ -385,12 +385,14 @@ ob_start();
 }
 
 .task-count {
-    background: var(--bg-tertiary);
-    color: var(--text-secondary);
-    padding: 4px 8px;
+    background: var(--primary-color);
+    color: var(--text-white);
+    padding: 6px 10px;
     border-radius: var(--radius-full);
     font-size: 0.8rem;
-    font-weight: var(--font-weight-medium);
+    font-weight: var(--font-weight-bold);
+    min-width: 24px;
+    text-align: center;
 }
 
 .column-header.overdue h3 { color: #ef4444; }
@@ -407,10 +409,14 @@ ob_start();
     background: var(--bg-primary);
     border: 1px solid var(--bg-accent);
     border-radius: var(--radius-md);
-    padding: var(--spacing-md);
-    margin-bottom: var(--spacing-md);
+    padding: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
     box-shadow: var(--shadow-sm);
     transition: all var(--transition-normal);
+    min-height: 80px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
 }
 
 .task-card:hover {
@@ -438,7 +444,7 @@ ob_start();
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: var(--spacing-sm);
+    margin-bottom: var(--spacing-xs);
 }
 
 .task-checkbox {
@@ -492,19 +498,20 @@ ob_start();
 .task-title {
     font-weight: var(--font-weight-semibold);
     color: var(--text-primary);
-    margin-bottom: var(--spacing-sm);
-    font-size: 0.95rem;
+    margin-bottom: var(--spacing-xs);
+    font-size: 0.9rem;
+    line-height: 1.2;
 }
 
 .task-project {
     color: var(--text-secondary);
-    font-size: 0.8rem;
-    margin-bottom: var(--spacing-sm);
+    font-size: 0.75rem;
+    margin-bottom: var(--spacing-xs);
 }
 
 .task-due-date {
-    font-size: 0.8rem;
-    margin-bottom: var(--spacing-md);
+    font-size: 0.75rem;
+    margin-bottom: var(--spacing-xs);
     display: flex;
     align-items: center;
     gap: var(--spacing-xs);
@@ -523,7 +530,7 @@ ob_start();
 .btn-edit {
     background: var(--bg-tertiary);
     color: var(--text-secondary);
-    padding: var(--spacing-sm) var(--spacing-md);
+    padding: var(--spacing-xs);
     border-radius: var(--radius-md);
     text-decoration: none;
     font-size: 0.8rem;
@@ -531,7 +538,9 @@ ob_start();
     transition: all var(--transition-normal);
     display: flex;
     align-items: center;
-    gap: var(--spacing-xs);
+    justify-content: center;
+    width: 32px;
+    height: 32px;
 }
 
 .btn-edit:hover {
