@@ -9,9 +9,9 @@ ob_start();
         <div class="nav-container">
             <div class="nav-brand">
                 <div class="brand-icon gradient-bg">
-                    <i class="fas fa-rhino"></i>
+                    <i class="fas fa-star"></i>
                 </div>
-                <span class="brand-text">RinoTrack Admin</span>
+                <span class="brand-text">Polaris Admin</span>
             </div>
             
             <ul class="nav-menu">

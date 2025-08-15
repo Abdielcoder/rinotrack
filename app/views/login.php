@@ -6,7 +6,7 @@ ob_start();
 <div class="login-container">
     <div class="login-box">
         <div class="login-header">
-            <i class="fas fa-rhino logo"></i>
+            <i class="fas fa-star logo"></i>
             <h1><?php echo APP_NAME; ?></h1>
             <p>Inicia sesión en tu cuenta</p>
         </div>

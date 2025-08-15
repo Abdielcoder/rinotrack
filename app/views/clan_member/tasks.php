@@ -12,8 +12,8 @@ ob_start();
     <nav class="modern-nav glass">
         <div class="nav-container">
             <div class="nav-brand">
-                <div class="brand-icon gradient-bg"><i class="fas fa-rhino"></i></div>
-                <span class="brand-text">RinoTrack</span>
+                <div class="brand-icon gradient-bg"><i class="fas fa-star"></i></div>
+                <span class="brand-text">Polaris</span>
             </div>
             <ul class="nav-menu">
                 <li class="nav-item"><a href="?route=clan_member" class="nav-link"><i class="fas fa-home"></i><span>Dashboard</span></a></li>
