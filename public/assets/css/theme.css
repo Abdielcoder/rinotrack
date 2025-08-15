@@ -5,10 +5,10 @@
 
 :root {
   /* === COLORES PRINCIPALES === */
-  --primary-color: #1e3a8a;
-  --primary-light: #3b82f6;
-  --primary-dark: #1e40af;
-  --primary-gradient: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+  --primary-color: #8b5cf6;
+  --primary-light: #a78bfa;
+  --primary-dark: #7c3aed;
+  --primary-gradient: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
   
   /* === COLORES SECUNDARIOS === */
   --secondary-color: #60a5fa;
@@ -17,11 +17,11 @@
   
   /* === COLORES DE FONDO === */
   --bg-primary: #ffffff;
-  --bg-secondary: #1e3a8a;
-  --bg-tertiary: #dbeafe;
-  --bg-accent: #bfdbfe;
+  --bg-secondary: #8b5cf6;
+  --bg-tertiary: #ffffff;
+  --bg-accent: #f3f4f6;
   --bg-dark: #0f172a;
-  --bg-glass: rgba(30, 58, 138, 0.9);
+  --bg-glass: rgba(139, 92, 246, 0.9);
   --bg-glass-dark: rgba(15, 23, 42, 0.9);
   
   /* === COLORES DE TEXTO === */
@@ -86,32 +86,32 @@ a:hover { text-decoration: none; }
 /* === TEMA OSCURO === */
 [data-theme="dark"] {
   --bg-primary: #0f172a;
-  --bg-secondary: #1e3a8a;
-  --bg-tertiary: #1e40af;
-  --bg-accent: #3b82f6;
-  --bg-glass: rgba(30, 58, 138, 0.9);
+  --bg-secondary: #8b5cf6;
+  --bg-tertiary: #7c3aed;
+  --bg-accent: #a78bfa;
+  --bg-glass: rgba(139, 92, 246, 0.9);
   
   --text-primary: #f1f5f9;
-  --text-secondary: #dbeafe;
-  --text-muted: #bfdbfe;
-  --text-light: #93c5fd;
+  --text-secondary: #ffffff;
+  --text-muted: #f3f4f6;
+  --text-light: #e5e7eb;
   
-  --glass-bg: rgba(30, 58, 138, 0.2);
-  --glass-border: rgba(219, 234, 254, 0.3);
+  --glass-bg: rgba(139, 92, 246, 0.2);
+  --glass-border: rgba(255, 255, 255, 0.3);
   
   /* === COLORES TRANSLÚCIDOS PROYECTA === */
-  --translucent-blue: rgba(59, 130, 246, 0.3);
-  --translucent-dark-blue: rgba(30, 58, 138, 0.4);
-  --accent-blue: #dbeafe;
-  --accent-light-blue: #eff6ff;
+  --translucent-blue: rgba(139, 92, 246, 0.3);
+  --translucent-dark-blue: rgba(124, 58, 237, 0.4);
+  --accent-blue: #ffffff;
+  --accent-light-blue: #f9fafb;
 }
 
 /* === COLORES TRANSLÚCIDOS PROYECTA (TEMA PRINCIPAL) === */
 :root {
-  --translucent-blue: rgba(59, 130, 246, 0.3);
-  --translucent-dark-blue: rgba(30, 58, 138, 0.4);
-  --accent-blue: #dbeafe;
-  --accent-light-blue: #eff6ff;
+  --translucent-blue: rgba(139, 92, 246, 0.3);
+  --translucent-dark-blue: rgba(124, 58, 237, 0.4);
+  --accent-blue: #ffffff;
+  --accent-light-blue: #f9fafb;
 }
 
 /* === TEMA TECH BLUE === */
