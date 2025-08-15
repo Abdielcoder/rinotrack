@@ -79,7 +79,7 @@ ob_start();
         </header>
 
         <section class="stats-section animate-fade-in">
-            <div class="stats-grid">
+            <div class="stats-row">
                 <div class="stat-card gradient-bg">
                     <div class="stat-content">
                         <div class="stat-header"><h3>Proyectos</h3><i class="fas fa-folder-open"></i></div>
@@ -104,6 +104,10 @@ ob_start();
                         <div class="stat-number"><?php echo $inProgress; ?></div>
                     </div>
                 </div>
+                <a href="?route=clan_member/tasks" class="btn btn-secondary btn-stats">
+                    <i class="fas fa-tasks"></i>
+                    Ver mis tareas
+                </a>
             </div>
         </section>
 
@@ -174,13 +178,15 @@ ob_start();
 .stat-icon{width:50px;height:50px;border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;color:var(--text-white);font-size:1.2rem}
 .stat-icon.success{background:var(--success)}
 .stats-section{margin-bottom:var(--spacing-2xl)}
-.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:var(--spacing-md)}
-.stat-card{background:var(--bg-primary);border-radius:var(--radius-lg);padding:var(--spacing-lg);box-shadow:var(--shadow-md);border:1px solid var(--bg-accent);transition:all var(--transition-normal)}
+.stats-row{display:flex;align-items:center;gap:var(--spacing-md);flex-wrap:wrap;justify-content:flex-start}
+.stat-card{background:var(--bg-primary);border-radius:var(--radius-lg);padding:var(--spacing-md);box-shadow:var(--shadow-md);border:1px solid var(--bg-accent);transition:all var(--transition-normal);min-width:140px;flex-shrink:0}
 .stat-card.gradient-bg{background:var(--primary-gradient);color:var(--text-white)}
-.stat-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--spacing-md)}
-.stat-header h3{font-size:1rem;margin:0}
-.stat-header i{font-size:1.1rem}
-.stat-number{font-size:2rem;font-weight:var(--font-weight-bold);margin-bottom:var(--spacing-sm);line-height:1}
+.stat-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--spacing-sm)}
+.stat-header h3{font-size:0.9rem;margin:0;font-weight:600}
+.stat-header i{font-size:1rem}
+.stat-number{font-size:1.5rem;font-weight:var(--font-weight-bold);margin-bottom:0;line-height:1}
+.btn-stats{display:flex;align-items:center;gap:var(--spacing-sm);padding:var(--spacing-md);background:var(--bg-primary);border:1px solid var(--bg-accent);border-radius:var(--radius-lg);text-decoration:none;color:var(--text-secondary);font-weight:600;font-size:0.9rem;min-width:140px;justify-content:center;box-shadow:var(--shadow-md);transition:all var(--transition-normal);flex-shrink:0}
+.btn-stats:hover{background:var(--bg-tertiary);color:var(--text-primary);transform:translateY(-2px);box-shadow:var(--shadow-lg)}
 .content-section{margin-bottom:var(--spacing-2xl)}
 .content-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(400px,1fr));gap:var(--spacing-xl)}
 .content-card{background:var(--bg-primary);border-radius:var(--radius-xl);padding:var(--spacing-xl);box-shadow:var(--shadow-md);border:1px solid var(--bg-accent);transition:all var(--transition-normal)}
@@ -193,7 +199,7 @@ ob_start();
 .progress-bar.large{width:100%;height:14px;background:var(--bg-tertiary);border-radius:9999px;overflow:hidden}
 .progress-fill{height:100%;background:var(--primary-gradient)}
 @media (max-width:1024px){.nav-container{flex-wrap:wrap;gap:var(--spacing-md)}.user-menu{order:-1;width:100%;justify-content:space-between}.content-grid{grid-template-columns:1fr}}
-@media (max-width:768px){.welcome-header{flex-direction:column;text-align:center;gap:var(--spacing-lg)}.stats-grid{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:var(--spacing-sm)}.nav-menu{display:none}.main-content{padding:var(--spacing-lg) var(--spacing-md)}}
+@media (max-width:768px){.welcome-header{flex-direction:column;text-align:center;gap:var(--spacing-lg)}.stats-row{gap:var(--spacing-sm);justify-content:center}.stat-card{min-width:120px}.btn-stats{min-width:120px}.nav-menu{display:none}.main-content{padding:var(--spacing-lg) var(--spacing-md)}}
 </style>
 
 <script>
