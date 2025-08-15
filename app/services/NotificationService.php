@@ -40,7 +40,7 @@ class NotificationService {
                 null,
                 ['emoji' => '🧩']
             );
-            if ($this->mailer->sendHtml($to, 'RinoTrack • Tarea asignada', $html)) {
+            if ($this->mailer->sendHtml($to, 'Polaris • Tarea asignada', $html)) {
                 Notification::logSent('task_assigned', $taskId, $r['user_id'], $to);
                 $count++;
             } else {
@@ -61,7 +61,7 @@ class NotificationService {
                     null,
                     ['emoji' => '🧩']
                 );
-                foreach ($extra as $mail) { $this->mailer->sendHtml($mail, 'RinoTrack • Tarea asignada', $html); }
+                foreach ($extra as $mail) { $this->mailer->sendHtml($mail, 'Polaris • Tarea asignada', $html); }
             }
         }
         return $count;
@@ -100,7 +100,7 @@ class NotificationService {
                 null,
                 ['emoji' => '📁']
             );
-            if ($this->mailer->sendHtml($to, 'RinoTrack • Proyecto asignado', $html)) {
+            if ($this->mailer->sendHtml($to, 'Polaris • Proyecto asignado', $html)) {
                 Notification::logSent('project_assigned_to_clan', $projectId, $m['user_id'], $to);
             }
         }
@@ -116,7 +116,7 @@ class NotificationService {
                 ],
                 ['label' => 'Ver proyecto', 'url' => APP_URL . '?route=admin/project-details&projectId=' . urlencode($projectId)]
             );
-            $this->mailer->sendHtml($to, 'RinoTrack • Proyecto asignado', $html);
+            $this->mailer->sendHtml($to, 'Polaris • Proyecto asignado', $html);
         }
     }
 
@@ -148,7 +148,7 @@ class NotificationService {
                 null,
                 ['emoji' => '⏳']
             );
-                if ($this->mailer->sendHtml($to, 'RinoTrack • Tarea próxima a vencer (' . $daysAhead . ' días)', $html)) {
+                if ($this->mailer->sendHtml($to, 'Polaris • Tarea próxima a vencer (' . $daysAhead . ' días)', $html)) {
                     Notification::logSent('task_due_soon_' . $daysAhead, $r['task_id'], $r['assigned_to_user_id'], $to);
                     $total++;
                 }
@@ -178,7 +178,7 @@ class NotificationService {
                 null,
                 ['emoji' => '⚠️']
             );
-            if ($this->mailer->sendHtml($to, 'RinoTrack • Tarea vencida', $html)) {
+            if ($this->mailer->sendHtml($to, 'Polaris • Tarea vencida', $html)) {
                 Notification::logSent('task_overdue', $r['task_id'], $r['assigned_to_user_id'], $to);
                 $count++;
             }

@@ -7,7 +7,7 @@ class EmailTemplate {
      */
     public static function render($title, $introHtml, $bodyRows = [], $cta = null, $options = []) {
         $year   = date('Y');
-        $brand  = 'RinoTrack';
+        $brand  = 'Polaris';
         // Usar logo local servido desde public/assets/img/logo.png para evitar enlaces rotos en correo
         $logo   = (defined('APP_URL') ? APP_URL : '/') . 'assets/img/logo.png';
         $accent = $options['accent'] ?? '#2563eb';
@@ -67,7 +67,7 @@ class EmailTemplate {
             . $header
             . $content
             . "<div style=\"padding:14px 20px;color:{$muted};font-size:12px;border-top:1px solid #e5e7eb;background:#fafafa\">"
-                . "© {$year} RinoRisk • Sistema RinoTrack"
+                . "© {$year} RinoRisk • Sistema Polaris"
                 . $footerNote
               . "</div>"
             . "</div>"

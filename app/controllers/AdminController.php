@@ -1253,12 +1253,12 @@ class AdminController {
             'Notificación de prueba',
             '<p>Este es un correo de prueba con el nuevo diseño.</p>',
             [
-                ['label' => 'Sistema', 'value' => 'RinoTrack'],
+                ['label' => 'Sistema', 'value' => 'Polaris'],
                 ['label' => 'Fecha', 'value' => date('Y-m-d H:i')]
             ],
             ['label' => 'Ir al panel', 'url' => APP_URL . '?route=admin']
         );
-        $ok = $mailer->sendHtml($to, 'RinoTrack • Notificación de prueba', $html);
+                    $ok = $mailer->sendHtml($to, 'Polaris • Notificación de prueba', $html);
 
         if ($ok) {
             Utils::jsonResponse(['success' => true, 'message' => 'Correo enviado correctamente']);
