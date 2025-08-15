@@ -106,6 +106,150 @@ ob_start();
             <div id="launchAnimation" class="lottie-animation"></div>
         </div>
 
+        <!-- Tablero Kanban de Tareas -->
+        <section class="kanban-section animate-fade-in">
+            <div class="kanban-header">
+                <h2><i class="fas fa-tasks icon-gradient"></i> Tareas</h2>
+            </div>
+            <div class="kanban-board">
+                <!-- Columna: Vencidas -->
+                <div class="kanban-column">
+                    <div class="column-header overdue">
+                        <h3>Vencidas</h3>
+                        <span class="task-count"><?php echo count($kanbanTasks['vencidas'] ?? []); ?></span>
+                    </div>
+                    <div class="column-content">
+                        <?php foreach ($kanbanTasks['vencidas'] ?? [] as $task): ?>
+                            <div class="task-card overdue" data-task-id="<?php echo $task['task_id']; ?>">
+                                <div class="task-header">
+                                    <label class="task-checkbox">
+                                        <input type="checkbox" onchange="toggleTaskStatus(<?php echo $task['task_id']; ?>, this.checked)">
+                                        <span class="checkmark"></span>
+                                    </label>
+                                    <span class="task-priority <?php echo strtolower($task['priority'] ?? 'medium'); ?>">
+                                        <i class="fas fa-flag"></i>
+                                    </span>
+                                </div>
+                                <div class="task-title"><?php echo Utils::escape($task['task_name']); ?></div>
+                                <div class="task-project"><?php echo Utils::escape($task['project_name']); ?></div>
+                                <div class="task-due-date overdue">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    Vencida hace <?php echo abs((int)$task['days_until_due']); ?> días
+                                </div>
+                                <div class="task-actions">
+                                    <a href="?route=clan_member/task-details&task_id=<?php echo $task['task_id']; ?>" class="btn-edit">
+                                        <i class="fas fa-edit"></i> Editar Tarea
+                                    </a>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+
+                <!-- Columna: Hoy -->
+                <div class="kanban-column">
+                    <div class="column-header today">
+                        <h3>Hoy</h3>
+                        <span class="task-count"><?php echo count($kanbanTasks['hoy'] ?? []); ?></span>
+                    </div>
+                    <div class="column-content">
+                        <?php foreach ($kanbanTasks['hoy'] ?? [] as $task): ?>
+                            <div class="task-card today" data-task-id="<?php echo $task['task_id']; ?>">
+                                <div class="task-header">
+                                    <label class="task-checkbox">
+                                        <input type="checkbox" onchange="toggleTaskStatus(<?php echo $task['task_id']; ?>, this.checked)">
+                                        <span class="checkmark"></span>
+                                    </label>
+                                    <span class="task-priority <?php echo strtolower($task['priority'] ?? 'medium'); ?>">
+                                        <i class="fas fa-flag"></i>
+                                    </span>
+                                </div>
+                                <div class="task-title"><?php echo Utils::escape($task['task_name']); ?></div>
+                                <div class="task-project"><?php echo Utils::escape($task['project_name']); ?></div>
+                                <div class="task-due-date today">
+                                    <i class="fas fa-clock"></i>
+                                    Vence hoy
+                                </div>
+                                <div class="task-actions">
+                                    <a href="?route=clan_member/task-details&task_id=<?php echo $task['task_id']; ?>" class="btn-edit">
+                                        <i class="fas fa-edit"></i> Editar Tarea
+                                    </a>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+
+                <!-- Columna: 1 Semana -->
+                <div class="kanban-column">
+                    <div class="column-header week1">
+                        <h3>1 Semana</h3>
+                        <span class="task-count"><?php echo count($kanbanTasks['1_semana'] ?? []); ?></span>
+                    </div>
+                    <div class="column-content">
+                        <?php foreach ($kanbanTasks['1_semana'] ?? [] as $task): ?>
+                            <div class="task-card week1" data-task-id="<?php echo $task['task_id']; ?>">
+                                <div class="task-header">
+                                    <label class="task-checkbox">
+                                        <input type="checkbox" onchange="toggleTaskStatus(<?php echo $task['task_id']; ?>, this.checked)">
+                                        <span class="checkmark"></span>
+                                    </label>
+                                    <span class="task-priority <?php echo strtolower($task['priority'] ?? 'medium'); ?>">
+                                        <i class="fas fa-flag"></i>
+                                    </span>
+                                </div>
+                                <div class="task-title"><?php echo Utils::escape($task['task_name']); ?></div>
+                                <div class="task-project"><?php echo Utils::escape($task['project_name']); ?></div>
+                                <div class="task-due-date week1">
+                                    <i class="fas fa-calendar"></i>
+                                    En <?php echo (int)$task['days_until_due']; ?> días
+                                </div>
+                                <div class="task-actions">
+                                    <a href="?route=clan_member/task-details&task_id=<?php echo $task['task_id']; ?>" class="btn-edit">
+                                        <i class="fas fa-edit"></i> Editar Tarea
+                                    </a>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+
+                <!-- Columna: 2 Semanas -->
+                <div class="kanban-column">
+                    <div class="column-header week2">
+                        <h3>2 Semanas</h3>
+                        <span class="task-count"><?php echo count($kanbanTasks['2_semanas'] ?? []); ?></span>
+                    </div>
+                    <div class="column-content">
+                        <?php foreach ($kanbanTasks['2_semanas'] ?? [] as $task): ?>
+                            <div class="task-card week2" data-task-id="<?php echo $task['task_id']; ?>">
+                                <div class="task-header">
+                                    <label class="task-checkbox">
+                                        <input type="checkbox" onchange="toggleTaskStatus(<?php echo $task['task_id']; ?>, this.checked)">
+                                        <span class="checkmark"></span>
+                                    </label>
+                                    <span class="task-priority <?php echo strtolower($task['priority'] ?? 'medium'); ?>">
+                                        <i class="fas fa-flag"></i>
+                                    </span>
+                                </div>
+                                <div class="task-title"><?php echo Utils::escape($task['task_name']); ?></div>
+                                <div class="task-project"><?php echo Utils::escape($task['project_name']); ?></div>
+                                <div class="task-due-date week2">
+                                    <i class="fas fa-calendar"></i>
+                                    En <?php echo (int)$task['days_until_due']; ?> días
+                                </div>
+                                <div class="task-actions">
+                                    <a href="?route=clan_member/task-details&task_id=<?php echo $task['task_id']; ?>" class="btn-edit">
+                                        <i class="fas fa-edit"></i> Editar Tarea
+                                    </a>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
+        </section>
+
 
 
 
@@ -166,6 +310,226 @@ ob_start();
     overflow: hidden;
     box-shadow: var(--shadow-lg);
     background: var(--bg-primary);
+}
+
+/* === TABLERO KANBAN === */
+.kanban-section {
+    margin: var(--spacing-2xl) 0;
+}
+
+.kanban-header {
+    text-align: center;
+    margin-bottom: var(--spacing-xl);
+}
+
+.kanban-header h2 {
+    font-size: 2rem;
+    font-weight: var(--font-weight-bold);
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.kanban-board {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--spacing-lg);
+    margin: 0 auto;
+    max-width: 1400px;
+}
+
+.kanban-column {
+    background: var(--bg-primary);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--bg-accent);
+    min-height: 400px;
+}
+
+.column-header {
+    padding: var(--spacing-lg);
+    border-bottom: 1px solid var(--bg-accent);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.column-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: var(--font-weight-semibold);
+}
+
+.task-count {
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    padding: 4px 8px;
+    border-radius: var(--radius-full);
+    font-size: 0.8rem;
+    font-weight: var(--font-weight-medium);
+}
+
+.column-header.overdue h3 { color: #ef4444; }
+.column-header.today h3 { color: #f59e0b; }
+.column-header.week1 h3 { color: #3b82f6; }
+.column-header.week2 h3 { color: #10b981; }
+
+.column-content {
+    padding: var(--spacing-md);
+    min-height: 300px;
+}
+
+.task-card {
+    background: var(--bg-primary);
+    border: 1px solid var(--bg-accent);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+    box-shadow: var(--shadow-sm);
+    transition: all var(--transition-normal);
+}
+
+.task-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.task-card.overdue {
+    border-left: 4px solid #ef4444;
+}
+
+.task-card.today {
+    border-left: 4px solid #f59e0b;
+}
+
+.task-card.week1 {
+    border-left: 4px solid #3b82f6;
+}
+
+.task-card.week2 {
+    border-left: 4px solid #10b981;
+}
+
+.task-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-sm);
+}
+
+.task-checkbox {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.task-checkbox input[type="checkbox"] {
+    display: none;
+}
+
+.checkmark {
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--bg-accent);
+    border-radius: var(--radius-sm);
+    background: var(--bg-primary);
+    position: relative;
+    transition: all var(--transition-normal);
+}
+
+.task-checkbox input[type="checkbox"]:checked + .checkmark {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.task-checkbox input[type="checkbox"]:checked + .checkmark::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.task-priority {
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    font-size: 0.7rem;
+    font-weight: var(--font-weight-medium);
+}
+
+.task-priority.urgent { background: #fef2f2; color: #dc2626; }
+.task-priority.high { background: #fffbeb; color: #d97706; }
+.task-priority.medium { background: #eff6ff; color: #2563eb; }
+.task-priority.low { background: #f0fdf4; color: #059669; }
+
+.task-title {
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-sm);
+    font-size: 0.95rem;
+}
+
+.task-project {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    margin-bottom: var(--spacing-sm);
+}
+
+.task-due-date {
+    font-size: 0.8rem;
+    margin-bottom: var(--spacing-md);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.task-due-date.overdue { color: #ef4444; }
+.task-due-date.today { color: #f59e0b; }
+.task-due-date.week1 { color: #3b82f6; }
+.task-due-date.week2 { color: #10b981; }
+
+.task-actions {
+    display: flex;
+    justify-content: center;
+}
+
+.btn-edit {
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    font-size: 0.8rem;
+    font-weight: var(--font-weight-medium);
+    transition: all var(--transition-normal);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.btn-edit:hover {
+    background: var(--bg-accent);
+    color: var(--text-primary);
+    transform: translateY(-1px);
+}
+
+/* Responsive para el Kanban */
+@media (max-width: 1200px) {
+    .kanban-board {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .kanban-board {
+        grid-template-columns: 1fr;
+    }
+    
+    .kanban-column {
+        min-height: 300px;
+    }
 }
 .content-section{margin-bottom:var(--spacing-2xl)}
 .content-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(400px,1fr));gap:var(--spacing-xl)}
@@ -233,6 +597,107 @@ ob_start();
   
   observer.observe(animationContainer);
 })();
+
+// Función para cambiar el estado de las tareas
+function toggleTaskStatus(taskId, isCompleted) {
+  fetch('?route=clan_member/toggle-task-status', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: `task_id=${taskId}&is_completed=${isCompleted}`
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      // Si la tarea se completó, removerla del tablero
+      if (isCompleted) {
+        const taskCard = document.querySelector(`[data-task-id="${taskId}"]`);
+        if (taskCard) {
+          taskCard.style.opacity = '0.5';
+          taskCard.style.transform = 'scale(0.95)';
+          setTimeout(() => {
+            taskCard.remove();
+            // Actualizar contadores
+            updateTaskCounts();
+          }, 300);
+        }
+      }
+      // Mostrar notificación
+      showNotification(data.message, 'success');
+    } else {
+      showNotification(data.message, 'error');
+      // Revertir checkbox si falló
+      const checkbox = document.querySelector(`[data-task-id="${taskId}"] input[type="checkbox"]`);
+      if (checkbox) checkbox.checked = !isCompleted;
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    showNotification('Error al actualizar la tarea', 'error');
+    // Revertir checkbox si falló
+    const checkbox = document.querySelector(`[data-task-id="${taskId}"] input[type="checkbox"]`);
+    if (checkbox) checkbox.checked = !isCompleted;
+  });
+}
+
+// Función para actualizar contadores de tareas
+function updateTaskCounts() {
+  const columns = ['vencidas', 'hoy', '1_semana', '2_semanas'];
+  columns.forEach(columnType => {
+    const column = document.querySelector(`.kanban-column:has(.column-header.${columnType})`);
+    if (column) {
+      const taskCount = column.querySelectorAll('.task-card').length;
+      const countElement = column.querySelector('.task-count');
+      if (countElement) {
+        countElement.textContent = taskCount;
+      }
+    }
+  });
+}
+
+// Función para mostrar notificaciones
+function showNotification(message, type = 'info') {
+  const notification = document.createElement('div');
+  notification.className = `notification notification-${type}`;
+  notification.textContent = message;
+  
+  // Estilos de la notificación
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 12px 20px;
+    border-radius: 8px;
+    color: white;
+    font-weight: 500;
+    z-index: 1000;
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+  `;
+  
+  // Colores según el tipo
+  if (type === 'success') notification.style.background = '#10b981';
+  else if (type === 'error') notification.style.background = '#ef4444';
+  else notification.style.background = '#3b82f6';
+  
+  document.body.appendChild(notification);
+  
+  // Mostrar notificación
+  setTimeout(() => {
+    notification.style.transform = 'translateX(0)';
+  }, 100);
+  
+  // Ocultar después de 3 segundos
+  setTimeout(() => {
+    notification.style.transform = 'translateX(100%)';
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.parentNode.removeChild(notification);
+      }
+    }, 300);
+  }, 3000);
+}
 </script>
 
 </body>

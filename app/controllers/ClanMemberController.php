@@ -50,6 +50,9 @@ class ClanMemberController {
         $ownContribution = $this->getOwnContribution($this->currentUser, $userTaskStats);
         $projects = $this->projectModel->getByClan($this->userClan['clan_id']);
         $ownTasksDetails = $this->getUserTasksForModal($this->currentUser['user_id'], $this->userClan['clan_id']);
+        
+        // Obtener tareas para el tablero Kanban
+        $kanbanTasks = $this->getKanbanTasks($this->currentUser['user_id'], $this->userClan['clan_id']);
 
         $data = [
             'currentPage' => 'clan_member',
@@ -58,7 +61,8 @@ class ClanMemberController {
             'userTaskStats' => $userTaskStats,
             'ownContribution' => $ownContribution,
             'projects' => $projects,
-            'ownContributionDetails' => $ownTasksDetails
+            'ownContributionDetails' => $ownTasksDetails,
+            'kanbanTasks' => $kanbanTasks
         ];
         $this->loadView('clan_member/dashboard', $data);
     }
@@ -832,6 +836,68 @@ class ClanMemberController {
     private function requireAuth() {
         if (!$this->auth->isLoggedIn()) {
             Utils::redirect('login');
+        }
+    }
+
+    private function getKanbanTasks($userId, $clanId) {
+        try {
+            $stmt = $this->db->prepare(
+                "SELECT 
+                    t.task_id,
+                    t.task_name,
+                    t.description,
+                    t.due_date,
+                    t.priority,
+                    t.status,
+                    t.completion_percentage,
+                    t.automatic_points,
+                    p.project_name,
+                    p.project_id,
+                    DATEDIFF(t.due_date, CURDATE()) as days_until_due
+                 FROM Tasks t
+                 INNER JOIN Projects p ON p.project_id = t.project_id
+                 LEFT JOIN Task_Assignments ta ON ta.task_id = t.task_id
+                 WHERE p.clan_id = ?
+                   AND t.is_subtask = 0
+                   AND t.status != 'completed'
+                   AND (t.assigned_to_user_id = ? OR ta.user_id = ?)
+                 GROUP BY t.task_id
+                 ORDER BY t.due_date ASC"
+            );
+            $stmt->execute([$clanId, $userId, $userId]);
+            $tasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Organizar tareas por columnas del Kanban
+            $kanbanColumns = [
+                'vencidas' => [],
+                'hoy' => [],
+                '1_semana' => [],
+                '2_semanas' => []
+            ];
+
+            foreach ($tasks as $task) {
+                $daysUntilDue = (int)($task['days_until_due'] ?? 0);
+                
+                if ($daysUntilDue < 0) {
+                    $kanbanColumns['vencidas'][] = $task;
+                } elseif ($daysUntilDue === 0) {
+                    $kanbanColumns['hoy'][] = $task;
+                } elseif ($daysUntilDue <= 7) {
+                    $kanbanColumns['1_semana'][] = $task;
+                } elseif ($daysUntilDue <= 14) {
+                    $kanbanColumns['2_semanas'][] = $task;
+                }
+            }
+
+            return $kanbanColumns;
+        } catch (Exception $e) {
+            error_log('Error getKanbanTasks: ' . $e->getMessage());
+            return [
+                'vencidas' => [],
+                'hoy' => [],
+                '1_semana' => [],
+                '2_semanas' => []
+            ];
         }
     }
 
