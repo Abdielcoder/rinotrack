@@ -2,6 +2,15 @@
 // Guardar el contenido de la vista
 ob_start();
 ?>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Polaris - Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+</head>
+<body>
 
 <?php
     $projectsCount = is_array($projects ?? null) ? count($projects) : 0;
@@ -77,16 +86,12 @@ ob_start();
                         </div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-content">
-                            <div class="stat-header"><h3>Completadas</h3><i class="fas fa-check-circle"></i></div>
-                            <div class="stat-number"><?php echo $completedTasks; ?></div>
-                        </div>
+                        <div class="stat-header"><h3>Completadas</h3><i class="fas fa-check-circle"></i></div>
+                        <div class="stat-number"><?php echo $completedTasks; ?></div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-content">
-                            <div class="stat-header"><h3>En Progreso</h3><i class="fas fa-spinner"></i></div>
-                            <div class="stat-number"><?php echo $inProgress; ?></div>
-                        </div>
+                        <div class="stat-header"><h3>En Progreso</h3><i class="fas fa-spinner"></i></div>
+                        <div class="stat-number"><?php echo $inProgress; ?></div>
                     </div>
                     <a href="?route=clan_member/tasks" class="btn btn-secondary btn-stats">
                         <i class="fas fa-tasks"></i>
@@ -95,6 +100,11 @@ ob_start();
                 </div>
             </div>
         </header>
+
+        <!-- Animación Lottie Launch -->
+        <div class="lottie-container">
+            <div id="launchAnimation" class="lottie-animation"></div>
+        </div>
 
 
 
@@ -139,6 +149,24 @@ ob_start();
 .stat-number{font-size:1.5rem;font-weight:var(--font-weight-bold);margin-bottom:0;line-height:1}
 .btn-stats{display:flex;align-items:center;gap:var(--spacing-sm);padding:var(--spacing-md);background:var(--bg-primary);border:1px solid var(--bg-accent);border-radius:var(--radius-lg);text-decoration:none;color:var(--text-secondary);font-weight:600;font-size:0.9rem;min-width:140px;justify-content:center;box-shadow:var(--shadow-md);transition:all var(--transition-normal);flex-shrink:0}
 .btn-stats:hover{background:var(--bg-tertiary);color:var(--text-primary);transform:translateY(-2px);box-shadow:var(--shadow-lg)}
+
+/* === ANIMACIÓN LOTTIE === */
+.lottie-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: var(--spacing-2xl) 0;
+    padding: var(--spacing-xl);
+}
+
+.lottie-animation {
+    width: 300px;
+    height: 300px;
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+    background: var(--bg-primary);
+}
 .content-section{margin-bottom:var(--spacing-2xl)}
 .content-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(400px,1fr));gap:var(--spacing-xl)}
 .content-card{background:var(--bg-primary);border-radius:var(--radius-xl);padding:var(--spacing-xl);box-shadow:var(--shadow-md);border:1px solid var(--bg-accent);transition:all var(--transition-normal)}
@@ -178,8 +206,37 @@ ob_start();
     applyQuote(null);
   })();
 })();
+
+// Cargar animación Lottie Launch
+(function() {
+  const animationContainer = document.getElementById('launchAnimation');
+  if (!animationContainer) return;
+  
+  const animation = lottie.loadAnimation({
+    container: animationContainer,
+    renderer: 'svg',
+    loop: true,
+    autoplay: true,
+    path: '<?php echo APP_URL; ?>assets/js/Launch.lottie'
+  });
+  
+  // Pausar animación cuando no está visible
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        animation.play();
+      } else {
+        animation.pause();
+      }
+    });
+  });
+  
+  observer.observe(animationContainer);
+})();
 </script>
 
+</body>
+</html>
 <?php
 $content = ob_get_clean();
 $additionalCSS = [APP_URL . 'assets/css/clan-member.css'];
