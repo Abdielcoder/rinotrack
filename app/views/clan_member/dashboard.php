@@ -2,15 +2,6 @@
 // Guardar el contenido de la vista
 ob_start();
 ?>
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Polaris - Dashboard</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
-</head>
-<body>
 
 <?php
     $projectsCount = is_array($projects ?? null) ? count($projects) : 0;
@@ -101,9 +92,18 @@ ob_start();
             </div>
         </header>
 
-        <!-- Animación Lottie Launch -->
-        <div class="lottie-container">
-            <div id="launchAnimation" class="lottie-animation"></div>
+        <!-- Animación de estrellas -->
+        <div class="stars-container">
+            <div class="star star-1"></div>
+            <div class="star star-2"></div>
+            <div class="star star-3"></div>
+            <div class="star star-4"></div>
+            <div class="star star-5"></div>
+            <div class="star star-6"></div>
+            <div class="star star-7"></div>
+            <div class="star star-8"></div>
+            <div class="star star-9"></div>
+            <div class="star star-10"></div>
         </div>
 
         <!-- Tablero Kanban de Tareas -->
@@ -294,22 +294,43 @@ ob_start();
 .btn-stats{display:flex;align-items:center;gap:var(--spacing-sm);padding:var(--spacing-md);background:var(--bg-primary);border:1px solid var(--bg-accent);border-radius:var(--radius-lg);text-decoration:none;color:var(--text-secondary);font-weight:600;font-size:0.9rem;min-width:140px;justify-content:center;box-shadow:var(--shadow-md);transition:all var(--transition-normal);flex-shrink:0}
 .btn-stats:hover{background:var(--bg-tertiary);color:var(--text-primary);transform:translateY(-2px);box-shadow:var(--shadow-lg)}
 
-/* === ANIMACIÓN LOTTIE === */
-.lottie-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin: var(--spacing-2xl) 0;
-    padding: var(--spacing-xl);
+/* === ANIMACIÓN DE ESTRELLAS === */
+.stars-container {
+    position: relative;
+    height: 100px;
+    margin: var(--spacing-lg) 0;
+    overflow: hidden;
 }
 
-.lottie-animation {
-    width: 300px;
-    height: 300px;
-    border-radius: var(--radius-xl);
-    overflow: hidden;
-    box-shadow: var(--shadow-lg);
-    background: var(--bg-primary);
+.star {
+    position: absolute;
+    width: 3px;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 50%;
+    animation: twinkle 3s infinite ease-in-out;
+}
+
+.star-1 { top: 20px; left: 10%; animation-delay: 0s; }
+.star-2 { top: 40px; left: 20%; animation-delay: 0.3s; }
+.star-3 { top: 15px; left: 30%; animation-delay: 0.6s; }
+.star-4 { top: 60px; left: 40%; animation-delay: 0.9s; }
+.star-5 { top: 25px; left: 50%; animation-delay: 1.2s; }
+.star-6 { top: 70px; left: 60%; animation-delay: 1.5s; }
+.star-7 { top: 35px; left: 70%; animation-delay: 1.8s; }
+.star-8 { top: 80px; left: 80%; animation-delay: 2.1s; }
+.star-9 { top: 45px; left: 90%; animation-delay: 2.4s; }
+.star-10 { top: 55px; left: 95%; animation-delay: 2.7s; }
+
+@keyframes twinkle {
+    0%, 100% { 
+        opacity: 0.3; 
+        transform: scale(1);
+    }
+    50% { 
+        opacity: 1; 
+        transform: scale(1.2);
+    }
 }
 
 /* === TABLERO KANBAN === */
@@ -571,32 +592,7 @@ ob_start();
   })();
 })();
 
-// Cargar animación Lottie Launch
-(function() {
-  const animationContainer = document.getElementById('launchAnimation');
-  if (!animationContainer) return;
-  
-  const animation = lottie.loadAnimation({
-    container: animationContainer,
-    renderer: 'svg',
-    loop: true,
-    autoplay: true,
-    path: '<?php echo APP_URL; ?>assets/js/Launch.lottie'
-  });
-  
-  // Pausar animación cuando no está visible
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        animation.play();
-      } else {
-        animation.pause();
-      }
-    });
-  });
-  
-  observer.observe(animationContainer);
-})();
+
 
 // Función para cambiar el estado de las tareas
 function toggleTaskStatus(taskId, isCompleted) {
@@ -700,8 +696,6 @@ function showNotification(message, type = 'info') {
 }
 </script>
 
-</body>
-</html>
 <?php
 $content = ob_get_clean();
 $additionalCSS = [APP_URL . 'assets/css/clan-member.css'];
