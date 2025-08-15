@@ -45,7 +45,7 @@ ob_start();
                 <div class="brand-icon gradient-bg">
                     <i class="fas fa-star"></i>
                 </div>
-                <span class="brand-text">Polaris</span>
+                <span class="brand-text" style="color: #ffffff; !important">Polaris</span>
             </div>
             
             <ul class="nav-menu">
