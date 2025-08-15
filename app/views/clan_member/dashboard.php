@@ -426,6 +426,24 @@ ob_start();
 
 .task-card.overdue {
     border-left: 4px solid #ef4444;
+    min-height: 60px;
+    padding: calc(var(--spacing-xs) + 2px);
+    margin-bottom: calc(var(--spacing-xs) - 2px);
+}
+
+.task-card.overdue .task-title {
+    font-size: 0.85rem;
+    margin-bottom: calc(var(--spacing-xs) - 2px);
+}
+
+.task-card.overdue .task-project {
+    font-size: 0.7rem;
+    margin-bottom: calc(var(--spacing-xs) - 2px);
+}
+
+.task-card.overdue .task-due-date {
+    font-size: 0.7rem;
+    margin-bottom: calc(var(--spacing-xs) - 2px);
 }
 
 .task-card.today {
@@ -528,8 +546,8 @@ ob_start();
 }
 
 .btn-edit {
-    background: var(--bg-tertiary);
-    color: var(--text-secondary);
+    background: var(--primary-color);
+    color: var(--text-white);
     padding: var(--spacing-xs);
     border-radius: var(--radius-md);
     text-decoration: none;
@@ -541,12 +559,13 @@ ob_start();
     justify-content: center;
     width: 32px;
     height: 32px;
+    border: 1px solid var(--primary-dark);
 }
 
 .btn-edit:hover {
-    background: var(--bg-accent);
-    color: var(--text-primary);
-    transform: translateY(-1px);
+    background: var(--primary-dark);
+    transform: scale(1.05);
+    box-shadow: var(--shadow-md);
 }
 
 /* Responsive para el Kanban */
