@@ -16,7 +16,7 @@
   --secondary-dark: #2563eb;
   
   /* === COLORES DE FONDO === */
-  --bg-primary: #ffffff;
+  --bg-primary: #1e3a8a;
   --bg-secondary: #1e3a8a;
   --bg-tertiary: #dbeafe;
   --bg-accent: #bfdbfe;
@@ -159,7 +159,7 @@ a:hover { text-decoration: none; }
 
 body {
   font-family: var(--font-family);
-  background: var(--bg-secondary);
+  background: var(--bg-primary);
   color: var(--text-primary);
   line-height: 1.6;
   font-weight: var(--font-weight-normal);
