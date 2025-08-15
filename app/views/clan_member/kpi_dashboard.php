@@ -68,46 +68,7 @@ ob_start();
             </div>
         </section>
 
-        <?php if ($currentKPI): ?>
-        <section class="content-section animate-fade-in">
-            <div class="content-card">
-                <div class="card-header"><h3><i class="fas fa-calendar-alt icon-gradient"></i> Trimestre</h3></div>
-                <div style="display:flex;gap:20px;flex-wrap:wrap">
-                    <div><span class="info-label">Periodo:</span> <strong>Q<?php echo $currentKPI['quarter']; ?> <?php echo $currentKPI['year']; ?></strong></div>
-                    <div><span class="info-label">Puntos del Clan:</span> <strong><?php echo number_format($clanTotalPoints); ?></strong></div>
-                    <div><span class="info-label">Puntos Completados:</span> <strong><?php echo number_format($clanCompletedPoints); ?></strong></div>
-                </div>
-            </div>
-        </section>
 
-        <section class="content-section animate-fade-in">
-            <div class="content-card">
-                <div class="card-header"><h3><i class="fas fa-project-diagram icon-gradient"></i> Proyectos con KPI</h3></div>
-                <?php if (empty($projects)): ?>
-                    <div class="empty">No hay proyectos con KPI</div>
-                <?php else: ?>
-                    <div class="table-wrapper">
-                        <table class="data-table">
-                            <thead><tr><th>Proyecto</th><th>Puntos KPI</th><th>Progreso</th></tr></thead>
-                            <tbody>
-                                <?php foreach ($projects as $project): ?>
-                                    <?php $progress = $project['progress_percentage'] ?? 0; ?>
-                                    <tr>
-                                        <td><?php echo Utils::escape($project['project_name']); ?></td>
-                                        <td><?php echo number_format($project['kpi_points']); ?></td>
-                                        <td>
-                                            <div class="progress-bar large"><div class="progress-fill" style="width: <?php echo round($progress,1); ?>%"></div></div>
-                                            <div style="text-align:right;font-weight:600;margin-top:4px"><?php echo round($progress,1); ?>%</div>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                <?php endif; ?>
-            </div>
-        </section>
-        <?php endif; ?>
     </main>
 </div>
 
