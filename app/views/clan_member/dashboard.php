@@ -62,54 +62,42 @@ ob_start();
                         <div id="motAuthor" style="font-size:.9rem;color:var(--text-secondary)"></div>
                     </div>
                 </div>
-                <a href="?route=clan_member/tasks" class="btn btn-primary" style="margin-top: 1rem;">
-                    <i class="fas fa-list-check"></i>
-                    Ver mis tareas
-                </a>
             </div>
             <div class="welcome-stats">
-                <div class="quick-stat">
-                    <div class="stat-icon success"><i class="fas fa-users"></i></div>
-                    <div class="stat-text">
-                        <span class="stat-value"><?php echo Utils::escape($clan['clan_name'] ?? ''); ?></span>
-                        <span class="stat-label">Mi Clan</span>
+                <div class="stats-row">
+                    <div class="stat-card gradient-bg">
+                        <div class="stat-content">
+                            <div class="stat-header"><h3>Proyectos</h3><i class="fas fa-folder-open"></i></div>
+                            <div class="stat-number"><?php echo $projectsCount; ?></div>
+                        </div>
                     </div>
+                    <div class="stat-card">
+                        <div class="stat-content">
+                            <div class="stat-header"><h3>Tareas</h3><i class="fas fa-tasks"></i></div>
+                            <div class="stat-number"><?php echo $totalTasks; ?></div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-content">
+                            <div class="stat-header"><h3>Completadas</h3><i class="fas fa-check-circle"></i></div>
+                            <div class="stat-number"><?php echo $completedTasks; ?></div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-content">
+                            <div class="stat-header"><h3>En Progreso</h3><i class="fas fa-spinner"></i></div>
+                            <div class="stat-number"><?php echo $inProgress; ?></div>
+                        </div>
+                    </div>
+                    <a href="?route=clan_member/tasks" class="btn btn-secondary btn-stats">
+                        <i class="fas fa-tasks"></i>
+                        Ver mis tareas
+                    </a>
                 </div>
             </div>
         </header>
 
-        <section class="stats-section animate-fade-in">
-            <div class="stats-row">
-                <div class="stat-card gradient-bg">
-                    <div class="stat-content">
-                        <div class="stat-header"><h3>Proyectos</h3><i class="fas fa-folder-open"></i></div>
-                        <div class="stat-number"><?php echo $projectsCount; ?></div>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-content">
-                        <div class="stat-header"><h3>Tareas</h3><i class="fas fa-tasks"></i></div>
-                        <div class="stat-number"><?php echo $totalTasks; ?></div>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-content">
-                        <div class="stat-header"><h3>Completadas</h3><i class="fas fa-check-circle"></i></div>
-                        <div class="stat-number"><?php echo $completedTasks; ?></div>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-content">
-                        <div class="stat-header"><h3>En Progreso</h3><i class="fas fa-spinner"></i></div>
-                        <div class="stat-number"><?php echo $inProgress; ?></div>
-                    </div>
-                </div>
-                <a href="?route=clan_member/tasks" class="btn btn-secondary btn-stats">
-                    <i class="fas fa-tasks"></i>
-                    Ver mis tareas
-                </a>
-            </div>
-        </section>
+
 
         <section class="content-section animate-fade-in">
             <div class="content-grid">
@@ -171,9 +159,10 @@ ob_start();
 .action-btn{width:35px;height:35px;border:none;border-radius:var(--radius-md);background:var(--bg-primary);color:var(--text-secondary);cursor:pointer;transition:all var(--transition-normal);display:flex;align-items:center;justify-content:center;text-decoration:none;box-shadow:var(--shadow-sm)}
 .action-btn.logout:hover{color:var(--error)}
 .main-content{max-width:1400px;margin:0 auto;padding:var(--spacing-xl) var(--spacing-lg)}
-.welcome-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--spacing-2xl);padding:var(--spacing-xl);background:var(--bg-primary);border-radius:var(--radius-xl);box-shadow:var(--shadow-md);border:1px solid var(--bg-accent)}
+.welcome-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:var(--spacing-2xl);padding:var(--spacing-xl);background:var(--bg-primary);border-radius:var(--radius-xl);box-shadow:var(--shadow-md);border:1px solid var(--bg-accent);gap:var(--spacing-xl)}
 .welcome-title{font-size:2.2rem;font-weight:var(--font-weight-bold);color:var(--text-primary);margin-bottom:var(--spacing-sm)}
 .welcome-subtitle{font-size:1.05rem;color:var(--text-secondary)}
+.welcome-stats{display:flex;flex-direction:column;align-items:stretch;min-width:fit-content}
 .quick-stat{display:flex;align-items:center;gap:var(--spacing-md);padding:var(--spacing-lg);background:var(--bg-tertiary);border-radius:var(--radius-lg);border:1px solid var(--bg-accent)}
 .stat-icon{width:50px;height:50px;border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;color:var(--text-white);font-size:1.2rem}
 .stat-icon.success{background:var(--success)}
@@ -199,7 +188,7 @@ ob_start();
 .progress-bar.large{width:100%;height:14px;background:var(--bg-tertiary);border-radius:9999px;overflow:hidden}
 .progress-fill{height:100%;background:var(--primary-gradient)}
 @media (max-width:1024px){.nav-container{flex-wrap:wrap;gap:var(--spacing-md)}.user-menu{order:-1;width:100%;justify-content:space-between}.content-grid{grid-template-columns:1fr}}
-@media (max-width:768px){.welcome-header{flex-direction:column;text-align:center;gap:var(--spacing-lg)}.stats-row{gap:var(--spacing-sm);justify-content:center}.stat-card{min-width:120px}.btn-stats{min-width:120px}.nav-menu{display:none}.main-content{padding:var(--spacing-lg) var(--spacing-md)}}
+@media (max-width:768px){.welcome-header{flex-direction:column;text-align:center;gap:var(--spacing-lg);align-items:center}.welcome-stats{width:100%}.stats-row{gap:var(--spacing-sm);justify-content:center}.stat-card{min-width:120px}.btn-stats{min-width:120px}.nav-menu{display:none}.main-content{padding:var(--spacing-lg) var(--spacing-md)}}
 </style>
 
 <script>
