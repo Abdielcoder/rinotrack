@@ -862,6 +862,7 @@ class ClanMemberController {
                      LEFT JOIN Task_Assignments ta ON ta.task_id = t.task_id
                      WHERE p.clan_id = ?
                        AND t.is_subtask = 0
+                       AND t.is_personal = 0
                        AND t.status != 'completed'
                        AND (t.assigned_to_user_id = ? OR ta.user_id = ?)
                      GROUP BY t.task_id
@@ -871,7 +872,7 @@ class ClanMemberController {
                 $clanTasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
             }
 
-            // Obtener tareas personales
+            // Obtener tareas personales usando el campo is_personal
             $personalTasks = [];
             $stmt = $this->db->prepare(
                 "SELECT 
@@ -984,20 +985,13 @@ class ClanMemberController {
                 'priority' => $priority,
                 'due_date' => $dueDate,
                 'status' => $status,
-                'assigned_to_user_id' => $userId,
-                'created_by' => $userId,
-                'completion_percentage' => $status === 'completed' ? 100 : 0
+                'assigned_to_user_id' => $userId
             ];
 
             error_log('Task data a crear: ' . print_r($taskData, true));
 
-            // Intentar primero con el método simplificado
+            // Crear tarea personal directamente
             $taskId = $this->taskModel->createPersonalTaskSimple($taskData);
-            
-            if (!$taskId) {
-                error_log('Método simple falló, intentando método completo');
-                $taskId = $this->taskModel->createPersonalTask($taskData);
-            }
 
             if ($taskId) {
                 echo json_encode([
@@ -1029,118 +1023,6 @@ class ClanMemberController {
             'user_id' => $this->currentUser['user_id'],
             'timestamp' => date('Y-m-d H:i:s')
         ]);
-    }
-
-    public function createPersonalProject() {
-        $this->requireAuth();
-        if (!$this->hasMemberAccess()) {
-            http_response_code(403);
-            echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
-            return;
-        }
-
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            echo json_encode(['success' => false, 'message' => 'Método no permitido']);
-            return;
-        }
-
-        try {
-            $projectName = trim($_POST['project_name'] ?? '');
-            $description = trim($_POST['description'] ?? '');
-            $userId = (int)($_POST['user_id'] ?? 0);
-
-            // Validaciones
-            if (empty($projectName)) {
-                echo json_encode(['success' => false, 'message' => 'El nombre del proyecto es requerido']);
-                return;
-            }
-
-            if ($userId !== (int)$this->currentUser['user_id']) {
-                echo json_encode(['success' => false, 'message' => 'Usuario no válido']);
-                return;
-            }
-
-            // Crear el proyecto personal
-            $projectData = [
-                'project_name' => $projectName,
-                'description' => $description,
-                'user_id' => $userId
-            ];
-
-            $projectId = $this->projectModel->createPersonalProject($projectData);
-
-            if ($projectId) {
-                echo json_encode([
-                    'success' => true, 
-                    'message' => 'Proyecto personal creado exitosamente',
-                    'project_id' => $projectId
-                ]);
-            } else {
-                echo json_encode(['success' => false, 'message' => 'Error al crear el proyecto personal']);
-            }
-
-        } catch (Exception $e) {
-            error_log('Error createPersonalProject: ' . $e->getMessage());
-            echo json_encode(['success' => false, 'message' => 'Error interno del servidor: ' . $e->getMessage()]);
-        }
-    }
-
-    public function testDatabaseConnection() {
-        $this->requireAuth();
-        if (!$this->hasMemberAccess()) {
-            http_response_code(403);
-            echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
-            return;
-        }
-
-        try {
-            $db = Database::getConnection();
-            
-            // Test 1: Verificar conexión
-            $stmt = $db->prepare("SELECT 1 as test");
-            $stmt->execute();
-            $test1 = $stmt->fetch();
-            
-            // Test 2: Verificar que el usuario existe
-            $stmt = $db->prepare("SELECT user_id, username, full_name FROM Users WHERE user_id = ?");
-            $stmt->execute([$this->currentUser['user_id']]);
-            $user = $stmt->fetch();
-            
-            // Test 3: Verificar que el usuario pertenece a un clan
-            $stmt = $db->prepare("
-                SELECT cm.clan_id, c.clan_name 
-                FROM Clan_Members cm 
-                JOIN Clans c ON c.clan_id = cm.clan_id 
-                WHERE cm.user_id = ?
-            ");
-            $stmt->execute([$this->currentUser['user_id']]);
-            $clan = $stmt->fetch();
-            
-            // Test 4: Verificar estructura de la tabla Projects
-            $stmt = $db->prepare("DESCRIBE Projects");
-            $stmt->execute();
-            $projectColumns = $stmt->fetchAll();
-            
-            echo json_encode([
-                'success' => true,
-                'message' => 'Test de base de datos completado',
-                'data' => [
-                    'connection_test' => $test1 ? 'OK' : 'FAIL',
-                    'user_exists' => $user ? 'SÍ' : 'NO',
-                    'user_data' => $user,
-                    'user_has_clan' => $clan ? 'SÍ' : 'NO',
-                    'clan_data' => $clan,
-                    'projects_table_columns' => array_column($projectColumns, 'Field')
-                ]
-            ]);
-            
-        } catch (Exception $e) {
-            echo json_encode([
-                'success' => false, 
-                'message' => 'Error en test de base de datos: ' . $e->getMessage()
-            ]);
-        }
     }
 
     private function loadView($view, $data = []) {
