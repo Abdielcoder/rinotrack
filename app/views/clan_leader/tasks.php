@@ -673,7 +673,7 @@ ob_start();
 }
 
 .btn-view-tasks:hover {
-    background: #2563eb;
+    background:rgb(246, 246, 248);
     transform: translateY(-2px);
     color: white;
     text-decoration: none;
