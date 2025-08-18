@@ -883,13 +883,23 @@ class AdminController {
 
         // Validar proyecto y obtener clan
         $db = Database::getConnection();
-        $stmt = $db->prepare('SELECT clan_id FROM Projects WHERE project_id = ?');
+        $stmt = $db->prepare('SELECT clan_id, project_name FROM Projects WHERE project_id = ?');
         $stmt->execute([$projectId]);
         $project = $stmt->fetch();
         if (!$project) {
             Utils::jsonResponse(['success' => false, 'message' => 'Proyecto no encontrado'], 404);
         }
         $clanId = (int)$project['clan_id'];
+        $projectName = $project['project_name'];
+        
+        // Log para debugging de tareas recurrentes/eventuales
+        error_log("=== ADMIN CREANDO TAREA ===");
+        error_log("Project ID: $projectId");
+        error_log("Project Name: $projectName");
+        error_log("Task Name: $taskName");
+        error_log("Repeat Dates: " . print_r($repeatDates, true));
+        error_log("Es Tarea Recurrente: " . ($projectName === 'Tareas Recurrentes' ? 'SÍ' : 'NO'));
+        error_log("Es Tarea Eventual: " . ($projectName === 'Tareas Eventuales' ? 'SÍ' : 'NO'));
 
         // validación de assignedUsers contra clan
         if (!empty($assignedUsers)) {
@@ -913,12 +923,19 @@ class AdminController {
 
             // Si se recibieron repeatDates válidas, crear duplicados
             if ($taskId && !empty($repeatDates)) {
+                error_log("Creando tareas duplicadas para proyecto: $projectName");
                 foreach ($repeatDates as $rDate) {
-                    if ($rDate === $dueDate) { continue; } // evitar duplicar la base
+                    if ($rDate === $dueDate) { 
+                        error_log("Saltando fecha duplicada: $rDate (igual a fecha base)");
+                        continue; 
+                    }
+                    error_log("Creando tarea duplicada para fecha: $rDate");
                     if (!empty($assignedUsers)) {
-                        $taskModel->createAdvanced($projectId, $taskName, $description, $rDate, $clanId, Task::PRIORITY_MEDIUM, $currentUser['user_id'] ?? null, $assignedUsers);
+                        $duplicateTaskId = $taskModel->createAdvanced($projectId, $taskName, $description, $rDate, $clanId, Task::PRIORITY_MEDIUM, $currentUser['user_id'] ?? null, $assignedUsers);
+                        error_log("Tarea duplicada creada con ID: $duplicateTaskId");
                     } else {
-                        $taskModel->create($projectId, $taskName, $description, null, Task::PRIORITY_MEDIUM, $rDate, $currentUser['user_id'] ?? null);
+                        $duplicateTaskId = $taskModel->create($projectId, $taskName, $description, null, Task::PRIORITY_MEDIUM, $rDate, $currentUser['user_id'] ?? null);
+                        error_log("Tarea duplicada creada con ID: $duplicateTaskId");
                     }
                 }
             }

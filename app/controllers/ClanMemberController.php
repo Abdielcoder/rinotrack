@@ -874,7 +874,7 @@ class ClanMemberController {
             error_log("=== INICIO getKanbanTasks ===");
             error_log("Usuario ID: $userId, Clan ID: $clanId");
             
-            // Obtener tareas del clan
+            // Obtener tareas del clan (excluyendo las especiales para evitar duplicados)
             $clanTasks = [];
             if ($clanId) {
                 $stmt = $this->db->prepare(
@@ -894,6 +894,7 @@ class ClanMemberController {
                      INNER JOIN Projects p ON p.project_id = t.project_id
                      LEFT JOIN Task_Assignments ta ON ta.task_id = t.task_id
                      WHERE p.clan_id = ?
+                       AND p.project_name NOT IN ('Tareas Recurrentes', 'Tareas Eventuales')
                        AND t.is_subtask = 0
                        AND t.status != 'completed'
                        AND (t.assigned_to_user_id = ? OR ta.user_id = ?)
@@ -968,12 +969,42 @@ class ClanMemberController {
             
             // Log detallado de cada tarea especial
             foreach ($specialTasks as $task) {
-                error_log("TAREA ESPECIAL - ID: {$task['task_id']}, Nombre: {$task['task_name']}, Proyecto: {$task['project_name']}");
+                error_log("TAREA ESPECIAL - ID: {$task['task_id']}, Nombre: {$task['task_name']}, Proyecto: {$task['project_name']}, Project ID: {$task['project_id']}");
             }
+            
+            // Verificar que las tareas especiales tengan el project_name correcto
+            foreach ($specialTasks as $task) {
+                if (!in_array($task['project_name'], ['Tareas Recurrentes', 'Tareas Eventuales'])) {
+                    error_log("ERROR: Tarea especial con project_name incorrecto: {$task['project_name']}");
+                }
+            }
+            
+            // Verificar en la base de datos directamente
+            $verifyStmt = $this->db->prepare("SELECT project_id, project_name FROM Projects WHERE project_name IN ('Tareas Recurrentes', 'Tareas Eventuales')");
+            $verifyStmt->execute();
+            $verifyProjects = $verifyStmt->fetchAll(PDO::FETCH_ASSOC);
+            error_log("Proyectos especiales en BD: " . print_r($verifyProjects, true));
 
             // Combinar todas las listas
             $allTasks = array_merge($clanTasks, $personalTasks, $specialTasks);
             error_log("Total de tareas combinadas: " . count($allTasks));
+            
+            // Verificar duplicados por task_id
+            $taskIds = [];
+            $duplicates = [];
+            foreach ($allTasks as $task) {
+                $taskId = $task['task_id'];
+                if (in_array($taskId, $taskIds)) {
+                    $duplicates[] = $taskId;
+                    error_log("DUPLICADO ENCONTRADO - Task ID: $taskId, Proyecto: {$task['project_name']}");
+                } else {
+                    $taskIds[] = $taskId;
+                }
+            }
+            
+            if (!empty($duplicates)) {
+                error_log("TAREAS DUPLICADAS ENCONTRADAS: " . implode(', ', $duplicates));
+            }
 
             // Organizar tareas por columnas del Kanban
             $kanbanColumns = [
