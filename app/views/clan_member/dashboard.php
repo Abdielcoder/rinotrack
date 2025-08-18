@@ -285,12 +285,12 @@ ob_start();
 .stat-icon.success{background:var(--success)}
 .stats-section{margin-bottom:var(--spacing-2xl)}
 .stats-row{display:flex;align-items:center;gap:var(--spacing-md);flex-wrap:wrap;justify-content:flex-start}
-.stat-card{background:#ffffff;border-radius:var(--radius-lg);padding:var(--spacing-md);box-shadow:var(--shadow-md);border:1px solid #e5e7eb;transition:all var(--transition-normal);min-width:140px;flex-shrink:0}
+.stat-card{background:#ffffff;border-radius:var(--radius-lg);padding:var(--spacing-md);box-shadow:var(--shadow-md);border:1px solid #e5e7eb;transition:all var(--transition-normal);min-width:140px;flex-shrink:0;position:relative;overflow:hidden}
 .stat-card.gradient-bg{background:var(--primary-gradient);color:#ffffff}
 .stat-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--spacing-sm)}
 .stat-header h3{font-size:0.9rem;margin:0;font-weight:600;color:#1e3a8a}
 .stat-header i{font-size:1rem;color:#1e3a8a}
-.stat-number{font-size:1.5rem;font-weight:var(--font-weight-bold);margin-bottom:0;line-height:1;color:#1e3a8a}
+.stat-number{font-size:1.5rem;font-weight:var(--font-weight-bold);margin-bottom:0;line-height:1;color:#1e3a8a;display:block;text-align:center;min-height:2rem;line-height:2rem;text-shadow:none;background:transparent;padding:4px 0;font-family:inherit}
 .btn-stats{display:flex;align-items:center;gap:var(--spacing-sm);padding:var(--spacing-md);background:#ffffff;border:1px solid #e5e7eb;border-radius:var(--radius-lg);text-decoration:none;color:#1e3a8a;font-weight:600;font-size:0.9rem;min-width:140px;justify-content:center;box-shadow:var(--shadow-md);transition:all var(--transition-normal);flex-shrink:0}
 .btn-stats:hover{background:#f3f4f6;color:#1e3a8a;transform:translateY(-2px);box-shadow:var(--shadow-lg)}
 
@@ -386,7 +386,7 @@ ob_start();
 }
 
 .task-count {
-    background: var(--primary-color);
+    background: #1e3a8a;
     color: #ffffff;
     padding: 6px 10px;
     border-radius: var(--radius-full);
@@ -394,6 +394,7 @@ ob_start();
     font-weight: var(--font-weight-bold);
     min-width: 24px;
     text-align: center;
+    display: inline-block;
 }
 
 .column-header.overdue h3 { color: #1e3a8a; }
