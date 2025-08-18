@@ -111,15 +111,15 @@ ob_start();
                     </div>
                     <div class="column-content">
                         <?php foreach ($kanbanTasks['vencidas'] ?? [] as $task): ?>
-                            <div class="task-card overdue" data-task-id="<?php echo $task['task_id']; ?>">
+                            <div class="task-card overdue" data-task-id="<?php echo $task['task_id']; ?>" data-priority="<?php echo $task['priority'] ?? 'medium'; ?>">
                                 <div class="task-header">
                                     <label class="task-checkbox">
                                         <input type="checkbox" onchange="toggleTaskStatus(<?php echo $task['task_id']; ?>, this.checked)">
                                         <span class="checkmark"></span>
                                     </label>
-                                    <span class="task-priority <?php echo strtolower($task['priority'] ?? 'medium'); ?>">
-                                        <i class="fas fa-flag"></i>
-                                    </span>
+                                    <div class="task-priority-badge" id="priority-<?php echo $task['task_id']; ?>">
+                                        <!-- La etiqueta de prioridad se insertará con JavaScript -->
+                                    </div>
                                 </div>
                                 <div class="task-title"><?php echo Utils::escape($task['task_name']); ?></div>
                                 <div class="task-project"><?php echo Utils::escape($task['project_name']); ?></div>
@@ -145,15 +145,15 @@ ob_start();
                     </div>
                     <div class="column-content">
                         <?php foreach ($kanbanTasks['hoy'] ?? [] as $task): ?>
-                            <div class="task-card today" data-task-id="<?php echo $task['task_id']; ?>">
+                            <div class="task-card today" data-task-id="<?php echo $task['task_id']; ?>" data-priority="<?php echo $task['priority'] ?? 'medium'; ?>">
                                 <div class="task-header">
                                     <label class="task-checkbox">
                                         <input type="checkbox" onchange="toggleTaskStatus(<?php echo $task['task_id']; ?>, this.checked)">
                                         <span class="checkmark"></span>
                                     </label>
-                                    <span class="task-priority <?php echo strtolower($task['priority'] ?? 'medium'); ?>">
-                                        <i class="fas fa-flag"></i>
-                                    </span>
+                                    <div class="task-priority-badge" id="priority-<?php echo $task['task_id']; ?>">
+                                        <!-- La etiqueta de prioridad se insertará con JavaScript -->
+                                    </div>
                                 </div>
                                 <div class="task-title"><?php echo Utils::escape($task['task_name']); ?></div>
                                 <div class="task-project"><?php echo Utils::escape($task['project_name']); ?></div>
@@ -179,15 +179,15 @@ ob_start();
                     </div>
                     <div class="column-content">
                         <?php foreach ($kanbanTasks['1_semana'] ?? [] as $task): ?>
-                            <div class="task-card week1" data-task-id="<?php echo $task['task_id']; ?>">
+                            <div class="task-card week1" data-task-id="<?php echo $task['task_id']; ?>" data-priority="<?php echo $task['priority'] ?? 'medium'; ?>">
                                 <div class="task-header">
                                     <label class="task-checkbox">
                                         <input type="checkbox" onchange="toggleTaskStatus(<?php echo $task['task_id']; ?>, this.checked)">
                                         <span class="checkmark"></span>
                                     </label>
-                                    <span class="task-priority <?php echo strtolower($task['priority'] ?? 'medium'); ?>">
-                                        <i class="fas fa-flag"></i>
-                                    </span>
+                                    <div class="task-priority-badge" id="priority-<?php echo $task['task_id']; ?>">
+                                        <!-- La etiqueta de prioridad se insertará con JavaScript -->
+                                    </div>
                                 </div>
                                 <div class="task-title"><?php echo Utils::escape($task['task_name']); ?></div>
                                 <div class="task-project"><?php echo Utils::escape($task['project_name']); ?></div>
@@ -213,21 +213,26 @@ ob_start();
                     </div>
                     <div class="column-content">
                         <?php foreach ($kanbanTasks['2_semanas'] ?? [] as $task): ?>
-                            <div class="task-card week2" data-task-id="<?php echo $task['task_id']; ?>">
+                            <div class="task-card week2" data-task-id="<?php echo $task['task_id']; ?>" data-priority="<?php echo $task['priority'] ?? 'medium'; ?>">
                                 <div class="task-header">
                                     <label class="task-checkbox">
                                         <input type="checkbox" onchange="toggleTaskStatus(<?php echo $task['task_id']; ?>, this.checked)">
                                         <span class="checkmark"></span>
                                     </label>
-                                    <span class="task-priority <?php echo strtolower($task['priority'] ?? 'medium'); ?>">
-                                        <i class="fas fa-flag"></i>
-                                    </span>
+                                    <div class="task-priority-badge" id="priority-<?php echo $task['task_id']; ?>">
+                                        <!-- La etiqueta de prioridad se insertará con JavaScript -->
+                                    </div>
                                 </div>
                                 <div class="task-title"><?php echo Utils::escape($task['task_name']); ?></div>
                                 <div class="task-project"><?php echo Utils::escape($task['project_name']); ?></div>
                                 <div class="task-due-date week2">
                                     <i class="fas fa-calendar"></i>
-                                    En <?php echo (int)$task['days_until_due']; ?> días
+                                    <?php if ($task['due_date']): ?>
+                                        Vence: <?php echo date('d/m/Y', strtotime($task['due_date'])); ?>
+                                        (<?php echo (int)$task['days_until_due']; ?> días)
+                                    <?php else: ?>
+                                        Sin fecha límite
+                                    <?php endif; ?>
                                 </div>
                                 <div class="task-actions">
                                     <a href="?route=clan_member/task-details&task_id=<?php echo $task['task_id']; ?>" class="btn-edit" title="Editar Tarea">
@@ -1308,6 +1313,76 @@ function reloadDashboard() {
     showNotification('Recargando dashboard...', 'info');
     location.reload();
 }
+
+// Función para obtener el color y texto de prioridad
+function getPriorityBadge(priority) {
+    const priorityConfig = {
+        'low': { color: '#6b7280', text: 'Baja', bgColor: '#f3f4f6' },
+        'medium': { color: '#3b82f6', text: 'Media', bgColor: '#dbeafe' },
+        'high': { color: '#f59e0b', text: 'Alta', bgColor: '#fef3c7' },
+        'critical': { color: '#dc2626', text: 'Crítica', bgColor: '#fee2e2' }
+    };
+    
+    const config = priorityConfig[priority] || priorityConfig['medium'];
+    
+    return `<span class="priority-badge" style="
+        background: ${config.bgColor};
+        color: ${config.color};
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border: 1px solid ${config.color}20;
+    ">${config.text}</span>`;
+}
+
+// Función para obtener el score de prioridad para ordenamiento
+function getPriorityScore(priority) {
+    const scores = { 'low': 1, 'medium': 2, 'high': 3, 'critical': 4 };
+    return scores[priority] || 2;
+}
+
+// Función para ordenar tareas por prioridad y fecha
+function sortTasksByPriorityAndDate(tasks) {
+    return tasks.sort((a, b) => {
+        // Primero por prioridad (crítica primero)
+        const priorityDiff = getPriorityScore(b.priority) - getPriorityScore(a.priority);
+        if (priorityDiff !== 0) return priorityDiff;
+        
+        // Luego por fecha de vencimiento (más cercana primero)
+        const aDate = a.due_date ? new Date(a.due_date) : new Date('9999-12-31');
+        const bDate = b.due_date ? new Date(b.due_date) : new Date('9999-12-31');
+        return aDate - bDate;
+    });
+}
+
+// Función para insertar etiquetas de prioridad en todas las tareas
+function insertPriorityBadges() {
+    const taskCards = document.querySelectorAll('.task-card');
+    taskCards.forEach(card => {
+        const taskId = card.dataset.taskId;
+        const priority = card.dataset.priority || 'medium';
+        const priorityBadge = card.querySelector('.task-priority-badge');
+        
+        if (priorityBadge && taskId) {
+            // Insertar la etiqueta de prioridad usando el atributo data-priority
+            priorityBadge.innerHTML = getPriorityBadge(priority);
+        }
+    });
+}
+
+// Ejecutar cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', function() {
+    // Insertar etiquetas de prioridad
+    insertPriorityBadges();
+    
+    // También ejecutar después de recargar el dashboard
+    if (typeof window.addEventListener === 'function') {
+        window.addEventListener('load', insertPriorityBadges);
+    }
+});
 </script>
 
 <?php

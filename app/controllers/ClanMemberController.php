@@ -944,6 +944,27 @@ class ClanMemberController {
                 error_log("  $column: " . count($tasks) . " tareas");
             }
 
+            // Ordenar cada columna por prioridad y fecha
+            foreach ($kanbanColumns as $column => &$tasks) {
+                usort($tasks, function($a, $b) {
+                    // Primero por prioridad (crítica primero)
+                    $priorityScores = ['low' => 1, 'medium' => 2, 'high' => 3, 'critical' => 4];
+                    $aScore = $priorityScores[$a['priority']] ?? 2;
+                    $bScore = $priorityScores[$b['priority']] ?? 2;
+                    
+                    if ($aScore !== $bScore) {
+                        return $bScore - $aScore; // Prioridad más alta primero
+                    }
+                    
+                    // Luego por fecha de vencimiento (más cercana primero)
+                    $aDate = $a['due_date'] ? strtotime($a['due_date']) : PHP_INT_MAX;
+                    $bDate = $b['due_date'] ? strtotime($b['due_date']) : PHP_INT_MAX;
+                    return $aDate - $bDate;
+                });
+                
+                error_log("  $column ordenada por prioridad y fecha");
+            }
+
             return $kanbanColumns;
         } catch (Exception $e) {
             error_log('Error getKanbanTasks: ' . $e->getMessage());
