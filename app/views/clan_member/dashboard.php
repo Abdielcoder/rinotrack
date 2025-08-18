@@ -162,6 +162,10 @@ ob_start();
                     </div>
                     <div class="column-content">
                         <?php foreach ($kanbanTasks['vencidas'] as $task): ?>
+                            <?php 
+                            // Debug: Log de la tarea para verificar el project_name
+                            error_log("DEBUG TAREA VENCIDA - ID: {$task['task_id']}, Nombre: {$task['task_name']}, Proyecto: {$task['project_name']}");
+                            ?>
                             <div class="task-card overdue" data-task-id="<?php echo $task['task_id']; ?>">
                                 <div class="task-header">
                                     <input type="checkbox" class="task-checkbox" <?php echo ($task['status'] === 'completed' || ($task['is_completed'] ?? 0) == 1) ? 'checked' : ''; ?> onchange="toggleTaskStatus(<?php echo $task['task_id']; ?>, this.checked)">
@@ -217,6 +221,10 @@ ob_start();
                     </div>
                     <div class="column-content">
                         <?php foreach ($kanbanTasks['hoy'] ?? [] as $task): ?>
+                            <?php 
+                            // Debug: Log de la tarea para verificar el project_name
+                            error_log("DEBUG TAREA HOY - ID: {$task['task_id']}, Nombre: {$task['task_name']}, Proyecto: {$task['project_name']}");
+                            ?>
                             <div class="task-card today" data-task-id="<?php echo $task['task_id']; ?>">
                                 <div class="task-header">
                                     <input type="checkbox" class="task-checkbox" <?php echo ($task['status'] === 'completed' || ($task['is_completed'] ?? 0) == 1) ? 'checked' : ''; ?> onchange="toggleTaskStatus(<?php echo $task['task_id']; ?>, this.checked)">

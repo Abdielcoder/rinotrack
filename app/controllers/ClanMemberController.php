@@ -965,6 +965,11 @@ class ClanMemberController {
             $specialTasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
             error_log("Tareas especiales (recurrentes/eventuales) encontradas: " . count($specialTasks));
             error_log("Detalle de tareas especiales: " . print_r($specialTasks, true));
+            
+            // Log detallado de cada tarea especial
+            foreach ($specialTasks as $task) {
+                error_log("TAREA ESPECIAL - ID: {$task['task_id']}, Nombre: {$task['task_name']}, Proyecto: {$task['project_name']}");
+            }
 
             // Combinar todas las listas
             $allTasks = array_merge($clanTasks, $personalTasks, $specialTasks);
