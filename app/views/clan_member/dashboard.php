@@ -1018,23 +1018,91 @@ function updateTaskCounts() {
 
 // Función para mostrar notificaciones
 function showNotification(message, type = 'info') {
+    // Crear contenedor de notificaciones si no existe
+    let notificationContainer = document.getElementById('notification-container');
+    if (!notificationContainer) {
+        notificationContainer = document.createElement('div');
+        notificationContainer.id = 'notification-container';
+        notificationContainer.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 400px;
+        `;
+        document.body.appendChild(notificationContainer);
+    }
+    
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;
-    notification.innerHTML = `
-        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
-        <span>${message}</span>
+    notification.style.cssText = `
+        background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : type === 'warning' ? '#f59e0b' : '#3b82f6'};
+        color: white;
+        padding: 16px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 14px;
+        font-weight: 500;
+        transform: translateX(100%);
+        transition: all 0.3s ease;
+        max-width: 100%;
+        word-wrap: break-word;
     `;
     
-    document.body.appendChild(notification);
+    // Icono según el tipo
+    let icon = 'info-circle';
+    if (type === 'success') icon = 'check-circle';
+    else if (type === 'error') icon = 'exclamation-circle';
+    else if (type === 'warning') icon = 'exclamation-triangle';
     
-    // Mostrar notificación
-    setTimeout(() => notification.classList.add('show'), 100);
+    notification.innerHTML = `
+        <i class="fas fa-${icon}" style="font-size: 18px; flex-shrink: 0;"></i>
+        <span style="flex: 1;">${message}</span>
+        <button onclick="this.parentElement.remove()" style="
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            font-size: 16px;
+            opacity: 0.7;
+            transition: opacity 0.2s ease;
+        " onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
     
-    // Ocultar después de 4 segundos
+    // Agregar al contenedor
+    notificationContainer.appendChild(notification);
+    
+    // Mostrar con animación
     setTimeout(() => {
-        notification.classList.remove('show');
-        setTimeout(() => notification.remove(), 300);
-    }, 4000);
+        notification.style.transform = 'translateX(0)';
+    }, 100);
+    
+    // Ocultar automáticamente después de 5 segundos
+    setTimeout(() => {
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+            if (notification.parentElement) {
+                notification.remove();
+            }
+        }, 300);
+    }, 5000);
+    
+    // Limpiar contenedor si está vacío
+    setTimeout(() => {
+        if (notificationContainer.children.length === 0) {
+            notificationContainer.remove();
+        }
+    }, 5300);
 }
 
 // Sistema de Debug Visual
