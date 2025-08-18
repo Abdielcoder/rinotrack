@@ -50,10 +50,8 @@ class ClanMemberController {
         $ownContribution = $this->getOwnContribution($this->currentUser, $userTaskStats);
         $allProjects = $this->projectModel->getByClan($this->userClan['clan_id']);
         
-        // Filtrar proyectos para excluir "Tareas Eventuales" y "Tareas Recurrentes"
-        $projects = array_filter($allProjects, function($project) {
-            return !in_array($project['project_name'], ['Tareas Eventuales', 'Tareas Recurrentes']);
-        });
+        // Incluir todos los proyectos, incluyendo "Tareas Eventuales" y "Tareas Recurrentes"
+        $projects = $allProjects;
         
         $ownTasksDetails = $this->getUserTasksForModal($this->currentUser['user_id'], $this->userClan['clan_id']);
         
@@ -99,10 +97,8 @@ class ClanMemberController {
         }
         $allProjects = $this->userClan ? $this->projectModel->getByClan($this->userClan['clan_id']) : [];
         
-        // Filtrar proyectos para excluir "Tareas Eventuales" y "Tareas Recurrentes"
-        $projects = array_filter($allProjects, function($project) {
-            return !in_array($project['project_name'], ['Tareas Eventuales', 'Tareas Recurrentes']);
-        });
+        // Incluir todos los proyectos, incluyendo "Tareas Eventuales" y "Tareas Recurrentes"
+        $projects = $allProjects;
         
         $data = [
             'currentPage' => 'clan_member',
