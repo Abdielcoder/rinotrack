@@ -1086,6 +1086,63 @@ class ClanMemberController {
         }
     }
 
+    public function testDatabaseConnection() {
+        $this->requireAuth();
+        if (!$this->hasMemberAccess()) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
+            return;
+        }
+
+        try {
+            $db = Database::getConnection();
+            
+            // Test 1: Verificar conexión
+            $stmt = $db->prepare("SELECT 1 as test");
+            $stmt->execute();
+            $test1 = $stmt->fetch();
+            
+            // Test 2: Verificar que el usuario existe
+            $stmt = $db->prepare("SELECT user_id, username, full_name FROM Users WHERE user_id = ?");
+            $stmt->execute([$this->currentUser['user_id']]);
+            $user = $stmt->fetch();
+            
+            // Test 3: Verificar que el usuario pertenece a un clan
+            $stmt = $db->prepare("
+                SELECT cm.clan_id, c.clan_name 
+                FROM Clan_Members cm 
+                JOIN Clans c ON c.clan_id = cm.clan_id 
+                WHERE cm.user_id = ?
+            ");
+            $stmt->execute([$this->currentUser['user_id']]);
+            $clan = $stmt->fetch();
+            
+            // Test 4: Verificar estructura de la tabla Projects
+            $stmt = $db->prepare("DESCRIBE Projects");
+            $stmt->execute();
+            $projectColumns = $stmt->fetchAll();
+            
+            echo json_encode([
+                'success' => true,
+                'message' => 'Test de base de datos completado',
+                'data' => [
+                    'connection_test' => $test1 ? 'OK' : 'FAIL',
+                    'user_exists' => $user ? 'SÍ' : 'NO',
+                    'user_data' => $user,
+                    'user_has_clan' => $clan ? 'SÍ' : 'NO',
+                    'clan_data' => $clan,
+                    'projects_table_columns' => array_column($projectColumns, 'Field')
+                ]
+            ]);
+            
+        } catch (Exception $e) {
+            echo json_encode([
+                'success' => false, 
+                'message' => 'Error en test de base de datos: ' . $e->getMessage()
+            ]);
+        }
+    }
+
     private function loadView($view, $data = []) {
         extract($data);
         $viewFile = __DIR__ . '/../views/' . $view . '.php';

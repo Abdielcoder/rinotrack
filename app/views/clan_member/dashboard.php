@@ -326,6 +326,10 @@ ob_start();
                     <i class="fas fa-bug"></i>
                     Test Conexión
                 </button>
+                <button type="button" class="btn-secondary" onclick="testDatabase()" style="background: #dc2626; color: white;">
+                    <i class="fas fa-database"></i>
+                    Test BD
+                </button>
                 <button type="button" class="btn-secondary" onclick="testCreateTask()" style="background: #10b981; color: white;">
                     <i class="fas fa-plus"></i>
                     Test Crear Tarea
@@ -1209,6 +1213,40 @@ function testConnection() {
         })
         .catch(error => {
             addDebugLog(`Error de conexión: ${error.message}`, 'error');
+            showNotification('Error de conexión: ' + error.message, 'error');
+        });
+}
+
+// Función para probar la base de datos
+function testDatabase() {
+    addDebugLog('Iniciando test de base de datos...', 'info');
+    showNotification('Probando base de datos...', 'info');
+    
+    fetch('?route=clan_member/test-database')
+        .then(response => {
+            addDebugLog(`Respuesta del servidor para BD: ${response.status} ${response.statusText}`, 'info');
+            return response.json();
+        })
+        .then(data => {
+            addDebugLog(`Datos de respuesta para BD: ${JSON.stringify(data, null, 2)}`, 'info');
+            if (data.success) {
+                addDebugLog('Test de base de datos exitoso!', 'success');
+                showNotification('Base de datos funcionando correctamente!', 'success');
+                
+                // Mostrar detalles en el log
+                if (data.data) {
+                    addDebugLog(`Conexión BD: ${data.data.connection_test}`, 'info');
+                    addDebugLog(`Usuario existe: ${data.data.user_exists}`, 'info');
+                    addDebugLog(`Usuario tiene clan: ${data.data.user_has_clan}`, 'info');
+                    addDebugLog(`Columnas de Projects: ${data.data.projects_table_columns?.join(', ')}`, 'info');
+                }
+            } else {
+                addDebugLog(`Test de BD falló: ${data.message}`, 'error');
+                showNotification('Error en test de BD: ' + data.message, 'error');
+            }
+        })
+        .catch(error => {
+            addDebugLog(`Error de conexión para BD: ${error.message}`, 'error');
             showNotification('Error de conexión: ' + error.message, 'error');
         });
 }

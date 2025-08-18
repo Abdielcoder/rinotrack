@@ -797,8 +797,17 @@ class Project {
                 WHERE cm.user_id = ?
                 LIMIT 1
             ");
+            
+            if (!$stmt) {
+                error_log("Error en prepare de Clan_Members: " . print_r($this->db->errorInfo(), true));
+                return false;
+            }
+            
+            error_log("Ejecutando consulta para obtener clan del usuario: " . $projectData['user_id']);
             $stmt->execute([$projectData['user_id']]);
             $userClan = $stmt->fetch();
+            
+            error_log("Resultado de consulta de clan: " . print_r($userClan, true));
             
             if (!$userClan) {
                 error_log("Usuario {$projectData['user_id']} no pertenece a ningún clan");
@@ -811,17 +820,30 @@ class Project {
             error_log("Usuario pertenece al clan: $clanName (ID: $clanId)");
             
             // Crear el proyecto personal en el clan del usuario
-            $stmt = $this->db->prepare("
+            $sql = "
                 INSERT INTO Projects (
                     project_name, 
                     description, 
                     clan_id, 
                     created_by_user_id, 
-                    status,
-                    start_date,
-                    end_date
-                ) VALUES (?, ?, ?, ?, 'active', CURDATE(), DATE_ADD(CURDATE(), INTERVAL 1 YEAR))
-            ");
+                    status
+                ) VALUES (?, ?, ?, ?, 'open')
+            ";
+            
+            error_log("SQL para crear proyecto: " . $sql);
+            error_log("Parámetros: " . print_r([
+                $projectData['project_name'],
+                $projectData['description'],
+                $clanId,
+                $projectData['user_id']
+            ], true));
+            
+            $stmt = $this->db->prepare($sql);
+            
+            if (!$stmt) {
+                error_log("Error en prepare de Projects: " . print_r($this->db->errorInfo(), true));
+                return false;
+            }
             
             $result = $stmt->execute([
                 $projectData['project_name'],
@@ -830,17 +852,18 @@ class Project {
                 $projectData['user_id']
             ]);
             
-            if ($result) {
-                $projectId = $this->db->lastInsertId();
-                error_log("Proyecto personal creado exitosamente con ID: " . $projectId);
-                return $projectId;
-            } else {
-                error_log("Error al crear proyecto personal: " . print_r($stmt->errorInfo(), true));
+            if (!$result) {
+                error_log("Error en execute de Projects: " . print_r($stmt->errorInfo(), true));
                 return false;
             }
             
+            $projectId = $this->db->lastInsertId();
+            error_log("Proyecto personal creado exitosamente con ID: " . $projectId);
+            return $projectId;
+            
         } catch (Exception $e) {
             error_log("ERROR en createPersonalProject: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
             return false;
         }
     }
