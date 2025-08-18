@@ -3,22 +3,22 @@ ob_start();
 ?>
 
 <div class="cm-task-details minimal">
-  <div class="project-hero" style="max-width:1100px;">
-    <div class="hero-inner">
-      <!-- Back link oculto en hero para clan_member -->
-      <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-        <div>
-          <h1 class="hero-title" style="margin-bottom:4px;"><?php echo htmlspecialchars($task['task_name']); ?></h1>
-          <div class="hero-subtitle">Proyecto: <?php echo htmlspecialchars($project['project_name']); ?></div>
-        </div>
-        <span class="status-badge <?php echo htmlspecialchars($task['status']); ?>"><?php echo strtoupper(str_replace('_',' ', (string)$task['status'])); ?></span>
-      </div>
-    </div>
-  </div>
-
   <div class="content-minimal" style="max-width:1100px;">
     <div class="task-details-grid">
       <div class="left-pane">
+        <div class="summary-card project-info-card">
+          <div class="project-info">
+            <div class="project-icon"><i class="fas fa-folder-open"></i></div>
+            <div class="project-text">
+              <div class="project-title"><?php echo htmlspecialchars($task['task_name']); ?></div>
+              <div class="project-subtitle">Proyecto: <?php echo htmlspecialchars($project['project_name']); ?></div>
+            </div>
+          </div>
+          <div class="project-status">
+            <span class="status-badge <?php echo htmlspecialchars($task['status']); ?>"><?php echo strtoupper(str_replace('_',' ', (string)$task['status'])); ?></span>
+          </div>
+        </div>
+        
         <div class="summary-card motivational-card">
           <div class="motivation">
             <div class="motivation-icon"><i class="fas fa-lightbulb"></i></div>
@@ -197,6 +197,79 @@ function noPermissionModal(){
   border-color: #5458e9 !important;
   transform: translateY(-1px);
   box-shadow: 0 6px 18px rgba(99, 102, 241, 0.22);
+}
+
+/* Estilos para la tarjeta del proyecto */
+.project-info-card {
+  background: linear-gradient(90deg, rgba(99,102,241,.12), rgba(59,130,246,.10)) !important;
+  border: 1px solid #e5e7eb !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px;
+}
+
+.project-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.project-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #6366f1;
+  color: #fff;
+  font-size: 1.2rem;
+}
+
+.project-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.project-title {
+  font-weight: 700;
+  color: #1e3a8a;
+  font-size: 1.1rem;
+}
+
+.project-subtitle {
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+.project-status {
+  margin-left: auto;
+}
+
+.status-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-badge.pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-badge.in_progress {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.status-badge.completed {
+  background: #d1fae5;
+  color: #065f46;
 }
 </style>
 
