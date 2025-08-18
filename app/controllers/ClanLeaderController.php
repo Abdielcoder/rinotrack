@@ -2705,7 +2705,7 @@ class ClanLeaderController {
      */
     private function getKanbanTasksForClan($clanId) {
         try {
-            // Obtener todas las tareas del clan (excluyendo las especiales y personales)
+            // Obtener todas las tareas del clan (incluyendo recurrentes y eventuales, pero excluyendo personales)
             $stmt = $this->db->prepare(
                 "SELECT 
                     t.task_id,
@@ -2722,7 +2722,7 @@ class ClanLeaderController {
                  FROM Tasks t
                  INNER JOIN Projects p ON p.project_id = t.project_id
                  WHERE p.clan_id = ?
-                   AND p.project_name NOT IN ('Tareas Recurrentes', 'Tareas Eventuales', 'Tareas Personales')
+                   AND p.project_name NOT IN ('Tareas Personales')
                    AND t.is_subtask = 0
                    AND t.is_personal = 0
                    AND t.status != 'completed'

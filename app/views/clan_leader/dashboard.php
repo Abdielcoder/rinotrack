@@ -69,7 +69,19 @@ ob_start();
                                         <p class="task-description"><?php echo htmlspecialchars(substr($task['description'], 0, 80)) . (strlen($task['description']) > 80 ? '...' : ''); ?></p>
                                     <?php endif; ?>
                                     <div class="task-project-info">
-                                        <span class="project-name"><?php echo htmlspecialchars($task['project_name']); ?></span>
+                                        <?php if (in_array($task['project_name'], ['Tareas Recurrentes', 'Tareas Eventuales'])): ?>
+                                            <!-- Mostrar etiqueta para tareas especiales -->
+                                            <span class="task-type-badge <?php echo strtolower(str_replace(' ', '-', $task['project_name'])); ?>">
+                                                <?php if ($task['project_name'] === 'Tareas Recurrentes'): ?>
+                                                    <i class="fas fa-redo"></i> Recurrente
+                                                <?php elseif ($task['project_name'] === 'Tareas Eventuales'): ?>
+                                                    <i class="fas fa-calendar-alt"></i> Eventual
+                                                <?php endif; ?>
+                                            </span>
+                                        <?php else: ?>
+                                            <!-- Mostrar project-name para tareas normales del clan -->
+                                            <span class="project-name"><?php echo htmlspecialchars($task['project_name']); ?></span>
+                                        <?php endif; ?>
                                     </div>
                                     <div class="task-status overdue">
                                         <i class="fas fa-exclamation-triangle"></i>
@@ -114,7 +126,19 @@ ob_start();
                                         <p class="task-description"><?php echo htmlspecialchars(substr($task['description'], 0, 80)) . (strlen($task['description']) > 80 ? '...' : ''); ?></p>
                                     <?php endif; ?>
                                     <div class="task-project-info">
-                                        <span class="project-name"><?php echo htmlspecialchars($task['project_name']); ?></span>
+                                        <?php if (in_array($task['project_name'], ['Tareas Recurrentes', 'Tareas Eventuales'])): ?>
+                                            <!-- Mostrar etiqueta para tareas especiales -->
+                                            <span class="task-type-badge <?php echo strtolower(str_replace(' ', '-', $task['project_name'])); ?>">
+                                                <?php if ($task['project_name'] === 'Tareas Recurrentes'): ?>
+                                                    <i class="fas fa-redo"></i> Recurrente
+                                                <?php elseif ($task['project_name'] === 'Tareas Eventuales'): ?>
+                                                    <i class="fas fa-calendar-alt"></i> Eventual
+                                                <?php endif; ?>
+                                            </span>
+                                        <?php else: ?>
+                                            <!-- Mostrar project-name para tareas normales del clan -->
+                                            <span class="project-name"><?php echo htmlspecialchars($task['project_name']); ?></span>
+                                        <?php endif; ?>
                                     </div>
                                     <div class="task-status today">
                                         <i class="fas fa-clock"></i>
@@ -159,7 +183,19 @@ ob_start();
                                         <p class="task-description"><?php echo htmlspecialchars(substr($task['description'], 0, 80)) . (strlen($task['description']) > 80 ? '...' : ''); ?></p>
                                     <?php endif; ?>
                                     <div class="task-project-info">
-                                        <span class="project-name"><?php echo htmlspecialchars($task['project_name']); ?></span>
+                                        <?php if (in_array($task['project_name'], ['Tareas Recurrentes', 'Tareas Eventuales'])): ?>
+                                            <!-- Mostrar etiqueta para tareas especiales -->
+                                            <span class="task-type-badge <?php echo strtolower(str_replace(' ', '-', $task['project_name'])); ?>">
+                                                <?php if ($task['project_name'] === 'Tareas Recurrentes'): ?>
+                                                    <i class="fas fa-redo"></i> Recurrente
+                                                <?php elseif ($task['project_name'] === 'Tareas Eventuales'): ?>
+                                                    <i class="fas fa-calendar-alt"></i> Eventual
+                                                <?php endif; ?>
+                                            </span>
+                                        <?php else: ?>
+                                            <!-- Mostrar project-name para tareas normales del clan -->
+                                            <span class="project-name"><?php echo htmlspecialchars($task['project_name']); ?></span>
+                                        <?php endif; ?>
                                     </div>
                                     <div class="task-status week1">
                                         <i class="fas fa-calendar"></i>
@@ -204,7 +240,19 @@ ob_start();
                                         <p class="task-description"><?php echo htmlspecialchars(substr($task['description'], 0, 80)) . (strlen($task['description']) > 80 ? '...' : ''); ?></p>
                                     <?php endif; ?>
                                     <div class="task-project-info">
-                                        <span class="project-name"><?php echo htmlspecialchars($task['project_name']); ?></span>
+                                        <?php if (in_array($task['project_name'], ['Tareas Recurrentes', 'Tareas Eventuales'])): ?>
+                                            <!-- Mostrar etiqueta para tareas especiales -->
+                                            <span class="task-type-badge <?php echo strtolower(str_replace(' ', '-', $task['project_name'])); ?>">
+                                                <?php if ($task['project_name'] === 'Tareas Recurrentes'): ?>
+                                                    <i class="fas fa-redo"></i> Recurrente
+                                                <?php elseif ($task['project_name'] === 'Tareas Eventuales'): ?>
+                                                    <i class="fas fa-calendar-alt"></i> Eventual
+                                                <?php endif; ?>
+                                            </span>
+                                        <?php else: ?>
+                                            <!-- Mostrar project-name para tareas normales del clan -->
+                                            <span class="project-name"><?php echo htmlspecialchars($task['project_name']); ?></span>
+                                        <?php endif; ?>
                                     </div>
                                     <div class="task-status week2">
                                         <i class="fas fa-calendar"></i>
