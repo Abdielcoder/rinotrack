@@ -895,7 +895,6 @@ class ClanMemberController {
                      LEFT JOIN Task_Assignments ta ON ta.task_id = t.task_id
                      WHERE p.clan_id = ?
                        AND t.is_subtask = 0
-                       AND t.is_personal = 0
                        AND t.status != 'completed'
                        AND (t.assigned_to_user_id = ? OR ta.user_id = ?)
                      GROUP BY t.task_id
@@ -936,8 +935,39 @@ class ClanMemberController {
             error_log("Tareas personales encontradas: " . count($personalTasks));
             error_log("Detalle de tareas personales: " . print_r($personalTasks, true));
 
-            // Combinar ambas listas
-            $allTasks = array_merge($clanTasks, $personalTasks);
+            // Obtener tareas de proyectos especiales (Tareas Recurrentes y Eventuales)
+            $specialTasks = [];
+            $stmt = $this->db->prepare(
+                "SELECT 
+                    t.task_id,
+                    t.task_name,
+                    t.description,
+                    t.due_date,
+                    t.priority,
+                    t.status,
+                    t.completion_percentage,
+                    t.automatic_points,
+                    p.project_name,
+                    p.project_id,
+                    CASE 
+                        WHEN t.due_date IS NULL THEN 999
+                        ELSE DATEDIFF(t.due_date, CURDATE())
+                    END as days_until_due
+                 FROM Tasks t
+                 INNER JOIN Projects p ON p.project_id = t.project_id
+                 WHERE p.project_name IN ('Tareas Recurrentes', 'Tareas Eventuales')
+                   AND t.assigned_to_user_id = ?
+                   AND t.status != 'completed'
+                   AND t.is_subtask = 0
+                 ORDER BY t.due_date ASC"
+            );
+            $stmt->execute([$userId]);
+            $specialTasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            error_log("Tareas especiales (recurrentes/eventuales) encontradas: " . count($specialTasks));
+            error_log("Detalle de tareas especiales: " . print_r($specialTasks, true));
+
+            // Combinar todas las listas
+            $allTasks = array_merge($clanTasks, $personalTasks, $specialTasks);
             error_log("Total de tareas combinadas: " . count($allTasks));
 
             // Organizar tareas por columnas del Kanban
