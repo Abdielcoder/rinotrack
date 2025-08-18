@@ -284,12 +284,12 @@ ob_start();
             
             <div class="form-row">
                 <div class="form-group">
-                    <label for="taskPriority">Prioridad</label>
-                    <select id="taskPriority" name="priority">
+                    <label for="priority">Prioridad:</label>
+                    <select name="priority" id="priority" required>
                         <option value="low">Baja</option>
                         <option value="medium" selected>Media</option>
                         <option value="high">Alta</option>
-                        <option value="urgent">Urgente</option>
+                        <option value="critical">Crítica</option>
                     </select>
                 </div>
                 

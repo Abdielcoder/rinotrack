@@ -1641,6 +1641,20 @@ class Task {
             error_log("=== INICIO createPersonalTaskSimple ===");
             error_log("Datos recibidos: " . print_r($taskData, true));
             
+            // Validar prioridad
+            $validPriorities = ['low', 'medium', 'high', 'critical'];
+            if (!in_array($taskData['priority'], $validPriorities)) {
+                error_log("ERROR: Prioridad inválida: " . $taskData['priority'] . ". Debe ser: " . implode(', ', $validPriorities));
+                return false;
+            }
+            
+            // Validar status
+            $validStatuses = ['pending', 'in_progress', 'completed', 'cancelled'];
+            if (!in_array($taskData['status'], $validStatuses)) {
+                error_log("ERROR: Status inválido: " . $taskData['status'] . ". Debe ser: " . implode(', ', $validStatuses));
+                return false;
+            }
+            
             // Primero, crear o obtener el proyecto personal del usuario
             $personalProjectId = $this->getOrCreatePersonalProject($taskData['assigned_to_user_id']);
             if (!$personalProjectId) {
@@ -1667,6 +1681,16 @@ class Task {
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0.00, 0.00, 0, 1)";
             
             error_log("SQL completo: " . $sql);
+            error_log("Parámetros a ejecutar: " . print_r([
+                $taskData['task_name'],
+                $taskData['description'],
+                $taskData['priority'],
+                $taskData['due_date'],
+                $taskData['status'],
+                $taskData['assigned_to_user_id'],
+                $taskData['assigned_to_user_id'], // created_by_user_id = assigned_to_user_id
+                $personalProjectId
+            ], true));
             
             $stmt = $this->db->prepare($sql);
             if (!$stmt) {
@@ -1696,6 +1720,7 @@ class Task {
             
         } catch (Exception $e) {
             error_log("ERROR en createPersonalTaskSimple: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
             return false;
         }
     }
