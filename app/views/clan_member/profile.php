@@ -367,6 +367,7 @@ body {
 .profile-container {
     min-height: 100vh;
     background: var(--bg-secondary);
+    width: 100%;
 }
 
 /* Header */
@@ -375,12 +376,14 @@ body {
     border-bottom: 1px solid var(--border-color);
     padding: var(--spacing-xl) 0;
     margin-bottom: var(--spacing-2xl);
+    width: 100%;
 }
 
 .header-content {
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 var(--spacing-lg);
+    width: 100%;
 }
 
 .back-link {
@@ -419,13 +422,23 @@ body {
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 var(--spacing-lg);
+    width: 100%;
 }
 
 .profile-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr); /* Tres columnas fijas en desktop */
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
     gap: var(--spacing-xl);
     max-width: 100%;
+    width: 100%;
+    min-height: 0;
+    min-width: 0;
+}
+
+/* Forzar el comportamiento del grid */
+.profile-grid > * {
+    min-width: 0;
+    min-height: 0;
 }
 
 /* Tarjetas */
@@ -436,6 +449,9 @@ body {
     box-shadow: var(--shadow-sm);
     border: 1px solid var(--border-color);
     transition: all 0.3s ease;
+    width: 100%;
+    min-width: 0;
+    flex-shrink: 0;
 }
 
 .profile-card:hover {
@@ -739,14 +755,14 @@ body {
 /* Responsive */
 @media (max-width: 1200px) {
     .profile-grid {
-        grid-template-columns: repeat(2, 1fr); /* Dos columnas en tablets medianas */
+        grid-template-columns: repeat(2, 1fr) !important;
         gap: var(--spacing-lg);
     }
 }
 
 @media (max-width: 768px) {
     .profile-grid {
-        grid-template-columns: 1fr; /* Una columna en móviles */
+        grid-template-columns: 1fr !important;
         gap: var(--spacing-lg);
     }
     
