@@ -2705,6 +2705,17 @@ class ClanLeaderController {
      */
     private function getKanbanTasksForClan($clanId) {
         try {
+            error_log("=== DEBUG getKanbanTasksForClan ===");
+            error_log("Clan ID: $clanId");
+            
+            // Obtener el clan_id de Olympo para tareas globales
+            $olympoStmt = $this->db->prepare("SELECT clan_id FROM Clans WHERE clan_name = 'Olympo'");
+            $olympoStmt->execute();
+            $olympoClan = $olympoStmt->fetch(PDO::FETCH_ASSOC);
+            $olympoClanId = $olympoClan ? $olympoClan['clan_id'] : null;
+            
+            error_log("Clan Olympo ID: " . ($olympoClanId ?? 'No encontrado'));
+            
             // Obtener todas las tareas del clan (incluyendo recurrentes y eventuales, pero excluyendo personales)
             $stmt = $this->db->prepare(
                 "SELECT 
@@ -2718,18 +2729,55 @@ class ClanLeaderController {
                     t.automatic_points,
                     p.project_name,
                     p.project_id,
-                    DATEDIFF(t.due_date, CURDATE()) as days_until_due
+                    CASE 
+                        WHEN t.due_date IS NULL THEN 999
+                        ELSE DATEDIFF(t.due_date, CURDATE())
+                    END as days_until_due
                  FROM Tasks t
                  INNER JOIN Projects p ON p.project_id = t.project_id
-                 WHERE p.clan_id = ?
+                 WHERE (p.clan_id = ? OR (p.clan_id = ? AND p.project_name IN ('Tareas Recurrentes', 'Tareas Eventuales')))
                    AND p.project_name NOT IN ('Tareas Personales')
                    AND t.is_subtask = 0
                    AND t.is_personal = 0
                    AND t.status != 'completed'
-                 ORDER BY t.due_date ASC"
+                 ORDER BY t.due_date ASC, t.task_id ASC"
             );
-            $stmt->execute([$clanId]);
+            
+            $params = [$clanId, $olympoClanId];
+            error_log("Ejecutando consulta con parámetros: clanId=$clanId, olympoClanId=$olympoClanId");
+            $stmt->execute($params);
             $allTasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            error_log("Total tareas encontradas: " . count($allTasks));
+            
+            // Debug: mostrar todas las tareas encontradas
+            foreach ($allTasks as $index => $task) {
+                error_log("Tarea $index: ID={$task['task_id']}, Nombre='{$task['task_name']}', Proyecto='{$task['project_name']}', Due_date='{$task['due_date']}', Days_until_due='{$task['days_until_due']}'");
+            }
+            
+            // Debug: verificar qué proyectos únicos se encontraron
+            $uniqueProjects = array_unique(array_column($allTasks, 'project_name'));
+            error_log("Proyectos únicos encontrados: " . implode(', ', $uniqueProjects));
+            
+            // Debug: verificar tareas del clan Olympo
+            $olympoTasks = array_filter($allTasks, function($task) use ($olympoClanId) {
+                return $task['project_name'] === 'Tareas Recurrentes' || $task['project_name'] === 'Tareas Eventuales';
+            });
+            error_log("Tareas de Olympo encontradas: " . count($olympoTasks));
+            foreach ($olympoTasks as $task) {
+                error_log("Tarea Olympo: ID={$task['task_id']}, Nombre='{$task['task_name']}', Proyecto='{$task['project_name']}'");
+            }
+            
+            // Debug: verificar todas las tareas por proyecto
+            $tasksByProject = [];
+            foreach ($allTasks as $task) {
+                $projectName = $task['project_name'];
+                if (!isset($tasksByProject[$projectName])) {
+                    $tasksByProject[$projectName] = 0;
+                }
+                $tasksByProject[$projectName]++;
+            }
+            error_log("Tareas por proyecto: " . json_encode($tasksByProject));
 
             // Organizar tareas por columnas del Kanban
             $kanbanTasks = [
@@ -2742,7 +2790,10 @@ class ClanLeaderController {
             foreach ($allTasks as $task) {
                 $daysUntilDue = (int)$task['days_until_due'];
                 
-                if ($daysUntilDue < 0) {
+                if ($daysUntilDue == 999) {
+                    // Tareas sin fecha de vencimiento van a la columna de 2 semanas
+                    $kanbanTasks['2_semanas'][] = $task;
+                } elseif ($daysUntilDue < 0) {
                     $kanbanTasks['vencidas'][] = $task;
                 } elseif ($daysUntilDue == 0) {
                     $kanbanTasks['hoy'][] = $task;
@@ -2752,6 +2803,12 @@ class ClanLeaderController {
                     $kanbanTasks['2_semanas'][] = $task;
                 }
             }
+            
+            error_log("Tareas organizadas por columna:");
+            error_log("- Vencidas: " . count($kanbanTasks['vencidas']));
+            error_log("- Hoy: " . count($kanbanTasks['hoy']));
+            error_log("- 1 Semana: " . count($kanbanTasks['1_semana']));
+            error_log("- 2 Semanas: " . count($kanbanTasks['2_semanas']));
 
             return $kanbanTasks;
         } catch (Exception $e) {
