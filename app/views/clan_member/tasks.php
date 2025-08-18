@@ -407,12 +407,101 @@ ob_start();
         padding: var(--spacing-lg) var(--spacing-md);
     }
     
+    .welcome-header {
+        flex-direction: column;
+        gap: var(--spacing-lg);
+        text-align: center;
+        padding: var(--spacing-lg);
+    }
+    
+    .welcome-title {
+        font-size: 1.8rem;
+    }
+    
+    .welcome-subtitle {
+        font-size: 1rem;
+    }
+    
     .cm-project-cards {
         grid-template-columns: 1fr;
+        gap: var(--spacing-md);
     }
     
     .cm-project-card {
         min-width: 100%;
+        padding: var(--spacing-lg);
+    }
+    
+    .pc-top {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+        text-align: center;
+    }
+    
+    .pc-title {
+        font-size: 1.1rem;
+    }
+    
+    .pc-status {
+        font-size: 0.9rem;
+    }
+    
+    .pc-metrics {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-md);
+    }
+    
+    .pc-metric {
+        justify-content: center;
+        text-align: center;
+    }
+    
+    .pc-progress {
+        margin-top: var(--spacing-md);
+    }
+    
+    .pc-actions {
+        justify-content: center;
+    }
+    
+    .filters {
+        flex-direction: column;
+        gap: var(--spacing-md);
+        align-items: stretch;
+    }
+    
+    .search-input,
+    .filter-select {
+        width: 100%;
+        padding: var(--spacing-md);
+        font-size: 1rem;
+    }
+    
+    .btn {
+        width: 100%;
+        padding: var(--spacing-md);
+        font-size: 1rem;
+        justify-content: center;
+    }
+    
+    .table-wrapper {
+        overflow-x: auto;
+        margin-top: var(--spacing-md);
+    }
+    
+    .data-table {
+        min-width: 600px;
+        font-size: 0.9rem;
+    }
+    
+    .data-table th,
+    .data-table td {
+        padding: var(--spacing-md);
+    }
+    
+    .badge {
+        font-size: 0.8rem;
+        padding: 6px 10px;
     }
 }
 
@@ -425,8 +514,54 @@ ob_start();
         padding: var(--spacing-md) var(--spacing-sm);
     }
     
+    .welcome-header {
+        padding: var(--spacing-md);
+    }
+    
     .welcome-title {
-        font-size: 1.8rem;
+        font-size: 1.6rem;
+    }
+    
+    .cm-project-card {
+        padding: var(--spacing-md);
+    }
+    
+    .pc-title {
+        font-size: 1rem;
+    }
+    
+    .pc-metric .num {
+        font-size: 1.2rem;
+    }
+    
+    .pc-metric .cap {
+        font-size: 0.8rem;
+    }
+    
+    .filters {
+        gap: var(--spacing-sm);
+    }
+    
+    .search-input,
+    .filter-select,
+    .btn {
+        padding: var(--spacing-sm);
+        font-size: 0.9rem;
+    }
+    
+    .data-table {
+        min-width: 500px;
+        font-size: 0.8rem;
+    }
+    
+    .data-table th,
+    .data-table td {
+        padding: var(--spacing-sm);
+    }
+    
+    .badge {
+        font-size: 0.7rem;
+        padding: 4px 8px;
     }
 }
 </style>
