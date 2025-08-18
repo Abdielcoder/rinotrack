@@ -161,25 +161,46 @@ ob_start();
                         <span class="task-count"><?php echo count($kanbanTasks['vencidas'] ?? []); ?></span>
                     </div>
                     <div class="column-content">
-                        <?php foreach ($kanbanTasks['vencidas'] ?? [] as $task): ?>
-                            <div class="task-card overdue" data-task-id="<?php echo $task['task_id']; ?>" data-priority="<?php echo $task['priority'] ?? 'medium'; ?>">
+                        <?php foreach ($kanbanTasks['vencidas'] as $task): ?>
+                            <div class="task-card overdue" data-task-id="<?php echo $task['task_id']; ?>">
                                 <div class="task-header">
-                                    <label class="task-checkbox">
-                                        <input type="checkbox" onchange="toggleTaskStatus(<?php echo $task['task_id']; ?>, this.checked)">
-                                        <span class="checkmark"></span>
-                                    </label>
-                                    <div class="task-priority-badge" id="priority-<?php echo $task['task_id']; ?>">
-                                        <!-- La etiqueta de prioridad se insertará con JavaScript -->
+                                    <input type="checkbox" class="task-checkbox" <?php echo ($task['status'] === 'completed' || ($task['is_completed'] ?? 0) == 1) ? 'checked' : ''; ?> onchange="toggleTaskStatus(<?php echo $task['task_id']; ?>, this.checked)">
+                                    <div class="task-priority-badge <?php echo $task['priority']; ?>">
+                                        <?php
+                                        $priorityLabels = [
+                                            'low' => 'BAJA',
+                                            'medium' => 'MEDIA', 
+                                            'high' => 'ALTA',
+                                            'critical' => 'CRÍTICA'
+                                        ];
+                                        echo $priorityLabels[$task['priority']] ?? 'MEDIA';
+                                        ?>
                                     </div>
                                 </div>
-                                <div class="task-title"><?php echo Utils::escape($task['task_name']); ?></div>
-                                <div class="task-project"><?php echo Utils::escape($task['project_name']); ?></div>
-                                <div class="task-due-date overdue">
-                                    <i class="fas fa-exclamation-triangle"></i>
-                                    Vencida hace <?php echo abs((int)$task['days_until_due']); ?> días
+                                <div class="task-content">
+                                    <h4 class="task-title"><?php echo htmlspecialchars($task['task_name']); ?></h4>
+                                    <?php if (!empty($task['description'])): ?>
+                                        <p class="task-description"><?php echo htmlspecialchars($task['description']); ?></p>
+                                    <?php endif; ?>
+                                    <div class="task-project-info">
+                                        <span class="project-name"><?php echo htmlspecialchars($task['project_name']); ?></span>
+                                        <?php if (in_array($task['project_name'], ['Tareas Recurrentes', 'Tareas Eventuales'])): ?>
+                                            <span class="task-type-badge <?php echo strtolower(str_replace(' ', '-', $task['project_name'])); ?>">
+                                                <?php if ($task['project_name'] === 'Tareas Recurrentes'): ?>
+                                                    <i class="fas fa-redo"></i> Recurrente
+                                                <?php else: ?>
+                                                    <i class="fas fa-calendar-alt"></i> Eventual
+                                                <?php endif; ?>
+                                            </span>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div class="task-status overdue">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                        Vencida hace <?php echo abs($task['days_until_due']); ?> días
+                                    </div>
                                 </div>
                                 <div class="task-actions">
-                                    <a href="?route=clan_member/task-details&task_id=<?php echo $task['task_id']; ?>" class="btn-edit" title="Ver Detalles">
+                                    <a href="?route=clan_member/task-details&task_id=<?php echo $task['task_id']; ?>" class="btn-edit" title="Ver detalles">
                                         <i class="fas fa-eye"></i>
                                     </a>
                                 </div>
@@ -196,24 +217,45 @@ ob_start();
                     </div>
                     <div class="column-content">
                         <?php foreach ($kanbanTasks['hoy'] ?? [] as $task): ?>
-                            <div class="task-card today" data-task-id="<?php echo $task['task_id']; ?>" data-priority="<?php echo $task['priority'] ?? 'medium'; ?>">
+                            <div class="task-card today" data-task-id="<?php echo $task['task_id']; ?>">
                                 <div class="task-header">
-                                    <label class="task-checkbox">
-                                        <input type="checkbox" onchange="toggleTaskStatus(<?php echo $task['task_id']; ?>, this.checked)">
-                                        <span class="checkmark"></span>
-                                    </label>
-                                    <div class="task-priority-badge" id="priority-<?php echo $task['task_id']; ?>">
-                                        <!-- La etiqueta de prioridad se insertará con JavaScript -->
+                                    <input type="checkbox" class="task-checkbox" <?php echo ($task['status'] === 'completed' || ($task['is_completed'] ?? 0) == 1) ? 'checked' : ''; ?> onchange="toggleTaskStatus(<?php echo $task['task_id']; ?>, this.checked)">
+                                    <div class="task-priority-badge <?php echo $task['priority']; ?>">
+                                        <?php
+                                        $priorityLabels = [
+                                            'low' => 'BAJA',
+                                            'medium' => 'MEDIA', 
+                                            'high' => 'ALTA',
+                                            'critical' => 'CRÍTICA'
+                                        ];
+                                        echo $priorityLabels[$task['priority']] ?? 'MEDIA';
+                                        ?>
                                     </div>
                                 </div>
-                                <div class="task-title"><?php echo Utils::escape($task['task_name']); ?></div>
-                                <div class="task-project"><?php echo Utils::escape($task['project_name']); ?></div>
-                                <div class="task-due-date today">
-                                    <i class="fas fa-clock"></i>
-                                    Vence hoy
+                                <div class="task-content">
+                                    <h4 class="task-title"><?php echo htmlspecialchars($task['task_name']); ?></h4>
+                                    <?php if (!empty($task['description'])): ?>
+                                        <p class="task-description"><?php echo htmlspecialchars($task['description']); ?></p>
+                                    <?php endif; ?>
+                                    <div class="task-project-info">
+                                        <span class="project-name"><?php echo htmlspecialchars($task['project_name']); ?></span>
+                                        <?php if (in_array($task['project_name'], ['Tareas Recurrentes', 'Tareas Eventuales'])): ?>
+                                            <span class="task-type-badge <?php echo strtolower(str_replace(' ', '-', $task['project_name'])); ?>">
+                                                <?php if ($task['project_name'] === 'Tareas Recurrentes'): ?>
+                                                    <i class="fas fa-redo"></i> Recurrente
+                                                <?php else: ?>
+                                                    <i class="fas fa-calendar-alt"></i> Eventual
+                                                <?php endif; ?>
+                                            </span>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div class="task-status today">
+                                        <i class="fas fa-clock"></i>
+                                        Vence hoy
+                                    </div>
                                 </div>
                                 <div class="task-actions">
-                                    <a href="?route=clan_member/task-details&task_id=<?php echo $task['task_id']; ?>" class="btn-edit" title="Ver Detalles">
+                                    <a href="?route=clan_member/task-details&task_id=<?php echo $task['task_id']; ?>" class="btn-edit" title="Ver detalles">
                                         <i class="fas fa-eye"></i>
                                     </a>
                                 </div>
@@ -230,24 +272,45 @@ ob_start();
                     </div>
                     <div class="column-content">
                         <?php foreach ($kanbanTasks['1_semana'] ?? [] as $task): ?>
-                            <div class="task-card week1" data-task-id="<?php echo $task['task_id']; ?>" data-priority="<?php echo $task['priority'] ?? 'medium'; ?>">
+                            <div class="task-card week1" data-task-id="<?php echo $task['task_id']; ?>">
                                 <div class="task-header">
-                                    <label class="task-checkbox">
-                                        <input type="checkbox" onchange="toggleTaskStatus(<?php echo $task['task_id']; ?>, this.checked)">
-                                        <span class="checkmark"></span>
-                                    </label>
-                                    <div class="task-priority-badge" id="priority-<?php echo $task['task_id']; ?>">
-                                        <!-- La etiqueta de prioridad se insertará con JavaScript -->
+                                    <input type="checkbox" class="task-checkbox" <?php echo ($task['status'] === 'completed' || ($task['is_completed'] ?? 0) == 1) ? 'checked' : ''; ?> onchange="toggleTaskStatus(<?php echo $task['task_id']; ?>, this.checked)">
+                                    <div class="task-priority-badge <?php echo $task['priority']; ?>">
+                                        <?php
+                                        $priorityLabels = [
+                                            'low' => 'BAJA',
+                                            'medium' => 'MEDIA', 
+                                            'high' => 'ALTA',
+                                            'critical' => 'CRÍTICA'
+                                        ];
+                                        echo $priorityLabels[$task['priority']] ?? 'MEDIA';
+                                        ?>
                                     </div>
                                 </div>
-                                <div class="task-title"><?php echo Utils::escape($task['task_name']); ?></div>
-                                <div class="task-project"><?php echo Utils::escape($task['project_name']); ?></div>
-                                <div class="task-due-date week1">
-                                    <i class="fas fa-calendar"></i>
-                                    En <?php echo (int)$task['days_until_due']; ?> días
+                                <div class="task-content">
+                                    <h4 class="task-title"><?php echo htmlspecialchars($task['task_name']); ?></h4>
+                                    <?php if (!empty($task['description'])): ?>
+                                        <p class="task-description"><?php echo htmlspecialchars($task['description']); ?></p>
+                                    <?php endif; ?>
+                                    <div class="task-project-info">
+                                        <span class="project-name"><?php echo htmlspecialchars($task['project_name']); ?></span>
+                                        <?php if (in_array($task['project_name'], ['Tareas Recurrentes', 'Tareas Eventuales'])): ?>
+                                            <span class="task-type-badge <?php echo strtolower(str_replace(' ', '-', $task['project_name'])); ?>">
+                                                <?php if ($task['project_name'] === 'Tareas Recurrentes'): ?>
+                                                    <i class="fas fa-redo"></i> Recurrente
+                                                <?php else: ?>
+                                                    <i class="fas fa-calendar-alt"></i> Eventual
+                                                <?php endif; ?>
+                                            </span>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div class="task-status week1">
+                                        <i class="fas fa-calendar"></i>
+                                        En <?php echo $task['days_until_due']; ?> días
+                                    </div>
                                 </div>
                                 <div class="task-actions">
-                                    <a href="?route=clan_member/task-details&task_id=<?php echo $task['task_id']; ?>" class="btn-edit" title="Ver Detalles">
+                                    <a href="?route=clan_member/task-details&task_id=<?php echo $task['task_id']; ?>" class="btn-edit" title="Ver detalles">
                                         <i class="fas fa-eye"></i>
                                     </a>
                                 </div>
@@ -263,30 +326,46 @@ ob_start();
                         <span class="task-count"><?php echo count($kanbanTasks['2_semanas'] ?? []); ?></span>
                     </div>
                     <div class="column-content">
-                        <?php foreach ($kanbanTasks['2_semanas'] ?? [] as $task): ?>
-                            <div class="task-card week2" data-task-id="<?php echo $task['task_id']; ?>" data-priority="<?php echo $task['priority'] ?? 'medium'; ?>">
+                        <?php foreach ($kanbanTasks['2_semanas'] as $task): ?>
+                            <div class="task-card week2" data-task-id="<?php echo $task['task_id']; ?>">
                                 <div class="task-header">
-                                    <label class="task-checkbox">
-                                        <input type="checkbox" onchange="toggleTaskStatus(<?php echo $task['task_id']; ?>, this.checked)">
-                                        <span class="checkmark"></span>
-                                    </label>
-                                    <div class="task-priority-badge" id="priority-<?php echo $task['task_id']; ?>">
-                                        <!-- La etiqueta de prioridad se insertará con JavaScript -->
+                                    <input type="checkbox" class="task-checkbox" <?php echo ($task['status'] === 'completed' || ($task['is_completed'] ?? 0) == 1) ? 'checked' : ''; ?> onchange="toggleTaskStatus(<?php echo $task['task_id']; ?>, this.checked)">
+                                    <div class="task-priority-badge <?php echo $task['priority']; ?>">
+                                        <?php
+                                        $priorityLabels = [
+                                            'low' => 'BAJA',
+                                            'medium' => 'MEDIA', 
+                                            'high' => 'ALTA',
+                                            'critical' => 'CRÍTICA'
+                                        ];
+                                        echo $priorityLabels[$task['priority']] ?? 'MEDIA';
+                                        ?>
                                     </div>
                                 </div>
-                                <div class="task-title"><?php echo Utils::escape($task['task_name']); ?></div>
-                                <div class="task-project"><?php echo Utils::escape($task['project_name']); ?></div>
-                                <div class="task-due-date week2">
-                                    <i class="fas fa-calendar"></i>
-                                    <?php if ($task['due_date']): ?>
-                                        Vence: <?php echo date('d/m/Y', strtotime($task['due_date'])); ?>
-                                        (<?php echo (int)$task['days_until_due']; ?> días)
-                                    <?php else: ?>
-                                        Sin fecha límite
+                                <div class="task-content">
+                                    <h4 class="task-title"><?php echo htmlspecialchars($task['task_name']); ?></h4>
+                                    <?php if (!empty($task['description'])): ?>
+                                        <p class="task-description"><?php echo htmlspecialchars($task['description']); ?></p>
                                     <?php endif; ?>
+                                    <div class="task-project-info">
+                                        <span class="project-name"><?php echo htmlspecialchars($task['project_name']); ?></span>
+                                        <?php if (in_array($task['project_name'], ['Tareas Recurrentes', 'Tareas Eventuales'])): ?>
+                                            <span class="task-type-badge <?php echo strtolower(str_replace(' ', '-', $task['project_name'])); ?>">
+                                                <?php if ($task['project_name'] === 'Tareas Recurrentes'): ?>
+                                                    <i class="fas fa-redo"></i> Recurrente
+                                                <?php else: ?>
+                                                    <i class="fas fa-calendar-alt"></i> Eventual
+                                                <?php endif; ?>
+                                            </span>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div class="task-status week2">
+                                        <i class="fas fa-calendar"></i>
+                                        Vence: <?php echo date('d/m/Y', strtotime($task['due_date'])); ?> (<?php echo $task['days_until_due']; ?> días)
+                                    </div>
                                 </div>
                                 <div class="task-actions">
-                                    <a href="?route=clan_member/task-details&task_id=<?php echo $task['task_id']; ?>" class="btn-edit" title="Ver Detalles">
+                                    <a href="?route=clan_member/task-details&task_id=<?php echo $task['task_id']; ?>" class="btn-edit" title="Ver detalles">
                                         <i class="fas fa-eye"></i>
                                     </a>
                                 </div>
@@ -1139,6 +1218,92 @@ ob_start();
 
 .debug-warning {
     color: #fbbf24;
+}
+
+/* === BADGES DE TIPO DE TAREA === */
+.task-type-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-left: 8px;
+}
+
+.task-type-badge.tareas-recurrentes {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+}
+
+.task-type-badge.tareas-eventuales {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+    box-shadow: 0 2px 4px rgba(240, 147, 251, 0.3);
+}
+
+.task-type-badge i {
+    font-size: 0.8rem;
+}
+
+/* === MEJORAS EN LOS CARDS === */
+.task-project-info {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 8px 0;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.project-name {
+    font-size: 0.85rem;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.task-description {
+    font-size: 0.85rem;
+    color: #6b7280;
+    margin: 6px 0;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.task-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    margin-top: 8px;
+}
+
+.task-status.overdue {
+    color: #dc2626;
+}
+
+.task-status.today {
+    color: #ea580c;
+}
+
+.task-status.week1 {
+    color: #2563eb;
+}
+
+.task-status.week2 {
+    color: #059669;
+}
+
+.task-status i {
+    font-size: 0.9rem;
 }
 </style>
 
