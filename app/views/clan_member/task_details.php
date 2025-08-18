@@ -82,7 +82,7 @@ ob_start();
         </div>
 
         <div class="footer-actions" style="display:flex; gap:10px; margin-top:12px;">
-          <a href="?route=clan_member/tasks" class="btn-minimal"><i class="fas fa-arrow-left"></i> Volver a Tareas</a>
+          <a href="?route=clan_member" class="btn-minimal"><i class="fas fa-arrow-left"></i> Volver a Tareas</a>
           <?php if ($canEdit): ?>
             <button class="btn-minimal primary" onclick="openEditTaskModal()"><i class="fas fa-edit"></i> Editar Tarea</button>
           <?php else: ?>
