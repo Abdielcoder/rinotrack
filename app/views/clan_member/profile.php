@@ -40,7 +40,7 @@ ob_start();
                     
                     <div class="form-group">
                         <label for="username">Nombre de usuario</label>
-                        <input type="text" id="username" name="username" value="<?php echo Utils::escape($user['username'] ?? ''); ?>" required />
+                        <input type="text" id="username" name="username" value="<?php echo Utils::escape($user['username'] ?? ''); ?>" disabled readonly />
                     </div>
                     
                     <div class="form-group">
@@ -480,6 +480,22 @@ body {
 
 .form-group input:hover {
     border-color: var(--primary-light);
+}
+
+/* Estilos para campos deshabilitados */
+.form-group input:disabled,
+.form-group input[readonly] {
+    background-color: var(--bg-secondary);
+    color: var(--text-muted);
+    cursor: not-allowed;
+    opacity: 0.7;
+    border-color: var(--border-color);
+}
+
+.form-group input:disabled:hover,
+.form-group input[readonly]:hover {
+    border-color: var(--border-color);
+    transform: none;
 }
 
 /* Botones */
