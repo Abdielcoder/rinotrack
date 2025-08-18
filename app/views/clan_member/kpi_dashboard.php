@@ -156,7 +156,7 @@ ob_start();
 }
 
 .mobile-menu {
-    display: none;
+    display: block !important;
     position: fixed;
     top: 0;
     left: 0;
@@ -170,8 +170,8 @@ ob_start();
 }
 
 .mobile-menu.active {
-    opacity: 1;
-    visibility: visible;
+    opacity: 1 !important;
+    visibility: visible !important;
 }
 
 .mobile-menu-content {
@@ -187,7 +187,7 @@ ob_start();
 }
 
 .mobile-menu.active .mobile-menu-content {
-    transform: translateX(0);
+    transform: translateX(0) !important;
 }
 
 .mobile-menu-header {

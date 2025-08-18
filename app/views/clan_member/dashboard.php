@@ -36,20 +36,45 @@ ob_start();
             </button>
             
             <!-- Menú móvil -->
-            <div class="mobile-menu" id="mobileMenu">
-                <div class="mobile-menu-content">
-                    <div class="mobile-menu-header">
-                        <span class="mobile-menu-title">Menú</span>
-                        <button class="mobile-menu-close" onclick="toggleMobileMenu()">
+            <div class="mobile-menu" id="mobileMenu" style="display: block !important; position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: rgba(0, 0, 0, 0.8); z-index: 999; opacity: 0; visibility: hidden; transition: all 0.3s ease;">
+                <div class="mobile-menu-content" style="position: absolute; top: 0; right: 0; width: 280px; height: 100%; background: #ffffff; transform: translateX(100%); transition: transform 0.3s ease; box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);">
+                    <div class="mobile-menu-header" style="display: flex; justify-content: space-between; align-items: center; padding: 20px; border-bottom: 1px solid #e5e7eb; background: #f9fafb;">
+                        <span class="mobile-menu-title" style="font-size: 1.2rem; font-weight: 600; color: #1e3a8a;">Menú</span>
+                        <button class="mobile-menu-close" onclick="toggleMobileMenu()" style="background: none; border: none; font-size: 1.5rem; color: #6b7280; cursor: pointer; padding: 0; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 8px; transition: all 0.2s ease;">
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
-                    <ul class="mobile-nav-menu">
-                        <li class="mobile-nav-item active"><a href="?route=clan_member" class="mobile-nav-link"><i class="fas fa-home"></i><span>Dashboard</span></a></li>
-                        <li class="mobile-nav-item"><a href="?route=clan_member/tasks" class="mobile-nav-link"><i class="fas fa-tasks"></i><span>Tareas</span></a></li>
-                        <li class="mobile-nav-item"><a href="?route=clan_member/kpi-dashboard" class="mobile-nav-link"><i class="fas fa-chart-line"></i><span>KPI</span></a></li>
-                        <li class="mobile-nav-item"><a href="?route=clan_member/availability" class="mobile-nav-link"><i class="fas fa-user-clock"></i><span>Disponibilidad</span></a></li>
-                        <li class="mobile-nav-item"><a href="?route=clan_member/profile" class="mobile-nav-link"><i class="fas fa-user"></i><span>Perfil</span></a></li>
+                    <ul class="mobile-nav-menu" style="list-style: none; padding: 0; margin: 0;">
+                        <li class="mobile-nav-item" style="border-bottom: 1px solid #e5e7eb;">
+                            <a href="?route=clan_member" class="mobile-nav-link" style="display: flex; align-items: center; gap: 16px; padding: 20px; text-decoration: none; color: #6b7280; font-weight: 500; transition: all 0.2s ease; background: #f3f4f6; color: #1e3a8a;">
+                                <i class="fas fa-home" style="width: 20px; text-align: center; font-size: 1.1rem;"></i>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
+                        <li class="mobile-nav-item" style="border-bottom: 1px solid #e5e7eb;">
+                            <a href="?route=clan_member/tasks" class="mobile-nav-link" style="display: flex; align-items: center; gap: 16px; padding: 20px; text-decoration: none; color: #6b7280; font-weight: 500; transition: all 0.2s ease;">
+                                <i class="fas fa-tasks" style="width: 20px; text-align: center; font-size: 1.1rem;"></i>
+                                <span>Tareas</span>
+                            </a>
+                        </li>
+                        <li class="mobile-nav-item" style="border-bottom: 1px solid #e5e7eb;">
+                            <a href="?route=clan_member/kpi-dashboard" class="mobile-nav-link" style="display: flex; align-items: center; gap: 16px; padding: 20px; text-decoration: none; color: #6b7280; font-weight: 500; transition: all 0.2s ease;">
+                                <i class="fas fa-chart-line" style="width: 20px; text-align: center; font-size: 1.1rem;"></i>
+                                <span>KPI</span>
+                            </a>
+                        </li>
+                        <li class="mobile-nav-item" style="border-bottom: 1px solid #e5e7eb;">
+                            <a href="?route=clan_member/availability" class="mobile-nav-link" style="display: flex; align-items: center; gap: 16px; padding: 20px; text-decoration: none; color: #6b7280; font-weight: 500; transition: all 0.2s ease;">
+                                <i class="fas fa-user-clock" style="width: 20px; text-align: center; font-size: 1.1rem;"></i>
+                                <span>Disponibilidad</span>
+                            </a>
+                        </li>
+                        <li class="mobile-nav-item" style="border-bottom: 1px solid #e5e7eb;">
+                            <a href="?route=clan_member/profile" class="mobile-nav-link" style="display: flex; align-items: center; gap: 16px; padding: 20px; text-decoration: none; color: #6b7280; font-weight: 500; transition: all 0.2s ease;">
+                                <i class="fas fa-user" style="width: 20px; text-align: center; font-size: 1.1rem;"></i>
+                                <span>Perfil</span>
+                            </a>
+                        </li>
                     </ul>
                 </div>
             </div>
@@ -489,7 +514,7 @@ ob_start();
 }
 
 .mobile-menu {
-    display: none;
+    display: block !important;
     position: fixed;
     top: 0;
     left: 0;
@@ -503,8 +528,8 @@ ob_start();
 }
 
 .mobile-menu.active {
-    opacity: 1;
-    visibility: visible;
+    opacity: 1 !important;
+    visibility: visible !important;
 }
 
 .mobile-menu-content {
@@ -520,7 +545,7 @@ ob_start();
 }
 
 .mobile-menu.active .mobile-menu-content {
-    transform: translateX(0);
+    transform: translateX(0) !important;
 }
 
 .mobile-menu-header {
