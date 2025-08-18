@@ -423,8 +423,9 @@ body {
 
 .profile-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    grid-template-columns: repeat(3, 1fr); /* Tres columnas fijas en desktop */
     gap: var(--spacing-xl);
+    max-width: 100%;
 }
 
 /* Tarjetas */
@@ -736,9 +737,16 @@ body {
 }
 
 /* Responsive */
+@media (max-width: 1200px) {
+    .profile-grid {
+        grid-template-columns: repeat(2, 1fr); /* Dos columnas en tablets medianas */
+        gap: var(--spacing-lg);
+    }
+}
+
 @media (max-width: 768px) {
     .profile-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr; /* Una columna en móviles */
         gap: var(--spacing-lg);
     }
     
