@@ -660,7 +660,7 @@ ob_start();
 }
 
 .btn-view-tasks {
-    background:rgb(243, 246, 250);
+    background:rgb(12, 12, 12);
     color: white;
     padding: 0.75rem 1.5rem;
     border-radius: 10px;
