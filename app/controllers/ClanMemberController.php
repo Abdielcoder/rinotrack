@@ -48,7 +48,13 @@ class ClanMemberController {
         // Solo estadísticas del usuario
         $userTaskStats = $this->getUserTaskStats($this->currentUser['user_id'], $this->userClan['clan_id']);
         $ownContribution = $this->getOwnContribution($this->currentUser, $userTaskStats);
-        $projects = $this->projectModel->getByClan($this->userClan['clan_id']);
+        $allProjects = $this->projectModel->getByClan($this->userClan['clan_id']);
+        
+        // Filtrar proyectos para excluir "Tareas Eventuales" y "Tareas Recurrentes"
+        $projects = array_filter($allProjects, function($project) {
+            return !in_array($project['project_name'], ['Tareas Eventuales', 'Tareas Recurrentes']);
+        });
+        
         $ownTasksDetails = $this->getUserTasksForModal($this->currentUser['user_id'], $this->userClan['clan_id']);
         
         // Verificar si se quiere editar una tarea
@@ -91,7 +97,13 @@ class ClanMemberController {
             Utils::redirect('dashboard');
             return;
         }
-        $projects = $this->userClan ? $this->projectModel->getByClan($this->userClan['clan_id']) : [];
+        $allProjects = $this->userClan ? $this->projectModel->getByClan($this->userClan['clan_id']) : [];
+        
+        // Filtrar proyectos para excluir "Tareas Eventuales" y "Tareas Recurrentes"
+        $projects = array_filter($allProjects, function($project) {
+            return !in_array($project['project_name'], ['Tareas Eventuales', 'Tareas Recurrentes']);
+        });
+        
         $data = [
             'currentPage' => 'clan_member',
             'user' => $this->currentUser,
