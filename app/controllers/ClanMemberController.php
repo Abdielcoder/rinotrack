@@ -51,6 +51,22 @@ class ClanMemberController {
         $projects = $this->projectModel->getByClan($this->userClan['clan_id']);
         $ownTasksDetails = $this->getUserTasksForModal($this->currentUser['user_id'], $this->userClan['clan_id']);
         
+        // Verificar si se quiere editar una tarea
+        $editTaskId = (int)($_GET['edit_task'] ?? 0);
+        $taskToEdit = null;
+        
+        if ($editTaskId > 0) {
+            // Obtener datos de la tarea para editar
+            $taskToEdit = $this->taskModel->findById($editTaskId);
+            if ($taskToEdit && $taskToEdit['assigned_to_user_id'] == $this->currentUser['user_id']) {
+                error_log("Tarea para editar encontrada: " . print_r($taskToEdit, true));
+            } else {
+                error_log("Tarea no encontrada o sin permisos para editar: $editTaskId");
+                $editTaskId = 0;
+                $taskToEdit = null;
+            }
+        }
+        
         // Obtener tareas para el tablero Kanban
         $kanbanTasks = $this->getKanbanTasks($this->currentUser['user_id'], $this->userClan['clan_id']);
 
@@ -62,7 +78,9 @@ class ClanMemberController {
             'ownContribution' => $ownContribution,
             'projects' => $projects,
             'ownContributionDetails' => $ownTasksDetails,
-            'kanbanTasks' => $kanbanTasks
+            'kanbanTasks' => $kanbanTasks,
+            'editTaskId' => $editTaskId,
+            'taskToEdit' => $taskToEdit
         ];
         $this->loadView('clan_member/dashboard', $data);
     }

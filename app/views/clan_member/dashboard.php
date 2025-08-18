@@ -128,7 +128,7 @@ ob_start();
                                     Vencida hace <?php echo abs((int)$task['days_until_due']); ?> días
                                 </div>
                                 <div class="task-actions">
-                                    <a href="?route=clan_member/task-details&task_id=<?php echo $task['task_id']; ?>" class="btn-edit" title="Editar Tarea">
+                                    <a href="?route=clan_member&edit_task=<?php echo $task['task_id']; ?>" class="btn-edit" title="Editar Tarea">
                                         <i class="fas fa-edit"></i>
                                     </a>
                                 </div>
@@ -162,7 +162,7 @@ ob_start();
                                     Vence hoy
                                 </div>
                                 <div class="task-actions">
-                                    <a href="?route=clan_member/task-details&task_id=<?php echo $task['task_id']; ?>" class="btn-edit" title="Editar Tarea">
+                                    <a href="?route=clan_member&edit_task=<?php echo $task['task_id']; ?>" class="btn-edit" title="Editar Tarea">
                                         <i class="fas fa-edit"></i>
                                     </a>
                                 </div>
@@ -196,7 +196,7 @@ ob_start();
                                     En <?php echo (int)$task['days_until_due']; ?> días
                                 </div>
                                 <div class="task-actions">
-                                    <a href="?route=clan_member/task-details&task_id=<?php echo $task['task_id']; ?>" class="btn-edit" title="Editar Tarea">
+                                    <a href="?route=clan_member&edit_task=<?php echo $task['task_id']; ?>" class="btn-edit" title="Editar Tarea">
                                         <i class="fas fa-edit"></i>
                                     </a>
                                 </div>
@@ -235,7 +235,7 @@ ob_start();
                                     <?php endif; ?>
                                 </div>
                                 <div class="task-actions">
-                                    <a href="?route=clan_member/task-details&task_id=<?php echo $task['task_id']; ?>" class="btn-edit" title="Editar Tarea">
+                                    <a href="?route=clan_member&edit_task=<?php echo $task['task_id']; ?>" class="btn-edit" title="Editar Tarea">
                                         <i class="fas fa-edit"></i>
                                     </a>
                                 </div>
@@ -270,7 +270,10 @@ ob_start();
 <div id="addTaskModal" class="modal-overlay">
     <div class="modal-content">
         <div class="modal-header">
-            <h3><i class="fas fa-plus-circle"></i> Agregar Nueva Tarea</h3>
+            <h3>
+                <i class="fas fa-<?php echo isset($editTaskId) && $editTaskId > 0 ? 'edit' : 'plus-circle'; ?>"></i> 
+                <?php echo isset($editTaskId) && $editTaskId > 0 ? 'Editar Tarea' : 'Agregar Nueva Tarea'; ?>
+            </h3>
             <button class="modal-close" onclick="closeAddTaskModal()">
                 <i class="fas fa-times"></i>
             </button>
@@ -279,57 +282,64 @@ ob_start();
         <form id="addTaskForm" class="modal-form">
             <div class="form-group">
                 <label for="taskName">Nombre de la Tarea *</label>
-                <input type="text" id="taskName" name="task_name" required placeholder="Escribe el nombre de la tarea">
+                <input type="text" id="taskName" name="task_name" required 
+                       placeholder="Escribe el nombre de la tarea"
+                       value="<?php echo isset($taskToEdit) ? htmlspecialchars($taskToEdit['task_name']) : ''; ?>">
             </div>
             
             <div class="form-group">
                 <label for="taskDescription">Descripción</label>
-                <textarea id="taskDescription" name="description" rows="3" placeholder="Describe la tarea (opcional)"></textarea>
+                <textarea id="taskDescription" name="description" rows="3" 
+                          placeholder="Describe la tarea (opcional)"><?php echo isset($taskToEdit) ? htmlspecialchars($taskToEdit['description']) : ''; ?></textarea>
             </div>
             
             <div class="form-row">
                 <div class="form-group">
                     <label for="priority">Prioridad:</label>
                     <select name="priority" id="priority" required>
-                        <option value="low">Baja</option>
-                        <option value="medium" selected>Media</option>
-                        <option value="high">Alta</option>
-                        <option value="critical">Crítica</option>
+                        <option value="low" <?php echo (isset($taskToEdit) && $taskToEdit['priority'] === 'low') ? 'selected' : ''; ?>>Baja</option>
+                        <option value="medium" <?php echo (!isset($taskToEdit) || $taskToEdit['priority'] === 'medium') ? 'selected' : ''; ?>>Media</option>
+                        <option value="high" <?php echo (isset($taskToEdit) && $taskToEdit['priority'] === 'high') ? 'selected' : ''; ?>>Alta</option>
+                        <option value="critical" <?php echo (isset($taskToEdit) && $taskToEdit['priority'] === 'critical') ? 'selected' : ''; ?>>Crítica</option>
                     </select>
                 </div>
                 
                 <div class="form-group">
                     <label for="taskDueDate">Fecha de Vencimiento</label>
-                    <input type="date" id="taskDueDate" name="due_date" required>
+                    <input type="date" id="taskDueDate" name="due_date" required
+                           value="<?php echo isset($taskToEdit) && $taskToEdit['due_date'] ? $taskToEdit['due_date'] : ''; ?>">
                 </div>
             </div>
             
             <div class="form-group">
                 <label for="taskStatus">Estado</label>
-                <select id="taskStatus" name="status">
-                    <option value="pending" selected>Pendiente</option>
-                    <option value="in_progress">En Progreso</option>
-                    <option value="completed">Completada</option>
+                <select name="status" id="taskStatus" required>
+                    <option value="pending" <?php echo (isset($taskToEdit) && $taskToEdit['status'] === 'pending') ? 'selected' : ''; ?>>Pendiente</option>
+                    <option value="in_progress" <?php echo (isset($taskToEdit) && $taskToEdit['status'] === 'in_progress') ? 'selected' : ''; ?>>En Progreso</option>
+                    <option value="completed" <?php echo (isset($taskToEdit) && $taskToEdit['status'] === 'completed') ? 'selected' : ''; ?>>Completada</option>
+                    <option value="cancelled" <?php echo (isset($taskToEdit) && $taskToEdit['status'] === 'cancelled') ? 'selected' : ''; ?>>Cancelada</option>
                 </select>
             </div>
             
-            <!-- Panel de Debug -->
-            <div class="debug-panel">
-                <h4><i class="fas fa-bug"></i> Panel de Debug</h4>
-                <div id="debugLog" class="debug-log"></div>
-                <button type="button" class="btn-secondary" onclick="clearDebugLog()" style="background: #6b7280; color: white;">
-                    <i class="fas fa-trash"></i> Limpiar Log
-                </button>
-            </div>
+            <!-- Campo oculto para el ID de la tarea cuando se esté editando -->
+            <?php if (isset($editTaskId) && $editTaskId > 0): ?>
+                <input type="hidden" name="task_id" value="<?php echo $editTaskId; ?>">
+            <?php endif; ?>
             
             <div class="form-actions">
+                <?php if (isset($editTaskId) && $editTaskId > 0): ?>
+                <a href="?route=clan_member" class="btn-secondary" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-arrow-left"></i>
+                    Volver a Tareas
+                </a>
+                <?php endif; ?>
                 <button type="button" class="btn-secondary" onclick="closeAddTaskModal()">
                     <i class="fas fa-times"></i>
                     Cancelar
                 </button>
                 <button type="submit" class="btn-primary">
-                    <i class="fas fa-save"></i>
-                    Crear Tarea
+                    <i class="fas="<?php echo isset($editTaskId) && $editTaskId > 0 ? 'save' : 'plus'; ?>"></i>
+                    <?php echo isset($editTaskId) && $editTaskId > 0 ? 'Guardar Cambios' : 'Crear Tarea'; ?>
                 </button>
             </div>
         </form>
@@ -1377,6 +1387,15 @@ function insertPriorityBadges() {
 document.addEventListener('DOMContentLoaded', function() {
     // Insertar etiquetas de prioridad
     insertPriorityBadges();
+    
+    // Verificar si se debe abrir el modal para editar una tarea
+    <?php if (isset($editTaskId) && $editTaskId > 0): ?>
+    // Abrir modal automáticamente para editar tarea
+    setTimeout(() => {
+        openAddTaskModal();
+        addDebugLog('Modal abierto automáticamente para editar tarea ID: <?php echo $editTaskId; ?>', 'info');
+    }, 500);
+    <?php endif; ?>
     
     // También ejecutar después de recargar el dashboard
     if (typeof window.addEventListener === 'function') {
