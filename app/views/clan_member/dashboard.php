@@ -322,14 +322,6 @@ ob_start();
                     <i class="fas fa-times"></i>
                     Cancelar
                 </button>
-                <button type="button" class="btn-secondary" onclick="testCreateTask()" style="background: #10b981; color: white;">
-                    <i class="fas fa-plus"></i>
-                    Test Crear Tarea
-                </button>
-                <button type="button" class="btn-secondary" onclick="reloadDashboard()" style="background: #3b82f6; color: white;">
-                    <i class="fas fa-sync-alt"></i>
-                    Recargar Dashboard
-                </button>
                 <button type="submit" class="btn-primary">
                     <i class="fas fa-save"></i>
                     Crear Tarea
