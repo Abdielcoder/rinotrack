@@ -64,7 +64,7 @@ ob_start();
             </div>
             <div class="welcome-stats">
                 <div class="stats-row">
-                    <div class="stat-card gradient-bg">
+                    <div class="stat-card">
                         <div class="stat-content">
                             <div class="stat-header"><h3>Proyectos</h3><i class="fas fa-folder-open"></i></div>
                             <div class="stat-number"><?php echo $projectsCount; ?></div>
