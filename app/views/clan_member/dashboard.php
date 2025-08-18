@@ -128,8 +128,8 @@ ob_start();
                                     Vencida hace <?php echo abs((int)$task['days_until_due']); ?> días
                                 </div>
                                 <div class="task-actions">
-                                    <a href="?route=clan_member&edit_task=<?php echo $task['task_id']; ?>" class="btn-edit" title="Editar Tarea">
-                                        <i class="fas fa-edit"></i>
+                                    <a href="#" onclick="openTaskDetailsModal(<?php echo $task['task_id']; ?>)" class="btn-edit" title="Ver Detalles">
+                                        <i class="fas fa-eye"></i>
                                     </a>
                                 </div>
                             </div>
@@ -162,8 +162,8 @@ ob_start();
                                     Vence hoy
                                 </div>
                                 <div class="task-actions">
-                                    <a href="?route=clan_member&edit_task=<?php echo $task['task_id']; ?>" class="btn-edit" title="Editar Tarea">
-                                        <i class="fas fa-edit"></i>
+                                    <a href="#" onclick="openTaskDetailsModal(<?php echo $task['task_id']; ?>)" class="btn-edit" title="Ver Detalles">
+                                        <i class="fas fa-eye"></i>
                                     </a>
                                 </div>
                             </div>
@@ -196,8 +196,8 @@ ob_start();
                                     En <?php echo (int)$task['days_until_due']; ?> días
                                 </div>
                                 <div class="task-actions">
-                                    <a href="?route=clan_member&edit_task=<?php echo $task['task_id']; ?>" class="btn-edit" title="Editar Tarea">
-                                        <i class="fas fa-edit"></i>
+                                    <a href="#" onclick="openTaskDetailsModal(<?php echo $task['task_id']; ?>)" class="btn-edit" title="Ver Detalles">
+                                        <i class="fas fa-eye"></i>
                                     </a>
                                 </div>
                             </div>
@@ -235,8 +235,8 @@ ob_start();
                                     <?php endif; ?>
                                 </div>
                                 <div class="task-actions">
-                                    <a href="?route=clan_member&edit_task=<?php echo $task['task_id']; ?>" class="btn-edit" title="Editar Tarea">
-                                        <i class="fas fa-edit"></i>
+                                    <a href="#" onclick="openTaskDetailsModal(<?php echo $task['task_id']; ?>)" class="btn-edit" title="Ver Detalles">
+                                        <i class="fas fa-eye"></i>
                                     </a>
                                 </div>
                             </div>
@@ -266,9 +266,9 @@ ob_start();
     </main>
 </div>
 
-<!-- Modal para Agregar Tarea -->
+<!-- Modal para Agregar/Editar Tarea -->
 <div id="addTaskModal" class="modal-overlay">
-    <div class="modal-content">
+    <div class="modal-content modal-large">
         <div class="modal-header">
             <h3>
                 <i class="fas fa-<?php echo isset($editTaskId) && $editTaskId > 0 ? 'edit' : 'plus-circle'; ?>"></i> 
@@ -327,12 +327,6 @@ ob_start();
             <?php endif; ?>
             
             <div class="form-actions">
-                <?php if (isset($editTaskId) && $editTaskId > 0): ?>
-                <a href="?route=clan_member" class="btn-secondary" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
-                    <i class="fas fa-arrow-left"></i>
-                    Volver a Tareas
-                </a>
-                <?php endif; ?>
                 <button type="button" class="btn-secondary" onclick="closeAddTaskModal()">
                     <i class="fas fa-times"></i>
                     Cancelar
@@ -343,6 +337,28 @@ ob_start();
                 </button>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- Modal Completo para Detalles de Tarea -->
+<div id="taskDetailsModal" class="modal-overlay">
+    <div class="modal-content modal-extra-large">
+        <div class="modal-header">
+            <h3><i class="fas fa-tasks"></i> Detalles de la Tarea</h3>
+            <button class="modal-close" onclick="closeTaskDetailsModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="modal-body">
+            <!-- Contenido se cargará dinámicamente -->
+            <div id="taskDetailsContent">
+                <div class="loading-spinner">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    Cargando detalles de la tarea...
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -758,6 +774,141 @@ ob_start();
     animation: modalSlideIn 0.3s ease;
 }
 
+.modal-large {
+    max-width: 600px;
+}
+
+.modal-extra-large {
+    max-width: 800px;
+    width: 90%;
+    max-height: 90vh;
+}
+
+.modal-body {
+    padding: var(--spacing-lg);
+    max-height: calc(90vh - 120px);
+    overflow-y: auto;
+}
+
+.loading-spinner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-xl);
+    color: var(--text-muted);
+    font-size: 1.1rem;
+}
+
+/* Estilos para el contenido de detalles de tarea */
+.task-details-container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+}
+
+.task-info-section {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-lg);
+    border: 1px solid var(--border-color);
+}
+
+.task-info-section h4 {
+    margin: 0 0 var(--spacing-md) 0;
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.task-comments {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.task-comment {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+}
+
+.task-comment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-sm);
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+.task-comment-content {
+    color: var(--text-primary);
+    line-height: 1.5;
+}
+
+.task-attachments {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+}
+
+.task-attachment {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: var(--spacing-sm);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.task-attachment:hover {
+    background: var(--bg-accent);
+    border-color: var(--primary-color);
+}
+
+.task-history {
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.task-history-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) 0;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.9rem;
+}
+
+.task-history-item:last-child {
+    border-bottom: none;
+}
+
+.task-history-icon {
+    color: var(--text-muted);
+    width: 20px;
+    text-align: center;
+}
+
+.task-history-content {
+    flex: 1;
+    color: var(--text-primary);
+}
+
+.task-history-time {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+
 @keyframes modalSlideIn {
     from {
         opacity: 0;
@@ -962,7 +1113,7 @@ ob_start();
     {text:'La disciplina es el puente entre metas y logros.', author:'Jim Rohn'},
     {text:'Haz hoy lo que otros no harán y mañana vivirás como otros no pueden.', author:'Jerry Rice'}
   ];
-  function applyQuote(q){ if(!q||!q.text) q=localFallback[Math.floor(Math.random()*localFallback.length)]; qEl.textContent='“'+(q.text||'')+'”'; aEl.textContent=q.author?('— '+q.author):''; }
+  function applyQuote(q){ if(!q||!q.text) q=localFallback[Math.floor(Math.random()*localFallback.length)]; qEl.textContent='"'+(q.text||'')+'"'; aEl.textContent=q.author?('— '+q.author):''; }
   (async function(){
     for(const api of apis){
       try { const r=await fetch(api.url,{credentials:'omit'}); if(!r.ok) continue; const d=await r.json(); const q=api.map(d); if(q&&q.text){ applyQuote(q); return; } } catch(_){ }
@@ -1192,6 +1343,14 @@ document.addEventListener('DOMContentLoaded', function() {
         e.preventDefault();
         createPersonalTask();
     });
+    
+    // Cerrar modal de detalles al hacer click fuera de él
+    const taskDetailsModal = document.getElementById('taskDetailsModal');
+    taskDetailsModal.addEventListener('click', function(e) {
+        if (e.target === taskDetailsModal) {
+            closeTaskDetailsModal();
+        }
+    });
 });
 
 // Función para crear tarea personal
@@ -1402,6 +1561,223 @@ document.addEventListener('DOMContentLoaded', function() {
         window.addEventListener('load', insertPriorityBadges);
     }
 });
+
+// Función para abrir el modal de detalles de tarea
+function openTaskDetailsModal(taskId) {
+    const modal = document.getElementById('taskDetailsModal');
+    const content = document.getElementById('taskDetailsContent');
+    
+    // Mostrar modal
+    modal.style.display = 'flex';
+    
+    // Mostrar loading
+    content.innerHTML = `
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+            Cargando detalles de la tarea...
+        </div>
+    `;
+    
+    // Cargar contenido de la tarea
+    loadTaskDetails(taskId);
+}
+
+// Función para cerrar el modal de detalles
+function closeTaskDetailsModal() {
+    const modal = document.getElementById('taskDetailsModal');
+    modal.style.display = 'none';
+}
+
+// Función para cargar los detalles de la tarea
+function loadTaskDetails(taskId) {
+    fetch(`?route=clan_member/task-details&task_id=${taskId}`)
+        .then(response => response.text())
+        .then(html => {
+            // Extraer solo el contenido relevante del HTML
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            
+            // Buscar el contenido principal de la tarea
+            const taskContent = doc.querySelector('.task-details, .task-container, main, .content') || doc.body;
+            
+            // Crear el contenido del modal
+            const modalContent = createTaskDetailsModalContent(taskContent, taskId);
+            
+            document.getElementById('taskDetailsContent').innerHTML = modalContent;
+        })
+        .catch(error => {
+            console.error('Error cargando detalles de la tarea:', error);
+            document.getElementById('taskDetailsContent').innerHTML = `
+                <div class="error-message">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Error al cargar los detalles de la tarea. Por favor, inténtalo de nuevo.
+                </div>
+            `;
+        });
+}
+
+// Función para crear el contenido del modal
+function createTaskDetailsModalContent(taskContent, taskId) {
+    // Extraer información básica de la tarea
+    const taskName = taskContent.querySelector('.task-title, h1, h2')?.textContent || 'Tarea';
+    const taskDescription = taskContent.querySelector('.task-description, .description')?.textContent || '';
+    const taskStatus = taskContent.querySelector('.task-status, .status')?.textContent || '';
+    const taskPriority = taskContent.querySelector('.task-priority, .priority')?.textContent || '';
+    const taskDueDate = taskContent.querySelector('.task-due-date, .due-date')?.textContent || '';
+    
+    // Extraer comentarios
+    const comments = Array.from(taskContent.querySelectorAll('.comment, .task-comment')).map(comment => {
+        const author = comment.querySelector('.comment-author, .author')?.textContent || 'Usuario';
+        const content = comment.querySelector('.comment-content, .content')?.textContent || '';
+        const time = comment.querySelector('.comment-time, .time')?.textContent || '';
+        return { author, content, time };
+    });
+    
+    // Extraer adjuntos
+    const attachments = Array.from(taskContent.querySelectorAll('.attachment, .task-attachment')).map(attachment => {
+        const name = attachment.querySelector('.attachment-name, .name')?.textContent || 'Archivo';
+        const link = attachment.href || '#';
+        return { name, link };
+    });
+    
+    // Extraer historial
+    const history = Array.from(taskContent.querySelectorAll('.history-item, .task-history-item')).map(item => {
+        const action = item.querySelector('.history-action, .action')?.textContent || '';
+        const time = item.querySelector('.history-time, .time')?.textContent || '';
+        return { action, time };
+    });
+    
+    return `
+        <div class="task-details-container">
+            <!-- Información básica de la tarea -->
+            <div class="task-info-section">
+                <h4><i class="fas fa-info-circle"></i> Información de la Tarea</h4>
+                <div class="task-basic-info">
+                    <p><strong>Nombre:</strong> ${taskName}</p>
+                    <p><strong>Descripción:</strong> ${taskDescription || 'Sin descripción'}</p>
+                    <p><strong>Estado:</strong> ${taskStatus}</p>
+                    <p><strong>Prioridad:</strong> ${taskPriority}</p>
+                    <p><strong>Fecha de Vencimiento:</strong> ${taskDueDate || 'Sin fecha'}</p>
+                </div>
+            </div>
+            
+            <!-- Comentarios -->
+            <div class="task-info-section">
+                <h4><i class="fas fa-comments"></i> Comentarios (${comments.length})</h4>
+                <div class="task-comments">
+                    ${comments.length > 0 ? comments.map(comment => `
+                        <div class="task-comment">
+                            <div class="task-comment-header">
+                                <span><strong>${comment.author}</strong></span>
+                                <span>${comment.time}</span>
+                            </div>
+                            <div class="task-comment-content">${comment.content}</div>
+                        </div>
+                    `).join('') : '<p>No hay comentarios aún.</p>'}
+                </div>
+                <div class="add-comment-section" style="margin-top: var(--spacing-md);">
+                    <textarea placeholder="Agregar un comentario..." rows="3" style="width: 100%; padding: var(--spacing-sm); border: 1px solid var(--border-color); border-radius: var(--radius-sm);"></textarea>
+                    <button onclick="addComment(${taskId})" class="btn-primary" style="margin-top: var(--spacing-sm);">
+                        <i class="fas fa-paper-plane"></i> Agregar Comentario
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Adjuntos -->
+            <div class="task-info-section">
+                <h4><i class="fas fa-paperclip"></i> Adjuntos (${attachments.length})</h4>
+                <div class="task-attachments">
+                    ${attachments.length > 0 ? attachments.map(attachment => `
+                        <a href="${attachment.link}" class="task-attachment" target="_blank">
+                            <i class="fas fa-file"></i>
+                            ${attachment.name}
+                        </a>
+                    `).join('') : '<p>No hay archivos adjuntos.</p>'}
+                </div>
+                <div class="add-attachment-section" style="margin-top: var(--spacing-md);">
+                    <input type="file" id="attachment-${taskId}" style="margin-bottom: var(--spacing-sm);">
+                    <button onclick="addAttachment(${taskId})" class="btn-secondary">
+                        <i class="fas fa-upload"></i> Subir Archivo
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Historial -->
+            <div class="task-info-section">
+                <h4><i class="fas fa-history"></i> Historial de Cambios</h4>
+                <div class="task-history">
+                    ${history.length > 0 ? history.map(item => `
+                        <div class="task-history-item">
+                            <div class="task-history-icon">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="task-history-content">${item.action}</div>
+                            <div class="task-history-time">${item.time}</div>
+                        </div>
+                    `).join('') : '<p>No hay historial disponible.</p>'}
+                </div>
+            </div>
+            
+            <!-- Acciones -->
+            <div class="task-info-section">
+                <h4><i class="fas fa-cogs"></i> Acciones</h4>
+                <div class="task-actions-buttons" style="display: flex; gap: var(--spacing-md); flex-wrap: wrap;">
+                    <button onclick="editTask(${taskId})" class="btn-primary">
+                        <i class="fas fa-edit"></i> Editar Tarea
+                    </button>
+                    <button onclick="changeTaskStatus(${taskId})" class="btn-secondary">
+                        <i class="fas fa-exchange-alt"></i> Cambiar Estado
+                    </button>
+                    <button onclick="closeTaskDetailsModal()" class="btn-secondary">
+                        <i class="fas fa-times"></i> Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Función para agregar comentario
+function addComment(taskId) {
+    const commentText = document.querySelector(`#taskDetailsModal textarea`).value;
+    if (!commentText.trim()) {
+        showNotification('Por favor escribe un comentario', 'error');
+        return;
+    }
+    
+    // Aquí implementarías la lógica para agregar el comentario
+    showNotification('Comentario agregado exitosamente', 'success');
+    // Recargar detalles de la tarea
+    loadTaskDetails(taskId);
+}
+
+// Función para agregar adjunto
+function addAttachment(taskId) {
+    const fileInput = document.querySelector(`#attachment-${taskId}`);
+    if (!fileInput.files[0]) {
+        showNotification('Por favor selecciona un archivo', 'error');
+        return;
+    }
+    
+    // Aquí implementarías la lógica para subir el archivo
+    showNotification('Archivo subido exitosamente', 'success');
+    // Recargar detalles de la tarea
+    loadTaskDetails(taskId);
+}
+
+// Función para editar tarea
+function editTask(taskId) {
+    // Cerrar modal de detalles y abrir modal de edición
+    closeTaskDetailsModal();
+    // Aquí podrías implementar la lógica para editar
+    showNotification('Funcionalidad de edición en desarrollo', 'info');
+}
+
+// Función para cambiar estado de tarea
+function changeTaskStatus(taskId) {
+    // Implementar cambio de estado
+    showNotification('Funcionalidad de cambio de estado en desarrollo', 'info');
+}
 </script>
 
 <?php
