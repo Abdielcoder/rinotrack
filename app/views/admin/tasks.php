@@ -352,12 +352,40 @@ function onTaskTypeChange() {
     const recId = <?php echo (int)$recurrentProject['project_id']; ?>;
     const evtId = <?php echo (int)$eventualProject['project_id']; ?>;
     projectSel.value = (type === 'recurrent') ? String(recId) : String(evtId);
+    
+    // Log para debugging
+    console.log('Tipo de tarea cambiado a:', type);
+    console.log('Project ID asignado:', projectSel.value);
+    console.log('Proyecto Recurrente ID:', recId);
+    console.log('Proyecto Eventual ID:', evtId);
 }
+
+// Ejecutar al cargar la página para asegurar estado inicial correcto
+document.addEventListener('DOMContentLoaded', function() {
+    onTaskTypeChange();
+    
+    // Log del estado inicial
+    const sel = document.getElementById('taskType');
+    const projectSel = document.getElementById('projectId');
+    if (sel && projectSel) {
+        console.log('Estado inicial - Tipo:', sel.value, 'Project ID:', projectSel.value);
+    }
+});
 
 document.getElementById('adminCreateTaskForm')?.addEventListener('submit', async function(e) {
     e.preventDefault();
     const form = e.currentTarget;
     const data = new FormData(form);
+    
+    // Log para debugging del formulario
+    console.log('=== ENVIANDO FORMULARIO ===');
+    console.log('Tipo de tarea:', document.getElementById('taskType')?.value);
+    console.log('Project ID:', document.getElementById('projectId')?.value);
+    console.log('Nombre de tarea:', data.get('taskName'));
+    console.log('Descripción:', data.get('description'));
+    console.log('Fecha límite:', data.get('dueDate'));
+    console.log('Usuarios asignados:', data.getAll('assignedUsers[]'));
+    
     // Generar duplicados semanales si es recurrente
     const createBtn = document.getElementById('createTaskBtn');
     const overlay = document.getElementById('processingOverlay');
@@ -384,9 +412,14 @@ document.getElementById('adminCreateTaskForm')?.addEventListener('submit', async
 
     try {
         const type = document.getElementById('taskType')?.value || 'eventual';
+        console.log('Procesando tipo de tarea:', type);
+        
         if (type === 'recurrent') {
+            console.log('Generando fechas repetidas para tarea recurrente...');
             const dueInput = form.querySelector('input[name="dueDate"]');
             const dateStr = dueInput && dueInput.value ? dueInput.value : '';
+            console.log('Fecha base:', dateStr);
+            
             if (dateStr) {
                 const start = new Date(dateStr + 'T00:00:00');
                 if (!isNaN(start.getTime())) {
@@ -396,6 +429,8 @@ document.getElementById('adminCreateTaskForm')?.addEventListener('submit', async
                     const m = now.getMonth(); // 0-11
                     const qEndMonth = m <= 2 ? 2 : (m <= 5 ? 5 : (m <= 8 ? 8 : 11));
                     const qEnd = new Date(y, qEndMonth + 1, 0); // último día del mes fin de trimestre
+                    console.log('Fin del trimestre:', qEnd.toISOString().split('T')[0]);
+                    
                     // Generar fechas semanales > fecha base
                     const repeats = [];
                     const baseDow = start.getDay();
@@ -412,17 +447,23 @@ document.getElementById('adminCreateTaskForm')?.addEventListener('submit', async
                         const y2 = d.getFullYear();
                         const m2 = (d.getMonth() + 1).toString().padStart(2,'0');
                         const d2 = d.getDate().toString().padStart(2,'0');
-                        repeats.push(`${y2}-${m2}-${d2}`);
+                        const dateStr = `${y2}-${m2}-${d2}`;
+                        repeats.push(dateStr);
+                        console.log('Fecha repetida generada:', dateStr);
                         next.setDate(next.getDate() + 7);
                     }
+                    console.log('Total de fechas repetidas:', repeats.length);
                     if (repeats.length > 0) {
                         data.append('repeatDates[]', dateStr); // incluir la fecha base también por claridad
                         repeats.forEach(dt => data.append('repeatDates[]', dt));
+                        console.log('Fechas repetidas agregadas al formulario');
                     }
                 }
             }
         }
-    } catch (_) { /* silencioso */ }
+    } catch (err) { 
+        console.error('Error procesando fechas repetidas:', err);
+    }
     try {
         openOverlay();
         const resp = await fetch('?route=admin/add-task', { method: 'POST', body: data });
@@ -538,5 +579,6 @@ $content = ob_get_clean();
 $title = 'Gestión de Tareas - ' . APP_NAME;
 include __DIR__ . '/layout.php';
 ?>
+
 
 
