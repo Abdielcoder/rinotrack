@@ -2821,4 +2821,56 @@ class ClanLeaderController {
             ];
         }
     }
+
+    /**
+     * Cambiar el estado de completado de una tarea
+     */
+    public function toggleTaskStatus() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
+        }
+
+        $this->requireAuth();
+        if (!$this->hasClanLeaderAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+        }
+
+        $taskId = (int)($_POST['task_id'] ?? 0);
+        $isCompleted = (int)($_POST['is_completed'] ?? 0);
+
+        if ($taskId <= 0) {
+            Utils::jsonResponse(['success' => false, 'message' => 'ID de tarea inválido'], 400);
+        }
+
+        try {
+            // Verificar que la tarea existe y pertenece a un proyecto del clan del líder
+            $stmt = $this->db->prepare(
+                "SELECT t.task_id, t.status, p.clan_id 
+                 FROM Tasks t 
+                 INNER JOIN Projects p ON t.project_id = p.project_id 
+                 WHERE t.task_id = ? AND (p.clan_id = ? OR p.clan_id IN (SELECT clan_id FROM Clans WHERE clan_name = 'Olympo'))"
+            );
+            $stmt->execute([$taskId, $this->userClan['clan_id']]);
+            $task = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$task) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Tarea no encontrada o sin permisos'], 404);
+            }
+
+            // Cambiar el estado de la tarea
+            $newStatus = $isCompleted ? 'completed' : 'pending';
+            $updateStmt = $this->db->prepare("UPDATE Tasks SET status = ? WHERE task_id = ?");
+            $result = $updateStmt->execute([$newStatus, $taskId]);
+
+            if ($result) {
+                Utils::jsonResponse(['success' => true, 'message' => 'Estado de tarea actualizado']);
+            } else {
+                Utils::jsonResponse(['success' => false, 'message' => 'Error al actualizar la tarea'], 500);
+            }
+
+        } catch (Exception $e) {
+            error_log('Error toggleTaskStatus: ' . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor'], 500);
+        }
+    }
 } 

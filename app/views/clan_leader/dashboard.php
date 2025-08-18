@@ -51,6 +51,7 @@ ob_start();
                         <?php foreach ($kanbanTasks['vencidas'] ?? [] as $task): ?>
                             <div class="task-card overdue" data-task-id="<?php echo $task['task_id']; ?>">
                                 <div class="task-header">
+                                    <input type="checkbox" class="task-checkbox" <?php echo ($task['status'] === 'completed' || ($task['is_completed'] ?? 0) == 1) ? 'checked' : ''; ?> onchange="toggleTaskStatus(<?php echo $task['task_id']; ?>, this.checked)">
                                     <div class="task-priority-badge <?php echo $task['priority']; ?>">
                                         <?php
                                         $priorityLabels = [
@@ -108,6 +109,7 @@ ob_start();
                         <?php foreach ($kanbanTasks['hoy'] ?? [] as $task): ?>
                             <div class="task-card today" data-task-id="<?php echo $task['task_id']; ?>">
                                 <div class="task-header">
+                                    <input type="checkbox" class="task-checkbox" <?php echo ($task['status'] === 'completed' || ($task['is_completed'] ?? 0) == 1) ? 'checked' : ''; ?> onchange="toggleTaskStatus(<?php echo $task['task_id']; ?>, this.checked)">
                                     <div class="task-priority-badge <?php echo $task['priority']; ?>">
                                         <?php
                                         $priorityLabels = [
@@ -165,6 +167,7 @@ ob_start();
                         <?php foreach ($kanbanTasks['1_semana'] ?? [] as $task): ?>
                             <div class="task-card week1" data-task-id="<?php echo $task['task_id']; ?>">
                                 <div class="task-header">
+                                    <input type="checkbox" class="task-checkbox" <?php echo ($task['status'] === 'completed' || ($task['is_completed'] ?? 0) == 1) ? 'checked' : ''; ?> onchange="toggleTaskStatus(<?php echo $task['task_id']; ?>, this.checked)">
                                     <div class="task-priority-badge <?php echo $task['priority']; ?>">
                                         <?php
                                         $priorityLabels = [
@@ -222,6 +225,7 @@ ob_start();
                         <?php foreach ($kanbanTasks['2_semanas'] ?? [] as $task): ?>
                             <div class="task-card week2" data-task-id="<?php echo $task['task_id']; ?>">
                                 <div class="task-header">
+                                    <input type="checkbox" class="task-checkbox" <?php echo ($task['status'] === 'completed' || ($task['is_completed'] ?? 0) == 1) ? 'checked' : ''; ?> onchange="toggleTaskStatus(<?php echo $task['task_id']; ?>, this.checked)">
                                     <div class="task-priority-badge <?php echo $task['priority']; ?>">
                                         <?php
                                         $priorityLabels = [
@@ -468,6 +472,130 @@ ob_start();
         </div>
     </div>
 </div>
+
+<script>
+// Función para cambiar el estado de una tarea
+function toggleTaskStatus(taskId, isChecked) {
+    console.log('Cambiando estado de tarea:', taskId, 'a:', isChecked);
+    
+    // Mostrar indicador de carga
+    const taskCard = document.querySelector(`[data-task-id="${taskId}"]`);
+    if (taskCard) {
+        taskCard.style.opacity = '0.7';
+    }
+    
+    // Enviar petición AJAX para cambiar el estado
+    fetch('?route=clan_leader/toggle-task-status', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'task_id=' + taskId + '&is_completed=' + (isChecked ? '1' : '0')
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            console.log('Estado de tarea actualizado exitosamente');
+            
+            // Si la tarea se marcó como completada, moverla a la columna de completadas o removerla
+            if (isChecked) {
+                // Opcional: remover la tarea del tablero o marcarla visualmente como completada
+                if (taskCard) {
+                    taskCard.style.opacity = '0.5';
+                    taskCard.style.textDecoration = 'line-through';
+                }
+            } else {
+                // Si se desmarcó, restaurar el estilo normal
+                if (taskCard) {
+                    taskCard.style.opacity = '1';
+                    taskCard.style.textDecoration = 'none';
+                }
+            }
+            
+            // Mostrar notificación de éxito
+            showNotification('Estado de tarea actualizado', 'success');
+        } else {
+            console.error('Error al actualizar estado de tarea:', data.message);
+            showNotification('Error al actualizar estado de tarea: ' + data.message, 'error');
+            
+            // Revertir el checkbox si hubo error
+            const checkbox = document.querySelector(`[data-task-id="${taskId}"] input[type="checkbox"]`);
+            if (checkbox) {
+                checkbox.checked = !isChecked;
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error en la petición:', error);
+        showNotification('Error al actualizar estado de tarea', 'error');
+        
+        // Revertir el checkbox si hubo error
+        const checkbox = document.querySelector(`[data-task-id="${taskId}"] input[type="checkbox"]`);
+        if (checkbox) {
+            checkbox.checked = !isChecked;
+        }
+    })
+    .finally(() => {
+        // Restaurar opacidad normal
+        if (taskCard) {
+            taskCard.style.opacity = '1';
+        }
+    });
+}
+
+// Función para mostrar notificaciones
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 16px 24px;
+        border-radius: 12px;
+        color: white;
+        font-weight: 600;
+        z-index: 10000;
+        animation: slideIn 0.3s ease;
+        max-width: 350px;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    `;
+    
+    if (type === 'success') {
+        notification.style.background = '#10b981';
+    } else if (type === 'error') {
+        notification.style.background = '#ef4444';
+    } else {
+        notification.style.background = '#3b82f6';
+    }
+    
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 300);
+    }, 3000);
+}
+
+// Estilos para animaciones de notificaciones
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes slideOut {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+`;
+document.head.appendChild(style);
+</script>
 
 <?php
 // Guardar el contenido en una variable
