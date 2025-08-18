@@ -1638,15 +1638,20 @@ class Task {
      */
     public function createPersonalTask($taskData) {
         try {
+            error_log("=== INICIO createPersonalTask ===");
+            error_log("Datos recibidos: " . print_r($taskData, true));
+            
             // Verificar si hay una transacción activa y cerrarla
             if ($this->db->inTransaction()) {
+                error_log("Transacción activa detectada, haciendo rollback");
                 $this->db->rollback();
             }
             
             $this->db->beginTransaction();
+            error_log("Transacción iniciada");
             
             // Crear la tarea personal - usando solo campos básicos que sabemos que existen
-            $stmt = $this->db->prepare("
+            $sql = "
                 INSERT INTO Tasks (
                     task_name, 
                     description, 
@@ -1660,7 +1665,26 @@ class Task {
                 ) VALUES (
                     ?, ?, ?, ?, ?, ?, ?, ?, 0
                 )
-            ");
+            ";
+            
+            error_log("SQL a ejecutar: " . $sql);
+            error_log("Parámetros: " . print_r([
+                $taskData['task_name'],
+                $taskData['description'],
+                $taskData['priority'],
+                $taskData['due_date'],
+                $taskData['status'],
+                $taskData['assigned_to_user_id'],
+                $taskData['created_by'],
+                $taskData['completion_percentage']
+            ], true));
+            
+            $stmt = $this->db->prepare($sql);
+            
+            if (!$stmt) {
+                error_log("Error en prepare: " . print_r($this->db->errorInfo(), true));
+                throw new Exception("Error preparando la consulta SQL");
+            }
             
             $result = $stmt->execute([
                 $taskData['task_name'],
@@ -1673,20 +1697,70 @@ class Task {
                 $taskData['completion_percentage']
             ]);
             
-            if ($result) {
-                $taskId = $this->db->lastInsertId();
-                $this->db->commit();
-                return $taskId;
+            if (!$result) {
+                error_log("Error en execute: " . print_r($stmt->errorInfo(), true));
+                throw new Exception("Error ejecutando la consulta SQL");
             }
             
-            $this->db->rollback();
-            return false;
+            $taskId = $this->db->lastInsertId();
+            error_log("Tarea creada exitosamente con ID: " . $taskId);
+            
+            $this->db->commit();
+            error_log("Transacción confirmada");
+            
+            return $taskId;
             
         } catch (Exception $e) {
+            error_log("ERROR en createPersonalTask: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
+            
             if ($this->db->inTransaction()) {
+                error_log("Haciendo rollback de la transacción");
                 $this->db->rollback();
             }
-            error_log("Error al crear tarea personal: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Crear tarea personal del usuario - versión simplificada
+     */
+    public function createPersonalTaskSimple($taskData) {
+        try {
+            error_log("=== INICIO createPersonalTaskSimple ===");
+            error_log("Datos recibidos: " . print_r($taskData, true));
+            
+            // Usar solo campos esenciales
+            $sql = "INSERT INTO Tasks (task_name, description, priority, due_date, status, assigned_to_user_id) VALUES (?, ?, ?, ?, ?, ?)";
+            
+            error_log("SQL simplificado: " . $sql);
+            
+            $stmt = $this->db->prepare($sql);
+            if (!$stmt) {
+                error_log("Error en prepare simple: " . print_r($this->db->errorInfo(), true));
+                return false;
+            }
+            
+            $result = $stmt->execute([
+                $taskData['task_name'],
+                $taskData['description'],
+                $taskData['priority'],
+                $taskData['due_date'],
+                $taskData['status'],
+                $taskData['assigned_to_user_id']
+            ]);
+            
+            if ($result) {
+                $taskId = $this->db->lastInsertId();
+                error_log("Tarea simple creada exitosamente con ID: " . $taskId);
+                return $taskId;
+            } else {
+                error_log("Error en execute simple: " . print_r($stmt->errorInfo(), true));
+                return false;
+            }
+            
+        } catch (Exception $e) {
+            error_log("ERROR en createPersonalTaskSimple: " . $e->getMessage());
             return false;
         }
     }

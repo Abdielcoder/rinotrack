@@ -991,7 +991,13 @@ class ClanMemberController {
 
             error_log('Task data a crear: ' . print_r($taskData, true));
 
-            $taskId = $this->taskModel->createPersonalTask($taskData);
+            // Intentar primero con el método simplificado
+            $taskId = $this->taskModel->createPersonalTaskSimple($taskData);
+            
+            if (!$taskId) {
+                error_log('Método simple falló, intentando método completo');
+                $taskId = $this->taskModel->createPersonalTask($taskData);
+            }
 
             if ($taskId) {
                 echo json_encode([
@@ -1000,7 +1006,7 @@ class ClanMemberController {
                     'task_id' => $taskId
                 ]);
             } else {
-                echo json_encode(['success' => false, 'message' => 'Error al crear la tarea']);
+                echo json_encode(['success' => false, 'message' => 'Error al crear la tarea - revisar logs del servidor']);
             }
 
         } catch (Exception $e) {

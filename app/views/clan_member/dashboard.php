@@ -317,6 +317,10 @@ ob_start();
                     <i class="fas fa-bug"></i>
                     Test Conexión
                 </button>
+                <button type="button" class="btn-secondary" onclick="testCreateTask()" style="background: #10b981; color: white;">
+                    <i class="fas fa-plus"></i>
+                    Test Crear Tarea
+                </button>
                 <button type="submit" class="btn-primary">
                     <i class="fas fa-save"></i>
                     Crear Tarea
@@ -1107,6 +1111,47 @@ function testConnection() {
         .catch(error => {
             showNotification('Error de conexión: ' + error.message, 'error');
         });
+}
+
+// Función para probar la creación de tarea con datos mínimos
+function testCreateTask() {
+    showNotification('Probando creación de tarea con datos mínimos...', 'info');
+    const form = document.getElementById('addTaskForm');
+    const formData = new FormData(form);
+    formData.append('route', 'clan_member/create-personal-task');
+    formData.append('user_id', '<?php echo $user['user_id'] ?? 0; ?>');
+    formData.append('task_name', 'Tarea de Prueba');
+    formData.append('priority', 'medium');
+    formData.append('due_date', new Date().toISOString().split('T')[0]);
+    formData.append('status', 'pending');
+
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creando...';
+    submitBtn.disabled = true;
+
+    fetch('?route=clan_member/create-personal-task', {
+        method: 'POST',
+        body: formData,
+        credentials: 'same-origin'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Tarea creada exitosamente con datos mínimos!', 'success');
+            closeAddTaskModal();
+            // No recargar la página, solo mostrar notificación
+        } else {
+            showNotification(data.message || 'Error al crear la tarea con datos mínimos', 'error');
+        }
+    })
+    .catch(error => {
+        showNotification('Error de conexión: ' + error.message, 'error');
+    })
+    .finally(() => {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    });
 }
 </script>
 
