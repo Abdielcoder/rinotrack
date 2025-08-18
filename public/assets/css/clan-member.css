@@ -96,11 +96,11 @@
 .cc-kpi .label { color: var(--cm-muted); font-size: .82rem; }
 .cc-kpi .value { font-weight: 800; color: var(--cm-text); font-size: .98rem; }
 .cc-progress { width: 100%; height: 8px; background: var(--cm-soft); border-radius: 999px; overflow: hidden; }
-.cc-progress > span { height: 100%; display: block; background: linear-gradient(90deg, var(--cm-primary), #8b5cf6); }
+.cc-progress > span { height: 100%; display: block; background: linear-gradient(90deg, var(--cm-primary), #3b82f6); }
 .cc-actions { display: flex; }
 
 /* Hero de proyecto (similar al ejemplo de referencia) */
-.project-hero { background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); border-radius: 14px; margin: 18px auto; max-width: 1200px; width: 75vw; min-width: min(95vw, 1200px); }
+.project-hero { background: linear-gradient(135deg, #6366f1 0%, #3b82f6 100%); border-radius: 14px; margin: 18px auto; max-width: 1200px; width: 75vw; min-width: min(95vw, 1200px); }
 .project-hero .hero-inner { padding: 22px; color: #fff; display: grid; gap: 12px; }
 .project-hero .hero-back { color: rgba(255,255,255,.9); text-decoration: none; display: inline-flex; align-items:center; gap:8px; font-weight:600; }
 .project-hero .hero-title { font-size: 1.6rem; margin: 0; }
@@ -167,7 +167,7 @@
 /* Progreso */
 .progress-bar-container { margin-top: 14px; }
 .progress-bar-main { width: 100%; height: 8px; background: var(--cm-soft); border-radius: 999px; overflow: hidden; position: relative; }
-.progress-segment { height: 100%; background: linear-gradient(90deg, var(--cm-primary), #8b5cf6); transition: width .6s ease; }
+.progress-segment { height: 100%; background: linear-gradient(90deg, var(--cm-primary), #3b82f6); transition: width .6s ease; }
 .completion-box { background: var(--cm-soft); padding: 8px 10px; border-radius: var(--cm-radius-sm); text-align: center; min-width: 80px; }
 .completion-percentage { font-size: 1.1rem; font-weight: 800; color: var(--cm-text); }
 
@@ -279,7 +279,7 @@ section h3 { margin: 6px 0 14px; color: var(--cm-text); font-size: 1.08rem; }
 .modal .form-row { display: flex; gap: 10px; flex-wrap: wrap; }
 
 /* Modal crear tarea - estilos avanzados */
-.modal-header-gradient { background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color:#fff; }
+.modal-header-gradient { background: linear-gradient(135deg, #6366f1 0%, #3b82f6 100%); color:#fff; }
 .modal-header-gradient h3 { color:#fff; }
 .modal-title-wrap { display:flex; flex-direction:column; gap:4px; }
 .modal-subtitle { font-size:.85rem; opacity:.9; }
