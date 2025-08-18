@@ -233,11 +233,6 @@ class ClanMemberController {
                 $pid = (int)$p['project_id'];
                 $projectName = $p['project_name'];
                 
-                // Excluir proyectos especiales del sistema
-                if (in_array($projectName, ['Tareas Recurrentes', 'Tareas Eventuales'])) {
-                    continue;
-                }
-                
                 // Verificar si el usuario tiene tareas asignadas en este proyecto
                 $userTasksInProject = $this->taskModel->getUserTasksByProject($this->currentUser['user_id'], $pid);
                 if (!empty($userTasksInProject)) {
@@ -264,11 +259,6 @@ class ClanMemberController {
             foreach ($tasks as $t) {
                 $pid = (int)$t['project_id'];
                 $projectName = $t['project_name'];
-                
-                // Excluir proyectos especiales del sistema
-                if (in_array($projectName, ['Tareas Recurrentes', 'Tareas Eventuales'])) {
-                    continue;
-                }
                 
                 if (!isset($byProject[$pid])) {
                     $byProject[$pid] = [
