@@ -162,41 +162,41 @@ function noPermissionModal(){
 
 /* Estilos específicos para los botones */
 .action-btn.primary {
-  background: #6366f1 !important;
+  background: #1e3a8a !important;
   color: #ffffff !important;
-  border-color: #6366f1 !important;
+  border-color: #1e3a8a !important;
   font-weight: 700;
   padding: 10px 14px;
   border-radius: 10px;
-  border: 1px solid #6366f1;
+  border: 1px solid #1e3a8a;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .action-btn.primary:hover {
-  background: #5458e9 !important;
-  border-color: #5458e9 !important;
+  background: #1e40af !important;
+  border-color: #1e40af !important;
   transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(99, 102, 241, 0.22);
+  box-shadow: 0 6px 18px rgba(30, 58, 138, 0.22);
 }
 
 .btn-minimal.primary {
-  background: #6366f1 !important;
+  background: #1e3a8a !important;
   color: #ffffff !important;
-  border-color: #6366f1 !important;
+  border-color: #1e3a8a !important;
   font-weight: 600;
   padding: 10px 14px;
   border-radius: 8px;
-  border: 1px solid #6366f1;
+  border: 1px solid #1e3a8a;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .btn-minimal.primary:hover {
-  background: #5458e9 !important;
-  border-color: #5458e9 !important;
+  background: #1e40af !important;
+  border-color: #1e40af !important;
   transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(99, 102, 241, 0.22);
+  box-shadow: 0 6px 18px rgba(30, 58, 138, 0.22);
 }
 
 /* Estilos para la tarjeta del proyecto */
