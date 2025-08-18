@@ -322,17 +322,9 @@ ob_start();
                     <i class="fas fa-times"></i>
                     Cancelar
                 </button>
-                <button type="button" class="btn-secondary" onclick="testConnection()" style="background: #f59e0b; color: white;">
-                    <i class="fas fa-bug"></i>
-                    Test Conexión
-                </button>
                 <button type="button" class="btn-secondary" onclick="testCreateTask()" style="background: #10b981; color: white;">
                     <i class="fas fa-plus"></i>
                     Test Crear Tarea
-                </button>
-                <button type="button" class="btn-secondary" onclick="testCreatePersonalProject()" style="background: #8b5cf6; color: white;">
-                    <i class="fas fa-folder-plus"></i>
-                    Test Proyecto Personal
                 </button>
                 <button type="button" class="btn-secondary" onclick="reloadDashboard()" style="background: #3b82f6; color: white;">
                     <i class="fas fa-sync-alt"></i>
@@ -1191,32 +1183,6 @@ function createPersonalTask() {
     });
 }
 
-// Función para probar la conexión
-function testConnection() {
-    addDebugLog('Iniciando test de conexión...', 'info');
-    showNotification('Probando conexión...', 'info');
-    
-    fetch('?route=clan_member/test-personal-task')
-        .then(response => {
-            addDebugLog(`Respuesta del servidor: ${response.status} ${response.statusText}`, 'info');
-            return response.json();
-        })
-        .then(data => {
-            addDebugLog(`Datos recibidos: ${JSON.stringify(data)}`, 'info');
-            if (data.success) {
-                addDebugLog('Test de conexión exitoso!', 'success');
-                showNotification('Conexión exitosa! Usuario ID: ' + data.user_id, 'success');
-            } else {
-                addDebugLog(`Test falló: ${data.message}`, 'error');
-                showNotification('Error en test: ' + data.message, 'error');
-            }
-        })
-        .catch(error => {
-            addDebugLog(`Error de conexión: ${error.message}`, 'error');
-            showNotification('Error de conexión: ' + error.message, 'error');
-        });
-}
-
 // Función para probar la creación de tarea con datos mínimos
 function testCreateTask() {
     addDebugLog('Iniciando test de creación de tarea...', 'info');
@@ -1268,59 +1234,6 @@ function testCreateTask() {
     })
     .catch(error => {
         addDebugLog(`Error de conexión: ${error.message}`, 'error');
-        showNotification('Error de conexión: ' + error.message, 'error');
-    })
-    .finally(() => {
-        submitBtn.innerHTML = originalText;
-        submitBtn.disabled = false;
-    });
-}
-
-// Función para probar la creación de un proyecto personal
-function testCreatePersonalProject() {
-    addDebugLog('Iniciando test de creación de proyecto personal...', 'info');
-    showNotification('Probando creación de proyecto personal...', 'info');
-
-    const formData = new FormData();
-    formData.append('route', 'clan_member/create-personal-project');
-    formData.append('user_id', '<?php echo $user['user_id'] ?? 0; ?>');
-    formData.append('project_name', 'Proyecto Personal de Prueba');
-    formData.append('description', 'Descripción de prueba para un proyecto personal.');
-
-    addDebugLog(`Datos de prueba enviados para proyecto personal: ${JSON.stringify({
-        project_name: 'Proyecto Personal de Prueba',
-        description: 'Descripción de prueba para un proyecto personal.',
-        user_id: '<?php echo $user['user_id'] ?? 0; ?>'
-    })}`, 'info');
-
-    const submitBtn = document.querySelector('#addTaskForm button[type="submit"]');
-    const originalText = submitBtn.innerHTML;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creando...';
-    submitBtn.disabled = true;
-
-    fetch('?route=clan_member/create-personal-project', {
-        method: 'POST',
-        body: formData,
-        credentials: 'same-origin'
-    })
-    .then(response => {
-        addDebugLog(`Respuesta del servidor para proyecto personal: ${response.status} ${response.statusText}`, 'info');
-        return response.json();
-    })
-    .then(data => {
-        addDebugLog(`Datos de respuesta para proyecto personal: ${JSON.stringify(data)}`, 'info');
-        if (data.success) {
-            addDebugLog('Proyecto personal creado exitosamente!', 'success');
-            showNotification('Proyecto personal creado exitosamente!', 'success');
-            closeAddTaskModal();
-            // No recargar la página, solo mostrar notificación
-        } else {
-            addDebugLog(`Error al crear proyecto personal: ${data.message}`, 'error');
-            showNotification(data.message || 'Error al crear el proyecto personal', 'error');
-        }
-    })
-    .catch(error => {
-        addDebugLog(`Error de conexión para proyecto personal: ${error.message}`, 'error');
         showNotification('Error de conexión: ' + error.message, 'error');
     })
     .finally(() => {
