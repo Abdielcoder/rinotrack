@@ -84,10 +84,7 @@ ob_start();
                         <div class="stat-header"><h3>En Progreso</h3><i class="fas fa-spinner"></i></div>
                         <div class="stat-number"><?php echo $inProgress; ?></div>
                     </div>
-                    <a href="?route=clan_member/tasks" class="btn btn-secondary btn-stats">
-                        <i class="fas fa-tasks"></i>
-                        Ver mis tareas
-                    </a>
+
                 </div>
             </div>
         </header>
