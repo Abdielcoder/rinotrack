@@ -16,19 +16,19 @@
   --secondary-dark: #2563eb;
   
   /* === COLORES DE FONDO === */
-  --bg-primary: #1e3a8a;
-  --bg-secondary: #1e3a8a;
-  --bg-tertiary: #dbeafe;
-  --bg-accent: #bfdbfe;
+  --bg-primary: #ffffff;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f8fafc;
+  --bg-accent: #e5e7eb;
   --bg-dark: #0f172a;
-  --bg-glass: rgba(30, 58, 138, 0.9);
+  --bg-glass: rgba(255, 255, 255, 0.9);
   --bg-glass-dark: rgba(15, 23, 42, 0.9);
   
   /* === COLORES DE TEXTO === */
-  --text-primary: #eff1f5;
-  --text-secondary: #ffffff;
-  --text-muted: #64748b;
-  --text-light: #94a3b8;
+  --text-primary: #1e3a8a;
+  --text-secondary: #1e3a8a;
+  --text-muted: #6b7280;
+  --text-light: #9ca3af;
   --text-white: #ffffff;
   
   /* === COLORES DE ESTADO === */
@@ -85,19 +85,19 @@ a:hover { text-decoration: none; }
 
 /* === TEMA OSCURO === */
 [data-theme="dark"] {
-  --bg-primary: #0f172a;
-  --bg-secondary: #1e3a8a;
-  --bg-tertiary: #1e40af;
-  --bg-accent: #3b82f6;
-  --bg-glass: rgba(30, 58, 138, 0.9);
+  --bg-primary: #ffffff;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f8fafc;
+  --bg-accent: #e5e7eb;
+  --bg-glass: rgba(255, 255, 255, 0.9);
   
-  --text-primary: #f1f5f9;
-  --text-secondary: #dbeafe;
-  --text-muted: #bfdbfe;
-  --text-light: #93c5fd;
+  --text-primary: #1e3a8a;
+  --text-secondary: #1e3a8a;
+  --text-muted: #6b7280;
+  --text-light: #9ca3af;
   
-  --glass-bg: rgba(30, 58, 138, 0.2);
-  --glass-border: rgba(219, 234, 254, 0.3);
+  --glass-bg: rgba(255, 255, 255, 0.2);
+  --glass-border: rgba(229, 231, 235, 0.3);
   
   /* === COLORES TRANSLÚCIDOS PROYECTA === */
   --translucent-blue: rgba(59, 130, 246, 0.3);
