@@ -387,9 +387,32 @@ class ClanLeaderController {
      */
     public function projects() {
         $search = $_GET['search'] ?? '';
-        $projects = empty($search) ? 
+        
+        // Obtener todos los proyectos del clan
+        $allProjects = empty($search) ? 
             $this->projectModel->getByClan($this->userClan['clan_id']) : 
             $this->searchProjects($search);
+        
+        // Filtrar proyectos personales: mostrar solo los del líder actual
+        $projects = array_filter($allProjects, function($project) {
+            // Si es un proyecto personal (is_personal = 1)
+            if (($project['is_personal'] ?? 0) == 1) {
+                // Solo mostrar si fue creado por el líder actual
+                $isOwnPersonal = ($project['created_by_user_id'] ?? 0) == $this->currentUser['user_id'];
+                error_log("Proyecto personal '{$project['project_name']}' - Creado por: {$project['created_by_user_id']}, Líder actual: {$this->currentUser['user_id']}, Mostrar: " . ($isOwnPersonal ? 'SÍ' : 'NO'));
+                return $isOwnPersonal;
+            }
+            // Mostrar todos los proyectos no personales
+            return true;
+        });
+        
+        // Log del resultado del filtrado
+        $totalProjects = count($allProjects);
+        $filteredProjects = count($projects);
+        error_log("Filtrado de proyectos - Total: $totalProjects, Filtrados: $filteredProjects, Líder: {$this->currentUser['user_id']}");
+        
+        // Reindexar el array después del filtro
+        $projects = array_values($projects);
         
         $data = [
             'projects' => $projects,
@@ -1950,13 +1973,27 @@ class ClanLeaderController {
      * Buscar proyectos del clan
      */
     private function searchProjects($searchTerm) {
-        $projects = $this->projectModel->getByClan($this->userClan['clan_id']);
+        $allProjects = $this->projectModel->getByClan($this->userClan['clan_id']);
         $searchPattern = strtolower($searchTerm);
         
-        return array_filter($projects, function($project) use ($searchPattern) {
+        // Primero filtrar por búsqueda
+        $searchResults = array_filter($allProjects, function($project) use ($searchPattern) {
             return strpos(strtolower($project['project_name']), $searchPattern) !== false ||
                    strpos(strtolower($project['description']), $searchPattern) !== false;
         });
+        
+        // Luego aplicar el mismo filtro de proyectos personales
+        $filteredResults = array_filter($searchResults, function($project) {
+            // Si es un proyecto personal (is_personal = 1)
+            if (($project['is_personal'] ?? 0) == 1) {
+                // Solo mostrar si fue creado por el líder actual
+                return ($project['created_by_user_id'] ?? 0) == $this->currentUser['user_id'];
+            }
+            // Mostrar todos los proyectos no personales
+            return true;
+        });
+        
+        return array_values($filteredResults);
     }
     
     /**
@@ -1998,15 +2035,26 @@ class ClanLeaderController {
             ];
         }
         $members = $this->clanModel->getMembers($this->userClan['clan_id']);
-        $projects = $this->projectModel->getByClan($this->userClan['clan_id']);
+        $allProjects = $this->projectModel->getByClan($this->userClan['clan_id']);
+        
+        // Filtrar proyectos personales: mostrar solo los del líder actual
+        $filteredProjects = array_filter($allProjects, function($project) {
+            // Si es un proyecto personal (is_personal = 1)
+            if (($project['is_personal'] ?? 0) == 1) {
+                // Solo mostrar si fue creado por el líder actual
+                return ($project['created_by_user_id'] ?? 0) == $this->currentUser['user_id'];
+            }
+            // Mostrar todos los proyectos no personales
+            return true;
+        });
         
         return [
             'member_count' => count($members),
-            'project_count' => count($projects),
-            'active_projects' => count(array_filter($projects, function($project) {
+            'project_count' => count($filteredProjects),
+            'active_projects' => count(array_filter($filteredProjects, function($project) {
                 return $project['status'] == 'active';
             })),
-            'completed_projects' => count(array_filter($projects, function($project) {
+            'completed_projects' => count(array_filter($filteredProjects, function($project) {
                 return $project['status'] == 'completed';
             }))
         ];
