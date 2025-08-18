@@ -490,7 +490,7 @@ function toggleTaskStatus(taskId, isChecked) {
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: 'task_id=' + taskId + '&is_completed=' + (isChecked ? '1' : '0')
+        body: 'taskId=' + taskId + '&isCompleted=' + (isChecked ? '1' : '0')
     })
     .then(response => response.json())
     .then(data => {
