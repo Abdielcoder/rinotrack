@@ -231,6 +231,13 @@ class ClanMemberController {
             $clanProjects = $this->projectModel->getByClan($this->userClan['clan_id']);
             foreach ($clanProjects as $p) {
                 $pid = (int)$p['project_id'];
+                $projectName = $p['project_name'];
+                
+                // Excluir proyectos especiales del sistema
+                if (in_array($projectName, ['Tareas Recurrentes', 'Tareas Eventuales'])) {
+                    continue;
+                }
+                
                 // Verificar si el usuario tiene tareas asignadas en este proyecto
                 $userTasksInProject = $this->taskModel->getUserTasksByProject($this->currentUser['user_id'], $pid);
                 if (!empty($userTasksInProject)) {
@@ -243,7 +250,7 @@ class ClanMemberController {
                     $progress = $total > 0 ? round(($completed / $total) * 100, 2) : 0;
                     $projectsSummary[] = [
                         'project_id' => $pid,
-                        'project_name' => $p['project_name'],
+                        'project_name' => $projectName,
                         'status' => $p['status'],
                         'total_tasks' => $total,
                         'completed_tasks' => $completed,
@@ -256,10 +263,17 @@ class ClanMemberController {
             $byProject = [];
             foreach ($tasks as $t) {
                 $pid = (int)$t['project_id'];
+                $projectName = $t['project_name'];
+                
+                // Excluir proyectos especiales del sistema
+                if (in_array($projectName, ['Tareas Recurrentes', 'Tareas Eventuales'])) {
+                    continue;
+                }
+                
                 if (!isset($byProject[$pid])) {
                     $byProject[$pid] = [
                         'project_id' => $pid,
-                        'project_name' => $t['project_name'],
+                        'project_name' => $projectName,
                         'status' => 'open',
                         'total_tasks' => 0,
                         'completed_tasks' => 0
