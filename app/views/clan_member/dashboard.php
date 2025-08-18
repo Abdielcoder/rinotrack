@@ -1364,8 +1364,8 @@ document.addEventListener('DOMContentLoaded', function() {
         createPersonalTask();
     });
     
-    // Función para el menú hamburguesa
-    function toggleMobileMenu() {
+    // Función para el menú hamburguesa (global)
+    window.toggleMobileMenu = function() {
         const mobileMenu = document.getElementById('mobileMenu');
         const hamburger = document.querySelector('.hamburger-menu');
         
@@ -1376,7 +1376,7 @@ document.addEventListener('DOMContentLoaded', function() {
             mobileMenu.classList.add('active');
             hamburger.classList.add('active');
         }
-    }
+    };
     
     // Cerrar menú móvil al hacer click en un enlace
     const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');

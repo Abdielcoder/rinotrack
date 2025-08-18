@@ -296,8 +296,8 @@ require_once __DIR__ . '/../layout.php';
 ?>
 
 <script>
-// Función para el menú hamburguesa
-function toggleMobileMenu() {
+// Función para el menú hamburguesa (global)
+window.toggleMobileMenu = function() {
     const mobileMenu = document.getElementById('mobileMenu');
     const hamburger = document.querySelector('.hamburger-menu');
     
@@ -308,7 +308,7 @@ function toggleMobileMenu() {
         mobileMenu.classList.add('active');
         hamburger.classList.add('active');
     }
-}
+};
 
 // Cerrar menú móvil al hacer click en un enlace
 document.addEventListener('DOMContentLoaded', function() {
