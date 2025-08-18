@@ -92,7 +92,15 @@ ob_start();
         <!-- Tablero Kanban de Tareas -->
         <section class="kanban-section animate-fade-in">
             <div class="kanban-header">
-                <h2><i class="fas fa-tasks icon-gradient"></i> Tareas</h2>
+                <div class="kanban-title">
+                    <h2><i class="fas fa-tasks icon-gradient"></i> Tareas</h2>
+                </div>
+                <div class="kanban-actions">
+                    <button class="btn-add-task" onclick="openAddTaskModal()">
+                        <i class="fas fa-plus"></i>
+                        Agregar Tarea
+                    </button>
+                </div>
             </div>
             <div class="kanban-board">
                 <!-- Columna: Vencidas -->
@@ -253,9 +261,70 @@ ob_start();
     </main>
 </div>
 
+<!-- Modal para Agregar Tarea -->
+<div id="addTaskModal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-plus-circle"></i> Agregar Nueva Tarea</h3>
+            <button class="modal-close" onclick="closeAddTaskModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <form id="addTaskForm" class="modal-form">
+            <div class="form-group">
+                <label for="taskName">Nombre de la Tarea *</label>
+                <input type="text" id="taskName" name="task_name" required placeholder="Escribe el nombre de la tarea">
+            </div>
+            
+            <div class="form-group">
+                <label for="taskDescription">Descripción</label>
+                <textarea id="taskDescription" name="description" rows="3" placeholder="Describe la tarea (opcional)"></textarea>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="taskPriority">Prioridad</label>
+                    <select id="taskPriority" name="priority">
+                        <option value="low">Baja</option>
+                        <option value="medium" selected>Media</option>
+                        <option value="high">Alta</option>
+                        <option value="urgent">Urgente</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="taskDueDate">Fecha de Vencimiento</label>
+                    <input type="date" id="taskDueDate" name="due_date" required>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="taskStatus">Estado</label>
+                <select id="taskStatus" name="status">
+                    <option value="pending" selected>Pendiente</option>
+                    <option value="in_progress">En Progreso</option>
+                    <option value="completed">Completada</option>
+                </select>
+            </div>
+            
+            <div class="form-actions">
+                <button type="button" class="btn-secondary" onclick="closeAddTaskModal()">
+                    <i class="fas fa-times"></i>
+                    Cancelar
+                </button>
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-save"></i>
+                    Crear Tarea
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <style>
-.modern-dashboard{min-height:100vh;background:#ffffff;padding:0;position:relative}
-.modern-nav{background:rgba(255, 255, 255, 0.9);backdrop-filter:blur(10px);border-bottom:1px solid #e5e7eb;padding:var(--spacing-md) 0;position:sticky;top:0;z-index:100}
+.modern-dashboard{min-height:100vh;background:var(--bg-secondary)}
+.modern-nav{background:var(--bg-glass);backdrop-filter:var(--glass-backdrop);border-bottom:1px solid var(--glass-border);padding:var(--spacing-md) 0;position:sticky;top:0;z-index:100}
 .nav-container{max-width:1400px;margin:0 auto;padding:0 var(--spacing-lg);display:flex;align-items:center;justify-content:space-between;gap:var(--spacing-xl)}
 .nav-brand{display:flex;align-items:center;gap:var(--spacing-md)}
 .brand-icon{width:40px;height:40px;border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;color:#ffffff;font-size:1.2rem;background:var(--primary-gradient)}
@@ -265,15 +334,15 @@ ob_start();
 .nav-item .nav-link:hover{color:#ffffff;background:var(--primary-gradient);transform:translateY(-2px);box-shadow:var(--shadow-md)}
 .nav-item.active .nav-link{background:var(--primary-gradient);color:#ffffff;box-shadow:var(--shadow-glow)}
 .user-menu{display:flex;align-items:center;gap:var(--spacing-md)}
-.modern-avatar{position:relative;width:45px;height:45px;background:var(--primary-gradient);border-radius:var(--radius-full);display:flex;align-items:center;justify-content:center;color:#ffffff;font-weight:var(--font-weight-semibold);box-shadow:var(--shadow-md)}
-.status-dot{position:absolute;bottom:2px;right:2px;width:12px;height:12px;background:var(--success);border:2px solid #ffffff;border-radius:var(--radius-full)}
+.modern-avatar{position:relative;width:45px;height:45px;background:var(--bg-tertiary);border-radius:var(--radius-full);display:flex;align-items:center;justify-content:center;color:#ffffff;font-weight:var(--font-weight-semibold);box-shadow:var(--shadow-md)}
+.status-dot{position:absolute;bottom:2px;right:2px;width:12px;height:12px;background:var(--success);border:2px solid var(--bg-primary);border-radius:999px}
 .user-info{display:flex;flex-direction:column;gap:2px}
 .user-name{font-weight:var(--font-weight-semibold);color:#1e3a8a;font-size:.95rem}
 .user-role{font-size:.8rem;color:#6b7280}
 .action-btn{width:35px;height:35px;border:none;border-radius:var(--radius-md);background:#ffffff;color:#1e3a8a;cursor:pointer;transition:all var(--transition-normal);display:flex;align-items:center;justify-content:center;text-decoration:none;box-shadow:var(--shadow-sm);border:1px solid #e5e7eb}
 .action-btn.logout:hover{color:var(--error)}
 .main-content{max-width:1400px;margin:0 auto;padding:var(--spacing-xl) var(--spacing-lg)}
-.welcome-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:var(--spacing-2xl);padding:var(--spacing-xl);background:#ffffff;border-radius:var(--radius-xl);box-shadow:var(--shadow-md);border:1px solid #e5e7eb;gap:var(--spacing-xl)}
+.welcome-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--spacing-2xl);padding:var(--spacing-xl);background:var(--bg-primary);border-radius:var(--radius-xl);box-shadow:var(--shadow-md);border:1px solid var(--bg-accent)}
 .welcome-title{font-size:2.2rem;font-weight:var(--font-weight-bold);color:#1e3a8a;margin-bottom:var(--spacing-sm)}
 .welcome-subtitle{font-size:1.05rem;color:#6b7280}
 .welcome-stats{display:flex;flex-direction:column;align-items:stretch;min-width:fit-content}
@@ -596,6 +665,200 @@ ob_start();
 .progress-fill{height:100%;background:var(--primary-gradient)}
 @media (max-width:1024px){.nav-container{flex-wrap:wrap;gap:var(--spacing-md)}.user-menu{order:-1;width:100%;justify-content:space-between}.content-grid{grid-template-columns:1fr}}
 @media (max-width:768px){.welcome-header{flex-direction:column;text-align:center;gap:var(--spacing-lg);align-items:center}.welcome-stats{width:100%}.stats-row{gap:var(--spacing-sm);justify-content:center}.stat-card{min-width:120px}.btn-stats{min-width:120px}.nav-menu{display:none}.main-content{padding:var(--spacing-lg) var(--spacing-md)}}
+
+/* Header del Kanban */
+.kanban-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-lg);
+    padding: var(--spacing-md) 0;
+}
+
+.kanban-title h2 {
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.kanban-actions {
+    display: flex;
+    gap: var(--spacing-md);
+}
+
+/* Botón Agregar Tarea */
+.btn-add-task {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md) var(--spacing-lg);
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.btn-add-task:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+/* Modal */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(4px);
+}
+
+.modal-content {
+    background: var(--bg-primary);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-lg);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: var(--spacing-sm);
+    border-radius: var(--radius-sm);
+    transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+    background: var(--bg-accent);
+    color: var(--text-primary);
+}
+
+/* Formulario del modal */
+.modal-form {
+    padding: var(--spacing-lg);
+}
+
+.modal-form .form-group {
+    margin-bottom: var(--spacing-lg);
+}
+
+.modal-form label {
+    display: block;
+    margin-bottom: var(--spacing-sm);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.modal-form input,
+.modal-form textarea,
+.modal-form select {
+    width: 100%;
+    padding: var(--spacing-md);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    background: var(--bg-primary);
+    box-sizing: border-box;
+}
+
+.modal-form input:focus,
+.modal-form textarea:focus,
+.modal-form select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
+}
+
+.modal-form textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-md);
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-xl);
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--border-color);
+}
+
+/* Responsive para el modal */
+@media (max-width: 768px) {
+    .modal-content {
+        width: 95%;
+        margin: var(--spacing-md);
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .kanban-header {
+        flex-direction: column;
+        gap: var(--spacing-md);
+        align-items: stretch;
+    }
+    
+    .btn-add-task {
+        justify-content: center;
+    }
+}
 </style>
 
 <script>
@@ -724,6 +987,91 @@ function showNotification(message, type = 'info') {
       }
     }, 300);
   }, 3000);
+}
+
+// Funciones para el modal de agregar tarea
+function openAddTaskModal() {
+    const modal = document.getElementById('addTaskModal');
+    modal.style.display = 'flex';
+    
+    // Establecer fecha mínima como hoy
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('taskDueDate').min = today;
+    
+    // Limpiar formulario
+    document.getElementById('addTaskForm').reset();
+    
+    // Enfocar en el primer campo
+    setTimeout(() => {
+        document.getElementById('taskName').focus();
+    }, 100);
+}
+
+function closeAddTaskModal() {
+    const modal = document.getElementById('addTaskModal');
+    modal.style.display = 'none';
+}
+
+// Cerrar modal al hacer click fuera de él
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('addTaskModal');
+    
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            closeAddTaskModal();
+        }
+    });
+    
+    // Manejar envío del formulario
+    document.getElementById('addTaskForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        createPersonalTask();
+    });
+});
+
+// Función para crear tarea personal
+function createPersonalTask() {
+    const form = document.getElementById('addTaskForm');
+    const formData = new FormData(form);
+    
+    // Agregar campos adicionales para tarea personal
+    formData.append('route', 'clan_member/create-personal-task');
+    formData.append('user_id', '<?php echo $user['user_id'] ?? 0; ?>');
+    formData.append('is_personal', '1');
+    
+    // Mostrar estado de carga
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creando...';
+    submitBtn.disabled = true;
+    
+    fetch('?route=clan_member/create-personal-task', {
+        method: 'POST',
+        body: formData,
+        credentials: 'same-origin'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Tarea creada exitosamente', 'success');
+            closeAddTaskModal();
+            
+            // Recargar la página para mostrar la nueva tarea
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+        } else {
+            showNotification(data.message || 'Error al crear la tarea', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error de conexión', 'error');
+    })
+    .finally(() => {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    });
 }
 </script>
 

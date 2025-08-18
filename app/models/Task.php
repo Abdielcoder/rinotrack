@@ -1632,5 +1632,71 @@ class Task {
             return [];
         }
     }
+
+    /**
+     * Crear tarea personal del usuario
+     */
+    public function createPersonalTask($taskData) {
+        try {
+            // Verificar si hay una transacción activa y cerrarla
+            if ($this->db->inTransaction()) {
+                $this->db->rollback();
+            }
+            
+            $this->db->beginTransaction();
+            
+            // Crear la tarea personal
+            $stmt = $this->db->prepare("
+                INSERT INTO Tasks (
+                    task_name, 
+                    description, 
+                    priority, 
+                    due_date, 
+                    status, 
+                    assigned_to_user_id, 
+                    is_personal, 
+                    project_id, 
+                    clan_id, 
+                    created_by_user_id, 
+                    created_at, 
+                    completion_percentage,
+                    is_subtask
+                ) VALUES (
+                    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0
+                )
+            ");
+            
+            $result = $stmt->execute([
+                $taskData['task_name'],
+                $taskData['description'],
+                $taskData['priority'],
+                $taskData['due_date'],
+                $taskData['status'],
+                $taskData['assigned_to_user_id'],
+                $taskData['is_personal'],
+                $taskData['project_id'],
+                $taskData['clan_id'],
+                $taskData['created_by'],
+                $taskData['created_at'],
+                $taskData['completion_percentage']
+            ]);
+            
+            if ($result) {
+                $taskId = $this->db->lastInsertId();
+                $this->db->commit();
+                return $taskId;
+            }
+            
+            $this->db->rollback();
+            return false;
+            
+        } catch (Exception $e) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollback();
+            }
+            error_log("Error al crear tarea personal: " . $e->getMessage());
+            return false;
+        }
+    }
 }
 ?>

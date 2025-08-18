@@ -641,6 +641,11 @@ try {
             $controller->uploadAvatar();
             break;
             
+        case 'clan_member/create-personal-task':
+            $controller = new ClanMemberController();
+            $controller->createPersonalTask();
+            break;
+            
         default:
             // Verificar si es un asset
             if (strpos($route, 'assets/') === 0) {

@@ -841,6 +841,38 @@ class ClanMemberController {
 
     private function getKanbanTasks($userId, $clanId) {
         try {
+            // Obtener tareas del clan
+            $clanTasks = [];
+            if ($clanId) {
+                $stmt = $this->db->prepare(
+                    "SELECT 
+                        t.task_id,
+                        t.task_name,
+                        t.description,
+                        t.due_date,
+                        t.priority,
+                        t.status,
+                        t.completion_percentage,
+                        t.automatic_points,
+                        p.project_name,
+                        p.project_id,
+                        DATEDIFF(t.due_date, CURDATE()) as days_until_due
+                     FROM Tasks t
+                     INNER JOIN Projects p ON p.project_id = t.project_id
+                     LEFT JOIN Task_Assignments ta ON ta.task_id = t.task_id
+                     WHERE p.clan_id = ?
+                       AND t.is_subtask = 0
+                       AND t.status != 'completed'
+                       AND (t.assigned_to_user_id = ? OR ta.user_id = ?)
+                     GROUP BY t.task_id
+                     ORDER BY t.due_date ASC"
+                );
+                $stmt->execute([$clanId, $userId, $userId]);
+                $clanTasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            }
+
+            // Obtener tareas personales
+            $personalTasks = [];
             $stmt = $this->db->prepare(
                 "SELECT 
                     t.task_id,
@@ -851,21 +883,21 @@ class ClanMemberController {
                     t.status,
                     t.completion_percentage,
                     t.automatic_points,
-                    p.project_name,
-                    p.project_id,
+                    'Tarea Personal' as project_name,
+                    NULL as project_id,
                     DATEDIFF(t.due_date, CURDATE()) as days_until_due
                  FROM Tasks t
-                 INNER JOIN Projects p ON p.project_id = t.project_id
-                 LEFT JOIN Task_Assignments ta ON ta.task_id = t.task_id
-                 WHERE p.clan_id = ?
-                   AND t.is_subtask = 0
+                 WHERE t.is_personal = 1
+                   AND t.assigned_to_user_id = ?
                    AND t.status != 'completed'
-                   AND (t.assigned_to_user_id = ? OR ta.user_id = ?)
-                 GROUP BY t.task_id
+                   AND t.is_subtask = 0
                  ORDER BY t.due_date ASC"
             );
-            $stmt->execute([$clanId, $userId, $userId]);
-            $tasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $stmt->execute([$userId]);
+            $personalTasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Combinar ambas listas
+            $allTasks = array_merge($clanTasks, $personalTasks);
 
             // Organizar tareas por columnas del Kanban
             $kanbanColumns = [
@@ -875,7 +907,7 @@ class ClanMemberController {
                 '2_semanas' => []
             ];
 
-            foreach ($tasks as $task) {
+            foreach ($allTasks as $task) {
                 $daysUntilDue = (int)($task['days_until_due'] ?? 0);
                 
                 if ($daysUntilDue < 0) {
@@ -898,6 +930,78 @@ class ClanMemberController {
                 '1_semana' => [],
                 '2_semanas' => []
             ];
+        }
+    }
+
+    public function createPersonalTask() {
+        $this->requireAuth();
+        if (!$this->hasMemberAccess()) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
+            return;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+            return;
+        }
+
+        try {
+            $taskName = trim($_POST['task_name'] ?? '');
+            $description = trim($_POST['description'] ?? '');
+            $priority = $_POST['priority'] ?? 'medium';
+            $dueDate = $_POST['due_date'] ?? '';
+            $status = $_POST['status'] ?? 'pending';
+            $userId = (int)($_POST['user_id'] ?? 0);
+
+            // Validaciones
+            if (empty($taskName)) {
+                echo json_encode(['success' => false, 'message' => 'El nombre de la tarea es requerido']);
+                return;
+            }
+
+            if (empty($dueDate)) {
+                echo json_encode(['success' => false, 'message' => 'La fecha de vencimiento es requerida']);
+                return;
+            }
+
+            if ($userId !== (int)$this->currentUser['user_id']) {
+                echo json_encode(['success' => false, 'message' => 'Usuario no válido']);
+                return;
+            }
+
+            // Crear la tarea personal
+            $taskData = [
+                'task_name' => $taskName,
+                'description' => $description,
+                'priority' => $priority,
+                'due_date' => $dueDate,
+                'status' => $status,
+                'assigned_to_user_id' => $userId,
+                'is_personal' => 1,
+                'project_id' => null, // Tarea personal, no pertenece a proyecto
+                'clan_id' => null,    // Tarea personal, no pertenece a clan
+                'created_by' => $userId,
+                'created_at' => date('Y-m-d H:i:s'),
+                'completion_percentage' => $status === 'completed' ? 100 : 0
+            ];
+
+            $taskId = $this->taskModel->createPersonalTask($taskData);
+
+            if ($taskId) {
+                echo json_encode([
+                    'success' => true, 
+                    'message' => 'Tarea personal creada exitosamente',
+                    'task_id' => $taskId
+                ]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Error al crear la tarea']);
+            }
+
+        } catch (Exception $e) {
+            error_log('Error createPersonalTask: ' . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'Error interno del servidor']);
         }
     }
 
