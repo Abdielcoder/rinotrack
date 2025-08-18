@@ -79,7 +79,7 @@ ob_start();
                         </div>
                         
                         <div class="project-actions">
-                            <a href="<?= APP_URL ?>?route=clan_leader/tasks&project_id=<?= $project['project_id'] ?>" class="btn-view-tasks">
+                            <a href="<?= APP_URL ?>?route=clan_leader/tasks&project_id=<?= $project['project_id'] ?>" class="btn-view-tasks" style="background:rgb(255, 255, 255); !important">
                                 <i class="fas fa-eye"></i>
                                 Ver Tareas
                             </a>
