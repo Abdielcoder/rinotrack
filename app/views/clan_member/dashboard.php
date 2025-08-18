@@ -334,6 +334,10 @@ ob_start();
                     <i class="fas fa-folder-plus"></i>
                     Test Proyecto Personal
                 </button>
+                <button type="button" class="btn-secondary" onclick="reloadDashboard()" style="background: #3b82f6; color: white;">
+                    <i class="fas fa-sync-alt"></i>
+                    Recargar Dashboard
+                </button>
                 <button type="submit" class="btn-primary">
                     <i class="fas fa-save"></i>
                     Crear Tarea
@@ -1323,6 +1327,13 @@ function testCreatePersonalProject() {
         submitBtn.innerHTML = originalText;
         submitBtn.disabled = false;
     });
+}
+
+// Función para recargar el dashboard
+function reloadDashboard() {
+    addDebugLog('Recargando dashboard...', 'info');
+    showNotification('Recargando dashboard...', 'info');
+    location.reload();
 }
 </script>
 

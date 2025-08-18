@@ -841,6 +841,9 @@ class ClanMemberController {
 
     private function getKanbanTasks($userId, $clanId) {
         try {
+            error_log("=== INICIO getKanbanTasks ===");
+            error_log("Usuario ID: $userId, Clan ID: $clanId");
+            
             // Obtener tareas del clan
             $clanTasks = [];
             if ($clanId) {
@@ -870,6 +873,7 @@ class ClanMemberController {
                 );
                 $stmt->execute([$clanId, $userId, $userId]);
                 $clanTasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                error_log("Tareas del clan encontradas: " . count($clanTasks));
             }
 
             // Obtener tareas personales usando el campo is_personal
@@ -886,7 +890,10 @@ class ClanMemberController {
                     t.automatic_points,
                     'Tarea Personal' as project_name,
                     NULL as project_id,
-                    DATEDIFF(t.due_date, CURDATE()) as days_until_due
+                    CASE 
+                        WHEN t.due_date IS NULL THEN 999
+                        ELSE DATEDIFF(t.due_date, CURDATE())
+                    END as days_until_due
                  FROM Tasks t
                  WHERE t.is_personal = 1
                    AND t.assigned_to_user_id = ?
@@ -896,9 +903,12 @@ class ClanMemberController {
             );
             $stmt->execute([$userId]);
             $personalTasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            error_log("Tareas personales encontradas: " . count($personalTasks));
+            error_log("Detalle de tareas personales: " . print_r($personalTasks, true));
 
             // Combinar ambas listas
             $allTasks = array_merge($clanTasks, $personalTasks);
+            error_log("Total de tareas combinadas: " . count($allTasks));
 
             // Organizar tareas por columnas del Kanban
             $kanbanColumns = [
@@ -910,16 +920,28 @@ class ClanMemberController {
 
             foreach ($allTasks as $task) {
                 $daysUntilDue = (int)($task['days_until_due'] ?? 0);
+                error_log("Tarea: {$task['task_name']} - Días hasta vencimiento: $daysUntilDue");
                 
                 if ($daysUntilDue < 0) {
                     $kanbanColumns['vencidas'][] = $task;
+                    error_log("  -> Agregada a 'vencidas'");
                 } elseif ($daysUntilDue === 0) {
                     $kanbanColumns['hoy'][] = $task;
+                    error_log("  -> Agregada a 'hoy'");
                 } elseif ($daysUntilDue <= 7) {
                     $kanbanColumns['1_semana'][] = $task;
+                    error_log("  -> Agregada a '1_semana'");
                 } elseif ($daysUntilDue <= 14) {
                     $kanbanColumns['2_semanas'][] = $task;
+                    error_log("  -> Agregada a '2_semanas'");
+                } else {
+                    error_log("  -> No agregada a ninguna columna (días: $daysUntilDue)");
                 }
+            }
+
+            error_log("Columnas del Kanban:");
+            foreach ($kanbanColumns as $column => $tasks) {
+                error_log("  $column: " . count($tasks) . " tareas");
             }
 
             return $kanbanColumns;
