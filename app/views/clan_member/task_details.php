@@ -222,7 +222,7 @@ function noPermissionModal(){
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #6366f1;
+  background: #1e3a8a;
   color: #fff;
   font-size: 1.2rem;
 }
