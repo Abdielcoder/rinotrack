@@ -26,8 +26,204 @@ ob_start();
         </div>
     </header>
 
-    <!-- Progreso General del Equipo -->
+    <!-- Tablero Kanban de Tareas del Clan -->
     <div class="content-minimal">
+        <section class="kanban-section animate-fade-in">
+            <div class="kanban-header">
+                <div class="kanban-title">
+                    <h3><i class="fas fa-tasks icon-gradient"></i> Tablero Kanban de Tareas del Clan</h3>
+                </div>
+                <div class="kanban-actions">
+                    <a href="?route=clan_leader/tasks" class="btn-add-task">
+                        <i class="fas fa-plus"></i>
+                        Gestionar Tareas
+                    </a>
+                </div>
+            </div>
+            <div class="kanban-board">
+                <!-- Columna: Vencidas -->
+                <div class="kanban-column">
+                    <div class="column-header overdue">
+                        <h4>Vencidas</h4>
+                        <span class="task-count"><?php echo count($kanbanTasks['vencidas'] ?? []); ?></span>
+                    </div>
+                    <div class="column-content">
+                        <?php foreach ($kanbanTasks['vencidas'] ?? [] as $task): ?>
+                            <div class="task-card overdue" data-task-id="<?php echo $task['task_id']; ?>">
+                                <div class="task-header">
+                                    <div class="task-priority-badge <?php echo $task['priority']; ?>">
+                                        <?php
+                                        $priorityLabels = [
+                                            'low' => 'BAJA',
+                                            'medium' => 'MEDIA', 
+                                            'high' => 'ALTA',
+                                            'critical' => 'CRÍTICA'
+                                        ];
+                                        echo $priorityLabels[$task['priority']] ?? 'MEDIA';
+                                        ?>
+                                    </div>
+                                </div>
+                                <div class="task-content">
+                                    <h5 class="task-title"><?php echo htmlspecialchars($task['task_name']); ?></h5>
+                                    <?php if (!empty($task['description'])): ?>
+                                        <p class="task-description"><?php echo htmlspecialchars(substr($task['description'], 0, 80)) . (strlen($task['description']) > 80 ? '...' : ''); ?></p>
+                                    <?php endif; ?>
+                                    <div class="task-project-info">
+                                        <span class="project-name"><?php echo htmlspecialchars($task['project_name']); ?></span>
+                                    </div>
+                                    <div class="task-status overdue">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                        Vencida hace <?php echo abs($task['days_until_due']); ?> días
+                                    </div>
+                                </div>
+                                <div class="task-actions">
+                                    <a href="?route=clan_leader/tasks&project_id=<?php echo $task['project_id']; ?>" class="btn-view" title="Ver proyecto">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+
+                <!-- Columna: Hoy -->
+                <div class="kanban-column">
+                    <div class="column-header today">
+                        <h4>Hoy</h4>
+                        <span class="task-count"><?php echo count($kanbanTasks['hoy'] ?? []); ?></span>
+                    </div>
+                    <div class="column-content">
+                        <?php foreach ($kanbanTasks['hoy'] ?? [] as $task): ?>
+                            <div class="task-card today" data-task-id="<?php echo $task['task_id']; ?>">
+                                <div class="task-header">
+                                    <div class="task-priority-badge <?php echo $task['priority']; ?>">
+                                        <?php
+                                        $priorityLabels = [
+                                            'low' => 'BAJA',
+                                            'medium' => 'MEDIA', 
+                                            'high' => 'ALTA',
+                                            'critical' => 'CRÍTICA'
+                                        ];
+                                        echo $priorityLabels[$task['priority']] ?? 'MEDIA';
+                                        ?>
+                                    </div>
+                                </div>
+                                <div class="task-content">
+                                    <h5 class="task-title"><?php echo htmlspecialchars($task['task_name']); ?></h5>
+                                    <?php if (!empty($task['description'])): ?>
+                                        <p class="task-description"><?php echo htmlspecialchars(substr($task['description'], 0, 80)) . (strlen($task['description']) > 80 ? '...' : ''); ?></p>
+                                    <?php endif; ?>
+                                    <div class="task-project-info">
+                                        <span class="project-name"><?php echo htmlspecialchars($task['project_name']); ?></span>
+                                    </div>
+                                    <div class="task-status today">
+                                        <i class="fas fa-clock"></i>
+                                        Vence hoy
+                                    </div>
+                                </div>
+                                <div class="task-actions">
+                                    <a href="?route=clan_leader/tasks&project_id=<?php echo $task['project_id']; ?>" class="btn-view" title="Ver proyecto">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+
+                <!-- Columna: 1 Semana -->
+                <div class="kanban-column">
+                    <div class="column-header week1">
+                        <h4>1 Semana</h4>
+                        <span class="task-count"><?php echo count($kanbanTasks['1_semana'] ?? []); ?></span>
+                    </div>
+                    <div class="column-content">
+                        <?php foreach ($kanbanTasks['1_semana'] ?? [] as $task): ?>
+                            <div class="task-card week1" data-task-id="<?php echo $task['task_id']; ?>">
+                                <div class="task-header">
+                                    <div class="task-priority-badge <?php echo $task['priority']; ?>">
+                                        <?php
+                                        $priorityLabels = [
+                                            'low' => 'BAJA',
+                                            'medium' => 'MEDIA', 
+                                            'high' => 'ALTA',
+                                            'critical' => 'CRÍTICA'
+                                        ];
+                                        echo $priorityLabels[$task['priority']] ?? 'MEDIA';
+                                        ?>
+                                    </div>
+                                </div>
+                                <div class="task-content">
+                                    <h5 class="task-title"><?php echo htmlspecialchars($task['task_name']); ?></h5>
+                                    <?php if (!empty($task['description'])): ?>
+                                        <p class="task-description"><?php echo htmlspecialchars(substr($task['description'], 0, 80)) . (strlen($task['description']) > 80 ? '...' : ''); ?></p>
+                                    <?php endif; ?>
+                                    <div class="task-project-info">
+                                        <span class="project-name"><?php echo htmlspecialchars($task['project_name']); ?></span>
+                                    </div>
+                                    <div class="task-status week1">
+                                        <i class="fas fa-calendar"></i>
+                                        En <?php echo $task['days_until_due']; ?> días
+                                    </div>
+                                </div>
+                                <div class="task-actions">
+                                    <a href="?route=clan_leader/tasks&project_id=<?php echo $task['project_id']; ?>" class="btn-view" title="Ver proyecto">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+
+                <!-- Columna: 2 Semanas -->
+                <div class="kanban-column">
+                    <div class="column-header week2">
+                        <h4>2 Semanas</h4>
+                        <span class="task-count"><?php echo count($kanbanTasks['2_semanas'] ?? []); ?></span>
+                    </div>
+                    <div class="column-content">
+                        <?php foreach ($kanbanTasks['2_semanas'] ?? [] as $task): ?>
+                            <div class="task-card week2" data-task-id="<?php echo $task['task_id']; ?>">
+                                <div class="task-header">
+                                    <div class="task-priority-badge <?php echo $task['priority']; ?>">
+                                        <?php
+                                        $priorityLabels = [
+                                            'low' => 'BAJA',
+                                            'medium' => 'MEDIA', 
+                                            'high' => 'ALTA',
+                                            'critical' => 'CRÍTICA'
+                                        ];
+                                        echo $priorityLabels[$task['priority']] ?? 'MEDIA';
+                                        ?>
+                                    </div>
+                                </div>
+                                <div class="task-content">
+                                    <h5 class="task-title"><?php echo htmlspecialchars($task['task_name']); ?></h5>
+                                    <?php if (!empty($task['description'])): ?>
+                                        <p class="task-description"><?php echo htmlspecialchars(substr($task['description'], 0, 80)) . (strlen($task['description']) > 80 ? '...' : ''); ?></p>
+                                    <?php endif; ?>
+                                    <div class="task-project-info">
+                                        <span class="project-name"><?php echo htmlspecialchars($task['project_name']); ?></span>
+                                    </div>
+                                    <div class="task-status week2">
+                                        <i class="fas fa-calendar"></i>
+                                        Vence: <?php echo date('d/m/Y', strtotime($task['due_date'])); ?> (<?php echo $task['days_until_due']; ?> días)
+                                    </div>
+                                </div>
+                                <div class="task-actions">
+                                    <a href="?route=clan_leader/tasks&project_id=<?php echo $task['project_id']; ?>" class="btn-view" title="Ver proyecto">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Progreso General del Equipo -->
         <section class="team-progress-section">
             <h3>Progreso General del Equipo</h3>
             <div class="progress-card">
