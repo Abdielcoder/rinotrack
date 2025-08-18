@@ -874,7 +874,7 @@ class ClanMemberController {
             error_log("=== INICIO getKanbanTasks ===");
             error_log("Usuario ID: $userId, Clan ID: $clanId");
             
-            // Obtener tareas del clan (excluyendo las especiales para evitar duplicados)
+            // Obtener tareas del clan (excluyendo las especiales y personales para evitar duplicados)
             $clanTasks = [];
             if ($clanId) {
                 $stmt = $this->db->prepare(
@@ -894,8 +894,9 @@ class ClanMemberController {
                      INNER JOIN Projects p ON p.project_id = t.project_id
                      LEFT JOIN Task_Assignments ta ON ta.task_id = t.task_id
                      WHERE p.clan_id = ?
-                       AND p.project_name NOT IN ('Tareas Recurrentes', 'Tareas Eventuales')
+                       AND p.project_name NOT IN ('Tareas Recurrentes', 'Tareas Eventuales', 'Tareas Personales')
                        AND t.is_subtask = 0
+                       AND t.is_personal = 0
                        AND t.status != 'completed'
                        AND (t.assigned_to_user_id = ? OR ta.user_id = ?)
                      GROUP BY t.task_id
@@ -1002,7 +1003,7 @@ class ClanMemberController {
                 $taskId = $task['task_id'];
                 if (in_array($taskId, $taskIds)) {
                     $duplicates[] = $taskId;
-                    error_log("DUPLICADO ENCONTRADO - Task ID: $taskId, Proyecto: {$task['project_name']}");
+                    error_log("DUPLICADO ENCONTRADO - Task ID: $taskId, Proyecto: {$task['project_name']}, Tipo: " . ($task['is_personal'] ?? 'N/A'));
                 } else {
                     $taskIds[] = $taskId;
                 }
@@ -1010,7 +1011,15 @@ class ClanMemberController {
             
             if (!empty($duplicates)) {
                 error_log("TAREAS DUPLICADAS ENCONTRADAS: " . implode(', ', $duplicates));
+            } else {
+                error_log("No se encontraron duplicados");
             }
+            
+            // Log de resumen por tipo
+            $clanCount = count($clanTasks);
+            $personalCount = count($personalTasks);
+            $specialCount = count($specialTasks);
+            error_log("RESUMEN - Clan: $clanCount, Personales: $personalCount, Especiales: $specialCount, Total: " . count($allTasks));
 
             // Organizar tareas por columnas del Kanban
             $kanbanColumns = [
