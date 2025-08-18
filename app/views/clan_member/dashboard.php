@@ -708,7 +708,7 @@ ob_start();
     align-items: center;
     gap: var(--spacing-sm);
     padding: var(--spacing-md) var(--spacing-lg);
-    background: var(--primary-color);
+    background: #1e3a8a;
     color: white;
     border: none;
     border-radius: var(--radius-md);
@@ -720,7 +720,7 @@ ob_start();
 }
 
 .btn-add-task:hover {
-    background: var(--primary-dark);
+    background: #1e40af;
     transform: translateY(-1px);
     box-shadow: var(--shadow-md);
 }
