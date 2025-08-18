@@ -399,10 +399,11 @@ class ClanLeaderController {
             if (($project['is_personal'] ?? 0) == 1) {
                 // Solo mostrar si fue creado por el líder actual
                 $isOwnPersonal = ($project['created_by_user_id'] ?? 0) == $this->currentUser['user_id'];
-                error_log("Proyecto personal '{$project['project_name']}' - Creado por: {$project['created_by_user_id']}, Líder actual: {$this->currentUser['user_id']}, Mostrar: " . ($isOwnPersonal ? 'SÍ' : 'NO'));
+                error_log("FILTRADO: Proyecto personal '{$project['project_name']}' - Creado por: {$project['created_by_user_id']}, Líder actual: {$this->currentUser['user_id']}, Mostrar: " . ($isOwnPersonal ? 'SÍ' : 'NO'));
                 return $isOwnPersonal;
             }
             // Mostrar todos los proyectos no personales
+            error_log("FILTRADO: Proyecto normal '{$project['project_name']}' - Se muestra (no es personal)");
             return true;
         });
         
@@ -416,7 +417,8 @@ class ClanLeaderController {
             $isPersonal = ($project['is_personal'] ?? 0) == 1;
             $createdBy = $project['created_by_user_id'] ?? 'N/A';
             $isOwn = $createdBy == $this->currentUser['user_id'];
-            error_log("Proyecto: '{$project['project_name']}' - is_personal: " . ($isPersonal ? 'SÍ' : 'NO') . ", Creado por: $createdBy, Es propio: " . ($isOwn ? 'SÍ' : 'NO'));
+            $projectName = $project['project_name'] ?? 'N/A';
+            error_log("DEBUG Proyecto: '$projectName' - ID: {$project['project_id']}, is_personal: " . ($isPersonal ? 'SÍ' : 'NO') . ", Creado por: $createdBy, Es propio: " . ($isOwn ? 'SÍ' : 'NO') . ", Clan: {$project['clan_id']}");
         }
         
         // Reindexar el array después del filtro
