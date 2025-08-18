@@ -105,7 +105,8 @@ ob_start();
                             <div class="form-grid">
                             <div class="form-group">
                                 <label>Tipo</label>
-                                <select id="taskType" onchange="onTaskTypeChange()">
+                                <select id="taskType" onchange="onTaskTypeChange()" required>
+                                    <option value="">Selecciona</option>
                                     <option value="recurrent">Recurrente</option>
                                     <option value="eventual">Eventual</option>
                                 </select>
@@ -351,35 +352,72 @@ function onTaskTypeChange() {
     const type = sel.value;
     const recId = <?php echo (int)$recurrentProject['project_id']; ?>;
     const evtId = <?php echo (int)$eventualProject['project_id']; ?>;
-    projectSel.value = (type === 'recurrent') ? String(recId) : String(evtId);
+    
+    if (type === '') {
+        // No hay tipo seleccionado
+        projectSel.value = '';
+        console.log('Tipo de tarea: No seleccionado');
+        console.log('Project ID: No asignado');
+    } else if (type === 'recurrent') {
+        projectSel.value = String(recId);
+        console.log('Tipo de tarea: Recurrente');
+        console.log('Project ID asignado:', projectSel.value);
+    } else if (type === 'eventual') {
+        projectSel.value = String(evtId);
+        console.log('Tipo de tarea: Eventual');
+        console.log('Project ID asignado:', projectSel.value);
+    }
     
     // Log para debugging
-    console.log('Tipo de tarea cambiado a:', type);
-    console.log('Project ID asignado:', projectSel.value);
     console.log('Proyecto Recurrente ID:', recId);
     console.log('Proyecto Eventual ID:', evtId);
 }
 
 // Ejecutar al cargar la página para asegurar estado inicial correcto
 document.addEventListener('DOMContentLoaded', function() {
-    onTaskTypeChange();
-    
-    // Log del estado inicial
+    // No ejecutar onTaskTypeChange() automáticamente, dejar que el usuario seleccione
     const sel = document.getElementById('taskType');
     const projectSel = document.getElementById('projectId');
     if (sel && projectSel) {
-        console.log('Estado inicial - Tipo:', sel.value, 'Project ID:', projectSel.value);
+        console.log('Estado inicial - Tipo: No seleccionado, Project ID: No asignado');
+        console.log('Proyecto Recurrente ID:', <?php echo (int)$recurrentProject['project_id']; ?>);
+        console.log('Proyecto Eventual ID:', <?php echo (int)$eventualProject['project_id']; ?>);
     }
 });
 
 document.getElementById('adminCreateTaskForm')?.addEventListener('submit', async function(e) {
     e.preventDefault();
     const form = e.currentTarget;
+    
+    // Validar que se haya seleccionado un tipo
+    const taskType = document.getElementById('taskType')?.value;
+    if (!taskType) {
+        openStatus({ 
+            title: 'Tipo no seleccionado', 
+            message: 'Debes seleccionar un tipo de tarea (Recurrente o Eventual)', 
+            icon: 'fa-exclamation-triangle', 
+            color: '#f59e0b' 
+        });
+        return;
+    }
+    
+    // Validar que el projectId esté asignado
+    const projectId = document.getElementById('projectId')?.value;
+    if (!projectId) {
+        openStatus({ 
+            title: 'Error de proyecto', 
+            message: 'No se pudo asignar el proyecto. Por favor, selecciona el tipo de tarea nuevamente.', 
+            icon: 'fa-exclamation-triangle', 
+            color: '#ef4444' 
+        });
+        return;
+    }
+    
     const data = new FormData(form);
     
     // Log para debugging del formulario
     console.log('=== ENVIANDO FORMULARIO ===');
-    console.log('Tipo de tarea:', document.getElementById('taskType')?.value);
+    console.log('Tipo de tarea:', taskType);
     console.log('Project ID:', document.getElementById('projectId')?.value);
     console.log('Nombre de tarea:', data.get('taskName'));
     console.log('Descripción:', data.get('description'));
