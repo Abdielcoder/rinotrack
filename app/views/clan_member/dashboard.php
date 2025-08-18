@@ -330,6 +330,10 @@ ob_start();
                     <i class="fas fa-plus"></i>
                     Test Crear Tarea
                 </button>
+                <button type="button" class="btn-secondary" onclick="testCreatePersonalProject()" style="background: #8b5cf6; color: white;">
+                    <i class="fas fa-folder-plus"></i>
+                    Test Proyecto Personal
+                </button>
                 <button type="submit" class="btn-primary">
                     <i class="fas fa-save"></i>
                     Crear Tarea
@@ -1260,6 +1264,59 @@ function testCreateTask() {
     })
     .catch(error => {
         addDebugLog(`Error de conexión: ${error.message}`, 'error');
+        showNotification('Error de conexión: ' + error.message, 'error');
+    })
+    .finally(() => {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    });
+}
+
+// Función para probar la creación de un proyecto personal
+function testCreatePersonalProject() {
+    addDebugLog('Iniciando test de creación de proyecto personal...', 'info');
+    showNotification('Probando creación de proyecto personal...', 'info');
+
+    const formData = new FormData();
+    formData.append('route', 'clan_member/create-personal-project');
+    formData.append('user_id', '<?php echo $user['user_id'] ?? 0; ?>');
+    formData.append('project_name', 'Proyecto Personal de Prueba');
+    formData.append('description', 'Descripción de prueba para un proyecto personal.');
+
+    addDebugLog(`Datos de prueba enviados para proyecto personal: ${JSON.stringify({
+        project_name: 'Proyecto Personal de Prueba',
+        description: 'Descripción de prueba para un proyecto personal.',
+        user_id: '<?php echo $user['user_id'] ?? 0; ?>'
+    })}`, 'info');
+
+    const submitBtn = document.querySelector('#addTaskForm button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creando...';
+    submitBtn.disabled = true;
+
+    fetch('?route=clan_member/create-personal-project', {
+        method: 'POST',
+        body: formData,
+        credentials: 'same-origin'
+    })
+    .then(response => {
+        addDebugLog(`Respuesta del servidor para proyecto personal: ${response.status} ${response.statusText}`, 'info');
+        return response.json();
+    })
+    .then(data => {
+        addDebugLog(`Datos de respuesta para proyecto personal: ${JSON.stringify(data)}`, 'info');
+        if (data.success) {
+            addDebugLog('Proyecto personal creado exitosamente!', 'success');
+            showNotification('Proyecto personal creado exitosamente!', 'success');
+            closeAddTaskModal();
+            // No recargar la página, solo mostrar notificación
+        } else {
+            addDebugLog(`Error al crear proyecto personal: ${data.message}`, 'error');
+            showNotification(data.message || 'Error al crear el proyecto personal', 'error');
+        }
+    })
+    .catch(error => {
+        addDebugLog(`Error de conexión para proyecto personal: ${error.message}`, 'error');
         showNotification('Error de conexión: ' + error.message, 'error');
     })
     .finally(() => {

@@ -1025,6 +1025,61 @@ class ClanMemberController {
         ]);
     }
 
+    public function createPersonalProject() {
+        $this->requireAuth();
+        if (!$this->hasMemberAccess()) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
+            return;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+            return;
+        }
+
+        try {
+            $projectName = trim($_POST['project_name'] ?? '');
+            $description = trim($_POST['description'] ?? '');
+            $userId = (int)($_POST['user_id'] ?? 0);
+
+            // Validaciones
+            if (empty($projectName)) {
+                echo json_encode(['success' => false, 'message' => 'El nombre del proyecto es requerido']);
+                return;
+            }
+
+            if ($userId !== (int)$this->currentUser['user_id']) {
+                echo json_encode(['success' => false, 'message' => 'Usuario no válido']);
+                return;
+            }
+
+            // Crear el proyecto personal usando el modelo Project
+            $projectData = [
+                'project_name' => $projectName,
+                'description' => $description,
+                'user_id' => $userId
+            ];
+
+            $projectId = $this->projectModel->createPersonalProject($projectData);
+
+            if ($projectId) {
+                echo json_encode([
+                    'success' => true, 
+                    'message' => 'Proyecto personal creado exitosamente',
+                    'project_id' => $projectId
+                ]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Error al crear el proyecto personal']);
+            }
+
+        } catch (Exception $e) {
+            error_log('Error createPersonalProject: ' . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'Error interno del servidor: ' . $e->getMessage()]);
+        }
+    }
+
     private function loadView($view, $data = []) {
         extract($data);
         $viewFile = __DIR__ . '/../views/' . $view . '.php';
