@@ -308,6 +308,15 @@ ob_start();
                 </select>
             </div>
             
+            <!-- Panel de Debug -->
+            <div class="debug-panel">
+                <h4><i class="fas fa-bug"></i> Panel de Debug</h4>
+                <div id="debugLog" class="debug-log"></div>
+                <button type="button" class="btn-secondary" onclick="clearDebugLog()" style="background: #6b7280; color: white;">
+                    <i class="fas fa-trash"></i> Limpiar Log
+                </button>
+            </div>
+            
             <div class="form-actions">
                 <button type="button" class="btn-secondary" onclick="closeAddTaskModal()">
                     <i class="fas fa-times"></i>
@@ -867,6 +876,67 @@ ob_start();
         justify-content: center;
     }
 }
+
+/* Panel de Debug */
+.debug-panel {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+.debug-panel h4 {
+    margin: 0 0 var(--spacing-sm) 0;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.debug-log {
+    background: #1f2937;
+    color: #f9fafb;
+    border-radius: var(--radius-sm);
+    padding: var(--spacing-sm);
+    max-height: 200px;
+    overflow-y: auto;
+    font-family: 'Courier New', monospace;
+    font-size: 0.8rem;
+    margin-bottom: var(--spacing-sm);
+}
+
+.debug-entry {
+    margin-bottom: 4px;
+    padding: 2px 0;
+    border-bottom: 1px solid #374151;
+}
+
+.debug-entry:last-child {
+    border-bottom: none;
+}
+
+.debug-time {
+    color: #9ca3af;
+    margin-right: var(--spacing-sm);
+}
+
+.debug-info {
+    color: #60a5fa;
+}
+
+.debug-success {
+    color: #34d399;
+}
+
+.debug-error {
+    color: #f87171;
+}
+
+.debug-warning {
+    color: #fbbf24;
+}
 </style>
 
 <script>
@@ -956,45 +1026,51 @@ function updateTaskCounts() {
 
 // Función para mostrar notificaciones
 function showNotification(message, type = 'info') {
-  const notification = document.createElement('div');
-  notification.className = `notification notification-${type}`;
-  notification.textContent = message;
-  
-  // Estilos de la notificación
-  notification.style.cssText = `
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    padding: 12px 20px;
-    border-radius: 8px;
-    color: white;
-    font-weight: 500;
-    z-index: 1000;
-    transform: translateX(100%);
-    transition: transform 0.3s ease;
-  `;
-  
-  // Colores según el tipo
-  if (type === 'success') notification.style.background = '#10b981';
-  else if (type === 'error') notification.style.background = '#ef4444';
-  else notification.style.background = '#3b82f6';
-  
-  document.body.appendChild(notification);
-  
-  // Mostrar notificación
-  setTimeout(() => {
-    notification.style.transform = 'translateX(0)';
-  }, 100);
-  
-  // Ocultar después de 3 segundos
-  setTimeout(() => {
-    notification.style.transform = 'translateX(100%)';
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+        <span>${message}</span>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Mostrar notificación
+    setTimeout(() => notification.classList.add('show'), 100);
+    
+    // Ocultar después de 4 segundos
     setTimeout(() => {
-      if (notification.parentNode) {
-        notification.parentNode.removeChild(notification);
-      }
-    }, 300);
-  }, 3000);
+        notification.classList.remove('show');
+        setTimeout(() => notification.remove(), 300);
+    }, 4000);
+}
+
+// Sistema de Debug Visual
+function addDebugLog(message, type = 'info') {
+    const debugLog = document.getElementById('debugLog');
+    if (!debugLog) return;
+    
+    const timestamp = new Date().toLocaleTimeString();
+    const logEntry = document.createElement('div');
+    logEntry.className = `debug-entry debug-${type}`;
+    logEntry.innerHTML = `
+        <span class="debug-time">[${timestamp}]</span>
+        <span class="debug-message">${message}</span>
+    `;
+    
+    debugLog.appendChild(logEntry);
+    debugLog.scrollTop = debugLog.scrollHeight;
+    
+    // También mostrar en consola
+    console.log(`[DEBUG ${type.toUpperCase()}] ${message}`);
+}
+
+function clearDebugLog() {
+    const debugLog = document.getElementById('debugLog');
+    if (debugLog) {
+        debugLog.innerHTML = '';
+        addDebugLog('Log de debug limpiado', 'info');
+    }
 }
 
 // Funciones para el modal de agregar tarea
@@ -1008,6 +1084,12 @@ function openAddTaskModal() {
     
     // Limpiar formulario
     document.getElementById('addTaskForm').reset();
+    
+    // Inicializar sistema de debug
+    clearDebugLog();
+    addDebugLog('Modal de agregar tarea abierto', 'info');
+    addDebugLog(`Usuario ID: <?php echo $user['user_id'] ?? 0; ?>`, 'info');
+    addDebugLog(`Fecha actual: ${today}`, 'info');
     
     // Enfocar en el primer campo
     setTimeout(() => {
@@ -1053,14 +1135,17 @@ function createPersonalTask() {
     submitBtn.disabled = true;
     
     // Log para debugging
-    console.log('Enviando datos:', {
+    const debugData = {
         task_name: formData.get('task_name'),
         description: formData.get('description'),
         priority: formData.get('priority'),
         due_date: formData.get('due_date'),
         status: formData.get('status'),
         user_id: formData.get('user_id')
-    });
+    };
+    
+    addDebugLog('Iniciando creación de tarea personal...', 'info');
+    addDebugLog(`Datos a enviar: ${JSON.stringify(debugData)}`, 'info');
     
     fetch('?route=clan_member/create-personal-task', {
         method: 'POST',
@@ -1068,13 +1153,13 @@ function createPersonalTask() {
         credentials: 'same-origin'
     })
     .then(response => {
-        console.log('Response status:', response.status);
-        console.log('Response headers:', response.headers);
+        addDebugLog(`Respuesta del servidor: ${response.status} ${response.statusText}`, 'info');
         return response.json();
     })
     .then(data => {
-        console.log('Response data:', data);
+        addDebugLog(`Datos de respuesta: ${JSON.stringify(data)}`, 'info');
         if (data.success) {
+            addDebugLog('Tarea creada exitosamente!', 'success');
             showNotification('Tarea creada exitosamente', 'success');
             closeAddTaskModal();
             
@@ -1083,10 +1168,12 @@ function createPersonalTask() {
                 location.reload();
             }, 1500);
         } else {
+            addDebugLog(`Error al crear tarea: ${data.message}`, 'error');
             showNotification(data.message || 'Error al crear la tarea', 'error');
         }
     })
     .catch(error => {
+        addDebugLog(`Error de conexión: ${error.message}`, 'error');
         console.error('Error en fetch:', error);
         showNotification('Error de conexión: ' + error.message, 'error');
     })
@@ -1098,34 +1185,54 @@ function createPersonalTask() {
 
 // Función para probar la conexión
 function testConnection() {
+    addDebugLog('Iniciando test de conexión...', 'info');
     showNotification('Probando conexión...', 'info');
+    
     fetch('?route=clan_member/test-personal-task')
-        .then(response => response.json())
+        .then(response => {
+            addDebugLog(`Respuesta del servidor: ${response.status} ${response.statusText}`, 'info');
+            return response.json();
+        })
         .then(data => {
+            addDebugLog(`Datos recibidos: ${JSON.stringify(data)}`, 'info');
             if (data.success) {
+                addDebugLog('Test de conexión exitoso!', 'success');
                 showNotification('Conexión exitosa! Usuario ID: ' + data.user_id, 'success');
             } else {
+                addDebugLog(`Test falló: ${data.message}`, 'error');
                 showNotification('Error en test: ' + data.message, 'error');
             }
         })
         .catch(error => {
+            addDebugLog(`Error de conexión: ${error.message}`, 'error');
             showNotification('Error de conexión: ' + error.message, 'error');
         });
 }
 
 // Función para probar la creación de tarea con datos mínimos
 function testCreateTask() {
+    addDebugLog('Iniciando test de creación de tarea...', 'info');
     showNotification('Probando creación de tarea con datos mínimos...', 'info');
-    const form = document.getElementById('addTaskForm');
-    const formData = new FormData(form);
+    
+    const formData = new FormData();
     formData.append('route', 'clan_member/create-personal-task');
     formData.append('user_id', '<?php echo $user['user_id'] ?? 0; ?>');
     formData.append('task_name', 'Tarea de Prueba');
+    formData.append('description', 'Descripción de prueba');
     formData.append('priority', 'medium');
     formData.append('due_date', new Date().toISOString().split('T')[0]);
     formData.append('status', 'pending');
 
-    const submitBtn = form.querySelector('button[type="submit"]');
+    addDebugLog(`Datos de prueba enviados: ${JSON.stringify({
+        task_name: 'Tarea de Prueba',
+        description: 'Descripción de prueba',
+        priority: 'medium',
+        due_date: new Date().toISOString().split('T')[0],
+        status: 'pending',
+        user_id: '<?php echo $user['user_id'] ?? 0; ?>'
+    })}`, 'info');
+
+    const submitBtn = document.querySelector('#addTaskForm button[type="submit"]');
     const originalText = submitBtn.innerHTML;
     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creando...';
     submitBtn.disabled = true;
@@ -1135,17 +1242,23 @@ function testCreateTask() {
         body: formData,
         credentials: 'same-origin'
     })
-    .then(response => response.json())
+    .then(response => {
+        addDebugLog(`Respuesta del servidor: ${response.status} ${response.statusText}`, 'info');
+        return response.json();
+    })
     .then(data => {
+        addDebugLog(`Datos de respuesta: ${JSON.stringify(data)}`, 'info');
         if (data.success) {
+            addDebugLog('Tarea creada exitosamente con datos mínimos!', 'success');
             showNotification('Tarea creada exitosamente con datos mínimos!', 'success');
             closeAddTaskModal();
-            // No recargar la página, solo mostrar notificación
         } else {
+            addDebugLog(`Error al crear tarea: ${data.message}`, 'error');
             showNotification(data.message || 'Error al crear la tarea con datos mínimos', 'error');
         }
     })
     .catch(error => {
+        addDebugLog(`Error de conexión: ${error.message}`, 'error');
         showNotification('Error de conexión: ' + error.message, 'error');
     })
     .finally(() => {
