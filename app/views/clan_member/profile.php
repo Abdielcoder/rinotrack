@@ -70,12 +70,22 @@ ob_start();
                     
                     <div class="form-group">
                         <label for="new_password">Nueva contraseña</label>
-                        <input type="password" id="new_password" name="new_password" required />
+                        <div class="password-input-wrapper">
+                            <input type="password" id="new_password" name="new_password" required />
+                            <button type="button" class="password-toggle" onclick="togglePassword('new_password')">
+                                <i class="fas fa-eye" id="eye-new"></i>
+                            </button>
+                        </div>
                     </div>
                     
                     <div class="form-group">
                         <label for="confirm_password">Confirmar contraseña</label>
-                        <input type="password" id="confirm_password" name="confirm_password" required />
+                        <div class="password-input-wrapper">
+                            <input type="password" id="confirm_password" name="confirm_password" required />
+                            <button type="button" class="password-toggle" onclick="togglePassword('confirm_password')">
+                                <i class="fas fa-eye" id="eye-confirm"></i>
+                            </button>
+                        </div>
                     </div>
                     
                     <div class="form-actions">
@@ -293,6 +303,22 @@ document.getElementById('avatar')?.addEventListener('change', function(e) {
         reader.readAsDataURL(file);
     }
 });
+
+// Función para mostrar/ocultar contraseñas
+function togglePassword(inputId) {
+    const input = document.getElementById(inputId);
+    const icon = document.getElementById(`eye-${inputId.replace('new_', '').replace('confirm_', '')}`);
+
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+    }
+}
 </script>
 
 <style>
@@ -480,6 +506,49 @@ body {
 
 .form-group input:hover {
     border-color: var(--primary-light);
+}
+
+/* Wrapper para inputs de contraseña */
+.password-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-input-wrapper input {
+    flex: 1;
+    padding-right: 50px; /* Espacio para el botón del ojo */
+}
+
+.password-toggle {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 8px;
+    border-radius: var(--radius-sm);
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+}
+
+.password-toggle:hover {
+    background: var(--bg-accent);
+    color: var(--text-primary);
+}
+
+.password-toggle:focus {
+    outline: none;
+    background: var(--bg-accent);
+    color: var(--text-primary);
+    box-shadow: 0 0 0 2px var(--primary-color);
 }
 
 /* Estilos para campos deshabilitados */
