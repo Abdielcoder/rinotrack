@@ -44,6 +44,17 @@ ob_start();
     <div class="content-minimal">
         <section class="projects-minimal">
             <?php if (!empty($projects)): ?>
+                <!-- DEBUG: Mostrar información de los proyectos -->
+                <div style="background: #f0f0f0; padding: 10px; margin: 10px 0; border-radius: 5px; font-family: monospace;">
+                    <strong>DEBUG:</strong> Total de proyectos: <?php echo count($projects); ?><br>
+                    <?php foreach ($projects as $project): ?>
+                        ID: <?php echo $project['project_id']; ?> | 
+                        Nombre: <?php echo htmlspecialchars($project['project_name']); ?> | 
+                        Personal: <?php echo ($project['is_personal'] ?? 0) ? 'SÍ' : 'NO'; ?> | 
+                        Creado por: <?php echo $project['created_by_user_id']; ?><br>
+                    <?php endforeach; ?>
+                </div>
+                
                 <div class="projects-list">
                     <?php foreach ($projects as $project): ?>
                         <div class="project-item">

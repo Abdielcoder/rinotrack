@@ -386,6 +386,11 @@ class ClanLeaderController {
      * Gestión de proyectos del clan
      */
     public function projects() {
+        error_log("=== MÉTODO PROJECTS INICIADO ===");
+        error_log("Usuario actual: " . json_encode($this->currentUser));
+        error_log("Clan del usuario: " . json_encode($this->userClan));
+        error_log("¿Tiene acceso de líder?: " . ($this->hasClanLeaderAccess() ? 'SÍ' : 'NO'));
+        
         $search = $_GET['search'] ?? '';
         
         // Obtener todos los proyectos del clan
@@ -394,18 +399,36 @@ class ClanLeaderController {
             $this->searchProjects($search);
         
         // Filtrar proyectos personales: mostrar solo los del líder actual
+        error_log("=== INICIANDO FILTRADO DE PROYECTOS ===");
+        error_log("Líder actual user_id: {$this->currentUser['user_id']}");
+        error_log("Total de proyectos antes del filtro: " . count($allProjects));
+        
         $projects = array_filter($allProjects, function($project) {
+            $projectId = $project['project_id'] ?? 'N/A';
+            $projectName = $project['project_name'] ?? 'N/A';
+            $isPersonal = ($project['is_personal'] ?? 0) == 1;
+            $createdBy = $project['created_by_user_id'] ?? 'N/A';
+            $currentUserId = $this->currentUser['user_id'];
+            
+            error_log("--- Analizando proyecto: ID=$projectId, Nombre='$projectName' ---");
+            error_log("  is_personal: $isPersonal");
+            error_log("  created_by_user_id: $createdBy");
+            error_log("  current_user_id: $currentUserId");
+            
             // Si es un proyecto personal (is_personal = 1)
-            if (($project['is_personal'] ?? 0) == 1) {
+            if ($isPersonal) {
                 // Solo mostrar si fue creado por el líder actual
-                $isOwnPersonal = ($project['created_by_user_id'] ?? 0) == $this->currentUser['user_id'];
-                error_log("FILTRADO: Proyecto personal '{$project['project_name']}' - Creado por: {$project['created_by_user_id']}, Líder actual: {$this->currentUser['user_id']}, Mostrar: " . ($isOwnPersonal ? 'SÍ' : 'NO'));
+                $isOwnPersonal = $createdBy == $currentUserId;
+                error_log("  RESULTADO: Proyecto PERSONAL - Es propio: " . ($isOwnPersonal ? 'SÍ' : 'NO'));
                 return $isOwnPersonal;
             }
             // Mostrar todos los proyectos no personales
-            error_log("FILTRADO: Proyecto normal '{$project['project_name']}' - Se muestra (no es personal)");
+            error_log("  RESULTADO: Proyecto NORMAL - Se muestra");
             return true;
         });
+        
+        error_log("Total de proyectos después del filtro: " . count($projects));
+        error_log("=== FIN DEL FILTRADO ===");
         
         // Log del resultado del filtrado
         $totalProjects = count($allProjects);

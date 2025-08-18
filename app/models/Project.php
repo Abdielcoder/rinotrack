@@ -211,6 +211,9 @@ class Project {
      */
     public function getByClan($clanId) {
         try {
+            error_log("=== getByClan INICIADO ===");
+            error_log("Clan ID solicitado: $clanId");
+            
             $stmt = $this->db->prepare("
                 SELECT 
                     p.*,
@@ -236,6 +239,13 @@ class Project {
             ");
             $stmt->execute([$clanId]);
             $projects = $stmt->fetchAll();
+            
+            error_log("Proyectos obtenidos: " . count($projects));
+            foreach ($projects as $project) {
+                error_log("  Proyecto: ID={$project['project_id']}, Nombre='{$project['project_name']}', is_personal={$project['is_personal']}, created_by={$project['created_by_user_id']}");
+            }
+            
+            error_log("=== getByClan FINALIZADO ===");
 
             foreach ($projects as &$project) {
                 $totalTasks = (int)($project['total_tasks'] ?? 0);
