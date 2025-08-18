@@ -94,6 +94,11 @@ ob_start();
                 <div class="cm-project-cards">
                     <?php foreach ($projectsSummary as $p): ?>
                         <?php 
+                            // Ocultar proyectos especiales del sistema
+                            if (in_array($p['project_name'], ['Tareas Recurrentes', 'Tareas Eventuales'])) {
+                                continue;
+                            }
+                            
                             $pid = (int)($p['project_id'] ?? 0);
                             $prog = (float)($p['progress_percentage'] ?? 0);
                             $status = strtoupper($p['status'] ?? 'open');
