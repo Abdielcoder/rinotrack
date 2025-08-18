@@ -22,6 +22,32 @@ ob_start();
                 <li class="nav-item"><a href="?route=clan_member/availability" class="nav-link"><i class="fas fa-user-clock"></i><span>Disponibilidad</span></a></li>
                 <li class="nav-item"><a href="?route=clan_member/profile" class="nav-link"><i class="fas fa-user"></i><span>Perfil</span></a></li>
             </ul>
+            
+            <!-- Botón hamburguesa para móvil -->
+            <button class="hamburger-menu" onclick="toggleMobileMenu()">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
+            
+            <!-- Menú móvil -->
+            <div class="mobile-menu" id="mobileMenu">
+                <div class="mobile-menu-content">
+                    <div class="mobile-menu-header">
+                        <span class="mobile-menu-title">Menú</span>
+                        <button class="mobile-menu-close" onclick="toggleMobileMenu()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <ul class="mobile-nav-menu">
+                        <li class="mobile-nav-item"><a href="?route=clan_member" class="mobile-nav-link"><i class="fas fa-home"></i><span>Dashboard</span></a></li>
+                        <li class="mobile-nav-item active"><a href="?route=clan_member/tasks" class="mobile-nav-link"><i class="fas fa-tasks"></i><span>Tareas</span></a></li>
+                        <li class="mobile-nav-item"><a href="?route=clan_member/kpi-dashboard" class="mobile-nav-link"><i class="fas fa-chart-line"></i><span>KPI</span></a></li>
+                        <li class="mobile-nav-item"><a href="?route=clan_member/availability" class="mobile-nav-link"><i class="fas fa-user-clock"></i><span>Disponibilidad</span></a></li>
+                        <li class="mobile-nav-item"><a href="?route=clan_member/profile" class="mobile-nav-link"><i class="fas fa-user"></i><span>Perfil</span></a></li>
+                    </ul>
+                </div>
+            </div>
             <div class="user-menu">
                 <div class="user-avatar modern-avatar">
                     <?php if (!empty($user['avatar_path'])): ?>
@@ -222,7 +248,220 @@ ob_start();
 .pc-progress>span{display:block;height:100%;background:linear-gradient(90deg,#10b981,#22c55e)}
 .pc-actions{display:flex;justify-content:center}
 @media (max-width:768px){.nav-menu{display:none}.main-content{padding:var(--spacing-lg) var(--spacing-md)}}
+
+/* === MENÚ HAMBURGUESA RESPONSIVE === */
+.hamburger-menu {
+    display: none;
+    flex-direction: column;
+    justify-content: space-around;
+    width: 30px;
+    height: 25px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    z-index: 1000;
+}
+
+.hamburger-line {
+    width: 100%;
+    height: 3px;
+    background: var(--text-secondary);
+    border-radius: 2px;
+    transition: all 0.3s ease;
+}
+
+.hamburger-menu.active .hamburger-line:nth-child(1) {
+    transform: rotate(45deg) translate(5px, 5px);
+}
+
+.hamburger-menu.active .hamburger-line:nth-child(2) {
+    opacity: 0;
+}
+
+.hamburger-menu.active .hamburger-line:nth-child(3) {
+    transform: rotate(-45deg) translate(7px, -6px);
+}
+
+.mobile-menu {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 999;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.mobile-menu.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.mobile-menu-content {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 280px;
+    height: 100%;
+    background: var(--bg-primary);
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+}
+
+.mobile-menu.active .mobile-menu-content {
+    transform: translateX(0);
+}
+
+.mobile-menu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-lg);
+    border-bottom: 1px solid var(--bg-accent);
+    background: var(--bg-secondary);
+}
+
+.mobile-menu-title {
+    font-size: 1.2rem;
+    font-weight: var(--font-weight-bold);
+    color: var(--text-primary);
+}
+
+.mobile-menu-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 0;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-md);
+    transition: all 0.2s ease;
+}
+
+.mobile-menu-close:hover {
+    background: var(--bg-accent);
+    color: var(--text-primary);
+}
+
+.mobile-nav-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.mobile-nav-item {
+    border-bottom: 1px solid var(--bg-accent);
+}
+
+.mobile-nav-link {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-lg);
+    text-decoration: none;
+    color: var(--text-secondary);
+    font-weight: var(--font-weight-medium);
+    transition: all 0.2s ease;
+}
+
+.mobile-nav-link:hover,
+.mobile-nav-item.active .mobile-nav-link {
+    background: var(--bg-accent);
+    color: var(--text-primary);
+}
+
+.mobile-nav-link i {
+    width: 20px;
+    text-align: center;
+    font-size: 1.1rem;
+}
+
+/* === RESPONSIVE DESIGN === */
+@media (max-width: 768px) {
+    .nav-menu {
+        display: none;
+    }
+    
+    .hamburger-menu {
+        display: flex;
+    }
+    
+    .nav-container {
+        padding: 0 var(--spacing-md);
+    }
+    
+    .main-content {
+        padding: var(--spacing-lg) var(--spacing-md);
+    }
+    
+    .cm-project-cards {
+        grid-template-columns: 1fr;
+    }
+    
+    .cm-project-card {
+        min-width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .nav-container {
+        padding: 0 var(--spacing-sm);
+    }
+    
+    .main-content {
+        padding: var(--spacing-md) var(--spacing-sm);
+    }
+    
+    .welcome-title {
+        font-size: 1.8rem;
+    }
+}
 </style>
+
+<script>
+// Función para el menú hamburguesa
+function toggleMobileMenu() {
+    const mobileMenu = document.getElementById('mobileMenu');
+    const hamburger = document.querySelector('.hamburger-menu');
+    
+    if (mobileMenu.classList.contains('active')) {
+        mobileMenu.classList.remove('active');
+        hamburger.classList.remove('active');
+    } else {
+        mobileMenu.classList.add('active');
+        hamburger.classList.add('active');
+    }
+}
+
+// Cerrar menú móvil al hacer click en un enlace
+document.addEventListener('DOMContentLoaded', function() {
+    const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
+    mobileNavLinks.forEach(link => {
+        link.addEventListener('click', function() {
+            toggleMobileMenu();
+        });
+    });
+    
+    // Cerrar menú móvil al hacer click fuera
+    const mobileMenu = document.getElementById('mobileMenu');
+    mobileMenu.addEventListener('click', function(e) {
+        if (e.target === mobileMenu) {
+            toggleMobileMenu();
+        }
+    });
+});
+</script>
 
 <?php
 $content = ob_get_clean();
