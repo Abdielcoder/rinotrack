@@ -1645,7 +1645,7 @@ class Task {
             
             $this->db->beginTransaction();
             
-            // Crear la tarea personal
+            // Crear la tarea personal - usando solo campos básicos que sabemos que existen
             $stmt = $this->db->prepare("
                 INSERT INTO Tasks (
                     task_name, 
@@ -1654,15 +1654,11 @@ class Task {
                     due_date, 
                     status, 
                     assigned_to_user_id, 
-                    is_personal, 
-                    project_id, 
-                    clan_id, 
                     created_by_user_id, 
-                    created_at, 
                     completion_percentage,
                     is_subtask
                 ) VALUES (
-                    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0
+                    ?, ?, ?, ?, ?, ?, ?, ?, 0
                 )
             ");
             
@@ -1673,11 +1669,7 @@ class Task {
                 $taskData['due_date'],
                 $taskData['status'],
                 $taskData['assigned_to_user_id'],
-                $taskData['is_personal'],
-                $taskData['project_id'],
-                $taskData['clan_id'],
                 $taskData['created_by'],
-                $taskData['created_at'],
                 $taskData['completion_percentage']
             ]);
             

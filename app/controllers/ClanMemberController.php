@@ -947,6 +947,9 @@ class ClanMemberController {
             return;
         }
 
+        // Log para debugging
+        error_log('createPersonalTask llamado con POST data: ' . print_r($_POST, true));
+
         try {
             $taskName = trim($_POST['task_name'] ?? '');
             $description = trim($_POST['description'] ?? '');
@@ -954,6 +957,9 @@ class ClanMemberController {
             $dueDate = $_POST['due_date'] ?? '';
             $status = $_POST['status'] ?? 'pending';
             $userId = (int)($_POST['user_id'] ?? 0);
+
+            // Log de datos recibidos
+            error_log("Datos procesados: task_name=$taskName, due_date=$dueDate, user_id=$userId");
 
             // Validaciones
             if (empty($taskName)) {
@@ -971,7 +977,7 @@ class ClanMemberController {
                 return;
             }
 
-            // Crear la tarea personal
+            // Crear la tarea personal con solo campos básicos
             $taskData = [
                 'task_name' => $taskName,
                 'description' => $description,
@@ -979,13 +985,11 @@ class ClanMemberController {
                 'due_date' => $dueDate,
                 'status' => $status,
                 'assigned_to_user_id' => $userId,
-                'is_personal' => 1,
-                'project_id' => null, // Tarea personal, no pertenece a proyecto
-                'clan_id' => null,    // Tarea personal, no pertenece a clan
                 'created_by' => $userId,
-                'created_at' => date('Y-m-d H:i:s'),
                 'completion_percentage' => $status === 'completed' ? 100 : 0
             ];
+
+            error_log('Task data a crear: ' . print_r($taskData, true));
 
             $taskId = $this->taskModel->createPersonalTask($taskData);
 
@@ -1001,8 +1005,24 @@ class ClanMemberController {
 
         } catch (Exception $e) {
             error_log('Error createPersonalTask: ' . $e->getMessage());
-            echo json_encode(['success' => false, 'message' => 'Error interno del servidor']);
+            echo json_encode(['success' => false, 'message' => 'Error interno del servidor: ' . $e->getMessage()]);
         }
+    }
+
+    public function testPersonalTask() {
+        $this->requireAuth();
+        if (!$this->hasMemberAccess()) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
+            return;
+        }
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'Test exitoso',
+            'user_id' => $this->currentUser['user_id'],
+            'timestamp' => date('Y-m-d H:i:s')
+        ]);
     }
 
     private function loadView($view, $data = []) {

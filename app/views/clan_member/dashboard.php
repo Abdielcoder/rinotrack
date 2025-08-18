@@ -313,6 +313,10 @@ ob_start();
                     <i class="fas fa-times"></i>
                     Cancelar
                 </button>
+                <button type="button" class="btn-secondary" onclick="testConnection()" style="background: #f59e0b; color: white;">
+                    <i class="fas fa-bug"></i>
+                    Test Conexión
+                </button>
                 <button type="submit" class="btn-primary">
                     <i class="fas fa-save"></i>
                     Crear Tarea
@@ -1037,7 +1041,6 @@ function createPersonalTask() {
     // Agregar campos adicionales para tarea personal
     formData.append('route', 'clan_member/create-personal-task');
     formData.append('user_id', '<?php echo $user['user_id'] ?? 0; ?>');
-    formData.append('is_personal', '1');
     
     // Mostrar estado de carga
     const submitBtn = form.querySelector('button[type="submit"]');
@@ -1045,13 +1048,28 @@ function createPersonalTask() {
     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creando...';
     submitBtn.disabled = true;
     
+    // Log para debugging
+    console.log('Enviando datos:', {
+        task_name: formData.get('task_name'),
+        description: formData.get('description'),
+        priority: formData.get('priority'),
+        due_date: formData.get('due_date'),
+        status: formData.get('status'),
+        user_id: formData.get('user_id')
+    });
+    
     fetch('?route=clan_member/create-personal-task', {
         method: 'POST',
         body: formData,
         credentials: 'same-origin'
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers);
+        return response.json();
+    })
     .then(data => {
+        console.log('Response data:', data);
         if (data.success) {
             showNotification('Tarea creada exitosamente', 'success');
             closeAddTaskModal();
@@ -1065,13 +1083,30 @@ function createPersonalTask() {
         }
     })
     .catch(error => {
-        console.error('Error:', error);
-        showNotification('Error de conexión', 'error');
+        console.error('Error en fetch:', error);
+        showNotification('Error de conexión: ' + error.message, 'error');
     })
     .finally(() => {
         submitBtn.innerHTML = originalText;
         submitBtn.disabled = false;
     });
+}
+
+// Función para probar la conexión
+function testConnection() {
+    showNotification('Probando conexión...', 'info');
+    fetch('?route=clan_member/test-personal-task')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Conexión exitosa! Usuario ID: ' + data.user_id, 'success');
+            } else {
+                showNotification('Error en test: ' + data.message, 'error');
+            }
+        })
+        .catch(error => {
+            showNotification('Error de conexión: ' + error.message, 'error');
+        });
 }
 </script>
 

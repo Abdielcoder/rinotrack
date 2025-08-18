@@ -646,6 +646,11 @@ try {
             $controller->createPersonalTask();
             break;
             
+        case 'clan_member/test-personal-task':
+            $controller = new ClanMemberController();
+            $controller->testPersonalTask();
+            break;
+            
         default:
             // Verificar si es un asset
             if (strpos($route, 'assets/') === 0) {
