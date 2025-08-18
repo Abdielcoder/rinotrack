@@ -398,34 +398,8 @@ class ClanLeaderController {
             $this->projectModel->getByClan($this->userClan['clan_id']) : 
             $this->searchProjects($search);
         
-        // Filtrar proyectos personales: mostrar solo los del líder actual
-        error_log("=== INICIANDO FILTRADO DE PROYECTOS ===");
-        error_log("Líder actual user_id: {$this->currentUser['user_id']}");
-        error_log("Total de proyectos antes del filtro: " . count($allProjects));
-        
-        $projects = array_filter($allProjects, function($project) {
-            $projectId = $project['project_id'] ?? 'N/A';
-            $projectName = $project['project_name'] ?? 'N/A';
-            $isPersonal = ($project['is_personal'] ?? 0) == 1;
-            $createdBy = $project['created_by_user_id'] ?? 'N/A';
-            $currentUserId = $this->currentUser['user_id'];
-            
-            error_log("--- Analizando proyecto: ID=$projectId, Nombre='$projectName' ---");
-            error_log("  is_personal: $isPersonal");
-            error_log("  created_by_user_id: $createdBy");
-            error_log("  current_user_id: $currentUserId");
-            
-            // Si es un proyecto personal (is_personal = 1)
-            if ($isPersonal) {
-                // Solo mostrar si fue creado por el líder actual
-                $isOwnPersonal = $createdBy == $currentUserId;
-                error_log("  RESULTADO: Proyecto PERSONAL - Es propio: " . ($isOwnPersonal ? 'SÍ' : 'NO'));
-                return $isOwnPersonal;
-            }
-            // Mostrar todos los proyectos no personales
-            error_log("  RESULTADO: Proyecto NORMAL - Se muestra");
-            return true;
-        });
+        // Los proyectos personales ya están filtrados en el modelo
+        $projects = $allProjects;
         
         error_log("Total de proyectos después del filtro: " . count($projects));
         error_log("=== FIN DEL FILTRADO ===");
@@ -433,15 +407,13 @@ class ClanLeaderController {
         // Log del resultado del filtrado
         $totalProjects = count($allProjects);
         $filteredProjects = count($projects);
-        error_log("Filtrado de proyectos - Total: $totalProjects, Filtrados: $filteredProjects, Líder: {$this->currentUser['user_id']}");
+        error_log("Filtrado de proyectos - Total: $totalProjects, Filtrados: $filteredProjects");
         
         // Log detallado de cada proyecto para debugging
         foreach ($allProjects as $project) {
             $isPersonal = ($project['is_personal'] ?? 0) == 1;
-            $createdBy = $project['created_by_user_id'] ?? 'N/A';
-            $isOwn = $createdBy == $this->currentUser['user_id'];
             $projectName = $project['project_name'] ?? 'N/A';
-            error_log("DEBUG Proyecto: '$projectName' - ID: {$project['project_id']}, is_personal: " . ($isPersonal ? 'SÍ' : 'NO') . ", Creado por: $createdBy, Es propio: " . ($isOwn ? 'SÍ' : 'NO') . ", Clan: {$project['clan_id']}");
+            error_log("DEBUG Proyecto: '$projectName' - ID: {$project['project_id']}, is_personal: " . ($isPersonal ? 'SÍ' : 'NO') . ", Clan: {$project['clan_id']}");
         }
         
         // Reindexar el array después del filtro
@@ -874,7 +846,7 @@ class ClanLeaderController {
                 if (($t['status'] ?? '') === 'completed') { $ownByProject[$pid]['completed']++; }
             }
 
-            // 1) Proyectos del clan: SIEMPRE mostrar, con métricas filtradas a tareas del líder
+            // 1) Proyectos del clan: mostrar solo proyectos no personales
             $clanProjects = $this->projectModel->getByClan($this->userClan['clan_id']);
             $projects = [];
             $presentIds = [];
@@ -1223,7 +1195,9 @@ class ClanLeaderController {
             }
         } else {
             // Si no se selecciona proyecto, usar el primer proyecto del clan
+            // Los proyectos personales ya están filtrados en el modelo
             $projects = $this->projectModel->getByClan($this->userClan['clan_id']);
+            
             if (empty($projects)) {
                 Utils::jsonResponse(['success' => false, 'message' => 'No hay proyectos disponibles en el clan'], 400);
             }
@@ -2045,18 +2019,8 @@ class ClanLeaderController {
                    strpos(strtolower($project['description']), $searchPattern) !== false;
         });
         
-        // Luego aplicar el mismo filtro de proyectos personales
-        $filteredResults = array_filter($searchResults, function($project) {
-            // Si es un proyecto personal (is_personal = 1)
-            if (($project['is_personal'] ?? 0) == 1) {
-                // Solo mostrar si fue creado por el líder actual
-                return ($project['created_by_user_id'] ?? 0) == $this->currentUser['user_id'];
-            }
-            // Mostrar todos los proyectos no personales
-            return true;
-        });
-        
-        return array_values($filteredResults);
+        // Los proyectos personales ya están filtrados en el modelo
+        return array_values($searchResults);
     }
     
     /**
@@ -2100,16 +2064,8 @@ class ClanLeaderController {
         $members = $this->clanModel->getMembers($this->userClan['clan_id']);
         $allProjects = $this->projectModel->getByClan($this->userClan['clan_id']);
         
-        // Filtrar proyectos personales: mostrar solo los del líder actual
-        $filteredProjects = array_filter($allProjects, function($project) {
-            // Si es un proyecto personal (is_personal = 1)
-            if (($project['is_personal'] ?? 0) == 1) {
-                // Solo mostrar si fue creado por el líder actual
-                return ($project['created_by_user_id'] ?? 0) == $this->currentUser['user_id'];
-            }
-            // Mostrar todos los proyectos no personales
-            return true;
-        });
+        // Los proyectos personales ya están filtrados en el modelo
+        $filteredProjects = $allProjects;
         
         return [
             'member_count' => count($members),
@@ -2488,6 +2444,7 @@ class ClanLeaderController {
         
         // Obtener todas las tareas (incluyendo asignadas desde proyectos de otros clanes) para el calendario
         $allTasks = [];
+        // Los proyectos personales ya están filtrados en el modelo
         $projects = $this->projectModel->getByClan($this->userClan['clan_id']);
 
         $allTasksData = $this->taskModel->getAllTasksByClan($this->userClan['clan_id'], 1, 10000, '', '');

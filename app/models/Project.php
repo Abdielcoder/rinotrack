@@ -231,7 +231,7 @@ class Project {
                 LEFT JOIN Clans c ON p.clan_id = c.clan_id
                 LEFT JOIN Users u ON p.created_by_user_id = u.user_id
                 LEFT JOIN Tasks t ON p.project_id = t.project_id AND t.is_subtask = 0
-                WHERE p.clan_id = ?
+                WHERE p.clan_id = ? AND (p.is_personal IS NULL OR p.is_personal != 1)
                 GROUP BY p.project_id, p.project_name, p.description, p.clan_id, p.created_by_user_id, 
                          p.status, p.created_at, p.updated_at, p.kpi_quarter_id, p.kpi_points, 
                          p.task_distribution_mode, c.clan_name, u.full_name
@@ -765,7 +765,7 @@ class Project {
                     SUM(CASE WHEN kpi_quarter_id IS NOT NULL AND kpi_points > 0 THEN 1 ELSE 0 END) as kpi_projects,
                     COALESCE(SUM(kpi_points), 0) as total_kpi_points
                 FROM Projects 
-                WHERE clan_id = ?
+                WHERE clan_id = ? AND (is_personal IS NULL OR is_personal != 1)
             ");
             $stmt->execute([$clanId]);
             $result = $stmt->fetch();
