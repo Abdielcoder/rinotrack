@@ -196,6 +196,10 @@ ob_start();
                                                     <i class="fas fa-calendar-alt"></i> Eventual
                                                 <?php endif; ?>
                                             </span>
+                                        <?php elseif ($task['project_name'] === 'Tarea Personal'): ?>
+                                            <span class="task-type-badge tarea-personal">
+                                                <i class="fas fa-user"></i> Personal
+                                            </span>
                                         <?php endif; ?>
                                     </div>
                                     <div class="task-status overdue">
@@ -255,6 +259,10 @@ ob_start();
                                                     <i class="fas fa-calendar-alt"></i> Eventual
                                                 <?php endif; ?>
                                             </span>
+                                        <?php elseif ($task['project_name'] === 'Tarea Personal'): ?>
+                                            <span class="task-type-badge tarea-personal">
+                                                <i class="fas fa-user"></i> Personal
+                                            </span>
                                         <?php endif; ?>
                                     </div>
                                     <div class="task-status today">
@@ -310,6 +318,10 @@ ob_start();
                                                     <i class="fas fa-calendar-alt"></i> Eventual
                                                 <?php endif; ?>
                                             </span>
+                                        <?php elseif ($task['project_name'] === 'Tarea Personal'): ?>
+                                            <span class="task-type-badge tarea-personal">
+                                                <i class="fas fa-user"></i> Personal
+                                            </span>
                                         <?php endif; ?>
                                     </div>
                                     <div class="task-status week1">
@@ -364,6 +376,10 @@ ob_start();
                                                 <?php else: ?>
                                                     <i class="fas fa-calendar-alt"></i> Eventual
                                                 <?php endif; ?>
+                                            </span>
+                                        <?php elseif ($task['project_name'] === 'Tarea Personal'): ?>
+                                            <span class="task-type-badge tarea-personal">
+                                                <i class="fas fa-user"></i> Personal
                                             </span>
                                         <?php endif; ?>
                                     </div>
@@ -1249,9 +1265,15 @@ ob_start();
 }
 
 .task-type-badge.tareas-eventuales {
-    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
     color: white;
-    box-shadow: 0 2px 4px rgba(240, 147, 251, 0.3);
+    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+}
+
+.task-type-badge.tarea-personal {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+    box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);
 }
 
 .task-type-badge i {
