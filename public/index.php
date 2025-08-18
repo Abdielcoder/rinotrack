@@ -646,6 +646,11 @@ try {
             $controller->createPersonalTask();
             break;
             
+        case 'clan_member/create-personal-project':
+            $controller = new ClanMemberController();
+            $controller->createPersonalProject();
+            break;
+            
         case 'clan_member/test-personal-task':
             $controller = new ClanMemberController();
             $controller->testPersonalTask();

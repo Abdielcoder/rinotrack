@@ -780,4 +780,68 @@ class Project {
             ];
         }
     }
+
+    /**
+     * Crear proyecto personal para un usuario
+     */
+    public function createPersonalProject($projectData) {
+        try {
+            error_log("=== INICIO createPersonalProject ===");
+            error_log("Datos recibidos: " . print_r($projectData, true));
+            
+            // Obtener el clan del usuario
+            $stmt = $this->db->prepare("
+                SELECT cm.clan_id, c.clan_name 
+                FROM Clan_Members cm 
+                JOIN Clans c ON c.clan_id = cm.clan_id 
+                WHERE cm.user_id = ?
+                LIMIT 1
+            ");
+            $stmt->execute([$projectData['user_id']]);
+            $userClan = $stmt->fetch();
+            
+            if (!$userClan) {
+                error_log("Usuario {$projectData['user_id']} no pertenece a ningún clan");
+                return false;
+            }
+            
+            $clanId = $userClan['clan_id'];
+            $clanName = $userClan['clan_name'];
+            
+            error_log("Usuario pertenece al clan: $clanName (ID: $clanId)");
+            
+            // Crear el proyecto personal en el clan del usuario
+            $stmt = $this->db->prepare("
+                INSERT INTO Projects (
+                    project_name, 
+                    description, 
+                    clan_id, 
+                    created_by_user_id, 
+                    status,
+                    start_date,
+                    end_date
+                ) VALUES (?, ?, ?, ?, 'active', CURDATE(), DATE_ADD(CURDATE(), INTERVAL 1 YEAR))
+            ");
+            
+            $result = $stmt->execute([
+                $projectData['project_name'],
+                $projectData['description'],
+                $clanId,
+                $projectData['user_id']
+            ]);
+            
+            if ($result) {
+                $projectId = $this->db->lastInsertId();
+                error_log("Proyecto personal creado exitosamente con ID: " . $projectId);
+                return $projectId;
+            } else {
+                error_log("Error al crear proyecto personal: " . print_r($stmt->errorInfo(), true));
+                return false;
+            }
+            
+        } catch (Exception $e) {
+            error_log("ERROR en createPersonalProject: " . $e->getMessage());
+            return false;
+        }
+    }
 }

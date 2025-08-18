@@ -1730,8 +1730,17 @@ class Task {
             error_log("=== INICIO createPersonalTaskSimple ===");
             error_log("Datos recibidos: " . print_r($taskData, true));
             
-            // Usar solo campos esenciales
-            $sql = "INSERT INTO Tasks (task_name, description, priority, due_date, status, assigned_to_user_id) VALUES (?, ?, ?, ?, ?, ?)";
+            // Primero, crear o obtener el proyecto personal del usuario
+            $personalProjectId = $this->getOrCreatePersonalProject($taskData['assigned_to_user_id']);
+            if (!$personalProjectId) {
+                error_log("Error: No se pudo crear/obtener el proyecto personal");
+                return false;
+            }
+            
+            error_log("Proyecto personal ID: " . $personalProjectId);
+            
+            // Usar solo campos esenciales, incluyendo el project_id
+            $sql = "INSERT INTO Tasks (task_name, description, priority, due_date, status, assigned_to_user_id, project_id) VALUES (?, ?, ?, ?, ?, ?, ?)";
             
             error_log("SQL simplificado: " . $sql);
             
@@ -1747,7 +1756,8 @@ class Task {
                 $taskData['priority'],
                 $taskData['due_date'],
                 $taskData['status'],
-                $taskData['assigned_to_user_id']
+                $taskData['assigned_to_user_id'],
+                $personalProjectId
             ]);
             
             if ($result) {
@@ -1761,6 +1771,82 @@ class Task {
             
         } catch (Exception $e) {
             error_log("ERROR en createPersonalTaskSimple: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Obtener o crear un proyecto personal para el usuario
+     */
+    private function getOrCreatePersonalProject($userId) {
+        try {
+            // Primero obtener el clan del usuario
+            $stmt = $this->db->prepare("
+                SELECT cm.clan_id, c.clan_name 
+                FROM Clan_Members cm 
+                JOIN Clans c ON c.clan_id = cm.clan_id 
+                WHERE cm.user_id = ?
+                LIMIT 1
+            ");
+            $stmt->execute([$userId]);
+            $userClan = $stmt->fetch();
+            
+            if (!$userClan) {
+                error_log("Usuario $userId no pertenece a ningún clan");
+                return false;
+            }
+            
+            $clanId = $userClan['clan_id'];
+            $clanName = $userClan['clan_name'];
+            
+            // Buscar proyecto personal existente en el clan del usuario
+            $stmt = $this->db->prepare("
+                SELECT project_id FROM Projects 
+                WHERE project_name LIKE ? AND clan_id = ? AND created_by_user_id = ?
+                LIMIT 1
+            ");
+            $personalProjectName = "Proyecto Personal - Usuario " . $userId;
+            $stmt->execute([$personalProjectName, $clanId, $userId]);
+            $existingProject = $stmt->fetch();
+            
+            if ($existingProject) {
+                error_log("Proyecto personal existente encontrado: " . $existingProject['project_id']);
+                return $existingProject['project_id'];
+            }
+            
+            // Si no existe, crear uno nuevo en el clan del usuario
+            error_log("Creando nuevo proyecto personal para usuario $userId en clan $clanName (ID: $clanId)");
+            
+            $stmt = $this->db->prepare("
+                INSERT INTO Projects (
+                    project_name, 
+                    description, 
+                    clan_id, 
+                    created_by_user_id, 
+                    status,
+                    start_date,
+                    end_date
+                ) VALUES (?, ?, ?, ?, 'active', CURDATE(), DATE_ADD(CURDATE(), INTERVAL 1 YEAR))
+            ");
+            
+            $result = $stmt->execute([
+                $personalProjectName,
+                "Proyecto personal para tareas individuales del usuario en clan $clanName",
+                $clanId,
+                $userId
+            ]);
+            
+            if ($result) {
+                $projectId = $this->db->lastInsertId();
+                error_log("Nuevo proyecto personal creado con ID: " . $projectId);
+                return $projectId;
+            } else {
+                error_log("Error al crear proyecto personal: " . print_r($stmt->errorInfo(), true));
+                return false;
+            }
+            
+        } catch (Exception $e) {
+            error_log("ERROR en getOrCreatePersonalProject: " . $e->getMessage());
             return false;
         }
     }
