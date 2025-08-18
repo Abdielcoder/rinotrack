@@ -396,10 +396,10 @@ ob_start();
     text-align: center;
 }
 
-.column-header.overdue h3 { color: #ef4444; }
-.column-header.today h3 { color: #f59e0b; }
-.column-header.week1 h3 { color: #3b82f6; }
-.column-header.week2 h3 { color: #10b981; }
+.column-header.overdue h3 { color: #1e3a8a; }
+.column-header.today h3 { color: #1e3a8a; }
+.column-header.week1 h3 { color: #1e3a8a; }
+.column-header.week2 h3 { color: #1e3a8a; }
 
 .column-content {
     padding: var(--spacing-md);
