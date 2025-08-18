@@ -918,13 +918,14 @@ class ClanMemberController {
                     t.status,
                     t.completion_percentage,
                     t.automatic_points,
-                    'Tarea Personal' as project_name,
-                    NULL as project_id,
+                    p.project_name,
+                    p.project_id,
                     CASE 
                         WHEN t.due_date IS NULL THEN 999
                         ELSE DATEDIFF(t.due_date, CURDATE())
                     END as days_until_due
                  FROM Tasks t
+                 INNER JOIN Projects p ON p.project_id = t.project_id
                  WHERE t.is_personal = 1
                    AND t.assigned_to_user_id = ?
                    AND t.status != 'completed'
@@ -935,6 +936,11 @@ class ClanMemberController {
             $personalTasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
             error_log("Tareas personales encontradas: " . count($personalTasks));
             error_log("Detalle de tareas personales: " . print_r($personalTasks, true));
+            
+            // Log detallado de cada tarea personal
+            foreach ($personalTasks as $task) {
+                error_log("TAREA PERSONAL - ID: {$task['task_id']}, Nombre: {$task['task_name']}, Proyecto: {$task['project_name']}, Project ID: {$task['project_id']}");
+            }
 
             // Obtener tareas de proyectos especiales (Tareas Recurrentes y Eventuales)
             $specialTasks = [];

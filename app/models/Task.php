@@ -1755,7 +1755,7 @@ class Task {
                 WHERE project_name LIKE ? AND clan_id = ? AND created_by_user_id = ? AND is_personal = 1
                 LIMIT 1
             ");
-            $personalProjectName = "Proyecto Personal - Usuario " . $userId;
+            $personalProjectName = "Tareas Personales";
             $stmt->execute([$personalProjectName, $clanId, $userId]);
             $existingProject = $stmt->fetch();
             
@@ -1780,7 +1780,7 @@ class Task {
             
             $result = $stmt->execute([
                 $personalProjectName,
-                "Proyecto personal para tareas individuales del usuario en clan $clanName",
+                "Proyecto personal para tareas individuales del usuario",
                 $clanId,
                 $userId
             ]);
