@@ -821,7 +821,7 @@ section {
 
 .project-actions .btn-view-tasks:hover,
 .clan-leader-tasks .btn-view-tasks:hover {
-    background: #f8fafc !important;
+    background: #121313 !important;
     border-color: #cbd5e0 !important;
     transform: translateY(-1px) !important;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
