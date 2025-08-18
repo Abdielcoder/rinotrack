@@ -411,6 +411,14 @@ class ClanLeaderController {
         $filteredProjects = count($projects);
         error_log("Filtrado de proyectos - Total: $totalProjects, Filtrados: $filteredProjects, Líder: {$this->currentUser['user_id']}");
         
+        // Log detallado de cada proyecto para debugging
+        foreach ($allProjects as $project) {
+            $isPersonal = ($project['is_personal'] ?? 0) == 1;
+            $createdBy = $project['created_by_user_id'] ?? 'N/A';
+            $isOwn = $createdBy == $this->currentUser['user_id'];
+            error_log("Proyecto: '{$project['project_name']}' - is_personal: " . ($isPersonal ? 'SÍ' : 'NO') . ", Creado por: $createdBy, Es propio: " . ($isOwn ? 'SÍ' : 'NO'));
+        }
+        
         // Reindexar el array después del filtro
         $projects = array_values($projects);
         
@@ -698,7 +706,22 @@ class ClanLeaderController {
         
         if ($action === 'create') {
             // Mostrar formulario de creación de tareas
-            $projects = $this->projectModel->getByClan($this->userClan['clan_id']);
+            $allProjects = $this->projectModel->getByClan($this->userClan['clan_id']);
+            
+            // Filtrar proyectos personales: mostrar solo los del líder actual
+            $projects = array_filter($allProjects, function($project) {
+                // Si es un proyecto personal (is_personal = 1)
+                if (($project['is_personal'] ?? 0) == 1) {
+                    // Solo mostrar si fue creado por el líder actual
+                    return ($project['created_by_user_id'] ?? 0) == $this->currentUser['user_id'];
+                }
+                // Mostrar todos los proyectos no personales
+                return true;
+            });
+            
+            // Reindexar el array después del filtro
+            $projects = array_values($projects);
+            
             $members = $this->clanModel->getMembers($this->userClan['clan_id']);
             
             // Obtener tareas del trimestre actual sin completar
@@ -744,7 +767,22 @@ class ClanLeaderController {
             
             // Obtener datos necesarios para el formulario
             if ($this->userClan && (int)$project['clan_id'] === (int)$this->userClan['clan_id']) {
-                $projects = $this->projectModel->getByClan($this->userClan['clan_id']);
+                $allProjects = $this->projectModel->getByClan($this->userClan['clan_id']);
+                
+                // Filtrar proyectos personales: mostrar solo los del líder actual
+                $projects = array_filter($allProjects, function($project) {
+                    // Si es un proyecto personal (is_personal = 1)
+                    if (($project['is_personal'] ?? 0) == 1) {
+                        // Solo mostrar si fue creado por el líder actual
+                        return ($project['created_by_user_id'] ?? 0) == $this->currentUser['user_id'];
+                    }
+                    // Mostrar todos los proyectos no personales
+                    return true;
+                });
+                
+                // Reindexar el array después del filtro
+                $projects = array_values($projects);
+                
                 $members = $this->clanModel->getMembers($this->userClan['clan_id']);
             } else {
                 // Proyecto externo: limitar selección
