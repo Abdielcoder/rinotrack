@@ -298,7 +298,7 @@ ob_start();
                     <label for="priority">Prioridad:</label>
                     <select name="priority" id="priority" required>
                         <option value="low" <?php echo (isset($taskToEdit) && $taskToEdit['priority'] === 'low') ? 'selected' : ''; ?>>Baja</option>
-                        <option value="medium" <?php echo (!isset($taskToEdit) && $editTaskId > 0) || $taskToEdit['priority'] === 'medium') ? 'selected' : ''; ?>>Media</option>
+                        <option value="medium" <?php echo (!isset($taskToEdit) || $taskToEdit['priority'] === 'medium') ? 'selected' : ''; ?>>Media</option>
                         <option value="high" <?php echo (isset($taskToEdit) && $taskToEdit['priority'] === 'high') ? 'selected' : ''; ?>>Alta</option>
                         <option value="critical" <?php echo (isset($taskToEdit) && $taskToEdit['priority'] === 'critical') ? 'selected' : ''; ?>>Crítica</option>
                     </select>
