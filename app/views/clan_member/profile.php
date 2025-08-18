@@ -468,6 +468,8 @@ body {
     font-size: 1rem;
     transition: all 0.2s ease;
     background: var(--bg-primary);
+    height: 48px; /* Altura consistente para todos los inputs */
+    min-height: 48px; /* Asegura altura mínima */
 }
 
 .form-group input:focus {
@@ -490,6 +492,7 @@ body {
 .btn-primary, .btn-secondary {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: var(--spacing-sm);
     padding: var(--spacing-md) var(--spacing-lg);
     border: none;
@@ -499,6 +502,10 @@ body {
     cursor: pointer;
     transition: all 0.2s ease;
     text-decoration: none;
+    height: 48px; /* Altura consistente con los inputs */
+    min-height: 48px; /* Asegura altura mínima */
+    white-space: nowrap; /* Evita que el texto se rompa */
+    max-width: 100%; /* Evita que se salga del contenedor */
 }
 
 .btn-primary {
@@ -585,11 +592,28 @@ body {
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
+    height: 48px; /* Altura consistente con los inputs */
+    min-height: 48px; /* Asegura altura mínima */
 }
 
 .file-label:hover {
     border-color: var(--primary-color);
     background: rgba(30, 58, 138, 0.05);
+}
+
+/* Ajustes específicos para el formulario de contraseña */
+#passwordForm .form-group input {
+    height: 48px;
+    min-height: 48px;
+}
+
+/* Ajustes para botones en formularios específicos */
+#passwordForm .form-actions .btn-secondary,
+#avatarForm .btn-secondary {
+    height: 48px;
+    min-height: 48px;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 /* Notificaciones */
