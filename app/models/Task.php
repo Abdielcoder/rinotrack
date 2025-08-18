@@ -1100,6 +1100,7 @@ class Task {
                     )
                 )
                 AND t.is_subtask = 0
+                AND (p.is_personal IS NULL OR p.is_personal != 1)
             ";
             
             // Agregar filtro de búsqueda si se proporciona
@@ -1204,6 +1205,7 @@ class Task {
                 LEFT JOIN Users ta_users ON ta.user_id = ta_users.user_id
                 WHERE p.clan_id = ? 
                 AND t.is_subtask = 0
+                AND (p.is_personal IS NULL OR p.is_personal != 1)
             ";
 
             $params = [$clanId];
@@ -1315,6 +1317,7 @@ class Task {
                 WHERE t.is_subtask = 0
                   AND (t.assigned_to_user_id = ? OR ta.user_id = ?)
                   AND p.project_name IN ($placeholders)
+                  AND (p.is_personal IS NULL OR p.is_personal != 1)
             ";
             $stmt = $this->db->prepare($sql);
             $stmt->execute($params);
@@ -1377,6 +1380,7 @@ class Task {
                     t.assigned_to_user_id = ?
                     OR ta.user_id = ?
                   )
+                  AND (p.is_personal IS NULL OR p.is_personal != 1)
             ";
 
             $params = [$userId, $userId];
@@ -1481,6 +1485,7 @@ class Task {
                     )
                 )
                 AND t.status IN ('pending', 'in_progress')
+                AND (p.is_personal IS NULL OR p.is_personal != 1)
             ";
             
             // Agregar filtro de búsqueda si se proporciona
@@ -1605,6 +1610,7 @@ class Task {
                 WHERE p.clan_id = ?
                 AND t.is_subtask = 0
                 AND t.status != 'completed'
+                AND (p.is_personal IS NULL OR p.is_personal != 1)
                 AND p.kpi_quarter_id IN (
                     SELECT kpi_id 
                     FROM Clan_KPIs 
