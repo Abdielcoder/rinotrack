@@ -1320,10 +1320,10 @@ section {
 }
 
 .contributions-section h3 {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #2d3748;
-    margin-bottom: 24px;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 16px;
     text-align: center;
     position: relative;
 }
@@ -1331,41 +1331,41 @@ section {
 .contributions-section h3::after {
     content: '';
     position: absolute;
-    bottom: -8px;
+    bottom: -6px;
     left: 50%;
     transform: translateX(-50%);
-    width: 60px;
-    height: 3px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 2px;
+    width: 40px;
+    height: 2px;
+    background: #d1d5db;
+    border-radius: 1px;
 }
 
 .contributions-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 8px;
 }
 
 .contribution-card {
     background: white;
-    border-radius: 8px;
-    padding: 12px;
+    border-radius: 6px;
+    padding: 8px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 18px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    gap: 6px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
     border: 1px solid #e2e8f0;
-    transition: all 0.3s ease;
-    min-height: 80px;
+    transition: all 0.2s ease;
+    min-height: 60px;
     justify-content: center;
     text-align: center;
 }
 
 .contribution-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    border-color: #667eea;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    border-color: #cbd5e1;
 }
 
 .member-avatar {
@@ -1373,23 +1373,23 @@ section {
 }
 
 .member-avatar img {
-    width: 1px;
-    height: 1px;
-    border-radius: 30%;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
     object-fit: cover;
     border: 1px solid #f1f5f9;
 }
 
 .avatar-initial {
-    width: 1px;
-    height: 1px;
-    border-radius: 30%;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
     font-weight: 700;
-    font-size: 4px;
+    font-size: 12px;
     border: 1px solid #f1f5f9;
 }
 
@@ -1400,10 +1400,15 @@ section {
 
 .member-name {
     font-weight: 600;
-    color: #2d3748;
-    margin-bottom: 4px;
-    font-size: 0.8rem;
+    color: #1a202c;
+    margin-bottom: 2px;
+    font-size: 0.75rem;
     text-align: center;
+    line-height: 1.2;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .member-tasks {
@@ -1414,10 +1419,14 @@ section {
 }
 
 .task-count {
-    color: #64748b;
-    font-size: 0.7rem;
-    font-weight: 500;
+    color: #4a5568;
+    font-size: 0.65rem;
+    font-weight: 600;
     text-align: center;
+    background: #f7fafc;
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid #e2e8f0;
 }
 
 /* Hacer que las tarjetas se vean más como botones */
