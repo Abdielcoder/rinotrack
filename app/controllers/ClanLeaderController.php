@@ -2740,16 +2740,15 @@ class ClanLeaderController {
                  INNER JOIN Projects p ON p.project_id = t.project_id
                  WHERE (p.clan_id = ? 
                         OR (p.project_name IN ('Tareas Recurrentes', 'Tareas Eventuales') 
-                            AND t.assigned_to_user_id = ?))
-                   AND p.project_name NOT IN ('Tareas Personales')
+                            AND t.assigned_to_user_id = ?)
+                        OR (t.is_personal = 1 AND t.assigned_to_user_id = ?))
                    AND t.is_subtask = 0
-                   AND t.is_personal = 0
                    AND t.status != 'completed'
                  ORDER BY t.due_date ASC, t.task_id ASC"
             );
             
-            $params = [$clanId, $this->currentUser['user_id']];
-            error_log("Ejecutando consulta con parámetros: clanId=$clanId, userId={$this->currentUser['user_id']} (tareas del clan + recurrentes/eventuales asignadas al usuario)");
+            $params = [$clanId, $this->currentUser['user_id'], $this->currentUser['user_id']];
+            error_log("Ejecutando consulta con parámetros: clanId=$clanId, userId={$this->currentUser['user_id']} (tareas del clan + recurrentes/eventuales + personales asignadas al usuario)");
             $stmt->execute($params);
             $allTasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
@@ -2772,17 +2771,25 @@ class ClanLeaderController {
             
             // Separar tareas por tipo para debug
             $clanSpecificTasks = array_filter($allTasks, function($task) use ($clanId) {
-                return !in_array($task['project_name'], ['Tareas Recurrentes', 'Tareas Eventuales']);
+                return !in_array($task['project_name'], ['Tareas Recurrentes', 'Tareas Eventuales', 'Tareas Personales']);
             });
             $recurrentEventualTasks = array_filter($allTasks, function($task) {
                 return in_array($task['project_name'], ['Tareas Recurrentes', 'Tareas Eventuales']);
             });
+            $personalTasks = array_filter($allTasks, function($task) {
+                return $task['project_name'] === 'Tareas Personales';
+            });
             
             error_log("Tareas específicas del clan: " . count($clanSpecificTasks));
             error_log("Tareas recurrentes/eventuales asignadas al usuario: " . count($recurrentEventualTasks));
+            error_log("Tareas personales del usuario: " . count($personalTasks));
             
             foreach ($recurrentEventualTasks as $task) {
                 error_log("Tarea recurrente/eventual asignada: ID={$task['task_id']}, Nombre='{$task['task_name']}', Proyecto='{$task['project_name']}'");
+            }
+            
+            foreach ($personalTasks as $task) {
+                error_log("Tarea personal: ID={$task['task_id']}, Nombre='{$task['task_name']}', Proyecto='{$task['project_name']}'");
             }
             
             // Debug: verificar todas las tareas por proyecto
