@@ -277,7 +277,13 @@ ob_start();
 
         <!-- Progreso General del Equipo -->
         <section class="team-progress-section">
-            <h3>Progreso General del Equipo</h3>
+            <div class="progress-header">
+                <h3>Progreso General del Equipo</h3>
+                <button id="toggleSectionsBtn" class="btn-toggle-sections" onclick="toggleSections()">
+                    <i class="fas fa-eye-slash"></i>
+                    <span>Ocultar Secciones</span>
+                </button>
+            </div>
             <div class="progress-card">
                 <div class="progress-info">
                     <div class="progress-left">
@@ -312,6 +318,9 @@ ob_start();
                 </div>
             </div>
         </section>
+        
+        <!-- Contenedor de secciones que se pueden ocultar -->
+        <div id="hideable-sections" style="display: none;">
         
         <!-- Contribuciones por Colaborador -->
         <section class="contributions-section">
@@ -455,6 +464,8 @@ ob_start();
                 </div>
             </div>
         </section>
+        
+        </div> <!-- Fin del contenedor hideable-sections -->
     </div>
 </div>
 
@@ -581,6 +592,49 @@ function showNotification(message, type = 'info') {
         }, 300);
     }, 3000);
 }
+
+// Función para ocultar/mostrar secciones
+function toggleSections() {
+    const hideableSections = document.getElementById('hideable-sections');
+    const toggleBtn = document.getElementById('toggleSectionsBtn');
+    const icon = toggleBtn.querySelector('i');
+    const text = toggleBtn.querySelector('span');
+    
+    if (hideableSections.style.display === 'none') {
+        // Mostrar secciones
+        hideableSections.style.display = 'block';
+        icon.className = 'fas fa-eye-slash';
+        text.textContent = 'Ocultar Secciones';
+        localStorage.setItem('sectionsVisible', 'true');
+    } else {
+        // Ocultar secciones
+        hideableSections.style.display = 'none';
+        icon.className = 'fas fa-eye';
+        text.textContent = 'Mostrar Secciones';
+        localStorage.setItem('sectionsVisible', 'false');
+    }
+}
+
+// Inicializar el estado de las secciones al cargar la página
+document.addEventListener('DOMContentLoaded', function() {
+    const hideableSections = document.getElementById('hideable-sections');
+    const toggleBtn = document.getElementById('toggleSectionsBtn');
+    const icon = toggleBtn.querySelector('i');
+    const text = toggleBtn.querySelector('span');
+    
+    // Por defecto las secciones están ocultas (como se especificó)
+    const sectionsVisible = localStorage.getItem('sectionsVisible') === 'true';
+    
+    if (sectionsVisible) {
+        hideableSections.style.display = 'block';
+        icon.className = 'fas fa-eye-slash';
+        text.textContent = 'Ocultar Secciones';
+    } else {
+        hideableSections.style.display = 'none';
+        icon.className = 'fas fa-eye';
+        text.textContent = 'Mostrar Secciones';
+    }
+});
 
 // Estilos para animaciones de notificaciones
 const style = document.createElement('style');
