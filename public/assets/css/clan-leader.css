@@ -1373,16 +1373,16 @@ section {
 }
 
 .member-avatar img {
-    width: 10px;
-    height: 10px;
+    width: 5px;
+    height: 5px;
     border-radius: 50%;
     object-fit: cover;
     border: 1px solid #f1f5f9;
 }
 
 .avatar-initial {
-    width: 10px;
-    height: 10px;
+    width: 5px;
+    height: 5px;
     border-radius: 50%;
     display: flex;
     align-items: center;
