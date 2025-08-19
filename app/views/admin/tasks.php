@@ -105,7 +105,7 @@ ob_start();
                             <div class="form-grid">
                             <div class="form-group">
                                 <label>Tipo</label>
-                                <select id="taskType" onchange="onTaskTypeChange()" required>
+                                <select id="taskType" required>
                                     <option value="">Selecciona</option>
                                     <option value="recurrent">Recurrente</option>
                                     <option value="eventual">Eventual</option>
@@ -121,7 +121,7 @@ ob_start();
                             <!-- Select de frecuencia para tareas recurrentes -->
                             <div class="form-group" id="frequencyGroup" style="display: none;">
                                 <label>Frecuencia</label>
-                                <select id="taskFrequency" onchange="onFrequencyChange()" name="frequency">
+                                <select id="taskFrequency" name="frequency">
                                     <option value="">Selecciona frecuencia</option>
                                     <option value="daily">Cada día</option>
                                     <option value="weekly">Cada semana</option>
@@ -366,6 +366,11 @@ ob_start();
 </div>
 
 <script>
+// ============================================
+// FUNCIONES PARA TAREAS RECURRENTES
+// ============================================
+
+// Función principal para manejar cambios en el tipo de tarea
 function onTaskTypeChange() {
     console.log('=== onTaskTypeChange ejecutándose ===');
     
@@ -432,6 +437,36 @@ function onTaskTypeChange() {
     console.log('=== Fin onTaskTypeChange ===');
 }
 
+// Función para manejar cambios en la frecuencia de tareas recurrentes
+function onFrequencyChange() {
+    const frequency = document.getElementById('taskFrequency').value;
+    const dueDateInput = document.querySelector('input[name="dueDate"]');
+    
+    if (!frequency || !dueDateInput) return;
+    
+    // Limpiar fecha límite cuando cambie la frecuencia
+    dueDateInput.value = '';
+    
+    console.log('Frecuencia seleccionada:', frequency);
+    
+    // Mostrar información sobre la calendarización
+    let infoMessage = '';
+    switch (frequency) {
+        case 'daily':
+            infoMessage = '📅 <strong>Frecuencia Diaria:</strong> Se crearán tareas cada día desde la fecha seleccionada hasta el final del trimestre actual. Ideal para tareas que deben realizarse diariamente.';
+            break;
+        case 'weekly':
+            infoMessage = '📅 <strong>Frecuencia Semanal:</strong> Se crearán tareas cada lunes desde la fecha seleccionada hasta el final del trimestre actual. El sistema automáticamente ajustará al lunes más cercano.';
+            break;
+        case 'monthly':
+            infoMessage = '📅 <strong>Frecuencia Mensual:</strong> Se crearán tareas cada primer día del mes desde la fecha seleccionada hasta el final del año actual. No se limita al trimestre.';
+            break;
+    }
+    
+    // Mostrar mensaje informativo
+    showFrequencyInfo(infoMessage);
+}
+
 // Función de prueba para verificar el select de frecuencia
 function testFrequencyGroup() {
     console.log('=== PROBANDO SELECT DE FRECUENCIA ===');
@@ -485,6 +520,71 @@ function testFrequencyGroup() {
     console.log('=== FIN PRUEBA ===');
 }
 
+// Función para mostrar información sobre la frecuencia seleccionada
+function showFrequencyInfo(message) {
+    // Remover mensaje anterior si existe
+    const existingInfo = document.getElementById('frequencyInfo');
+    if (existingInfo) {
+        existingInfo.remove();
+    }
+    
+    // Crear nuevo mensaje informativo
+    const infoDiv = document.createElement('div');
+    infoDiv.id = 'frequencyInfo';
+    infoDiv.style.cssText = `
+        background: #dbeafe;
+        border: 1px solid #3b82f6;
+        border-radius: 6px;
+        padding: 12px;
+        margin: 10px 0;
+        color: #1e40af;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    `;
+    infoDiv.innerHTML = `<i class="fas fa-info-circle"></i> ${message}`;
+    
+    // Insertar después del select de frecuencia
+    const frequencyGroup = document.getElementById('frequencyGroup');
+    if (frequencyGroup) {
+        frequencyGroup.parentNode.insertBefore(infoDiv, frequencyGroup.nextSibling);
+    }
+}
+
+// Función para mostrar el contador de tareas que se van a crear
+function showTaskCount(count) {
+    // Remover contador anterior si existe
+    const existingCount = document.getElementById('taskCountInfo');
+    if (existingCount) {
+        existingCount.remove();
+    }
+    
+    // Crear nuevo contador
+    const countDiv = document.createElement('div');
+    countDiv.id = 'taskCountInfo';
+    countDiv.style.cssText = `
+        background: #ecfdf5;
+        border: 1px solid #10b981;
+        border-radius: 6px;
+        padding: 12px;
+        margin: 10px 0;
+        color: #065f46;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 600;
+    `;
+    countDiv.innerHTML = `<i class="fas fa-tasks"></i> Se crearán <strong>${count} tareas</strong> en total`;
+    
+    // Insertar después del mensaje de frecuencia
+    const frequencyInfo = document.getElementById('frequencyInfo');
+    if (frequencyInfo) {
+        frequencyInfo.parentNode.insertBefore(countDiv, frequencyInfo.nextSibling);
+    }
+}
+
 // Función para forzar la selección de Recurrente
 function forceRecurrent() {
     console.log('=== FORZANDO RECURRENTE ===');
@@ -504,6 +604,47 @@ function forceRecurrent() {
     }
     
     console.log('=== FIN FORZAR RECURRENTE ===');
+}
+
+// ============================================
+// FUNCIONES AUXILIARES DEL FORMULARIO
+// ============================================
+
+// Función para abrir overlay de procesamiento
+function openOverlay() {
+    const overlay = document.getElementById('processingOverlay');
+    const createBtn = document.getElementById('createTaskBtn');
+    if (overlay) overlay.style.display = 'block';
+    if (createBtn) createBtn.disabled = true;
+}
+
+// Función para cerrar overlay de procesamiento
+function closeOverlay() {
+    const overlay = document.getElementById('processingOverlay');
+    const createBtn = document.getElementById('createTaskBtn');
+    if (overlay) overlay.style.display = 'none';
+    if (createBtn) createBtn.disabled = false;
+}
+
+// Función para abrir modal de estado
+function openStatus(opts) {
+    const statusModal = document.getElementById('statusModal');
+    const statusTitle = document.getElementById('statusModalTitle');
+    const statusIcon = document.getElementById('statusModalIcon');
+    const statusMsg = document.getElementById('statusModalMessage');
+    
+    if (!statusModal) return;
+    statusTitle.textContent = opts.title || 'Resultado';
+    statusMsg.textContent = opts.message || '';
+    statusIcon.className = `fas ${opts.icon || 'fa-check-circle'}`;
+    statusIcon.style.color = opts.color || 'var(--success,#10b981)';
+    statusModal.style.display = 'block';
+}
+
+// Función para cerrar modal de estado
+function closeStatus() {
+    const statusModal = document.getElementById('statusModal');
+    if (statusModal) statusModal.style.display = 'none';
 }
 
 // Función para manejar cambios en la frecuencia de tareas recurrentes
@@ -644,7 +785,8 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('=== FIN DOM CARGADO ===');
 });
 
-document.getElementById('adminCreateTaskForm')?.addEventListener('submit', async function(e) {
+// Función para manejar el envío del formulario
+async function handleFormSubmit(e) {
     e.preventDefault();
     const form = e.currentTarget;
     
@@ -849,7 +991,7 @@ document.getElementById('adminCreateTaskForm')?.addEventListener('submit', async
         closeOverlay();
         openStatus({ title:'Error de red', message: 'No se pudo completar la operación.', icon:'fa-wifi', color:'#ef4444' });
     }
-});
+} // Fin de handleFormSubmit
 
 // Manejo de filtros y paginación
 (function(){
@@ -942,6 +1084,59 @@ document.getElementById('adminCreateTaskForm')?.addEventListener('submit', async
         });
     });
 })();
+
+// ============================================
+// VINCULACIÓN DE EVENT LISTENERS
+// ============================================
+
+// Vincular eventos cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('=== DOM CARGADO - VINCULANDO EVENTOS ===');
+    
+    // Vincular evento change del select de tipo de tarea
+    const taskTypeSelect = document.getElementById('taskType');
+    if (taskTypeSelect) {
+        taskTypeSelect.addEventListener('change', onTaskTypeChange);
+        console.log('✅ Evento change vinculado al select de tipo de tarea');
+    } else {
+        console.error('❌ No se encontró el select de tipo de tarea');
+    }
+    
+    // Vincular evento change del select de frecuencia
+    const frequencySelect = document.getElementById('taskFrequency');
+    if (frequencySelect) {
+        frequencySelect.addEventListener('change', onFrequencyChange);
+        console.log('✅ Evento change vinculado al select de frecuencia');
+    } else {
+        console.error('❌ No se encontró el select de frecuencia');
+    }
+    
+    // Vincular evento submit del formulario
+    const form = document.getElementById('adminCreateTaskForm');
+    if (form) {
+        form.addEventListener('submit', handleFormSubmit);
+        console.log('✅ Evento submit vinculado al formulario');
+    } else {
+        console.error('❌ No se encontró el formulario');
+    }
+    
+    console.log('=== FIN VINCULACIÓN DE EVENTOS ===');
+    
+    // Vincular eventos de los botones del modal de estado
+    const statusOk = document.getElementById('statusModalOk');
+    const statusCloseX = document.getElementById('statusModalCloseX');
+    
+    if (statusOk) {
+        statusOk.addEventListener('click', closeStatus);
+        console.log('✅ Evento click vinculado al botón OK del modal');
+    }
+    
+    if (statusCloseX) {
+        statusCloseX.addEventListener('click', closeStatus);
+        console.log('✅ Evento click vinculado al botón cerrar del modal');
+    }
+});
+
 </script>
 
 <?php
