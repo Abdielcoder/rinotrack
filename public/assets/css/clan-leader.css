@@ -1412,7 +1412,7 @@ section {
 }
 
 .member-tasks {
-    display: flex;
+    display: none !important;
     align-items: center;
     justify-content: center;
     gap: 2px;
