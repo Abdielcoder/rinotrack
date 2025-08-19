@@ -44,6 +44,14 @@ class ClanLeaderController {
             } else {
                 // Obtener el clan del usuario
                 $this->userClan = $this->userModel->getUserClan($this->currentUser['user_id']);
+                
+                // Asignar el clan_id al usuario actual para que esté disponible
+                if ($this->userClan && isset($this->userClan['clan_id'])) {
+                    $this->currentUser['clan_id'] = $this->userClan['clan_id'];
+                    error_log('Clan ID asignado al usuario: ' . $this->currentUser['clan_id']);
+                } else {
+                    error_log('ERROR: No se pudo obtener el clan del usuario');
+                }
             }
         } else {
             $this->userClan = null;
@@ -2832,6 +2840,41 @@ class ClanLeaderController {
     }
 
     /**
+     * Debug: Verificar estado del usuario y clan
+     */
+    private function debugUserState() {
+        error_log('=== DEBUG USER STATE ===');
+        error_log('Current User: ' . print_r($this->currentUser, true));
+        error_log('User Clan: ' . print_r($this->userClan, true));
+        error_log('Has Clan Leader Access: ' . ($this->hasClanLeaderAccess() ? 'YES' : 'NO'));
+        if ($this->currentUser && isset($this->currentUser['user_id'])) {
+            error_log('User ID: ' . $this->currentUser['user_id']);
+            $clanFromDB = $this->userModel->getUserClan($this->currentUser['user_id']);
+            error_log('Clan from DB: ' . print_r($clanFromDB, true));
+        }
+        error_log('=== END DEBUG ===');
+    }
+
+    /**
+     * Forzar recarga del clan del usuario
+     */
+    private function reloadUserClan() {
+        if ($this->currentUser && isset($this->currentUser['user_id'])) {
+            error_log('Recargando clan del usuario...');
+            $this->userClan = $this->userModel->getUserClan($this->currentUser['user_id']);
+            if ($this->userClan && isset($this->userClan['clan_id'])) {
+                $this->currentUser['clan_id'] = $this->userClan['clan_id'];
+                error_log('Clan recargado exitosamente: ' . $this->currentUser['clan_id']);
+                return true;
+            } else {
+                error_log('ERROR: No se pudo recargar el clan del usuario');
+                return false;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Crear tarea personal para el líder del clan
      */
     public function createPersonalTask() {
@@ -2861,25 +2904,40 @@ class ClanLeaderController {
         try {
             // Log para debugging
             error_log('=== INICIO createPersonalTask ===');
+            $this->debugUserState();
             error_log('POST data: ' . print_r($_POST, true));
-            error_log('Current user: ' . print_r($this->currentUser, true));
-            error_log('User clan: ' . print_r($this->userClan, true));
             
             // Verificar que el usuario tenga clan
             if (!$this->userClan || !isset($this->userClan['clan_id'])) {
-                error_log('ERROR: Usuario no tiene clan asignado');
-                echo json_encode(['success' => false, 'message' => 'Usuario no tiene clan asignado']);
-                return;
+                error_log('ERROR: Usuario no tiene clan asignado, intentando recargar...');
+                if (!$this->reloadUserClan()) {
+                    error_log('ERROR: No se pudo recargar el clan del usuario');
+                    echo json_encode(['success' => false, 'message' => 'Usuario no tiene clan asignado']);
+                    return;
+                }
             }
             error_log('Usuario tiene clan ID: ' . $this->userClan['clan_id']);
             
             // Verificar que el currentUser tenga clan_id
             if (!isset($this->currentUser['clan_id'])) {
-                error_log('ERROR: currentUser no tiene clan_id');
+                error_log('ERROR: currentUser no tiene clan_id, intentando recargar...');
+                if (!$this->reloadUserClan()) {
+                    error_log('ERROR: No se pudo recargar el clan del usuario');
+                    echo json_encode(['success' => false, 'message' => 'Usuario no tiene clan asignado']);
+                    return;
+                }
+            }
+            error_log('Current user tiene clan_id: ' . $this->currentUser['clan_id']);
+            
+            // Verificar que el clan_id coincida entre currentUser y userClan
+            if ($this->currentUser['clan_id'] != $this->userClan['clan_id']) {
+                error_log('ERROR: clan_id no coincide entre currentUser y userClan');
+                error_log('Current user clan_id: ' . $this->currentUser['clan_id']);
+                error_log('User clan clan_id: ' . $this->userClan['clan_id']);
                 echo json_encode(['success' => false, 'message' => 'Usuario no tiene clan asignado']);
                 return;
             }
-            error_log('Current user tiene clan_id: ' . $this->currentUser['clan_id']);
+            error_log('Clan_id coincide correctamente: ' . $this->currentUser['clan_id']);
             
             $taskName = trim($_POST['task_name'] ?? '');
             $description = trim($_POST['description'] ?? '');
