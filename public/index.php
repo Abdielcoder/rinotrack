@@ -386,15 +386,20 @@ try {
         $controller->kpiDashboard();
         break;
         
-    case 'clan_leader/assign-kpi':
-        $controller = new ClanLeaderController();
-        $controller->assignKPI();
-        break;
-        
-    case 'clan_leader/get-available-points':
-        $controller = new ClanLeaderController();
-        $controller->getAvailablePoints();
-        break;
+                    case 'clan_leader/assign-kpi':
+            $controller = new ClanLeaderController();
+            $controller->assignKPI();
+            break;
+            
+        case 'clan_leader/get-available-points':
+            $controller = new ClanLeaderController();
+            $controller->getAvailablePoints();
+            break;
+            
+        case 'clan_leader/create-personal-task':
+            $controller = new ClanLeaderController();
+            $controller->createPersonalTask();
+            break;
         
     case 'clan_leader/tasks':
         $controller = new ClanLeaderController();

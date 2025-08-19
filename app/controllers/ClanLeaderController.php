@@ -575,13 +575,13 @@ class ClanLeaderController {
         $clanTotalPoints = 1000;
         
         // Obtener proyectos del clan con KPI
-        $projects = $this->projectModel->getByKPIQuarter($currentKPI['kpi_quarter_id'] ?? null);
+        $projects = $this->projectModel->getByKPIQuarter($currentKPI['kpi_quarter_id'] ?? null) ?? [];
         $clanProjects = array_filter($projects, function($project) {
             return $project['clan_id'] == $this->userClan['clan_id'];
         });
         
         // Obtener proyectos sin KPI del clan
-        $projectsWithoutKPI = $this->projectModel->getProjectsWithoutKPIByClan($this->userClan['clan_id']);
+        $projectsWithoutKPI = $this->projectModel->getProjectsWithoutKPIByClan($this->userClan['clan_id']) ?? [];
         
         // Calcular puntos asignados del clan
         $assignedPoints = array_sum(array_column($clanProjects, 'kpi_points'));
@@ -2617,12 +2617,12 @@ class ClanLeaderController {
         $membersData = $this->getMembersSnakePathData($currentKPI['kpi_quarter_id']);
         
         // Información del trimestre
-        $quarterInfo = $this->getQuarterInfo($currentKPI['quarter'], $currentKPI['year']);
+        $quarterInfo = $this->getQuarterInfo($currentKPI['quarter'], $currentKPI['year']) ?? [];
 
         return [
             'quarter_progress' => $quarterProgress,
             'members_data' => $membersData,
-            'total_points' => $currentKPI['total_points'],
+            'total_points' => $currentKPI['total_points'] ?? 1000,
             'quarter_info' => $quarterInfo
         ];
     }
@@ -2828,6 +2828,76 @@ class ClanLeaderController {
                 '1_semana' => [],
                 '2_semanas' => []
             ];
+        }
+    }
+
+    /**
+     * Crear tarea personal para el líder del clan
+     */
+    public function createPersonalTask() {
+        $this->requireAuth();
+        if (!$this->hasLeaderAccess()) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
+            return;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+            return;
+        }
+
+        try {
+            $taskName = trim($_POST['task_name'] ?? '');
+            $description = trim($_POST['description'] ?? '');
+            $priority = $_POST['priority'] ?? 'medium';
+            $dueDate = $_POST['due_date'] ?? '';
+            $status = $_POST['status'] ?? 'pending';
+            $userId = (int)($_POST['user_id'] ?? 0);
+
+            // Validaciones
+            if (empty($taskName)) {
+                echo json_encode(['success' => false, 'message' => 'El nombre de la tarea es requerido']);
+                return;
+            }
+
+            if (empty($dueDate)) {
+                echo json_encode(['success' => false, 'message' => 'La fecha de vencimiento es requerida']);
+                return;
+            }
+
+            if ($userId !== (int)$this->currentUser['user_id']) {
+                echo json_encode(['success' => false, 'message' => 'Usuario no válido']);
+                return;
+            }
+
+            // Crear la tarea personal con solo campos básicos
+            $taskData = [
+                'task_name' => $taskName,
+                'description' => $description,
+                'priority' => $priority,
+                'due_date' => $dueDate,
+                'status' => $status,
+                'assigned_to_user_id' => $userId
+            ];
+
+            // Crear tarea personal directamente
+            $taskId = $this->taskModel->createPersonalTaskSimple($taskData);
+
+            if ($taskId) {
+                echo json_encode([
+                    'success' => true, 
+                    'message' => 'Tarea personal creada exitosamente',
+                    'task_id' => $taskId
+                ]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Error al crear la tarea - revisar logs del servidor']);
+            }
+
+        } catch (Exception $e) {
+            error_log('Error createPersonalTask: ' . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'Error interno del servidor: ' . $e->getMessage()]);
         }
     }
 

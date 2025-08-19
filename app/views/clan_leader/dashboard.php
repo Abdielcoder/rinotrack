@@ -34,10 +34,10 @@ ob_start();
                     <h3><i class="fas fa-tasks icon-gradient"></i> Tareas</h3>
                 </div>
                 <div class="kanban-actions">
-                    <a href="?route=clan_leader/tasks" class="btn-add-task">
+                    <button class="btn-add-task" onclick="openAddTaskModal()">
                         <i class="fas fa-plus"></i>
-                        Tareas
-                    </a>
+                        Agregar Tarea
+                    </button>
                 </div>
             </div>
             <div class="kanban-board">
@@ -484,6 +484,73 @@ ob_start();
     </div>
 </div>
 
+<!-- Modal para Agregar Tarea Personal -->
+<div id="addTaskModal" class="modal-overlay">
+    <div class="modal-content modal-large">
+        <div class="modal-header">
+            <h3>
+                <i class="fas fa-plus-circle"></i> 
+                Agregar Nueva Tarea Personal
+            </h3>
+            <button class="modal-close" onclick="closeAddTaskModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <form id="addTaskForm" class="modal-form">
+            <div class="form-group">
+                <label for="taskName">Nombre de la Tarea *</label>
+                <input type="text" id="taskName" name="task_name" required 
+                       placeholder="Escribe el nombre de la tarea">
+            </div>
+            
+            <div class="form-group">
+                <label for="taskDescription">Descripción</label>
+                <textarea id="taskDescription" name="description" rows="3" 
+                          placeholder="Describe la tarea (opcional)"></textarea>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="priority">Prioridad:</label>
+                    <select name="priority" id="priority" required>
+                        <option value="low">Baja</option>
+                        <option value="medium" selected>Media</option>
+                        <option value="high">Alta</option>
+                        <option value="critical">Crítica</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="taskDueDate">Fecha de Vencimiento</label>
+                    <input type="date" id="taskDueDate" name="due_date" required>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="taskStatus">Estado</label>
+                <select name="status" id="taskStatus" required>
+                    <option value="pending" selected>Pendiente</option>
+                    <option value="in_progress">En Progreso</option>
+                    <option value="completed">Completada</option>
+                    <option value="cancelled">Cancelada</option>
+                </select>
+            </div>
+            
+            <div class="form-actions">
+                <button type="button" class="btn-secondary" onclick="closeAddTaskModal()">
+                    <i class="fas fa-times"></i>
+                    Cancelar
+                </button>
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-plus"></i>
+                    Crear Tarea
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
 // Función para cambiar el estado de una tarea
 function toggleTaskStatus(taskId, isChecked) {
@@ -551,6 +618,73 @@ function toggleTaskStatus(taskId, isChecked) {
         if (taskCard) {
             taskCard.style.opacity = '1';
         }
+    });
+}
+
+// Funciones para el modal de agregar tarea
+function openAddTaskModal() {
+    const modal = document.getElementById('addTaskModal');
+    modal.style.display = 'flex';
+    
+    // Establecer fecha mínima como hoy
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('taskDueDate').min = today;
+    
+    // Limpiar formulario
+    document.getElementById('addTaskForm').reset();
+    
+    // Enfocar en el primer campo
+    setTimeout(() => {
+        document.getElementById('taskName').focus();
+    }, 100);
+}
+
+function closeAddTaskModal() {
+    const modal = document.getElementById('addTaskModal');
+    modal.style.display = 'none';
+}
+
+// Función para crear tarea personal
+function createPersonalTask() {
+    const form = document.getElementById('addTaskForm');
+    const formData = new FormData(form);
+    
+    // Agregar campos adicionales para tarea personal
+    formData.append('route', 'clan_leader/create-personal-task');
+    formData.append('user_id', '<?php echo $user['user_id'] ?? 0; ?>');
+    
+    // Mostrar estado de carga
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creando...';
+    submitBtn.disabled = true;
+    
+    fetch('?route=clan_leader/create-personal-task', {
+        method: 'POST',
+        body: formData,
+        credentials: 'same-origin'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Tarea creada exitosamente', 'success');
+            closeAddTaskModal();
+            
+            // Recargar la página para mostrar la nueva tarea
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+        } else {
+            showNotification(data.message || 'Error al crear la tarea', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error en fetch:', error);
+        showNotification('Error de conexión: ' + error.message, 'error');
+    })
+    .finally(() => {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
     });
 }
 
@@ -634,6 +768,22 @@ document.addEventListener('DOMContentLoaded', function() {
         icon.className = 'fas fa-eye';
         text.textContent = 'Mostrar Secciones';
     }
+    
+    // Event listeners para el modal de agregar tarea
+    const addTaskModal = document.getElementById('addTaskModal');
+    
+    // Cerrar modal al hacer click fuera de él
+    addTaskModal.addEventListener('click', function(e) {
+        if (e.target === addTaskModal) {
+            closeAddTaskModal();
+        }
+    });
+    
+    // Manejar envío del formulario
+    document.getElementById('addTaskForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        createPersonalTask();
+    });
 });
 
 // Estilos para animaciones de notificaciones

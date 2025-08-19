@@ -9,11 +9,11 @@ ob_start();
         <div class="header-row">
             <div class="title-minimal">
                 <h1>Dashboard KPI del Clan</h1>
-                <span class="subtitle"><?php echo htmlspecialchars($clan['clan_name']); ?></span>
+                <span class="subtitle"><?php echo htmlspecialchars($clan['clan_name'] ?? 'Clan'); ?></span>
             </div>
             
             <div class="actions-minimal">
-                <a href="?route=clan_leader/dashboard" class="btn-minimal">
+                <a href="?route=clan_leader/dashboard" class="btn-minimal primary">
                     <i class="fas fa-arrow-left"></i>
                     Volver al Dashboard
                 </a>
@@ -58,7 +58,7 @@ ob_start();
                         <div class="snake-path-header">
                             <h3>Progreso de Miembros del Clan</h3>
                             <div class="quarter-info">
-                                <span class="quarter-label"><?php echo htmlspecialchars($snakePathData['quarter_info']['display_name']); ?></span>
+                                <span class="quarter-label"><?php echo htmlspecialchars($snakePathData['quarter_info']['display_name'] ?? 'Trimestre'); ?></span>
                                 <span class="quarter-period">
                                     <?php
                                     $quarterMonths = [
@@ -67,7 +67,7 @@ ob_start();
                                         'Q3' => ['JUL', 'AGO', 'SEP'],
                                         'Q4' => ['OCT', 'NOV', 'DIC']
                                     ];
-                                    $months = $quarterMonths[$snakePathData['quarter_info']['quarter']] ?? ['MES1', 'MES2', 'MES3'];
+                                    $months = $quarterMonths[$snakePathData['quarter_info']['quarter'] ?? 'Q1'] ?? ['MES1', 'MES2', 'MES3'];
                                     echo implode(' - ', $months);
                                     ?>
                                 </span>
