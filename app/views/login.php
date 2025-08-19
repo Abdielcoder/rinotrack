@@ -35,7 +35,6 @@ ob_start();
                     <span class="checkmark"></span>
                     Recordarme
                 </label>
-                <a href="#" class="forgot-password">¿Olvidaste tu contraseña?</a>
             </div>
             
             <button type="submit" class="login-btn" id="loginBtn">
@@ -48,9 +47,7 @@ ob_start();
             <div class="login-message" id="loginMessage"></div>
         </form>
         
-        <div class="login-footer">
-            <p>¿No tienes cuenta? <a href="#" class="signup-link">Regístrate aquí</a></p>
-        </div>
+
     </div>
 </div>
 
