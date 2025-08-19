@@ -100,7 +100,6 @@ ob_start();
                         <h3>Crear tarea recurrente/eventual</h3>
                     </div>
                     <form id="adminCreateTaskForm" class="modal-form">
-                        <input type="hidden" name="route" value="admin/add-task">
 
                             <div class="form-grid">
                             <div class="form-group">
@@ -362,6 +361,47 @@ ob_start();
 
 <script>
 // ============================================
+// FUNCIONES AUXILIARES
+// ============================================
+
+// Función para mostrar overlay de procesamiento
+function openOverlay() {
+    const overlay = document.getElementById('processingOverlay');
+    const createBtn = document.getElementById('createTaskBtn');
+    if (overlay) overlay.style.display = 'block';
+    if (createBtn) createBtn.disabled = true;
+}
+
+// Función para ocultar overlay de procesamiento
+function closeOverlay() {
+    const overlay = document.getElementById('processingOverlay');
+    const createBtn = document.getElementById('createTaskBtn');
+    if (overlay) overlay.style.display = 'none';
+    if (createBtn) createBtn.disabled = false;
+}
+
+// Función para mostrar modal de estado
+function openStatus(opts) {
+    const statusModal = document.getElementById('statusModal');
+    const statusTitle = document.getElementById('statusModalTitle');
+    const statusIcon = document.getElementById('statusModalIcon');
+    const statusMsg = document.getElementById('statusModalMessage');
+    
+    if (!statusModal) return;
+    statusTitle.textContent = opts.title || 'Resultado';
+    statusMsg.textContent = opts.message || '';
+    statusIcon.className = `fas ${opts.icon || 'fa-check-circle'}`;
+    statusIcon.style.color = opts.color || 'var(--success,#10b981)';
+    statusModal.style.display = 'block';
+}
+
+// Función para cerrar modal de estado
+function closeStatus() {
+    const statusModal = document.getElementById('statusModal');
+    if (statusModal) statusModal.style.display = 'none';
+}
+
+// ============================================
 // FUNCIONES PARA TAREAS RECURRENTES
 // ============================================
 
@@ -457,45 +497,6 @@ function showRecurrenceInfo(message) {
 // FUNCIONES AUXILIARES DEL FORMULARIO
 // ============================================
 
-// Función para abrir overlay de procesamiento
-function openOverlay() {
-    const overlay = document.getElementById('processingOverlay');
-    const createBtn = document.getElementById('createTaskBtn');
-    if (overlay) overlay.style.display = 'block';
-    if (createBtn) createBtn.disabled = true;
-}
-
-// Función para cerrar overlay de procesamiento
-function closeOverlay() {
-    const overlay = document.getElementById('processingOverlay');
-    const createBtn = document.getElementById('createTaskBtn');
-    if (overlay) overlay.style.display = 'none';
-    if (createBtn) createBtn.disabled = false;
-}
-
-// Función para abrir modal de estado
-function openStatus(opts) {
-    const statusModal = document.getElementById('statusModal');
-    const statusTitle = document.getElementById('statusModalTitle');
-    const statusIcon = document.getElementById('statusModalIcon');
-    const statusMsg = document.getElementById('statusModalMessage');
-    
-    if (!statusModal) return;
-    statusTitle.textContent = opts.title || 'Resultado';
-    statusMsg.textContent = opts.message || '';
-    statusIcon.className = `fas ${opts.icon || 'fa-check-circle'}`;
-    statusIcon.style.color = opts.color || 'var(--success,#10b981)';
-    statusModal.style.display = 'block';
-}
-
-// Función para cerrar modal de estado
-function closeStatus() {
-    const statusModal = document.getElementById('statusModal');
-    if (statusModal) statusModal.style.display = 'none';
-}
-
-
-
 // Función para mostrar el contador de tareas que se van a crear
 function showTaskCount(count) {
     // Remover contador anterior si existe
@@ -585,30 +586,6 @@ async function handleFormSubmit(e) {
     console.log('Fecha límite:', data.get('dueDate'));
     console.log('Usuarios asignados:', data.getAll('assignedUsers[]'));
     
-    // Generar duplicados semanales si es recurrente
-    const createBtn = document.getElementById('createTaskBtn');
-    const overlay = document.getElementById('processingOverlay');
-    const statusModal = document.getElementById('statusModal');
-    const statusOk = document.getElementById('statusModalOk');
-    const statusCloseX = document.getElementById('statusModalCloseX');
-    const statusTitle = document.getElementById('statusModalTitle');
-    const statusIcon = document.getElementById('statusModalIcon');
-    const statusMsg = document.getElementById('statusModalMessage');
-
-    function openOverlay(){ if(overlay) overlay.style.display='block'; if(createBtn) createBtn.disabled = true; }
-    function closeOverlay(){ if(overlay) overlay.style.display='none'; if(createBtn) createBtn.disabled = false; }
-    function openStatus(opts){
-        if (!statusModal) return;
-        statusTitle.textContent = opts.title || 'Resultado';
-        statusMsg.textContent = opts.message || '';
-        statusIcon.className = `fas ${opts.icon || 'fa-check-circle'}`;
-        statusIcon.style.color = opts.color || 'var(--success,#10b981)';
-        statusModal.style.display = 'block';
-    }
-    function closeStatus(){ if(statusModal) statusModal.style.display='none'; }
-    statusOk?.addEventListener('click', closeStatus);
-    statusCloseX?.addEventListener('click', closeStatus);
-
     try {
         const type = document.getElementById('taskType')?.value || 'eventual';
         console.log('Procesando tipo de tarea:', type);
@@ -650,7 +627,7 @@ async function handleFormSubmit(e) {
                 // Calcular fin del trimestre actual para limitar las repeticiones
                 const y = now.getFullYear();
                 const m = now.getMonth();
-                const qEndMonth = m <= 2 ? 2 : (m <= 5 ? 5 : (m <= 8 ? 8 : 11);
+                const qEndMonth = m <= 2 ? 2 : (m <= 5 ? 5 : (m <= 8 ? 8 : 11));
                 const qEnd = new Date(y, qEndMonth + 1, 0);
                 
                 let current = new Date(start);
@@ -709,20 +686,55 @@ async function handleFormSubmit(e) {
     } catch (err) { 
         console.error('Error procesando fechas repetidas:', err);
     }
+    
     try {
         openOverlay();
+        console.log('Enviando petición a admin/add-task...');
         const resp = await fetch('?route=admin/add-task', { method: 'POST', body: data });
+        console.log('Respuesta recibida:', resp.status, resp.statusText);
+        
         const json = await resp.json();
+        console.log('JSON de respuesta:', json);
         closeOverlay();
+        
         if (json.success) {
+            // Limpiar el formulario
             form.reset();
-            openStatus({ title:'Tarea creada', message:'La tarea se creó correctamente.', icon:'fa-check-circle', color:'var(--success,#10b981)' });
+            console.log('Tarea creada exitosamente, limpiando formulario...');
+            
+            // Mostrar mensaje de éxito
+            openStatus({ 
+                title: 'Tarea creada exitosamente', 
+                message: json.message || 'La tarea se creó correctamente.', 
+                icon: 'fa-check-circle', 
+                color: 'var(--success,#10b981)' 
+            });
+            
+            // Recargar la página después de 2 segundos para mostrar la nueva tarea
+            console.log('Programando recarga de página en 2 segundos...');
+            setTimeout(() => {
+                console.log('Recargando página...');
+                window.location.reload();
+            }, 2000);
+            
         } else {
-            openStatus({ title:'Error', message: json.message || 'Error al crear tarea', icon:'fa-triangle-exclamation', color:'#ef4444' });
+            console.error('Error del servidor:', json.message);
+            openStatus({ 
+                title: 'Error al crear tarea', 
+                message: json.message || 'Error al crear tarea', 
+                icon: 'fa-triangle-exclamation', 
+                color: '#ef4444' 
+            });
         }
     } catch (err) {
         closeOverlay();
-        openStatus({ title:'Error de red', message: 'No se pudo completar la operación.', icon:'fa-wifi', color:'#ef4444' });
+        console.error('Error en la petición:', err);
+        openStatus({ 
+            title: 'Error de conexión', 
+            message: 'No se pudo completar la operación. Verifica tu conexión a internet.', 
+            icon: 'fa-wifi', 
+            color: '#ef4444' 
+        });
     }
 } // Fin de handleFormSubmit
 
