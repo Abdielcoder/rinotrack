@@ -2708,10 +2708,10 @@ class ClanLeaderController {
             error_log("=== DEBUG getKanbanTasksForClan ===");
             error_log("Clan ID: $clanId");
             
-            // Solo tareas del clan del líder (no tareas globales de Olympo)
-            error_log("Filtrando tareas solo del clan ID: $clanId");
+            // Tareas del clan del líder + tareas recurrentes/eventuales asignadas al usuario
+            error_log("Filtrando tareas del clan ID: $clanId y tareas recurrentes/eventuales asignadas al usuario");
             
-            // Obtener SOLO las tareas del clan del líder (excluyendo tareas globales de Olympo)
+            // Obtener tareas del clan del líder + tareas recurrentes/eventuales asignadas al usuario
             $stmt = $this->db->prepare(
                 "SELECT 
                     t.task_id,
@@ -2730,7 +2730,9 @@ class ClanLeaderController {
                     END as days_until_due
                  FROM Tasks t
                  INNER JOIN Projects p ON p.project_id = t.project_id
-                 WHERE p.clan_id = ? 
+                 WHERE (p.clan_id = ? 
+                        OR (p.project_name IN ('Tareas Recurrentes', 'Tareas Eventuales') 
+                            AND t.assigned_to_user_id = ?))
                    AND p.project_name NOT IN ('Tareas Personales')
                    AND t.is_subtask = 0
                    AND t.is_personal = 0
@@ -2738,8 +2740,8 @@ class ClanLeaderController {
                  ORDER BY t.due_date ASC, t.task_id ASC"
             );
             
-            $params = [$clanId];
-            error_log("Ejecutando consulta con parámetros: clanId=$clanId (solo tareas del clan del líder)");
+            $params = [$clanId, $this->currentUser['user_id']];
+            error_log("Ejecutando consulta con parámetros: clanId=$clanId, userId={$this->currentUser['user_id']} (tareas del clan + recurrentes/eventuales asignadas al usuario)");
             $stmt->execute($params);
             $allTasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
@@ -2754,13 +2756,25 @@ class ClanLeaderController {
             $uniqueProjects = array_unique(array_column($allTasks, 'project_name'));
             error_log("Proyectos únicos encontrados: " . implode(', ', $uniqueProjects));
             
-            // Debug: verificar que solo hay tareas del clan del líder
+            // Debug: verificar tareas del clan y tareas recurrentes/eventuales asignadas al usuario
             $clanTasks = array_filter($allTasks, function($task) use ($clanId) {
-                return true; // Todas las tareas ahora son del clan del líder
+                return true; // Todas las tareas son del clan del líder o recurrentes/eventuales asignadas
             });
-            error_log("Tareas del clan del líder encontradas: " . count($clanTasks));
-            foreach ($clanTasks as $task) {
-                error_log("Tarea del clan: ID={$task['task_id']}, Nombre='{$task['task_name']}', Proyecto='{$task['project_name']}'");
+            error_log("Total tareas encontradas (clan + recurrentes/eventuales asignadas): " . count($clanTasks));
+            
+            // Separar tareas por tipo para debug
+            $clanSpecificTasks = array_filter($allTasks, function($task) use ($clanId) {
+                return !in_array($task['project_name'], ['Tareas Recurrentes', 'Tareas Eventuales']);
+            });
+            $recurrentEventualTasks = array_filter($allTasks, function($task) {
+                return in_array($task['project_name'], ['Tareas Recurrentes', 'Tareas Eventuales']);
+            });
+            
+            error_log("Tareas específicas del clan: " . count($clanSpecificTasks));
+            error_log("Tareas recurrentes/eventuales asignadas al usuario: " . count($recurrentEventualTasks));
+            
+            foreach ($recurrentEventualTasks as $task) {
+                error_log("Tarea recurrente/eventual asignada: ID={$task['task_id']}, Nombre='{$task['task_name']}', Proyecto='{$task['project_name']}'");
             }
             
             // Debug: verificar todas las tareas por proyecto
