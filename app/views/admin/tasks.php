@@ -112,19 +112,7 @@ ob_start();
                                 </select>
                             </div>
                             
-                            <!-- Select de frecuencia para tareas recurrentes -->
-                            <div class="form-group" id="frequencyGroup" style="display: none;">
-                                <label>Frecuencia</label>
-                                <select id="taskFrequency" name="frequency">
-                                    <option value="">Selecciona frecuencia</option>
-                                    <option value="daily">Cada día</option>
-                                    <option value="weekly">Cada semana</option>
-                                    <option value="monthly">Cada mes</option>
-                                </select>
-                                <small style="color: var(--admin-text-secondary); font-size: 12px; margin-top: 4px; display: block;">
-                                    💡 <strong>Diaria:</strong> Hasta fin de trimestre | <strong>Semanal:</strong> Hasta fin de trimestre | <strong>Mensual:</strong> Hasta fin de año
-                                </small>
-                            </div>
+
                             
                             <!-- Proyecto lógico oculto (se asigna automáticamente) -->
                             <input type="hidden" id="projectId" name="projectId" value="<?php echo (int)$recurrentProject['project_id']; ?>">
@@ -146,20 +134,33 @@ ob_start();
                                 <input type="date" name="dueDate">
                             </div>
                             <div class="form-group">
-                                <label>Asignar a miembros (múltiple)</label>
-                                <input type="text" id="memberSearch" class="filter-select" placeholder="Buscar colaborador..." style="width:100%;max-width:420px">
-                                <div id="memberList" class="checkbox-list" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(240px, 1fr));gap:10px;margin-top:10px;max-height:260px;overflow-y:auto;padding-right:6px">
-                                    <?php foreach ($members as $m): ?>
-                                        <?php $n = trim(($m['full_name'] ?: $m['username'] ?: '')); ?>
-                                        <label class="member-item" data-name="<?php echo strtolower(Utils::escape($n)); ?>" style="display:flex;align-items:center;gap:8px;border:1px solid var(--admin-border);padding:10px;border-radius:10px;background:var(--admin-bg-primary)">
-                                            <input type="checkbox" class="member-checkbox" name="assignedUsers[]" value="<?php echo (int)$m['user_id']; ?>">
-                                            <span><?php echo Utils::escape($n); ?></span>
-                                        </label>
-                                    <?php endforeach; ?>
-                                    <?php if (empty($members)): ?>
-                                        <div class="empty">No hay miembros en el clan</div>
-                                    <?php endif; ?>
-                                </div>
+                                <label>Recurrencia</label>
+                                <select id="recurrenceSelect" name="recurrence">
+                                    <option value="">Sin recurrencia</option>
+                                    <option value="weekly">Cada semana</option>
+                                    <option value="biweekly">Cada 15 días</option>
+                                    <option value="monthly">Cada 30 días</option>
+                                </select>
+                                <small style="color: var(--admin-text-secondary); font-size: 12px; margin-top: 4px; display: block;">
+                                    💡 Selecciona la frecuencia con la que se repetirá esta tarea
+                                </small>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Asignar a miembros (múltiple)</label>
+                            <input type="text" id="memberSearch" class="filter-select" placeholder="Buscar colaborador..." style="width:100%;max-width:420px">
+                            <div id="memberList" class="checkbox-list" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(240px, 1fr));gap:10px;margin-top:10px;max-height:260px;overflow-y:auto;padding-right:6px">
+                                <?php foreach ($members as $m): ?>
+                                    <?php $n = trim(($m['full_name'] ?: $m['username'] ?: '')); ?>
+                                    <label class="member-item" data-name="<?php echo strtolower(Utils::escape($n)); ?>" style="display:flex;align-items:center;gap:8px;border:1px solid var(--admin-border);padding:10px;border-radius:10px;background:var(--admin-bg-primary)">
+                                        <input type="checkbox" class="member-checkbox" name="assignedUsers[]" value="<?php echo (int)$m['user_id']; ?>">
+                                        <span><?php echo Utils::escape($n); ?></span>
+                                    </label>
+                                <?php endforeach; ?>
+                                <?php if (empty($members)): ?>
+                                    <div class="empty">No hay miembros en el clan</div>
+                                <?php endif; ?>
                             </div>
                         </div>
 
@@ -368,10 +369,8 @@ ob_start();
 function onTaskTypeChange() {
     const sel = document.getElementById('taskType');
     const projectSel = document.getElementById('projectId');
-    const frequencyGroup = document.getElementById('frequencyGroup');
-    const frequencySelect = document.getElementById('taskFrequency');
     
-    if (!sel || !projectSel || !frequencyGroup || !frequencySelect) {
+    if (!sel || !projectSel) {
         return;
     }
     
@@ -379,116 +378,76 @@ function onTaskTypeChange() {
     const recId = <?php echo (int)$recurrentProject['project_id']; ?>;
     const evtId = <?php echo (int)$eventualProject['project_id']; ?>;
     
-    // Ocultar grupo de frecuencia por defecto
-    frequencyGroup.style.display = 'none';
-    frequencyGroup.classList.remove('show');
-    frequencySelect.value = '';
-    
     if (type === '') {
         // No hay tipo seleccionado
         projectSel.value = '';
     } else if (type === 'recurrent') {
         projectSel.value = String(recId);
-        // Mostrar select de frecuencia para tareas recurrentes
-        frequencyGroup.style.display = 'block';
-        frequencyGroup.classList.add('show');
+        console.log('✅ Tarea recurrente seleccionada - Usar campo de recurrencia');
     } else if (type === 'eventual') {
         projectSel.value = String(evtId);
     }
 }
 
-// Función para manejar cambios en la frecuencia de tareas recurrentes
-function onFrequencyChange() {
-    const frequency = document.getElementById('taskFrequency').value;
+
+
+// Función para manejar cambios en la recurrencia de tareas
+function onRecurrenceChange() {
+    const recurrence = document.getElementById('recurrenceSelect').value;
     const dueDateInput = document.querySelector('input[name="dueDate"]');
     
-    if (!frequency || !dueDateInput) return;
+    if (!recurrence || !dueDateInput) return;
     
-    // Limpiar fecha límite cuando cambie la frecuencia
+    // Limpiar fecha límite cuando cambie la recurrencia
     dueDateInput.value = '';
     
-    // Mostrar información sobre la calendarización
+    // Mostrar información sobre la recurrencia seleccionada
     let infoMessage = '';
-    switch (frequency) {
-        case 'daily':
-            infoMessage = '📅 <strong>Frecuencia Diaria:</strong> Se crearán tareas cada día desde la fecha seleccionada hasta el final del trimestre actual.';
-            break;
+    switch (recurrence) {
         case 'weekly':
-            infoMessage = '📅 <strong>Frecuencia Semanal:</strong> Se crearán tareas cada lunes hasta el final del trimestre actual.';
+            infoMessage = '📅 <strong>Recurrencia Semanal:</strong> La tarea se repetirá cada 7 días desde la fecha seleccionada.';
+            break;
+        case 'biweekly':
+            infoMessage = '📅 <strong>Recurrencia Quincenal:</strong> La tarea se repetirá cada 15 días desde la fecha seleccionada.';
             break;
         case 'monthly':
-            infoMessage = '📅 <strong>Frecuencia Mensual:</strong> Se crearán tareas cada primer día del mes hasta el final del año actual.';
+            infoMessage = '📅 <strong>Recurrencia Mensual:</strong> La tarea se repetirá cada 30 días desde la fecha seleccionada.';
             break;
     }
     
     // Mostrar mensaje informativo
-    showFrequencyInfo(infoMessage);
+    showRecurrenceInfo(infoMessage);
 }
 
-
-
-// Función para mostrar información sobre la frecuencia seleccionada
-function showFrequencyInfo(message) {
+// Función para mostrar información sobre la recurrencia seleccionada
+function showRecurrenceInfo(message) {
     // Remover mensaje anterior si existe
-    const existingInfo = document.getElementById('frequencyInfo');
+    const existingInfo = document.getElementById('recurrenceInfo');
     if (existingInfo) {
         existingInfo.remove();
     }
     
     // Crear nuevo mensaje informativo
     const infoDiv = document.createElement('div');
-    infoDiv.id = 'frequencyInfo';
+    infoDiv.id = 'recurrenceInfo';
     infoDiv.style.cssText = `
-        background: #dbeafe;
-        border: 1px solid #3b82f6;
+        background: #fef3c7;
+        border: 1px solid #f59e0b;
         border-radius: 6px;
         padding: 12px;
         margin: 10px 0;
-        color: #1e40af;
+        color: #92400e;
         font-size: 14px;
         display: flex;
         align-items: center;
         gap: 8px;
     `;
-    infoDiv.innerHTML = `<i class="fas fa-info-circle"></i> ${message}`;
+    infoDiv.innerHTML = `<i class="fas fa-calendar-alt"></i> ${message}`;
     
-    // Insertar después del select de frecuencia
-    const frequencyGroup = document.getElementById('frequencyGroup');
-    if (frequencyGroup) {
-        frequencyGroup.parentNode.insertBefore(infoDiv, frequencyGroup.nextSibling);
-    }
-}
-
-// Función para mostrar el contador de tareas que se van a crear
-function showTaskCount(count) {
-    // Remover contador anterior si existe
-    const existingCount = document.getElementById('taskCountInfo');
-    if (existingCount) {
-        existingCount.remove();
-    }
-    
-    // Crear nuevo contador
-    const countDiv = document.createElement('div');
-    countDiv.id = 'taskCountInfo';
-    countDiv.style.cssText = `
-        background: #ecfdf5;
-        border: 1px solid #10b981;
-        border-radius: 6px;
-        padding: 12px;
-        margin: 10px 0;
-        color: #065f46;
-        font-size: 14px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-weight: 600;
-    `;
-    countDiv.innerHTML = `<i class="fas fa-tasks"></i> Se crearán <strong>${count} tareas</strong> en total`;
-    
-    // Insertar después del mensaje de frecuencia
-    const frequencyInfo = document.getElementById('frequencyInfo');
-    if (frequencyInfo) {
-        frequencyInfo.parentNode.insertBefore(countDiv, frequencyInfo.nextSibling);
+    // Insertar después del select de recurrencia
+    const recurrenceSelect = document.getElementById('recurrenceSelect');
+    if (recurrenceSelect) {
+        recurrenceSelect.parentNode.insertBefore(infoDiv, recurrenceSelect.nextSibling);
     }
 }
 
@@ -535,37 +494,7 @@ function closeStatus() {
     if (statusModal) statusModal.style.display = 'none';
 }
 
-// Función para mostrar información sobre la frecuencia seleccionada
-function showFrequencyInfo(message) {
-    // Remover mensaje anterior si existe
-    const existingInfo = document.getElementById('frequencyInfo');
-    if (existingInfo) {
-        existingInfo.remove();
-    }
-    
-    // Crear nuevo mensaje informativo
-    const infoDiv = document.createElement('div');
-    infoDiv.id = 'frequencyInfo';
-    infoDiv.style.cssText = `
-        background: #dbeafe;
-        border: 1px solid #3b82f6;
-        border-radius: 6px;
-        padding: 12px;
-        margin: 10px 0;
-        color: #1e40af;
-        font-size: 14px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    `;
-    infoDiv.innerHTML = `<i class="fas fa-info-circle"></i> ${message}`;
-    
-    // Insertar después del select de frecuencia
-    const frequencyGroup = document.getElementById('frequencyGroup');
-    if (frequencyGroup) {
-        frequencyGroup.parentNode.insertBefore(infoDiv, frequencyGroup.nextSibling);
-    }
-}
+
 
 // Función para mostrar el contador de tareas que se van a crear
 function showTaskCount(count) {
@@ -593,55 +522,14 @@ function showTaskCount(count) {
     `;
     countDiv.innerHTML = `<i class="fas fa-tasks"></i> Se crearán <strong>${count} tareas</strong> en total`;
     
-    // Insertar después del mensaje de frecuencia
-    const frequencyInfo = document.getElementById('frequencyInfo');
-    if (frequencyInfo) {
-        frequencyInfo.parentNode.insertBefore(countDiv, frequencyInfo.nextSibling);
+    // Insertar después del mensaje de recurrencia
+    const recurrenceInfo = document.getElementById('recurrenceInfo');
+    if (recurrenceInfo) {
+        recurrenceInfo.parentNode.insertBefore(countDiv, recurrenceInfo.nextSibling);
     }
 }
 
-// Ejecutar al cargar la página para asegurar estado inicial correcto
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('=== DOM CARGADO ===');
-    
-    // Verificar que todos los elementos estén presentes
-    const sel = document.getElementById('taskType');
-    const projectSel = document.getElementById('projectId');
-    const frequencyGroup = document.getElementById('frequencyGroup');
-    const frequencySelect = document.getElementById('taskFrequency');
-    
-    console.log('Elementos en DOM:', {
-        taskType: !!sel,
-        projectId: !!projectSel,
-        frequencyGroup: !!frequencyGroup,
-        frequencySelect: !!frequencySelect
-    });
-    
-    // Verificar que el evento onchange esté correctamente vinculado
-    if (sel) {
-        console.log('Evento onchange del taskType:', sel.onchange);
-        // Asegurar que el evento esté vinculado
-        sel.addEventListener('change', onTaskTypeChange);
-        console.log('Evento change agregado manualmente');
-    }
-    
-    if (sel && projectSel) {
-        console.log('Estado inicial - Tipo: No seleccionado, Project ID: No asignado');
-        console.log('Proyecto Recurrente ID:', <?php echo (int)$recurrentProject['project_id']; ?>);
-        console.log('Proyecto Eventual ID:', <?php echo (int)$eventualProject['project_id']; ?>);
-    }
-    
-    // Verificar estado inicial del frequencyGroup
-    if (frequencyGroup) {
-        console.log('Estado inicial del frequencyGroup:', {
-            display: frequencyGroup.style.display,
-            classList: frequencyGroup.classList.toString(),
-            offsetParent: frequencyGroup.offsetParent
-        });
-    }
-    
-    console.log('=== FIN DOM CARGADO ===');
-});
+
 
 // Función para manejar el envío del formulario
 async function handleFormSubmit(e) {
@@ -672,13 +560,13 @@ async function handleFormSubmit(e) {
         return;
     }
     
-    // Validar frecuencia para tareas recurrentes
+    // Validar recurrencia para tareas recurrentes
     if (taskType === 'recurrent') {
-        const frequency = document.getElementById('taskFrequency')?.value;
-        if (!frequency) {
+        const recurrence = document.getElementById('recurrenceSelect')?.value;
+        if (!recurrence) {
             openStatus({ 
-                title: 'Frecuencia no seleccionada', 
-                message: 'Para tareas recurrentes debes seleccionar una frecuencia (diaria, semanal o mensual)', 
+                title: 'Recurrencia no seleccionada', 
+                message: 'Para tareas recurrentes debes seleccionar una recurrencia (semanal, quincenal o mensual)', 
                 icon: 'fa-exclamation-triangle', 
                 color: '#f59e0b' 
             });
@@ -727,14 +615,14 @@ async function handleFormSubmit(e) {
         
         if (type === 'recurrent') {
             console.log('Generando fechas repetidas para tarea recurrente...');
-            const frequency = document.getElementById('taskFrequency')?.value;
+            const recurrence = document.getElementById('recurrenceSelect')?.value;
             const dueInput = form.querySelector('input[name="dueDate"]');
             const dateStr = dueInput && dueInput.value ? dueInput.value : '';
             
-            if (!frequency) {
+            if (!recurrence) {
                 openStatus({ 
-                    title: 'Frecuencia no seleccionada', 
-                    message: 'Debes seleccionar una frecuencia para las tareas recurrentes', 
+                    title: 'Recurrencia no seleccionada', 
+                    message: 'Debes seleccionar una recurrencia para las tareas recurrentes', 
                     icon: 'fa-exclamation-triangle', 
                     color: '#f59e0b' 
                 });
@@ -752,44 +640,24 @@ async function handleFormSubmit(e) {
             }
             
             console.log('Fecha base:', dateStr);
-            console.log('Frecuencia:', frequency);
+            console.log('Recurrencia:', recurrence);
             
             const start = new Date(dateStr + 'T00:00:00');
             if (!isNaN(start.getTime())) {
                 const repeats = [];
                 const now = new Date();
                 
-                if (frequency === 'daily') {
-                    // Generar fechas diarias hasta el final del trimestre
-                    const y = now.getFullYear();
-                    const m = now.getMonth();
-                    const qEndMonth = m <= 2 ? 2 : (m <= 5 ? 5 : (m <= 8 ? 8 : 11);
-                    const qEnd = new Date(y, qEndMonth + 1, 0);
-                    
-                    let current = new Date(start);
-                    current.setDate(current.getDate() + 1); // Empezar desde el día siguiente
-                    
-                    while (current <= qEnd) {
-                        const y2 = current.getFullYear();
-                        const m2 = (current.getMonth() + 1).toString().padStart(2, '0');
-                        const d2 = current.getDate().toString().padStart(2, '0');
-                        const dateStr = `${y2}-${m2}-${d2}`;
-                        repeats.push(dateStr);
-                        current.setDate(current.getDate() + 1);
-                    }
-                    
-                } else if (frequency === 'weekly') {
-                    // Generar fechas semanales (cada lunes) hasta el final del trimestre
-                    const y = now.getFullYear();
-                    const m = now.getMonth();
-                    const qEndMonth = m <= 2 ? 2 : (m <= 5 ? 5 : (m <= 8 ? 8 : 11);
-                    const qEnd = new Date(y, qEndMonth + 1, 0);
-                    
-                    let current = new Date(start);
-                    // Encontrar el próximo lunes
-                    while (current.getDay() !== 1) { // 1 = lunes
-                        current.setDate(current.getDate() + 1);
-                    }
+                // Calcular fin del trimestre actual para limitar las repeticiones
+                const y = now.getFullYear();
+                const m = now.getMonth();
+                const qEndMonth = m <= 2 ? 2 : (m <= 5 ? 5 : (m <= 8 ? 8 : 11);
+                const qEnd = new Date(y, qEndMonth + 1, 0);
+                
+                let current = new Date(start);
+                
+                if (recurrence === 'weekly') {
+                    // Generar fechas semanales (cada 7 días)
+                    current.setDate(current.getDate() + 7); // Empezar desde la siguiente semana
                     
                     while (current <= qEnd) {
                         const y2 = current.getFullYear();
@@ -797,26 +665,33 @@ async function handleFormSubmit(e) {
                         const d2 = current.getDate().toString().padStart(2, '0');
                         const dateStr = `${y2}-${m2}-${d2}`;
                         repeats.push(dateStr);
-                        current.setDate(current.getDate() + 7); // Siguiente lunes
+                        current.setDate(current.getDate() + 7); // Siguiente semana
                     }
                     
-                } else if (frequency === 'monthly') {
-                    // Generar fechas mensuales (cada inicio de mes) hasta el final del año
-                    const y = now.getFullYear();
-                    const yearEnd = new Date(y, 11, 31); // 31 de diciembre
+                } else if (recurrence === 'biweekly') {
+                    // Generar fechas quincenales (cada 15 días)
+                    current.setDate(current.getDate() + 15); // Empezar desde los siguientes 15 días
                     
-                    let current = new Date(start);
-                    // Ir al primer día del mes siguiente
-                    current.setDate(1);
-                    current.setMonth(current.getMonth() + 1);
-                    
-                    while (current <= yearEnd) {
+                    while (current <= qEnd) {
                         const y2 = current.getFullYear();
                         const m2 = (current.getMonth() + 1).toString().padStart(2, '0');
                         const d2 = current.getDate().toString().padStart(2, '0');
                         const dateStr = `${y2}-${m2}-${d2}`;
                         repeats.push(dateStr);
-                        current.setMonth(current.getMonth() + 1);
+                        current.setDate(current.getDate() + 15); // Siguientes 15 días
+                    }
+                    
+                } else if (recurrence === 'monthly') {
+                    // Generar fechas mensuales (cada 30 días)
+                    current.setDate(current.getDate() + 30); // Empezar desde los siguientes 30 días
+                    
+                    while (current <= qEnd) {
+                        const y2 = current.getFullYear();
+                        const m2 = (current.getMonth() + 1).toString().padStart(2, '0');
+                        const d2 = current.getDate().toString().padStart(2, '0');
+                        const dateStr = `${y2}-${m2}-${d2}`;
+                        repeats.push(dateStr);
+                        current.setDate(current.getDate() + 30); // Siguientes 30 días
                     }
                 }
                 
@@ -955,10 +830,10 @@ document.addEventListener('DOMContentLoaded', function() {
         taskTypeSelect.addEventListener('change', onTaskTypeChange);
     }
     
-    // Vincular evento change del select de frecuencia
-    const frequencySelect = document.getElementById('taskFrequency');
-    if (frequencySelect) {
-        frequencySelect.addEventListener('change', onFrequencyChange);
+    // Vincular evento change del select de recurrencia
+    const recurrenceSelect = document.getElementById('recurrenceSelect');
+    if (recurrenceSelect) {
+        recurrenceSelect.addEventListener('change', onRecurrenceChange);
     }
     
     // Vincular evento submit del formulario

@@ -943,6 +943,49 @@ a.nav-link, .nav-link:visited { color: var(--admin-text-secondary); }
     font-size: 16px;
 }
 
+/* Estilos para el select de recurrencia */
+#recurrenceSelect {
+    background: var(--admin-bg-primary);
+    border: 2px solid var(--admin-border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 1rem;
+    color: var(--admin-text-primary);
+    transition: all 0.2s ease;
+    cursor: pointer;
+    width: 100%;
+}
+
+#recurrenceSelect:focus {
+    outline: none;
+    border-color: var(--admin-primary);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+#recurrenceSelect:hover {
+    border-color: var(--admin-primary-dark);
+}
+
+/* Mensaje informativo de recurrencia */
+#recurrenceInfo {
+    background: #fef3c7;
+    border: 1px solid #f59e0b;
+    border-radius: 6px;
+    padding: 12px;
+    margin: 10px 0;
+    color: #92400e;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    animation: fadeIn 0.3s ease-out;
+}
+
+#recurrenceInfo i {
+    color: #f59e0b;
+    font-size: 16px;
+}
+
 /* Animaciones */
 @keyframes slideDown {
     from {
