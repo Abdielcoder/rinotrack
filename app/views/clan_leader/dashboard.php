@@ -583,18 +583,28 @@ function toggleTaskStatus(taskId, isChecked) {
         if (data.success) {
             console.log('Estado de tarea actualizado exitosamente');
             
-            // Si la tarea se marcó como completada, moverla a la columna de completadas o removerla
+            // Si la tarea se marcó como completada, removerla del tablero
             if (isChecked) {
-                // Opcional: remover la tarea del tablero o marcarla visualmente como completada
                 if (taskCard) {
-                    taskCard.style.opacity = '0.5';
-                    taskCard.style.textDecoration = 'line-through';
+                    // Agregar animación de desvanecimiento
+                    taskCard.style.transition = 'all 0.5s ease-out';
+                    taskCard.style.opacity = '0';
+                    taskCard.style.transform = 'scale(0.8)';
+                    
+                    // Remover la tarea del DOM después de la animación
+                    setTimeout(() => {
+                        taskCard.remove();
+                        
+                        // Actualizar contadores de tareas por columna
+                        updateColumnCounts();
+                    }, 500);
                 }
             } else {
                 // Si se desmarcó, restaurar el estilo normal
                 if (taskCard) {
                     taskCard.style.opacity = '1';
                     taskCard.style.textDecoration = 'none';
+                    taskCard.style.transform = 'scale(1)';
                 }
             }
             
@@ -627,6 +637,77 @@ function toggleTaskStatus(taskId, isChecked) {
             taskCard.style.opacity = '1';
         }
     });
+}
+
+// Función para actualizar contadores de tareas por columna
+function updateColumnCounts() {
+    const columns = ['urgent', 'this-week', 'next-week', 'later'];
+    
+    columns.forEach(columnId => {
+        const column = document.getElementById(`kanban-${columnId}`);
+        if (column) {
+            const taskCount = column.querySelectorAll('.task-card').length;
+            const countElement = column.querySelector('.column-header .task-count');
+            if (countElement) {
+                countElement.textContent = `(${taskCount})`;
+            }
+        }
+    });
+}
+
+// Función para mostrar notificaciones
+function showNotification(message, type = 'info') {
+    // Crear elemento de notificación
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.textContent = message;
+    
+    // Agregar estilos básicos
+    const styles = {
+        position: 'fixed',
+        top: '20px',
+        right: '20px',
+        padding: '12px 20px',
+        borderRadius: '6px',
+        color: 'white',
+        fontWeight: '500',
+        zIndex: '10000',
+        opacity: '0',
+        transform: 'translateX(100%)',
+        transition: 'all 0.3s ease-out'
+    };
+    
+    // Aplicar estilos
+    Object.assign(notification.style, styles);
+    
+    // Estilos según el tipo
+    if (type === 'success') {
+        notification.style.backgroundColor = '#10b981';
+    } else if (type === 'error') {
+        notification.style.backgroundColor = '#ef4444';
+    } else {
+        notification.style.backgroundColor = '#3b82f6';
+    }
+    
+    // Agregar al DOM
+    document.body.appendChild(notification);
+    
+    // Animar entrada
+    setTimeout(() => {
+        notification.style.opacity = '1';
+        notification.style.transform = 'translateX(0)';
+    }, 100);
+    
+    // Auto-remover después de 3 segundos
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 300);
+    }, 3000);
 }
 
 // Funciones para el modal de agregar tarea
