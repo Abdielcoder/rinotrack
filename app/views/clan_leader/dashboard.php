@@ -31,7 +31,7 @@ ob_start();
         <section class="kanban-section animate-fade-in">
             <div class="kanban-header">
                 <div class="kanban-title">
-                    <h3><i class="fas fa-tasks icon-gradient"></i> Tablero Kanban de Tareas del Clan</h3>
+                    <h3><i class="fas fa-tasks icon-gradient"></i> Tareas</h3>
                 </div>
                 <div class="kanban-actions">
                     <a href="?route=clan_leader/tasks" class="btn-add-task">

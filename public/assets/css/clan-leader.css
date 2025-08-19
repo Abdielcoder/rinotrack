@@ -1791,21 +1791,21 @@ section {
 
 .collaborators-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
     gap: 16px;
     margin-top: 24px;
 }
 
 .collaborator-card {
     background: white;
-    border-radius: 12px;
-    padding: 16px;
+    border-radius: 8px;
+    padding: 8px;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
     border: 1px solid #e2e8f0;
     transition: all 0.3s ease;
     position: relative;
     overflow: visible;
-    min-height: 240px;
+    min-height: 72px;
     height: fit-content;
     animation: cardSlideIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
     opacity: 0;
@@ -1861,15 +1861,15 @@ section {
 .collaborator-header {
     display: flex;
     align-items: center;
-    gap: 12px;
-    margin-bottom: 16px;
-    padding-bottom: 12px;
+    gap: 8px;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
     border-bottom: 1px solid #e2e8f0;
 }
 
 .collaborator-avatar {
-    width: 40px;
-    height: 40px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
     overflow: hidden;
     flex-shrink: 0;
@@ -1888,7 +1888,7 @@ section {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.2rem;
+    font-size: 0.9rem;
     font-weight: 700;
     color: white;
 }
@@ -1899,20 +1899,20 @@ section {
 }
 
 .collaborator-name {
-    font-size: 1rem;
+    font-size: 0.8rem;
     font-weight: 600;
     color: #1a202c;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
     line-height: 1.2;
 }
 
 .availability-badge {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 0.75rem;
+    gap: 2px;
+    padding: 2px 6px;
+    border-radius: 8px;
+    font-size: 0.6rem;
     font-weight: 600;
     color: white;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -1935,25 +1935,25 @@ section {
 }
 
 .collaborator-metrics {
-    margin-bottom: 16px;
+    margin-bottom: 8px;
     width: 100%;
     display: grid;
     grid-template-columns: 1fr;
-    gap: 8px;
+    gap: 4px;
     flex: 1;
 }
 
 .metric-item {
     display: flex;
     align-items: flex-start;
-    gap: 8px;
-    padding: 8px 12px;
+    gap: 4px;
+    padding: 4px 8px;
     background: #f8fafc;
-    border-radius: 8px;
+    border-radius: 6px;
     border: 1px solid #e2e8f0;
     transition: all 0.3s ease;
-    font-size: 0.85rem;
-    min-height: 40px;
+    font-size: 0.7rem;
+    min-height: 28px;
     word-wrap: break-word;
     overflow-wrap: break-word;
 }
@@ -1965,9 +1965,9 @@ section {
 }
 
 .metric-item i {
-    width: 14px;
+    width: 10px;
     color: #667eea;
-    font-size: 0.8rem;
+    font-size: 0.6rem;
     text-align: center;
     flex-shrink: 0;
     margin-top: 1px;
@@ -1976,7 +1976,7 @@ section {
 .metric-label {
     color: #4a5568;
     font-weight: 600;
-    min-width: 120px;
+    min-width: 80px;
     font-size: 0.8rem;
     flex-shrink: 0;
     line-height: 1.2;
