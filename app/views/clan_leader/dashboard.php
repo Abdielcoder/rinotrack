@@ -36,7 +36,7 @@ ob_start();
                 <div class="kanban-actions">
                     <a href="?route=clan_leader/tasks" class="btn-add-task">
                         <i class="fas fa-plus"></i>
-                        Gestionar Tareas
+                        Tareas
                     </a>
                 </div>
             </div>
