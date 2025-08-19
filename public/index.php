@@ -73,6 +73,22 @@ foreach ($controllers as $controller) {
     }
 }
 
+// Limpiar tokens de "recordarme" expirados (ejecutar solo ocasionalmente)
+try {
+    $auth = new Auth();
+    if (method_exists($auth, 'cleanExpiredTokens')) {
+        // Solo limpiar cada 100 requests para no afectar el rendimiento
+        $cleanupCounter = isset($_SESSION['cleanup_counter']) ? $_SESSION['cleanup_counter'] : 0;
+        if ($cleanupCounter % 100 === 0) {
+            $auth->cleanExpiredTokens();
+        }
+        $_SESSION['cleanup_counter'] = $cleanupCounter + 1;
+    }
+} catch (Exception $e) {
+    // Silenciar errores de limpieza para no afectar la funcionalidad principal
+    error_log("Error en limpieza de tokens: " . $e->getMessage());
+}
+
 // Obtener ruta
 $route = $_GET['route'] ?? '';
 

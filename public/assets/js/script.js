@@ -64,6 +64,34 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
     
+    // Verificar si el usuario ya tiene un token de "recordarme" activo
+    function checkRememberMeStatus() {
+        // Verificar si hay una cookie de remember_token
+        const hasRememberToken = document.cookie.split(';').some(item => item.trim().startsWith('remember_token='));
+        
+        if (hasRememberToken) {
+            // Si hay token, marcar el checkbox y mostrar mensaje
+            if (rememberMeCheckbox) {
+                rememberMeCheckbox.checked = true;
+                showLoginMessage('Sesión recordada activa', 'info');
+                
+                // Ocultar mensaje después de 3 segundos
+                setTimeout(() => {
+                    hideLoginMessage();
+                }, 3000);
+            }
+        } else {
+            // Restaurar preferencia previa del usuario
+            const savedPreference = localStorage.getItem('rememberMePreference');
+            if (savedPreference === 'true' && rememberMeCheckbox) {
+                rememberMeCheckbox.checked = true;
+            }
+        }
+    }
+    
+    // Ejecutar verificación al cargar la página
+    checkRememberMeStatus();
+    
     // Toggle para mostrar/ocultar contraseña
     if (togglePassword) {
         togglePassword.addEventListener('click', function() {
@@ -191,7 +219,18 @@ document.addEventListener('DOMContentLoaded', function() {
         const formData = new FormData();
         formData.append('username', usernameInput.value.trim());
         formData.append('password', passwordInput.value);
-        formData.append('rememberMe', document.getElementById('rememberMe').checked);
+        
+        // Obtener el estado del checkbox "Recordarme"
+        const rememberMeCheckbox = document.getElementById('rememberMe');
+        const rememberMe = rememberMeCheckbox ? rememberMeCheckbox.checked : false;
+        formData.append('rememberMe', rememberMe);
+        
+        // Guardar preferencia de "Recordarme" en localStorage para futuras visitas
+        if (rememberMe) {
+            localStorage.setItem('rememberMePreference', 'true');
+        } else {
+            localStorage.removeItem('rememberMePreference');
+        }
         
         // Enviar datos con AJAX (compatible con y sin mod_rewrite)
         fetch('?route=process-login', {

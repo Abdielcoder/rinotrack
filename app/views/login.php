@@ -35,6 +35,10 @@ ob_start();
                     <span class="checkmark"></span>
                     Recordarme
                 </label>
+                <small class="remember-info">
+                    <i class="fas fa-info-circle"></i>
+                    Mantendrá tu sesión activa por 30 días
+                </small>
             </div>
             
             <button type="submit" class="login-btn" id="loginBtn">

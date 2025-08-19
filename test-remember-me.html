@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Remember Me - RinoTrack</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .test-title {
+            color: #1e3a8a;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .feature-list {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .feature-list h3 {
+            color: #1e3a8a;
+            margin-top: 0;
+        }
+
+        .feature-list ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+
+        .feature-list li {
+            margin: 8px 0;
+            color: #374151;
+        }
+
+        .test-info {
+            background: #e0f2fe;
+            border-left: 4px solid #1e3a8a;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+
+        .test-info h4 {
+            color: #1e3a8a;
+            margin-top: 0;
+        }
+
+        .code-block {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-active { background: #10b981; }
+        .status-inactive { background: #6b7280; }
+        .status-error { background: #ef4444; }
+
+        .test-button {
+            background: #1e3a8a;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+
+        .test-button:hover {
+            background: #1e40af;
+        }
+
+        .cookie-info {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .cookie-info h4 {
+            color: #92400e;
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1 class="test-title">🧠 Test Remember Me - RinoTrack</h1>
+        
+        <div class="test-section">
+            <h2>🔐 Funcionalidad "Recordarme" Implementada</h2>
+            <div class="feature-list">
+                <h3>✅ Características Implementadas:</h3>
+                <ul>
+                    <li><strong>Checkbox "Recordarme":</strong> Permite al usuario activar la funcionalidad</li>
+                    <li><strong>Tokens Seguros:</strong> Generación de tokens únicos de 32 bytes hasheados con SHA-256</li>
+                    <li><strong>Cookies Persistentes:</strong> Cookie de 30 días para mantener la sesión</li>
+                    <li><strong>Base de Datos:</strong> Almacenamiento seguro de tokens con expiración</li>
+                    <li><strong>Auto-Renovación:</strong> Los tokens se renuevan automáticamente al usarlos</li>
+                    <li><strong>Limpieza Automática:</strong> Eliminación de tokens expirados</li>
+                    <li><strong>Preferencias del Usuario:</strong> Recuerda la preferencia en localStorage</li>
+                    <li><strong>Seguridad:</strong> Tokens se invalidan al cerrar sesión</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🏗️ Arquitectura Técnica</h2>
+            <div class="test-info">
+                <h4>📋 Componentes del Sistema:</h4>
+                <ul>
+                    <li><strong>Modelo Auth:</strong> Maneja la lógica de autenticación y tokens</li>
+                    <li><strong>Controlador AuthController:</strong> Procesa el login y maneja el checkbox</li>
+                    <li><strong>Base de Datos:</strong> Tabla `remember_tokens` para almacenar tokens</li>
+                    <li><strong>JavaScript Frontend:</strong> Maneja la UI y preferencias del usuario</li>
+                    <li><strong>Cookies HTTP:</strong> Almacenamiento seguro en el navegador</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🗄️ Estructura de Base de Datos</h2>
+            <div class="code-block">
+CREATE TABLE `remember_tokens` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `token` varchar(255) NOT NULL,
+  `expires_at` datetime NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `user_id` (`user_id`),
+  KEY `token` (`token`),
+  KEY `expires_at` (`expires_at`),
+  CONSTRAINT `remember_tokens_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `Users` (`user_id`) ON DELETE CASCADE
+);
+            </div>
+            <p><strong>Nota:</strong> Ejecuta el script <code>create_remember_tokens_table.sql</code> en tu base de datos.</p>
+        </div>
+
+        <div class="test-section">
+            <h2>🧪 Pruebas de Funcionalidad</h2>
+            <div class="test-info">
+                <h4>🔍 Para Probar la Funcionalidad:</h4>
+                <ol>
+                    <li><strong>Activar "Recordarme":</strong> Marca el checkbox y haz login</li>
+                    <li><strong>Verificar Cookie:</strong> Revisa que se cree la cookie <code>remember_token</code></li>
+                    <li><strong>Cerrar Navegador:</strong> Cierra completamente el navegador</li>
+                    <li><strong>Volver a Abrir:</strong> Abre RinoTrack nuevamente</li>
+                    <li><strong>Verificar Auto-Login:</strong> Deberías estar logueado automáticamente</li>
+                </ol>
+            </div>
+            
+            <div class="cookie-info">
+                <h4>🍪 Información de Cookies:</h4>
+                <p><strong>Nombre:</strong> <code>remember_token</code></p>
+                <p><strong>Duración:</strong> 30 días</p>
+                <p><strong>Seguridad:</strong> HttpOnly, Secure (en HTTPS)</p>
+                <p><strong>Alcance:</strong> Todo el dominio</p>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔒 Características de Seguridad</h2>
+            <div class="feature-list">
+                <h3>🛡️ Medidas Implementadas:</h3>
+                <ul>
+                    <li><strong>Tokens Únicos:</strong> Cada token es único y no predecible</li>
+                    <li><strong>Hashing SHA-256:</strong> Los tokens se almacenan hasheados</li>
+                    <li><strong>Expiración Automática:</strong> Los tokens expiran después de 30 días</li>
+                    <li><strong>Invalidación al Logout:</strong> Los tokens se eliminan al cerrar sesión</li>
+                    <li><strong>Limpieza Periódica:</strong> Eliminación automática de tokens expirados</li>
+                    <li><strong>Cookies Seguras:</strong> Configuración HttpOnly y Secure</li>
+                    <li><strong>Validación de Usuario:</strong> Solo usuarios activos pueden usar tokens</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>📱 Experiencia del Usuario</h2>
+            <div class="test-info">
+                <h4>✨ Beneficios para el Usuario:</h4>
+                <ul>
+                    <li><strong>Conveniencia:</strong> No necesita hacer login cada vez que abre la aplicación</li>
+                    <li><strong>Persistencia:</strong> La sesión se mantiene por 30 días</li>
+                    <li><strong>Preferencias:</strong> Recuerda la elección del usuario</li>
+                    <li><strong>Transparencia:</strong> Información clara sobre la duración de la sesión</li>
+                    <li><strong>Control:</strong> Puede desactivar la funcionalidad en cualquier momento</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🚀 Próximos Pasos</h2>
+            <div class="test-info">
+                <h4>📋 Para Completar la Implementación:</h4>
+                <ol>
+                    <li><strong>Ejecutar SQL:</strong> Crear la tabla <code>remember_tokens</code></li>
+                    <li><strong>Probar Login:</strong> Verificar que el checkbox funcione correctamente</li>
+                    <li><strong>Verificar Cookies:</strong> Comprobar que se creen las cookies correctamente</li>
+                    <li><strong>Probar Persistencia:</strong> Verificar que la sesión se mantenga entre navegaciones</li>
+                    <li><strong>Probar Logout:</strong> Verificar que los tokens se eliminen al cerrar sesión</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Función para mostrar información de cookies
+        function showCookieInfo() {
+            const cookies = document.cookie.split(';');
+            const rememberToken = cookies.find(cookie => cookie.trim().startsWith('remember_token='));
+            
+            if (rememberToken) {
+                console.log('✅ Cookie remember_token encontrada');
+                console.log('Valor:', rememberToken.split('=')[1]);
+            } else {
+                console.log('❌ No hay cookie remember_token activa');
+            }
+        }
+
+        // Función para simular verificación de estado
+        function checkRememberMeStatus() {
+            const hasRememberToken = document.cookie.split(';').some(item => 
+                item.trim().startsWith('remember_token=')
+            );
+            
+            console.log('🔍 Estado de Remember Me:');
+            console.log('Cookie presente:', hasRememberToken ? 'SÍ' : 'NO');
+            console.log('localStorage preference:', localStorage.getItem('rememberMePreference'));
+        }
+
+        // Ejecutar verificaciones al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🧠 Test Remember Me - RinoTrack');
+            console.log('================================');
+            
+            showCookieInfo();
+            checkRememberMeStatus();
+            
+            console.log('📋 Para probar la funcionalidad:');
+            console.log('1. Ve a la página de login');
+            console.log('2. Marca "Recordarme" y haz login');
+            console.log('3. Verifica que se cree la cookie');
+            console.log('4. Cierra el navegador y vuelve a abrir');
+            console.log('5. Deberías estar logueado automáticamente');
+        });
+    </script>
+</body>
+</html>
