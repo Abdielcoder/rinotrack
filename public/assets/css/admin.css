@@ -863,10 +863,22 @@ a.nav-link, .nav-link:visited { color: var(--admin-text-secondary); }
 /* Estilos para el select de frecuencia de tareas recurrentes */
 #frequencyGroup {
     transition: all 0.3s ease;
+    /* Debug: asegurar que sea visible */
+    min-height: 20px;
+    border: 2px solid transparent;
 }
 
 #frequencyGroup.show {
     animation: slideDown 0.3s ease-out;
+    border-color: #10b981; /* Debug: borde verde cuando está visible */
+}
+
+/* Debug: hacer el select más visible */
+#frequencyGroup[style*="display: block"] {
+    background-color: #f0f9ff;
+    border: 2px solid #3b82f6;
+    padding: 10px;
+    border-radius: 8px;
 }
 
 #taskFrequency {

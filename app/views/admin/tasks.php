@@ -110,6 +110,12 @@ ob_start();
                                     <option value="recurrent">Recurrente</option>
                                     <option value="eventual">Eventual</option>
                                 </select>
+                                <button type="button" onclick="testFrequencyGroup()" style="margin-top: 5px; padding: 5px 10px; font-size: 12px; background: #f59e0b; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                                    🔍 Probar Select Frecuencia
+                                </button>
+                                <button type="button" onclick="forceRecurrent()" style="margin-top: 5px; margin-left: 5px; padding: 5px 10px; font-size: 12px; background: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                                    🚀 Forzar Recurrente
+                                </button>
                             </div>
                             
                             <!-- Select de frecuencia para tareas recurrentes -->
@@ -361,16 +367,35 @@ ob_start();
 
 <script>
 function onTaskTypeChange() {
+    console.log('=== onTaskTypeChange ejecutándose ===');
+    
     const sel = document.getElementById('taskType');
     const projectSel = document.getElementById('projectId');
     const frequencyGroup = document.getElementById('frequencyGroup');
     const frequencySelect = document.getElementById('taskFrequency');
     
-    if (!sel || !projectSel || !frequencyGroup || !frequencySelect) return;
+    console.log('Elementos encontrados:', {
+        sel: !!sel,
+        projectSel: !!projectSel,
+        frequencyGroup: !!frequencyGroup,
+        frequencySelect: !!frequencySelect
+    });
+    
+    if (!sel || !projectSel || !frequencyGroup || !frequencySelect) {
+        console.error('Faltan elementos del DOM:', {
+            sel: !!sel,
+            projectSel: !!projectSel,
+            frequencyGroup: !!frequencyGroup,
+            frequencySelect: !!frequencySelect
+        });
+        return;
+    }
     
     const type = sel.value;
     const recId = <?php echo (int)$recurrentProject['project_id']; ?>;
     const evtId = <?php echo (int)$eventualProject['project_id']; ?>;
+    
+    console.log('Valores:', { type, recId, evtId });
     
     // Ocultar grupo de frecuencia por defecto
     frequencyGroup.style.display = 'none';
@@ -385,8 +410,14 @@ function onTaskTypeChange() {
     } else if (type === 'recurrent') {
         projectSel.value = String(recId);
         // Mostrar select de frecuencia para tareas recurrentes
+        console.log('Mostrando select de frecuencia...');
         frequencyGroup.style.display = 'block';
         frequencyGroup.classList.add('show');
+        console.log('Estado del frequencyGroup:', {
+            display: frequencyGroup.style.display,
+            classList: frequencyGroup.classList.toString(),
+            visible: frequencyGroup.offsetParent !== null
+        });
         console.log('Tipo de tarea: Recurrente');
         console.log('Project ID asignado:', projectSel.value);
     } else if (type === 'eventual') {
@@ -398,6 +429,81 @@ function onTaskTypeChange() {
     // Log para debugging
     console.log('Proyecto Recurrente ID:', recId);
     console.log('Proyecto Eventual ID:', evtId);
+    console.log('=== Fin onTaskTypeChange ===');
+}
+
+// Función de prueba para verificar el select de frecuencia
+function testFrequencyGroup() {
+    console.log('=== PROBANDO SELECT DE FRECUENCIA ===');
+    
+    const frequencyGroup = document.getElementById('frequencyGroup');
+    const frequencySelect = document.getElementById('taskFrequency');
+    
+    console.log('Elementos encontrados:', {
+        frequencyGroup: !!frequencyGroup,
+        frequencySelect: !!frequencySelect
+    });
+    
+    if (frequencyGroup && frequencySelect) {
+        console.log('Estado actual del frequencyGroup:', {
+            display: frequencyGroup.style.display,
+            classList: frequencyGroup.classList.toString(),
+            offsetParent: frequencyGroup.offsetParent,
+            offsetHeight: frequencyGroup.offsetHeight,
+            offsetWidth: frequencyGroup.offsetWidth
+        });
+        
+        // Intentar mostrar el select
+        frequencyGroup.style.display = 'block';
+        frequencyGroup.classList.add('show');
+        
+        console.log('Después de mostrar:', {
+            display: frequencyGroup.style.display,
+            classList: frequencyGroup.classList.toString(),
+            offsetParent: frequencyGroup.offsetParent,
+            offsetHeight: frequencyGroup.offsetHeight,
+            offsetWidth: frequencyGroup.offsetWidth
+        });
+        
+        // Verificar si está visible
+        const isVisible = frequencyGroup.offsetParent !== null && 
+                         frequencyGroup.offsetHeight > 0 && 
+                         frequencyGroup.offsetWidth > 0;
+        
+        console.log('¿Está visible?', isVisible);
+        
+        if (isVisible) {
+            alert('✅ Select de frecuencia está visible y funcionando');
+        } else {
+            alert('❌ Select de frecuencia NO está visible');
+        }
+    } else {
+        console.error('No se encontraron los elementos del select de frecuencia');
+        alert('❌ No se encontraron los elementos del select de frecuencia');
+    }
+    
+    console.log('=== FIN PRUEBA ===');
+}
+
+// Función para forzar la selección de Recurrente
+function forceRecurrent() {
+    console.log('=== FORZANDO RECURRENTE ===');
+    
+    const taskTypeSelect = document.getElementById('taskType');
+    if (taskTypeSelect) {
+        taskTypeSelect.value = 'recurrent';
+        console.log('Valor del select cambiado a:', taskTypeSelect.value);
+        
+        // Disparar el evento change manualmente
+        const event = new Event('change', { bubbles: true });
+        taskTypeSelect.dispatchEvent(event);
+        
+        console.log('Evento change disparado manualmente');
+    } else {
+        console.error('No se encontró el select de tipo de tarea');
+    }
+    
+    console.log('=== FIN FORZAR RECURRENTE ===');
 }
 
 // Función para manejar cambios en la frecuencia de tareas recurrentes
@@ -497,14 +603,45 @@ function showTaskCount(count) {
 
 // Ejecutar al cargar la página para asegurar estado inicial correcto
 document.addEventListener('DOMContentLoaded', function() {
-    // No ejecutar onTaskTypeChange() automáticamente, dejar que el usuario seleccione
+    console.log('=== DOM CARGADO ===');
+    
+    // Verificar que todos los elementos estén presentes
     const sel = document.getElementById('taskType');
     const projectSel = document.getElementById('projectId');
+    const frequencyGroup = document.getElementById('frequencyGroup');
+    const frequencySelect = document.getElementById('taskFrequency');
+    
+    console.log('Elementos en DOM:', {
+        taskType: !!sel,
+        projectId: !!projectSel,
+        frequencyGroup: !!frequencyGroup,
+        frequencySelect: !!frequencySelect
+    });
+    
+    // Verificar que el evento onchange esté correctamente vinculado
+    if (sel) {
+        console.log('Evento onchange del taskType:', sel.onchange);
+        // Asegurar que el evento esté vinculado
+        sel.addEventListener('change', onTaskTypeChange);
+        console.log('Evento change agregado manualmente');
+    }
+    
     if (sel && projectSel) {
         console.log('Estado inicial - Tipo: No seleccionado, Project ID: No asignado');
         console.log('Proyecto Recurrente ID:', <?php echo (int)$recurrentProject['project_id']; ?>);
         console.log('Proyecto Eventual ID:', <?php echo (int)$eventualProject['project_id']; ?>);
     }
+    
+    // Verificar estado inicial del frequencyGroup
+    if (frequencyGroup) {
+        console.log('Estado inicial del frequencyGroup:', {
+            display: frequencyGroup.style.display,
+            classList: frequencyGroup.classList.toString(),
+            offsetParent: frequencyGroup.offsetParent
+        });
+    }
+    
+    console.log('=== FIN DOM CARGADO ===');
 });
 
 document.getElementById('adminCreateTaskForm')?.addEventListener('submit', async function(e) {
