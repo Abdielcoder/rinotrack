@@ -2708,15 +2708,10 @@ class ClanLeaderController {
             error_log("=== DEBUG getKanbanTasksForClan ===");
             error_log("Clan ID: $clanId");
             
-            // Obtener el clan_id de Olympo para tareas globales
-            $olympoStmt = $this->db->prepare("SELECT clan_id FROM Clans WHERE clan_name = 'Olympo'");
-            $olympoStmt->execute();
-            $olympoClan = $olympoStmt->fetch(PDO::FETCH_ASSOC);
-            $olympoClanId = $olympoClan ? $olympoClan['clan_id'] : null;
+            // Solo tareas del clan del líder (no tareas globales de Olympo)
+            error_log("Filtrando tareas solo del clan ID: $clanId");
             
-            error_log("Clan Olympo ID: " . ($olympoClanId ?? 'No encontrado'));
-            
-            // Obtener todas las tareas del clan (incluyendo recurrentes y eventuales, pero excluyendo personales)
+            // Obtener SOLO las tareas del clan del líder (excluyendo tareas globales de Olympo)
             $stmt = $this->db->prepare(
                 "SELECT 
                     t.task_id,
@@ -2735,7 +2730,7 @@ class ClanLeaderController {
                     END as days_until_due
                  FROM Tasks t
                  INNER JOIN Projects p ON p.project_id = t.project_id
-                 WHERE (p.clan_id = ? OR (p.clan_id = ? AND p.project_name IN ('Tareas Recurrentes', 'Tareas Eventuales')))
+                 WHERE p.clan_id = ? 
                    AND p.project_name NOT IN ('Tareas Personales')
                    AND t.is_subtask = 0
                    AND t.is_personal = 0
@@ -2743,8 +2738,8 @@ class ClanLeaderController {
                  ORDER BY t.due_date ASC, t.task_id ASC"
             );
             
-            $params = [$clanId, $olympoClanId];
-            error_log("Ejecutando consulta con parámetros: clanId=$clanId, olympoClanId=$olympoClanId");
+            $params = [$clanId];
+            error_log("Ejecutando consulta con parámetros: clanId=$clanId (solo tareas del clan del líder)");
             $stmt->execute($params);
             $allTasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
@@ -2759,13 +2754,13 @@ class ClanLeaderController {
             $uniqueProjects = array_unique(array_column($allTasks, 'project_name'));
             error_log("Proyectos únicos encontrados: " . implode(', ', $uniqueProjects));
             
-            // Debug: verificar tareas del clan Olympo
-            $olympoTasks = array_filter($allTasks, function($task) use ($olympoClanId) {
-                return $task['project_name'] === 'Tareas Recurrentes' || $task['project_name'] === 'Tareas Eventuales';
+            // Debug: verificar que solo hay tareas del clan del líder
+            $clanTasks = array_filter($allTasks, function($task) use ($clanId) {
+                return true; // Todas las tareas ahora son del clan del líder
             });
-            error_log("Tareas de Olympo encontradas: " . count($olympoTasks));
-            foreach ($olympoTasks as $task) {
-                error_log("Tarea Olympo: ID={$task['task_id']}, Nombre='{$task['task_name']}', Proyecto='{$task['project_name']}'");
+            error_log("Tareas del clan del líder encontradas: " . count($clanTasks));
+            foreach ($clanTasks as $task) {
+                error_log("Tarea del clan: ID={$task['task_id']}, Nombre='{$task['task_name']}', Proyecto='{$task['project_name']}'");
             }
             
             // Debug: verificar todas las tareas por proyecto
