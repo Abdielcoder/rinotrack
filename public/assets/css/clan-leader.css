@@ -110,16 +110,26 @@
 }
 
 .btn-minimal.primary {
-    background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
-    color: white;
-    border-color: #48bb78;
-    box-shadow: 0 4px 15px rgba(72, 187, 120, 0.3);
+    background: white;
+    color: #1e3a8a;
+    border: 2px solid #1e3a8a;
+    box-shadow: 0 4px 15px rgba(30, 58, 138, 0.2);
 }
 
 .btn-minimal.primary:hover {
-    background: linear-gradient(135deg, #38a169 0%, #2f855a 100%);
+    background: #f8fafc;
+    color: #1e3a8a;
+    border-color: #2563eb;
     transform: translateY(-3px);
-    box-shadow: 0 12px 30px rgba(72, 187, 120, 0.4);
+    box-shadow: 0 12px 30px rgba(30, 58, 138, 0.3);
+}
+
+.btn-minimal.primary i {
+    color: #1e3a8a;
+}
+
+.btn-minimal.primary:hover i {
+    color: #1e3a8a;
 }
 
 .btn-minimal.danger {
