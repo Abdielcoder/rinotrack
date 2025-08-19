@@ -644,28 +644,57 @@ function closeAddTaskModal() {
     modal.style.display = 'none';
 }
 
-// Función para crear tarea personal
-function createPersonalTask() {
-    const form = document.getElementById('addTaskForm');
-    const formData = new FormData(form);
-    
-    // Agregar campos adicionales para tarea personal
-    formData.append('route', 'clan_leader/create-personal-task');
-    formData.append('user_id', '<?php echo $user['user_id'] ?? 0; ?>');
-    
-    // Mostrar estado de carga
-    const submitBtn = form.querySelector('button[type="submit"]');
-    const originalText = submitBtn.innerHTML;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creando...';
-    submitBtn.disabled = true;
+    // Función para crear tarea personal
+    function createPersonalTask() {
+        const form = document.getElementById('addTaskForm');
+        const formData = new FormData(form);
+        
+        // Agregar campos adicionales para tarea personal
+        formData.append('route', 'clan_leader/create-personal-task');
+        formData.append('user_id', '<?php echo $user['user_id'] ?? 0; ?>');
+        
+        // Debug: mostrar datos que se van a enviar
+        console.log('=== DEBUG: Datos a enviar ===');
+        for (let [key, value] of formData.entries()) {
+            console.log(key + ': ' + value);
+        }
+        console.log('User ID desde PHP: <?php echo $user['user_id'] ?? 0; ?>');
+        console.log('=== FIN DEBUG ===');
+        
+        // Mostrar estado de carga
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creando...';
+        submitBtn.disabled = true;
     
     fetch('?route=clan_leader/create-personal-task', {
         method: 'POST',
         body: formData,
         credentials: 'same-origin'
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers);
+        
+        // Verificar si la respuesta es JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            throw new Error('La respuesta del servidor no es JSON válido. Status: ' + response.status);
+        }
+        
+        return response.text().then(text => {
+            console.log('Response text:', text);
+            try {
+                return JSON.parse(text);
+            } catch (parseError) {
+                console.error('Error parsing JSON:', parseError);
+                console.error('Raw response:', text);
+                throw new Error('Respuesta del servidor no es JSON válido: ' + text.substring(0, 200));
+            }
+        });
+    })
     .then(data => {
+        console.log('Parsed data:', data);
         if (data.success) {
             showNotification('Tarea creada exitosamente', 'success');
             closeAddTaskModal();
@@ -679,8 +708,8 @@ function createPersonalTask() {
         }
     })
     .catch(error => {
-        console.error('Error en fetch:', error);
-        showNotification('Error de conexión: ' + error.message, 'error');
+        console.error('Error completo:', error);
+        showNotification('Error: ' + error.message, 'error');
     })
     .finally(() => {
         submitBtn.innerHTML = originalText;

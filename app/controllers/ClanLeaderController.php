@@ -2835,20 +2835,52 @@ class ClanLeaderController {
      * Crear tarea personal para el líder del clan
      */
     public function createPersonalTask() {
+        // Establecer headers para JSON
+        header('Content-Type: application/json');
+        header('Cache-Control: no-cache, must-revalidate');
+        
         $this->requireAuth();
+        error_log('Usuario autenticado correctamente');
+        
         if (!$this->hasLeaderAccess()) {
+            error_log('ERROR: Usuario no tiene acceso de líder');
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
             return;
         }
+        error_log('Usuario tiene acceso de líder correctamente');
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            error_log('ERROR: Método HTTP incorrecto: ' . $_SERVER['REQUEST_METHOD']);
             http_response_code(405);
             echo json_encode(['success' => false, 'message' => 'Método no permitido']);
             return;
         }
+        error_log('Método HTTP correcto: POST');
 
         try {
+            // Log para debugging
+            error_log('=== INICIO createPersonalTask ===');
+            error_log('POST data: ' . print_r($_POST, true));
+            error_log('Current user: ' . print_r($this->currentUser, true));
+            error_log('User clan: ' . print_r($this->userClan, true));
+            
+            // Verificar que el usuario tenga clan
+            if (!$this->userClan || !isset($this->userClan['clan_id'])) {
+                error_log('ERROR: Usuario no tiene clan asignado');
+                echo json_encode(['success' => false, 'message' => 'Usuario no tiene clan asignado']);
+                return;
+            }
+            error_log('Usuario tiene clan ID: ' . $this->userClan['clan_id']);
+            
+            // Verificar que el currentUser tenga clan_id
+            if (!isset($this->currentUser['clan_id'])) {
+                error_log('ERROR: currentUser no tiene clan_id');
+                echo json_encode(['success' => false, 'message' => 'Usuario no tiene clan asignado']);
+                return;
+            }
+            error_log('Current user tiene clan_id: ' . $this->currentUser['clan_id']);
+            
             $taskName = trim($_POST['task_name'] ?? '');
             $description = trim($_POST['description'] ?? '');
             $priority = $_POST['priority'] ?? 'medium';
@@ -2868,10 +2900,58 @@ class ClanLeaderController {
             }
 
             if ($userId !== (int)$this->currentUser['user_id']) {
+                error_log('ERROR: userId no coincide con currentUser');
                 echo json_encode(['success' => false, 'message' => 'Usuario no válido']);
                 return;
             }
-
+            error_log('Usuario validado correctamente: ' . $userId);
+            
+                        // Verificar que el usuario sea miembro del clan
+            if (!isset($this->currentUser['clan_id']) || $this->currentUser['clan_id'] != $this->userClan['clan_id']) {
+                error_log('ERROR: Usuario no es miembro del clan');
+                error_log('Current user clan_id: ' . ($this->currentUser['clan_id'] ?? 'no definido'));
+                error_log('User clan clan_id: ' . $this->userClan['clan_id']);
+                echo json_encode(['success' => false, 'message' => 'Usuario no es miembro del clan']);
+                return;
+            }
+            error_log('Usuario es miembro del clan correctamente');
+            
+            // Verificar que el usuario tenga el rol correcto
+            if (!isset($this->currentUser['role']) || $this->currentUser['role'] !== 'clan_leader') {
+                error_log('ERROR: Usuario no tiene rol de clan_leader: ' . ($this->currentUser['role'] ?? 'no definido'));
+                echo json_encode(['success' => false, 'message' => 'Usuario no tiene permisos de líder de clan']);
+                return;
+            }
+            error_log('Usuario tiene rol correcto: ' . $this->currentUser['role']);
+            
+            // Verificar que el usuario tenga el clan_id correcto
+            if ($this->currentUser['clan_id'] != $this->userClan['clan_id']) {
+                error_log('ERROR: clan_id no coincide entre currentUser y userClan');
+                error_log('Current user clan_id: ' . $this->currentUser['clan_id']);
+                error_log('User clan clan_id: ' . $this->userClan['clan_id']);
+                echo json_encode(['success' => false, 'message' => 'Usuario no tiene clan asignado']);
+                return;
+            }
+            error_log('Clan_id coincide correctamente: ' . $this->currentUser['clan_id']);
+            
+            // Verificar que el usuario tenga el clan_id correcto en el currentUser
+            if (!isset($this->currentUser['clan_id'])) {
+                error_log('ERROR: currentUser no tiene clan_id');
+                echo json_encode(['success' => false, 'message' => 'Usuario no tiene clan asignado']);
+                return;
+            }
+            error_log('Current user tiene clan_id: ' . $this->currentUser['clan_id']);
+            
+            // Verificar que el usuario tenga el clan_id correcto en el currentUser
+            if ($this->currentUser['clan_id'] != $this->userClan['clan_id']) {
+                error_log('ERROR: clan_id no coincide entre currentUser y userClan');
+                error_log('Current user clan_id: ' . $this->currentUser['clan_id']);
+                error_log('User clan clan_id: ' . $this->userClan['clan_id']);
+                echo json_encode(['success' => false, 'message' => 'Usuario no tiene clan asignado']);
+                return;
+            }
+            error_log('Clan_id coincide correctamente: ' . $this->currentUser['clan_id']);
+            
             // Crear la tarea personal con solo campos básicos
             $taskData = [
                 'task_name' => $taskName,
@@ -2882,23 +2962,65 @@ class ClanLeaderController {
                 'assigned_to_user_id' => $userId
             ];
 
-            // Crear tarea personal directamente
-            $taskId = $this->taskModel->createPersonalTaskSimple($taskData);
+            error_log('Task data a crear: ' . print_r($taskData, true));
+            
+            // Verificar que todos los campos requeridos estén presentes
+            if (empty($taskData['task_name']) || empty($taskData['due_date']) || empty($taskData['assigned_to_user_id'])) {
+                error_log('ERROR: Campos requeridos faltantes en taskData');
+                echo json_encode(['success' => false, 'message' => 'Campos requeridos faltantes']);
+                return;
+            }
+            error_log('Todos los campos requeridos están presentes');
 
-            if ($taskId) {
-                echo json_encode([
-                    'success' => true, 
-                    'message' => 'Tarea personal creada exitosamente',
-                    'task_id' => $taskId
-                ]);
-            } else {
-                echo json_encode(['success' => false, 'message' => 'Error al crear la tarea - revisar logs del servidor']);
+            // Crear tarea personal directamente
+            error_log('Llamando a createPersonalTaskSimple...');
+            error_log('Task data completo: ' . json_encode($taskData));
+            
+            try {
+                // Verificar que el modelo esté disponible
+                if (!$this->taskModel) {
+                    throw new Exception('taskModel no está inicializado');
+                }
+                error_log('taskModel está disponible');
+                
+                // Verificar que la base de datos esté disponible
+                if (!$this->db) {
+                    throw new Exception('Base de datos no está disponible');
+                }
+                error_log('Base de datos está disponible');
+                
+                $taskId = $this->taskModel->createPersonalTaskSimple($taskData);
+                error_log('Resultado de createPersonalTaskSimple: ' . $taskId);
+                
+                if ($taskId) {
+                    $response = [
+                        'success' => true, 
+                        'message' => 'Tarea personal creada exitosamente',
+                        'task_id' => $taskId
+                    ];
+                    error_log('Respuesta exitosa: ' . json_encode($response));
+                    echo json_encode($response);
+                } else {
+                    $response = ['success' => false, 'message' => 'Error al crear la tarea - revisar logs del servidor'];
+                    error_log('Respuesta de error: ' . json_encode($response));
+                    echo json_encode($response);
+                }
+            } catch (Exception $modelException) {
+                error_log('Error en createPersonalTaskSimple: ' . $modelException->getMessage());
+                error_log('Stack trace: ' . $modelException->getTraceAsString());
+                
+                $response = ['success' => false, 'message' => 'Error en el modelo: ' . $modelException->getMessage()];
+                echo json_encode($response);
             }
 
         } catch (Exception $e) {
             error_log('Error createPersonalTask: ' . $e->getMessage());
+            error_log('Stack trace: ' . $e->getTraceAsString());
             echo json_encode(['success' => false, 'message' => 'Error interno del servidor: ' . $e->getMessage()]);
         }
+        
+        // Asegurar que no se ejecute código adicional
+        exit;
     }
 
 } 
