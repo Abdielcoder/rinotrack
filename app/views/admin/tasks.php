@@ -110,12 +110,6 @@ ob_start();
                                     <option value="recurrent">Recurrente</option>
                                     <option value="eventual">Eventual</option>
                                 </select>
-                                <button type="button" onclick="testFrequencyGroup()" style="margin-top: 5px; padding: 5px 10px; font-size: 12px; background: #f59e0b; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                                    🔍 Probar Select Frecuencia
-                                </button>
-                                <button type="button" onclick="forceRecurrent()" style="margin-top: 5px; margin-left: 5px; padding: 5px 10px; font-size: 12px; background: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                                    🚀 Forzar Recurrente
-                                </button>
                             </div>
                             
                             <!-- Select de frecuencia para tareas recurrentes -->
@@ -372,35 +366,18 @@ ob_start();
 
 // Función principal para manejar cambios en el tipo de tarea
 function onTaskTypeChange() {
-    console.log('=== onTaskTypeChange ejecutándose ===');
-    
     const sel = document.getElementById('taskType');
     const projectSel = document.getElementById('projectId');
     const frequencyGroup = document.getElementById('frequencyGroup');
     const frequencySelect = document.getElementById('taskFrequency');
     
-    console.log('Elementos encontrados:', {
-        sel: !!sel,
-        projectSel: !!projectSel,
-        frequencyGroup: !!frequencyGroup,
-        frequencySelect: !!frequencySelect
-    });
-    
     if (!sel || !projectSel || !frequencyGroup || !frequencySelect) {
-        console.error('Faltan elementos del DOM:', {
-            sel: !!sel,
-            projectSel: !!projectSel,
-            frequencyGroup: !!frequencyGroup,
-            frequencySelect: !!frequencySelect
-        });
         return;
     }
     
     const type = sel.value;
     const recId = <?php echo (int)$recurrentProject['project_id']; ?>;
     const evtId = <?php echo (int)$eventualProject['project_id']; ?>;
-    
-    console.log('Valores:', { type, recId, evtId });
     
     // Ocultar grupo de frecuencia por defecto
     frequencyGroup.style.display = 'none';
@@ -410,31 +387,14 @@ function onTaskTypeChange() {
     if (type === '') {
         // No hay tipo seleccionado
         projectSel.value = '';
-        console.log('Tipo de tarea: No seleccionado');
-        console.log('Project ID: No asignado');
     } else if (type === 'recurrent') {
         projectSel.value = String(recId);
         // Mostrar select de frecuencia para tareas recurrentes
-        console.log('Mostrando select de frecuencia...');
         frequencyGroup.style.display = 'block';
         frequencyGroup.classList.add('show');
-        console.log('Estado del frequencyGroup:', {
-            display: frequencyGroup.style.display,
-            classList: frequencyGroup.classList.toString(),
-            visible: frequencyGroup.offsetParent !== null
-        });
-        console.log('Tipo de tarea: Recurrente');
-        console.log('Project ID asignado:', projectSel.value);
     } else if (type === 'eventual') {
         projectSel.value = String(evtId);
-        console.log('Tipo de tarea: Eventual');
-        console.log('Project ID asignado:', projectSel.value);
     }
-    
-    // Log para debugging
-    console.log('Proyecto Recurrente ID:', recId);
-    console.log('Proyecto Eventual ID:', evtId);
-    console.log('=== Fin onTaskTypeChange ===');
 }
 
 // Función para manejar cambios en la frecuencia de tareas recurrentes
@@ -447,19 +407,17 @@ function onFrequencyChange() {
     // Limpiar fecha límite cuando cambie la frecuencia
     dueDateInput.value = '';
     
-    console.log('Frecuencia seleccionada:', frequency);
-    
     // Mostrar información sobre la calendarización
     let infoMessage = '';
     switch (frequency) {
         case 'daily':
-            infoMessage = '📅 <strong>Frecuencia Diaria:</strong> Se crearán tareas cada día desde la fecha seleccionada hasta el final del trimestre actual. Ideal para tareas que deben realizarse diariamente.';
+            infoMessage = '📅 <strong>Frecuencia Diaria:</strong> Se crearán tareas cada día desde la fecha seleccionada hasta el final del trimestre actual.';
             break;
         case 'weekly':
-            infoMessage = '📅 <strong>Frecuencia Semanal:</strong> Se crearán tareas cada lunes desde la fecha seleccionada hasta el final del trimestre actual. El sistema automáticamente ajustará al lunes más cercano.';
+            infoMessage = '📅 <strong>Frecuencia Semanal:</strong> Se crearán tareas cada lunes hasta el final del trimestre actual.';
             break;
         case 'monthly':
-            infoMessage = '📅 <strong>Frecuencia Mensual:</strong> Se crearán tareas cada primer día del mes desde la fecha seleccionada hasta el final del año actual. No se limita al trimestre.';
+            infoMessage = '📅 <strong>Frecuencia Mensual:</strong> Se crearán tareas cada primer día del mes hasta el final del año actual.';
             break;
     }
     
@@ -467,58 +425,7 @@ function onFrequencyChange() {
     showFrequencyInfo(infoMessage);
 }
 
-// Función de prueba para verificar el select de frecuencia
-function testFrequencyGroup() {
-    console.log('=== PROBANDO SELECT DE FRECUENCIA ===');
-    
-    const frequencyGroup = document.getElementById('frequencyGroup');
-    const frequencySelect = document.getElementById('taskFrequency');
-    
-    console.log('Elementos encontrados:', {
-        frequencyGroup: !!frequencyGroup,
-        frequencySelect: !!frequencySelect
-    });
-    
-    if (frequencyGroup && frequencySelect) {
-        console.log('Estado actual del frequencyGroup:', {
-            display: frequencyGroup.style.display,
-            classList: frequencyGroup.classList.toString(),
-            offsetParent: frequencyGroup.offsetParent,
-            offsetHeight: frequencyGroup.offsetHeight,
-            offsetWidth: frequencyGroup.offsetWidth
-        });
-        
-        // Intentar mostrar el select
-        frequencyGroup.style.display = 'block';
-        frequencyGroup.classList.add('show');
-        
-        console.log('Después de mostrar:', {
-            display: frequencyGroup.style.display,
-            classList: frequencyGroup.classList.toString(),
-            offsetParent: frequencyGroup.offsetParent,
-            offsetHeight: frequencyGroup.offsetHeight,
-            offsetWidth: frequencyGroup.offsetWidth
-        });
-        
-        // Verificar si está visible
-        const isVisible = frequencyGroup.offsetParent !== null && 
-                         frequencyGroup.offsetHeight > 0 && 
-                         frequencyGroup.offsetWidth > 0;
-        
-        console.log('¿Está visible?', isVisible);
-        
-        if (isVisible) {
-            alert('✅ Select de frecuencia está visible y funcionando');
-        } else {
-            alert('❌ Select de frecuencia NO está visible');
-        }
-    } else {
-        console.error('No se encontraron los elementos del select de frecuencia');
-        alert('❌ No se encontraron los elementos del select de frecuencia');
-    }
-    
-    console.log('=== FIN PRUEBA ===');
-}
+
 
 // Función para mostrar información sobre la frecuencia seleccionada
 function showFrequencyInfo(message) {
@@ -585,26 +492,7 @@ function showTaskCount(count) {
     }
 }
 
-// Función para forzar la selección de Recurrente
-function forceRecurrent() {
-    console.log('=== FORZANDO RECURRENTE ===');
-    
-    const taskTypeSelect = document.getElementById('taskType');
-    if (taskTypeSelect) {
-        taskTypeSelect.value = 'recurrent';
-        console.log('Valor del select cambiado a:', taskTypeSelect.value);
-        
-        // Disparar el evento change manualmente
-        const event = new Event('change', { bubbles: true });
-        taskTypeSelect.dispatchEvent(event);
-        
-        console.log('Evento change disparado manualmente');
-    } else {
-        console.error('No se encontró el select de tipo de tarea');
-    }
-    
-    console.log('=== FIN FORZAR RECURRENTE ===');
-}
+
 
 // ============================================
 // FUNCIONES AUXILIARES DEL FORMULARIO
@@ -645,36 +533,6 @@ function openStatus(opts) {
 function closeStatus() {
     const statusModal = document.getElementById('statusModal');
     if (statusModal) statusModal.style.display = 'none';
-}
-
-// Función para manejar cambios en la frecuencia de tareas recurrentes
-function onFrequencyChange() {
-    const frequency = document.getElementById('taskFrequency').value;
-    const dueDateInput = document.querySelector('input[name="dueDate"]');
-    
-    if (!frequency || !dueDateInput) return;
-    
-    // Limpiar fecha límite cuando cambie la frecuencia
-    dueDateInput.value = '';
-    
-    console.log('Frecuencia seleccionada:', frequency);
-    
-    // Mostrar información sobre la calendarización
-    let infoMessage = '';
-    switch (frequency) {
-        case 'daily':
-            infoMessage = '📅 <strong>Frecuencia Diaria:</strong> Se crearán tareas cada día desde la fecha seleccionada hasta el final del trimestre actual. Ideal para tareas que deben realizarse diariamente.';
-            break;
-        case 'weekly':
-            infoMessage = '📅 <strong>Frecuencia Semanal:</strong> Se crearán tareas cada lunes desde la fecha seleccionada hasta el final del trimestre actual. El sistema automáticamente ajustará al lunes más cercano.';
-            break;
-        case 'monthly':
-            infoMessage = '📅 <strong>Frecuencia Mensual:</strong> Se crearán tareas cada primer día del mes desde la fecha seleccionada hasta el final del año actual. No se limita al trimestre.';
-            break;
-    }
-    
-    // Mostrar mensaje informativo
-    showFrequencyInfo(infoMessage);
 }
 
 // Función para mostrar información sobre la frecuencia seleccionada
@@ -1091,36 +949,23 @@ async function handleFormSubmit(e) {
 
 // Vincular eventos cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('=== DOM CARGADO - VINCULANDO EVENTOS ===');
-    
     // Vincular evento change del select de tipo de tarea
     const taskTypeSelect = document.getElementById('taskType');
     if (taskTypeSelect) {
         taskTypeSelect.addEventListener('change', onTaskTypeChange);
-        console.log('✅ Evento change vinculado al select de tipo de tarea');
-    } else {
-        console.error('❌ No se encontró el select de tipo de tarea');
     }
     
     // Vincular evento change del select de frecuencia
     const frequencySelect = document.getElementById('taskFrequency');
     if (frequencySelect) {
         frequencySelect.addEventListener('change', onFrequencyChange);
-        console.log('✅ Evento change vinculado al select de frecuencia');
-    } else {
-        console.error('❌ No se encontró el select de frecuencia');
     }
     
     // Vincular evento submit del formulario
     const form = document.getElementById('adminCreateTaskForm');
     if (form) {
         form.addEventListener('submit', handleFormSubmit);
-        console.log('✅ Evento submit vinculado al formulario');
-    } else {
-        console.error('❌ No se encontró el formulario');
     }
-    
-    console.log('=== FIN VINCULACIÓN DE EVENTOS ===');
     
     // Vincular eventos de los botones del modal de estado
     const statusOk = document.getElementById('statusModalOk');
@@ -1128,12 +973,10 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (statusOk) {
         statusOk.addEventListener('click', closeStatus);
-        console.log('✅ Evento click vinculado al botón OK del modal');
     }
     
     if (statusCloseX) {
         statusCloseX.addEventListener('click', closeStatus);
-        console.log('✅ Evento click vinculado al botón cerrar del modal');
     }
 });
 
