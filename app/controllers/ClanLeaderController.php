@@ -2842,7 +2842,7 @@ class ClanLeaderController {
         $this->requireAuth();
         error_log('Usuario autenticado correctamente');
         
-        if (!$this->hasLeaderAccess()) {
+        if (!$this->hasClanLeaderAccess()) {
             error_log('ERROR: Usuario no tiene acceso de líder');
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
@@ -2906,51 +2906,11 @@ class ClanLeaderController {
             }
             error_log('Usuario validado correctamente: ' . $userId);
             
-                        // Verificar que el usuario sea miembro del clan
-            if (!isset($this->currentUser['clan_id']) || $this->currentUser['clan_id'] != $this->userClan['clan_id']) {
-                error_log('ERROR: Usuario no es miembro del clan');
-                error_log('Current user clan_id: ' . ($this->currentUser['clan_id'] ?? 'no definido'));
-                error_log('User clan clan_id: ' . $this->userClan['clan_id']);
-                echo json_encode(['success' => false, 'message' => 'Usuario no es miembro del clan']);
-                return;
-            }
-            error_log('Usuario es miembro del clan correctamente');
+            // Las validaciones de clan y rol ya se hicieron en hasClanLeaderAccess()
+            error_log('Validaciones de acceso completadas correctamente');
             
-            // Verificar que el usuario tenga el rol correcto
-            if (!isset($this->currentUser['role']) || $this->currentUser['role'] !== 'clan_leader') {
-                error_log('ERROR: Usuario no tiene rol de clan_leader: ' . ($this->currentUser['role'] ?? 'no definido'));
-                echo json_encode(['success' => false, 'message' => 'Usuario no tiene permisos de líder de clan']);
-                return;
-            }
-            error_log('Usuario tiene rol correcto: ' . $this->currentUser['role']);
-            
-            // Verificar que el usuario tenga el clan_id correcto
-            if ($this->currentUser['clan_id'] != $this->userClan['clan_id']) {
-                error_log('ERROR: clan_id no coincide entre currentUser y userClan');
-                error_log('Current user clan_id: ' . $this->currentUser['clan_id']);
-                error_log('User clan clan_id: ' . $this->userClan['clan_id']);
-                echo json_encode(['success' => false, 'message' => 'Usuario no tiene clan asignado']);
-                return;
-            }
-            error_log('Clan_id coincide correctamente: ' . $this->currentUser['clan_id']);
-            
-            // Verificar que el usuario tenga el clan_id correcto en el currentUser
-            if (!isset($this->currentUser['clan_id'])) {
-                error_log('ERROR: currentUser no tiene clan_id');
-                echo json_encode(['success' => false, 'message' => 'Usuario no tiene clan asignado']);
-                return;
-            }
-            error_log('Current user tiene clan_id: ' . $this->currentUser['clan_id']);
-            
-            // Verificar que el usuario tenga el clan_id correcto en el currentUser
-            if ($this->currentUser['clan_id'] != $this->userClan['clan_id']) {
-                error_log('ERROR: clan_id no coincide entre currentUser y userClan');
-                error_log('Current user clan_id: ' . $this->currentUser['clan_id']);
-                error_log('User clan clan_id: ' . $this->userClan['clan_id']);
-                echo json_encode(['success' => false, 'message' => 'Usuario no tiene clan asignado']);
-                return;
-            }
-            error_log('Clan_id coincide correctamente: ' . $this->currentUser['clan_id']);
+
+
             
             // Crear la tarea personal con solo campos básicos
             $taskData = [
