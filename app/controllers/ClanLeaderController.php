@@ -1139,6 +1139,14 @@ class ClanLeaderController {
         error_log('  assigned_members: ' . print_r($_POST['assigned_members'] ?? 'NOT SET', true));
         error_log('  subtasks: ' . print_r($_POST['subtasks'] ?? 'NOT SET', true));
         
+        // Log adicional para debuggear subtareas
+        if (isset($_POST['subtasks'])) {
+            error_log('createTask - Subtareas recibidas (raw): ' . $_POST['subtasks']);
+            error_log('createTask - Subtareas decodificadas: ' . print_r(json_decode($_POST['subtasks'], true), true));
+        } else {
+            error_log('createTask - NO se recibieron subtareas en $_POST');
+        }
+        
         $taskTitle = Utils::sanitizeInput($_POST['task_title'] ?? '');
         $taskDueDate = $_POST['task_due_date'] ?? '';
         
@@ -1158,21 +1166,33 @@ class ClanLeaderController {
         }
         // Manejar subtasks que puede ser un array o JSON string y normalizar datos
         $subtasksRaw = $_POST['subtasks'] ?? [];
+        error_log('createTask - subtasksRaw: ' . print_r($subtasksRaw, true));
+        
         if (is_string($subtasksRaw)) {
             $subtasks = json_decode($subtasksRaw, true) ?: [];
+            error_log('createTask - subtasks decodificadas de JSON: ' . print_r($subtasks, true));
         } else {
             $subtasks = $subtasksRaw;
+            error_log('createTask - subtasks ya es array: ' . print_r($subtasks, true));
         }
+        
         if (!empty($subtasks) && is_array($subtasks)) {
+            error_log('createTask - Procesando ' . count($subtasks) . ' subtareas');
             $normalized = [];
-            foreach ($subtasks as $st) {
+            foreach ($subtasks as $index => $st) {
+                error_log('createTask - Procesando subtarea ' . ($index + 1) . ': ' . print_r($st, true));
+                
                 $title = trim($st['title'] ?? '');
-                if ($title === '') { continue; }
+                if ($title === '') { 
+                    error_log('createTask - Subtarea ' . ($index + 1) . ' sin título, saltando');
+                    continue; 
+                }
                 $desc = trim($st['description'] ?? '');
                 $perc = isset($st['percentage']) && $st['percentage'] !== '' ? (float)$st['percentage'] : 0.0;
                 $due  = isset($st['due_date']) && trim((string)$st['due_date']) !== '' ? trim($st['due_date']) : null;
                 $prio = in_array(($st['priority'] ?? 'medium'), ['low','medium','high','urgent'], true) ? $st['priority'] : 'medium';
                 $auid = isset($st['assigned_user_id']) && $st['assigned_user_id'] !== '' ? (int)$st['assigned_user_id'] : null;
+                
                 $normalized[] = [
                     'title' => $title,
                     'description' => $desc,
@@ -1181,8 +1201,12 @@ class ClanLeaderController {
                     'priority' => $prio,
                     'assigned_user_id' => $auid,
                 ];
+                error_log('createTask - Subtarea ' . ($index + 1) . ' normalizada: ' . print_r($normalized[count($normalized)-1], true));
             }
             $subtasks = $normalized;
+            error_log('createTask - Total de subtareas normalizadas: ' . count($subtasks));
+        } else {
+            error_log('createTask - No hay subtareas para procesar o no es un array válido');
         }
         
         $priority = Utils::sanitizeInput($_POST['priority'] ?? 'medium');

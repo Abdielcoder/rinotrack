@@ -233,12 +233,7 @@ try {
         case 'test-clan-member-subtask':
             include __DIR__ . '/../test_clan_member_subtask.php';
             break;
-        case 'test-subtasks-debug':
-            include __DIR__ . '/../test_subtasks_debug.php';
-            break;
-        case 'quick-subtask-check':
-            include __DIR__ . '/../quick_subtask_check.php';
-            break;
+
 
 
 
