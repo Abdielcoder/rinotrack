@@ -83,69 +83,100 @@ class Task {
      */
     public function createAdvanced($projectId, $taskName, $description = '', $dueDate = null, $clanId = null, $priority = self::PRIORITY_MEDIUM, $createdByUserId = null, $assignedUsers = [], $subtasks = [], $labels = []) {
         try {
+            error_log('=== Task::createAdvanced - INICIO ===');
+            error_log('Task::createAdvanced - Parámetros recibidos:');
+            error_log('  projectId: ' . $projectId);
+            error_log('  taskName: ' . $taskName);
+            error_log('  description: ' . $description);
+            error_log('  dueDate: ' . ($dueDate ?? 'NULL'));
+            error_log('  clanId: ' . ($clanId ?? 'NULL'));
+            error_log('  priority: ' . $priority);
+            error_log('  createdByUserId: ' . ($createdByUserId ?? 'NULL'));
+            error_log('  assignedUsers: ' . print_r($assignedUsers, true));
+            error_log('  subtasks: ' . print_r($subtasks, true));
+            error_log('  labels: ' . print_r($labels, true));
+            
             // Verificar si hay una transacción activa y cerrarla
             if ($this->db->inTransaction()) {
+                error_log('Task::createAdvanced - Transacción activa detectada, haciendo rollback');
                 $this->db->rollback();
             }
             
             $this->db->beginTransaction();
-            error_log('Task::createAdvanced - Transacción iniciada');
+            error_log('Task::createAdvanced - ✅ Transacción iniciada');
             
             // Crear la tarea principal
+            error_log('Task::createAdvanced - 🔄 Creando tarea principal...');
             $stmt = $this->db->prepare("
                 INSERT INTO Tasks (project_id, task_name, description, due_date, priority, created_by_user_id, status, completion_percentage) 
                 VALUES (?, ?, ?, ?, ?, ?, 'pending', 0.00)
             ");
-            $result = $stmt->execute([$projectId, $taskName, $description, $dueDate, $priority, $createdByUserId]);
+            
+            $taskParams = [$projectId, $taskName, $description, $dueDate, $priority, $createdByUserId];
+            error_log('Task::createAdvanced - Parámetros para INSERT de tarea: ' . print_r($taskParams, true));
+            
+            $result = $stmt->execute($taskParams);
             
             if (!$result) {
                 $err = $stmt->errorInfo();
-                error_log('Task::createAdvanced - Error al crear tarea principal: ' . json_encode($err));
+                error_log('Task::createAdvanced - ❌ Error al crear tarea principal: ' . json_encode($err));
                 throw new Exception('Error al crear la tarea principal: ' . ($err[2] ?? ''));
             }
             
             $taskId = $this->db->lastInsertId();
+            error_log('Task::createAdvanced - ✅ Tarea principal creada con ID: ' . $taskId);
             
             // Asignar múltiples usuarios si se especifican
             if (!empty($assignedUsers)) {
+                error_log('Task::createAdvanced - 🔄 Asignando ' . count($assignedUsers) . ' usuarios...');
                 $ok = $this->assignMultipleUsers($taskId, $assignedUsers, $createdByUserId);
                 if (!$ok) {
+                    error_log('Task::createAdvanced - ❌ Error al asignar múltiples usuarios');
                     throw new Exception('Error al asignar múltiples usuarios');
                 }
+                error_log('Task::createAdvanced - ✅ Usuarios asignados exitosamente');
+            } else {
+                error_log('Task::createAdvanced - ⚠️ No hay usuarios para asignar');
             }
             
-            // Crear subtareas si se especifican
+                        // Crear subtareas si se especifican
+            error_log('=== Task::createAdvanced - PROCESAMIENTO DE SUBTAREAS ===');
             if (!empty($subtasks)) {
-                error_log('Task::createAdvanced - Procesando ' . count($subtasks) . ' subtareas');
+                error_log('Task::createAdvanced - ✅ Procesando ' . count($subtasks) . ' subtareas');
                 foreach ($subtasks as $index => $subtask) {
-                    error_log('Task::createAdvanced - Creando subtarea ' . ($index + 1) . ' con datos: ' . print_r($subtask, true));
+                    error_log('Task::createAdvanced - 🔄 Creando subtarea ' . ($index + 1) . ' con datos: ' . print_r($subtask, true));
                     
-                                    // Mapear prioridad de tarea a prioridad de subtarea
-                $subtaskPriority = $subtask['priority'] ?? 'medium';
-                if ($subtaskPriority === 'critical') {
-                    $subtaskPriority = 'urgent'; // Mapear 'critical' a 'urgent' para subtareas
-                }
-                
-                $subId = $this->createSubtaskAdvanced(
-                    $taskId, 
-                    $subtask['title'], 
-                    $createdByUserId,
-                    $subtask['description'] ?? '', 
-                    $subtask['percentage'] ?? 0,
-                    $subtask['due_date'] ?? null,
-                    $subtaskPriority,
-                    $subtask['assigned_user_id'] ?? null
-                );
+                    // Mapear prioridad de tarea a prioridad de subtarea
+                    $subtaskPriority = $subtask['priority'] ?? 'medium';
+                    if ($subtaskPriority === 'critical') {
+                        error_log('Task::createAdvanced - Mapeando prioridad "critical" a "urgent"');
+                        $subtaskPriority = 'urgent'; // Mapear 'critical' a 'urgent' para subtareas
+                    }
+                    error_log('Task::createAdvanced - Prioridad final para subtarea: ' . $subtaskPriority);
+                    
+                    $subId = $this->createSubtaskAdvanced(
+                        $taskId, 
+                        $subtask['title'], 
+                        $createdByUserId,
+                        $subtask['description'] ?? '', 
+                        $subtask['percentage'] ?? 0,
+                        $subtask['due_date'] ?? null,
+                        $subtaskPriority,
+                        $subtask['assigned_user_id'] ?? null
+                    );
                     
                     if (!$subId) {
-                        error_log('Task::createAdvanced - Error al crear subtarea ' . ($index + 1) . ': ' . ($subtask['title'] ?? 'sin título'));
+                        error_log('Task::createAdvanced - ❌ Error al crear subtarea ' . ($index + 1) . ': ' . ($subtask['title'] ?? 'sin título'));
                         throw new Exception('Error al crear subtarea: ' . ($subtask['title'] ?? 'sin título'));
                     } else {
-                        error_log('Task::createAdvanced - Subtarea ' . ($index + 1) . ' creada exitosamente con ID: ' . $subId);
+                        error_log('Task::createAdvanced - ✅ Subtarea ' . ($index + 1) . ' creada exitosamente con ID: ' . $subId);
                     }
                 }
             } else {
-                error_log('Task::createAdvanced - No hay subtareas para procesar');
+                error_log('Task::createAdvanced - ❌ No hay subtareas para procesar');
+                error_log('Task::createAdvanced - ❌ subtasks está vacío: ' . (empty($subtasks) ? 'SÍ' : 'NO'));
+                error_log('Task::createAdvanced - ❌ subtasks es array: ' . (is_array($subtasks) ? 'SÍ' : 'NO'));
+                error_log('Task::createAdvanced - ❌ subtasks: ' . print_r($subtasks, true));
             }
             
             // Asignar etiquetas si se especifican
@@ -159,10 +190,15 @@ class Task {
             }
             
             // Registrar en el historial
+            error_log('Task::createAdvanced - 🔄 Registrando tarea en historial...');
             $this->logTaskAction($taskId, $createdByUserId, 'created', null, null, null, 'Tarea creada');
+            error_log('Task::createAdvanced - ✅ Historial registrado');
             
+            error_log('Task::createAdvanced - 🔄 Confirmando transacción...');
             $this->db->commit();
-            error_log('Task::createAdvanced - Transacción confirmada exitosamente');
+            error_log('Task::createAdvanced - ✅ Transacción confirmada exitosamente');
+            error_log('Task::createAdvanced - ✅ Tarea creada exitosamente con ID: ' . $taskId);
+            error_log('=== Task::createAdvanced - FINALIZADO EXITOSAMENTE ===');
             return $taskId;
             
         } catch (Exception $e) {
@@ -254,16 +290,18 @@ class Task {
      */
     public function createSubtaskAdvanced($taskId, $title, $createdByUserId, $description = '', $percentage = 0, $dueDate = null, $priority = self::PRIORITY_MEDIUM, $assignedUserId = null) {
         try {
-            error_log('Task::createSubtaskAdvanced - INICIO');
+            error_log('=== Task::createSubtaskAdvanced - INICIO ===');
+            error_log('Task::createSubtaskAdvanced - Parámetros recibidos:');
             error_log('  taskId: ' . $taskId);
-            error_log('  title: ' . $title);
+            error_log('  title: "' . $title . '"');
             error_log('  createdByUserId: ' . $createdByUserId);
-            error_log('  description: ' . $description);
+            error_log('  description: "' . $description . '"');
             error_log('  percentage: ' . $percentage);
             error_log('  dueDate: ' . ($dueDate ?? 'NULL'));
             error_log('  priority: ' . $priority);
             error_log('  assignedUserId: ' . ($assignedUserId ?? 'NULL'));
             
+            error_log('Task::createSubtaskAdvanced - 🔄 Preparando INSERT en tabla Subtasks...');
             $stmt = $this->db->prepare("
                 INSERT INTO Subtasks (task_id, title, description, completion_percentage, due_date, priority, assigned_to_user_id, created_by_user_id, subtask_order) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, (SELECT COALESCE(MAX(subtask_order), 0) + 1 FROM Subtasks s WHERE s.task_id = ?))
@@ -271,26 +309,33 @@ class Task {
             
             $params = [$taskId, $title, $description, $percentage, $dueDate, $priority, $assignedUserId, $createdByUserId, $taskId];
             error_log('Task::createSubtaskAdvanced - Parámetros para INSERT: ' . print_r($params, true));
+            error_log('Task::createSubtaskAdvanced - Cantidad de parámetros: ' . count($params));
             
+            error_log('Task::createSubtaskAdvanced - 🔄 Ejecutando INSERT...');
             $result = $stmt->execute($params);
             
             if ($result) {
                 $subtaskId = $this->db->lastInsertId();
-                error_log('Task::createSubtaskAdvanced - Subtarea creada exitosamente con ID: ' . $subtaskId);
+                error_log('Task::createSubtaskAdvanced - ✅ Subtarea creada exitosamente con ID: ' . $subtaskId);
                 
                 // Registrar en el historial
+                error_log('Task::createSubtaskAdvanced - 🔄 Registrando en historial...');
                 $this->logTaskAction($taskId, $createdByUserId, 'created', 'subtask', null, $title, 'Subtarea creada: ' . $title);
+                error_log('Task::createSubtaskAdvanced - ✅ Historial registrado');
                 
                 return $subtaskId;
             }
             
             $err = $stmt->errorInfo();
-            error_log('Task::createSubtaskAdvanced - Error al crear subtarea: ' . json_encode($err));
+            error_log('Task::createSubtaskAdvanced - ❌ Error al crear subtarea: ' . json_encode($err));
+            error_log('Task::createSubtaskAdvanced - ❌ Código de error: ' . $err[0]);
+            error_log('Task::createSubtaskAdvanced - ❌ Código de error específico: ' . $err[1]);
+            error_log('Task::createSubtaskAdvanced - ❌ Mensaje de error: ' . $err[2]);
             return false;
             
         } catch (Exception $e) {
-            error_log("Error al crear subtarea avanzada: " . $e->getMessage());
-            error_log("Stack trace: " . $e->getTraceAsString());
+            error_log("Task::createSubtaskAdvanced - ❌ EXCEPCIÓN: " . $e->getMessage());
+            error_log("Task::createSubtaskAdvanced - ❌ Stack trace: " . $e->getTraceAsString());
             // Temporalmente lanzar la excepción para ver el error exacto
             throw new Exception("createSubtaskAdvanced falló: " . $e->getMessage());
         }

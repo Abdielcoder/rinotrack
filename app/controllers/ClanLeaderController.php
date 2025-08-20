@@ -1130,7 +1130,10 @@ class ClanLeaderController {
                 $this->db->rollback();
             }
         
-        // Logs detallados de los datos recibidos
+        // Logs EXTREMADAMENTE DETALLADOS de los datos recibidos
+        error_log('=== createTask - INICIO DE LOGS ===');
+        error_log('createTask - $_POST completo: ' . print_r($_POST, true));
+        error_log('createTask - $_FILES completo: ' . print_r($_FILES, true));
         error_log('createTask - Datos recibidos:');
         error_log('  task_title: ' . ($_POST['task_title'] ?? 'NOT SET'));
         error_log('  task_due_date: ' . ($_POST['task_due_date'] ?? 'NOT SET'));
@@ -1139,12 +1142,18 @@ class ClanLeaderController {
         error_log('  assigned_members: ' . print_r($_POST['assigned_members'] ?? 'NOT SET', true));
         error_log('  subtasks: ' . print_r($_POST['subtasks'] ?? 'NOT SET', true));
         
-        // Log adicional para debuggear subtareas
+        // Log SUPER DETALLADO para subtareas
         if (isset($_POST['subtasks'])) {
-            error_log('createTask - Subtareas recibidas (raw): ' . $_POST['subtasks']);
-            error_log('createTask - Subtareas decodificadas: ' . print_r(json_decode($_POST['subtasks'], true), true));
+            error_log('createTask - ✅ Subtareas recibidas (raw): ' . $_POST['subtasks']);
+            $decodedSubtasks = json_decode($_POST['subtasks'], true);
+            error_log('createTask - ✅ Subtareas decodificadas: ' . print_r($decodedSubtasks, true));
+            error_log('createTask - ✅ Tipo de subtareas decodificadas: ' . gettype($decodedSubtasks));
+            if (is_array($decodedSubtasks)) {
+                error_log('createTask - ✅ Cantidad de subtareas: ' . count($decodedSubtasks));
+            }
         } else {
-            error_log('createTask - NO se recibieron subtareas en $_POST');
+            error_log('createTask - ❌ NO se recibieron subtareas en $_POST');
+            error_log('createTask - ❌ Claves disponibles en $_POST: ' . implode(', ', array_keys($_POST)));
         }
         
         $taskTitle = Utils::sanitizeInput($_POST['task_title'] ?? '');
@@ -1165,40 +1174,56 @@ class ClanLeaderController {
             $assignedMembers = $assignedMembersRaw;
         }
         // Manejar subtasks que puede ser un array o JSON string y normalizar datos
+        error_log('=== createTask - PROCESAMIENTO DE SUBTAREAS ===');
         $subtasksRaw = $_POST['subtasks'] ?? [];
         error_log('createTask - subtasksRaw: ' . print_r($subtasksRaw, true));
+        error_log('createTask - Tipo de subtasksRaw: ' . gettype($subtasksRaw));
         
         if (is_string($subtasksRaw)) {
+            error_log('createTask - subtasksRaw es string, decodificando JSON...');
             $subtasks = json_decode($subtasksRaw, true) ?: [];
-            error_log('createTask - subtasks decodificadas de JSON: ' . print_r($subtasks, true));
+            error_log('createTask - ✅ subtasks decodificadas de JSON: ' . print_r($subtasks, true));
+            error_log('createTask - Tipo de subtasks decodificadas: ' . gettype($subtasks));
         } else {
+            error_log('createTask - subtasksRaw NO es string, usando como array');
             $subtasks = $subtasksRaw;
-            error_log('createTask - subtasks ya es array: ' . print_r($subtasks, true));
+            error_log('createTask - ✅ subtasks ya es array: ' . print_r($subtasks, true));
         }
         
         if (!empty($subtasks) && is_array($subtasks)) {
-            error_log('createTask - Procesando ' . count($subtasks) . ' subtareas');
+            error_log('createTask - ✅ Procesando ' . count($subtasks) . ' subtareas');
             $normalized = [];
             foreach ($subtasks as $index => $st) {
-                error_log('createTask - Procesando subtarea ' . ($index + 1) . ': ' . print_r($st, true));
+                error_log('createTask - 🔄 Procesando subtarea ' . ($index + 1) . ': ' . print_r($st, true));
                 
                 $title = trim($st['title'] ?? '');
+                error_log('createTask - Subtarea ' . ($index + 1) . ' - title: "' . $title . '"');
+                
                 if ($title === '') { 
-                    error_log('createTask - Subtarea ' . ($index + 1) . ' sin título, saltando');
+                    error_log('createTask - ❌ Subtarea ' . ($index + 1) . ' sin título, saltando');
                     continue; 
                 }
+                
                 $desc = trim($st['description'] ?? '');
+                error_log('createTask - Subtarea ' . ($index + 1) . ' - description: "' . $desc . '"');
+                
                 $perc = isset($st['percentage']) && $st['percentage'] !== '' ? (float)$st['percentage'] : 0.0;
                 error_log('createTask - Subtarea ' . ($index + 1) . ' - percentage procesado: ' . $perc);
                 
                 // Validar que el porcentaje esté en el rango correcto
                 if ($perc < 0 || $perc > 100) {
-                    error_log('createTask - Error: Porcentaje fuera de rango: ' . $perc);
+                    error_log('createTask - ⚠️ Porcentaje fuera de rango: ' . $perc . ', ajustando a 0.0');
                     $perc = 0.0;
                 }
+                
                 $due  = isset($st['due_date']) && trim((string)$st['due_date']) !== '' ? trim($st['due_date']) : null;
+                error_log('createTask - Subtarea ' . ($index + 1) . ' - due_date: ' . ($due ?? 'NULL'));
+                
                 $prio = in_array(($st['priority'] ?? 'medium'), ['low','medium','high','urgent'], true) ? $st['priority'] : 'medium';
+                error_log('createTask - Subtarea ' . ($index + 1) . ' - priority: ' . $prio);
+                
                 $auid = isset($st['assigned_user_id']) && $st['assigned_user_id'] !== '' ? (int)$st['assigned_user_id'] : null;
+                error_log('createTask - Subtarea ' . ($index + 1) . ' - assigned_user_id: ' . ($auid ?? 'NULL'));
                 
                 $normalized[] = [
                     'title' => $title,
@@ -1208,12 +1233,14 @@ class ClanLeaderController {
                     'priority' => $prio,
                     'assigned_user_id' => $auid,
                 ];
-                error_log('createTask - Subtarea ' . ($index + 1) . ' normalizada: ' . print_r($normalized[count($normalized)-1], true));
+                error_log('createTask - ✅ Subtarea ' . ($index + 1) . ' normalizada: ' . print_r($normalized[count($normalized)-1], true));
             }
             $subtasks = $normalized;
-            error_log('createTask - Total de subtareas normalizadas: ' . count($subtasks));
+            error_log('createTask - ✅ Total de subtareas normalizadas: ' . count($subtasks));
         } else {
-            error_log('createTask - No hay subtareas para procesar o no es un array válido');
+            error_log('createTask - ❌ No hay subtareas para procesar o no es un array válido');
+            error_log('createTask - ❌ subtasks está vacío: ' . (empty($subtasks) ? 'SÍ' : 'NO'));
+            error_log('createTask - ❌ subtasks es array: ' . (is_array($subtasks) ? 'SÍ' : 'NO'));
         }
         
         $priority = Utils::sanitizeInput($_POST['priority'] ?? 'medium');
@@ -1334,7 +1361,17 @@ class ClanLeaderController {
             
             error_log('createTask - taskModel OK, ejecutando createAdvanced...');
             
+            error_log('=== createTask - LLAMADA AL MODELO ===');
             error_log('createTask - Llamando a createAdvanced con subtasks: ' . print_r($subtasks, true));
+            error_log('createTask - Cantidad de subtareas a enviar: ' . count($subtasks));
+            error_log('createTask - taskProject: ' . $taskProject);
+            error_log('createTask - taskTitle: ' . $taskTitle);
+            error_log('createTask - taskDueDate: ' . ($taskDueDate ?? 'NULL'));
+            error_log('createTask - clan_id: ' . $this->userClan['clan_id']);
+            error_log('createTask - priority: ' . $priority);
+            error_log('createTask - createdByUserId: ' . $createdByUserId);
+            error_log('createTask - assignedMembers: ' . print_r($assignedMembers, true));
+            error_log('createTask - labels: ' . print_r($labels, true));
             
             $taskId = $this->taskModel->createAdvanced(
                 $taskProject,
