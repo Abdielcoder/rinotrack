@@ -51,23 +51,26 @@ function saveTask() {
         formData.append('assigned_members[]', member.value);
     });
     
-    // Agregar subtareas - OCULTO
-    // const subtasks = [];
-    // document.querySelectorAll('.subtask-item').forEach((subtask, index) => {
-    //     const title = subtask.querySelector('input[name^="subtasks"][name$="[title]"]').value;
-    //     const percentage = subtask.querySelector('input[name^="subtasks"][name$="[percentage]"]').value;
-    //     const description = subtask.querySelector('textarea[name^="subtasks"][name$="[description]"]').value;
+    // Agregar subtareas
+    const subtasks = [];
+    document.querySelectorAll('.subtask-item').forEach((subtask, index) => {
+        const title = subtask.querySelector('input[name^="subtasks"][name$="[title]"]').value;
+        const percentage = subtask.querySelector('input[name^="subtasks"][name$="[percentage]"]').value;
+        const description = subtask.querySelector('textarea[name^="subtasks"][name$="[description]"]').value;
         
-    //     if (title && percentage) {
-    //         subtasks.push({
-    //             title: title,
-    //             percentage: percentage,
-    //             description: description
-    //         });
-    //     }
-    // });
+        if (title && percentage) {
+            subtasks.push({
+                title: title,
+                percentage: percentage,
+                description: description
+            });
+        }
+    });
     
-    // formData.append('subtasks', JSON.stringify(subtasks));
+    if (subtasks.length > 0) {
+        formData.append('subtasks', JSON.stringify(subtasks));
+        console.log('Subtareas incluidas:', subtasks);
+    }
     
     // Log para debug
     console.log('Enviando tarea con datos:');

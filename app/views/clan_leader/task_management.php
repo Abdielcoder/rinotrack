@@ -94,11 +94,11 @@ function getActiveTasksCount($userId) {
                     </div>
                 </div>
 
-                <!-- Sección de Subtareas - OCULTA -->
-                <!-- <div class="form-section">
+                <!-- Sección de Subtareas -->
+                <div class="form-section">
                     <div class="section-header">
-                        <h3>Subtareas</h3>
-                        <button class="btn-minimal small" onclick="addSubtask()">
+                        <h3><i class="fas fa-tasks"></i> Subtareas</h3>
+                        <button type="button" class="btn-minimal small" onclick="addSubtask()">
                             <i class="fas fa-plus"></i>
                             Agregar Subtarea
                         </button>
@@ -107,7 +107,7 @@ function getActiveTasksCount($userId) {
                     <div id="subtasks-container">
                         <!-- Las subtareas se agregarán dinámicamente aquí -->
                     </div>
-                </div> -->
+                </div>
 
                 <!-- Sección de Asignación de Colaboradores -->
                 <div class="form-section">
@@ -227,8 +227,8 @@ function getActiveTasksCount($userId) {
     </div>
 </div>
 
-<!-- Template para Subtareas - OCULTO -->
-<!-- <template id="subtask-template">
+<!-- Template para Subtareas -->
+<template id="subtask-template">
     <div class="subtask-item" data-subtask-index="{index}">
         <div class="subtask-header">
             <div class="subtask-number">Subtarea {number}</div>
@@ -258,7 +258,7 @@ function getActiveTasksCount($userId) {
             </div>
         </div>
     </div>
-</template> -->
+</template>
 
 
 
@@ -280,6 +280,95 @@ $additionalJS = [
 // Incluir el layout
 require_once __DIR__ . '/../admin/layout.php';
 ?>
+
+<!-- Estilos para subtareas -->
+<style>
+.subtask-item {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+    position: relative;
+}
+
+.subtask-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.subtask-number {
+    font-weight: 600;
+    color: #374151;
+    font-size: 14px;
+}
+
+.btn-remove-subtask {
+    background: #ef4444;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 6px 10px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s ease;
+}
+
+.btn-remove-subtask:hover {
+    background: #dc2626;
+    transform: scale(1.05);
+}
+
+.subtask-content .form-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.subtask-content .form-group {
+    flex: 1;
+}
+
+.subtask-content .form-group.full-width {
+    flex: 1 1 100%;
+}
+
+.subtask-content input,
+.subtask-content textarea {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.subtask-content input:focus,
+.subtask-content textarea:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.section-header h3 {
+    margin: 0;
+    color: #1f2937;
+    font-size: 18px;
+}
+
+.section-header h3 i {
+    margin-right: 8px;
+    color: #6b7280;
+}
+</style>
 
 <!-- JavaScript inline para asegurar que funcione -->
 <script>
@@ -318,5 +407,65 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     console.log('✅ Script inline ejecutado correctamente');
+    
+    // Variables globales para subtareas
+    window.subtaskIndex = 0;
+    window.subtasks = [];
 });
+
+// Funciones para manejar subtareas
+function addSubtask() {
+    const container = document.getElementById('subtasks-container');
+    const template = document.getElementById('subtask-template');
+    
+    if (!container || !template) {
+        console.error('No se encontró el contenedor o template de subtareas');
+        return;
+    }
+    
+    const subtaskHtml = template.innerHTML
+        .replace(/{index}/g, window.subtaskIndex)
+        .replace(/{number}/g, window.subtaskIndex + 1);
+    
+    const subtaskElement = document.createElement('div');
+    subtaskElement.innerHTML = subtaskHtml;
+    subtaskElement.className = 'subtask-item';
+    subtaskElement.setAttribute('data-subtask-index', window.subtaskIndex);
+    
+    container.appendChild(subtaskElement);
+    window.subtaskIndex++;
+    
+    console.log('Subtarea agregada con índice:', window.subtaskIndex - 1);
+}
+
+function removeSubtask(index) {
+    const subtaskElement = document.querySelector(`[data-subtask-index="${index}"]`);
+    if (subtaskElement) {
+        subtaskElement.remove();
+        console.log('Subtarea removida con índice:', index);
+    }
+}
+
+// Función para recolectar datos de subtareas antes de enviar
+function collectSubtasksData() {
+    const subtaskElements = document.querySelectorAll('.subtask-item');
+    const subtasks = [];
+    
+    subtaskElements.forEach(element => {
+        const index = element.getAttribute('data-subtask-index');
+        const title = element.querySelector('input[name^="subtasks"][name$="[title]"]').value;
+        const percentage = element.querySelector('input[name^="subtasks"][name$="[percentage]"]').value;
+        const description = element.querySelector('textarea[name^="subtasks"][name$="[description]"]').value;
+        
+        if (title.trim() !== '') {
+            subtasks.push({
+                title: title.trim(),
+                percentage: parseInt(percentage) || 0,
+                description: description.trim()
+            });
+        }
+    });
+    
+    return subtasks;
+}
 </script> 
