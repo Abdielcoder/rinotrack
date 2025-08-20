@@ -251,6 +251,46 @@ function getActiveTasksCount($userId) {
             </div>
             
             <div class="form-row">
+                <div class="form-group">
+                    <label>Fecha límite</label>
+                    <div class="date-input-wrapper">
+                        <input type="date" name="subtasks[{index}][due_date]" placeholder="Fecha límite">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Prioridad</label>
+                    <div class="select-wrapper">
+                        <select name="subtasks[{index}][priority]">
+                            <option value="low">Baja</option>
+                            <option value="medium" selected>Media</option>
+                            <option value="high">Alta</option>
+                            <option value="urgent">Urgente</option>
+                        </select>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Asignar a</label>
+                    <div class="select-wrapper">
+                        <select name="subtasks[{index}][assigned_user_id]">
+                            <option value="">Sin asignar</option>
+                            <?php foreach ($members as $member): ?>
+                                <option value="<?php echo $member['user_id']; ?>">
+                                    <?php echo htmlspecialchars($member['full_name']); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-row">
                 <div class="form-group full-width">
                     <label>Descripción</label>
                     <textarea name="subtasks[{index}][description]" rows="2" placeholder="Descripción de la subtarea..."></textarea>
@@ -335,8 +375,36 @@ require_once __DIR__ . '/../admin/layout.php';
     flex: 1 1 100%;
 }
 
+.subtask-content .form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+    color: #374151;
+    font-size: 13px;
+}
+
+.subtask-content .form-group input,
+.subtask-content .form-group textarea,
+.subtask-content .form-group select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.subtask-content .form-group input:focus,
+.subtask-content .form-group textarea:focus,
+.subtask-content .form-group select:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
 .subtask-content input,
-.subtask-content textarea {
+.subtask-content textarea,
+.subtask-content select {
     width: 100%;
     padding: 8px 12px;
     border: 1px solid #d1d5db;
@@ -345,10 +413,33 @@ require_once __DIR__ . '/../admin/layout.php';
 }
 
 .subtask-content input:focus,
-.subtask-content textarea:focus {
+.subtask-content textarea:focus,
+.subtask-content select:focus {
     outline: none;
     border-color: #3b82f6;
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.subtask-content .date-input-wrapper,
+.subtask-content .select-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.subtask-content .date-input-wrapper input,
+.subtask-content .select-wrapper select {
+    width: 100%;
+    padding-right: 35px;
+}
+
+.subtask-content .date-input-wrapper i,
+.subtask-content .select-wrapper i {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    pointer-events: none;
 }
 
 .section-header {
@@ -456,12 +547,18 @@ function collectSubtasksData() {
         const title = element.querySelector('input[name^="subtasks"][name$="[title]"]').value;
         const percentage = element.querySelector('input[name^="subtasks"][name$="[percentage]"]').value;
         const description = element.querySelector('textarea[name^="subtasks"][name$="[description]"]').value;
+        const dueDate = element.querySelector('input[name^="subtasks"][name$="[due_date]"]').value;
+        const priority = element.querySelector('select[name^="subtasks"][name$="[priority]"]').value;
+        const assignedUserId = element.querySelector('select[name^="subtasks"][name$="[assigned_user_id]"]').value;
         
         if (title.trim() !== '') {
             subtasks.push({
                 title: title.trim(),
                 percentage: parseInt(percentage) || 0,
-                description: description.trim()
+                description: description.trim(),
+                due_date: dueDate,
+                priority: priority,
+                assigned_user_id: assignedUserId
             });
         }
     });
