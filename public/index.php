@@ -217,6 +217,15 @@ try {
             $controller->getClanMembers();
             break;
             
+        case 'admin/get-task-subtasks':
+            $controller = new AdminController();
+            $controller->getTaskSubtasks();
+            break;
+            
+        case 'test-subtasks':
+            include __DIR__ . '/../test_subtasks.php';
+            break;
+            
         case 'admin/clan-details':
             $controller = new AdminController();
             $controller->getClanDetails();
