@@ -39,6 +39,7 @@ $models = [
     __DIR__ . '/../app/models/Role.php',
     __DIR__ . '/../app/models/KPI.php',
     __DIR__ . '/../app/models/Task.php',
+    __DIR__ . '/../app/models/Subtask.php',
     __DIR__ . '/../app/models/Gamification.php',
     __DIR__ . '/../app/models/Notification.php',
     __DIR__ . '/../app/services/Mailer.php',
@@ -524,6 +525,37 @@ try {
         $controller->deleteSubtask();
         break;
         
+    // Rutas para comentarios y documentos de subtareas
+    case 'clan_leader/add-subtask-comment':
+        $controller = new ClanLeaderController();
+        $controller->addSubtaskComment();
+        break;
+        
+    case 'clan_leader/get-subtask-comments':
+        $controller = new ClanLeaderController();
+        $controller->getSubtaskComments();
+        break;
+        
+    case 'clan_leader/upload-subtask-attachment':
+        $controller = new ClanLeaderController();
+        $controller->uploadSubtaskAttachment();
+        break;
+        
+    case 'clan_leader/get-subtask-attachments':
+        $controller = new ClanLeaderController();
+        $controller->getSubtaskAttachments();
+        break;
+        
+    case 'clan_leader/delete-subtask-comment':
+        $controller = new ClanLeaderController();
+        $controller->deleteSubtaskComment();
+        break;
+        
+    case 'clan_leader/delete-subtask-attachment':
+        $controller = new ClanLeaderController();
+        $controller->deleteSubtaskAttachment();
+        break;
+        
     case 'clan_leader/add-comment':
         $controller = new ClanLeaderController();
         $controller->addComment();
@@ -727,6 +759,37 @@ try {
         case 'clan_member/update-subtask-status':
             $controller = new ClanMemberController();
             $controller->updateSubtaskStatus();
+            break;
+            
+        // Rutas para comentarios y documentos de subtareas
+        case 'clan_member/add-subtask-comment':
+            $controller = new ClanMemberController();
+            $controller->addSubtaskComment();
+            break;
+            
+        case 'clan_member/get-subtask-comments':
+            $controller = new ClanMemberController();
+            $controller->getSubtaskComments();
+            break;
+            
+        case 'clan_member/upload-subtask-attachment':
+            $controller = new ClanMemberController();
+            $controller->uploadSubtaskAttachment();
+            break;
+            
+        case 'clan_member/get-subtask-attachments':
+            $controller = new ClanMemberController();
+            $controller->getSubtaskAttachments();
+            break;
+            
+        case 'clan_member/delete-subtask-comment':
+            $controller = new ClanMemberController();
+            $controller->deleteSubtaskComment();
+            break;
+            
+        case 'clan_member/delete-subtask-attachment':
+            $controller = new ClanMemberController();
+            $controller->deleteSubtaskAttachment();
             break;
             
         default:

@@ -8,6 +8,7 @@ class ClanMemberController {
     private $roleModel;
     private $kpiModel;
     private $taskModel;
+    private $subtaskModel;
     private $db;
     private $currentUser;
     private $userClan;
@@ -20,6 +21,7 @@ class ClanMemberController {
         $this->roleModel = new Role();
         $this->kpiModel = new KPI();
         $this->taskModel = new Task();
+        $this->subtaskModel = new Subtask();
         $this->db = Database::getConnection();
 
         $this->currentUser = $this->auth->getCurrentUser();
@@ -1303,6 +1305,285 @@ class ClanMemberController {
         } catch (Exception $e) {
             error_log("Error al actualizar estado de subtarea (clan member): " . $e->getMessage());
             Utils::jsonResponse(['success' => false, 'message' => 'Error al actualizar estado'], 500);
+        }
+    }
+
+    /**
+     * Agregar comentario a una subtarea
+     */
+    public function addSubtaskComment() {
+        $this->requireAuth();
+        if (!$this->hasMemberAccess()) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
+            return;
+        }
+
+        try {
+            $input = json_decode(file_get_contents('php://input'), true);
+            $subtaskId = $input['subtask_id'] ?? null;
+            $commentText = trim($input['comment_text'] ?? '');
+
+            if (!$subtaskId || !$commentText) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Subtarea ID y texto del comentario son requeridos']);
+                return;
+            }
+
+            // Verificar permisos
+            $permissions = $this->subtaskModel->checkUserPermissions($subtaskId, $this->currentUser['user_id']);
+            if (!$permissions['can_comment']) {
+                http_response_code(403);
+                echo json_encode(['success' => false, 'message' => 'No tienes permisos para comentar en esta subtarea']);
+                return;
+            }
+
+            $commentId = $this->subtaskModel->addComment(
+                $subtaskId, 
+                $this->currentUser['user_id'], 
+                $commentText
+            );
+
+            if ($commentId) {
+                echo json_encode([
+                    'success' => true, 
+                    'message' => 'Comentario agregado exitosamente',
+                    'comment_id' => $commentId
+                ]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Error al agregar comentario']);
+            }
+
+        } catch (Exception $e) {
+            error_log("Error en addSubtaskComment (member): " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error interno del servidor']);
+        }
+    }
+
+    /**
+     * Obtener comentarios de una subtarea
+     */
+    public function getSubtaskComments() {
+        $this->requireAuth();
+        if (!$this->hasMemberAccess()) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
+            return;
+        }
+
+        try {
+            $subtaskId = $_GET['subtask_id'] ?? null;
+
+            if (!$subtaskId) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Subtarea ID requerido']);
+                return;
+            }
+
+            // Verificar permisos
+            $permissions = $this->subtaskModel->checkUserPermissions($subtaskId, $this->currentUser['user_id']);
+            if (!$permissions['can_view']) {
+                http_response_code(403);
+                echo json_encode(['success' => false, 'message' => 'No tienes permisos para ver esta subtarea']);
+                return;
+            }
+
+            $comments = $this->subtaskModel->getComments($subtaskId);
+            echo json_encode(['success' => true, 'comments' => $comments]);
+
+        } catch (Exception $e) {
+            error_log("Error en getSubtaskComments (member): " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error interno del servidor']);
+        }
+    }
+
+    /**
+     * Subir archivo adjunto a una subtarea
+     */
+    public function uploadSubtaskAttachment() {
+        $this->requireAuth();
+        if (!$this->hasMemberAccess()) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
+            return;
+        }
+
+        try {
+            $subtaskId = $_POST['subtask_id'] ?? null;
+            $commentId = $_POST['comment_id'] ?? null;
+            $description = trim($_POST['description'] ?? '');
+
+            if (!$subtaskId || !isset($_FILES['file'])) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Subtarea ID y archivo son requeridos']);
+                return;
+            }
+
+            // Verificar permisos
+            $permissions = $this->subtaskModel->checkUserPermissions($subtaskId, $this->currentUser['user_id']);
+            if (!$permissions['can_attach']) {
+                http_response_code(403);
+                echo json_encode(['success' => false, 'message' => 'No tienes permisos para adjuntar archivos en esta subtarea']);
+                return;
+            }
+
+            $file = $_FILES['file'];
+            
+            // Validar archivo
+            $maxSize = 50 * 1024 * 1024; // 50MB
+            if ($file['size'] > $maxSize) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'El archivo es demasiado grande (máximo 50MB)']);
+                return;
+            }
+
+            // Guardar archivo
+            $fileInfo = $this->subtaskModel->saveUploadedFile($file, $subtaskId, $this->currentUser['user_id']);
+            if (!$fileInfo) {
+                http_response_code(500);
+                echo json_encode(['success' => false, 'message' => 'Error al guardar el archivo']);
+                return;
+            }
+
+            // Guardar en base de datos
+            $attachmentId = $this->subtaskModel->addAttachment(
+                $subtaskId,
+                $this->currentUser['user_id'],
+                $fileInfo['original_name'],
+                $fileInfo['public_path'],
+                $fileInfo['file_size'],
+                $fileInfo['file_type'],
+                $description,
+                $commentId
+            );
+
+            if ($attachmentId) {
+                echo json_encode([
+                    'success' => true, 
+                    'message' => 'Archivo adjuntado exitosamente',
+                    'attachment_id' => $attachmentId,
+                    'file_info' => $fileInfo
+                ]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Error al guardar el adjunto en la base de datos']);
+            }
+
+        } catch (Exception $e) {
+            error_log("Error en uploadSubtaskAttachment (member): " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error interno del servidor']);
+        }
+    }
+
+    /**
+     * Obtener adjuntos de una subtarea
+     */
+    public function getSubtaskAttachments() {
+        $this->requireAuth();
+        if (!$this->hasMemberAccess()) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
+            return;
+        }
+
+        try {
+            $subtaskId = $_GET['subtask_id'] ?? null;
+
+            if (!$subtaskId) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Subtarea ID requerido']);
+                return;
+            }
+
+            // Verificar permisos
+            $permissions = $this->subtaskModel->checkUserPermissions($subtaskId, $this->currentUser['user_id']);
+            if (!$permissions['can_view']) {
+                http_response_code(403);
+                echo json_encode(['success' => false, 'message' => 'No tienes permisos para ver esta subtarea']);
+                return;
+            }
+
+            $attachments = $this->subtaskModel->getAttachments($subtaskId);
+            echo json_encode(['success' => true, 'attachments' => $attachments]);
+
+        } catch (Exception $e) {
+            error_log("Error en getSubtaskAttachments (member): " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error interno del servidor']);
+        }
+    }
+
+    /**
+     * Eliminar comentario de subtarea
+     */
+    public function deleteSubtaskComment() {
+        $this->requireAuth();
+        if (!$this->hasMemberAccess()) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
+            return;
+        }
+
+        try {
+            $input = json_decode(file_get_contents('php://input'), true);
+            $commentId = $input['comment_id'] ?? null;
+
+            if (!$commentId) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Comment ID requerido']);
+                return;
+            }
+
+            $result = $this->subtaskModel->deleteComment($commentId, $this->currentUser['user_id']);
+
+            if ($result) {
+                echo json_encode(['success' => true, 'message' => 'Comentario eliminado exitosamente']);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Error al eliminar comentario o no tienes permisos']);
+            }
+
+        } catch (Exception $e) {
+            error_log("Error en deleteSubtaskComment (member): " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error interno del servidor']);
+        }
+    }
+
+    /**
+     * Eliminar adjunto de subtarea
+     */
+    public function deleteSubtaskAttachment() {
+        $this->requireAuth();
+        if (!$this->hasMemberAccess()) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
+            return;
+        }
+
+        try {
+            $input = json_decode(file_get_contents('php://input'), true);
+            $attachmentId = $input['attachment_id'] ?? null;
+
+            if (!$attachmentId) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Attachment ID requerido']);
+                return;
+            }
+
+            $result = $this->subtaskModel->deleteAttachment($attachmentId, $this->currentUser['user_id']);
+
+            if ($result) {
+                echo json_encode(['success' => true, 'message' => 'Adjunto eliminado exitosamente']);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Error al eliminar adjunto o no tienes permisos']);
+            }
+
+        } catch (Exception $e) {
+            error_log("Error en deleteSubtaskAttachment (member): " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error interno del servidor']);
         }
     }
 }

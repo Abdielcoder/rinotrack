@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1:3306
--- Tiempo de generación: 20-08-2025 a las 22:28:33
+-- Tiempo de generación: 20-08-2025 a las 23:40:11
 -- Versión del servidor: 11.8.2-MariaDB
 -- Versión de PHP: 8.3.23
 
@@ -650,7 +650,14 @@ INSERT INTO `Notification_Log` (`id`, `event_type`, `entity_id`, `user_id`, `sen
 (264, 'task_assigned', 254, 4, 'desarrollo2@rinorisk.com', NULL, '2025-08-20 20:49:47'),
 (265, 'task_assigned', 255, 4, 'desarrollo2@rinorisk.com', NULL, '2025-08-20 22:18:46'),
 (266, 'task_assigned', 256, 4, 'desarrollo2@rinorisk.com', NULL, '2025-08-20 22:24:26'),
-(267, 'task_assigned', 257, 4, 'desarrollo2@rinorisk.com', NULL, '2025-08-20 22:26:37');
+(267, 'task_assigned', 257, 4, 'desarrollo2@rinorisk.com', NULL, '2025-08-20 22:26:37'),
+(268, 'task_assigned', 258, 4, 'desarrollo2@rinorisk.com', NULL, '2025-08-20 22:32:35'),
+(269, 'task_assigned', 259, 4, 'desarrollo2@rinorisk.com', NULL, '2025-08-20 22:34:03'),
+(270, 'task_assigned', 260, 4, 'desarrollo2@rinorisk.com', NULL, '2025-08-20 22:39:41'),
+(271, 'task_assigned', 261, 4, 'desarrollo2@rinorisk.com', NULL, '2025-08-20 23:04:17'),
+(272, 'task_assigned', 262, 4, 'desarrollo2@rinorisk.com', NULL, '2025-08-20 23:09:08'),
+(273, 'task_assigned', 263, 4, 'desarrollo2@rinorisk.com', NULL, '2025-08-20 23:14:33'),
+(274, 'task_assigned', 264, 4, 'desarrollo2@rinorisk.com', NULL, '2025-08-20 23:24:47');
 
 -- --------------------------------------------------------
 
@@ -712,7 +719,7 @@ INSERT INTO `Projects` (`project_id`, `project_name`, `description`, `clan_id`, 
 (24, 'RinoPlugin', 'Plugin de control de accesos de portales', 5, 58, 'open', 4, 4, 100.00, '2025-08-13 16:29:25', '2025-08-13 23:49:09', 11, 50, 'automatic', '2025-09-30', 0),
 (25, 'Resegmentación', 'Utilidad fuera de linea, de consulta, comparación y resegmentación de prima y negocios', 5, 58, 'open', 5, 5, 200.00, '2025-08-13 16:30:52', '2025-08-19 15:07:25', 11, 50, 'automatic', '2025-09-30', 0),
 (26, 'Nuevos Indicadores / procesos automaticos', 'Indicadores necesarios para procesos y sistemas', 5, 58, 'open', 0, 0, 0.00, '2025-08-13 16:31:33', '2025-08-13 23:49:26', 11, 350, 'automatic', '2025-09-30', 0),
-(29, 'Metas promotoria etapa 1', 'Seguimiento al proyecto, consulta de promotoria.', 5, 1, 'open', 1, 1, 0.00, '2025-08-13 17:35:38', '2025-08-18 23:57:50', 11, 300, 'automatic', '2025-09-30', 0),
+(29, 'Metas promotoria etapa 1', 'Seguimiento al proyecto, consulta de promotoria.', 5, 1, 'open', 3, 0, 0.00, '2025-08-13 17:35:38', '2025-08-20 22:31:23', 11, 300, 'automatic', '2025-09-30', 0),
 (34, 'Tareas Recurrentes', 'Tareas Recurrentes', 13, 1, 'open', 10, 1, 0.00, '2025-08-14 05:48:31', '2025-08-19 20:28:02', NULL, 0, 'automatic', NULL, 0),
 (35, 'Tareas Eventuales', 'Tareas Eventuales', 13, 1, 'open', 2, 2, 0.00, '2025-08-14 05:48:31', '2025-08-19 20:29:15', NULL, 0, 'automatic', NULL, 0),
 (42, 'Tareas Personales', 'Proyecto personal para tareas individuales del usuario', 5, 2, 'active', 0, 0, 0.00, '2025-08-19 20:29:39', '2025-08-19 20:29:39', NULL, 0, 'automatic', NULL, 1),
@@ -815,7 +822,10 @@ INSERT INTO `Subtasks` (`subtask_id`, `task_id`, `title`, `description`, `comple
 (13, 246, 'ww1', '', 100.00, NULL, NULL, 'completed', 'medium', NULL, NULL, 1, 1, '2025-08-20 19:39:59', '2025-08-20 20:01:19'),
 (14, 246, 'ww2', '', 50.00, NULL, NULL, 'in_progress', 'medium', NULL, NULL, 1, 2, '2025-08-20 19:39:59', '2025-08-20 20:20:40'),
 (15, 256, 'erer432', 'dffds23424', 0.00, NULL, NULL, 'pending', 'medium', NULL, NULL, 2, 1, '2025-08-20 22:24:25', '2025-08-20 22:24:25'),
-(16, 256, 'erer432', 'dffds23424', 0.00, NULL, NULL, 'pending', 'medium', NULL, NULL, 2, 2, '2025-08-20 22:24:25', '2025-08-20 22:24:25');
+(16, 256, 'erer432', 'dffds23424', 0.00, NULL, NULL, 'pending', 'medium', NULL, NULL, 2, 2, '2025-08-20 22:24:25', '2025-08-20 22:24:25'),
+(17, 264, 'ggg', '', 50.00, NULL, NULL, 'in_progress', 'medium', NULL, NULL, 2, 1, '2025-08-20 23:24:46', '2025-08-20 23:25:06'),
+(18, 264, 'ggg', '', 0.00, NULL, NULL, 'pending', 'medium', NULL, NULL, 2, 2, '2025-08-20 23:24:46', '2025-08-20 23:24:46'),
+(19, 253, 'Plan de Capacitacion Director Agencia', '', 0.00, NULL, NULL, 'pending', 'medium', NULL, NULL, 1, 1, '2025-08-20 23:28:48', '2025-08-20 23:28:48');
 
 --
 -- Disparadores `Subtasks`
@@ -900,22 +910,17 @@ CREATE TABLE `Tasks` (
 
 INSERT INTO `Tasks` (`task_id`, `parent_task_id`, `task_name`, `description`, `project_id`, `assigned_to_user_id`, `created_by_user_id`, `priority`, `due_date`, `estimated_hours`, `actual_hours`, `completion_percentage`, `automatic_points`, `assigned_percentage`, `color_tag`, `is_subtask`, `subtask_order`, `status`, `is_completed`, `completed_at`, `created_at`, `updated_at`, `is_personal`) VALUES
 (240, NULL, 'METAS Y OBJETIVOS', 'El objetivo de esta tarea es establecer los objetivos que se tendran que plantear para cada direccion de agencia, los reportes que deberán llevar los directores y los reportes que se les presentaran desde el area de estadísticas.', 44, 22, 22, 'medium', '2025-10-31', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-20 18:12:58', '2025-08-20 18:34:49', 0),
-(242, NULL, 'QA', 'Pruebas funcionales.', 29, 2, 1, 'medium', '2025-08-22', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-20 18:35:45', '2025-08-20 18:35:45', 0),
-(243, NULL, 'Q2', 'Q2', 29, 2, 1, 'medium', NULL, NULL, NULL, 50.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-20 18:49:30', '2025-08-20 19:38:21', 0),
-(244, NULL, 'test1', 'ees', 29, 2, 1, 'medium', '2025-08-20', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-20 18:56:36', '2025-08-20 18:56:36', 0),
-(245, NULL, '555', '555', 29, 2, 1, 'medium', '2025-08-20', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-20 19:00:47', '2025-08-20 19:00:47', 0),
-(246, NULL, 'Tarea prueba', 'sub', 29, 4, 1, 'medium', '2025-08-22', NULL, NULL, 75.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-20 19:39:59', '2025-08-20 20:20:40', 0),
-(247, NULL, 'Tarea yyy', 'Subv', 29, 4, 2, 'medium', '2025-08-20', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-20 20:11:33', '2025-08-20 20:11:33', 0),
-(248, NULL, 'Tarea con subs en clan', 'fdfsfsad', 29, 4, 2, 'medium', '2025-08-20', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-20 20:21:48', '2025-08-20 20:21:48', 0),
-(249, NULL, 'Tarea de clan 222', 'sadfsadfsadfsadf', 29, 4, 2, 'medium', '2025-08-20', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-20 20:27:53', '2025-08-20 20:27:53', 0),
-(250, NULL, 'Tare de clan con subtareas ccc', 'sadfadsfasdf', 29, 4, 2, 'medium', '2025-08-20', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-20 20:32:16', '2025-08-20 20:32:16', 0),
-(251, NULL, '123123', '213123', 29, 4, 2, 'medium', '2025-08-20', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-20 20:43:13', '2025-08-20 20:43:13', 0),
-(252, NULL, 'xxxxx', 'xxxx', 29, 4, 2, 'medium', '2025-08-22', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-20 20:44:13', '2025-08-20 20:44:13', 0),
+(242, NULL, 'QA', 'Pruebas funcionales.', 29, 2, 1, 'medium', '2025-08-22', NULL, NULL, 0.00, 100.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-20 18:35:45', '2025-08-20 22:31:23', 0),
+(243, NULL, 'Q2', 'Q2', 29, 2, 1, 'medium', NULL, NULL, NULL, 50.00, 100.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-20 18:49:30', '2025-08-20 22:31:23', 0),
+(248, NULL, 'Tarea con subs en clan', 'fdfsfsad', 29, 4, 2, 'medium', '2025-08-20', NULL, NULL, 0.00, 100.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-20 20:21:48', '2025-08-20 22:31:23', 0),
 (253, NULL, 'CAPACITACION Y RRHH', 'El objetivo es contar un plan de capacitacion y conocimientos para cada uno de los colaboradores que pertenezcan a la agencia.', 44, 22, 22, 'medium', '2025-10-31', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-20 20:49:33', '2025-08-20 20:49:33', 0),
-(254, NULL, 'vvvvsad', 'fsadfsadf', 29, 4, 2, 'medium', '2025-08-20', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-20 20:49:46', '2025-08-20 20:49:46', 0),
-(255, NULL, 'Tarea 33', 'asdf', 29, 4, 2, 'medium', '2025-08-20', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-20 22:18:45', '2025-08-20 22:18:45', 0),
-(256, NULL, 'xcxcx', 'xcxcxcxc', 29, 4, 2, 'medium', '2025-08-20', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-20 22:24:25', '2025-08-20 22:24:25', 0),
-(257, NULL, 'trrtertwerwtertw', 'sdafasdf23w', 29, 4, 2, 'medium', '2025-08-20', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-20 22:26:36', '2025-08-20 22:26:36', 0);
+(258, NULL, 'Tarea de clan 33', 'Esto es un ejemplo de tarea de clan', 29, 4, 2, 'medium', '2025-08-20', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-20 22:32:33', '2025-08-20 22:32:33', 0),
+(259, NULL, 'Tarea de prueba332', '', 29, 4, 2, 'medium', '2025-08-20', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-20 22:34:02', '2025-08-20 22:34:02', 0),
+(260, NULL, 'xq2', 'fsasfasdf', 29, 4, 2, 'medium', '2025-08-20', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-20 22:39:40', '2025-08-20 22:39:40', 0),
+(261, NULL, 'wer', 'ewsdfdsf', 29, 4, 2, 'medium', '2025-08-20', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-20 23:04:16', '2025-08-20 23:04:16', 0),
+(262, NULL, 'vcvcvcvcv', 'vfdvdfsvdfs', 29, 4, 2, 'medium', '2025-08-20', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-20 23:09:06', '2025-08-20 23:09:06', 0),
+(263, NULL, 'g3w4gerger', 'sdafsadfsadfasd', 29, 4, 2, 'medium', '2025-08-20', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-20 23:14:32', '2025-08-20 23:14:32', 0),
+(264, NULL, 'rrrere', 'dsfaerw', 29, 4, 2, 'medium', '2025-08-20', NULL, NULL, 25.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-20 23:24:46', '2025-08-20 23:25:06', 0);
 
 --
 -- Disparadores `Tasks`
@@ -1209,7 +1214,14 @@ INSERT INTO `Task_Assignments` (`assignment_id`, `task_id`, `user_id`, `assigned
 (343, 254, 4, 100.00, '2025-08-20 20:49:46', 2, 'assigned', NULL),
 (344, 255, 4, 100.00, '2025-08-20 22:18:45', 2, 'assigned', NULL),
 (345, 256, 4, 100.00, '2025-08-20 22:24:25', 2, 'assigned', NULL),
-(346, 257, 4, 100.00, '2025-08-20 22:26:36', 2, 'assigned', NULL);
+(346, 257, 4, 100.00, '2025-08-20 22:26:36', 2, 'assigned', NULL),
+(347, 258, 4, 100.00, '2025-08-20 22:32:33', 2, 'assigned', NULL),
+(348, 259, 4, 100.00, '2025-08-20 22:34:02', 2, 'assigned', NULL),
+(349, 260, 4, 100.00, '2025-08-20 22:39:40', 2, 'assigned', NULL),
+(350, 261, 4, 100.00, '2025-08-20 23:04:16', 2, 'assigned', NULL),
+(351, 262, 4, 100.00, '2025-08-20 23:09:06', 2, 'assigned', NULL),
+(352, 263, 4, 100.00, '2025-08-20 23:14:32', 2, 'assigned', NULL),
+(353, 264, 4, 100.00, '2025-08-20 23:24:46', 2, 'assigned', NULL);
 
 -- --------------------------------------------------------
 
@@ -1900,7 +1912,25 @@ INSERT INTO `Task_History` (`history_id`, `task_id`, `user_id`, `action_type`, `
 (680, 256, 2, 'created', 'subtask', NULL, 'erer432', NULL, 'Subtarea creada: erer432', '2025-08-20 22:24:25'),
 (681, 256, 2, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-08-20 22:24:25'),
 (682, 257, 2, 'assigned', 'assigned_users', NULL, '4', NULL, 'Múltiples usuarios asignados', '2025-08-20 22:26:36'),
-(683, 257, 2, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-08-20 22:26:36');
+(683, 257, 2, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-08-20 22:26:36'),
+(684, 258, 2, 'assigned', 'assigned_users', NULL, '4', NULL, 'Múltiples usuarios asignados', '2025-08-20 22:32:33'),
+(685, 258, 2, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-08-20 22:32:33'),
+(686, 259, 2, 'assigned', 'assigned_users', NULL, '4', NULL, 'Múltiples usuarios asignados', '2025-08-20 22:34:02'),
+(687, 259, 2, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-08-20 22:34:02'),
+(688, 260, 2, 'assigned', 'assigned_users', NULL, '4', NULL, 'Múltiples usuarios asignados', '2025-08-20 22:39:40'),
+(689, 260, 2, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-08-20 22:39:40'),
+(690, 261, 2, 'assigned', 'assigned_users', NULL, '4', NULL, 'Múltiples usuarios asignados', '2025-08-20 23:04:16'),
+(691, 261, 2, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-08-20 23:04:16'),
+(692, 262, 2, 'assigned', 'assigned_users', NULL, '4', NULL, 'Múltiples usuarios asignados', '2025-08-20 23:09:06'),
+(693, 262, 2, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-08-20 23:09:06'),
+(694, 263, 2, 'assigned', 'assigned_users', NULL, '4', NULL, 'Múltiples usuarios asignados', '2025-08-20 23:14:32'),
+(695, 263, 2, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-08-20 23:14:32'),
+(696, 264, 2, 'assigned', 'assigned_users', NULL, '4', NULL, 'Múltiples usuarios asignados', '2025-08-20 23:24:46'),
+(697, 264, 2, 'created', 'subtask', NULL, 'ggg', NULL, 'Subtarea creada: ggg', '2025-08-20 23:24:46'),
+(698, 264, 2, 'created', 'subtask', NULL, 'ggg', NULL, 'Subtarea creada: ggg', '2025-08-20 23:24:46'),
+(699, 264, 2, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-08-20 23:24:46'),
+(700, 264, 2, 'updated', 'subtask_status', NULL, 'in_progress', NULL, 'Estado de subtarea actualizado', '2025-08-20 23:25:06'),
+(701, 253, 1, 'created', 'subtask', NULL, 'Plan de Capacitacion Director Agencia', NULL, 'Subtarea creada: Plan de Capacitacion Director Agencia', '2025-08-20 23:28:48');
 
 -- --------------------------------------------------------
 
@@ -1974,8 +2004,8 @@ CREATE TABLE `Users` (
 --
 
 INSERT INTO `Users` (`user_id`, `username`, `password_hash`, `email`, `full_name`, `is_active`, `last_login`, `created_at`, `avatar_path`) VALUES
-(1, 'super', '123456', 'desarrollo@rinorisk.com', 'Usuario Administrador', 1, '2025-08-20 21:12:15', '2025-07-29 22:45:12', ''),
-(2, 'abdielc', '123456', 'redskullcoder@gmail.com', 'Abdiel Carrasco', 1, '2025-08-20 21:13:31', '2025-07-29 23:23:21', ''),
+(1, 'super', '123456', 'desarrollo@rinorisk.com', 'Usuario Administrador', 1, '2025-08-20 23:27:14', '2025-07-29 22:45:12', ''),
+(2, 'abdielc', '123456', 'redskullcoder@gmail.com', 'Abdiel Carrasco', 1, '2025-08-20 23:11:02', '2025-07-29 23:23:21', ''),
 (4, 'franklinb', 'Grok2024', 'desarrollo2@rinorisk.com', 'Franklin Benitez', 1, '2025-08-20 20:00:58', '2025-07-30 17:10:05', 'uploads/avatar_4_1755619752.jpeg'),
 (5, 'Rubend', '123456', 'desarrollo3@rinorisk.com', 'Ruben Dorado', 1, NULL, '2025-07-30 18:20:45', ''),
 (6, 'gaelh', '123456', 'desarrollo.fulstack@rinorisk.com', 'Gael Herrera', 1, NULL, '2025-07-30 19:36:11', ''),
@@ -1992,7 +2022,7 @@ INSERT INTO `Users` (`user_id`, `username`, `password_hash`, `email`, `full_name
 (19, 'arisbethc', '123456', 'supervisor.comercialtj@rinorisk.com', 'Arisbeth Cuevas', 1, '2025-08-07 20:20:36', '2025-08-06 21:05:25', ''),
 (20, 'marlenef', '123456', 'cobranza@rinorisk.com', 'Marlene Flores', 1, NULL, '2025-08-06 21:06:16', ''),
 (21, 'Beatrizi', '123456', 'servicio.vgmtj@rinorisk.com', 'Beatriz Ita', 1, NULL, '2025-08-06 21:07:46', ''),
-(22, 'sofiag', 'Cur7ywhoi#!', 'Sofia@rinorisk.com', 'Sofia Gallardo', 1, '2025-08-20 20:33:16', '2025-08-06 21:09:03', ''),
+(22, 'sofiag', 'Cur7ywhoi#!', 'Sofia@rinorisk.com', 'Sofia Gallardo', 1, '2025-08-20 23:32:18', '2025-08-06 21:09:03', ''),
 (23, 'taniab', '123456', 'auxiliar.inmuebles@rinorisk.com', 'Tania Barboza', 1, NULL, '2025-08-06 21:09:43', ''),
 (24, 'angelicav', '123456', 'gerente.administrativo@rinorisk.com', 'Angelica Vallejo', 1, NULL, '2025-08-06 21:10:52', ''),
 (25, 'yazmint', '123456', 'contabilidad@rinorisk.com', 'Yazmin Trejo', 1, NULL, '2025-08-06 21:11:37', ''),
@@ -2277,7 +2307,7 @@ ALTER TABLE `Clan_Members`
 -- AUTO_INCREMENT de la tabla `Notification_Log`
 --
 ALTER TABLE `Notification_Log`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=268;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=275;
 
 --
 -- AUTO_INCREMENT de la tabla `Projects`
@@ -2289,19 +2319,19 @@ ALTER TABLE `Projects`
 -- AUTO_INCREMENT de la tabla `Subtasks`
 --
 ALTER TABLE `Subtasks`
-  MODIFY `subtask_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `subtask_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
 -- AUTO_INCREMENT de la tabla `Tasks`
 --
 ALTER TABLE `Tasks`
-  MODIFY `task_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=258;
+  MODIFY `task_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=265;
 
 --
 -- AUTO_INCREMENT de la tabla `Task_Assignments`
 --
 ALTER TABLE `Task_Assignments`
-  MODIFY `assignment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=347;
+  MODIFY `assignment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=354;
 
 --
 -- AUTO_INCREMENT de la tabla `Task_Attachments`
@@ -2319,7 +2349,7 @@ ALTER TABLE `Task_Comments`
 -- AUTO_INCREMENT de la tabla `Task_History`
 --
 ALTER TABLE `Task_History`
-  MODIFY `history_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=684;
+  MODIFY `history_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=702;
 
 --
 -- AUTO_INCREMENT de la tabla `Users`
@@ -2335,6 +2365,105 @@ ALTER TABLE `Users`
 DROP TABLE IF EXISTS `v_subtasks_complete`;
 
 CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `v_subtasks_complete`  AS SELECT `s`.`subtask_id` AS `subtask_id`, `s`.`task_id` AS `task_id`, `t`.`task_name` AS `parent_task_name`, `s`.`title` AS `title`, `s`.`description` AS `description`, `s`.`completion_percentage` AS `completion_percentage`, `s`.`estimated_hours` AS `estimated_hours`, `s`.`actual_hours` AS `actual_hours`, `s`.`status` AS `status`, `s`.`priority` AS `priority`, `s`.`due_date` AS `due_date`, `s`.`assigned_to_user_id` AS `assigned_to_user_id`, `s`.`created_by_user_id` AS `created_by_user_id`, `s`.`subtask_order` AS `subtask_order`, `s`.`created_at` AS `created_at`, `s`.`updated_at` AS `updated_at`, `u_assigned`.`full_name` AS `assigned_to_fullname`, `u_assigned`.`username` AS `assigned_to_username`, `u_created`.`full_name` AS `created_by_fullname`, `u_created`.`username` AS `created_by_username` FROM (((`Subtasks` `s` left join `Tasks` `t` on(`s`.`task_id` = `t`.`task_id`)) left join `Users` `u_assigned` on(`s`.`assigned_to_user_id` = `u_assigned`.`user_id`)) left join `Users` `u_created` on(`s`.`created_by_user_id` = `u_created`.`user_id`)) ;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `Subtask_Comments`
+--
+
+CREATE TABLE `Subtask_Comments` (
+  `comment_id` int(11) NOT NULL,
+  `subtask_id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `comment_text` text NOT NULL,
+  `comment_type` enum('comment','status_change','assignment','completion','system') DEFAULT 'comment',
+  `related_user_id` int(11) DEFAULT NULL,
+  `old_value` varchar(255) DEFAULT NULL,
+  `new_value` varchar(255) DEFAULT NULL,
+  `is_private` tinyint(1) DEFAULT 0,
+  `created_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `Subtask_Attachments`
+--
+
+CREATE TABLE `Subtask_Attachments` (
+  `attachment_id` int(11) NOT NULL,
+  `subtask_id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `comment_id` int(11) DEFAULT NULL,
+  `file_name` varchar(255) NOT NULL,
+  `file_path` varchar(500) NOT NULL,
+  `file_size` int(11) DEFAULT NULL,
+  `file_type` varchar(100) DEFAULT NULL,
+  `description` text DEFAULT NULL,
+  `uploaded_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Índices para tablas volcadas
+--
+
+--
+-- Indices de la tabla `Subtask_Comments`
+--
+ALTER TABLE `Subtask_Comments`
+  ADD PRIMARY KEY (`comment_id`),
+  ADD KEY `subtask_id` (`subtask_id`),
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `related_user_id` (`related_user_id`),
+  ADD KEY `idx_subtask_comments_created_at` (`created_at`);
+
+--
+-- Indices de la tabla `Subtask_Attachments`
+--
+ALTER TABLE `Subtask_Attachments`
+  ADD PRIMARY KEY (`attachment_id`),
+  ADD KEY `subtask_id` (`subtask_id`),
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `comment_id` (`comment_id`),
+  ADD KEY `idx_subtask_attachments_uploaded_at` (`uploaded_at`);
+
+--
+-- AUTO_INCREMENT de las tablas volcadas
+--
+
+--
+-- AUTO_INCREMENT de la tabla `Subtask_Comments`
+--
+ALTER TABLE `Subtask_Comments`
+  MODIFY `comment_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `Subtask_Attachments`
+--
+ALTER TABLE `Subtask_Attachments`
+  MODIFY `attachment_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- Restricciones para tablas volcadas
+--
+
+--
+-- Filtros para la tabla `Subtask_Comments`
+--
+ALTER TABLE `Subtask_Comments`
+  ADD CONSTRAINT `subtask_comments_ibfk_1` FOREIGN KEY (`subtask_id`) REFERENCES `Subtasks` (`subtask_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `subtask_comments_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `Users` (`user_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `subtask_comments_ibfk_3` FOREIGN KEY (`related_user_id`) REFERENCES `Users` (`user_id`) ON DELETE SET NULL;
+
+--
+-- Filtros para la tabla `Subtask_Attachments`
+--
+ALTER TABLE `Subtask_Attachments`
+  ADD CONSTRAINT `subtask_attachments_ibfk_1` FOREIGN KEY (`subtask_id`) REFERENCES `Subtasks` (`subtask_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `subtask_attachments_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `Users` (`user_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `subtask_attachments_ibfk_3` FOREIGN KEY (`comment_id`) REFERENCES `Subtask_Comments` (`comment_id`) ON DELETE SET NULL;
+
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
