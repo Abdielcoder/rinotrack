@@ -2378,10 +2378,34 @@ class ClanLeaderController {
                 return [];
             }
             
-            // Obtener proyectos del clan
-            $projectStmt = $this->db->prepare("SELECT project_id FROM Projects WHERE clan_id = ?");
-            $projectStmt->execute([$this->userClan['clan_id']]);
-            $projects = $projectStmt->fetchAll(PDO::FETCH_COLUMN);
+            // Obtener proyectos del clan (excluyendo proyectos personales de otros usuarios)
+            $projectStmt = $this->db->prepare("
+                SELECT project_id, is_personal, created_by_user_id 
+                FROM Projects 
+                WHERE clan_id = ? 
+                AND (is_personal IS NULL OR is_personal != 1 OR created_by_user_id = ?)
+            ");
+            $projectStmt->execute([$this->userClan['clan_id'], $this->currentUser['user_id']]);
+            $projectData = $projectStmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Separar proyectos personales del usuario actual y proyectos no personales
+            $personalProjects = [];
+            $nonPersonalProjects = [];
+            
+            foreach ($projectData as $project) {
+                if (($project['is_personal'] ?? 0) == 1) {
+                    // Solo incluir proyectos personales del usuario actual
+                    if ($project['created_by_user_id'] == $this->currentUser['user_id']) {
+                        $personalProjects[] = $project['project_id'];
+                    }
+                } else {
+                    // Incluir todos los proyectos no personales
+                    $nonPersonalProjects[] = $project['project_id'];
+                }
+            }
+            
+            // Combinar ambos tipos de proyectos
+            $projects = array_merge($nonPersonalProjects, $personalProjects);
             
             $totalCompletedTasks = 0;
             
@@ -2393,9 +2417,30 @@ class ClanLeaderController {
                 
                 if (!empty($projects)) {
                     $placeholders = str_repeat('?,', count($projects) - 1) . '?';
-                    $taskStmt = $this->db->prepare("\n                        SELECT\n                            COUNT(DISTINCT t.task_id) as total_tasks,\n                            SUM(CASE WHEN t.status = 'completed' THEN 1 ELSE 0 END) as completed_tasks,\n                            SUM(CASE WHEN t.status = 'pending' THEN 1 ELSE 0 END) as pending_tasks,\n                            SUM(CASE WHEN t.status = 'in_progress' THEN 1 ELSE 0 END) as in_progress_tasks\n                        FROM Tasks t\n                        WHERE t.project_id IN ($placeholders)\n                          AND t.is_subtask = 0\n                          AND (\n                            t.assigned_to_user_id = ?\n                            OR t.task_id IN (SELECT ta.task_id FROM Task_Assignments ta WHERE ta.user_id = ?)\n                          )\n                    ");
                     
-                    $params = array_merge($projects, [$member['user_id'], $member['user_id']]);
+                    // Consulta que respeta la privacidad de proyectos personales
+                    $taskStmt = $this->db->prepare("
+                        SELECT
+                            COUNT(DISTINCT t.task_id) as total_tasks,
+                            SUM(CASE WHEN t.status = 'completed' THEN 1 ELSE 0 END) as completed_tasks,
+                            SUM(CASE WHEN t.status = 'pending' THEN 1 ELSE 0 END) as pending_tasks,
+                            SUM(CASE WHEN t.status = 'in_progress' THEN 1 ELSE 0 END) as in_progress_tasks
+                        FROM Tasks t
+                        JOIN Projects p ON t.project_id = p.project_id
+                        WHERE t.project_id IN ($placeholders)
+                          AND t.is_subtask = 0
+                          AND (
+                            t.assigned_to_user_id = ?
+                            OR t.task_id IN (SELECT ta.task_id FROM Task_Assignments ta WHERE ta.user_id = ?)
+                          )
+                          AND (
+                            p.is_personal IS NULL 
+                            OR p.is_personal != 1 
+                            OR (p.is_personal = 1 AND p.created_by_user_id = ?)
+                          )
+                    ");
+                    
+                    $params = array_merge($projects, [$member['user_id'], $member['user_id'], $this->currentUser['user_id']]);
                     $taskStmt->execute($params);
                     $taskStats = $taskStmt->fetch(PDO::FETCH_ASSOC);
                     
@@ -2453,7 +2498,7 @@ class ClanLeaderController {
         $members = $this->clanModel->getMembers($this->userClan['clan_id']);
         
         foreach ($members as $member) {
-            $activeTasks = $this->taskModel->getActiveTasksByUser($member['user_id']);
+            $activeTasks = $this->taskModel->getActiveTasksByUserForClanLeader($member['user_id'], $this->currentUser['user_id']);
             $taskCount = count($activeTasks);
             
             // Determinar nivel de disponibilidad
@@ -2489,13 +2534,21 @@ class ClanLeaderController {
             }
         }
         
-        // Obtener todas las tareas (incluyendo asignadas desde proyectos de otros clanes) para el calendario
+        // Obtener todas las tareas (excluyendo tareas personales de otros usuarios) para el calendario
         $allTasks = [];
-        // Los proyectos personales ya están filtrados en el modelo
-        $projects = $this->projectModel->getByClan($this->userClan['clan_id']);
-
-        $allTasksData = $this->taskModel->getAllTasksByClan($this->userClan['clan_id'], 1, 10000, '', '');
-        $calendarTasks = $allTasksData['tasks'] ?? [];
+        
+        // Obtener tareas del clan (excluyendo proyectos personales)
+        $clanTasksData = $this->taskModel->getAllTasksByClanStrict($this->userClan['clan_id'], 1, 10000, '', '');
+        $clanTasks = $clanTasksData['tasks'] ?? [];
+        
+        // Obtener tareas personales del líder actual
+        $ownPersonalTasks = $this->taskModel->getPersonalTasksForClanLeader(
+            $this->currentUser['user_id'], 
+            $this->userClan['clan_id']
+        );
+        
+        // Combinar tareas del clan y tareas personales del líder
+        $calendarTasks = array_merge($clanTasks, $ownPersonalTasks);
         foreach ($calendarTasks as $t) {
             if (($t['status'] ?? '') !== 'cancelled' && !empty($t['due_date'])) {
                 $allTasks[] = [

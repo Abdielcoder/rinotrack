@@ -645,6 +645,38 @@ class Task {
                     p.project_name,
                     p.status as project_status
                 FROM Tasks t
+                INNER JOIN Projects p ON t.project_id = t.project_id
+                WHERE (t.assigned_to_user_id = ? OR t.task_id IN (
+                    SELECT task_id FROM Task_Assignments WHERE user_id = ?
+                ))
+                AND p.clan_id = (SELECT clan_id FROM Users WHERE user_id = ?)
+                AND t.is_subtask = 0
+                AND t.status IN ('pending', 'in_progress')
+                AND (t.due_date IS NULL OR t.due_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 15 DAY))
+                AND (p.is_personal IS NULL OR p.is_personal != 1 OR (p.is_personal = 1 AND p.created_by_user_id = ?))
+                ORDER BY t.due_date ASC
+            ");
+            
+            $stmt->execute([$userId, $userId, $userId, $userId]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+        } catch (Exception $e) {
+            error_log("Error al obtener tareas activas del usuario: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Obtener tareas activas de un usuario con filtro de privacidad para el dashboard del clan leader
+     */
+    public function getActiveTasksByUserForClanLeader($userId, $clanLeaderId) {
+        try {
+            $stmt = $this->db->prepare("
+                SELECT 
+                    t.*,
+                    p.project_name,
+                    p.status as project_status
+                FROM Tasks t
                 INNER JOIN Projects p ON t.project_id = p.project_id
                 WHERE (t.assigned_to_user_id = ? OR t.task_id IN (
                     SELECT task_id FROM Task_Assignments WHERE user_id = ?
@@ -653,14 +685,19 @@ class Task {
                 AND t.is_subtask = 0
                 AND t.status IN ('pending', 'in_progress')
                 AND (t.due_date IS NULL OR t.due_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 15 DAY))
+                AND (
+                    p.is_personal IS NULL 
+                    OR p.is_personal != 1 
+                    OR (p.is_personal = 1 AND p.created_by_user_id = ?)
+                )
                 ORDER BY t.due_date ASC
             ");
             
-            $stmt->execute([$userId, $userId, $userId]);
+            $stmt->execute([$userId, $userId, $userId, $clanLeaderId]);
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
             
         } catch (Exception $e) {
-            error_log("Error al obtener tareas activas del usuario: " . $e->getMessage());
+            error_log("Error al obtener tareas activas del usuario para clan leader: " . $e->getMessage());
             return [];
         }
     }
