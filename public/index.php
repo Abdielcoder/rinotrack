@@ -485,10 +485,26 @@ try {
         $controller->getAvailableLabels();
         break;
         
-    case 'clan_leader/test':
-        $controller = new ClanLeaderController();
-        $controller->test();
-        break;
+            case 'clan_leader/test':
+            $controller = new ClanLeaderController();
+            $controller->test();
+            break;
+            
+        case 'test-subtask-creation':
+            require_once 'test-subtask-creation.php';
+            break;
+            
+        case 'debug-subtasks':
+            require_once 'debug-subtasks.html';
+            break;
+            
+        case 'test-controller':
+            require_once 'test-controller.php';
+            break;
+            
+        case 'check-database':
+            require_once 'check-database.php';
+            break;
         
     case 'clan_leader/delete-task':
         $controller = new ClanLeaderController();

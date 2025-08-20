@@ -2,26 +2,100 @@ console.log('📜 Archivo task-management.js cargado correctamente - Versión:',
 
 let subtaskCounter = 0;
 
-/* function addSubtask() {
+// Función de inicialización
+function initializeTaskManagement() {
+    console.log('🚀 === INICIALIZANDO GESTIÓN DE TAREAS ===');
+    
+    // Verificar que los elementos necesarios estén presentes
     const container = document.getElementById('subtasks-container');
     const template = document.getElementById('subtask-template');
+    const addButton = document.querySelector('button[onclick="addSubtask()"]');
+    
+    console.log('🔍 Elementos encontrados:');
+    console.log('  - Contenedor de subtareas:', container);
+    console.log('  - Template de subtareas:', template);
+    console.log('  - Botón agregar subtarea:', addButton);
+    
+    if (container && template && addButton) {
+        console.log('✅ Todos los elementos están presentes');
+    } else {
+        console.error('❌ Faltan elementos necesarios');
+    }
+    
+    // Verificar que el botón de guardar esté presente
+    const saveButton = document.querySelector('button[onclick="saveTask()"]');
+    console.log('💾 Botón de guardar:', saveButton);
+    
+    console.log('🎯 === INICIALIZACIÓN COMPLETADA ===');
+}
+
+// Ejecutar inicialización cuando el DOM esté listo
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeTaskManagement);
+} else {
+    initializeTaskManagement();
+}
+
+function addSubtask() {
+    console.log('🚀 === AGREGANDO SUBTAREA ===');
+    console.log('🔍 Buscando contenedor de subtareas...');
+    
+    const container = document.getElementById('subtasks-container');
+    const template = document.getElementById('subtask-template');
+    
+    console.log('📦 Contenedor encontrado:', container);
+    console.log('📋 Template encontrado:', template);
+    
+    if (!container || !template) {
+        console.error('❌ No se encontró el contenedor o template de subtareas');
+        console.error('❌ Container:', container);
+        console.error('❌ Template:', template);
+        return;
+    }
+    
+    console.log('🔄 Reemplazando placeholders en template...');
     const subtaskHtml = template.innerHTML
         .replace(/{index}/g, subtaskCounter)
         .replace(/{number}/g, subtaskCounter + 1);
     
+    console.log('📝 HTML generado:', subtaskHtml);
+    
     const subtaskElement = document.createElement('div');
     subtaskElement.innerHTML = subtaskHtml;
+    
+    console.log('🔧 Elemento DOM creado:', subtaskElement);
+    console.log('🔧 Primer hijo del elemento:', subtaskElement.firstElementChild);
+    
     container.appendChild(subtaskElement.firstElementChild);
     
+    console.log('✅ Subtarea agregada al contenedor');
+    console.log('📊 Contador de subtareas actualizado a:', subtaskCounter + 1);
+    
     subtaskCounter++;
-} */
+    
+    // Verificar que se agregó correctamente
+    const allSubtasks = container.querySelectorAll('.subtask-item');
+    console.log('📊 Total de subtareas en el contenedor:', allSubtasks.length);
+}
 
-/* function removeSubtask(index) {
+function removeSubtask(index) {
+    console.log('🗑️ === REMOVIENDO SUBTAREA ===');
+    console.log('🔍 Buscando subtarea con índice:', index);
+    
     const subtaskElement = document.querySelector(`[data-subtask-index="${index}"]`);
+    console.log('📦 Elemento encontrado:', subtaskElement);
+    
     if (subtaskElement) {
         subtaskElement.remove();
+        console.log('✅ Subtarea removida exitosamente');
+        
+        // Verificar que se removió correctamente
+        const allSubtasks = document.querySelectorAll('.subtask-item');
+        console.log('📊 Total de subtareas restantes:', allSubtasks.length);
+    } else {
+        console.error('❌ No se encontró la subtarea con índice:', index);
     }
-} */
+}
 
 function saveTask() {
     // Validar formulario
@@ -52,30 +126,75 @@ function saveTask() {
     });
     
     // Agregar subtareas
+    console.log('🔍 Buscando elementos de subtareas...');
+    const subtaskElements = document.querySelectorAll('.subtask-item');
+    console.log('📊 Elementos de subtareas encontrados:', subtaskElements.length);
+    
     const subtasks = [];
-    document.querySelectorAll('.subtask-item').forEach((subtask, index) => {
-        const title = subtask.querySelector('input[name^="subtasks"][name$="[title]"]').value;
-        const percentage = subtask.querySelector('input[name^="subtasks"][name$="[percentage]"]').value;
-        const description = subtask.querySelector('textarea[name^="subtasks"][name$="[description]"]').value;
+    subtaskElements.forEach((subtask, index) => {
+        console.log(`🔄 Procesando subtarea ${index + 1}:`, subtask);
         
-        if (title && percentage) {
-            subtasks.push({
-                title: title,
-                percentage: percentage,
-                description: description
-            });
+        const titleInput = subtask.querySelector('input[name^="subtasks"][name$="[title]"]');
+        const percentageInput = subtask.querySelector('input[name^="subtasks"][name$="[percentage]"]');
+        const descriptionInput = subtask.querySelector('textarea[name^="subtasks"][name$="[description]"]');
+        
+        console.log(`📝 Inputs encontrados para subtarea ${index + 1}:`, {
+            title: titleInput,
+            percentage: percentageInput,
+            description: descriptionInput
+        });
+        
+        if (titleInput && percentageInput) {
+            const title = titleInput.value;
+            const percentage = percentageInput.value;
+            const description = descriptionInput ? descriptionInput.value : '';
+            
+            console.log(`📋 Valores de subtarea ${index + 1}:`, { title, percentage, description });
+            
+            if (title && percentage) {
+                subtasks.push({
+                    title: title,
+                    percentage: percentage,
+                    description: description
+                });
+                console.log(`✅ Subtarea ${index + 1} agregada al array`);
+            } else {
+                console.log(`⚠️ Subtarea ${index + 1} no tiene título o porcentaje, saltando`);
+            }
+        } else {
+            console.log(`❌ No se encontraron inputs para subtarea ${index + 1}`);
         }
     });
     
+    console.log('📊 Array final de subtareas:', subtasks);
+    
     if (subtasks.length > 0) {
-        formData.append('subtasks', JSON.stringify(subtasks));
-        console.log('Subtareas incluidas:', subtasks);
+        const subtasksJson = JSON.stringify(subtasks);
+        formData.append('subtasks', subtasksJson);
+        console.log('✅ Subtareas incluidas en FormData:', subtasksJson);
+    } else {
+        console.log('⚠️ No hay subtareas para incluir');
     }
     
     // Log para debug
-    console.log('Enviando tarea con datos:');
+    console.log('🚀 === ENVIANDO TAREA AL SERVIDOR ===');
+    console.log('📋 FormData completo:');
     for (let [key, value] of formData.entries()) {
-        console.log(`${key}:`, value);
+        console.log(`  ${key}:`, value);
+    }
+    
+    // Log específico para subtareas
+    const subtasksValue = formData.get('subtasks');
+    if (subtasksValue) {
+        console.log('🔍 Valor de subtareas en FormData:', subtasksValue);
+        try {
+            const parsed = JSON.parse(subtasksValue);
+            console.log('✅ Subtareas parseadas correctamente:', parsed);
+        } catch (e) {
+            console.error('❌ Error parseando subtareas:', e);
+        }
+    } else {
+        console.log('⚠️ No se encontró subtasks en FormData');
     }
     
     // Enviar datos al servidor
@@ -84,31 +203,49 @@ function saveTask() {
         body: formData
     })
     .then(response => {
-        console.log('Response status:', response.status);
+        console.log('📡 Response status:', response.status);
+        console.log('📡 Response headers:', response.headers);
         return response.text(); // Primero obtener como texto
     })
     .then(text => {
-        console.log('Response body:', text);
+        console.log('📄 Response body completo:', text);
+        console.log('📄 Longitud del response:', text.length);
+        
         try {
             const data = JSON.parse(text);
+            console.log('✅ JSON parseado correctamente:', data);
+            
             if (data.success) {
+                console.log('🎉 Tarea creada exitosamente');
                 showToast('Tarea creada exitosamente', 'success');
                 setTimeout(() => {
                     window.location.href = '?route=clan_leader/tasks';
                 }, 1500);
             } else {
+                console.error('❌ Error del servidor:', data.message);
                 showToast(data.message || 'Error al crear la tarea', 'error');
-                console.error('Error del servidor:', data.message);
             }
         } catch (e) {
-            console.error('Error parseando JSON:', e);
-            console.error('Respuesta no JSON:', text);
+            console.error('❌ Error parseando JSON:', e);
+            console.error('❌ Respuesta no JSON:', text);
+            console.error('❌ Stack trace:', e.stack);
             showToast('Error del servidor. Ver consola para detalles.', 'error');
         }
     })
     .catch(error => {
+        console.error('💥 === ERROR DE RED ===');
         console.error('Error completo:', error);
-        showToast('Error al crear la tarea', 'error');
+        console.error('Error name:', error.name);
+        console.error('Error message:', error.message);
+        console.error('Error stack:', error.stack);
+        
+        if (error.name === 'TypeError') {
+            console.error('❌ Error de tipo - posible problema con fetch o FormData');
+        } else if (error.name === 'NetworkError') {
+            console.error('❌ Error de red - problema de conectividad');
+        }
+        
+        showToast('Error al crear la tarea: ' + error.message, 'error');
     });
 }
 

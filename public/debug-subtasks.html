@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Subtareas</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .subtask-item { border: 1px solid #ccc; padding: 10px; margin: 10px 0; }
+        .form-group { margin: 10px 0; }
+        label { display: block; margin-bottom: 5px; }
+        input, textarea { width: 100%; padding: 5px; }
+        button { padding: 10px 20px; margin: 5px; }
+        #debug-output { background: #f0f0f0; padding: 10px; margin: 20px 0; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Debug de Subtareas</h1>
+    
+    <div>
+        <button onclick="addSubtask()">➕ Agregar Subtarea</button>
+        <button onclick="testCollectData()">🧪 Probar Recolección</button>
+        <button onclick="testSendToServer()">📡 Probar Envío</button>
+    </div>
+    
+    <div id="subtasks-container">
+        <!-- Las subtareas se agregarán aquí -->
+    </div>
+    
+    <div id="debug-output">
+        <strong>Debug Output:</strong>
+        <br>Haz clic en "Probar Recolección" para ver los datos
+    </div>
+    
+    <!-- Template para subtareas -->
+    <template id="subtask-template">
+        <div class="subtask-item" data-subtask-index="{index}">
+            <div class="form-group">
+                <label>Título: <input type="text" name="subtasks[{index}][title]" placeholder="Título de la subtarea"></label>
+            </div>
+            <div class="form-group">
+                <label>Porcentaje: <input type="number" name="subtasks[{index}][percentage]" placeholder="25" min="0" max="100"></label>
+            </div>
+            <div class="form-group">
+                <label>Descripción: <textarea name="subtasks[{index}][description]" placeholder="Descripción"></textarea></label>
+            </div>
+            <button onclick="removeSubtask({index})">🗑️ Eliminar</button>
+        </div>
+    </template>
+    
+    <script>
+        let subtaskCounter = 0;
+        
+        function addSubtask() {
+            console.log('🚀 Agregando subtarea...');
+            
+            const container = document.getElementById('subtasks-container');
+            const template = document.getElementById('subtask-template');
+            
+            if (!container || !template) {
+                console.error('❌ No se encontró container o template');
+                return;
+            }
+            
+            const subtaskHtml = template.innerHTML
+                .replace(/{index}/g, subtaskCounter)
+                .replace(/{number}/g, subtaskCounter + 1);
+            
+            const subtaskElement = document.createElement('div');
+            subtaskElement.innerHTML = subtaskHtml;
+            
+            container.appendChild(subtaskElement.firstElementChild);
+            subtaskCounter++;
+            
+            console.log('✅ Subtarea agregada. Total:', container.querySelectorAll('.subtask-item').length);
+        }
+        
+        function removeSubtask(index) {
+            const element = document.querySelector(`[data-subtask-index="${index}"]`);
+            if (element) {
+                element.remove();
+                console.log('🗑️ Subtarea removida:', index);
+            }
+        }
+        
+        function testCollectData() {
+            console.log('🧪 === PROBANDO RECOLECCIÓN DE DATOS ===');
+            
+            const subtaskElements = document.querySelectorAll('.subtask-item');
+            console.log('📊 Elementos encontrados:', subtaskElements.length);
+            
+            const subtasks = [];
+            
+            subtaskElements.forEach((element, index) => {
+                console.log(`🔄 Procesando subtarea ${index + 1}:`, element);
+                
+                const titleInput = element.querySelector('input[name^="subtasks"][name$="[title]"]');
+                const percentageInput = element.querySelector('input[name^="subtasks"][name$="[percentage]"]');
+                const descriptionInput = element.querySelector('textarea[name^="subtasks"][name$="[description]"]');
+                
+                console.log(`📝 Inputs para subtarea ${index + 1}:`, {
+                    title: titleInput,
+                    percentage: percentageInput,
+                    description: descriptionInput
+                });
+                
+                if (titleInput && percentageInput) {
+                    const title = titleInput.value.trim();
+                    const percentage = percentageInput.value.trim();
+                    const description = descriptionInput ? descriptionInput.value.trim() : '';
+                    
+                    console.log(`📋 Valores de subtarea ${index + 1}:`, { title, percentage, description });
+                    
+                    if (title && percentage) {
+                        subtasks.push({
+                            title: title,
+                            percentage: parseInt(percentage) || 0,
+                            description: description
+                        });
+                        console.log(`✅ Subtarea ${index + 1} agregada al array`);
+                    } else {
+                        console.log(`⚠️ Subtarea ${index + 1} sin título o porcentaje`);
+                    }
+                } else {
+                    console.log(`❌ No se encontraron inputs para subtarea ${index + 1}`);
+                }
+            });
+            
+            console.log('📊 Array final de subtareas:', subtasks);
+            
+            // Mostrar en pantalla
+            const debugOutput = document.getElementById('debug-output');
+            debugOutput.innerHTML = `
+                <strong>Debug Output:</strong>
+                <br>Elementos encontrados: ${subtaskElements.length}
+                <br>Subtareas recolectadas: ${subtasks.length}
+                <br>Array de subtareas: ${JSON.stringify(subtasks, null, 2)}
+            `;
+            
+            return subtasks;
+        }
+        
+        function testSendToServer() {
+            console.log('📡 === PROBANDO ENVÍO AL SERVIDOR ===');
+            
+            const subtasks = testCollectData();
+            
+            if (subtasks.length === 0) {
+                console.log('⚠️ No hay subtareas para enviar');
+                return;
+            }
+            
+            // Crear FormData
+            const formData = new FormData();
+            formData.append('task_title', 'Tarea de prueba');
+            formData.append('task_due_date', '2024-12-31');
+            formData.append('task_project', '29');
+            formData.append('subtasks', JSON.stringify(subtasks));
+            
+            console.log('📋 FormData creado:');
+            for (let [key, value] of formData.entries()) {
+                console.log(`  ${key}:`, value);
+            }
+            
+            // Enviar al servidor
+            fetch('?route=test-subtask-creation', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                console.log('📡 Response status:', response.status);
+                return response.text();
+            })
+            .then(text => {
+                console.log('📄 Response body:', text);
+                try {
+                    const data = JSON.parse(text);
+                    console.log('✅ JSON parseado:', data);
+                } catch (e) {
+                    console.error('❌ Error parseando JSON:', e);
+                }
+            })
+            .catch(error => {
+                console.error('💥 Error:', error);
+            });
+        }
+        
+        // Inicialización
+        console.log('🚀 Debug de subtareas cargado');
+        console.log('📋 Elementos disponibles:', {
+            container: document.getElementById('subtasks-container'),
+            template: document.getElementById('subtask-template')
+        });
+    </script>
+</body>
+</html>
