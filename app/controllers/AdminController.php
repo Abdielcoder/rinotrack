@@ -239,7 +239,7 @@ class AdminController {
         
         $projects = $this->projectModel->getAllWithClanInfo();
         // Ocultar proyectos lógicos de tareas
-        $hiddenNames = ['Tareas Recurrentes', 'Tareas Eventuales'];
+        $hiddenNames = ['Tareas Recurrentes', 'Tareas Eventuales', 'Tareas Personales'];
         $projects = array_values(array_filter($projects, function($p) use ($hiddenNames) {
             return !in_array($p['project_name'], $hiddenNames, true);
         }));
