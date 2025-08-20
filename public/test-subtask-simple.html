@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Subtareas Simple</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .form-group { margin: 10px 0; }
+        label { display: block; margin-bottom: 5px; }
+        input, textarea { width: 100%; padding: 5px; }
+        button { padding: 10px 20px; margin: 5px; }
+        #result { background: #f0f0f0; padding: 10px; margin: 20px 0; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test Subtareas Simple</h1>
+    
+    <form id="testForm">
+        <div class="form-group">
+            <label>Título de la tarea:</label>
+            <input type="text" name="task_title" value="Tarea de prueba" required>
+        </div>
+        
+        <div class="form-group">
+            <label>Fecha límite:</label>
+            <input type="date" name="task_due_date" value="2024-12-31" required>
+        </div>
+        
+        <div class="form-group">
+            <label>Proyecto:</label>
+            <input type="text" name="task_project" value="29">
+        </div>
+        
+        <div class="form-group">
+            <label>Descripción:</label>
+            <textarea name="task_description">Descripción de prueba</textarea>
+        </div>
+        
+        <div class="form-group">
+            <label>Miembros asignados:</label>
+            <input type="text" name="assigned_members[]" value="1">
+            <input type="text" name="assigned_members[]" value="2">
+        </div>
+        
+        <div class="form-group">
+            <label>Prioridad:</label>
+            <input type="text" name="priority" value="medium">
+        </div>
+        
+        <div class="form-group">
+            <label>Subtareas (JSON):</label>
+            <textarea name="subtasks" rows="5">[{"title":"Subtarea 1","percentage":"25","description":"Descripción 1"},{"title":"Subtarea 2","percentage":"50","description":"Descripción 2"}]</textarea>
+        </div>
+        
+        <button type="button" onclick="testSubmit()">🧪 Probar Envío</button>
+        <button type="button" onclick="testController()">📡 Probar Controlador</button>
+        <button type="button" onclick="testInsert()">💾 Probar Inserción</button>
+    </form>
+    
+    <div id="result">
+        <strong>Resultado:</strong>
+        <br>Haz clic en uno de los botones para probar
+    </div>
+    
+    <script>
+        function testSubmit() {
+            const form = document.getElementById('testForm');
+            const formData = new FormData(form);
+            
+            console.log('📋 === FORM DATA ===');
+            for (let [key, value] of formData.entries()) {
+                console.log(`${key}:`, value);
+            }
+            
+            // Verificar específicamente las subtareas
+            const subtasksValue = formData.get('subtasks');
+            console.log('🔍 Valor de subtareas:', subtasksValue);
+            
+            try {
+                const parsed = JSON.parse(subtasksValue);
+                console.log('✅ Subtareas parseadas:', parsed);
+                console.log('✅ Cantidad de subtareas:', parsed.length);
+            } catch (e) {
+                console.error('❌ Error parseando subtareas:', e);
+            }
+            
+            // Mostrar resultado
+            document.getElementById('result').innerHTML = `
+                <strong>FormData creado:</strong>
+                <br>Subtareas: ${subtasksValue}
+                <br>Subtareas parseadas: ${JSON.stringify(JSON.parse(subtasksValue), null, 2)}
+            `;
+        }
+        
+        function testController() {
+            const form = document.getElementById('testForm');
+            const formData = new FormData(form);
+            
+            console.log('📡 === ENVIANDO AL CONTROLADOR ===');
+            
+            fetch('?route=test-controller', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                console.log('📡 Response status:', response.status);
+                return response.text();
+            })
+            .then(text => {
+                console.log('📄 Response body:', text);
+                
+                try {
+                    const data = JSON.parse(text);
+                    console.log('✅ JSON parseado:', data);
+                    
+                    document.getElementById('result').innerHTML = `
+                        <strong>Respuesta del controlador:</strong>
+                        <br>${JSON.stringify(data, null, 2)}
+                    `;
+                } catch (e) {
+                    console.error('❌ Error parseando JSON:', e);
+                    document.getElementById('result').innerHTML = `
+                        <strong>Error parseando JSON:</strong>
+                        <br>${text}
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('💥 Error:', error);
+                document.getElementById('result').innerHTML = `
+                    <strong>Error de red:</strong>
+                    <br>${error.message}
+                `;
+            });
+        }
+        
+        function testInsert() {
+            const form = document.getElementById('testForm');
+            const formData = new FormData(form);
+            
+            console.log('💾 === PROBANDO INSERCIÓN ===');
+            
+            fetch('?route=test-subtask-insert', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                console.log('📡 Response status:', response.status);
+                return response.text();
+            })
+            .then(text => {
+                console.log('📄 Response body:', text);
+                
+                try {
+                    const data = JSON.parse(text);
+                    console.log('✅ JSON parseado:', data);
+                    
+                    document.getElementById('result').innerHTML = `
+                        <strong>Resultado de inserción:</strong>
+                        <br>${JSON.stringify(data, null, 2)}
+                    `;
+                } catch (e) {
+                    console.error('❌ Error parseando JSON:', e);
+                    document.getElementById('result').innerHTML = `
+                        <strong>Error parseando JSON:</strong>
+                        <br>${text}
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('💥 Error:', error);
+                document.getElementById('result').innerHTML = `
+                    <strong>Error de red:</strong>
+                    <br>${error.message}
+                `;
+            });
+        }
+        
+        // Inicialización
+        console.log('🚀 Test de subtareas cargado');
+        console.log('📋 Formulario disponible:', document.getElementById('testForm'));
+    </script>
+</body>
+</html>

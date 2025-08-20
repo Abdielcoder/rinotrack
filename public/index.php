@@ -509,6 +509,10 @@ try {
         case 'test-subtask-insert':
             require_once 'test-subtask-insert.php';
             break;
+            
+        case 'test-subtask-simple':
+            require_once 'test-subtask-simple.html';
+            break;
         
     case 'clan_leader/delete-task':
         $controller = new ClanLeaderController();

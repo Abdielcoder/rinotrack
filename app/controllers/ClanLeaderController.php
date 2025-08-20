@@ -1146,17 +1146,38 @@ class ClanLeaderController {
         error_log('  subtasks: ' . print_r($_POST['subtasks'] ?? 'NOT SET', true));
         
         // Log SUPER DETALLADO para subtareas
+        error_log('=== VERIFICACIÓN DE SUBTAREAS ===');
+        error_log('createTask - $_POST completo: ' . print_r($_POST, true));
+        error_log('createTask - Claves en $_POST: ' . implode(', ', array_keys($_POST)));
+        
         if (isset($_POST['subtasks'])) {
             error_log('createTask - ✅ Subtareas recibidas (raw): ' . $_POST['subtasks']);
+            error_log('createTask - ✅ Tipo de subtareas: ' . gettype($_POST['subtasks']));
+            error_log('createTask - ✅ Longitud de subtareas: ' . strlen($_POST['subtasks']));
+            
             $decodedSubtasks = json_decode($_POST['subtasks'], true);
             error_log('createTask - ✅ Subtareas decodificadas: ' . print_r($decodedSubtasks, true));
             error_log('createTask - ✅ Tipo de subtareas decodificadas: ' . gettype($decodedSubtasks));
+            
             if (is_array($decodedSubtasks)) {
                 error_log('createTask - ✅ Cantidad de subtareas: ' . count($decodedSubtasks));
+                foreach ($decodedSubtasks as $index => $subtask) {
+                    error_log("createTask - ✅ Subtarea ${index}: " . print_r($subtask, true));
+                }
+            } else {
+                error_log('createTask - ❌ Subtareas decodificadas NO es array');
+                error_log('createTask - ❌ JSON error: ' . json_last_error_msg());
             }
         } else {
             error_log('createTask - ❌ NO se recibieron subtareas en $_POST');
             error_log('createTask - ❌ Claves disponibles en $_POST: ' . implode(', ', array_keys($_POST)));
+            
+            // Verificar si hay algún campo similar
+            foreach ($_POST as $key => $value) {
+                if (strpos($key, 'subtask') !== false || strpos($key, 'sub') !== false) {
+                    error_log("createTask - 🔍 Campo similar encontrado: ${key} = " . print_r($value, true));
+                }
+            }
         }
         
         $taskTitle = Utils::sanitizeInput($_POST['task_title'] ?? '');
