@@ -1231,7 +1231,7 @@ class ClanLeaderController {
                 $desc = trim($st['description'] ?? '');
                 error_log('createTask - Subtarea ' . ($index + 1) . ' - description: "' . $desc . '"');
                 
-                $perc = isset($st['percentage']) && $st['percentage'] !== '' ? (float)$st['percentage'] : 0.0;
+                $perc = isset($st['percentage']) && $st['percentage'] !== '' ? (float)$st['percentage'] : (isset($st['completion_percentage']) && $st['completion_percentage'] !== '' ? (float)$st['completion_percentage'] : 0.0);
                 error_log('createTask - Subtarea ' . ($index + 1) . ' - percentage procesado: ' . $perc);
                 
                 // Validar que el porcentaje esté en el rango correcto
@@ -1246,16 +1246,16 @@ class ClanLeaderController {
                 $prio = in_array(($st['priority'] ?? 'medium'), ['low','medium','high','urgent'], true) ? ($st['priority'] ?? 'medium') : 'medium';
                 error_log('createTask - Subtarea ' . ($index + 1) . ' - priority: ' . $prio);
                 
-                $auid = isset($st['assigned_user_id']) && $st['assigned_user_id'] !== '' ? (int)$st['assigned_user_id'] : null;
-                error_log('createTask - Subtarea ' . ($index + 1) . ' - assigned_user_id: ' . ($auid ?? 'NULL'));
+                $auid = isset($st['assigned_to_user_id']) && $st['assigned_to_user_id'] !== '' ? (int)$st['assigned_to_user_id'] : null;
+                error_log('createTask - Subtarea ' . ($index + 1) . ' - assigned_to_user_id: ' . ($auid ?? 'NULL'));
                 
                 $normalized[] = [
                     'title' => $title,
                     'description' => $desc,
-                    'percentage' => $perc,
+                    'completion_percentage' => $perc,
                     'due_date' => $due,
                     'priority' => $prio,
-                    'assigned_user_id' => $auid,
+                    'assigned_to_user_id' => $auid,
                 ];
                 error_log('createTask - ✅ Subtarea ' . ($index + 1) . ' normalizada: ' . print_r($normalized[count($normalized)-1], true));
             }

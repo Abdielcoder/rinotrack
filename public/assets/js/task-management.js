@@ -139,7 +139,7 @@ function saveTask() {
         const descriptionInput = subtask.querySelector('textarea[name^="subtasks"][name$="[description]"]');
         const dueDateInput = subtask.querySelector('input[name^="subtasks"][name$="[due_date]"]');
         const priorityInput = subtask.querySelector('select[name^="subtasks"][name$="[priority]"]');
-        const assignedUserInput = subtask.querySelector('select[name^="subtasks"][name$="[assigned_user_id]"]');
+        const assignedUserInput = subtask.querySelector('select[name^="subtasks"][name$="[assigned_to_user_id]"]');
         
         console.log(`📝 Inputs encontrados para subtarea ${index + 1}:`, {
             title: titleInput,
@@ -154,9 +154,9 @@ function saveTask() {
             const title = titleInput.value;
             const percentage = percentageInput.value;
             const description = descriptionInput ? descriptionInput.value : '';
-            const dueDate = dueDateInput ? dueDateInput.value : '';
+            const dueDate = dueDateInput ? dueDateInput.value : null;
             const priority = priorityInput ? priorityInput.value : 'medium';
-            const assignedUserId = assignedUserInput ? assignedUserInput.value : '';
+            const assignedUserId = assignedUserInput ? (assignedUserInput.value || null) : null;
             
             console.log(`📋 Valores de subtarea ${index + 1}:`, { 
                 title, 
@@ -174,7 +174,7 @@ function saveTask() {
                     description: description,
                     due_date: dueDate,
                     priority: priority,
-                    assigned_user_id: assignedUserId
+                    assigned_to_user_id: assignedUserId
                 });
                 console.log(`✅ Subtarea ${index + 1} agregada al array`);
             } else {

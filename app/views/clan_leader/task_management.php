@@ -277,7 +277,7 @@ function getActiveTasksCount($userId) {
                 <div class="form-group">
                     <label>Asignar a</label>
                     <div class="select-wrapper">
-                        <select name="subtasks[{index}][assigned_user_id]">
+                        <select name="subtasks[{index}][assigned_to_user_id]">
                             <option value="">Sin asignar</option>
                             <?php foreach ($members as $member): ?>
                                 <option value="<?php echo $member['user_id']; ?>">
@@ -547,9 +547,9 @@ function collectSubtasksData() {
         const title = element.querySelector('input[name^="subtasks"][name$="[title]"]').value;
         const percentage = element.querySelector('input[name^="subtasks"][name$="[percentage]"]').value;
         const description = element.querySelector('textarea[name^="subtasks"][name$="[description]"]').value;
-        const dueDate = element.querySelector('input[name^="subtasks"][name$="[due_date]"]').value;
+        const dueDate = element.querySelector('input[name^="subtasks"][name$="[due_date]"]').value || null;
         const priority = element.querySelector('select[name^="subtasks"][name$="[priority]"]').value;
-        const assignedUserId = element.querySelector('select[name^="subtasks"][name$="[assigned_user_id]"]').value;
+        const assignedUserId = element.querySelector('select[name^="subtasks"][name$="[assigned_to_user_id]"]').value || null;
         
         if (title.trim() !== '') {
             subtasks.push({
@@ -558,7 +558,7 @@ function collectSubtasksData() {
                 description: description.trim(),
                 due_date: dueDate,
                 priority: priority,
-                assigned_user_id: assignedUserId
+                assigned_to_user_id: assignedUserId
             });
         }
     });

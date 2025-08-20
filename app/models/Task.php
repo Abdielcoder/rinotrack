@@ -159,10 +159,10 @@ class Task {
                         $subtask['title'], 
                         $createdByUserId,
                         $subtask['description'] ?? '', 
-                        $subtask['percentage'] ?? 0,
+                        $subtask['completion_percentage'] ?? 0,
                         $subtask['due_date'] ?? null,
                         $subtaskPriority,
-                        $subtask['assigned_user_id'] ?? null
+                        $subtask['assigned_to_user_id'] ?? null
                     );
                     
                     if (!$subId) {
@@ -306,6 +306,10 @@ class Task {
                 INSERT INTO Subtasks (task_id, title, description, completion_percentage, due_date, priority, assigned_to_user_id, created_by_user_id, subtask_order) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, (SELECT COALESCE(MAX(subtask_order), 0) + 1 FROM Subtasks s WHERE s.task_id = ?))
             ");
+            
+            // Convertir valores vacíos a NULL
+            $dueDate = empty($dueDate) ? null : $dueDate;
+            $assignedUserId = empty($assignedUserId) ? null : $assignedUserId;
             
             $params = [$taskId, $title, $description, $percentage, $dueDate, $priority, $assignedUserId, $createdByUserId, $taskId];
             error_log('Task::createSubtaskAdvanced - Parámetros para INSERT: ' . print_r($params, true));
