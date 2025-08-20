@@ -428,6 +428,22 @@ ob_start();
                 <input type="date" id="taskDueDate" name="dueDate">
             </div>
 
+            <!-- Sección de Subtareas -->
+            <div class="form-group">
+                <label>Subtareas</label>
+                <div class="subtasks-container">
+                    <div class="subtasks-header">
+                        <span>Organiza tu tarea en pasos más pequeños</span>
+                        <button type="button" class="btn btn-small btn-secondary" id="addSubtaskBtn">
+                            <i class="fas fa-plus"></i> Agregar Subtarea
+                        </button>
+                    </div>
+                    <div id="subtasksList" class="subtasks-list">
+                        <!-- Las subtareas se agregarán aquí dinámicamente -->
+                    </div>
+                </div>
+            </div>
+
             <div class="modal-actions">
                 <button type="button" class="btn btn-secondary" data-action="close-task-modal">
                     Cancelar
@@ -744,6 +760,119 @@ textarea {
     font-family: inherit;
 }
 
+/* Estilos para subtareas */
+.subtasks-container {
+    border: 1px solid var(--bg-accent);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    background: var(--bg-tertiary);
+}
+
+.subtasks-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-md);
+    padding-bottom: var(--spacing-sm);
+    border-bottom: 1px solid var(--bg-accent);
+}
+
+.subtasks-header span {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.btn-small {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: 0.85rem;
+}
+
+.subtasks-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.subtask-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm);
+    background: var(--bg-primary);
+    border: 1px solid var(--bg-accent);
+    border-radius: var(--radius-sm);
+    position: relative;
+}
+
+.subtask-item:hover {
+    border-color: var(--primary-color);
+}
+
+.subtask-drag-handle {
+    cursor: grab;
+    color: var(--text-muted);
+    font-size: 1.1rem;
+}
+
+.subtask-drag-handle:active {
+    cursor: grabbing;
+}
+
+.subtask-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    padding: var(--spacing-xs);
+}
+
+.subtask-input:focus {
+    outline: none;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-xs);
+}
+
+.subtask-remove {
+    background: none;
+    border: none;
+    color: var(--error);
+    cursor: pointer;
+    padding: var(--spacing-xs);
+    border-radius: var(--radius-xs);
+    font-size: 0.9rem;
+    opacity: 0.7;
+    transition: opacity var(--transition-normal);
+}
+
+.subtask-remove:hover {
+    opacity: 1;
+    background: var(--error);
+    color: white;
+}
+
+.subtasks-empty {
+    text-align: center;
+    color: var(--text-muted);
+    font-style: italic;
+    padding: var(--spacing-lg);
+    border: 2px dashed var(--bg-accent);
+    border-radius: var(--radius-sm);
+    background: var(--bg-primary);
+}
+
+.subtask-counter {
+    position: absolute;
+    top: -8px;
+    left: 8px;
+    background: var(--primary-color);
+    color: white;
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-weight: var(--font-weight-medium);
+}
+
 @media (max-width: 768px) {
     .projects-header {
         flex-direction: column;
@@ -867,7 +996,100 @@ textarea {
             }
         }
 
-        function closeTaskModal() { if (taskModal) taskModal.style.display = 'none'; }
+        function closeTaskModal() { 
+            if (taskModal) {
+                taskModal.style.display = 'none';
+                // Limpiar subtareas al cerrar
+                clearSubtasks();
+            }
+        }
+
+        // -------- Gestión de Subtareas --------
+        let subtaskCounter = 0;
+
+        function addSubtask(title = '') {
+            subtaskCounter++;
+            const subtaskId = 'subtask_' + subtaskCounter;
+            const subtasksList = document.getElementById('subtasksList');
+            
+            // Crear elemento de subtarea
+            const subtaskItem = document.createElement('div');
+            subtaskItem.className = 'subtask-item';
+            subtaskItem.dataset.subtaskId = subtaskId;
+            
+            subtaskItem.innerHTML = `
+                <span class="subtask-counter">${subtaskCounter}</span>
+                <i class="fas fa-grip-vertical subtask-drag-handle" title="Arrastrar para reordenar"></i>
+                <input type="text" class="subtask-input" name="subtasks[]" placeholder="Nombre de la subtarea..." value="${title}" required>
+                <button type="button" class="subtask-remove" onclick="removeSubtask('${subtaskId}')" title="Eliminar subtarea">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            if (subtasksList) {
+                subtasksList.appendChild(subtaskItem);
+                updateSubtasksDisplay();
+                
+                // Enfocar el input de la nueva subtarea
+                const input = subtaskItem.querySelector('.subtask-input');
+                if (input) {
+                    input.focus();
+                }
+            }
+        }
+
+        function removeSubtask(subtaskId) {
+            const subtaskItem = document.querySelector(`[data-subtask-id="${subtaskId}"]`);
+            if (subtaskItem) {
+                subtaskItem.remove();
+                updateSubtasksDisplay();
+                renumberSubtasks();
+            }
+        }
+
+        function clearSubtasks() {
+            const subtasksList = document.getElementById('subtasksList');
+            if (subtasksList) {
+                subtasksList.innerHTML = '';
+                subtaskCounter = 0;
+                updateSubtasksDisplay();
+            }
+        }
+
+        function updateSubtasksDisplay() {
+            const subtasksList = document.getElementById('subtasksList');
+            const subtaskItems = subtasksList ? subtasksList.querySelectorAll('.subtask-item') : [];
+            
+            if (subtaskItems.length === 0 && subtasksList) {
+                subtasksList.innerHTML = '<div class="subtasks-empty">No hay subtareas agregadas. Haz clic en "Agregar Subtarea" para comenzar.</div>';
+            } else if (subtasksList && subtasksList.querySelector('.subtasks-empty')) {
+                subtasksList.querySelector('.subtasks-empty').remove();
+            }
+        }
+
+        function renumberSubtasks() {
+            const subtaskItems = document.querySelectorAll('.subtask-item');
+            subtaskItems.forEach((item, index) => {
+                const counter = item.querySelector('.subtask-counter');
+                if (counter) {
+                    counter.textContent = index + 1;
+                }
+            });
+            subtaskCounter = subtaskItems.length;
+        }
+
+        // Event listener para agregar subtareas
+        document.addEventListener('click', function(e) {
+            if (e.target.id === 'addSubtaskBtn' || e.target.closest('#addSubtaskBtn')) {
+                e.preventDefault();
+                addSubtask();
+            }
+        });
+
+        // Inicializar display de subtareas vacío
+        document.addEventListener('DOMContentLoaded', function() {
+            updateSubtasksDisplay();
+        });
         
         // Función para limpiar errores
         function clearErrors() {

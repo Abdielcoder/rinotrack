@@ -871,6 +871,23 @@ class AdminController {
         if (isset($_POST['assignedUsers'])) {
             $assignedUsers = is_array($_POST['assignedUsers']) ? array_map('intval', $_POST['assignedUsers']) : [ (int)$_POST['assignedUsers'] ];
         }
+        // Subtareas (opcional)
+        $subtasks = [];
+        if (isset($_POST['subtasks']) && is_array($_POST['subtasks'])) {
+            foreach ($_POST['subtasks'] as $subtaskTitle) {
+                $subtaskTitle = trim(Utils::sanitizeInput($subtaskTitle));
+                if ($subtaskTitle !== '') {
+                    $subtasks[] = [
+                        'title' => $subtaskTitle,
+                        'description' => '',
+                        'percentage' => 0,
+                        'due_date' => null,
+                        'priority' => Task::PRIORITY_MEDIUM,
+                        'assigned_user_id' => null
+                    ];
+                }
+            }
+        }
         // Repeticiones para tareas recurrentes (opcional, fechas AAAA-MM-DD)
         $repeatDates = [];
         if (isset($_POST['repeatDates'])) {
@@ -897,6 +914,7 @@ class AdminController {
         error_log("Project ID: $projectId");
         error_log("Project Name: $projectName");
         error_log("Task Name: $taskName");
+        error_log("Subtasks: " . print_r($subtasks, true));
         error_log("Repeat Dates: " . print_r($repeatDates, true));
         error_log("Es Tarea Recurrente: " . ($projectName === 'Tareas Recurrentes' ? 'SÍ' : 'NO'));
         error_log("Es Tarea Eventual: " . ($projectName === 'Tareas Eventuales' ? 'SÍ' : 'NO'));
@@ -915,8 +933,18 @@ class AdminController {
         $taskModel = new Task();
         $currentUser = $this->auth->getCurrentUser();
         try {
-            if (!empty($assignedUsers)) {
-                $taskId = $taskModel->createAdvanced($projectId, $taskName, $description, $dueDate, $clanId, Task::PRIORITY_MEDIUM, $currentUser['user_id'] ?? null, $assignedUsers);
+            if (!empty($assignedUsers) || !empty($subtasks)) {
+                $taskId = $taskModel->createAdvanced(
+                    $projectId, 
+                    $taskName, 
+                    $description, 
+                    $dueDate, 
+                    $clanId, 
+                    Task::PRIORITY_MEDIUM, 
+                    $currentUser['user_id'] ?? null, 
+                    $assignedUsers,
+                    $subtasks  // Agregar subtareas al método
+                );
             } else {
                 $taskId = $taskModel->create($projectId, $taskName, $description, null, Task::PRIORITY_MEDIUM, $dueDate, $currentUser['user_id'] ?? null);
             }
@@ -930,8 +958,8 @@ class AdminController {
                         continue; 
                     }
                     error_log("Creando tarea duplicada para fecha: $rDate");
-                    if (!empty($assignedUsers)) {
-                        $duplicateTaskId = $taskModel->createAdvanced($projectId, $taskName, $description, $rDate, $clanId, Task::PRIORITY_MEDIUM, $currentUser['user_id'] ?? null, $assignedUsers);
+                    if (!empty($assignedUsers) || !empty($subtasks)) {
+                        $duplicateTaskId = $taskModel->createAdvanced($projectId, $taskName, $description, $rDate, $clanId, Task::PRIORITY_MEDIUM, $currentUser['user_id'] ?? null, $assignedUsers, $subtasks);
                         error_log("Tarea duplicada creada con ID: $duplicateTaskId");
                     } else {
                         $duplicateTaskId = $taskModel->create($projectId, $taskName, $description, null, Task::PRIORITY_MEDIUM, $rDate, $currentUser['user_id'] ?? null);
