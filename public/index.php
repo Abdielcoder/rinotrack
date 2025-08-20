@@ -691,6 +691,11 @@ try {
             $controller = new ClanMemberController();
             $controller->testPersonalTask();
             break;
+        
+        case 'clan_member/update-subtask-status':
+            $controller = new ClanMemberController();
+            $controller->updateSubtaskStatus();
+            break;
             
         default:
             // Verificar si es un asset

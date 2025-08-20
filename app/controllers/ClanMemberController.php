@@ -1243,6 +1243,73 @@ class ClanMemberController {
             die('Vista no encontrada: ' . $view);
         }
     }
+    
+    /**
+     * Actualizar estado de subtarea (para clan members)
+     */
+    public function updateSubtaskStatus() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
+        }
+        
+        $subtaskId = (int)($_POST['subtask_id'] ?? 0);
+        $status = Utils::sanitizeInput($_POST['status'] ?? '');
+        $completionPercentage = isset($_POST['completion_percentage']) ? (float)$_POST['completion_percentage'] : null;
+        
+        if ($subtaskId <= 0) {
+            Utils::jsonResponse(['success' => false, 'message' => 'ID de subtarea inválido'], 400);
+        }
+        
+        // Si no se envía status pero sí completion_percentage, solo actualizar porcentaje
+        if (empty($status) && $completionPercentage === null) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Debe proporcionar estado o porcentaje de completación'], 400);
+        }
+        
+        try {
+            // Verificar que la subtarea pertenece a una tarea del clan del usuario
+            $stmt = $this->db->prepare("
+                SELECT s.*, t.project_id, p.clan_id, ta.user_id as assigned_user
+                FROM Subtasks s
+                JOIN Tasks t ON s.task_id = t.task_id
+                JOIN Projects p ON t.project_id = p.project_id
+                LEFT JOIN TaskAssignments ta ON t.task_id = ta.task_id AND ta.user_id = ?
+                WHERE s.subtask_id = ?
+            ");
+            $stmt->execute([$this->currentUser['user_id'], $subtaskId]);
+            $subtask = $stmt->fetch();
+            
+            if (!$subtask) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Subtarea no encontrada'], 404);
+            }
+            
+            // Verificar que el usuario pertenece al clan y está asignado a la tarea
+            if ($subtask['clan_id'] != $this->userClan['clan_id']) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado - no perteneces a este clan'], 403);
+            }
+            
+            if (!$subtask['assigned_user']) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado - no estás asignado a esta tarea'], 403);
+            }
+            
+            // Actualizar estado
+            $result = $this->taskModel->updateSubtaskStatus(
+                $subtaskId, 
+                $status, 
+                $completionPercentage, 
+                $this->currentUser['user_id']
+            );
+            
+            if ($result) {
+                Utils::jsonResponse(['success' => true, 'message' => 'Estado actualizado exitosamente']);
+            } else {
+                Utils::jsonResponse(['success' => false, 'message' => 'Error al actualizar estado'], 500);
+            }
+            
+        } catch (Exception $e) {
+            error_log("Error al actualizar estado de subtarea (clan member): " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error al actualizar estado'], 500);
+        }
+    }
 }
 
 ?>

@@ -44,6 +44,67 @@ ob_start();
           <div><?php echo nl2br(htmlspecialchars($task['description'] ?? '')); ?></div>
         </div>
 
+        <!-- Sección de Subtareas -->
+        <?php if (!empty($subtasks)): ?>
+        <div class="summary-card">
+          <h3><i class="fas fa-tasks"></i> Subtareas (<?php echo count($subtasks); ?>)</h3>
+          <div class="subtasks-list">
+            <?php foreach ($subtasks as $subtask): ?>
+            <div class="subtask-item" data-subtask-id="<?php echo $subtask['subtask_id']; ?>">
+              <div class="subtask-info">
+                <div class="subtask-header">
+                  <div class="subtask-title"><?php echo htmlspecialchars($subtask['title']); ?></div>
+                  <?php if ($canEdit): ?>
+                  <div class="subtask-actions">
+                    <button class="btn-icon-small" onclick="editSubtask(<?php echo $subtask['subtask_id']; ?>)" title="Editar">
+                      <i class="fas fa-edit"></i>
+                    </button>
+                  </div>
+                  <?php endif; ?>
+                </div>
+                <div class="subtask-meta">
+                  <span>Estado: <?php echo ucfirst($subtask['status']); ?></span>
+                  <?php if (!empty($subtask['assigned_user_name'])): ?>
+                  <span>Asignado: <?php echo htmlspecialchars($subtask['assigned_user_name']); ?></span>
+                  <?php endif; ?>
+                  <?php if ($subtask['due_date']): ?>
+                  <span>Vence: <?php echo Utils::formatDate($subtask['due_date']); ?></span>
+                  <?php endif; ?>
+                </div>
+                <?php if (!empty($subtask['description'])): ?>
+                <div class="subtask-description">
+                  <?php echo htmlspecialchars($subtask['description']); ?>
+                </div>
+                <?php endif; ?>
+              </div>
+              <div class="subtask-controls">
+                <div class="subtask-progress">
+                  <div class="progress-bar">
+                    <div class="progress-fill" style="width: <?php echo $subtask['completion_percentage']; ?>%"></div>
+                  </div>
+                  <span class="progress-percentage">
+                    <?php echo $subtask['completion_percentage']; ?>%
+                  </span>
+                </div>
+                <?php if ($canEdit): ?>
+                <div class="subtask-status-controls">
+                  <select class="status-select" onchange="updateSubtaskStatus(<?php echo $subtask['subtask_id']; ?>, this.value)">
+                    <option value="pending" <?php echo $subtask['status'] === 'pending' ? 'selected' : ''; ?>>Pendiente</option>
+                    <option value="in_progress" <?php echo $subtask['status'] === 'in_progress' ? 'selected' : ''; ?>>En Progreso</option>
+                    <option value="completed" <?php echo $subtask['status'] === 'completed' ? 'selected' : ''; ?>>Completada</option>
+                  </select>
+                  <span class="status-display">
+                    Estado: <?php echo ucfirst(str_replace('_', ' ', $subtask['status'])); ?>
+                  </span>
+                </div>
+                <?php endif; ?>
+              </div>
+            </div>
+            <?php endforeach; ?>
+          </div>
+        </div>
+        <?php endif; ?>
+
         <div class="summary-card">
           <h3>Comentarios (<?php echo count($comments); ?>)</h3>
           <?php if ($canEdit): ?>
@@ -271,6 +332,134 @@ function noPermissionModal(){
   background: #d1fae5;
   color: #065f46;
 }
+
+/* Estilos para subtareas */
+.subtasks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 15px;
+}
+
+.subtask-item {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 15px;
+}
+
+.subtask-info {
+  flex: 1;
+}
+
+.subtask-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.subtask-title {
+  font-weight: 600;
+  color: #1f2937;
+  font-size: 14px;
+}
+
+.subtask-actions {
+  display: flex;
+  gap: 5px;
+}
+
+.btn-icon-small {
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 4px;
+  background: #f3f4f6;
+  color: #6b7280;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  transition: all 0.2s ease;
+}
+
+.btn-icon-small:hover {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.subtask-meta {
+  display: flex;
+  gap: 15px;
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 8px;
+}
+
+.subtask-description {
+  margin-top: 8px;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.subtask-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 150px;
+}
+
+.subtask-progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.progress-bar {
+  width: 80px;
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: #10b981;
+  transition: width 0.3s ease;
+}
+
+.progress-percentage {
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+  min-width: 35px;
+}
+
+.subtask-status-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.status-select {
+  padding: 4px 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 12px;
+  background: #fff;
+}
+
+.status-display {
+  font-size: 11px;
+  color: #6b7280;
+}
 </style>
 
 <script>
@@ -319,6 +508,130 @@ function noPermissionModal(){
     applyQuote(null);
   })();
 })();
+
+// Funciones para subtareas
+function updateSubtaskStatus(subtaskId, status) {
+  // Determinar porcentaje automático basado en el estado
+  let completion_percentage = 0;
+  if (status === 'in_progress') {
+    completion_percentage = 50;
+  } else if (status === 'completed') {
+    completion_percentage = 100;
+  } else if (status === 'pending') {
+    completion_percentage = 0;
+  }
+  
+  fetch('?route=clan_member/update-subtask-status', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: `subtask_id=${subtaskId}&status=${status}&completion_percentage=${completion_percentage}`
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      // Actualizar la UI
+      const subtaskItem = document.querySelector(`[data-subtask-id="${subtaskId}"]`);
+      if (subtaskItem) {
+        // Actualizar el estado en la meta
+        const statusSpan = subtaskItem.querySelector('.subtask-meta span:first-child');
+        if (statusSpan) {
+          statusSpan.textContent = `Estado: ${status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ')}`;
+        }
+        
+        // Actualizar la barra de progreso
+        const progressFill = subtaskItem.querySelector('.progress-fill');
+        const percentageSpan = subtaskItem.querySelector('.progress-percentage');
+        if (progressFill) {
+          progressFill.style.width = completion_percentage + '%';
+        }
+        if (percentageSpan) {
+          percentageSpan.textContent = completion_percentage + '%';
+        }
+        
+        // Actualizar el estado en los controles
+        const statusDisplaySpan = subtaskItem.querySelector('.status-display');
+        if (statusDisplaySpan) {
+          statusDisplaySpan.textContent = `Estado: ${status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ')}`;
+        }
+      }
+      
+      showNotification('Estado de subtarea actualizado', 'success');
+    } else {
+      showNotification('Error al actualizar estado: ' + data.message, 'error');
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    showNotification('Error al actualizar estado', 'error');
+  });
+}
+
+function editSubtask(subtaskId) {
+  // Función básica de edición de subtarea
+  alert('Función de edición de subtarea en desarrollo');
+}
+
+// Función simple de notificación para el clan member
+function showNotification(message, type = 'info') {
+  // Crear notificación si no existe
+  let notification = document.getElementById('cm-notification');
+  if (!notification) {
+    const notificationHTML = `
+      <div id="cm-notification" style="
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        padding: 12px 20px;
+        border-radius: 8px;
+        color: white;
+        font-weight: 600;
+        display: none;
+        transition: all 0.3s ease;
+      ">
+        <span id="cm-notificationMessage"></span>
+        <button onclick="closeCMNotification()" style="
+          background: none;
+          border: none;
+          color: white;
+          margin-left: 10px;
+          cursor: pointer;
+          font-size: 16px;
+        ">&times;</button>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', notificationHTML);
+    notification = document.getElementById('cm-notification');
+  }
+  
+  const messageElement = document.getElementById('cm-notificationMessage');
+  messageElement.textContent = message;
+  
+  // Aplicar colores según el tipo
+  if (type === 'success') {
+    notification.style.backgroundColor = '#10b981';
+  } else if (type === 'error') {
+    notification.style.backgroundColor = '#ef4444';
+  } else {
+    notification.style.backgroundColor = '#3b82f6';
+  }
+  
+  notification.style.display = 'block';
+  
+  // Auto-ocultar después de 3 segundos
+  setTimeout(() => {
+    notification.style.display = 'none';
+  }, 3000);
+}
+
+function closeCMNotification() {
+  const notification = document.getElementById('cm-notification');
+  if (notification) {
+    notification.style.display = 'none';
+  }
+}
 </script>
 
 <!-- Modal editar tarea -->
