@@ -1268,27 +1268,22 @@ class ClanMemberController {
         try {
             // Verificar que la subtarea pertenece a una tarea del clan del usuario
             $stmt = $this->db->prepare("
-                SELECT s.*, t.project_id, p.clan_id, ta.user_id as assigned_user
+                SELECT s.*, t.project_id, p.clan_id
                 FROM Subtasks s
                 JOIN Tasks t ON s.task_id = t.task_id
                 JOIN Projects p ON t.project_id = p.project_id
-                LEFT JOIN TaskAssignments ta ON t.task_id = ta.task_id AND ta.user_id = ?
                 WHERE s.subtask_id = ?
             ");
-            $stmt->execute([$this->currentUser['user_id'], $subtaskId]);
+            $stmt->execute([$subtaskId]);
             $subtask = $stmt->fetch();
             
             if (!$subtask) {
                 Utils::jsonResponse(['success' => false, 'message' => 'Subtarea no encontrada'], 404);
             }
             
-            // Verificar que el usuario pertenece al clan y está asignado a la tarea
+            // Verificar que el usuario pertenece al clan
             if ($subtask['clan_id'] != $this->userClan['clan_id']) {
                 Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado - no perteneces a este clan'], 403);
-            }
-            
-            if (!$subtask['assigned_user']) {
-                Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado - no estás asignado a esta tarea'], 403);
             }
             
             // Actualizar estado

@@ -227,9 +227,12 @@ try {
             $controller->addSubtasksToTask();
             break;
             
-            case 'test-subtasks':
-        include __DIR__ . '/../test_subtasks.php';
-        break;
+                    case 'test-subtasks':
+            include __DIR__ . '/../test_subtasks.php';
+            break;
+        case 'test-clan-member-subtask':
+            include __DIR__ . '/../test_clan_member_subtask.php';
+            break;
 
             
         case 'admin/clan-details':
