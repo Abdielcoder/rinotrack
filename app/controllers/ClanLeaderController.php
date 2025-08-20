@@ -1189,6 +1189,7 @@ class ClanLeaderController {
                 }
                 $desc = trim($st['description'] ?? '');
                 $perc = isset($st['percentage']) && $st['percentage'] !== '' ? (float)$st['percentage'] : 0.0;
+                error_log('createTask - Subtarea ' . ($index + 1) . ' - percentage procesado: ' . $perc);
                 $due  = isset($st['due_date']) && trim((string)$st['due_date']) !== '' ? trim($st['due_date']) : null;
                 $prio = in_array(($st['priority'] ?? 'medium'), ['low','medium','high','urgent'], true) ? $st['priority'] : 'medium';
                 $auid = isset($st['assigned_user_id']) && $st['assigned_user_id'] !== '' ? (int)$st['assigned_user_id'] : null;

@@ -115,7 +115,10 @@ class Task {
             
             // Crear subtareas si se especifican
             if (!empty($subtasks)) {
-                foreach ($subtasks as $subtask) {
+                error_log('Task::createAdvanced - Procesando ' . count($subtasks) . ' subtareas');
+                foreach ($subtasks as $index => $subtask) {
+                    error_log('Task::createAdvanced - Creando subtarea ' . ($index + 1) . ' con datos: ' . print_r($subtask, true));
+                    
                     $subId = $this->createSubtaskAdvanced(
                         $taskId, 
                         $subtask['title'], 
@@ -126,10 +129,16 @@ class Task {
                         $subtask['priority'] ?? self::PRIORITY_MEDIUM,
                         $subtask['assigned_user_id'] ?? null
                     );
+                    
                     if (!$subId) {
+                        error_log('Task::createAdvanced - Error al crear subtarea ' . ($index + 1) . ': ' . ($subtask['title'] ?? 'sin título'));
                         throw new Exception('Error al crear subtarea: ' . ($subtask['title'] ?? 'sin título'));
+                    } else {
+                        error_log('Task::createAdvanced - Subtarea ' . ($index + 1) . ' creada exitosamente con ID: ' . $subId);
                     }
                 }
+            } else {
+                error_log('Task::createAdvanced - No hay subtareas para procesar');
             }
             
             // Asignar etiquetas si se especifican
@@ -237,15 +246,29 @@ class Task {
      */
     public function createSubtaskAdvanced($taskId, $title, $createdByUserId, $description = '', $percentage = 0, $dueDate = null, $priority = self::PRIORITY_MEDIUM, $assignedUserId = null) {
         try {
+            error_log('Task::createSubtaskAdvanced - INICIO');
+            error_log('  taskId: ' . $taskId);
+            error_log('  title: ' . $title);
+            error_log('  createdByUserId: ' . $createdByUserId);
+            error_log('  description: ' . $description);
+            error_log('  percentage: ' . $percentage);
+            error_log('  dueDate: ' . ($dueDate ?? 'NULL'));
+            error_log('  priority: ' . $priority);
+            error_log('  assignedUserId: ' . ($assignedUserId ?? 'NULL'));
+            
             $stmt = $this->db->prepare("
                 INSERT INTO Subtasks (task_id, title, description, completion_percentage, due_date, priority, assigned_to_user_id, created_by_user_id, subtask_order) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, (SELECT COALESCE(MAX(subtask_order), 0) + 1 FROM Subtasks s WHERE s.task_id = ?))
             ");
             
-            $result = $stmt->execute([$taskId, $title, $description, $percentage, $dueDate, $priority, $assignedUserId, $createdByUserId, $taskId]);
+            $params = [$taskId, $title, $description, $percentage, $dueDate, $priority, $assignedUserId, $createdByUserId, $taskId];
+            error_log('Task::createSubtaskAdvanced - Parámetros para INSERT: ' . print_r($params, true));
+            
+            $result = $stmt->execute($params);
             
             if ($result) {
                 $subtaskId = $this->db->lastInsertId();
+                error_log('Task::createSubtaskAdvanced - Subtarea creada exitosamente con ID: ' . $subtaskId);
                 
                 // Registrar en el historial
                 $this->logTaskAction($taskId, $createdByUserId, 'created', 'subtask', null, $title, 'Subtarea creada: ' . $title);
