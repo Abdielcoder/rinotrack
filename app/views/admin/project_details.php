@@ -196,7 +196,7 @@ ob_start();
 }
 
 .btn-subtasks {
-  background: var(--primary-color);
+  background: #1e3a8a;
   color: white;
   border: none;
   padding: 4px 8px;
@@ -210,7 +210,7 @@ ob_start();
 }
 
 .btn-subtasks:hover {
-  background: var(--primary-dark);
+  background: #1e40af;
   transform: translateY(-1px);
 }
 
