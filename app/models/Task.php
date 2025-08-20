@@ -766,6 +766,53 @@ class Task {
             return [];
         }
     }
+
+    /**
+     * Obtener tareas de un proyecto con filtro de privacidad para proyectos personales
+     */
+    public function getByProjectWithPrivacy($projectId, $userId = null) {
+        try {
+            // Primero verificar si el proyecto es personal
+            $projectStmt = $this->db->prepare("SELECT is_personal, created_by_user_id FROM Projects WHERE project_id = ?");
+            $projectStmt->execute([$projectId]);
+            $project = $projectStmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$project) {
+                return [];
+            }
+            
+            // Si es un proyecto personal y se proporciona userId, solo mostrar tareas del usuario
+            if (($project['is_personal'] ?? 0) == 1 && $userId) {
+                $stmt = $this->db->prepare("
+                    SELECT 
+                        t.*,
+                        u.full_name as assigned_to_fullname,
+                        u.username as assigned_to_username,
+                        GROUP_CONCAT(DISTINCT ta_users.full_name ORDER BY ta_users.full_name SEPARATOR ', ') as all_assigned_users,
+                        GROUP_CONCAT(DISTINCT ta_users.user_id ORDER BY ta_users.full_name SEPARATOR ',') as all_assigned_user_ids
+                    FROM Tasks t
+                    LEFT JOIN Users u ON t.assigned_to_user_id = u.user_id
+                    LEFT JOIN Task_Assignments ta ON t.task_id = ta.task_id
+                    LEFT JOIN Users ta_users ON ta.user_id = ta_users.user_id
+                    WHERE t.project_id = ?
+                    AND t.is_subtask = 0
+                    AND (t.assigned_to_user_id = ? OR t.created_by_user_id = ?)
+                    GROUP BY t.task_id
+                    ORDER BY t.due_date ASC, t.created_at DESC
+                ");
+                
+                $stmt->execute([$projectId, $userId, $userId]);
+                return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            } else {
+                // Para proyectos no personales, usar el método original
+                return $this->getByProject($projectId);
+            }
+            
+        } catch (Exception $e) {
+            error_log("Error al obtener tareas del proyecto con privacidad: " . $e->getMessage());
+            return [];
+        }
+    }
     
     /**
      * Obtener tareas asignadas a un usuario
@@ -1358,6 +1405,51 @@ class Task {
             return $stmt->fetchAll();
         } catch (PDOException $e) {
             error_log("Error al obtener tareas del usuario por proyecto: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Obtener tareas personales del usuario para el dashboard del clan leader
+     */
+    public function getPersonalTasksForClanLeader($userId, $clanId) {
+        try {
+            $sql = "
+                SELECT 
+                    t.task_id,
+                    t.task_name,
+                    t.description,
+                    t.due_date,
+                    t.priority,
+                    t.status,
+                    t.completion_percentage,
+                    t.automatic_points,
+                    p.project_name,
+                    p.project_id,
+                    DATEDIFF(t.due_date, CURDATE()) as days_until_due
+                FROM Tasks t
+                JOIN Projects p ON t.project_id = p.project_id
+                WHERE t.is_subtask = 0
+                  AND p.clan_id = ?
+                  AND p.is_personal = 1
+                  AND (t.assigned_to_user_id = ? OR t.created_by_user_id = ?)
+                ORDER BY 
+                    CASE t.priority 
+                        WHEN 'urgent' THEN 1 
+                        WHEN 'high' THEN 2 
+                        WHEN 'medium' THEN 3 
+                        WHEN 'low' THEN 4 
+                    END,
+                    t.due_date ASC,
+                    t.created_at DESC
+            ";
+            
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$clanId, $userId, $userId]);
+            return $stmt->fetchAll();
+            
+        } catch (PDOException $e) {
+            error_log("Error al obtener tareas personales para clan leader: " . $e->getMessage());
             return [];
         }
     }

@@ -820,7 +820,7 @@ class ClanLeaderController {
             if (!$project) { Utils::redirect('clan_leader/tasks'); }
 
             $isLeaderClanProject = $this->userClan && ((int)$project['clan_id'] === (int)$this->userClan['clan_id']);
-            $tasks = $this->taskModel->getByProject($projectId);
+            $tasks = $this->taskModel->getByProjectWithPrivacy($projectId, $this->currentUser['user_id']);
             if (!$isLeaderClanProject) {
                 $uid = (int)$this->currentUser['user_id'];
                 $tasks = array_values(array_filter($tasks, function($t) use ($uid){
@@ -865,13 +865,30 @@ class ClanLeaderController {
             foreach ($clanProjects as $p) {
                 $pid = (int)$p['project_id'];
                 $presentIds[$pid] = true;
+                
                 // Para proyectos del clan: mostrar métricas de TODO el proyecto
-                $projectTasks = $this->taskModel->getByProject($pid);
+                $projectTasks = $this->taskModel->getByProjectWithPrivacy($pid, $this->currentUser['user_id']);
                 $total = count($projectTasks);
                 $completed = 0;
+                
+                // Filtrar tareas personales: solo mostrar las del usuario actual
                 foreach ($projectTasks as $t) {
-                    if (($t['status'] ?? '') === 'completed' || ($t['is_completed'] ?? 0) == 1) { $completed++; }
+                    // Si es un proyecto personal, solo contar tareas del usuario actual
+                    if (($p['is_personal'] ?? 0) == 1) {
+                        if (($t['assigned_to_user_id'] ?? 0) == $this->currentUser['user_id'] ||
+                            ($t['created_by_user_id'] ?? 0) == $this->currentUser['user_id']) {
+                            if (($t['status'] ?? '') === 'completed' || ($t['is_completed'] ?? 0) == 1) { 
+                                $completed++; 
+                            }
+                        }
+                    } else {
+                        // Para proyectos no personales, contar todas las tareas
+                        if (($t['status'] ?? '') === 'completed' || ($t['is_completed'] ?? 0) == 1) { 
+                            $completed++; 
+                        }
+                    }
                 }
+                
                 $progress = $total > 0 ? round(($completed / $total) * 100, 2) : 0;
                 $projects[] = [
                     'project_id' => $pid,
@@ -910,6 +927,7 @@ class ClanLeaderController {
             // Tabla: combinar
             // - Tareas de TODOS del clan (estricto a proyectos del clan)
             // - MÁS tareas del líder SOLO de proyectos lógicos (Recurrentes/Eventuales)
+            // - MÁS tareas personales del líder actual
             $clanTasks = $this->taskModel->getAllTasksByClanStrict($this->userClan['clan_id'], $page, $perPage, $search, $statusFilter);
 
             $ownLogical = $this->taskModel->getUserTasksByProjectNames(
@@ -917,10 +935,17 @@ class ClanLeaderController {
                 ['Tareas Recurrentes', 'Tareas Eventuales']
             );
 
+            // Obtener tareas personales del líder actual
+            $ownPersonalTasks = $this->taskModel->getPersonalTasksForClanLeader(
+                $this->currentUser['user_id'], 
+                $this->userClan['clan_id']
+            );
+
             // Fusionar evitando duplicados por task_id
             $merged = [];
             foreach ($clanTasks['tasks'] as $t) { $merged[$t['task_id']] = $t; }
             foreach ($ownLogical as $t) { $merged[$t['task_id']] = $t; }
+            foreach ($ownPersonalTasks as $t) { $merged[$t['task_id']] = $t; }
             $mergedTasks = array_values($merged);
 
             // Reusar estructura de paginación del estricta
@@ -2105,15 +2130,25 @@ class ClanLeaderController {
                     'completion_percentage' => 0
                 ];
             }
-            // Incluir tareas del clan y las asignadas a sus miembros aunque pertenezcan a proyectos de otro clan (ej. Olympo)
-            $allTasksData = $this->taskModel->getAllTasksByClan($this->userClan['clan_id'], 1, 10000, '', '');
-            $tasks = $allTasksData['tasks'] ?? [];
+            
+            // Obtener tareas del clan (excluyendo proyectos personales)
+            $clanTasksData = $this->taskModel->getAllTasksByClanStrict($this->userClan['clan_id'], 1, 10000, '', '');
+            $clanTasks = $clanTasksData['tasks'] ?? [];
+            
+            // Obtener tareas personales del líder actual
+            $ownPersonalTasks = $this->taskModel->getPersonalTasksForClanLeader(
+                $this->currentUser['user_id'], 
+                $this->userClan['clan_id']
+            );
+            
+            // Combinar tareas del clan y tareas personales del líder
+            $allTasks = array_merge($clanTasks, $ownPersonalTasks);
 
-            $totalTasks = count($tasks);
+            $totalTasks = count($allTasks);
             $completedTasks = 0;
             $pendingTasks = 0;
             $inProgressTasks = 0;
-            foreach ($tasks as $t) {
+            foreach ($allTasks as $t) {
                 $status = $t['status'] ?? 'pending';
                 if ($status === 'completed') { $completedTasks++; }
                 elseif ($status === 'in_progress') { $inProgressTasks++; }
@@ -2741,13 +2776,13 @@ class ClanLeaderController {
                  WHERE (p.clan_id = ? 
                         OR (p.project_name IN ('Tareas Recurrentes', 'Tareas Eventuales') 
                             AND t.assigned_to_user_id = ?)
-                        OR (t.is_personal = 1 AND t.assigned_to_user_id = ?))
+                        OR (p.is_personal = 1 AND (t.assigned_to_user_id = ? OR t.created_by_user_id = ?)))
                    AND t.is_subtask = 0
                    AND t.status != 'completed'
                  ORDER BY t.due_date ASC, t.task_id ASC"
             );
             
-            $params = [$clanId, $this->currentUser['user_id'], $this->currentUser['user_id']];
+            $params = [$clanId, $this->currentUser['user_id'], $this->currentUser['user_id'], $this->currentUser['user_id']];
             error_log("Ejecutando consulta con parámetros: clanId=$clanId, userId={$this->currentUser['user_id']} (tareas del clan + recurrentes/eventuales + personales asignadas al usuario)");
             $stmt->execute($params);
             $allTasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
