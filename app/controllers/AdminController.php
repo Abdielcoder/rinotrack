@@ -487,6 +487,9 @@ class AdminController {
             $subtasks = $taskModel->getSubtasks($task['task_id']);
             $task['subtasks_count'] = count($subtasks);
             $task['subtasks'] = $subtasks; // Para usar en el modal
+            
+            // Log de depuración
+            error_log("Tarea {$task['task_id']} ({$task['task_name']}): {$task['subtasks_count']} subtareas");
         }
         unset($task); // Limpiar referencia
 
