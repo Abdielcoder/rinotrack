@@ -1090,6 +1090,9 @@ class ClanLeaderController {
      * Crear tarea con múltiples usuarios y subtareas
      */
     public function createTask() {
+        // Suprimir warnings temporalmente para evitar interferencia con JSON
+        error_reporting(E_ALL & ~E_WARNING);
+        
         error_log('=== ClanLeaderController::createTask - INICIO ===');
         error_log('POST data: ' . print_r($_POST, true));
         error_log('FILES data: ' . print_r($_FILES, true));
@@ -1219,7 +1222,7 @@ class ClanLeaderController {
                 $due  = isset($st['due_date']) && trim((string)$st['due_date']) !== '' ? trim($st['due_date']) : null;
                 error_log('createTask - Subtarea ' . ($index + 1) . ' - due_date: ' . ($due ?? 'NULL'));
                 
-                $prio = in_array(($st['priority'] ?? 'medium'), ['low','medium','high','urgent'], true) ? $st['priority'] : 'medium';
+                $prio = in_array(($st['priority'] ?? 'medium'), ['low','medium','high','urgent'], true) ? ($st['priority'] ?? 'medium') : 'medium';
                 error_log('createTask - Subtarea ' . ($index + 1) . ' - priority: ' . $prio);
                 
                 $auid = isset($st['assigned_user_id']) && $st['assigned_user_id'] !== '' ? (int)$st['assigned_user_id'] : null;
