@@ -222,6 +222,11 @@ try {
             $controller->getTaskSubtasks();
             break;
             
+        case 'admin/add-subtasks-to-task':
+            $controller = new AdminController();
+            $controller->addSubtasksToTask();
+            break;
+            
         case 'test-subtasks':
             include __DIR__ . '/../test_subtasks.php';
             break;

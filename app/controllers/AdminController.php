@@ -1041,6 +1041,80 @@ class AdminController {
     }
 
     /**
+     * Añadir subtareas a una tarea existente
+     */
+    public function addSubtasksToTask() {
+        $this->requireAuth();
+        if (!$this->hasAdminAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos'], 403);
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
+        }
+
+        $taskId = (int)($_POST['taskId'] ?? 0);
+        $subtasks = $_POST['subtasks'] ?? [];
+
+        if ($taskId <= 0) {
+            Utils::jsonResponse(['success' => false, 'message' => 'ID de tarea inválido'], 400);
+        }
+
+        if (empty($subtasks) || !is_array($subtasks)) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Debe proporcionar al menos una subtarea'], 400);
+        }
+
+        try {
+            $taskModel = new Task();
+            
+            // Verificar que la tarea existe
+            $task = $taskModel->findById($taskId);
+            if (!$task) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Tarea no encontrada'], 404);
+            }
+
+            $currentUser = $this->auth->getCurrentUser();
+            $createdByUserId = $currentUser['user_id'] ?? 1;
+            
+            // Crear cada subtarea
+            $createdCount = 0;
+            foreach ($subtasks as $subtaskTitle) {
+                $subtaskTitle = trim(Utils::sanitizeInput($subtaskTitle));
+                if ($subtaskTitle !== '') {
+                    $subtaskId = $taskModel->createSubtaskAdvanced(
+                        $taskId,
+                        $subtaskTitle,
+                        $createdByUserId,
+                        '', // descripción vacía
+                        0,  // porcentaje inicial
+                        null, // sin fecha límite
+                        Task::PRIORITY_MEDIUM,
+                        null  // sin usuario asignado inicialmente
+                    );
+                    
+                    if ($subtaskId) {
+                        $createdCount++;
+                    }
+                }
+            }
+
+            if ($createdCount > 0) {
+                Utils::jsonResponse([
+                    'success' => true, 
+                    'message' => "Se crearon {$createdCount} subtareas exitosamente",
+                    'created_count' => $createdCount
+                ]);
+            } else {
+                Utils::jsonResponse(['success' => false, 'message' => 'No se pudo crear ninguna subtarea'], 500);
+            }
+
+        } catch (Exception $e) {
+            error_log('Error al añadir subtareas: ' . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
      * Obtener miembros de un clan
      */
     public function getClanMembers() {

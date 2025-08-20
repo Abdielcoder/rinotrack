@@ -83,7 +83,9 @@ ob_start();
                         <i class="fas fa-list-ul"></i> Subtareas
                       </button>
                     <?php else: ?>
-                      <span class="no-subtasks">-</span>
+                      <button class="btn-add-subtasks" data-task-id="<?php echo intval($t['task_id']); ?>" data-task-name="<?php echo htmlspecialchars($t['task_name']); ?>" title="Añadir subtareas">
+                        <i class="fas fa-plus"></i> Añadir Subtareas
+                      </button>
                     <?php endif; ?>
                   </td>
                 </tr>
@@ -152,6 +154,51 @@ ob_start();
   </div>
 </div>
 
+<!-- Modal para añadir subtareas -->
+<div id="addSubtasksModal" class="modal" style="display: none;">
+  <div class="modal-content modal-large">
+    <div class="modal-header">
+      <h3 id="addSubtasksModalTitle">Añadir Subtareas</h3>
+      <button class="modal-close" onclick="closeAddSubtasksModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    
+    <form id="addSubtasksForm">
+      <div class="modal-body">
+        <div class="task-info">
+          <h4 id="addSubtasksTaskName">Tarea: Cargando...</h4>
+          <input type="hidden" id="addSubtasksTaskId" name="taskId">
+        </div>
+        
+        <div class="subtasks-container">
+          <div class="subtasks-header">
+            <span>Organiza esta tarea en pasos más pequeños</span>
+            <button type="button" class="btn btn-small btn-secondary" id="addSubtaskBtnModal">
+              <i class="fas fa-plus"></i> Agregar Subtarea
+            </button>
+          </div>
+          <div id="addSubtasksList" class="subtasks-list">
+            <!-- Las subtareas se agregarán aquí dinámicamente -->
+          </div>
+        </div>
+      </div>
+      
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeAddSubtasksModal()">
+          Cancelar
+        </button>
+        <button type="submit" class="btn btn-primary" id="saveSubtasksBtn">
+          <span id="saveSubtasksText">Guardar Subtareas</span>
+          <span id="saveSubtasksLoader" class="btn-loader" style="display: none;">
+            <i class="fas fa-spinner fa-spin"></i>
+          </span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <style>
 .project-overview {display:grid;grid-template-columns:1fr 1fr;gap:var(--spacing-xl);margin-bottom:var(--spacing-xl)}
 .overview-card{background:var(--bg-primary);border:1px solid var(--bg-accent);border-radius:var(--radius-xl);padding:var(--spacing-xl)}
@@ -211,6 +258,25 @@ ob_start();
 
 .btn-subtasks:hover {
   background: #1e40af;
+  transform: translateY(-1px);
+}
+
+.btn-add-subtasks {
+  background: #059669;
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn-add-subtasks:hover {
+  background: #047857;
   transform: translateY(-1px);
 }
 
@@ -397,13 +463,35 @@ document.addEventListener('DOMContentLoaded', function() {
                 openSubtasksModal(taskId);
             }
         }
+        
+        // Event listener para botón "Añadir Subtareas"
+        if (e.target.closest('.btn-add-subtasks')) {
+            const button = e.target.closest('.btn-add-subtasks');
+            const taskId = button.dataset.taskId;
+            const taskName = button.dataset.taskName;
+            if (taskId) {
+                openAddSubtasksModal(taskId, taskName);
+            }
+        }
+        
+        // Event listener para añadir subtarea en modal
+        if (e.target.id === 'addSubtaskBtnModal' || e.target.closest('#addSubtaskBtnModal')) {
+            e.preventDefault();
+            addSubtaskToForm();
+        }
     });
 
     // Cerrar modal al hacer clic fuera
     document.addEventListener('click', function(e) {
         const modal = document.getElementById('subtasksModal');
+        const addModal = document.getElementById('addSubtasksModal');
+        
         if (e.target === modal) {
             closeSubtasksModal();
+        }
+        
+        if (e.target === addModal) {
+            closeAddSubtasksModal();
         }
     });
 
@@ -411,8 +499,57 @@ document.addEventListener('DOMContentLoaded', function() {
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
             closeSubtasksModal();
+            closeAddSubtasksModal();
         }
     });
+
+    // Manejar envío del formulario de añadir subtareas
+    const addSubtasksForm = document.getElementById('addSubtasksForm');
+    if (addSubtasksForm) {
+        addSubtasksForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const saveBtn = document.getElementById('saveSubtasksBtn');
+            const saveText = document.getElementById('saveSubtasksText');
+            const saveLoader = document.getElementById('saveSubtasksLoader');
+            
+            // Mostrar loader
+            if (saveBtn) saveBtn.disabled = true;
+            if (saveText) saveText.style.display = 'none';
+            if (saveLoader) saveLoader.style.display = 'inline-block';
+            
+            // Preparar datos del formulario
+            const formData = new FormData(addSubtasksForm);
+            
+            // Enviar petición AJAX
+            fetch('?route=admin/add-subtasks-to-task', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    closeAddSubtasksModal();
+                    // Recargar la página para mostrar los cambios
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 500);
+                } else {
+                    alert(data.message || 'Error al añadir subtareas');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error de conexión al añadir subtareas');
+            })
+            .finally(() => {
+                // Ocultar loader
+                if (saveBtn) saveBtn.disabled = false;
+                if (saveText) saveText.style.display = 'inline';
+                if (saveLoader) saveLoader.style.display = 'none';
+            });
+        });
+    }
 });
 
 function openSubtasksModal(taskId) {
@@ -488,6 +625,105 @@ function renderSubtasks(subtasks) {
 function closeSubtasksModal() {
     const modal = document.getElementById('subtasksModal');
     modal.style.display = 'none';
+}
+
+// -------- Modal para añadir subtareas --------
+let addSubtaskCounter = 0;
+
+function openAddSubtasksModal(taskId, taskName) {
+    const modal = document.getElementById('addSubtasksModal');
+    const taskNameEl = document.getElementById('addSubtasksTaskName');
+    const taskIdEl = document.getElementById('addSubtasksTaskId');
+    const listEl = document.getElementById('addSubtasksList');
+    
+    // Configurar modal
+    taskNameEl.textContent = `Tarea: ${taskName}`;
+    taskIdEl.value = taskId;
+    
+    // Limpiar lista y reiniciar contador
+    listEl.innerHTML = '';
+    addSubtaskCounter = 0;
+    updateAddSubtasksDisplay();
+    
+    // Añadir una subtarea inicial
+    addSubtaskToForm();
+    
+    // Mostrar modal
+    modal.style.display = 'flex';
+}
+
+function closeAddSubtasksModal() {
+    const modal = document.getElementById('addSubtasksModal');
+    modal.style.display = 'none';
+    
+    // Limpiar formulario
+    const listEl = document.getElementById('addSubtasksList');
+    if (listEl) {
+        listEl.innerHTML = '';
+        addSubtaskCounter = 0;
+    }
+}
+
+function addSubtaskToForm() {
+    addSubtaskCounter++;
+    const subtaskId = 'add_subtask_' + addSubtaskCounter;
+    const listEl = document.getElementById('addSubtasksList');
+    
+    // Crear elemento de subtarea
+    const subtaskItem = document.createElement('div');
+    subtaskItem.className = 'subtask-item';
+    subtaskItem.dataset.subtaskId = subtaskId;
+    
+    subtaskItem.innerHTML = `
+        <span class="subtask-counter">${addSubtaskCounter}</span>
+        <i class="fas fa-grip-vertical subtask-drag-handle" title="Arrastrar para reordenar"></i>
+        <input type="text" class="subtask-input" name="subtasks[]" placeholder="Nombre de la subtarea..." required>
+        <button type="button" class="subtask-remove" onclick="removeSubtaskFromForm('${subtaskId}')" title="Eliminar subtarea">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+    
+    if (listEl) {
+        listEl.appendChild(subtaskItem);
+        updateAddSubtasksDisplay();
+        
+        // Enfocar el input de la nueva subtarea
+        const input = subtaskItem.querySelector('.subtask-input');
+        if (input) {
+            input.focus();
+        }
+    }
+}
+
+function removeSubtaskFromForm(subtaskId) {
+    const subtaskItem = document.querySelector(`[data-subtask-id="${subtaskId}"]`);
+    if (subtaskItem) {
+        subtaskItem.remove();
+        updateAddSubtasksDisplay();
+        renumberAddSubtasks();
+    }
+}
+
+function updateAddSubtasksDisplay() {
+    const listEl = document.getElementById('addSubtasksList');
+    const subtaskItems = listEl ? listEl.querySelectorAll('.subtask-item') : [];
+    
+    if (subtaskItems.length === 0 && listEl) {
+        listEl.innerHTML = '<div class="subtasks-empty">No hay subtareas. Haz clic en "Agregar Subtarea" para comenzar.</div>';
+    } else if (listEl && listEl.querySelector('.subtasks-empty')) {
+        listEl.querySelector('.subtasks-empty').remove();
+    }
+}
+
+function renumberAddSubtasks() {
+    const subtaskItems = document.querySelectorAll('#addSubtasksList .subtask-item');
+    subtaskItems.forEach((item, index) => {
+        const counter = item.querySelector('.subtask-counter');
+        if (counter) {
+            counter.textContent = index + 1;
+        }
+    });
+    addSubtaskCounter = subtaskItems.length;
 }
 
 function getStatusText(status) {
