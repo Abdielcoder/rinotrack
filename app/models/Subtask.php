@@ -286,7 +286,7 @@ class Subtask {
     }
     
     /**
-     * Verificar permisos de usuario en una subtarea
+     * Verificar permisos de usuario en una subtarea (sin restricciones)
      */
     public function checkUserPermissions($subtaskId, $userId) {
         try {
@@ -294,55 +294,24 @@ class Subtask {
                 SELECT 
                     s.*,
                     t.project_id,
-                    p.clan_id,
-                    cm.role_id as clan_role,
-                    r.role_name
+                    p.clan_id
                 FROM Subtasks s
                 JOIN Tasks t ON s.task_id = t.task_id
                 JOIN Projects p ON t.project_id = p.project_id
-                LEFT JOIN Clan_Members cm ON p.clan_id = cm.clan_id AND cm.user_id = ?
-                LEFT JOIN Roles r ON cm.role_id = r.role_id
                 WHERE s.subtask_id = ?
             ");
-            $stmt->execute([$userId, $subtaskId]);
+            $stmt->execute([$subtaskId]);
             $result = $stmt->fetch();
             
             if (!$result) {
                 return ['can_view' => false, 'can_comment' => false, 'can_attach' => false];
             }
             
-            // Verificar permisos basados en el rol
-            $canView = false;
-            $canComment = false;
-            $canAttach = false;
-            
-            // El usuario asignado o creador de la subtarea tiene todos los permisos
-            if ($result['assigned_to_user_id'] == $userId || $result['created_by_user_id'] == $userId) {
-                $canView = $canComment = $canAttach = true;
-            }
-            // Clan leader tiene todos los permisos en subtareas de su clan
-            else if ($result['role_name'] == 'Clan Leader') {
-                $canView = $canComment = $canAttach = true;
-            }
-            // Miembros del clan pueden ver y comentar/adjuntar si están asignados a la tarea padre
-            else if ($result['clan_role']) {
-                $canView = true;
-                
-                // Verificar si está asignado a la tarea padre
-                $stmt = $this->db->prepare("
-                    SELECT 1 FROM Task_Assignments 
-                    WHERE task_id = ? AND user_id = ?
-                ");
-                $stmt->execute([$result['task_id'], $userId]);
-                if ($stmt->fetch()) {
-                    $canComment = $canAttach = true;
-                }
-            }
-            
+            // Permitir todos los permisos a cualquier usuario autenticado
             return [
-                'can_view' => $canView,
-                'can_comment' => $canComment,
-                'can_attach' => $canAttach,
+                'can_view' => true,
+                'can_comment' => true,
+                'can_attach' => true,
                 'subtask' => $result
             ];
             
