@@ -89,6 +89,7 @@ class Task {
             }
             
             $this->db->beginTransaction();
+            error_log('Task::createAdvanced - Transacción iniciada');
             
             // Crear la tarea principal
             $stmt = $this->db->prepare("
@@ -119,16 +120,22 @@ class Task {
                 foreach ($subtasks as $index => $subtask) {
                     error_log('Task::createAdvanced - Creando subtarea ' . ($index + 1) . ' con datos: ' . print_r($subtask, true));
                     
-                    $subId = $this->createSubtaskAdvanced(
-                        $taskId, 
-                        $subtask['title'], 
-                        $createdByUserId,
-                        $subtask['description'] ?? '', 
-                        $subtask['percentage'] ?? 0,
-                        $subtask['due_date'] ?? null,
-                        $subtask['priority'] ?? self::PRIORITY_MEDIUM,
-                        $subtask['assigned_user_id'] ?? null
-                    );
+                                    // Mapear prioridad de tarea a prioridad de subtarea
+                $subtaskPriority = $subtask['priority'] ?? 'medium';
+                if ($subtaskPriority === 'critical') {
+                    $subtaskPriority = 'urgent'; // Mapear 'critical' a 'urgent' para subtareas
+                }
+                
+                $subId = $this->createSubtaskAdvanced(
+                    $taskId, 
+                    $subtask['title'], 
+                    $createdByUserId,
+                    $subtask['description'] ?? '', 
+                    $subtask['percentage'] ?? 0,
+                    $subtask['due_date'] ?? null,
+                    $subtaskPriority,
+                    $subtask['assigned_user_id'] ?? null
+                );
                     
                     if (!$subId) {
                         error_log('Task::createAdvanced - Error al crear subtarea ' . ($index + 1) . ': ' . ($subtask['title'] ?? 'sin título'));
@@ -155,6 +162,7 @@ class Task {
             $this->logTaskAction($taskId, $createdByUserId, 'created', null, null, null, 'Tarea creada');
             
             $this->db->commit();
+            error_log('Task::createAdvanced - Transacción confirmada exitosamente');
             return $taskId;
             
         } catch (Exception $e) {
