@@ -2056,6 +2056,17 @@ ALTER TABLE `Projects`
   ADD KEY `idx_projects_time_limit` (`time_limit`);
 
 --
+-- Indices de la tabla `Subtasks`
+--
+ALTER TABLE `Subtasks`
+  ADD PRIMARY KEY (`subtask_id`),
+  ADD KEY `idx_task_id` (`task_id`),
+  ADD KEY `idx_assigned_to` (`assigned_to_user_id`),
+  ADD KEY `idx_created_by` (`created_by_user_id`),
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_due_date` (`due_date`);
+
+--
 -- Indices de la tabla `Tasks`
 --
 ALTER TABLE `Tasks`
@@ -2146,6 +2157,12 @@ ALTER TABLE `Task_Assignments`
 --
 ALTER TABLE `Task_Attachments`
   MODIFY `attachment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
+
+--
+-- AUTO_INCREMENT de la tabla `Subtasks`
+--
+ALTER TABLE `Subtasks`
+  MODIFY `subtask_id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT de la tabla `Task_Comments`

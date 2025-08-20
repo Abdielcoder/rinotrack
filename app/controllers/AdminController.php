@@ -478,8 +478,17 @@ class AdminController {
             Utils::redirect('admin/projects');
         }
 
-        // Tareas del proyecto
-        $tasks = (new Task())->getByProject($projectId);
+        // Tareas del proyecto con conteo de subtareas
+        $taskModel = new Task();
+        $tasks = $taskModel->getByProject($projectId);
+        
+        // Añadir conteo de subtareas para cada tarea
+        foreach ($tasks as &$task) {
+            $subtasks = $taskModel->getSubtasks($task['task_id']);
+            $task['subtasks_count'] = count($subtasks);
+            $task['subtasks'] = $subtasks; // Para usar en el modal
+        }
+        unset($task); // Limpiar referencia
 
         // Calcular métricas de tareas
         $stats = [
@@ -986,6 +995,48 @@ class AdminController {
         }
     }
     
+    /**
+     * Obtener subtareas de una tarea
+     */
+    public function getTaskSubtasks() {
+        $this->requireAuth();
+        if (!$this->hasAdminAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos'], 403);
+        }
+
+        $taskId = (int)($_GET['taskId'] ?? 0);
+        if ($taskId <= 0) {
+            Utils::jsonResponse(['success' => false, 'message' => 'ID de tarea inválido'], 400);
+        }
+
+        try {
+            $taskModel = new Task();
+            
+            // Verificar que la tarea existe
+            $task = $taskModel->findById($taskId);
+            if (!$task) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Tarea no encontrada'], 404);
+            }
+
+            // Obtener subtareas
+            $subtasks = $taskModel->getSubtasks($taskId);
+
+            Utils::jsonResponse([
+                'success' => true, 
+                'task' => [
+                    'task_id' => $task['task_id'],
+                    'task_name' => $task['task_name'],
+                    'project_name' => $task['project_name']
+                ],
+                'subtasks' => $subtasks
+            ]);
+
+        } catch (Exception $e) {
+            error_log('Error al obtener subtareas: ' . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno'], 500);
+        }
+    }
+
     /**
      * Obtener miembros de un clan
      */
