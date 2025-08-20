@@ -144,4 +144,35 @@ class Utils {
         
         return $html;
     }
+    
+    /**
+     * Formatear fecha de forma segura evitando errores deprecated con null
+     */
+    public static function formatDate($date, $format = 'd/m/Y', $emptyText = 'Sin fecha') {
+        if (empty($date)) {
+            return $emptyText;
+        }
+        
+        // Verificar si la fecha es válida
+        $timestamp = strtotime($date);
+        if ($timestamp === false) {
+            return $emptyText;
+        }
+        
+        return date($format, $timestamp);
+    }
+    
+    /**
+     * Formatear fecha y hora de forma segura
+     */
+    public static function formatDateTime($datetime, $format = 'd/m/Y H:i', $emptyText = 'Sin fecha') {
+        return self::formatDate($datetime, $format, $emptyText);
+    }
+    
+    /**
+     * Escapar texto para mostrar de forma segura en HTML
+     */
+    public static function escape($text) {
+        return htmlspecialchars((string)$text, ENT_QUOTES, 'UTF-8');
+    }
 }

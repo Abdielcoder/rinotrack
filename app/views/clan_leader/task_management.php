@@ -184,7 +184,7 @@ function getActiveTasksCount($userId) {
                                                 <?php if ($task['due_date']): ?>
                                                     <div class="meta-item">
                                                         <i class="fas fa-calendar-alt"></i>
-                                                        <span>Vence: <?php echo date('d/m/Y', strtotime($task['due_date'])); ?></span>
+                                                        <span>Vence: <?php echo Utils::formatDate($task['due_date'], 'd/m/Y', 'Sin fecha límite'); ?></span>
                                                         <?php if ($task['days_until_due'] < 0): ?>
                                                             <span class="overdue">¡Vencida!</span>
                                                         <?php elseif ($task['days_until_due'] <= 3): ?>

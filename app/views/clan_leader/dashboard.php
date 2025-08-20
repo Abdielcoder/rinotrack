@@ -268,7 +268,14 @@ ob_start();
                                     </div>
                                     <div class="task-status week2">
                                         <i class="fas fa-calendar"></i>
-                                        Vence: <?php echo date('d/m/Y', strtotime($task['due_date'])); ?> (<?php echo $task['days_until_due']; ?> días)
+                                        Vence: <?php 
+                                            if (!empty($task['due_date'])) {
+                                                echo Utils::formatDate($task['due_date']); 
+                                                echo ' (' . $task['days_until_due'] . ' días)';
+                                            } else {
+                                                echo 'Sin fecha límite';
+                                            }
+                                        ?>
                                     </div>
                                 </div>
                                 <div class="task-actions">
