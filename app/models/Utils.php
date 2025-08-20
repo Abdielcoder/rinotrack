@@ -168,11 +168,4 @@ class Utils {
     public static function formatDateTime($datetime, $format = 'd/m/Y H:i', $emptyText = 'Sin fecha') {
         return self::formatDate($datetime, $format, $emptyText);
     }
-    
-    /**
-     * Escapar texto para mostrar de forma segura en HTML
-     */
-    public static function escape($text) {
-        return htmlspecialchars((string)$text, ENT_QUOTES, 'UTF-8');
-    }
 }
