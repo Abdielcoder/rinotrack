@@ -37,9 +37,13 @@ function getActiveTasksCount($userId) {
                     <i class="fas fa-times"></i>
                     Cerrar
                 </button>
-                <button class="btn-minimal primary" onclick="saveTask()">
+                <button class="btn-minimal primary" onclick="openSubtasksModal()">
+                    <i class="fas fa-tasks"></i>
+                    Crear con Subtareas
+                </button>
+                <button class="btn-minimal secondary" onclick="saveTaskWithoutSubtasks()">
                     <i class="fas fa-save"></i>
-                    Guardar Tarea
+                    Crear sin Subtareas
                 </button>
             </div>
         </div>
@@ -94,20 +98,7 @@ function getActiveTasksCount($userId) {
                     </div>
                 </div>
 
-                <!-- Sección de Subtareas -->
-                <div class="form-section">
-                    <div class="section-header">
-                        <h3><i class="fas fa-tasks"></i> Subtareas</h3>
-                        <button type="button" class="btn-minimal small" onclick="addSubtask()">
-                            <i class="fas fa-plus"></i>
-                            Agregar Subtarea
-                        </button>
-                    </div>
-                    
-                    <div id="subtasks-container">
-                        <!-- Las subtareas se agregarán dinámicamente aquí -->
-                    </div>
-                </div>
+
 
                 <!-- Sección de Asignación de Colaboradores -->
                 <div class="form-section">
@@ -227,78 +218,55 @@ function getActiveTasksCount($userId) {
     </div>
 </div>
 
-<!-- Template para Subtareas -->
-<template id="subtask-template">
-    <div class="subtask-item" data-subtask-index="{index}">
-        <div class="subtask-header">
-            <div class="subtask-number">Subtarea {number}</div>
-            <button type="button" class="btn-remove-subtask" onclick="removeSubtask({index})">
-                <i class="fas fa-trash"></i>
+<!-- Modal para añadir subtareas -->
+<div id="addSubtasksModal" class="modal" style="display: none;">
+    <div class="modal-content modal-large">
+        <div class="modal-header">
+            <h3 id="addSubtasksModalTitle">
+                <i class="fas fa-tasks" style="margin-right: 8px; color: #3b82f6;"></i>
+                Añadir Subtareas
+            </h3>
+            <button class="modal-close" onclick="closeAddSubtasksModal()">
+                <i class="fas fa-times"></i>
             </button>
         </div>
         
-        <div class="subtask-content">
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Título de la subtarea *</label>
-                    <input type="text" name="subtasks[{index}][title]" placeholder="Título de la subtarea" required>
+        <form id="addSubtasksForm">
+            <div class="modal-body">
+                <div class="task-info">
+                    <h4 id="addSubtasksTaskName">Esta tarea será creada con las subtareas que agregues</h4>
+                    <input type="hidden" id="addSubtasksTaskId" name="taskId">
                 </div>
                 
-                <div class="form-group">
-                    <label>Porcentaje de completado *</label>
-                    <input type="number" name="subtasks[{index}][percentage]" min="1" max="100" placeholder="%" required>
-                </div>
-            </div>
-            
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Fecha límite</label>
-                    <div class="date-input-wrapper">
-                        <input type="date" name="subtasks[{index}][due_date]" placeholder="Fecha límite">
-                        <i class="fas fa-calendar-alt"></i>
+                <div class="subtasks-container">
+                    <div class="subtasks-header">
+                        <span>Organiza esta tarea en pasos más pequeños</span>
+                        <button type="button" class="btn btn-small btn-add-more" id="addSubtaskBtnModal">
+                            <i class="fas fa-plus"></i> Agregar Subtarea
+                        </button>
                     </div>
-                </div>
-                
-                <div class="form-group">
-                    <label>Prioridad</label>
-                    <div class="select-wrapper">
-                        <select name="subtasks[{index}][priority]">
-                            <option value="low">Baja</option>
-                            <option value="medium" selected>Media</option>
-                            <option value="high">Alta</option>
-                            <option value="urgent">Urgente</option>
-                        </select>
-                        <i class="fas fa-chevron-down"></i>
+                    <div id="addSubtasksList" class="subtasks-list">
+                        <!-- Las subtareas se agregarán aquí dinámicamente -->
                     </div>
                 </div>
             </div>
             
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Asignar a</label>
-                    <div class="select-wrapper">
-                        <select name="subtasks[{index}][assigned_to_user_id]">
-                            <option value="">Sin asignar</option>
-                            <?php foreach ($members as $member): ?>
-                                <option value="<?php echo $member['user_id']; ?>">
-                                    <?php echo htmlspecialchars($member['full_name']); ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                        <i class="fas fa-chevron-down"></i>
-                    </div>
-                </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeAddSubtasksModal()">
+                    Cancelar
+                </button>
+                <button type="button" class="btn btn-primary" id="continueWithSubtasksBtn">
+                    <span id="continueSubtasksText">Continuar con Subtareas</span>
+                    <span id="continueSubtasksLoader" class="btn-loader" style="display: none;">
+                        <i class="fas fa-spinner fa-spin"></i>
+                    </span>
+                </button>
             </div>
-            
-            <div class="form-row">
-                <div class="form-group full-width">
-                    <label>Descripción</label>
-                    <textarea name="subtasks[{index}][description]" rows="2" placeholder="Descripción de la subtarea..."></textarea>
-                </div>
-            </div>
-        </div>
+        </form>
     </div>
-</template>
+</div>
+
+
 
 
 
@@ -321,143 +289,254 @@ $additionalJS = [
 require_once __DIR__ . '/../admin/layout.php';
 ?>
 
-<!-- Estilos para subtareas -->
+<!-- Estilos para el modal -->
 <style>
-.subtask-item {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    padding: 16px;
-    margin-bottom: 16px;
-    position: relative;
+/* Estilos para el modal */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
 }
 
-.subtask-header {
+.modal.show {
+    opacity: 1;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 12px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    transform: scale(0.9);
+    transition: transform 0.3s ease;
+}
+
+.modal.show .modal-content {
+    transform: scale(1);
+}
+
+.modal-large {
+    max-width: 800px;
+}
+
+.modal-header {
+    padding: 20px 24px 0;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.modal-body {
+    padding: 0 24px;
+}
+
+.modal-footer {
+    padding: 20px 24px;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.task-info h4 {
+    margin: 0 0 8px 0;
+    color: #1f2937;
+    font-size: 1.1rem;
+}
+
+.subtasks-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 16px;
+    padding: 16px;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
 }
 
-.subtask-number {
+.subtasks-header span {
+    color: #6b7280;
+    font-size: 0.9rem;
+}
+
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
     font-weight: 600;
-    color: #374151;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
     font-size: 14px;
 }
 
-.btn-remove-subtask {
-    background: #ef4444;
+.btn-primary {
+    background: #3b82f6;
     color: white;
-    border: none;
-    border-radius: 4px;
-    padding: 6px 10px;
-    cursor: pointer;
-    font-size: 12px;
-    transition: all 0.2s ease;
 }
 
-.btn-remove-subtask:hover {
-    background: #dc2626;
-    transform: scale(1.05);
+.btn-primary:hover {
+    background: #2563eb;
 }
 
-.subtask-content .form-row {
-    display: flex;
-    gap: 16px;
-    margin-bottom: 16px;
+.btn-secondary {
+    background: #6b7280;
+    color: white;
 }
 
-.subtask-content .form-group {
-    flex: 1;
+.btn-secondary:hover {
+    background: #4b5563;
 }
 
-.subtask-content .form-group.full-width {
-    flex: 1 1 100%;
-}
-
-.subtask-content .form-group label {
-    display: block;
-    margin-bottom: 6px;
-    font-weight: 600;
-    color: #374151;
+.btn-small {
+    padding: 8px 16px;
     font-size: 13px;
 }
 
-.subtask-content .form-group input,
-.subtask-content .form-group textarea,
-.subtask-content .form-group select {
-    width: 100%;
+.btn-add-more {
+    background: #10b981;
+    color: white;
+}
+
+.btn-add-more:hover {
+    background: #059669;
+}
+
+.subtasks-list {
+    min-height: 100px;
+}
+
+.subtasks-empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: #9ca3af;
+    font-style: italic;
+}
+
+.subtask-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    background: white;
+    transition: all 0.2s ease;
+}
+
+.subtask-item:hover {
+    border-color: #d1d5db;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.subtask-counter {
+    background: #3b82f6;
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.subtask-drag-handle {
+    color: #9ca3af;
+    cursor: grab;
+    flex-shrink: 0;
+}
+
+.subtask-drag-handle:active {
+    cursor: grabbing;
+}
+
+.subtask-input {
+    flex: 1;
     padding: 8px 12px;
     border: 1px solid #d1d5db;
     border-radius: 6px;
     font-size: 14px;
+}
+
+.subtask-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.subtask-remove {
+    background: #ef4444;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    font-size: 12px;
     transition: all 0.2s ease;
 }
 
-.subtask-content .form-group input:focus,
-.subtask-content .form-group textarea:focus,
-.subtask-content .form-group select:focus {
-    outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+.subtask-remove:hover {
+    background: #dc2626;
+    transform: scale(1.05);
 }
 
-.subtask-content input,
-.subtask-content textarea,
-.subtask-content select {
-    width: 100%;
-    padding: 8px 12px;
-    border: 1px solid #d1d5db;
-    border-radius: 4px;
-    font-size: 14px;
-}
-
-.subtask-content input:focus,
-.subtask-content textarea:focus,
-.subtask-content select:focus {
-    outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.subtask-content .date-input-wrapper,
-.subtask-content .select-wrapper {
-    position: relative;
-    width: 100%;
-}
-
-.subtask-content .date-input-wrapper input,
-.subtask-content .select-wrapper select {
-    width: 100%;
-    padding-right: 35px;
-}
-
-.subtask-content .date-input-wrapper i,
-.subtask-content .select-wrapper i {
-    position: absolute;
-    right: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #9ca3af;
-    pointer-events: none;
-}
-
-.section-header {
-    display: flex;
-    justify-content: space-between;
+.btn-loader {
+    display: inline-flex;
     align-items: center;
-    margin-bottom: 16px;
 }
 
-.section-header h3 {
-    margin: 0;
-    color: #1f2937;
-    font-size: 18px;
-}
-
-.section-header h3 i {
-    margin-right: 8px;
-    color: #6b7280;
+.btn-loader i {
+    margin-right: 4px;
 }
 </style>
 
@@ -498,71 +577,307 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     console.log('✅ Script inline ejecutado correctamente');
-    
-    // Variables globales para subtareas
-    window.subtaskIndex = 0;
-    window.subtasks = [];
 });
 
-// Funciones para manejar subtareas
-function addSubtask() {
-    const container = document.getElementById('subtasks-container');
-    const template = document.getElementById('subtask-template');
+// -------- Modal para añadir subtareas --------
+let addSubtaskCounter = 0;
+
+function openSubtasksModal() {
+    // Validar formulario principal primero
+    const taskTitle = document.getElementById('task_title').value;
+    const taskDueDate = document.getElementById('task_due_date').value;
+    const assignedMembers = document.querySelectorAll('input[name="assigned_members[]"]:checked');
     
-    if (!container || !template) {
-        console.error('No se encontró el contenedor o template de subtareas');
+    if (!taskTitle || !taskDueDate) {
+        showToast('Por favor completa el título y fecha límite antes de agregar subtareas', 'error');
         return;
     }
     
-    const subtaskHtml = template.innerHTML
-        .replace(/{index}/g, window.subtaskIndex)
-        .replace(/{number}/g, window.subtaskIndex + 1);
+    if (assignedMembers.length === 0) {
+        showToast('Debes asignar al menos un colaborador antes de agregar subtareas', 'error');
+        return;
+    }
     
-    const subtaskElement = document.createElement('div');
-    subtaskElement.innerHTML = subtaskHtml;
-    subtaskElement.className = 'subtask-item';
-    subtaskElement.setAttribute('data-subtask-index', window.subtaskIndex);
+    const modal = document.getElementById('addSubtasksModal');
+    const taskNameEl = document.getElementById('addSubtasksTaskName');
+    const listEl = document.getElementById('addSubtasksList');
     
-    container.appendChild(subtaskElement);
-    window.subtaskIndex++;
+    // Configurar modal
+    taskNameEl.textContent = `Tarea: ${taskTitle}`;
     
-    console.log('Subtarea agregada con índice:', window.subtaskIndex - 1);
+    // Limpiar lista y reiniciar contador
+    listEl.innerHTML = '';
+    addSubtaskCounter = 0;
+    updateAddSubtasksDisplay();
+    
+    // Añadir una subtarea inicial
+    addSubtaskToForm();
+    
+    // Mostrar modal
+    modal.style.display = 'flex';
+    setTimeout(() => modal.classList.add('show'), 10);
 }
 
-function removeSubtask(index) {
-    const subtaskElement = document.querySelector(`[data-subtask-index="${index}"]`);
-    if (subtaskElement) {
-        subtaskElement.remove();
-        console.log('Subtarea removida con índice:', index);
+function closeAddSubtasksModal() {
+    const modal = document.getElementById('addSubtasksModal');
+    modal.classList.remove('show');
+    setTimeout(() => {
+        modal.style.display = 'none';
+        
+        // Limpiar formulario
+        const listEl = document.getElementById('addSubtasksList');
+        if (listEl) {
+            listEl.innerHTML = '';
+            addSubtaskCounter = 0;
+        }
+    }, 300);
+}
+
+function addSubtaskToForm() {
+    addSubtaskCounter++;
+    const subtaskId = 'add_subtask_' + addSubtaskCounter;
+    const listEl = document.getElementById('addSubtasksList');
+    
+    // Crear elemento de subtarea
+    const subtaskItem = document.createElement('div');
+    subtaskItem.className = 'subtask-item';
+    subtaskItem.dataset.subtaskId = subtaskId;
+    
+    subtaskItem.innerHTML = `
+        <span class="subtask-counter">${addSubtaskCounter}</span>
+        <i class="fas fa-grip-vertical subtask-drag-handle" title="Arrastrar para reordenar"></i>
+        <input type="text" class="subtask-input" name="subtasks[]" placeholder="Nombre de la subtarea..." required>
+        <button type="button" class="subtask-remove" onclick="removeSubtaskFromForm('${subtaskId}')" title="Eliminar subtarea">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+    
+    if (listEl) {
+        listEl.appendChild(subtaskItem);
+        updateAddSubtasksDisplay();
+        
+        // Enfocar el input de la nueva subtarea
+        const input = subtaskItem.querySelector('.subtask-input');
+        if (input) {
+            input.focus();
+        }
     }
 }
 
-// Función para recolectar datos de subtareas antes de enviar
-function collectSubtasksData() {
-    const subtaskElements = document.querySelectorAll('.subtask-item');
+function removeSubtaskFromForm(subtaskId) {
+    const subtaskItem = document.querySelector(`[data-subtask-id="${subtaskId}"]`);
+    if (subtaskItem) {
+        subtaskItem.remove();
+        updateAddSubtasksDisplay();
+        renumberAddSubtasks();
+    }
+}
+
+function updateAddSubtasksDisplay() {
+    const listEl = document.getElementById('addSubtasksList');
+    const subtaskItems = listEl ? listEl.querySelectorAll('.subtask-item') : [];
+    
+    if (subtaskItems.length === 0 && listEl) {
+        listEl.innerHTML = '<div class="subtasks-empty">No hay subtareas. Haz clic en "Agregar Subtarea" para comenzar.</div>';
+    } else if (listEl && listEl.querySelector('.subtasks-empty')) {
+        listEl.querySelector('.subtasks-empty').remove();
+    }
+}
+
+function renumberAddSubtasks() {
+    const subtaskItems = document.querySelectorAll('#addSubtasksList .subtask-item');
+    subtaskItems.forEach((item, index) => {
+        const counter = item.querySelector('.subtask-counter');
+        if (counter) {
+            counter.textContent = index + 1;
+        }
+    });
+    addSubtaskCounter = subtaskItems.length;
+}
+
+function saveTaskWithoutSubtasks() {
+    saveTask();
+}
+
+function saveTaskWithSubtasks() {
+    // Recopilar subtareas del modal
+    const subtaskInputs = document.querySelectorAll('#addSubtasksList .subtask-input');
     const subtasks = [];
     
-    subtaskElements.forEach(element => {
-        const index = element.getAttribute('data-subtask-index');
-        const title = element.querySelector('input[name^="subtasks"][name$="[title]"]').value;
-        const percentage = element.querySelector('input[name^="subtasks"][name$="[percentage]"]').value;
-        const description = element.querySelector('textarea[name^="subtasks"][name$="[description]"]').value;
-        const dueDate = element.querySelector('input[name^="subtasks"][name$="[due_date]"]').value || null;
-        const priority = element.querySelector('select[name^="subtasks"][name$="[priority]"]').value;
-        const assignedUserId = element.querySelector('select[name^="subtasks"][name$="[assigned_to_user_id]"]').value || null;
-        
-        if (title.trim() !== '') {
+    subtaskInputs.forEach(input => {
+        const title = input.value.trim();
+        if (title) {
             subtasks.push({
-                title: title.trim(),
-                completion_percentage: parseInt(percentage) || 0,
-                description: description.trim(),
-                due_date: dueDate,
-                priority: priority,
-                assigned_to_user_id: assignedUserId
+                title: title,
+                description: '',
+                completion_percentage: 0,
+                due_date: null,
+                priority: 'medium',
+                assigned_to_user_id: null
             });
         }
     });
     
-    return subtasks;
+    if (subtasks.length === 0) {
+        showToast('Debes agregar al menos una subtarea', 'error');
+        return;
+    }
+    
+    // Crear tarea principal con subtareas
+    createTaskWithSubtasks(subtasks);
+}
+
+function createTaskWithSubtasks(subtasks) {
+    // Validar formulario
+    const taskTitle = document.getElementById('task_title').value;
+    const taskDueDate = document.getElementById('task_due_date').value;
+    const assignedMembers = document.querySelectorAll('input[name="assigned_members[]"]:checked');
+    
+    if (!taskTitle || !taskDueDate) {
+        showToast('Por favor completa todos los campos requeridos', 'error');
+        return;
+    }
+    
+    if (assignedMembers.length === 0) {
+        showToast('Debes asignar al menos un colaborador', 'error');
+        return;
+    }
+    
+    // Recopilar datos del formulario
+    const formData = new FormData();
+    formData.append('task_title', taskTitle);
+    formData.append('task_due_date', taskDueDate);
+    formData.append('task_project', document.getElementById('task_project').value);
+    formData.append('task_description', document.getElementById('task_description').value);
+    
+    // Agregar miembros asignados
+    assignedMembers.forEach(member => {
+        formData.append('assigned_members[]', member.value);
+    });
+    
+    // Agregar subtareas como JSON
+    if (subtasks.length > 0) {
+        formData.append('subtasks', JSON.stringify(subtasks));
+    }
+    
+    // Log para debug
+    console.log('🚀 === ENVIANDO TAREA CON SUBTAREAS ===');
+    console.log('📊 Subtareas:', subtasks);
+    
+    // Mostrar loader
+    const continueBtn = document.getElementById('continueWithSubtasksBtn');
+    const continueText = document.getElementById('continueSubtasksText');
+    const continueLoader = document.getElementById('continueSubtasksLoader');
+    
+    if (continueBtn) continueBtn.disabled = true;
+    if (continueText) continueText.style.display = 'none';
+    if (continueLoader) continueLoader.style.display = 'inline-flex';
+    
+    // Enviar datos al servidor
+    fetch('?route=clan_leader/create-task', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        console.log('📡 Response status:', response.status);
+        return response.text();
+    })
+    .then(text => {
+        console.log('📄 Response body:', text);
+        
+        try {
+            const data = JSON.parse(text);
+            console.log('✅ JSON parseado:', data);
+            
+            if (data.success) {
+                console.log('🎉 Tarea creada exitosamente');
+                showToast('Tarea con subtareas creada exitosamente', 'success');
+                setTimeout(() => {
+                    window.location.href = '?route=clan_leader/tasks';
+                }, 1500);
+            } else {
+                console.error('❌ Error del servidor:', data.message);
+                showToast(data.message || 'Error al crear la tarea', 'error');
+            }
+        } catch (e) {
+            console.error('❌ Error parseando JSON:', e);
+            showToast('Error del servidor. Ver consola para detalles.', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('💥 Error de red:', error);
+        showToast('Error al crear la tarea: ' + error.message, 'error');
+    })
+    .finally(() => {
+        // Ocultar loader
+        if (continueBtn) continueBtn.disabled = false;
+        if (continueText) continueText.style.display = 'inline';
+        if (continueLoader) continueLoader.style.display = 'none';
+    });
+}
+
+// Event listeners para el modal
+document.addEventListener('DOMContentLoaded', function() {
+    // Botón para agregar subtarea en el modal
+    const addSubtaskBtn = document.getElementById('addSubtaskBtnModal');
+    if (addSubtaskBtn) {
+        addSubtaskBtn.addEventListener('click', addSubtaskToForm);
+    }
+    
+    // Botón para continuar con subtareas
+    const continueBtn = document.getElementById('continueWithSubtasksBtn');
+    if (continueBtn) {
+        continueBtn.addEventListener('click', saveTaskWithSubtasks);
+    }
+    
+    // Cerrar modal con Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const modal = document.getElementById('addSubtasksModal');
+            if (modal && modal.style.display !== 'none') {
+                closeAddSubtasksModal();
+            }
+        }
+    });
+});
+
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 16px 24px;
+        border-radius: 12px;
+        color: white;
+        font-weight: 600;
+        z-index: 10001;
+        animation: slideIn 0.3s ease;
+        max-width: 350px;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    `;
+    
+    if (type === 'success') {
+        toast.style.background = '#10b981';
+    } else if (type === 'error') {
+        toast.style.background = '#ef4444';
+    } else if (type === 'warning') {
+        toast.style.background = '#f59e0b';
+    } else {
+        toast.style.background = '#3b82f6';
+    }
+    
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, 300);
+    }, 3000);
 }
 </script> 

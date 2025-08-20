@@ -1725,6 +1725,83 @@ class ClanLeaderController {
     }
     
     /**
+     * Añadir subtareas a una tarea existente
+     */
+    public function addSubtasksToTask() {
+        $this->requireAuth();
+        if (!$this->hasClanLeaderAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos'], 403);
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
+        }
+
+        $taskId = (int)($_POST['taskId'] ?? 0);
+        $subtasks = $_POST['subtasks'] ?? [];
+
+        if ($taskId <= 0) {
+            Utils::jsonResponse(['success' => false, 'message' => 'ID de tarea inválido'], 400);
+        }
+
+        if (empty($subtasks) || !is_array($subtasks)) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Debe proporcionar al menos una subtarea'], 400);
+        }
+
+        try {
+            // Verificar que la tarea existe y pertenece al clan
+            $task = $this->taskModel->findById($taskId);
+            if (!$task) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Tarea no encontrada'], 404);
+            }
+
+            // Verificar que la tarea pertenece a un proyecto del clan
+            $project = $this->projectModel->findById($task['project_id']);
+            if (!$project || $project['clan_id'] != $this->userClan['clan_id']) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+            }
+
+            $createdByUserId = $this->currentUser['user_id'];
+            
+            // Crear cada subtarea
+            $createdCount = 0;
+            foreach ($subtasks as $subtaskTitle) {
+                $subtaskTitle = trim(Utils::sanitizeInput($subtaskTitle));
+                if ($subtaskTitle !== '') {
+                    $subtaskId = $this->taskModel->createSubtaskAdvanced(
+                        $taskId,
+                        $subtaskTitle,
+                        $createdByUserId,
+                        '', // descripción vacía
+                        0,  // porcentaje inicial
+                        null, // sin fecha límite
+                        Task::PRIORITY_MEDIUM,
+                        null  // sin usuario asignado inicialmente
+                    );
+                    
+                    if ($subtaskId) {
+                        $createdCount++;
+                    }
+                }
+            }
+
+            if ($createdCount > 0) {
+                Utils::jsonResponse([
+                    'success' => true, 
+                    'message' => "Se crearon {$createdCount} subtareas exitosamente",
+                    'created_count' => $createdCount
+                ]);
+            } else {
+                Utils::jsonResponse(['success' => false, 'message' => 'No se pudo crear ninguna subtarea'], 500);
+            }
+
+        } catch (Exception $e) {
+            error_log('Error al añadir subtareas (clan leader): ' . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
      * Método de prueba para verificar que el controlador funciona
      */
     public function test() {
