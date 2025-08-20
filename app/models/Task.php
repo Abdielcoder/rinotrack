@@ -561,8 +561,13 @@ class Task {
      */
     public function updateSubtaskStatus($subtaskId, $status, $completionPercentage = null, $userId = null) {
         try {
-            $sql = "UPDATE Subtasks SET status = ?, updated_at = CURRENT_TIMESTAMP";
-            $params = [$status];
+            $sql = "UPDATE Subtasks SET updated_at = CURRENT_TIMESTAMP";
+            $params = [];
+            
+            if (!empty($status)) {
+                $sql .= ", status = ?";
+                $params[] = $status;
+            }
             
             if ($completionPercentage !== null) {
                 $sql .= ", completion_percentage = ?";

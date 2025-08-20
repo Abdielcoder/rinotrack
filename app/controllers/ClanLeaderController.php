@@ -1579,10 +1579,15 @@ class ClanLeaderController {
         
         $subtaskId = (int)($_POST['subtask_id'] ?? 0);
         $status = Utils::sanitizeInput($_POST['status'] ?? '');
-        $completionPercentage = (float)($_POST['completion_percentage'] ?? 0);
+        $completionPercentage = isset($_POST['completion_percentage']) ? (float)$_POST['completion_percentage'] : null;
         
-        if ($subtaskId <= 0 || empty($status)) {
-            Utils::jsonResponse(['success' => false, 'message' => 'Datos inválidos'], 400);
+        if ($subtaskId <= 0) {
+            Utils::jsonResponse(['success' => false, 'message' => 'ID de subtarea inválido'], 400);
+        }
+        
+        // Si no se envía status pero sí completion_percentage, solo actualizar porcentaje
+        if (empty($status) && $completionPercentage === null) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Debe proporcionar estado o porcentaje de completación'], 400);
         }
         
         try {

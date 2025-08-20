@@ -1234,6 +1234,8 @@ if (!isset($task) || !isset($subtasks) || !isset($comments) || !isset($history) 
         }
         
         function updateSubtaskCompletion(subtaskId, completion) {
+            console.log('Actualizando subtarea:', subtaskId, 'Porcentaje:', completion);
+            
             fetch('?route=clan_leader/update-subtask-status', {
                 method: 'POST',
                 headers: {
@@ -1241,25 +1243,48 @@ if (!isset($task) || !isset($subtasks) || !isset($comments) || !isset($history) 
                 },
                 body: `subtask_id=${subtaskId}&completion_percentage=${completion}`
             })
-            .then(response => response.json())
+            .then(response => {
+                console.log('Respuesta recibida:', response.status);
+                return response.json();
+            })
             .then(data => {
+                console.log('Datos de respuesta:', data);
                 if (data.success) {
                     // Actualizar la UI
                     const subtaskItem = document.querySelector(`[data-subtask-id="${subtaskId}"]`);
                     if (subtaskItem) {
                         const progressFill = subtaskItem.querySelector('.progress-fill');
                         const percentageSpan = subtaskItem.querySelector('.subtask-progress span');
-                        if (progressFill) progressFill.style.width = completion + '%';
-                        if (percentageSpan) percentageSpan.textContent = completion + '%';
+                        if (progressFill) {
+                            progressFill.style.width = completion + '%';
+                            console.log('Barra actualizada a:', completion + '%');
+                        }
+                        if (percentageSpan) {
+                            percentageSpan.textContent = completion + '%';
+                            console.log('Texto actualizado a:', completion + '%');
+                        }
                     }
-                    showNotification('Progreso de subtarea actualizado', 'success');
+                    if (typeof showNotification === 'function') {
+                        showNotification('Progreso de subtarea actualizado', 'success');
+                    } else {
+                        console.log('Progreso actualizado exitosamente');
+                    }
                 } else {
-                    showNotification('Error al actualizar progreso: ' + data.message, 'error');
+                    console.error('Error del servidor:', data.message);
+                    if (typeof showNotification === 'function') {
+                        showNotification('Error al actualizar progreso: ' + data.message, 'error');
+                    } else {
+                        alert('Error al actualizar progreso: ' + data.message);
+                    }
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
-                showNotification('Error al actualizar progreso', 'error');
+                console.error('Error de red:', error);
+                if (typeof showNotification === 'function') {
+                    showNotification('Error al actualizar progreso', 'error');
+                } else {
+                    alert('Error al actualizar progreso');
+                }
             });
         }
         
