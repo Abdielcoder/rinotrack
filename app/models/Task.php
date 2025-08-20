@@ -685,11 +685,11 @@ class Task {
                 AND t.is_subtask = 0
                 AND t.status IN ('pending', 'in_progress')
                 AND (t.due_date IS NULL OR t.due_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 15 DAY))
-                AND (
-                    p.is_personal IS NULL 
-                    OR p.is_personal != 1 
-                    OR (p.is_personal = 1 AND p.created_by_user_id = ?)
-                )
+                                 AND (
+                     p.is_personal IS NULL 
+                     OR p.is_personal != 1 
+                     OR (p.is_personal = 1 AND p.created_by_user_id = ?)
+                 )
                 ORDER BY t.due_date ASC
             ");
             
@@ -1469,6 +1469,7 @@ class Task {
                 WHERE t.is_subtask = 0
                   AND p.clan_id = ?
                   AND p.is_personal = 1
+                  AND p.created_by_user_id = ?
                   AND (t.assigned_to_user_id = ? OR t.created_by_user_id = ?)
                 ORDER BY 
                     CASE t.priority 
@@ -1482,7 +1483,7 @@ class Task {
             ";
             
             $stmt = $this->db->prepare($sql);
-            $stmt->execute([$clanId, $userId, $userId]);
+            $stmt->execute([$clanId, $userId, $userId, $userId]);
             return $stmt->fetchAll();
             
         } catch (PDOException $e) {

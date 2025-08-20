@@ -2826,17 +2826,20 @@ class ClanLeaderController {
                     END as days_until_due
                  FROM Tasks t
                  INNER JOIN Projects p ON p.project_id = t.project_id
-                 WHERE (p.clan_id = ? 
+                 WHERE (
+                        (p.clan_id = ? AND (p.is_personal IS NULL OR p.is_personal != 1))
                         OR (p.project_name IN ('Tareas Recurrentes', 'Tareas Eventuales') 
                             AND t.assigned_to_user_id = ?)
-                        OR (p.is_personal = 1 AND (t.assigned_to_user_id = ? OR t.created_by_user_id = ?)))
+                        OR (p.clan_id = ? AND p.is_personal = 1 AND p.created_by_user_id = ? AND (t.assigned_to_user_id = ? OR t.created_by_user_id = ?))
+                       )
                    AND t.is_subtask = 0
                    AND t.status != 'completed'
                  ORDER BY t.due_date ASC, t.task_id ASC"
             );
             
-            $params = [$clanId, $this->currentUser['user_id'], $this->currentUser['user_id'], $this->currentUser['user_id']];
+            $params = [$clanId, $this->currentUser['user_id'], $clanId, $this->currentUser['user_id'], $this->currentUser['user_id'], $this->currentUser['user_id']];
             error_log("Ejecutando consulta con parámetros: clanId=$clanId, userId={$this->currentUser['user_id']} (tareas del clan + recurrentes/eventuales + personales asignadas al usuario)");
+            error_log("Parámetros SQL: " . implode(', ', $params));
             $stmt->execute($params);
             $allTasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
@@ -2845,6 +2848,11 @@ class ClanLeaderController {
             // Debug: mostrar todas las tareas encontradas
             foreach ($allTasks as $index => $task) {
                 error_log("Tarea $index: ID={$task['task_id']}, Nombre='{$task['task_name']}', Proyecto='{$task['project_name']}', Due_date='{$task['due_date']}', Days_until_due='{$task['days_until_due']}'");
+                
+                // Debug específico para tareas personales
+                if ($task['project_name'] === 'Tareas Personales') {
+                    error_log("  *** TAREA PERSONAL DETECTADA *** - Necesita verificación de filtrado");
+                }
             }
             
             // Debug: verificar qué proyectos únicos se encontraron
@@ -2932,6 +2940,58 @@ class ClanLeaderController {
                 '2_semanas' => []
             ];
         }
+    }
+
+    /**
+     * Debug: Verificar filtrado de tareas personales (temporal)
+     */
+    public function debugTaskFiltering() {
+        $this->requireAuth();
+        if (!$this->hasClanLeaderAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos'], 403);
+            return;
+        }
+
+        if (!$this->userClan) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Sin clan asignado'], 400);
+            return;
+        }
+
+        $userId = $this->currentUser['user_id'];
+        $clanId = $this->userClan['clan_id'];
+
+        // Obtener todas las tareas personales en el clan (sin filtro)
+        $stmt = $this->db->prepare("
+            SELECT 
+                t.task_id,
+                t.task_name,
+                t.assigned_to_user_id,
+                t.created_by_user_id,
+                p.project_name,
+                p.created_by_user_id as project_creator,
+                p.is_personal
+            FROM Tasks t
+            JOIN Projects p ON t.project_id = p.project_id
+            WHERE p.clan_id = ? AND p.is_personal = 1
+            ORDER BY t.task_id
+        ");
+        $stmt->execute([$clanId]);
+        $allPersonalTasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Obtener tareas personales con filtro
+        $filteredTasks = $this->taskModel->getPersonalTasksForClanLeader($userId, $clanId);
+
+        Utils::jsonResponse([
+            'success' => true,
+            'debug_info' => [
+                'current_user_id' => $userId,
+                'clan_id' => $clanId,
+                'all_personal_tasks_in_clan' => count($allPersonalTasks),
+                'filtered_personal_tasks' => count($filteredTasks),
+                'all_tasks' => $allPersonalTasks,
+                'filtered_tasks' => $filteredTasks
+            ]
+        ]);
     }
 
     /**
