@@ -186,7 +186,7 @@ ob_start();
 /* Estilos para subtareas */
 .subtask-count-badge {
   display: inline-block;
-  background: var(--primary-color);
+  background: #1e3a8a;
   color: white;
   font-size: 0.7rem;
   padding: 2px 6px;
