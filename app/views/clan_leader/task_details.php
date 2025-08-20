@@ -916,6 +916,12 @@ if (!isset($task) || !isset($subtasks) || !isset($comments) || !isset($history) 
                                 <div class="subtask-header">
                                     <div class="subtask-title"><?= htmlspecialchars($subtask['title']) ?></div>
                                     <div class="subtask-actions">
+                                        <button class="btn-icon-small" onclick="showSubtaskComments(<?= $subtask['subtask_id'] ?>)" title="Ver comentarios">
+                                            <i class="fas fa-comments"></i>
+                                        </button>
+                                        <button class="btn-icon-small" onclick="showSubtaskAttachments(<?= $subtask['subtask_id'] ?>)" title="Ver adjuntos">
+                                            <i class="fas fa-paperclip"></i>
+                                        </button>
                                         <button class="btn-icon-small" onclick="editSubtask(<?= $subtask['subtask_id'] ?>)" title="Editar">
                                             <i class="fas fa-edit"></i>
                                         </button>
@@ -1735,6 +1741,368 @@ if (!isset($task) || !isset($subtasks) || !isset($comments) || !isset($history) 
             // Agregar al DOM
             document.body.appendChild(modal);
         }
+
+        // Funciones para comentarios y adjuntos de subtareas
+        function showSubtaskComments(subtaskId) {
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 800px;">
+                    <div class="modal-header">
+                        <h3><i class="fas fa-comments"></i> Comentarios de Subtarea</h3>
+                        <button class="btn-close" onclick="this.closest('.modal-overlay').remove()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="subtask-comments-list">
+                            <div class="loading">Cargando comentarios...</div>
+                        </div>
+                        <div class="add-comment-section">
+                            <h4>Agregar Comentario</h4>
+                            <div class="comment-form">
+                                <textarea id="subtask-comment-text" placeholder="Escribe tu comentario..." rows="3"></textarea>
+                                <div class="comment-actions">
+                                    <input type="file" id="subtask-comment-file" style="display: none;" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif">
+                                    <button type="button" onclick="document.getElementById('subtask-comment-file').click()" class="btn btn-secondary">
+                                        <i class="fas fa-paperclip"></i> Adjuntar
+                                    </button>
+                                    <button type="button" onclick="addSubtaskComment(${subtaskId})" class="btn btn-primary">
+                                        <i class="fas fa-paper-plane"></i> Enviar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0, 0, 0, 0.5); display: flex; align-items: center;
+                justify-content: center; z-index: 1000;
+            `;
+            
+            document.body.appendChild(modal);
+            loadSubtaskComments(subtaskId);
+        }
+
+        function showSubtaskAttachments(subtaskId) {
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 800px;">
+                    <div class="modal-header">
+                        <h3><i class="fas fa-paperclip"></i> Archivos Adjuntos de Subtarea</h3>
+                        <button class="btn-close" onclick="this.closest('.modal-overlay').remove()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="subtask-attachments-list">
+                            <div class="loading">Cargando adjuntos...</div>
+                        </div>
+                        <div class="add-attachment-section">
+                            <h4>Subir Archivo</h4>
+                            <div class="attachment-form">
+                                <input type="file" id="subtask-attachment-file" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.zip,.rar">
+                                <textarea id="subtask-attachment-description" placeholder="Descripción del archivo (opcional)" rows="2"></textarea>
+                                <button type="button" onclick="uploadSubtaskAttachment(${subtaskId})" class="btn btn-primary">
+                                    <i class="fas fa-upload"></i> Subir Archivo
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0, 0, 0, 0.5); display: flex; align-items: center;
+                justify-content: center; z-index: 1000;
+            `;
+            
+            document.body.appendChild(modal);
+            loadSubtaskAttachments(subtaskId);
+        }
+
+        function loadSubtaskComments(subtaskId) {
+            fetch('?route=clan_leader/get-subtask-comments&subtask_id=' + subtaskId)
+                .then(response => response.json())
+                .then(data => {
+                    const container = document.getElementById('subtask-comments-list');
+                    if (data.success) {
+                        if (data.comments.length === 0) {
+                            container.innerHTML = '<p class="no-data">No hay comentarios aún. ¡Sé el primero en comentar!</p>';
+                        } else {
+                            container.innerHTML = data.comments.map(comment => `
+                                <div class="comment-item">
+                                    <div class="comment-header">
+                                        <strong>${comment.full_name}</strong>
+                                        <span class="comment-date">${new Date(comment.created_at).toLocaleString()}</span>
+                                    </div>
+                                    <div class="comment-text">${comment.comment_text}</div>
+                                    ${comment.attachments && comment.attachments.length > 0 ? `
+                                        <div class="comment-attachments">
+                                            ${comment.attachments.map(att => `
+                                                <a href="${att.file_path}" target="_blank" class="attachment-link">
+                                                    <i class="fas fa-paperclip"></i> ${att.file_name}
+                                                </a>
+                                            `).join('')}
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            `).join('');
+                        }
+                    } else {
+                        container.innerHTML = '<p class="error">Error al cargar comentarios: ' + data.message + '</p>';
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('subtask-comments-list').innerHTML = '<p class="error">Error de conexión</p>';
+                });
+        }
+
+        function loadSubtaskAttachments(subtaskId) {
+            fetch('?route=clan_leader/get-subtask-attachments&subtask_id=' + subtaskId)
+                .then(response => response.json())
+                .then(data => {
+                    const container = document.getElementById('subtask-attachments-list');
+                    if (data.success) {
+                        if (data.attachments.length === 0) {
+                            container.innerHTML = '<p class="no-data">No hay archivos adjuntos aún.</p>';
+                        } else {
+                            container.innerHTML = data.attachments.map(att => `
+                                <div class="attachment-item">
+                                    <div class="attachment-info">
+                                        <a href="${att.file_path}" target="_blank" class="attachment-link">
+                                            <i class="fas fa-file"></i> ${att.file_name}
+                                        </a>
+                                        <div class="attachment-meta">
+                                            <span>Subido por: ${att.uploaded_by_name}</span>
+                                            <span>Fecha: ${new Date(att.uploaded_at).toLocaleString()}</span>
+                                            ${att.file_size ? `<span>Tamaño: ${formatFileSize(att.file_size)}</span>` : ''}
+                                        </div>
+                                        ${att.description ? `<div class="attachment-description">${att.description}</div>` : ''}
+                                    </div>
+                                </div>
+                            `).join('');
+                        }
+                    } else {
+                        container.innerHTML = '<p class="error">Error al cargar adjuntos: ' + data.message + '</p>';
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('subtask-attachments-list').innerHTML = '<p class="error">Error de conexión</p>';
+                });
+        }
+
+        function addSubtaskComment(subtaskId) {
+            const commentText = document.getElementById('subtask-comment-text').value.trim();
+            const fileInput = document.getElementById('subtask-comment-file');
+            
+            if (!commentText) {
+                alert('Por favor escribe un comentario');
+                return;
+            }
+
+            // Si hay archivo, primero subir el archivo
+            if (fileInput.files.length > 0) {
+                const formData = new FormData();
+                formData.append('subtask_id', subtaskId);
+                formData.append('file', fileInput.files[0]);
+                
+                fetch('?route=clan_leader/upload-subtask-attachment', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Ahora agregar el comentario con referencia al archivo
+                        addSubtaskCommentWithText(subtaskId, commentText, data.attachment_id);
+                    } else {
+                        alert('Error al subir archivo: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    alert('Error de conexión al subir archivo');
+                });
+            } else {
+                // Solo comentario sin archivo
+                addSubtaskCommentWithText(subtaskId, commentText);
+            }
+        }
+
+        function addSubtaskCommentWithText(subtaskId, commentText, attachmentId = null) {
+            fetch('?route=clan_leader/add-subtask-comment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    subtask_id: subtaskId,
+                    comment_text: commentText,
+                    attachment_id: attachmentId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('subtask-comment-text').value = '';
+                    document.getElementById('subtask-comment-file').value = '';
+                    loadSubtaskComments(subtaskId);
+                } else {
+                    alert('Error al agregar comentario: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('Error de conexión');
+            });
+        }
+
+        function uploadSubtaskAttachment(subtaskId) {
+            const fileInput = document.getElementById('subtask-attachment-file');
+            const description = document.getElementById('subtask-attachment-description').value.trim();
+            
+            if (fileInput.files.length === 0) {
+                alert('Por favor selecciona un archivo');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('subtask_id', subtaskId);
+            formData.append('file', fileInput.files[0]);
+            formData.append('description', description);
+            
+            fetch('?route=clan_leader/upload-subtask-attachment', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    fileInput.value = '';
+                    document.getElementById('subtask-attachment-description').value = '';
+                    loadSubtaskAttachments(subtaskId);
+                } else {
+                    alert('Error al subir archivo: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('Error de conexión');
+            });
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
     </script>
+
+    <style>
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 8px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .comment-item, .attachment-item {
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .comment-date {
+            color: #6b7280;
+            font-size: 12px;
+        }
+
+        .comment-form, .attachment-form {
+            margin-top: 15px;
+        }
+
+        .comment-form textarea, .attachment-form textarea {
+            width: 100%;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            padding: 8px;
+            margin-bottom: 10px;
+        }
+
+        .comment-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .attachment-link {
+            color: #3b82f6;
+            text-decoration: none;
+            display: inline-block;
+            margin-right: 10px;
+        }
+
+        .attachment-link:hover {
+            text-decoration: underline;
+        }
+
+        .attachment-meta {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 5px;
+        }
+
+        .attachment-meta span {
+            margin-right: 15px;
+        }
+
+        .loading, .no-data, .error {
+            text-align: center;
+            padding: 20px;
+            color: #6b7280;
+        }
+
+        .error {
+            color: #dc2626;
+        }
+    </style>
 </body>
 </html> 

@@ -357,7 +357,7 @@ class Subtask {
      */
     public function saveUploadedFile($file, $subtaskId, $userId) {
         try {
-            $uploadsDir = __DIR__ . '/../../public/uploads/subtasks/';
+            $uploadsDir = __DIR__ . '/../../public/uploads/';
             
             // Crear directorio si no existe
             if (!file_exists($uploadsDir)) {
@@ -375,7 +375,7 @@ class Subtask {
                     'original_name' => $file['name'],
                     'saved_name' => $filename,
                     'file_path' => $filepath,
-                    'public_path' => '/uploads/subtasks/' . $filename,
+                    'public_path' => '/uploads/' . $filename,
                     'file_size' => $file['size'],
                     'file_type' => $file['type']
                 ];
