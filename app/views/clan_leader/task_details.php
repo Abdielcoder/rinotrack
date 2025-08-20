@@ -709,6 +709,138 @@ if (!isset($task) || !isset($subtasks) || !isset($comments) || !isset($history) 
         .user-option input[type="checkbox"] {
             margin: 0;
         }
+        
+        /* Estilos mejorados para subtareas */
+        .subtasks-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        .subtask-item {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px;
+            transition: all 0.2s ease;
+        }
+        
+        .subtask-item:hover {
+            border-color: #cbd5e1;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        
+        .subtask-info {
+            margin-bottom: 16px;
+        }
+        
+        .subtask-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .subtask-title {
+            font-weight: 600;
+            color: #1f2937;
+            font-size: 16px;
+        }
+        
+        .subtask-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .subtask-meta {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            font-size: 13px;
+            color: #6b7280;
+        }
+        
+        .subtask-meta span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .subtask-description {
+            margin-top: 12px;
+            padding: 12px;
+            background: #f1f5f9;
+            border-radius: 6px;
+            border-left: 3px solid #3b82f6;
+        }
+        
+        .subtask-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .subtask-progress {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .progress-bar {
+            flex: 1;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+            transition: width 0.3s ease;
+        }
+        
+        .subtask-status-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .status-select {
+            padding: 6px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 13px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .status-select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .status-select:hover {
+            border-color: #9ca3af;
+        }
+        
+        /* Animaciones */
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .notification {
+            animation: slideInRight 0.3s ease;
+        }
     </style>
 </head>
 <body>
@@ -1432,6 +1564,176 @@ if (!isset($task) || !isset($subtasks) || !isset($comments) || !isset($history) 
             if (event.target === modal) {
                 closeAddCollaboratorModal();
             }
+        }
+        
+        // Función para actualizar el estado de las subtareas
+        function updateSubtaskStatus(subtaskId, newStatus) {
+            console.log('Actualizando subtarea:', subtaskId, 'a estado:', newStatus);
+            
+            // Determinar el porcentaje de completado basado en el estado
+            let completionPercentage = 0;
+            switch(newStatus) {
+                case 'pending':
+                    completionPercentage = 0;
+                    break;
+                case 'in_progress':
+                    completionPercentage = 50;
+                    break;
+                case 'completed':
+                    completionPercentage = 100;
+                    break;
+                default:
+                    completionPercentage = 0;
+            }
+            
+            // Enviar actualización al servidor
+            fetch('?route=clan_leader/update-subtask-status', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `subtask_id=${subtaskId}&status=${newStatus}&completion_percentage=${completionPercentage}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('Estado de subtarea actualizado exitosamente', 'success');
+                    
+                    // Actualizar la interfaz
+                    const subtaskItem = document.querySelector(`[data-subtask-id="${subtaskId}"]`);
+                    if (subtaskItem) {
+                        // Actualizar la barra de progreso
+                        const progressFill = subtaskItem.querySelector('.progress-fill');
+                        const progressText = subtaskItem.querySelector('.progress-fill + span');
+                        if (progressFill && progressText) {
+                            progressFill.style.width = completionPercentage + '%';
+                            progressText.textContent = completionPercentage + '%';
+                        }
+                        
+                        // Actualizar el texto del estado
+                        const statusText = subtaskItem.querySelector('.subtask-status-controls span');
+                        if (statusText) {
+                            statusText.textContent = 'Estado: ' + newStatus.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+                        }
+                    }
+                } else {
+                    showNotification('Error al actualizar subtarea: ' + data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Error al actualizar subtarea', 'error');
+            });
+        }
+        
+        // Función para editar subtarea (placeholder)
+        function editSubtask(subtaskId) {
+            console.log('Editando subtarea:', subtaskId);
+            showNotification('Función de edición de subtareas próximamente disponible', 'info');
+        }
+        
+        // Función para eliminar subtarea (placeholder)
+        function deleteSubtask(subtaskId) {
+            showConfirmationModal({
+                title: 'Confirmar Eliminación',
+                message: '¿Estás seguro de que quieres eliminar esta subtarea?',
+                type: 'warning',
+                confirmText: 'Eliminar',
+                cancelText: 'Cancelar',
+                onConfirm: () => {
+                    console.log('Eliminando subtarea:', subtaskId);
+                    showNotification('Función de eliminación de subtareas próximamente disponible', 'info');
+                }
+            });
+        }
+        
+        // Función para mostrar notificaciones
+        function showNotification(message, type = 'info') {
+            // Crear elemento de notificación
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.innerHTML = `
+                <div class="notification-content">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            // Agregar estilos
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+                color: white;
+                padding: 12px 20px;
+                border-radius: 6px;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                z-index: 10000;
+                font-size: 14px;
+                max-width: 300px;
+                animation: slideInRight 0.3s ease;
+            `;
+            
+            // Agregar al DOM
+            document.body.appendChild(notification);
+            
+            // Remover después de 3 segundos
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 3000);
+        }
+        
+        // Función para mostrar modal de confirmación
+        function showConfirmationModal(options) {
+            const modal = document.createElement('div');
+            modal.className = 'confirmation-modal';
+            modal.innerHTML = `
+                <div class="confirmation-content">
+                    <h3>${options.title}</h3>
+                    <p>${options.message}</p>
+                    <div class="confirmation-actions">
+                        <button class="btn btn-secondary" onclick="this.closest('.confirmation-modal').remove()">${options.cancelText}</button>
+                        <button class="btn btn-primary" onclick="this.closest('.confirmation-modal').remove(); ${options.onConfirm.toString()}()">${options.confirmText}</button>
+                    </div>
+                </div>
+            `;
+            
+            // Agregar estilos
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10000;
+            `;
+            
+            const content = modal.querySelector('.confirmation-content');
+            content.style.cssText = `
+                background: white;
+                padding: 24px;
+                border-radius: 8px;
+                max-width: 400px;
+                text-align: center;
+            `;
+            
+            const actions = modal.querySelector('.confirmation-actions');
+            actions.style.cssText = `
+                display: flex;
+                gap: 12px;
+                justify-content: center;
+                margin-top: 20px;
+            `;
+            
+            // Agregar al DOM
+            document.body.appendChild(modal);
         }
     </script>
 </body>
