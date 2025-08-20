@@ -170,7 +170,7 @@ function saveTask() {
             if (title && percentage) {
                 subtasks.push({
                     title: title,
-                    percentage: percentage,
+                    completion_percentage: percentage,
                     description: description,
                     due_date: dueDate,
                     priority: priority,

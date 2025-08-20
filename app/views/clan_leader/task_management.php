@@ -554,7 +554,7 @@ function collectSubtasksData() {
         if (title.trim() !== '') {
             subtasks.push({
                 title: title.trim(),
-                percentage: parseInt(percentage) || 0,
+                completion_percentage: parseInt(percentage) || 0,
                 description: description.trim(),
                 due_date: dueDate,
                 priority: priority,

@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Subtareas Completo - RinoTrack</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            padding: 20px; 
+            background: #f5f7fa;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .form-group { 
+            margin: 15px 0; 
+        }
+        label { 
+            display: block; 
+            margin-bottom: 5px; 
+            font-weight: 600;
+            color: #374151;
+        }
+        input, textarea, select { 
+            width: 100%; 
+            padding: 10px; 
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        button { 
+            padding: 12px 24px; 
+            margin: 8px; 
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+        .btn-warning {
+            background: #f59e0b;
+            color: white;
+        }
+        #result { 
+            background: #f8fafc; 
+            padding: 20px; 
+            margin: 20px 0; 
+            white-space: pre-wrap; 
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .title {
+            color: #1f2937;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .section {
+            margin: 25px 0;
+            padding: 20px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            background: #f9fafb;
+        }
+        .section h3 {
+            margin-top: 0;
+            color: #374151;
+        }
+        .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">🧪 Test Completo de Subtareas - RinoTrack</h1>
+        
+        <form id="testForm">
+            <div class="section">
+                <h3>📋 Datos de la Tarea Principal</h3>
+                
+                <div class="form-group">
+                    <label>Título de la tarea:</label>
+                    <input type="text" name="task_title" value="Tarea de prueba con subtareas completas" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Fecha límite:</label>
+                    <input type="date" name="task_due_date" value="2024-12-31" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Proyecto ID:</label>
+                    <input type="number" name="task_project" value="29">
+                </div>
+                
+                <div class="form-group">
+                    <label>Descripción:</label>
+                    <textarea name="task_description" rows="3">Descripción de prueba para tarea con subtareas avanzadas</textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>Miembros asignados (separados por coma):</label>
+                    <input type="text" name="assigned_members_input" value="1,2" placeholder="ej: 1,2,3">
+                </div>
+                
+                <div class="form-group">
+                    <label>Prioridad:</label>
+                    <select name="priority">
+                        <option value="low">Baja</option>
+                        <option value="medium" selected>Media</option>
+                        <option value="high">Alta</option>
+                        <option value="urgent">Urgente</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>🔧 Subtareas Avanzadas (JSON)</h3>
+                <div class="form-group">
+                    <label>Subtareas (JSON con todos los campos):</label>
+                    <textarea name="subtasks" rows="12">[
+    {
+        "title": "Análisis inicial",
+        "completion_percentage": 0,
+        "description": "Realizar análisis completo del requerimiento",
+        "due_date": "2024-12-15",
+        "priority": "high",
+        "assigned_to_user_id": "1"
+    },
+    {
+        "title": "Desarrollo del prototipo",
+        "completion_percentage": 25,
+        "description": "Crear prototipo funcional básico",
+        "due_date": "2024-12-20",
+        "priority": "medium",
+        "assigned_to_user_id": "2"
+    },
+    {
+        "title": "Testing y validación",
+        "completion_percentage": 0,
+        "description": "Realizar pruebas exhaustivas",
+        "due_date": "",
+        "priority": "urgent",
+        "assigned_to_user_id": ""
+    }
+]</textarea>
+                </div>
+            </div>
+        </form>
+        
+        <div class="buttons">
+            <button type="button" class="btn-primary" onclick="testFormData()">📋 Validar FormData</button>
+            <button type="button" class="btn-secondary" onclick="testJSON()">🔍 Validar JSON</button>
+            <button type="button" class="btn-success" onclick="testSubmitToController()">🚀 Enviar al Controlador</button>
+            <button type="button" class="btn-warning" onclick="testDirectInsert()">💾 Test Inserción Directa</button>
+        </div>
+        
+        <div id="result">
+            <strong>Resultado:</strong>
+            <br>Haz clic en uno de los botones para probar la funcionalidad
+        </div>
+    </div>
+    
+    <script>
+        function updateResult(content) {
+            document.getElementById('result').innerHTML = content;
+        }
+
+        function testFormData() {
+            const form = document.getElementById('testForm');
+            const formData = new FormData();
+            
+            // Agregar campos básicos
+            formData.append('task_title', form.task_title.value);
+            formData.append('task_due_date', form.task_due_date.value);
+            formData.append('task_project', form.task_project.value);
+            formData.append('task_description', form.task_description.value);
+            formData.append('priority', form.priority.value);
+            
+            // Agregar miembros asignados
+            const members = form.assigned_members_input.value.split(',').map(m => m.trim()).filter(m => m);
+            members.forEach(member => {
+                formData.append('assigned_members[]', member);
+            });
+            
+            // Agregar subtareas
+            formData.append('subtasks', form.subtasks.value);
+            
+            console.log('📋 === FORM DATA GENERADO ===');
+            let formDataContent = '<strong>📋 FormData Generado:</strong>\n';
+            for (let [key, value] of formData.entries()) {
+                console.log(`${key}:`, value);
+                formDataContent += `${key}: ${value}\n`;
+            }
+            
+            // Validar JSON de subtareas
+            try {
+                const subtasksData = JSON.parse(form.subtasks.value);
+                console.log('✅ Subtareas JSON válido:', subtasksData);
+                formDataContent += `\n✅ JSON de subtareas válido: ${subtasksData.length} subtareas\n`;
+                formDataContent += JSON.stringify(subtasksData, null, 2);
+            } catch (e) {
+                console.error('❌ Error en JSON de subtareas:', e);
+                formDataContent += `\n❌ Error en JSON de subtareas: ${e.message}`;
+            }
+            
+            updateResult(formDataContent);
+        }
+
+        function testJSON() {
+            const form = document.getElementById('testForm');
+            
+            try {
+                const subtasksData = JSON.parse(form.subtasks.value);
+                console.log('🔍 === VALIDACIÓN DE JSON ===');
+                console.log('Subtareas parseadas:', subtasksData);
+                
+                let result = '<strong>🔍 Validación de JSON:</strong>\n';
+                result += `✅ JSON válido con ${subtasksData.length} subtareas\n\n`;
+                
+                subtasksData.forEach((subtask, index) => {
+                    result += `Subtarea ${index + 1}:\n`;
+                    result += `  - Título: "${subtask.title}"\n`;
+                    result += `  - Porcentaje: ${subtask.completion_percentage}%\n`;
+                    result += `  - Descripción: "${subtask.description}"\n`;
+                    result += `  - Fecha límite: ${subtask.due_date || 'Sin fecha'}\n`;
+                    result += `  - Prioridad: ${subtask.priority}\n`;
+                    result += `  - Usuario asignado: ${subtask.assigned_to_user_id || 'Sin asignar'}\n\n`;
+                });
+                
+                updateResult(result);
+            } catch (e) {
+                console.error('❌ Error parseando JSON:', e);
+                updateResult(`<strong>❌ Error parseando JSON:</strong>\n${e.message}`);
+            }
+        }
+
+        function testSubmitToController() {
+            const form = document.getElementById('testForm');
+            const formData = new FormData();
+            
+            // Agregar campos básicos
+            formData.append('task_title', form.task_title.value);
+            formData.append('task_due_date', form.task_due_date.value);
+            formData.append('task_project', form.task_project.value);
+            formData.append('task_description', form.task_description.value);
+            formData.append('priority', form.priority.value);
+            
+            // Agregar miembros asignados
+            const members = form.assigned_members_input.value.split(',').map(m => m.trim()).filter(m => m);
+            members.forEach(member => {
+                formData.append('assigned_members[]', member);
+            });
+            
+            // Agregar subtareas
+            formData.append('subtasks', form.subtasks.value);
+            
+            console.log('🚀 === ENVIANDO AL CONTROLADOR ===');
+            updateResult('<strong>🚀 Enviando al controlador...</strong>\nPor favor espera...');
+            
+            fetch('?route=clan_leader/create-task', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                console.log('📡 Response status:', response.status);
+                return response.text();
+            })
+            .then(text => {
+                console.log('📄 Response body:', text);
+                
+                try {
+                    const data = JSON.parse(text);
+                    console.log('✅ JSON parseado:', data);
+                    
+                    let result = '<strong>🚀 Respuesta del Controlador:</strong>\n';
+                    result += `Status: ${data.success ? '✅ Éxito' : '❌ Error'}\n`;
+                    result += `Mensaje: ${data.message}\n`;
+                    if (data.task_id) {
+                        result += `ID de tarea creada: ${data.task_id}\n`;
+                    }
+                    result += `\nRespuesta completa:\n${JSON.stringify(data, null, 2)}`;
+                    
+                    updateResult(result);
+                } catch (e) {
+                    console.error('❌ Error parseando respuesta:', e);
+                    updateResult(`<strong>❌ Error parseando respuesta:</strong>\n${e.message}\n\nRespuesta raw:\n${text}`);
+                }
+            })
+            .catch(error => {
+                console.error('💥 Error de red:', error);
+                updateResult(`<strong>💥 Error de red:</strong>\n${error.message}`);
+            });
+        }
+
+        function testDirectInsert() {
+            console.log('💾 === TEST INSERCIÓN DIRECTA ===');
+            updateResult('<strong>💾 Probando inserción directa...</strong>\nPor favor espera...');
+            
+            fetch('test-subtask-insert.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'test=1'
+            })
+            .then(response => response.text())
+            .then(text => {
+                console.log('📄 Response inserción directa:', text);
+                updateResult(`<strong>💾 Resultado de inserción directa:</strong>\n${text}`);
+            })
+            .catch(error => {
+                console.error('💥 Error:', error);
+                updateResult(`<strong>💥 Error en inserción directa:</strong>\n${error.message}`);
+            });
+        }
+        
+        // Inicialización
+        console.log('🚀 Test de subtareas completo cargado');
+        console.log('📋 Formulario disponible:', document.getElementById('testForm'));
+        updateResult('<strong>🚀 Test de Subtareas Completo - RinoTrack</strong>\n\nEste test valida la funcionalidad completa de subtareas con todos los campos:\n- Título y descripción\n- Porcentaje de completado\n- Fecha límite\n- Prioridad\n- Usuario asignado\n\nHaz clic en los botones para probar diferentes aspectos de la funcionalidad.');
+    </script>
+</body>
+</html>

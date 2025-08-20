@@ -1231,7 +1231,7 @@ class ClanLeaderController {
                 $desc = trim($st['description'] ?? '');
                 error_log('createTask - Subtarea ' . ($index + 1) . ' - description: "' . $desc . '"');
                 
-                $perc = isset($st['percentage']) && $st['percentage'] !== '' ? (float)$st['percentage'] : (isset($st['completion_percentage']) && $st['completion_percentage'] !== '' ? (float)$st['completion_percentage'] : 0.0);
+                $perc = isset($st['completion_percentage']) && $st['completion_percentage'] !== '' ? (float)$st['completion_percentage'] : (isset($st['percentage']) && $st['percentage'] !== '' ? (float)$st['percentage'] : 0.0);
                 error_log('createTask - Subtarea ' . ($index + 1) . ' - percentage procesado: ' . $perc);
                 
                 // Validar que el porcentaje esté en el rango correcto
