@@ -483,33 +483,7 @@ if (!isset($task) || !isset($subtasks) || !isset($comments) || !isset($history) 
             background: #fff;
         }
         
-        .completion-slider {
-            flex: 1;
-            height: 6px;
-            border-radius: 3px;
-            background: #e5e7eb;
-            outline: none;
-            -webkit-appearance: none;
-        }
-        
-        .completion-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            background: #3b82f6;
-            cursor: pointer;
-        }
-        
-        .completion-slider::-moz-range-thumb {
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            background: #3b82f6;
-            cursor: pointer;
-            border: none;
-        }
+
         
         /* Estilos para comentarios */
         .add-comment-form {
@@ -848,9 +822,9 @@ if (!isset($task) || !isset($subtasks) || !isset($comments) || !isset($history) 
                                         <option value="in_progress" <?= $subtask['status'] === 'in_progress' ? 'selected' : '' ?>>En Progreso</option>
                                         <option value="completed" <?= $subtask['status'] === 'completed' ? 'selected' : '' ?>>Completada</option>
                                     </select>
-                                    <input type="range" min="0" max="100" value="<?= $subtask['completion_percentage'] ?>" 
-                                           class="completion-slider" 
-                                           onchange="updateSubtaskCompletion(<?= $subtask['subtask_id'] ?>, this.value)">
+                                    <span style="font-size: 12px; color: #6b7280; margin-left: 10px;">
+                                        Estado: <?= ucfirst(str_replace('_', ' ', $subtask['status'])) ?>
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -1204,12 +1178,22 @@ if (!isset($task) || !isset($subtasks) || !isset($comments) || !isset($history) 
         
         // Funciones para subtareas
         function updateSubtaskStatus(subtaskId, status) {
+            // Determinar porcentaje automático basado en el estado
+            let completion_percentage = 0;
+            if (status === 'in_progress') {
+                completion_percentage = 50;
+            } else if (status === 'completed') {
+                completion_percentage = 100;
+            } else if (status === 'pending') {
+                completion_percentage = 0;
+            }
+            
             fetch('?route=clan_leader/update-subtask-status', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                 },
-                body: `subtask_id=${subtaskId}&status=${status}`
+                body: `subtask_id=${subtaskId}&status=${status}&completion_percentage=${completion_percentage}`
             })
             .then(response => response.json())
             .then(data => {
@@ -1217,76 +1201,53 @@ if (!isset($task) || !isset($subtasks) || !isset($comments) || !isset($history) 
                     // Actualizar la UI
                     const subtaskItem = document.querySelector(`[data-subtask-id="${subtaskId}"]`);
                     if (subtaskItem) {
+                        // Actualizar el estado en la meta
                         const statusSpan = subtaskItem.querySelector('.subtask-meta span:first-child');
                         if (statusSpan) {
-                            statusSpan.textContent = `Estado: ${status.charAt(0).toUpperCase() + status.slice(1)}`;
+                            statusSpan.textContent = `Estado: ${status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ')}`;
+                        }
+                        
+                        // Actualizar la barra de progreso
+                        const progressFill = subtaskItem.querySelector('.progress-fill');
+                        const percentageSpan = subtaskItem.querySelector('.subtask-progress span');
+                        if (progressFill) {
+                            progressFill.style.width = completion_percentage + '%';
+                        }
+                        if (percentageSpan) {
+                            percentageSpan.textContent = completion_percentage + '%';
+                        }
+                        
+                        // Actualizar el estado en los controles
+                        const statusDisplaySpan = subtaskItem.querySelector('.subtask-status-controls span');
+                        if (statusDisplaySpan) {
+                            statusDisplaySpan.textContent = `Estado: ${status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ')}`;
                         }
                     }
-                    showNotification('Estado de subtarea actualizado', 'success');
+                    
+                    if (typeof showNotification === 'function') {
+                        showNotification('Estado de subtarea actualizado', 'success');
+                    } else {
+                        console.log('Estado actualizado exitosamente');
+                    }
                 } else {
-                    showNotification('Error al actualizar estado: ' + data.message, 'error');
+                    if (typeof showNotification === 'function') {
+                        showNotification('Error al actualizar estado: ' + data.message, 'error');
+                    } else {
+                        alert('Error al actualizar estado: ' + data.message);
+                    }
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                showNotification('Error al actualizar estado', 'error');
+                if (typeof showNotification === 'function') {
+                    showNotification('Error al actualizar estado', 'error');
+                } else {
+                    alert('Error al actualizar estado');
+                }
             });
         }
         
-        function updateSubtaskCompletion(subtaskId, completion) {
-            console.log('Actualizando subtarea:', subtaskId, 'Porcentaje:', completion);
-            
-            fetch('?route=clan_leader/update-subtask-status', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: `subtask_id=${subtaskId}&completion_percentage=${completion}`
-            })
-            .then(response => {
-                console.log('Respuesta recibida:', response.status);
-                return response.json();
-            })
-            .then(data => {
-                console.log('Datos de respuesta:', data);
-                if (data.success) {
-                    // Actualizar la UI
-                    const subtaskItem = document.querySelector(`[data-subtask-id="${subtaskId}"]`);
-                    if (subtaskItem) {
-                        const progressFill = subtaskItem.querySelector('.progress-fill');
-                        const percentageSpan = subtaskItem.querySelector('.subtask-progress span');
-                        if (progressFill) {
-                            progressFill.style.width = completion + '%';
-                            console.log('Barra actualizada a:', completion + '%');
-                        }
-                        if (percentageSpan) {
-                            percentageSpan.textContent = completion + '%';
-                            console.log('Texto actualizado a:', completion + '%');
-                        }
-                    }
-                    if (typeof showNotification === 'function') {
-                        showNotification('Progreso de subtarea actualizado', 'success');
-                    } else {
-                        console.log('Progreso actualizado exitosamente');
-                    }
-                } else {
-                    console.error('Error del servidor:', data.message);
-                    if (typeof showNotification === 'function') {
-                        showNotification('Error al actualizar progreso: ' + data.message, 'error');
-                    } else {
-                        alert('Error al actualizar progreso: ' + data.message);
-                    }
-                }
-            })
-            .catch(error => {
-                console.error('Error de red:', error);
-                if (typeof showNotification === 'function') {
-                    showNotification('Error al actualizar progreso', 'error');
-                } else {
-                    alert('Error al actualizar progreso');
-                }
-            });
-        }
+
         
         function editSubtask(subtaskId) {
             // Implementar edición de subtarea
