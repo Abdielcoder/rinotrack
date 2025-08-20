@@ -158,7 +158,10 @@ ob_start();
 <div id="addSubtasksModal" class="modal" style="display: none;">
   <div class="modal-content modal-large">
     <div class="modal-header">
-      <h3 id="addSubtasksModalTitle">Añadir Subtareas</h3>
+      <h3 id="addSubtasksModalTitle">
+        <i class="fas fa-tasks" style="margin-right: 8px; color: #3b82f6;"></i>
+        Añadir Subtareas
+      </h3>
       <button class="modal-close" onclick="closeAddSubtasksModal()">
         <i class="fas fa-times"></i>
       </button>
@@ -174,7 +177,7 @@ ob_start();
         <div class="subtasks-container">
           <div class="subtasks-header">
             <span>Organiza esta tarea en pasos más pequeños</span>
-            <button type="button" class="btn btn-small btn-secondary" id="addSubtaskBtnModal">
+            <button type="button" class="btn btn-small btn-add-more" id="addSubtaskBtnModal">
               <i class="fas fa-plus"></i> Agregar Subtarea
             </button>
           </div>
@@ -447,6 +450,303 @@ ob_start();
 
 .btn-secondary:hover {
   background: var(--bg-tertiary);
+}
+
+/* Estilos mejorados para el modal de añadir subtareas */
+.btn-loader {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn-small {
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+/* Mejorar el contenedor de subtareas en el modal */
+#addSubtasksModal .subtasks-container {
+  background: var(--bg-primary);
+  border: 1px solid var(--bg-accent);
+  border-radius: 12px;
+  padding: 20px;
+  margin-top: 16px;
+}
+
+#addSubtasksModal .subtasks-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--bg-accent);
+}
+
+#addSubtasksModal .subtasks-header span {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+#addSubtasksModal .subtasks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 60px;
+}
+
+/* Estilos mejorados para items de subtarea */
+#addSubtasksModal .subtask-item {
+  background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-primary) 100%);
+  border: 2px solid var(--bg-accent);
+  border-radius: 12px;
+  padding: 16px;
+  position: relative;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+#addSubtasksModal .subtask-item:hover {
+  border-color: #1e3a8a;
+  box-shadow: 0 4px 12px rgba(30, 58, 138, 0.15);
+  transform: translateY(-2px);
+}
+
+#addSubtasksModal .subtask-counter {
+  position: absolute;
+  top: -8px;
+  left: 12px;
+  background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+  color: white;
+  font-size: 0.75rem;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(30, 58, 138, 0.3);
+}
+
+#addSubtasksModal .subtask-drag-handle {
+  cursor: grab;
+  color: var(--text-muted);
+  font-size: 1.2rem;
+  padding: 4px;
+  border-radius: 4px;
+  transition: color 0.2s ease;
+}
+
+#addSubtasksModal .subtask-drag-handle:hover {
+  color: #1e3a8a;
+}
+
+#addSubtasksModal .subtask-drag-handle:active {
+  cursor: grabbing;
+}
+
+#addSubtasksModal .subtask-input {
+  flex: 1;
+  border: 2px solid transparent;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  padding: 12px 16px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+#addSubtasksModal .subtask-input:focus {
+  outline: none;
+  border-color: #1e3a8a;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
+}
+
+#addSubtasksModal .subtask-input::placeholder {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+#addSubtasksModal .subtask-remove {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  opacity: 0.8;
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+}
+
+#addSubtasksModal .subtask-remove:hover {
+  opacity: 1;
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(239, 68, 68, 0.4);
+}
+
+/* Mejorar el estado vacío */
+#addSubtasksModal .subtasks-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-muted);
+  font-style: italic;
+  background: var(--bg-tertiary);
+  border: 2px dashed var(--bg-accent);
+  border-radius: 12px;
+  font-size: 0.95rem;
+}
+
+/* Mejorar botones del modal */
+#addSubtasksModal .btn-primary {
+  background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+  border: none;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(30, 58, 138, 0.3);
+}
+
+#addSubtasksModal .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(30, 58, 138, 0.4);
+}
+
+#addSubtasksModal .btn-primary:disabled {
+  opacity: 0.7;
+  transform: none;
+  cursor: not-allowed;
+}
+
+#addSubtasksModal .btn-secondary {
+  background: var(--bg-accent);
+  border: 2px solid var(--bg-accent);
+  color: var(--text-primary);
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+#addSubtasksModal .btn-secondary:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--bg-tertiary);
+  transform: translateY(-1px);
+}
+
+/* Mejorar el header del modal */
+#addSubtasksModal .modal-header {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  border-bottom: 2px solid var(--bg-accent);
+  padding: 20px 24px;
+}
+
+#addSubtasksModal .modal-header h3 {
+  color: #1e3a8a;
+  font-weight: 700;
+  font-size: 1.25rem;
+  margin: 0;
+}
+
+#addSubtasksModal .task-info {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border: 1px solid #bfdbfe;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+#addSubtasksModal .task-info h4 {
+  color: #1e3a8a;
+  font-weight: 600;
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+/* Animaciones suaves */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+#addSubtasksModal .modal-content {
+  animation: modalFadeIn 0.3s ease;
+}
+
+#addSubtasksModal .subtask-item {
+  animation: slideInUp 0.3s ease;
+}
+
+/* Botón especial para agregar más subtareas */
+.btn-add-more {
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  border: none;
+  color: white;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  box-shadow: 0 3px 8px rgba(5, 150, 105, 0.3);
+}
+
+.btn-add-more:hover {
+  background: linear-gradient(135deg, #047857 0%, #059669 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 12px rgba(5, 150, 105, 0.4);
+}
+
+.btn-add-more i {
+  transition: transform 0.2s ease;
+}
+
+.btn-add-more:hover i {
+  transform: rotate(90deg);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  #addSubtasksModal .modal-content {
+    width: 95%;
+    margin: 10px;
+  }
+  
+  #addSubtasksModal .subtasks-header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+  
+  #addSubtasksModal .subtask-item {
+    padding: 12px;
+  }
+  
+  #addSubtasksModal .modal-footer {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  #addSubtasksModal .modal-footer button {
+    width: 100%;
+  }
 }
 </style>
 
