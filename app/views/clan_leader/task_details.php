@@ -12,22 +12,22 @@ ob_start();
             <div class="project-text">
               <div class="project-title"><?php echo htmlspecialchars($task['task_name']); ?></div>
               <div class="project-subtitle">Proyecto: <?php echo htmlspecialchars($task['project_name'] ?? 'N/A'); ?></div>
-            </div>
-          </div>
+                    </div>
+                    </div>
           <div class="project-status">
             <span class="status-badge <?php echo htmlspecialchars($task['status']); ?>"><?php echo strtoupper(str_replace('_',' ', (string)$task['status'])); ?></span>
-          </div>
-        </div>
-        
+                </div>
+            </div>
+            
         <div class="summary-card motivational-card">
           <div class="motivation">
             <div class="motivation-icon"><i class="fas fa-lightbulb"></i></div>
             <div class="motivation-text">
               <div id="motQuote" class="mot-quote">Cargando frase motivacional...</div>
               <div id="motAuthor" class="mot-author"></div>
-            </div>
-          </div>
-        </div>
+                </div>
+                </div>
+                </div>
         
         <div class="summary-card">
           <div class="meta-row">
@@ -39,85 +39,85 @@ ob_start();
             <?php endif; ?>
             <?php if ($task['estimated_hours']): ?>
               <div class="meta"><i class="fas fa-clock"></i> Estimado: <?php echo $task['estimated_hours']; ?>h</div>
-            <?php endif; ?>
-          </div>
+                <?php endif; ?>
+            </div>
         </div>
-
-        <?php if (!empty($task['description'])): ?>
+        
+                <?php if (!empty($task['description'])): ?>
         <div class="summary-card">
           <h3>Descripción</h3>
           <div><?php echo nl2br(htmlspecialchars($task['description'])); ?></div>
-        </div>
-        <?php endif; ?>
-
-        <!-- Sección de Subtareas -->
-        <?php if (!empty($subtasks)): ?>
-        <div class="summary-card">
-          <h3><i class="fas fa-tasks"></i> Subtareas (<?php echo count($subtasks); ?>)</h3>
-          <div class="subtasks-list">
-            <?php foreach ($subtasks as $subtask): ?>
-            <div class="subtask-item" data-subtask-id="<?php echo $subtask['subtask_id']; ?>">
-              <div class="subtask-info">
-                <div class="subtask-header">
-                  <div class="subtask-title"><?php echo htmlspecialchars($subtask['title']); ?></div>
-                  <div class="subtask-actions">
-                    <button class="btn-icon-small btn-with-badge" id="comments-btn-<?php echo $subtask['subtask_id']; ?>" onclick="showSubtaskComments(<?php echo $subtask['subtask_id']; ?>)" title="Ver comentarios">
-                      <i class="fas fa-comments"></i>
-                      <span class="badge" id="comments-badge-<?php echo $subtask['subtask_id']; ?>" style="display: none;">0</span>
-                    </button>
-                    <button class="btn-icon-small btn-with-badge" id="attachments-btn-<?php echo $subtask['subtask_id']; ?>" onclick="showSubtaskAttachments(<?php echo $subtask['subtask_id']; ?>)" title="Ver adjuntos">
-                      <i class="fas fa-paperclip"></i>
-                      <span class="badge" id="attachments-badge-<?php echo $subtask['subtask_id']; ?>" style="display: none;">0</span>
-                    </button>
-                    <button class="btn-icon-small" onclick="editSubtask(<?php echo $subtask['subtask_id']; ?>)" title="Editar">
-                      <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="btn-icon-small" onclick="deleteSubtask(<?php echo $subtask['subtask_id']; ?>)" title="Eliminar">
-                      <i class="fas fa-trash"></i>
-                    </button>
-                  </div>
-                </div>
-                <div class="subtask-meta">
-                  <span>Estado: <?php echo ucfirst($subtask['status']); ?></span>
-                  <?php if (!empty($subtask['assigned_user_name'])): ?>
-                  <span>Asignado: <?php echo htmlspecialchars($subtask['assigned_user_name']); ?></span>
-                  <?php endif; ?>
-                  <?php if ($subtask['due_date']): ?>
-                  <span>Vence: <?php echo date('d/m/Y', strtotime($subtask['due_date'])); ?></span>
-                  <?php endif; ?>
-                </div>
-                <?php if (!empty($subtask['description'])): ?>
-                <div class="subtask-description">
-                  <?php echo htmlspecialchars($subtask['description']); ?>
                 </div>
                 <?php endif; ?>
-              </div>
-              <div class="subtask-controls">
-                <div class="subtask-progress">
-                  <div class="progress-bar">
+                
+        <!-- Sección de Subtareas -->
+                <?php if (!empty($subtasks)): ?>
+        <div class="summary-card">
+          <h3><i class="fas fa-tasks"></i> Subtareas (<?php echo count($subtasks); ?>)</h3>
+                    <div class="subtasks-list">
+                        <?php foreach ($subtasks as $subtask): ?>
+            <div class="subtask-item" data-subtask-id="<?php echo $subtask['subtask_id']; ?>">
+                            <div class="subtask-info">
+                                <div class="subtask-header">
+                  <div class="subtask-title"><?php echo htmlspecialchars($subtask['title']); ?></div>
+                                    <div class="subtask-actions">
+                    <button class="btn-icon-small btn-with-badge" id="comments-btn-<?php echo $subtask['subtask_id']; ?>" onclick="showSubtaskComments(<?php echo $subtask['subtask_id']; ?>)" title="Ver comentarios">
+                                            <i class="fas fa-comments"></i>
+                      <span class="badge" id="comments-badge-<?php echo $subtask['subtask_id']; ?>" style="display: none;">0</span>
+                                        </button>
+                    <button class="btn-icon-small btn-with-badge" id="attachments-btn-<?php echo $subtask['subtask_id']; ?>" onclick="showSubtaskAttachments(<?php echo $subtask['subtask_id']; ?>)" title="Ver adjuntos">
+                                            <i class="fas fa-paperclip"></i>
+                      <span class="badge" id="attachments-badge-<?php echo $subtask['subtask_id']; ?>" style="display: none;">0</span>
+                                        </button>
+                    <button class="btn-icon-small" onclick="editSubtask(<?php echo $subtask['subtask_id']; ?>)" title="Editar">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                    <button class="btn-icon-small" onclick="deleteSubtask(<?php echo $subtask['subtask_id']; ?>)" title="Eliminar">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="subtask-meta">
+                  <span>Estado: <?php echo ucfirst($subtask['status']); ?></span>
+                                    <?php if (!empty($subtask['assigned_user_name'])): ?>
+                  <span>Asignado: <?php echo htmlspecialchars($subtask['assigned_user_name']); ?></span>
+                                    <?php endif; ?>
+                                    <?php if ($subtask['due_date']): ?>
+                  <span>Vence: <?php echo date('d/m/Y', strtotime($subtask['due_date'])); ?></span>
+                                    <?php endif; ?>
+                                </div>
+                                <?php if (!empty($subtask['description'])): ?>
+                <div class="subtask-description">
+                  <?php echo htmlspecialchars($subtask['description']); ?>
+                                </div>
+                                <?php endif; ?>
+                            </div>
+                            <div class="subtask-controls">
+                                <div class="subtask-progress">
+                                    <div class="progress-bar">
                     <div class="progress-fill" style="width: <?php echo $subtask['completion_percentage']; ?>%"></div>
-                  </div>
+                                    </div>
                   <span class="progress-percentage">
                     <?php echo $subtask['completion_percentage']; ?>%
-                  </span>
-                </div>
-                <div class="subtask-status-controls">
+                                    </span>
+                                </div>
+                                <div class="subtask-status-controls">
                   <select class="status-select" onchange="updateSubtaskStatus(<?php echo $subtask['subtask_id']; ?>, this.value)">
                     <option value="pending" <?php echo $subtask['status'] === 'pending' ? 'selected' : ''; ?>>Pendiente</option>
                     <option value="in_progress" <?php echo $subtask['status'] === 'in_progress' ? 'selected' : ''; ?>>En Progreso</option>
                     <option value="completed" <?php echo $subtask['status'] === 'completed' ? 'selected' : ''; ?>>Completada</option>
-                  </select>
+                                    </select>
                   <span class="status-display">
                     Estado: <?php echo ucfirst(str_replace('_', ' ', $subtask['status'])); ?>
-                  </span>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
                 </div>
-              </div>
-            </div>
-            <?php endforeach; ?>
-          </div>
-        </div>
-        <?php endif; ?>
-
+                <?php endif; ?>
+                
         <div class="summary-card">
           <h3>Comentarios (<?php echo count($comments); ?>)</h3>
           <form id="tdCommentForm" class="comment-composer" enctype="multipart/form-data">
@@ -126,13 +126,13 @@ ob_start();
             <div class="form-group inline">
               <input type="file" name="attachments[]" multiple />
               <button class="action-btn primary" type="submit"><i class="fas fa-paper-plane"></i> Enviar</button>
-            </div>
+                            </div>
           </form>
           <div class="comments-list" style="margin-top:10px;">
             <?php if (empty($comments)): ?>
               <div class="empty-minimal">Sin comentarios</div>
             <?php else: foreach ($comments as $c): ?>
-              <div class="comment-item">
+                            <div class="comment-item">
                 <div class="comment-meta"><span class="author"><?php echo htmlspecialchars($c['full_name'] ?? $c['username'] ?? ''); ?></span><span class="date"><?php echo htmlspecialchars($c['created_at'] ?? ''); ?></span></div>
                 <div class="comment-text"><?php echo nl2br(htmlspecialchars($c['comment_text'] ?? '')); ?></div>
                 <?php if (!empty($c['attachments'])): ?>
@@ -144,34 +144,34 @@ ob_start();
                       <a class="att att-file" href="<?php echo $url; ?>" target="_blank" rel="noopener"><i class="fas fa-file-pdf"></i> <?php echo $name; ?></a>
                     <?php else: ?>
                       <a class="att att-file" href="<?php echo $url; ?>" target="_blank" rel="noopener"><i class="fas fa-paperclip"></i> <?php echo $name; ?></a>
-                    <?php endif; ?>
-                  <?php endforeach; ?>
-                </div>
-                <?php endif; ?>
-              </div>
+                                    <?php endif; ?>
+                                <?php endforeach; ?>
+                            </div>
+                            <?php endif; ?>
+                            </div>
             <?php endforeach; endif; ?>
-          </div>
-        </div>
+                            </div>
+                    </div>
 
         <div class="footer-actions" style="display:flex; gap:10px; margin-top:12px;">
           <a href="?route=clan_leader/tasks" class="btn-minimal"><i class="fas fa-arrow-left"></i> Volver a Tareas</a>
           <a href="?route=clan_leader/tasks&action=edit&task_id=<?php echo $task['task_id']; ?>" class="btn-minimal primary"><i class="fas fa-edit"></i> Editar Tarea</a>
           <button class="btn-minimal danger" onclick="deleteTask(<?php echo $task['task_id']; ?>)"><i class="fas fa-trash"></i> Eliminar</button>
-        </div>
-      </div>
-
+                </div>
+            </div>
+            
       <aside class="right-pane">
         <div class="summary-card">
           <h3>Colaboradores (<?php echo count($assignedUsers); ?>)</h3>
-          
-          <!-- Botón para agregar colaborador -->
+                    
+                    <!-- Botón para agregar colaborador -->
           <div style="margin-bottom: 15px;">
             <button onclick="showAddCollaboratorModal()" class="btn-minimal primary" style="width: 100%;">
-              <i class="fas fa-plus"></i>
-              Agregar Colaborador
-            </button>
-          </div>
-          
+                            <i class="fas fa-plus"></i>
+                            Agregar Colaborador
+                        </button>
+                    </div>
+                    
           <div class="assignees-list">
             <?php foreach ($assignedUsers as $au): ?>
               <div class="assignee-item" data-user-id="<?php echo $au['user_id']; ?>">
@@ -179,90 +179,90 @@ ob_start();
                 <div class="assignee-info">
                   <div class="name"><?php echo htmlspecialchars($au['full_name'] ?? $au['username'] ?? ''); ?></div>
                   <div class="meta"><?php echo htmlspecialchars($au['username'] ?? ''); ?></div>
-                </div>
+                                </div>
                 <div style="display: flex; align-items: center; gap: 10px;">
                   <div style="display: flex; align-items: center; gap: 4px;">
                     <input type="number" min="0" max="100" value="<?php echo $au['assigned_percentage'] ?? 0; ?>" 
                            style="width: 50px; padding: 4px 6px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 12px; text-align: center;" 
                            onchange="updateUserPercentage(<?php echo $au['user_id']; ?>, this.value)">
                     <span style="font-size: 12px;">%</span>
-                  </div>
+                                </div>
                   <button onclick="removeCollaborator(<?php echo $au['user_id']; ?>)" class="btn-icon-small" title="Remover" style="background: #fee2e2; color: #dc2626;">
-                    <i class="fas fa-times"></i>
-                  </button>
-                </div>
-              </div>
-            <?php endforeach; ?>
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <?php endforeach; ?>
             <?php if (empty($assignedUsers)): ?><div class="empty-minimal">Sin colaboradores</div><?php endif; ?>
-          </div>
-        </div>
-
-        <!-- Etiquetas -->
-        <?php if (!empty($labels)): ?>
+                    </div>
+                </div>
+                
+                <!-- Etiquetas -->
+                <?php if (!empty($labels)): ?>
         <div class="summary-card">
           <h3>Etiquetas</h3>
           <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-            <?php foreach ($labels as $label): ?>
+                        <?php foreach ($labels as $label): ?>
             <span style="padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; background: <?php echo htmlspecialchars($label['label_color'] ?? '#e5e7eb'); ?>; color: #fff;">
               <?php echo htmlspecialchars($label['label_name'] ?? ''); ?>
-            </span>
-            <?php endforeach; ?>
-          </div>
-        </div>
-        <?php endif; ?>
-
+                        </span>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+                <?php endif; ?>
+                
         <div class="summary-card">
           <h3>Historial</h3>
           <div class="history-list">
             <?php if (empty($history)): ?>
               <div class="empty-minimal">Sin historial</div>
             <?php else: foreach ($history as $h): ?>
-              <div class="history-item">
+                    <div class="history-item">
                 <div class="title"><?php echo htmlspecialchars(ucfirst($h['action_type'] ?? $h['notes'] ?? '')); ?></div>
                 <div class="meta">Por: <?php echo htmlspecialchars($h['full_name'] ?? $h['username'] ?? ''); ?> — <?php echo htmlspecialchars($h['created_at'] ?? ''); ?></div>
-              </div>
+                        </div>
             <?php endforeach; endif; ?>
-          </div>
-        </div>
+                            </div>
+                        </div>
 
         <div class="summary-card">
           <h3>Información</h3>
           <div class="info-grid">
             <div><strong>Creado:</strong> <?php echo date('d/m/Y H:i', strtotime($task['created_at'])); ?></div>
-            <?php if ($task['updated_at'] !== $task['created_at']): ?>
+                        <?php if ($task['updated_at'] !== $task['created_at']): ?>
             <div><strong>Actualizado:</strong> <?php echo date('d/m/Y H:i', strtotime($task['updated_at'])); ?></div>
-            <?php endif; ?>
+                        <?php endif; ?>
             <div><strong>Progreso:</strong> <?php echo (int)($task['completion_percentage'] ?? 0); ?>%</div>
-            <?php if ($task['actual_hours']): ?>
+                        <?php if ($task['actual_hours']): ?>
             <div><strong>Horas reales:</strong> <?php echo $task['actual_hours']; ?>h</div>
-            <?php endif; ?>
-          </div>
-        </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
       </aside>
+            </div>
+        </div>
     </div>
-  </div>
-</div>
-
-<!-- Modal para agregar colaborador -->
-<div id="addCollaboratorModal" class="modal">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h3 class="modal-title">Agregar Colaborador</h3>
-      <span class="close" onclick="closeAddCollaboratorModal()">&times;</span>
-    </div>
-    <div class="modal-body">
+    
+    <!-- Modal para agregar colaborador -->
+    <div id="addCollaboratorModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Agregar Colaborador</h3>
+                <span class="close" onclick="closeAddCollaboratorModal()">&times;</span>
+            </div>
+            <div class="modal-body">
       <div id="availableUsersList" style="max-height: 300px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 6px;">
-        <!-- Los usuarios se cargarán dinámicamente -->
-      </div>
+                    <!-- Los usuarios se cargarán dinámicamente -->
+                </div>
       <div style="margin-top: 20px; text-align: right;">
         <button onclick="closeAddCollaboratorModal()" class="btn-minimal secondary">Cancelar</button>
         <button onclick="addSelectedCollaborators()" class="btn-minimal primary">Agregar Seleccionados</button>
-      </div>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
-</div>
-
-<script>
+    
+    <script>
 document.getElementById('tdCommentForm')?.addEventListener('submit', function(e){
   e.preventDefault();
   const fd = new FormData(this);
@@ -316,146 +316,146 @@ document.getElementById('tdCommentForm')?.addEventListener('submit', function(e)
     applyQuote(null);
   })();
 })();
-
-// Funciones para colaboradores
-function showAddCollaboratorModal() {
-  fetch('?route=clan_leader/get-available-users')
-  .then(response => response.json())
-  .then(data => {
-    if (data.success) {
-      const userList = document.getElementById('availableUsersList');
-      userList.innerHTML = '';
-      
-      data.users.forEach(user => {
-        const userOption = document.createElement('div');
-        userOption.className = 'user-option';
-        userOption.innerHTML = `
-          <input type="checkbox" id="user_${user.user_id}" value="${user.user_id}">
+        
+        // Funciones para colaboradores
+        function showAddCollaboratorModal() {
+            fetch('?route=clan_leader/get-available-users')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const userList = document.getElementById('availableUsersList');
+                    userList.innerHTML = '';
+                    
+                    data.users.forEach(user => {
+                        const userOption = document.createElement('div');
+                        userOption.className = 'user-option';
+                        userOption.innerHTML = `
+                            <input type="checkbox" id="user_${user.user_id}" value="${user.user_id}">
           <div style="width: 32px; height: 32px; border-radius: 50%; background: #3b82f6; color: white; display: flex; align-items: center; justify-content: center; font-weight: 600;">
-            ${user.full_name ? user.full_name.charAt(0).toUpperCase() : user.username.charAt(0).toUpperCase()}
-          </div>
-          <div>
-            <div style="font-weight: 600;">${user.full_name || user.username}</div>
-            <div style="font-size: 12px; color: #6b7280;">${user.username}</div>
-          </div>
-        `;
-        userList.appendChild(userOption);
-      });
-      
+                                ${user.full_name ? user.full_name.charAt(0).toUpperCase() : user.username.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                                <div style="font-weight: 600;">${user.full_name || user.username}</div>
+                                <div style="font-size: 12px; color: #6b7280;">${user.username}</div>
+                            </div>
+                        `;
+                        userList.appendChild(userOption);
+                    });
+                    
       document.getElementById('addCollaboratorModal').style.display = 'flex';
-    } else {
-      showNotification('Error al cargar usuarios: ' + data.message, 'error');
-    }
-  })
-  .catch(error => {
-    console.error('Error:', error);
-    showNotification('Error al cargar usuarios', 'error');
-  });
-}
-
-function closeAddCollaboratorModal() {
-  document.getElementById('addCollaboratorModal').style.display = 'none';
-}
-
-function addSelectedCollaborators() {
-  const checkboxes = document.querySelectorAll('#availableUsersList input[type="checkbox"]:checked');
-  const userIds = Array.from(checkboxes).map(cb => cb.value);
-  
-  if (userIds.length === 0) {
-    showNotification('Por favor selecciona al menos un usuario', 'error');
-    return;
-  }
-  
-  fetch('?route=clan_leader/add-collaborators', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
+                } else {
+                    showNotification('Error al cargar usuarios: ' + data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Error al cargar usuarios', 'error');
+            });
+        }
+        
+        function closeAddCollaboratorModal() {
+            document.getElementById('addCollaboratorModal').style.display = 'none';
+        }
+        
+        function addSelectedCollaborators() {
+            const checkboxes = document.querySelectorAll('#availableUsersList input[type="checkbox"]:checked');
+            const userIds = Array.from(checkboxes).map(cb => cb.value);
+            
+            if (userIds.length === 0) {
+                showNotification('Por favor selecciona al menos un usuario', 'error');
+                return;
+            }
+            
+            fetch('?route=clan_leader/add-collaborators', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
     body: `task_id=<?php echo $task['task_id']; ?>&user_ids=${userIds.join(',')}`
-  })
-  .then(response => response.json())
-  .then(data => {
-    if (data.success) {
-      closeAddCollaboratorModal();
-      showNotification('Colaboradores agregados exitosamente', 'success');
-      setTimeout(() => location.reload(), 1000);
-    } else {
-      showNotification('Error al agregar colaboradores: ' + data.message, 'error');
-    }
-  })
-  .catch(error => {
-    console.error('Error:', error);
-    showNotification('Error al agregar colaboradores', 'error');
-  });
-}
-
-function updateUserPercentage(userId, percentage) {
-  fetch('?route=clan_leader/update-user-percentage', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    closeAddCollaboratorModal();
+                    showNotification('Colaboradores agregados exitosamente', 'success');
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showNotification('Error al agregar colaboradores: ' + data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Error al agregar colaboradores', 'error');
+            });
+        }
+        
+        function updateUserPercentage(userId, percentage) {
+            fetch('?route=clan_leader/update-user-percentage', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
     body: `task_id=<?php echo $task['task_id']; ?>&user_id=${userId}&percentage=${percentage}`
-  })
-  .then(response => response.json())
-  .then(data => {
-    if (data.success) {
-      showNotification('Porcentaje actualizado', 'success');
-    } else {
-      showNotification('Error al actualizar porcentaje: ' + data.message, 'error');
-    }
-  })
-  .catch(error => {
-    console.error('Error:', error);
-    showNotification('Error al actualizar porcentaje', 'error');
-  });
-}
-
-function removeCollaborator(userId) {
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('Porcentaje actualizado', 'success');
+                } else {
+                    showNotification('Error al actualizar porcentaje: ' + data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Error al actualizar porcentaje', 'error');
+            });
+        }
+        
+        function removeCollaborator(userId) {
   if (typeof showConfirmationModal === 'function') {
-    showConfirmationModal({
-      title: 'Confirmar Remoción',
-      message: '¿Estás seguro de que quieres remover este colaborador?',
-      type: 'warning',
-      confirmText: 'Remover',
-      cancelText: 'Cancelar',
-      onConfirm: () => {
-        fetch('?route=clan_leader/remove-collaborator', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
+            showConfirmationModal({
+            title: 'Confirmar Remoción',
+            message: '¿Estás seguro de que quieres remover este colaborador?',
+            type: 'warning',
+            confirmText: 'Remover',
+            cancelText: 'Cancelar',
+            onConfirm: () => {
+                fetch('?route=clan_leader/remove-collaborator', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
           body: `task_id=<?php echo $task['task_id']; ?>&user_id=${userId}`
-        })
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            const userItem = document.querySelector(`[data-user-id="${userId}"]`);
-            if (userItem) userItem.remove();
-            showNotification('Colaborador removido', 'success');
-          } else {
-            showNotification('Error al remover colaborador: ' + data.message, 'error');
-          }
-        })
-        .catch(error => {
-          console.error('Error:', error);
-          showNotification('Error al remover colaborador', 'error');
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const userItem = document.querySelector(`[data-user-id="${userId}"]`);
+                        if (userItem) userItem.remove();
+                        showNotification('Colaborador removido', 'success');
+                    } else {
+                        showNotification('Error al remover colaborador: ' + data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showNotification('Error al remover colaborador', 'error');
+                });
+            }
         });
-      }
-    });
   } else {
     if (!confirm('¿Estás seguro de que quieres remover este colaborador?')) return;
     
     fetch('?route=clan_leader/remove-collaborator', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
       body: `task_id=<?php echo $task['task_id']; ?>&user_id=${userId}`
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.success) {
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
         const userItem = document.querySelector(`[data-user-id="${userId}"]`);
         if (userItem) userItem.remove();
         alert('Colaborador removido exitosamente');
@@ -489,11 +489,11 @@ function deleteTask(taskId) {
           if (data.success) {
             showNotification('Tarea eliminada exitosamente', 'success');
             setTimeout(() => { window.location.href = '?route=clan_leader/tasks'; }, 800);
-          } else {
+                } else {
             showNotification('Error al eliminar la tarea: ' + data.message, 'error');
-          }
-        })
-        .catch(error => {
+                }
+            })
+            .catch(error => {
           showNotification('Error al eliminar la tarea', 'error');
         });
       }
@@ -520,16 +520,16 @@ function deleteTask(taskId) {
 }
 
 // Función simple de notificación
-function showNotification(message, type = 'info') {
+        function showNotification(message, type = 'info') {
   let notification = document.getElementById('cl-notification');
   if (!notification) {
     const notificationHTML = `
       <div id="cl-notification" style="
-        position: fixed;
-        top: 20px;
-        right: 20px;
+                position: fixed;
+                top: 20px;
+                right: 20px;
         z-index: 9999;
-        padding: 12px 20px;
+                padding: 12px 20px;
         border-radius: 8px;
         color: white;
         font-weight: 600;
@@ -566,9 +566,9 @@ function showNotification(message, type = 'info') {
   
   setTimeout(() => {
     notification.style.display = 'none';
-  }, 3000);
-}
-
+            }, 3000);
+        }
+        
 function closeCLNotification() {
   const notification = document.getElementById('cl-notification');
   if (notification) {
@@ -673,9 +673,9 @@ window.onclick = function(event) {
   width: 42px;
   height: 42px;
   border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+                display: flex;
+                align-items: center;
+                justify-content: center;
   background: #1e3a8a;
   color: #fff;
   font-size: 1.2rem;
@@ -728,9 +728,9 @@ window.onclick = function(event) {
 
 /* Estilos para subtareas */
 .subtasks-list {
-  display: flex;
+                display: flex;
   flex-direction: column;
-  gap: 12px;
+                gap: 12px;
   margin-top: 15px;
 }
 
@@ -777,7 +777,7 @@ window.onclick = function(event) {
   cursor: pointer;
   display: flex;
   align-items: center;
-  justify-content: center;
+                justify-content: center;
   font-size: 12px;
   transition: all 0.2s ease;
 }
@@ -893,39 +893,39 @@ function showSubtaskComments(subtaskId) {
     console.log('Mostrando comentarios de subtarea:', subtaskId);
     
     // Cargar comentarios desde el servidor
-    fetch('?route=clan_leader/getSubtaskComments&subtask_id=' + subtaskId)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
+            fetch('?route=clan_leader/get-subtask-comments&subtask_id=' + subtaskId)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
                 // TODO: Crear y mostrar modal con comentarios
                 console.log('Comentarios cargados:', data.comments);
                 showNotification('Comentarios cargados correctamente', 'info');
-            } else {
+                        } else {
                 showNotification('Error al cargar comentarios: ' + (data.message || 'Error desconocido'), 'error');
-            }
-        })
-        .catch(error => {
+                    }
+                })
+                .catch(error => {
             console.error('Error:', error);
             showNotification('Error al cargar comentarios', 'error');
-        });
-}
+                });
+        }
 
 function showSubtaskAttachments(subtaskId) {
     console.log('Mostrando adjuntos de subtarea:', subtaskId);
     
     // Cargar adjuntos desde el servidor
-    fetch('?route=clan_leader/getSubtaskAttachments&subtask_id=' + subtaskId)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
+            fetch('?route=clan_leader/get-subtask-attachments&subtask_id=' + subtaskId)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
                 // TODO: Crear y mostrar modal con adjuntos
                 console.log('Adjuntos cargados:', data.attachments);
                 showNotification('Adjuntos cargados correctamente', 'info');
-            } else {
+                        } else {
                 showNotification('Error al cargar adjuntos: ' + (data.message || 'Error desconocido'), 'error');
-            }
-        })
-        .catch(error => {
+                    }
+                })
+                .catch(error => {
             console.error('Error:', error);
             showNotification('Error al cargar adjuntos', 'error');
         });
@@ -935,18 +935,18 @@ function editSubtask(subtaskId) {
     console.log('Editando subtarea:', subtaskId);
     
     // Redirigir a la página de edición o abrir modal
-    fetch('?route=clan_leader/editSubtask&subtask_id=' + subtaskId)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
+    fetch('?route=clan_leader/edit-subtask&subtask_id=' + subtaskId)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
                 // TODO: Crear y mostrar modal de edición con datos de la subtarea
                 console.log('Datos de subtarea:', data.subtask);
                 showNotification('Modal de edición en desarrollo', 'info');
-            } else {
+                    } else {
                 showNotification('Error al cargar datos de subtarea: ' + (data.message || 'Error desconocido'), 'error');
-            }
-        })
-        .catch(error => {
+                    }
+                })
+                .catch(error => {
             console.error('Error:', error);
             showNotification('Error al cargar datos de subtarea', 'error');
         });
@@ -956,27 +956,27 @@ function deleteSubtask(subtaskId) {
     if (confirm('¿Estás seguro de que quieres eliminar esta subtarea?')) {
         console.log('Eliminando subtarea:', subtaskId);
         
-        fetch('?route=clan_leader/deleteSubtask', {
-            method: 'POST',
-            headers: {
+        fetch('?route=clan_leader/delete-subtask', {
+                method: 'POST',
+                headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
             },
             body: 'subtask_id=' + subtaskId
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
                 // Remover el elemento de la vista
                 const subtaskElement = document.querySelector(`[data-subtask-id="${subtaskId}"]`);
                 if (subtaskElement) {
                     subtaskElement.remove();
                 }
                 showNotification('Subtarea eliminada correctamente', 'success');
-            } else {
+                } else {
                 showNotification('Error al eliminar la subtarea: ' + (data.message || 'Error desconocido'), 'error');
-            }
-        })
-        .catch(error => {
+                }
+            })
+            .catch(error => {
             console.error('Error:', error);
             showNotification('Error al eliminar la subtarea', 'error');
         });
@@ -986,16 +986,16 @@ function deleteSubtask(subtaskId) {
 function updateSubtaskStatus(subtaskId, newStatus) {
     console.log('Actualizando estado de subtarea:', subtaskId, 'a:', newStatus);
     
-    fetch('?route=clan_leader/updateSubtaskStatus', {
-        method: 'POST',
+    fetch('?route=clan_leader/update-subtask-status', {
+                method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: 'subtask_id=' + subtaskId + '&status=' + newStatus
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
             // Actualizar el progreso si viene en la respuesta
             if (data.completion_percentage !== undefined) {
                 const progressFill = document.querySelector(`[data-subtask-id="${subtaskId}"] .progress-fill`);
@@ -1010,11 +1010,11 @@ function updateSubtaskStatus(subtaskId, newStatus) {
             }
             
             showNotification('Estado de subtarea actualizado correctamente', 'success');
-        } else {
+                } else {
             showNotification('Error al actualizar el estado: ' + (data.message || 'Error desconocido'), 'error');
-        }
-    })
-    .catch(error => {
+                }
+            })
+            .catch(error => {
         console.error('Error:', error);
         showNotification('Error al actualizar el estado de la subtarea', 'error');
     });
@@ -1029,10 +1029,10 @@ function loadSubtaskCounters() {
         const subtaskId = element.getAttribute('data-subtask-id');
         
         // Cargar contadores usando la ruta existente
-        fetch('?route=clan_leader/getSubtaskCounts&subtask_id=' + subtaskId)
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
+            fetch('?route=clan_leader/get-subtask-counts&subtask_id=' + subtaskId)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
                     // Actualizar badge de comentarios
                     const commentsBadge = document.getElementById('comments-badge-' + subtaskId);
                     if (commentsBadge && data.comments_count > 0) {
@@ -1041,7 +1041,7 @@ function loadSubtaskCounters() {
                     }
                     
                     // Actualizar badge de adjuntos
-                    const attachmentsBadge = document.getElementById('attachments-badge-' + subtaskId);
+            const attachmentsBadge = document.getElementById('attachments-badge-' + subtaskId);
                     if (attachmentsBadge && data.attachments_count > 0) {
                         attachmentsBadge.textContent = data.attachments_count;
                         attachmentsBadge.style.display = 'inline';
@@ -1053,10 +1053,10 @@ function loadSubtaskCounters() {
 }
 
 // Cargar contadores al inicializar la página
-document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function() {
     loadSubtaskCounters();
-});
-</script>
+        });
+    </script>
 
 <?php
 $content = ob_get_clean();
