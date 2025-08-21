@@ -92,12 +92,14 @@ class Subtask {
                 if (!empty($commentIds)) {
                     $in = implode(',', array_fill(0, count($commentIds), '?'));
                     $stmtA = $this->db->prepare("
-                        SELECT comment_id, file_name, file_path, file_type, uploaded_at 
+                        SELECT comment_id, file_name, file_path, file_type, uploaded_at, attachment_id 
                         FROM Subtask_Attachments 
-                        WHERE comment_id IN ($in)
+                        WHERE comment_id IN ($in) AND comment_id IS NOT NULL
                     ");
                     $stmtA->execute($commentIds);
                     $rows = $stmtA->fetchAll();
+                    
+                    error_log("DEBUG: Adjuntos encontrados para comentarios: " . print_r($rows, true));
                     
                     $byComment = [];
                     foreach ($rows as $r) {
@@ -107,7 +109,37 @@ class Subtask {
                     foreach ($comments as &$c) {
                         $c['attachments'] = $byComment[$c['comment_id']] ?? [];
                         $c['attachments_count'] = count($c['attachments']);
+                        error_log("DEBUG: Comentario {$c['comment_id']} tiene " . count($c['attachments']) . " adjuntos");
                     }
+                }
+                
+                // También buscar adjuntos independientes (sin comment_id) para esta subtarea
+                $stmtB = $this->db->prepare("
+                    SELECT sa.*, u.full_name as uploaded_by_name
+                    FROM Subtask_Attachments sa
+                    JOIN Users u ON sa.user_id = u.user_id
+                    WHERE sa.subtask_id = ? AND (sa.comment_id IS NULL OR sa.comment_id = 0)
+                    ORDER BY sa.uploaded_at DESC
+                ");
+                $stmtB->execute([$subtaskId]);
+                $independentAttachments = $stmtB->fetchAll();
+                
+                // Agregar adjuntos independientes como un "comentario" especial
+                if (!empty($independentAttachments)) {
+                    $fakeComment = [
+                        'comment_id' => 0,
+                        'subtask_id' => $subtaskId,
+                        'user_id' => 0,
+                        'comment_text' => '',
+                        'comment_type' => 'attachment_only',
+                        'full_name' => 'Archivos adjuntos',
+                        'username' => '',
+                        'created_at' => '',
+                        'attachments' => $independentAttachments,
+                        'attachments_count' => count($independentAttachments),
+                        'is_attachment_only' => true
+                    ];
+                    array_unshift($comments, $fakeComment);
                 }
             }
 

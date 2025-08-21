@@ -1839,16 +1839,26 @@ if (!isset($task) || !isset($subtasks) || !isset($comments) || !isset($history) 
                         } else {
                             container.innerHTML = data.comments.map(comment => `
                                 <div class="comment-item">
-                                    <div class="comment-header">
-                                        <strong>${comment.full_name}</strong>
-                                        <span class="comment-date">${new Date(comment.created_at).toLocaleString()}</span>
-                                    </div>
-                                    <div class="comment-text">${comment.comment_text}</div>
+                                    ${comment.is_attachment_only ? `
+                                        <div class="comment-header">
+                                            <strong><i class="fas fa-paperclip"></i> ${comment.full_name}</strong>
+                                        </div>
+                                    ` : `
+                                        <div class="comment-header">
+                                            <strong>${comment.full_name}</strong>
+                                            <span class="comment-date">${new Date(comment.created_at).toLocaleString()}</span>
+                                        </div>
+                                        <div class="comment-text">${comment.comment_text}</div>
+                                    `}
                                     ${comment.attachments && comment.attachments.length > 0 ? `
                                         <div class="comment-attachments">
+                                            <div style="font-weight: bold; margin-bottom: 5px; color: #6b7280; font-size: 12px;">
+                                                📎 Archivos adjuntos (${comment.attachments.length}):
+                                            </div>
                                             ${comment.attachments.map(att => `
                                                 <a href="${att.file_path}" target="_blank" class="attachment-link">
-                                                    <i class="fas fa-paperclip"></i> ${att.file_name}
+                                                    <i class="fas fa-file"></i> ${att.file_name}
+                                                    ${att.uploaded_at ? `<span class="attachment-date">(${new Date(att.uploaded_at).toLocaleDateString()})</span>` : ''}
                                                 </a>
                                             `).join('')}
                                         </div>
@@ -2201,6 +2211,12 @@ if (!isset($task) || !isset($subtasks) || !isset($comments) || !isset($history) 
             border-radius: 4px;
             margin: 2px 4px 2px 0;
             font-size: 12px;
+        }
+
+        .attachment-date {
+            color: #9ca3af;
+            font-size: 10px;
+            margin-left: 4px;
         }
     </style>
 </body>
