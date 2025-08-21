@@ -5278,73 +5278,50 @@ input[type="checkbox"] {
     }
 }
 
-/* ===== NUEVO BOTÓN "VER TAREAS" - RECREADO COMPLETAMENTE ===== */
-.btn-view-tasks-new {
+/* ===== ESTILOS EXACTOS DE TASK_DETAILS.PHP PARA BTN-MINIMAL ===== */
+.btn-minimal {
     display: inline-flex !important;
     align-items: center !important;
-    justify-content: center !important;
     gap: 8px !important;
-    padding: 12px 20px !important;
-    background: #1e3a8a !important;
-    color: #ffffff !important;
-    border: 2px solid #1e3a8a !important;
-    border-radius: 10px !important;
+    padding: 10px 14px !important;
+    border-radius: 8px !important;
     text-decoration: none !important;
     font-weight: 600 !important;
     font-size: 14px !important;
-    line-height: 1 !important;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
     cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    border: 1px solid !important;
     opacity: 1 !important;
     visibility: visible !important;
     position: relative !important;
-    z-index: 999 !important;
-    box-shadow: 0 4px 12px rgba(30, 58, 138, 0.15) !important;
-    min-width: 120px !important;
-    white-space: nowrap !important;
-    overflow: visible !important;
-    text-overflow: unset !important;
+    z-index: 10 !important;
 }
 
-.btn-view-tasks-new:hover {
+.btn-minimal.primary {
+    background: #1e3a8a !important;
+    color: #ffffff !important;
+    border-color: #1e3a8a !important;
+}
+
+.btn-minimal.primary:hover {
     background: #1e40af !important;
     border-color: #1e40af !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 6px 18px rgba(30, 58, 138, 0.22) !important;
     color: #ffffff !important;
-    transform: translateY(-2px) !important;
-    box-shadow: 0 8px 25px rgba(30, 58, 138, 0.3) !important;
-    opacity: 1 !important;
-    visibility: visible !important;
+    text-decoration: none !important;
 }
 
-.btn-view-tasks-new:active {
-    transform: translateY(0) !important;
-    box-shadow: 0 4px 12px rgba(30, 58, 138, 0.2) !important;
-}
-
-.btn-view-tasks-new i {
-    font-size: 16px !important;
+.btn-minimal.primary i {
     color: #ffffff !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    line-height: 1 !important;
 }
 
-.btn-view-tasks-new span {
-    color: #ffffff !important;
-    font-weight: 600 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    line-height: 1 !important;
-}
-
-/* Forzar visibilidad en cualquier contexto */
-* .btn-view-tasks-new,
-.btn-view-tasks-new,
-.project-card .btn-view-tasks-new,
-.card-compact .btn-view-tasks-new,
-.summary-card .btn-view-tasks-new,
-.project-actions .btn-view-tasks-new,
-.clan-leader-tasks .btn-view-tasks-new {
+/* Forzar visibilidad en todos los contextos */
+.project-actions .btn-minimal.primary,
+.clan-leader-tasks .btn-minimal.primary,
+.project-card .btn-minimal.primary,
+.card-compact .btn-minimal.primary,
+.summary-card .btn-minimal.primary {
     display: inline-flex !important;
     opacity: 1 !important;
     visibility: visible !important;
@@ -5353,54 +5330,17 @@ input[type="checkbox"] {
     border-color: #1e3a8a !important;
 }
 
-* .btn-view-tasks-new:hover,
-.btn-view-tasks-new:hover,
-.project-card .btn-view-tasks-new:hover,
-.card-compact .btn-view-tasks-new:hover,
-.summary-card .btn-view-tasks-new:hover,
-.project-actions .btn-view-tasks-new:hover,
-.clan-leader-tasks .btn-view-tasks-new:hover {
+.project-actions .btn-minimal.primary:hover,
+.clan-leader-tasks .btn-minimal.primary:hover,
+.project-card .btn-minimal.primary:hover,
+.card-compact .btn-minimal.primary:hover,
+.summary-card .btn-minimal.primary:hover {
     display: inline-flex !important;
     opacity: 1 !important;
     visibility: visible !important;
     background: #1e40af !important;
     color: #ffffff !important;
     border-color: #1e40af !important;
-}
-
-/* Reset completo para el botón original (por si acaso) */
-.btn-view-tasks {
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 8px !important;
-    padding: 12px 20px !important;
-    background: #1e3a8a !important;
-    color: #ffffff !important;
-    border: 2px solid #1e3a8a !important;
-    border-radius: 10px !important;
-    text-decoration: none !important;
-    font-weight: 600 !important;
-    font-size: 14px !important;
-    transition: all 0.3s ease !important;
-    cursor: pointer !important;
-    opacity: 1 !important;
-    visibility: visible !important;
-    position: relative !important;
-    z-index: 999 !important;
-    box-shadow: 0 4px 12px rgba(30, 58, 138, 0.15) !important;
-}
-
-.btn-view-tasks:hover {
-    background: #1e40af !important;
-    border-color: #1e40af !important;
-    color: #ffffff !important;
-    transform: translateY(-2px) !important;
-    box-shadow: 0 8px 25px rgba(30, 58, 138, 0.3) !important;
-    opacity: 1 !important;
-    visibility: visible !important;
-}
-
-.btn-view-tasks i {
-    font-size: 16px !important;
-    color: #ffffff !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 6px 18px rgba(30, 58, 138, 0.22) !important;
 }

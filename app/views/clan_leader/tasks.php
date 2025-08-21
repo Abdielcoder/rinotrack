@@ -79,9 +79,8 @@ ob_start();
                         </div>
                         
                         <div class="project-actions">
-                            <a href="<?= APP_URL ?>?route=clan_leader/tasks&project_id=<?= $project['project_id'] ?>" class="btn-view-tasks-new">
-                                <i class="fas fa-eye"></i>
-                                <span>Ver Tareas</span>
+                            <a href="<?= APP_URL ?>?route=clan_leader/tasks&project_id=<?= $project['project_id'] ?>" class="btn-minimal primary">
+                                <i class="fas fa-eye"></i> Ver Tareas
                             </a>
                         </div>
                     </div>
@@ -659,44 +658,32 @@ ob_start();
     justify-content: center;
 }
 
-/* Estilos para el nuevo botón "Ver Tareas" */
-.btn-view-tasks-new {
+/* Estilos exactos de los botones de task_details.php */
+.btn-minimal {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid;
+}
+
+.btn-minimal.primary {
     background: #1e3a8a !important;
-    color: white !important;
-    padding: 12px 20px !important;
-    border-radius: 10px !important;
-    text-decoration: none !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 8px !important;
-    font-weight: 600 !important;
-    transition: all 0.3s ease !important;
-    border: 2px solid #1e3a8a !important;
-    box-shadow: 0 4px 12px rgba(30, 58, 138, 0.15) !important;
-    opacity: 1 !important;
-    visibility: visible !important;
-    position: relative !important;
-    z-index: 999 !important;
+    color: #ffffff !important;
+    border-color: #1e3a8a !important;
 }
 
-.btn-view-tasks-new:hover {
+.btn-minimal.primary:hover {
     background: #1e40af !important;
-    transform: translateY(-2px) !important;
-    color: white !important;
-    text-decoration: none !important;
-    box-shadow: 0 8px 25px rgba(30, 58, 138, 0.3) !important;
-    opacity: 1 !important;
-    visibility: visible !important;
-}
-
-.btn-view-tasks-new i {
-    color: white !important;
-    font-size: 16px !important;
-}
-
-.btn-view-tasks-new span {
-    color: white !important;
-    font-weight: 600 !important;
+    border-color: #1e40af !important;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(30, 58, 138, 0.22);
 }
 
 /* Filtros */
@@ -2116,53 +2103,36 @@ style.textContent = `
         to { transform: translateX(100%); opacity: 0; }
     }
     
-    /* Estilos adicionales para asegurar visibilidad del botón */
-    .btn-view-tasks-new {
-        background: #1e3a8a !important;
-        color: white !important;
-        padding: 12px 20px !important;
-        border-radius: 10px !important;
-        text-decoration: none !important;
+    /* Estilos adicionales para asegurar que el botón btn-minimal.primary sea visible */
+    .btn-minimal {
         display: inline-flex !important;
         align-items: center !important;
         gap: 8px !important;
-        font-weight: 600 !important;
-        transition: all 0.3s ease !important;
-        border: 2px solid #1e3a8a !important;
-        box-shadow: 0 4px 12px rgba(30, 58, 138, 0.15) !important;
-        opacity: 1 !important;
-        visibility: visible !important;
-        position: relative !important;
-        z-index: 999 !important;
-        min-width: 120px !important;
-        white-space: nowrap !important;
-    }
-    
-    .btn-view-tasks-new:hover {
-        background: #1e40af !important;
-        transform: translateY(-2px) !important;
-        color: white !important;
+        padding: 10px 14px !important;
+        border-radius: 8px !important;
         text-decoration: none !important;
-        box-shadow: 0 8px 25px rgba(30, 58, 138, 0.3) !important;
-        opacity: 1 !important;
-        visibility: visible !important;
-    }
-    
-    .btn-view-tasks-new i {
-        color: white !important;
-        font-size: 16px !important;
-    }
-    
-    .btn-view-tasks-new span {
-        color: white !important;
         font-weight: 600 !important;
-    }
-    
-    /* Forzar visibilidad en cualquier contexto */
-    * .btn-view-tasks-new {
+        font-size: 14px !important;
+        cursor: pointer !important;
+        transition: all 0.2s ease !important;
+        border: 1px solid !important;
         opacity: 1 !important;
         visibility: visible !important;
-        display: inline-flex !important;
+    }
+    
+    .btn-minimal.primary {
+        background: #1e3a8a !important;
+        color: #ffffff !important;
+        border-color: #1e3a8a !important;
+    }
+    
+    .btn-minimal.primary:hover {
+        background: #1e40af !important;
+        border-color: #1e40af !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 6px 18px rgba(30, 58, 138, 0.22) !important;
+        color: #ffffff !important;
+        text-decoration: none !important;
     }
 `;
 document.head.appendChild(style);
