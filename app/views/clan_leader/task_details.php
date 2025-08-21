@@ -887,6 +887,177 @@ window.onclick = function(event) {
 }
 </style>
 
+<script>
+// Funciones para subtareas
+function showSubtaskComments(subtaskId) {
+    console.log('Mostrando comentarios de subtarea:', subtaskId);
+    
+    // Cargar comentarios desde el servidor
+    fetch('?route=clan_leader/getSubtaskComments&subtask_id=' + subtaskId)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // TODO: Crear y mostrar modal con comentarios
+                console.log('Comentarios cargados:', data.comments);
+                showNotification('Comentarios cargados correctamente', 'info');
+            } else {
+                showNotification('Error al cargar comentarios: ' + (data.message || 'Error desconocido'), 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Error al cargar comentarios', 'error');
+        });
+}
+
+function showSubtaskAttachments(subtaskId) {
+    console.log('Mostrando adjuntos de subtarea:', subtaskId);
+    
+    // Cargar adjuntos desde el servidor
+    fetch('?route=clan_leader/getSubtaskAttachments&subtask_id=' + subtaskId)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // TODO: Crear y mostrar modal con adjuntos
+                console.log('Adjuntos cargados:', data.attachments);
+                showNotification('Adjuntos cargados correctamente', 'info');
+            } else {
+                showNotification('Error al cargar adjuntos: ' + (data.message || 'Error desconocido'), 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Error al cargar adjuntos', 'error');
+        });
+}
+
+function editSubtask(subtaskId) {
+    console.log('Editando subtarea:', subtaskId);
+    
+    // Redirigir a la página de edición o abrir modal
+    fetch('?route=clan_leader/editSubtask&subtask_id=' + subtaskId)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // TODO: Crear y mostrar modal de edición con datos de la subtarea
+                console.log('Datos de subtarea:', data.subtask);
+                showNotification('Modal de edición en desarrollo', 'info');
+            } else {
+                showNotification('Error al cargar datos de subtarea: ' + (data.message || 'Error desconocido'), 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Error al cargar datos de subtarea', 'error');
+        });
+}
+
+function deleteSubtask(subtaskId) {
+    if (confirm('¿Estás seguro de que quieres eliminar esta subtarea?')) {
+        console.log('Eliminando subtarea:', subtaskId);
+        
+        fetch('?route=clan_leader/deleteSubtask', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'subtask_id=' + subtaskId
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Remover el elemento de la vista
+                const subtaskElement = document.querySelector(`[data-subtask-id="${subtaskId}"]`);
+                if (subtaskElement) {
+                    subtaskElement.remove();
+                }
+                showNotification('Subtarea eliminada correctamente', 'success');
+            } else {
+                showNotification('Error al eliminar la subtarea: ' + (data.message || 'Error desconocido'), 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Error al eliminar la subtarea', 'error');
+        });
+    }
+}
+
+function updateSubtaskStatus(subtaskId, newStatus) {
+    console.log('Actualizando estado de subtarea:', subtaskId, 'a:', newStatus);
+    
+    fetch('?route=clan_leader/updateSubtaskStatus', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'subtask_id=' + subtaskId + '&status=' + newStatus
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Actualizar el progreso si viene en la respuesta
+            if (data.completion_percentage !== undefined) {
+                const progressFill = document.querySelector(`[data-subtask-id="${subtaskId}"] .progress-fill`);
+                const progressText = document.querySelector(`[data-subtask-id="${subtaskId}"] .progress-text`);
+                
+                if (progressFill) {
+                    progressFill.style.width = data.completion_percentage + '%';
+                }
+                if (progressText) {
+                    progressText.textContent = data.completion_percentage + '%';
+                }
+            }
+            
+            showNotification('Estado de subtarea actualizado correctamente', 'success');
+        } else {
+            showNotification('Error al actualizar el estado: ' + (data.message || 'Error desconocido'), 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error al actualizar el estado de la subtarea', 'error');
+    });
+}
+
+// Función auxiliar para cargar contadores de comentarios y adjuntos
+function loadSubtaskCounters() {
+    // Obtener todos los IDs de subtareas
+    const subtaskElements = document.querySelectorAll('[data-subtask-id]');
+    
+    subtaskElements.forEach(element => {
+        const subtaskId = element.getAttribute('data-subtask-id');
+        
+        // Cargar contadores usando la ruta existente
+        fetch('?route=clan_leader/getSubtaskCounts&subtask_id=' + subtaskId)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Actualizar badge de comentarios
+                    const commentsBadge = document.getElementById('comments-badge-' + subtaskId);
+                    if (commentsBadge && data.comments_count > 0) {
+                        commentsBadge.textContent = data.comments_count;
+                        commentsBadge.style.display = 'inline';
+                    }
+                    
+                    // Actualizar badge de adjuntos
+                    const attachmentsBadge = document.getElementById('attachments-badge-' + subtaskId);
+                    if (attachmentsBadge && data.attachments_count > 0) {
+                        attachmentsBadge.textContent = data.attachments_count;
+                        attachmentsBadge.style.display = 'inline';
+                    }
+                }
+            })
+            .catch(error => console.log('Error cargando contadores:', error));
+    });
+}
+
+// Cargar contadores al inicializar la página
+document.addEventListener('DOMContentLoaded', function() {
+    loadSubtaskCounters();
+});
+</script>
+
 <?php
 $content = ob_get_clean();
 $additionalCSS = [APP_URL . 'assets/css/clan-member.css'];
