@@ -1164,7 +1164,7 @@ class ClanLeaderController {
             if (is_array($decodedSubtasks)) {
                 error_log('createTask - ✅ Cantidad de subtareas: ' . count($decodedSubtasks));
                 foreach ($decodedSubtasks as $index => $subtask) {
-                    error_log("createTask - ✅ Subtarea ${index}: " . print_r($subtask, true));
+                    error_log("createTask - ✅ Subtarea {$index}: " . print_r($subtask, true));
                 }
             } else {
                 error_log('createTask - ❌ Subtareas decodificadas NO es array');
@@ -1177,7 +1177,7 @@ class ClanLeaderController {
             // Verificar si hay algún campo similar
             foreach ($_POST as $key => $value) {
                 if (strpos($key, 'subtask') !== false || strpos($key, 'sub') !== false) {
-                    error_log("createTask - 🔍 Campo similar encontrado: ${key} = " . print_r($value, true));
+                    error_log("createTask - 🔍 Campo similar encontrado: {$key} = " . print_r($value, true));
                 }
             }
         }
@@ -1851,47 +1851,7 @@ class ClanLeaderController {
         }
     }
     
-    /**
-     * Eliminar una subtarea
-     */
-    public function deleteSubtask() {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
-        }
-        
-        $subtaskId = (int)($_POST['subtask_id'] ?? 0);
-        
-        if ($subtaskId <= 0) {
-            Utils::jsonResponse(['success' => false, 'message' => 'ID de subtarea inválido'], 400);
-        }
-        
-        try {
-            // Verificar que la subtarea pertenece a una tarea del clan
-            $subtask = $this->taskModel->getSubtasks(null, $subtaskId);
-            if (empty($subtask)) {
-                Utils::jsonResponse(['success' => false, 'message' => 'Subtarea no encontrada'], 404);
-            }
-            
-            $task = $this->taskModel->findById($subtask[0]['task_id']);
-            $project = $this->projectModel->findById($task['project_id']);
-            if (!$project || $project['clan_id'] != $this->userClan['clan_id']) {
-                Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
-            }
-            
-            // Eliminar la subtarea
-            $result = $this->taskModel->deleteSubtask($subtaskId);
-            
-            if ($result) {
-                Utils::jsonResponse(['success' => true, 'message' => 'Subtarea eliminada exitosamente']);
-            } else {
-                Utils::jsonResponse(['success' => false, 'message' => 'Error al eliminar la subtarea'], 500);
-            }
-            
-        } catch (Exception $e) {
-            error_log("Error al eliminar subtarea: " . $e->getMessage());
-            Utils::jsonResponse(['success' => false, 'message' => 'Error al eliminar la subtarea'], 500);
-        }
-    }
+
     
     /**
      * Agregar comentario a una tarea
