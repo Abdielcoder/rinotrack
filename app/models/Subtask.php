@@ -344,7 +344,7 @@ class Subtask {
                     'original_name' => $file['name'],
                     'saved_name' => $filename,
                     'file_path' => $filepath,
-                    'public_path' => '/uploads/' . $filename,
+                    'public_path' => '/desarrollo/rinotrack/public/uploads/' . $filename,
                     'file_size' => $file['size'],
                     'file_type' => $file['type']
                 ];
