@@ -577,8 +577,100 @@ function updateSubtaskStatus(subtaskId, status) {
 }
 
 function editSubtask(subtaskId) {
-  // Función básica de edición de subtarea
-  alert('Función de edición de subtarea en desarrollo');
+    // Obtener datos actuales de la subtarea
+    const subtaskElement = document.querySelector(`[data-subtask-id="${subtaskId}"]`);
+    const currentTitle = subtaskElement.querySelector('.subtask-title').textContent.trim();
+    const currentDescription = subtaskElement.querySelector('.subtask-description')?.textContent.trim() || '';
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3><i class="fas fa-edit"></i> Editar Subtarea</h3>
+                <button class="btn-close" onclick="this.closest('.modal-overlay').remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="edit-form">
+                    <div class="form-group">
+                        <label for="edit-subtask-title">Título:</label>
+                        <input type="text" id="edit-subtask-title" value="${currentTitle}" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px; margin-bottom: 10px;">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-subtask-description">Descripción:</label>
+                        <textarea id="edit-subtask-description" rows="3" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px; margin-bottom: 15px;">${currentDescription}</textarea>
+                    </div>
+                    <div class="form-actions" style="display: flex; gap: 10px; justify-content: flex-end;">
+                        <button type="button" onclick="this.closest('.modal-overlay').remove()" class="btn btn-secondary">Cancelar</button>
+                        <button type="button" onclick="saveSubtaskChanges(${subtaskId})" class="btn btn-primary">Guardar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    modal.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.5); display: flex; align-items: center;
+        justify-content: center; z-index: 1000;
+    `;
+    
+    document.body.appendChild(modal);
+    document.getElementById('edit-subtask-title').focus();
+}
+
+function saveSubtaskChanges(subtaskId) {
+    const title = document.getElementById('edit-subtask-title').value.trim();
+    const description = document.getElementById('edit-subtask-description').value.trim();
+    
+    if (!title) {
+        alert('El título es requerido');
+        return;
+    }
+    
+    fetch('?route=clan_member/edit-subtask', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            subtask_id: subtaskId,
+            title: title,
+            description: description
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Actualizar en la página sin recargar
+            const subtaskElement = document.querySelector(`[data-subtask-id="${subtaskId}"]`);
+            subtaskElement.querySelector('.subtask-title').textContent = title;
+            
+            let descElement = subtaskElement.querySelector('.subtask-description');
+            if (description) {
+                if (!descElement) {
+                    descElement = document.createElement('div');
+                    descElement.className = 'subtask-description';
+                    descElement.style.cssText = 'margin-top: 8px; font-size: 13px; color: #6b7280;';
+                    subtaskElement.querySelector('.subtask-info').appendChild(descElement);
+                }
+                descElement.textContent = description;
+            } else if (descElement) {
+                descElement.remove();
+            }
+            
+            document.querySelector('.modal-overlay').remove();
+            showNotification('Subtarea actualizada exitosamente', 'success');
+        } else {
+            alert('Error al actualizar subtarea: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error de conexión');
+    });
 }
 
 // Función simple de notificación para el clan member

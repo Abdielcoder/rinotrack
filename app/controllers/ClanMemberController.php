@@ -1616,6 +1616,51 @@ class ClanMemberController {
             echo json_encode(['success' => false, 'message' => 'Error interno del servidor']);
         }
     }
+
+    /**
+     * Editar subtarea
+     */
+    public function editSubtask() {
+        $this->requireAuth();
+        if (!$this->hasMemberAccess()) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
+            return;
+        }
+
+        try {
+            $input = json_decode(file_get_contents('php://input'), true);
+            $subtaskId = $input['subtask_id'] ?? null;
+            $title = trim($input['title'] ?? '');
+            $description = trim($input['description'] ?? '');
+
+            if (!$subtaskId || !$title) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Subtarea ID y título son requeridos']);
+                return;
+            }
+
+            // Actualizar subtarea en base de datos
+            $stmt = $this->db->prepare("
+                UPDATE Subtasks 
+                SET title = ?, description = ?, updated_at = CURRENT_TIMESTAMP 
+                WHERE subtask_id = ?
+            ");
+            
+            $result = $stmt->execute([$title, $description, $subtaskId]);
+
+            if ($result) {
+                echo json_encode(['success' => true, 'message' => 'Subtarea actualizada exitosamente']);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Error al actualizar subtarea']);
+            }
+
+        } catch (Exception $e) {
+            error_log("Error en editSubtask (member): " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error interno del servidor']);
+        }
+    }
 }
 
 ?>

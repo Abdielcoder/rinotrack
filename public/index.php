@@ -561,6 +561,11 @@ try {
         $controller->getSubtaskCounts();
         break;
         
+    case 'clan_leader/edit-subtask':
+        $controller = new ClanLeaderController();
+        $controller->editSubtask();
+        break;
+        
     case 'clan_leader/add-comment':
         $controller = new ClanLeaderController();
         $controller->addComment();
@@ -800,6 +805,11 @@ try {
         case 'clan_member/get-subtask-counts':
             $controller = new ClanMemberController();
             $controller->getSubtaskCounts();
+            break;
+            
+        case 'clan_member/edit-subtask':
+            $controller = new ClanMemberController();
+            $controller->editSubtask();
             break;
             
         default:
