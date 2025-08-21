@@ -1771,7 +1771,7 @@ if (!isset($task) || !isset($subtasks) || !isset($comments) || !isset($history) 
                     <p>${options.message}</p>
                     <div class="confirmation-actions">
                         <button class="btn btn-secondary" onclick="this.closest('.confirmation-modal').remove()">${options.cancelText}</button>
-                        <button class="btn btn-primary" onclick="this.closest('.confirmation-modal').remove(); ${options.onConfirm.toString()}()">${options.confirmText}</button>
+                        <button class="btn btn-primary confirm-btn">${options.confirmText}</button>
                     </div>
                 </div>
             `;
@@ -1805,6 +1805,23 @@ if (!isset($task) || !isset($subtasks) || !isset($comments) || !isset($history) 
                 gap: 12px;
                 justify-content: center;
                 margin-top: 20px;
+            `;
+            
+            // Agregar event listeners
+            const cancelBtn = modal.querySelector('.btn-secondary');
+            const confirmBtn = modal.querySelector('.confirm-btn');
+            
+            confirmBtn.addEventListener('click', () => {
+                modal.remove();
+                if (options.onConfirm && typeof options.onConfirm === 'function') {
+                    options.onConfirm();
+                }
+            });
+            
+            // Mejorar estilos para centrado
+            content.style.cssText += `
+                min-width: 300px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             `;
             
             // Agregar al DOM

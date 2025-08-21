@@ -3728,4 +3728,60 @@ class ClanLeaderController {
         }
     }
 
+    /**
+     * Eliminar subtarea
+     */
+    public function deleteSubtask() {
+        $this->requireAuth();
+        if (!$this->hasClanLeaderAccess()) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
+            return;
+        }
+
+        try {
+            $subtaskId = $_POST['subtask_id'] ?? null;
+
+            if (!$subtaskId) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Subtarea ID requerido']);
+                return;
+            }
+
+            // Iniciar transacción
+            $this->db->beginTransaction();
+
+            try {
+                // Eliminar comentarios de la subtarea
+                $stmt = $this->db->prepare("DELETE FROM Subtask_Comments WHERE subtask_id = ?");
+                $stmt->execute([$subtaskId]);
+
+                // Eliminar adjuntos de la subtarea
+                $stmt = $this->db->prepare("DELETE FROM Subtask_Attachments WHERE subtask_id = ?");
+                $stmt->execute([$subtaskId]);
+
+                // Eliminar la subtarea
+                $stmt = $this->db->prepare("DELETE FROM Subtasks WHERE subtask_id = ?");
+                $result = $stmt->execute([$subtaskId]);
+
+                if ($result && $stmt->rowCount() > 0) {
+                    $this->db->commit();
+                    echo json_encode(['success' => true, 'message' => 'Subtarea eliminada exitosamente']);
+                } else {
+                    $this->db->rollback();
+                    echo json_encode(['success' => false, 'message' => 'Subtarea no encontrada']);
+                }
+
+            } catch (Exception $e) {
+                $this->db->rollback();
+                throw $e;
+            }
+
+        } catch (Exception $e) {
+            error_log("Error en deleteSubtask: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error interno del servidor']);
+        }
+    }
+
 } 
