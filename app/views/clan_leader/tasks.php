@@ -79,9 +79,9 @@ ob_start();
                         </div>
                         
                         <div class="project-actions">
-                            <a href="<?= APP_URL ?>?route=clan_leader/tasks&project_id=<?= $project['project_id'] ?>" class="btn-view-tasks" style="background:rgb(255, 255, 255); !important">
+                            <a href="<?= APP_URL ?>?route=clan_leader/tasks&project_id=<?= $project['project_id'] ?>" class="btn-view-tasks-new">
                                 <i class="fas fa-eye"></i>
-                                Ver Tareas
+                                <span>Ver Tareas</span>
                             </a>
                         </div>
                     </div>
@@ -659,24 +659,44 @@ ob_start();
     justify-content: center;
 }
 
-.btn-view-tasks {
-    background:rgb(12, 12, 12);
-    color: white;
-    padding: 0.75rem 1.5rem;
-    border-radius: 10px;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-weight: 600;
-    transition: all 0.3s ease;
+/* Estilos para el nuevo botón "Ver Tareas" */
+.btn-view-tasks-new {
+    background: #1e3a8a !important;
+    color: white !important;
+    padding: 12px 20px !important;
+    border-radius: 10px !important;
+    text-decoration: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    font-weight: 600 !important;
+    transition: all 0.3s ease !important;
+    border: 2px solid #1e3a8a !important;
+    box-shadow: 0 4px 12px rgba(30, 58, 138, 0.15) !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    position: relative !important;
+    z-index: 999 !important;
 }
 
-.btn-view-tasks:hover {
-    background:rgb(22, 22, 24);
-    transform: translateY(-2px);
-    color: white;
-    text-decoration: none;
+.btn-view-tasks-new:hover {
+    background: #1e40af !important;
+    transform: translateY(-2px) !important;
+    color: white !important;
+    text-decoration: none !important;
+    box-shadow: 0 8px 25px rgba(30, 58, 138, 0.3) !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+.btn-view-tasks-new i {
+    color: white !important;
+    font-size: 16px !important;
+}
+
+.btn-view-tasks-new span {
+    color: white !important;
+    font-weight: 600 !important;
 }
 
 /* Filtros */
@@ -2094,6 +2114,55 @@ style.textContent = `
     @keyframes slideOut {
         from { transform: translateX(0); opacity: 1; }
         to { transform: translateX(100%); opacity: 0; }
+    }
+    
+    /* Estilos adicionales para asegurar visibilidad del botón */
+    .btn-view-tasks-new {
+        background: #1e3a8a !important;
+        color: white !important;
+        padding: 12px 20px !important;
+        border-radius: 10px !important;
+        text-decoration: none !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        font-weight: 600 !important;
+        transition: all 0.3s ease !important;
+        border: 2px solid #1e3a8a !important;
+        box-shadow: 0 4px 12px rgba(30, 58, 138, 0.15) !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        position: relative !important;
+        z-index: 999 !important;
+        min-width: 120px !important;
+        white-space: nowrap !important;
+    }
+    
+    .btn-view-tasks-new:hover {
+        background: #1e40af !important;
+        transform: translateY(-2px) !important;
+        color: white !important;
+        text-decoration: none !important;
+        box-shadow: 0 8px 25px rgba(30, 58, 138, 0.3) !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+    
+    .btn-view-tasks-new i {
+        color: white !important;
+        font-size: 16px !important;
+    }
+    
+    .btn-view-tasks-new span {
+        color: white !important;
+        font-weight: 600 !important;
+    }
+    
+    /* Forzar visibilidad en cualquier contexto */
+    * .btn-view-tasks-new {
+        opacity: 1 !important;
+        visibility: visible !important;
+        display: inline-flex !important;
     }
 `;
 document.head.appendChild(style);
