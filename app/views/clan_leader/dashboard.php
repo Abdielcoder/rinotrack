@@ -28,195 +28,93 @@ ob_start();
 
     <!-- Tablero Kanban de Tareas del Clan -->
     <div class="content-minimal">
-        <section class="tasks-list-section animate-fade-in">
-            <div class="tasks-header">
-                <div class="tasks-title">
+        <section class="kanban-section animate-fade-in">
+            <div class="kanban-header">
+                <div class="kanban-title">
                     <h3><i class="fas fa-tasks icon-gradient"></i> Tareas</h3>
                 </div>
-                <div class="tasks-actions">
+                <div class="kanban-actions">
                     <button class="btn-add-task" onclick="openAddTaskModal()">
                         <i class="fas fa-plus"></i>
                         Agregar Tarea
                     </button>
                 </div>
             </div>
-            
-            <!-- Vista de Lista Compacta -->
-            <div class="tasks-list-container">
-                
-                <!-- Sección: Vencidas -->
-                <?php if (!empty($kanbanTasks['vencidas'])): ?>
-                <div class="task-category-section">
-                    <div class="category-header overdue">
-                        <div class="category-title">
-                            <i class="fas fa-exclamation-triangle"></i>
-                            <span>Vencidas</span>
-                            <span class="task-count"><?php echo count($kanbanTasks['vencidas']); ?></span>
-                        </div>
-                        <button class="toggle-category" onclick="toggleCategory('vencidas')">
-                            <i class="fas fa-chevron-down"></i>
-                        </button>
+            <div class="kanban-board-compact">
+                <!-- Columna: Vencidas -->
+                <div class="kanban-column-compact">
+                    <div class="column-header overdue">
+                        <h4>Vencidas</h4>
+                        <span class="task-count"><?php echo count($kanbanTasks['vencidas'] ?? []); ?></span>
                     </div>
-                    <div class="category-content" id="category-vencidas">
-                        <?php foreach ($kanbanTasks['vencidas'] as $task): ?>
-                            <div class="task-list-item overdue" data-task-id="<?php echo $task['task_id']; ?>">
-                                <div class="task-checkbox-container">
-                                    <input type="checkbox" class="task-checkbox" <?php echo ($task['status'] === 'completed' || ($task['is_completed'] ?? 0) == 1) ? 'checked' : ''; ?> onchange="toggleTaskStatus(<?php echo $task['task_id']; ?>, this.checked)">
-                                </div>
-                                <div class="task-priority-indicator priority-<?php echo $task['priority']; ?>" title="Prioridad: <?php echo ucfirst($task['priority']); ?>"></div>
-                                <div class="task-info">
-                                    <div class="task-name"><?php echo htmlspecialchars($task['task_name']); ?></div>
-                                    <div class="task-meta">
-                                        <span class="task-project"><?php echo htmlspecialchars($task['project_name']); ?></span>
-                                        <span class="task-due-status">Vencida hace <?php echo abs($task['days_until_due']); ?> días</span>
-                                    </div>
-                                </div>
-                                <div class="task-actions-compact">
-                                    <a href="?route=clan_leader/tasks&project_id=<?php echo $task['project_id']; ?>" class="btn-minimal primary" title="Ver proyecto">
+                    <div class="column-content-compact">
+                        <?php foreach ($kanbanTasks['vencidas'] ?? [] as $task): ?>
+                            <div class="task-card-compact overdue" data-task-id="<?php echo $task['task_id']; ?>">
+                                <div class="task-compact-row">
+                                    <input type="checkbox" class="task-checkbox-compact" <?php echo ($task['status'] === 'completed' || ($task['is_completed'] ?? 0) == 1) ? 'checked' : ''; ?> onchange="toggleTaskStatus(<?php echo $task['task_id']; ?>, this.checked)">
+                                    <div class="task-name-compact"><?php echo htmlspecialchars($task['task_name']); ?></div>
+                                    <a href="?route=clan_leader/tasks&project_id=<?php echo $task['project_id']; ?>" class="btn-compact-action" title="Ver proyecto">
                                         <i class="fas fa-eye"></i>
                                     </a>
+                                </div>
+                                <div class="task-due-compact overdue">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    Vencida hace <?php echo abs($task['days_until_due']); ?> días
                                 </div>
                             </div>
                         <?php endforeach; ?>
                     </div>
                 </div>
-                <?php endif; ?>
-                
-                <!-- Sección: Hoy -->
-                <?php if (!empty($kanbanTasks['hoy'])): ?>
-                <div class="task-category-section">
-                    <div class="category-header today">
-                        <div class="category-title">
-                            <i class="fas fa-clock"></i>
-                            <span>Hoy</span>
-                            <span class="task-count"><?php echo count($kanbanTasks['hoy']); ?></span>
-                        </div>
-                        <button class="toggle-category" onclick="toggleCategory('hoy')">
-                            <i class="fas fa-chevron-down"></i>
-                        </button>
+
+                <!-- Columna: Hoy -->
+                <div class="kanban-column-compact">
+                    <div class="column-header today">
+                        <h4>Hoy</h4>
+                        <span class="task-count"><?php echo count($kanbanTasks['hoy'] ?? []); ?></span>
                     </div>
-                    <div class="category-content" id="category-hoy">
-                        <?php foreach ($kanbanTasks['hoy'] as $task): ?>
-                            <div class="task-list-item today" data-task-id="<?php echo $task['task_id']; ?>">
-                                <div class="task-checkbox-container">
-                                    <input type="checkbox" class="task-checkbox" <?php echo ($task['status'] === 'completed' || ($task['is_completed'] ?? 0) == 1) ? 'checked' : ''; ?> onchange="toggleTaskStatus(<?php echo $task['task_id']; ?>, this.checked)">
-                                </div>
-                                <div class="task-priority-indicator priority-<?php echo $task['priority']; ?>" title="Prioridad: <?php echo ucfirst($task['priority']); ?>"></div>
-                                <div class="task-info">
-                                    <div class="task-name"><?php echo htmlspecialchars($task['task_name']); ?></div>
-                                    <div class="task-meta">
-                                        <span class="task-project"><?php echo htmlspecialchars($task['project_name']); ?></span>
-                                        <span class="task-due-status">Vence hoy</span>
-                                    </div>
-                                </div>
-                                <div class="task-actions-compact">
-                                    <a href="?route=clan_leader/tasks&project_id=<?php echo $task['project_id']; ?>" class="btn-minimal primary" title="Ver proyecto">
+                    <div class="column-content-compact">
+                        <?php foreach ($kanbanTasks['hoy'] ?? [] as $task): ?>
+                            <div class="task-card-compact today" data-task-id="<?php echo $task['task_id']; ?>">
+                                <div class="task-compact-row">
+                                    <input type="checkbox" class="task-checkbox-compact" <?php echo ($task['status'] === 'completed' || ($task['is_completed'] ?? 0) == 1) ? 'checked' : ''; ?> onchange="toggleTaskStatus(<?php echo $task['task_id']; ?>, this.checked)">
+                                    <div class="task-name-compact"><?php echo htmlspecialchars($task['task_name']); ?></div>
+                                    <a href="?route=clan_leader/tasks&project_id=<?php echo $task['project_id']; ?>" class="btn-compact-action" title="Ver proyecto">
                                         <i class="fas fa-eye"></i>
                                     </a>
+                                </div>
+                                <div class="task-due-compact today">
+                                    <i class="fas fa-clock"></i>
+                                    Vence hoy
                                 </div>
                             </div>
                         <?php endforeach; ?>
                     </div>
                 </div>
-                <?php endif; ?>
-                
-                <!-- Sección: 1 Semana -->
-                <?php if (!empty($kanbanTasks['1_semana'])): ?>
-                <div class="task-category-section">
-                    <div class="category-header week1">
-                        <div class="category-title">
-                            <i class="fas fa-calendar"></i>
-                            <span>1 Semana</span>
-                            <span class="task-count"><?php echo count($kanbanTasks['1_semana']); ?></span>
-                        </div>
-                        <button class="toggle-category" onclick="toggleCategory('semana1')">
-                            <i class="fas fa-chevron-down"></i>
-                        </button>
+
+                <!-- Columna: 1 Semana -->
+                <div class="kanban-column-compact">
+                    <div class="column-header week1">
+                        <h4>1 Semana</h4>
+                        <span class="task-count"><?php echo count($kanbanTasks['1_semana'] ?? []); ?></span>
                     </div>
-                    <div class="category-content" id="category-semana1">
-                        <?php foreach ($kanbanTasks['1_semana'] as $task): ?>
-                            <div class="task-list-item week1" data-task-id="<?php echo $task['task_id']; ?>">
-                                <div class="task-checkbox-container">
-                                    <input type="checkbox" class="task-checkbox" <?php echo ($task['status'] === 'completed' || ($task['is_completed'] ?? 0) == 1) ? 'checked' : ''; ?> onchange="toggleTaskStatus(<?php echo $task['task_id']; ?>, this.checked)">
-                                </div>
-                                <div class="task-priority-indicator priority-<?php echo $task['priority']; ?>" title="Prioridad: <?php echo ucfirst($task['priority']); ?>"></div>
-                                <div class="task-info">
-                                    <div class="task-name"><?php echo htmlspecialchars($task['task_name']); ?></div>
-                                    <div class="task-meta">
-                                        <span class="task-project"><?php echo htmlspecialchars($task['project_name']); ?></span>
-                                        <span class="task-due-status">En <?php echo $task['days_until_due']; ?> días</span>
-                                    </div>
-                                </div>
-                                <div class="task-actions-compact">
-                                    <a href="?route=clan_leader/tasks&project_id=<?php echo $task['project_id']; ?>" class="btn-minimal primary" title="Ver proyecto">
+                    <div class="column-content-compact">
+                        <?php foreach ($kanbanTasks['1_semana'] ?? [] as $task): ?>
+                            <div class="task-card-compact week1" data-task-id="<?php echo $task['task_id']; ?>">
+                                <div class="task-compact-row">
+                                    <input type="checkbox" class="task-checkbox-compact" <?php echo ($task['status'] === 'completed' || ($task['is_completed'] ?? 0) == 1) ? 'checked' : ''; ?> onchange="toggleTaskStatus(<?php echo $task['task_id']; ?>, this.checked)">
+                                    <div class="task-name-compact"><?php echo htmlspecialchars($task['task_name']); ?></div>
+                                    <a href="?route=clan_leader/tasks&project_id=<?php echo $task['project_id']; ?>" class="btn-compact-action" title="Ver proyecto">
                                         <i class="fas fa-eye"></i>
                                     </a>
+                                </div>
+                                <div class="task-due-compact week1">
+                                    <i class="fas fa-calendar"></i>
+                                    En <?php echo $task['days_until_due']; ?> días
                                 </div>
                             </div>
                         <?php endforeach; ?>
                     </div>
                 </div>
-                <?php endif; ?>
-                
-                <!-- Sección: 2 Semanas -->
-                <?php if (!empty($kanbanTasks['2_semanas'])): ?>
-                <div class="task-category-section">
-                    <div class="category-header week2">
-                        <div class="category-title">
-                            <i class="fas fa-calendar-alt"></i>
-                            <span>2 Semanas</span>
-                            <span class="task-count"><?php echo count($kanbanTasks['2_semanas']); ?></span>
-                        </div>
-                        <button class="toggle-category" onclick="toggleCategory('semanas2')">
-                            <i class="fas fa-chevron-down"></i>
-                        </button>
-                    </div>
-                    <div class="category-content" id="category-semanas2">
-                        <?php foreach ($kanbanTasks['2_semanas'] as $task): ?>
-                            <div class="task-list-item week2" data-task-id="<?php echo $task['task_id']; ?>">
-                                <div class="task-checkbox-container">
-                                    <input type="checkbox" class="task-checkbox" <?php echo ($task['status'] === 'completed' || ($task['is_completed'] ?? 0) == 1) ? 'checked' : ''; ?> onchange="toggleTaskStatus(<?php echo $task['task_id']; ?>, this.checked)">
-                                </div>
-                                <div class="task-priority-indicator priority-<?php echo $task['priority']; ?>" title="Prioridad: <?php echo ucfirst($task['priority']); ?>"></div>
-                                <div class="task-info">
-                                    <div class="task-name"><?php echo htmlspecialchars($task['task_name']); ?></div>
-                                    <div class="task-meta">
-                                        <span class="task-project"><?php echo htmlspecialchars($task['project_name']); ?></span>
-                                        <span class="task-due-status">
-                                            <?php 
-                                            if (!empty($task['due_date'])) {
-                                                echo 'Vence: ' . date('d/m/Y', strtotime($task['due_date']));
-                                            } else {
-                                                echo 'Sin fecha límite';
-                                            }
-                                            ?>
-                                        </span>
-                                    </div>
-                                </div>
-                                <div class="task-actions-compact">
-                                    <a href="?route=clan_leader/tasks&project_id=<?php echo $task['project_id']; ?>" class="btn-minimal primary" title="Ver proyecto">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                </div>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-                <?php endif; ?>
-                
-                <!-- Mensaje si no hay tareas -->
-                <?php if (empty($kanbanTasks['vencidas']) && empty($kanbanTasks['hoy']) && empty($kanbanTasks['1_semana']) && empty($kanbanTasks['2_semanas'])): ?>
-                <div class="empty-tasks">
-                    <i class="fas fa-tasks"></i>
-                    <h4>No hay tareas pendientes</h4>
-                    <p>¡Excelente trabajo! No tienes tareas pendientes en este momento.</p>
-                    <button class="btn-minimal primary" onclick="openAddTaskModal()">
-                        <i class="fas fa-plus"></i>
-                        Agregar Primera Tarea
-                    </button>
-                </div>
-                <?php endif; ?>
-                
             </div>
         </section>
 
@@ -855,26 +753,10 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// Función para expandir/colapsar categorías de tareas
-function toggleCategory(categoryId) {
-    const categoryContent = document.getElementById('category-' + categoryId);
-    const toggleButton = event.target.closest('.toggle-category');
-    
-    if (categoryContent && toggleButton) {
-        if (categoryContent.classList.contains('collapsed')) {
-            categoryContent.classList.remove('collapsed');
-            toggleButton.classList.remove('collapsed');
-        } else {
-            categoryContent.classList.add('collapsed');
-            toggleButton.classList.add('collapsed');
-        }
-    }
-}
-
-// Inicializar el estado de las categorías al cargar la página
+// Funciones específicas para el dashboard del clan leader
 document.addEventListener('DOMContentLoaded', function() {
-    // Todas las categorías empiezan expandidas por defecto
-    // Si quieres que algunas empiecen colapsadas, puedes agregar lógica aquí
+    // Inicialización del dashboard compacto
+    console.log('Dashboard compacto cargado');
 });
 </script>
 
