@@ -3653,4 +3653,34 @@ class ClanLeaderController {
         }
     }
 
+    /**
+     * Obtener conteos de comentarios y adjuntos de una subtarea
+     */
+    public function getSubtaskCounts() {
+        $this->requireAuth();
+        if (!$this->hasClanLeaderAccess()) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
+            return;
+        }
+
+        try {
+            $subtaskId = $_GET['subtask_id'] ?? null;
+
+            if (!$subtaskId) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Subtarea ID requerido']);
+                return;
+            }
+
+            $counts = $this->subtaskModel->getSubtaskCounts($subtaskId);
+            echo json_encode(['success' => true, 'counts' => $counts]);
+
+        } catch (Exception $e) {
+            error_log("Error en getSubtaskCounts: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error interno del servidor']);
+        }
+    }
+
 } 

@@ -916,11 +916,13 @@ if (!isset($task) || !isset($subtasks) || !isset($comments) || !isset($history) 
                                 <div class="subtask-header">
                                     <div class="subtask-title"><?= htmlspecialchars($subtask['title']) ?></div>
                                     <div class="subtask-actions">
-                                        <button class="btn-icon-small" onclick="showSubtaskComments(<?= $subtask['subtask_id'] ?>)" title="Ver comentarios">
+                                        <button class="btn-icon-small btn-with-badge" id="comments-btn-<?= $subtask['subtask_id'] ?>" onclick="showSubtaskComments(<?= $subtask['subtask_id'] ?>)" title="Ver comentarios">
                                             <i class="fas fa-comments"></i>
+                                            <span class="badge" id="comments-badge-<?= $subtask['subtask_id'] ?>" style="display: none;">0</span>
                                         </button>
-                                        <button class="btn-icon-small" onclick="showSubtaskAttachments(<?= $subtask['subtask_id'] ?>)" title="Ver adjuntos">
+                                        <button class="btn-icon-small btn-with-badge" id="attachments-btn-<?= $subtask['subtask_id'] ?>" onclick="showSubtaskAttachments(<?= $subtask['subtask_id'] ?>)" title="Ver adjuntos">
                                             <i class="fas fa-paperclip"></i>
+                                            <span class="badge" id="attachments-badge-<?= $subtask['subtask_id'] ?>" style="display: none;">0</span>
                                         </button>
                                         <button class="btn-icon-small" onclick="editSubtask(<?= $subtask['subtask_id'] ?>)" title="Editar">
                                             <i class="fas fa-edit"></i>
@@ -1952,6 +1954,7 @@ if (!isset($task) || !isset($subtasks) || !isset($comments) || !isset($history) 
                     document.getElementById('subtask-comment-text').value = '';
                     document.getElementById('subtask-comment-file').value = '';
                     loadSubtaskComments(subtaskId);
+                    loadSubtaskCounts(subtaskId); // Actualizar conteos
                 } else {
                     alert('Error al agregar comentario: ' + data.message);
                 }
@@ -1985,6 +1988,7 @@ if (!isset($task) || !isset($subtasks) || !isset($comments) || !isset($history) 
                     fileInput.value = '';
                     document.getElementById('subtask-attachment-description').value = '';
                     loadSubtaskAttachments(subtaskId);
+                    loadSubtaskCounts(subtaskId); // Actualizar conteos
                 } else {
                     alert('Error al subir archivo: ' + data.message);
                 }
@@ -2001,6 +2005,56 @@ if (!isset($task) || !isset($subtasks) || !isset($comments) || !isset($history) 
             const i = Math.floor(Math.log(bytes) / Math.log(k));
             return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         }
+
+        // Cargar conteos para todas las subtareas al cargar la página
+        function loadAllSubtaskCounts() {
+            const subtaskItems = document.querySelectorAll('[data-subtask-id]');
+            subtaskItems.forEach(item => {
+                const subtaskId = item.getAttribute('data-subtask-id');
+                loadSubtaskCounts(subtaskId);
+            });
+        }
+
+        function loadSubtaskCounts(subtaskId) {
+            fetch('?route=clan_leader/get-subtask-counts&subtask_id=' + subtaskId)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        updateBadges(subtaskId, data.counts);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading counts for subtask ' + subtaskId, error);
+                });
+        }
+
+        function updateBadges(subtaskId, counts) {
+            const commentsBadge = document.getElementById('comments-badge-' + subtaskId);
+            const attachmentsBadge = document.getElementById('attachments-badge-' + subtaskId);
+            
+            if (commentsBadge) {
+                if (counts.comments_count > 0) {
+                    commentsBadge.textContent = counts.comments_count;
+                    commentsBadge.style.display = 'inline-block';
+                } else {
+                    commentsBadge.style.display = 'none';
+                }
+            }
+            
+            if (attachmentsBadge) {
+                if (counts.attachments_count > 0) {
+                    attachmentsBadge.textContent = counts.attachments_count;
+                    attachmentsBadge.style.display = 'inline-block';
+                } else {
+                    attachmentsBadge.style.display = 'none';
+                }
+            }
+        }
+
+        // Cargar conteos al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            loadAllSubtaskCounts();
+        });
     </script>
 
     <style>
@@ -2102,6 +2156,51 @@ if (!isset($task) || !isset($subtasks) || !isset($comments) || !isset($history) 
 
         .error {
             color: #dc2626;
+        }
+
+        /* Estilos para badges de contadores */
+        .btn-with-badge {
+            position: relative;
+        }
+
+        .badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ef4444;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 11px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+            min-width: 18px;
+            padding: 0 4px;
+            box-sizing: border-box;
+        }
+
+        .badge:empty {
+            display: none !important;
+        }
+
+        /* Estilos para archivos adjuntos en comentarios */
+        .comment-attachments {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .comment-attachments .attachment-link {
+            display: inline-block;
+            background: #f3f4f6;
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin: 2px 4px 2px 0;
+            font-size: 12px;
         }
     </style>
 </body>

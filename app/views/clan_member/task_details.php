@@ -55,11 +55,13 @@ ob_start();
                 <div class="subtask-header">
                   <div class="subtask-title"><?php echo htmlspecialchars($subtask['title']); ?></div>
                   <div class="subtask-actions">
-                    <button class="btn-icon-small" onclick="showSubtaskComments(<?php echo $subtask['subtask_id']; ?>)" title="Ver comentarios">
+                    <button class="btn-icon-small btn-with-badge" id="comments-btn-<?php echo $subtask['subtask_id']; ?>" onclick="showSubtaskComments(<?php echo $subtask['subtask_id']; ?>)" title="Ver comentarios">
                       <i class="fas fa-comments"></i>
+                      <span class="badge" id="comments-badge-<?php echo $subtask['subtask_id']; ?>" style="display: none;">0</span>
                     </button>
-                    <button class="btn-icon-small" onclick="showSubtaskAttachments(<?php echo $subtask['subtask_id']; ?>)" title="Ver adjuntos">
+                    <button class="btn-icon-small btn-with-badge" id="attachments-btn-<?php echo $subtask['subtask_id']; ?>" onclick="showSubtaskAttachments(<?php echo $subtask['subtask_id']; ?>)" title="Ver adjuntos">
                       <i class="fas fa-paperclip"></i>
+                      <span class="badge" id="attachments-badge-<?php echo $subtask['subtask_id']; ?>" style="display: none;">0</span>
                     </button>
                     <?php if ($canEdit): ?>
                     <button class="btn-icon-small" onclick="editSubtask(<?php echo $subtask['subtask_id']; ?>)" title="Editar">
@@ -924,15 +926,16 @@ function addSubtaskCommentWithText(subtaskId, commentText, attachmentId = null) 
         })
     })
     .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            document.getElementById('subtask-comment-text').value = '';
-            document.getElementById('subtask-comment-file').value = '';
-            loadSubtaskComments(subtaskId);
-        } else {
-            alert('Error al agregar comentario: ' + data.message);
-        }
-    })
+            .then(data => {
+            if (data.success) {
+                document.getElementById('subtask-comment-text').value = '';
+                document.getElementById('subtask-comment-file').value = '';
+                loadSubtaskComments(subtaskId);
+                loadSubtaskCounts(subtaskId); // Actualizar conteos
+            } else {
+                alert('Error al agregar comentario: ' + data.message);
+            }
+        })
     .catch(error => {
         alert('Error de conexión');
     });
@@ -957,15 +960,16 @@ function uploadSubtaskAttachment(subtaskId) {
         body: formData
     })
     .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            fileInput.value = '';
-            document.getElementById('subtask-attachment-description').value = '';
-            loadSubtaskAttachments(subtaskId);
-        } else {
-            alert('Error al subir archivo: ' + data.message);
-        }
-    })
+            .then(data => {
+            if (data.success) {
+                fileInput.value = '';
+                document.getElementById('subtask-attachment-description').value = '';
+                loadSubtaskAttachments(subtaskId);
+                loadSubtaskCounts(subtaskId); // Actualizar conteos
+            } else {
+                alert('Error al subir archivo: ' + data.message);
+            }
+        })
     .catch(error => {
         alert('Error de conexión');
     });
@@ -978,6 +982,56 @@ function formatFileSize(bytes) {
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
+
+// Cargar conteos para todas las subtareas al cargar la página
+function loadAllSubtaskCounts() {
+    const subtaskItems = document.querySelectorAll('[data-subtask-id]');
+    subtaskItems.forEach(item => {
+        const subtaskId = item.getAttribute('data-subtask-id');
+        loadSubtaskCounts(subtaskId);
+    });
+}
+
+function loadSubtaskCounts(subtaskId) {
+    fetch('?route=clan_member/get-subtask-counts&subtask_id=' + subtaskId)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                updateBadges(subtaskId, data.counts);
+            }
+        })
+        .catch(error => {
+            console.error('Error loading counts for subtask ' + subtaskId, error);
+        });
+}
+
+function updateBadges(subtaskId, counts) {
+    const commentsBadge = document.getElementById('comments-badge-' + subtaskId);
+    const attachmentsBadge = document.getElementById('attachments-badge-' + subtaskId);
+    
+    if (commentsBadge) {
+        if (counts.comments_count > 0) {
+            commentsBadge.textContent = counts.comments_count;
+            commentsBadge.style.display = 'inline-block';
+        } else {
+            commentsBadge.style.display = 'none';
+        }
+    }
+    
+    if (attachmentsBadge) {
+        if (counts.attachments_count > 0) {
+            attachmentsBadge.textContent = counts.attachments_count;
+            attachmentsBadge.style.display = 'inline-block';
+        } else {
+            attachmentsBadge.style.display = 'none';
+        }
+    }
+}
+
+// Cargar conteos al cargar la página
+document.addEventListener('DOMContentLoaded', function() {
+    loadAllSubtaskCounts();
+});
 </script>
 
 <style>
@@ -1091,6 +1145,51 @@ function formatFileSize(bytes) {
 
 .btn-close:hover {
     color: #374151;
+}
+
+/* Estilos para badges de contadores */
+.btn-with-badge {
+    position: relative;
+}
+
+.badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #ef4444;
+    color: white;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    font-size: 11px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    min-width: 18px;
+    padding: 0 4px;
+    box-sizing: border-box;
+}
+
+.badge:empty {
+    display: none !important;
+}
+
+/* Estilos para archivos adjuntos en comentarios */
+.comment-attachments {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.comment-attachments .attachment-link {
+    display: inline-block;
+    background: #f3f4f6;
+    padding: 4px 8px;
+    border-radius: 4px;
+    margin: 2px 4px 2px 0;
+    font-size: 12px;
 }
 </style>
 

@@ -556,6 +556,11 @@ try {
         $controller->deleteSubtaskAttachment();
         break;
         
+    case 'clan_leader/get-subtask-counts':
+        $controller = new ClanLeaderController();
+        $controller->getSubtaskCounts();
+        break;
+        
     case 'clan_leader/add-comment':
         $controller = new ClanLeaderController();
         $controller->addComment();
@@ -790,6 +795,11 @@ try {
         case 'clan_member/delete-subtask-attachment':
             $controller = new ClanMemberController();
             $controller->deleteSubtaskAttachment();
+            break;
+            
+        case 'clan_member/get-subtask-counts':
+            $controller = new ClanMemberController();
+            $controller->getSubtaskCounts();
             break;
             
         default:

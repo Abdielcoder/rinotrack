@@ -45,6 +45,31 @@ class Subtask {
             return false;
         }
     }
+
+    /**
+     * Obtener conteos de comentarios y adjuntos para una subtarea
+     */
+    public function getSubtaskCounts($subtaskId) {
+        try {
+            // Contar comentarios
+            $stmt = $this->db->prepare("SELECT COUNT(*) as count FROM Subtask_Comments WHERE subtask_id = ?");
+            $stmt->execute([$subtaskId]);
+            $commentsCount = $stmt->fetchColumn();
+            
+            // Contar adjuntos
+            $stmt = $this->db->prepare("SELECT COUNT(*) as count FROM Subtask_Attachments WHERE subtask_id = ?");
+            $stmt->execute([$subtaskId]);
+            $attachmentsCount = $stmt->fetchColumn();
+            
+            return [
+                'comments_count' => (int)$commentsCount,
+                'attachments_count' => (int)$attachmentsCount
+            ];
+        } catch (Exception $e) {
+            error_log("Error al obtener conteos de subtarea: " . $e->getMessage());
+            return ['comments_count' => 0, 'attachments_count' => 0];
+        }
+    }
     
     /**
      * Obtener comentarios de una subtarea
