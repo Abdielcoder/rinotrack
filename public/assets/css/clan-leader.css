@@ -5344,3 +5344,336 @@ input[type="checkbox"] {
     transform: translateY(-1px) !important;
     box-shadow: 0 6px 18px rgba(30, 58, 138, 0.22) !important;
 }
+
+/* ===== ESTILOS PARA VISTA DE LISTA DE TAREAS ===== */
+
+/* Contenedor principal de la lista de tareas */
+.tasks-list-section {
+    margin: 32px 0;
+}
+
+.tasks-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding: 16px 0;
+}
+
+.tasks-title h3 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1e3a8a;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.tasks-actions {
+    display: flex;
+    gap: 16px;
+}
+
+.tasks-list-container {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e5e7eb;
+    overflow: hidden;
+}
+
+/* Secciones de categorías */
+.task-category-section {
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.task-category-section:last-child {
+    border-bottom: none;
+}
+
+.category-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    background: #f8fafc;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-left: 4px solid transparent;
+}
+
+.category-header:hover {
+    background: #f1f5f9;
+}
+
+.category-header.overdue {
+    border-left-color: #ef4444;
+    background: linear-gradient(90deg, #fef2f2, #f8fafc);
+}
+
+.category-header.today {
+    border-left-color: #f59e0b;
+    background: linear-gradient(90deg, #fffbeb, #f8fafc);
+}
+
+.category-header.week1 {
+    border-left-color: #3b82f6;
+    background: linear-gradient(90deg, #eff6ff, #f8fafc);
+}
+
+.category-header.week2 {
+    border-left-color: #10b981;
+    background: linear-gradient(90deg, #ecfdf5, #f8fafc);
+}
+
+.category-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.category-title i {
+    font-size: 1.1rem;
+}
+
+.category-title .task-count {
+    background: #1e3a8a;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    min-width: 24px;
+    text-align: center;
+}
+
+.toggle-category {
+    background: none;
+    border: none;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.toggle-category:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: #374151;
+}
+
+.toggle-category i {
+    transition: transform 0.2s ease;
+}
+
+.toggle-category.collapsed i {
+    transform: rotate(-90deg);
+}
+
+/* Contenido de categorías */
+.category-content {
+    max-height: 1000px;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+}
+
+.category-content.collapsed {
+    max-height: 0;
+}
+
+/* Items de tareas en lista */
+.task-list-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 20px;
+    border-bottom: 1px solid #f3f4f6;
+    transition: all 0.2s ease;
+    min-height: 60px;
+}
+
+.task-list-item:last-child {
+    border-bottom: none;
+}
+
+.task-list-item:hover {
+    background: #f9fafb;
+}
+
+.task-checkbox-container {
+    flex-shrink: 0;
+}
+
+.task-checkbox {
+    width: 18px;
+    height: 18px;
+    border: 2px solid #d1d5db;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: white;
+    accent-color: #10b981;
+}
+
+.task-checkbox:checked {
+    background: #10b981;
+    border-color: #10b981;
+}
+
+/* Indicador de prioridad */
+.task-priority-indicator {
+    width: 4px;
+    height: 40px;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+.task-priority-indicator.priority-low {
+    background: #10b981;
+}
+
+.task-priority-indicator.priority-medium {
+    background: #3b82f6;
+}
+
+.task-priority-indicator.priority-high {
+    background: #f59e0b;
+}
+
+.task-priority-indicator.priority-critical {
+    background: #ef4444;
+}
+
+/* Información de la tarea */
+.task-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.task-name {
+    font-weight: 600;
+    color: #1e3a8a;
+    margin-bottom: 4px;
+    font-size: 1rem;
+    line-height: 1.4;
+}
+
+.task-meta {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.task-project {
+    color: #6b7280;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.task-due-status {
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 12px;
+}
+
+.task-list-item.overdue .task-due-status {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+.task-list-item.today .task-due-status {
+    background: #fffbeb;
+    color: #d97706;
+}
+
+.task-list-item.week1 .task-due-status {
+    background: #eff6ff;
+    color: #2563eb;
+}
+
+.task-list-item.week2 .task-due-status {
+    background: #ecfdf5;
+    color: #059669;
+}
+
+/* Acciones compactas */
+.task-actions-compact {
+    flex-shrink: 0;
+}
+
+.task-actions-compact .btn-minimal {
+    padding: 8px 12px;
+    font-size: 0.875rem;
+}
+
+/* Estado vacío */
+.empty-tasks {
+    text-align: center;
+    padding: 60px 20px;
+    color: #6b7280;
+}
+
+.empty-tasks i {
+    font-size: 4rem;
+    margin-bottom: 20px;
+    color: #d1d5db;
+}
+
+.empty-tasks h4 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 12px;
+}
+
+.empty-tasks p {
+    font-size: 1rem;
+    margin-bottom: 24px;
+    color: #6b7280;
+}
+
+/* Responsive para vista de lista */
+@media (max-width: 768px) {
+    .tasks-header {
+        flex-direction: column;
+        gap: 16px;
+        align-items: stretch;
+    }
+    
+    .tasks-title h3 {
+        font-size: 1.5rem;
+        justify-content: center;
+    }
+    
+    .task-list-item {
+        padding: 16px;
+        flex-wrap: wrap;
+        min-height: auto;
+    }
+    
+    .task-meta {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .task-actions-compact {
+        margin-top: 8px;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+    }
+    
+    .category-header {
+        padding: 12px 16px;
+    }
+    
+    .category-title {
+        gap: 8px;
+    }
+}
