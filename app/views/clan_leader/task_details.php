@@ -104,7 +104,7 @@ ob_start();
                                 </div>
             
             <div style="margin-bottom: 15px;">
-                <span style="color: #6b7280; font-size: 14px;">Estado: <?php 
+                <span class="subtask-status-text" style="color: #6b7280; font-size: 14px;">Estado: <?php 
                     $estados = [
                         'pending' => 'Pendiente',
                         'in_progress' => 'En Progreso', 
@@ -118,13 +118,13 @@ ob_start();
                                     <?php endif; ?>
                                 </div>
             
-            <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
                 <div style="flex: 1; margin-right: 20px;">
                     <div style="background: #e5e7eb; height: 8px; border-radius: 4px; overflow: hidden;">
-                        <div style="background: #10b981; height: 100%; width: <?php echo $subtask['completion_percentage']; ?>%; transition: width 0.3s ease;"></div>
-                                </div>
-                    <span style="font-size: 14px; font-weight: 600; color: #374151;"><?php echo $subtask['completion_percentage']; ?>%</span>
-                            </div>
+                        <div class="progress-fill" style="background: #10b981; height: 100%; width: <?php echo $subtask['completion_percentage']; ?>%; transition: width 0.3s ease;"></div>
+                    </div>
+                    <span class="progress-text" style="font-size: 14px; font-weight: 600; color: #374151;"><?php echo $subtask['completion_percentage']; ?>%</span>
+                </div>
                 <select onchange="updateSubtaskStatus(<?php echo $subtask['subtask_id']; ?>, this.value)" style="padding: 6px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; background: white;">
                     <option value="pending" <?php echo $subtask['status'] === 'pending' ? 'selected' : ''; ?>>Pendiente</option>
                     <option value="in_progress" <?php echo $subtask['status'] === 'in_progress' ? 'selected' : ''; ?>>En Progreso</option>
@@ -823,9 +823,43 @@ function updateSubtaskStatus(subtaskId, newStatus) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
+            // Actualizar el estado visual inmediatamente
+            const subtaskCard = document.querySelector(`[data-subtask-id="${subtaskId}"]`);
+            if (subtaskCard) {
+                // Actualizar el texto del estado
+                const estadoSpan = subtaskCard.querySelector('.subtask-status-text');
+                if (estadoSpan) {
+                    const estados = {
+                        'pending': 'Pendiente',
+                        'in_progress': 'En Progreso',
+                        'completed': 'Completada',
+                        'blocked': 'Bloqueada'
+                    };
+                    estadoSpan.textContent = 'Estado: ' + estados[newStatus];
+                }
+                
+                // Actualizar la barra de progreso según el estado
+                const progressBar = subtaskCard.querySelector('.progress-fill');
+                const progressText = subtaskCard.querySelector('.progress-text');
+                
+                let newProgress = 0;
+                if (newStatus === 'in_progress') {
+                    newProgress = 50;
+                } else if (newStatus === 'completed') {
+                    newProgress = 100;
+                } else if (newStatus === 'pending') {
+                    newProgress = 0;
+                }
+                
+                if (progressBar) {
+                    progressBar.style.width = newProgress + '%';
+                }
+                if (progressText) {
+                    progressText.textContent = newProgress + '%';
+                }
+            }
+            
             showNotification('Estado de subtarea actualizado correctamente', 'success');
-            // Recargar para mostrar cambios
-            location.reload();
         } else {
             showNotification('Error al actualizar el estado: ' + (data.message || 'Error desconocido'), 'error');
         }
