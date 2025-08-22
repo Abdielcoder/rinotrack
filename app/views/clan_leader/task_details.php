@@ -789,7 +789,19 @@ function saveCheckboxState(checkbox) {
     })
     .then(response => {
         console.log('📥 Respuesta recibida, status:', response.status);
-        return response.json();
+        console.log('📥 Headers:', response.headers);
+        
+        // Verificar si la respuesta es JSON válido
+        return response.text().then(text => {
+            console.log('📥 Respuesta como texto:', text);
+            try {
+                return JSON.parse(text);
+            } catch (e) {
+                console.error('❌ Error parsing JSON:', e);
+                console.error('❌ Respuesta recibida (no es JSON):', text);
+                throw new Error('Respuesta no es JSON válido: ' + text.substring(0, 200));
+            }
+        });
     })
     .then(data => {
         console.log('📥 Datos de respuesta:', data);

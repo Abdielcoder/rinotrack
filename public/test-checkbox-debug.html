@@ -15,6 +15,13 @@
     <h1>🔧 Debug de Checkboxes - RinoTrack</h1>
     
     <div class="test-section">
+        <h2>0. Test de Ruta Simple</h2>
+        <p>Prueba si la ruta básica funciona:</p>
+        <button onclick="testRoute()">🔧 Probar Ruta</button>
+        <div id="route-result"></div>
+    </div>
+    
+    <div class="test-section">
         <h2>1. Test de Backend</h2>
         <p>Prueba si el backend puede crear la tabla y guardar datos:</p>
         <button onclick="testBackend()">🧪 Probar Backend</button>
@@ -42,6 +49,30 @@
     </div>
 
     <script>
+        async function testRoute() {
+            const resultDiv = document.getElementById('route-result');
+            resultDiv.innerHTML = '⏳ Probando ruta básica...';
+            
+            try {
+                const response = await fetch('?route=clan_leader/test-checkbox-route');
+                const text = await response.text();
+                
+                resultDiv.innerHTML = `
+                    <div class="result">
+                        ✅ Ruta funcionando<br>
+                        📊 <strong>Status:</strong> ${response.status}<br>
+                        📤 <strong>Respuesta:</strong> ${text}
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        ❌ Error en ruta: ${error.message}
+                    </div>
+                `;
+            }
+        }
+        
         async function testBackend() {
             const resultDiv = document.getElementById('backend-result');
             resultDiv.innerHTML = '⏳ Probando backend...';

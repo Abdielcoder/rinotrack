@@ -3750,19 +3750,31 @@ class ClanLeaderController {
      * Guardar estado de checkbox en comentario
      */
     public function saveCheckboxState() {
+        // Log para debugging
+        error_log("saveCheckboxState: Iniciando función");
+        error_log("saveCheckboxState: REQUEST_METHOD = " . $_SERVER['REQUEST_METHOD']);
+        error_log("saveCheckboxState: Content-Type = " . ($_SERVER['CONTENT_TYPE'] ?? 'no-set'));
+        
         $this->requireAuth();
         
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            error_log("saveCheckboxState: Método no permitido");
             Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
         }
         
-        $input = json_decode(file_get_contents('php://input'), true);
+        $rawInput = file_get_contents('php://input');
+        error_log("saveCheckboxState: Raw input = " . $rawInput);
+        
+        $input = json_decode($rawInput, true);
+        error_log("saveCheckboxState: Parsed input = " . print_r($input, true));
         
         $commentId = (int)($input['comment_id'] ?? 0);
         $commentType = $input['comment_type'] ?? ''; // 'task' o 'subtask'
         $checkboxIndex = (int)($input['checkbox_index'] ?? 0);
         $checkboxText = trim($input['checkbox_text'] ?? '');
         $isChecked = (bool)($input['is_checked'] ?? false);
+        
+        error_log("saveCheckboxState: commentId=$commentId, commentType=$commentType, checkboxIndex=$checkboxIndex, isChecked=" . ($isChecked ? 'true' : 'false'));
         
         if ($commentId <= 0 || !in_array($commentType, ['task', 'subtask']) || empty($checkboxText)) {
             Utils::jsonResponse(['success' => false, 'message' => 'Datos inválidos'], 400);
@@ -3803,6 +3815,11 @@ class ClanLeaderController {
                 }
             }
             
+            // Verificar que el modelo existe y cargar si es necesario
+            if (!class_exists('CheckboxState')) {
+                require_once __DIR__ . '/../models/CheckboxState.php';
+            }
+            
             // Guardar estado del checkbox
             $checkboxModel = new CheckboxState();
             $checkboxModel->createTableIfNotExists(); // Crear tabla si no existe
@@ -3824,7 +3841,8 @@ class ClanLeaderController {
             
         } catch (Exception $e) {
             error_log("Error al guardar estado de checkbox: " . $e->getMessage());
-            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor'], 500);
+            error_log("Error al guardar estado de checkbox - Stack trace: " . $e->getTraceAsString());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor: ' . $e->getMessage()], 500);
         }
     }
     
@@ -3842,6 +3860,11 @@ class ClanLeaderController {
         }
         
         try {
+            // Verificar que el modelo existe
+            if (!class_exists('CheckboxState')) {
+                require_once __DIR__ . '/../models/CheckboxState.php';
+            }
+            
             $commentIdsArray = explode(',', $commentIds);
             $checkboxModel = new CheckboxState();
             $allStates = [];
@@ -3865,12 +3888,25 @@ class ClanLeaderController {
     }
 
     /**
+     * Test simple para verificar que la ruta funciona
+     */
+    public function testCheckboxRoute() {
+        error_log("testCheckboxRoute: Función ejecutada correctamente");
+        Utils::jsonResponse(['success' => true, 'message' => 'Ruta funcionando', 'timestamp' => time()]);
+    }
+
+    /**
      * Debug: Verificar funcionamiento de checkboxes
      */
     public function debugCheckboxes() {
         $this->requireAuth();
         
         try {
+            // Verificar que el modelo existe
+            if (!class_exists('CheckboxState')) {
+                require_once __DIR__ . '/../models/CheckboxState.php';
+            }
+            
             // Verificar si la tabla existe
             $checkboxModel = new CheckboxState();
             $tableCreated = $checkboxModel->createTableIfNotExists();
