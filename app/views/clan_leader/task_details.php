@@ -151,7 +151,10 @@ ob_start();
         
         <form id="tdCommentForm" class="comment-form" enctype="multipart/form-data" style="margin-bottom: 20px;">
             <input type="hidden" name="task_id" value="<?php echo (int)$task['task_id']; ?>" />
-            <textarea name="comment_text" placeholder="Escribe un comentario..." style="width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; resize: vertical; margin-bottom: 10px;" rows="3"></textarea>
+            <input type="hidden" name="comment_text" id="task-comment-content" />
+            <div class="rich-editor-container">
+                <div id="task-comment-editor" style="margin-bottom: 10px;"></div>
+            </div>
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <input type="file" name="attachments[]" multiple style="font-size: 14px;" />
                 <button type="submit" style="background: #1e3a8a; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;">
@@ -170,7 +173,7 @@ ob_start();
                         <span style="font-weight: 600; color: #374151;"><?php echo htmlspecialchars($c['full_name'] ?? $c['username'] ?? ''); ?></span>
                         <span style="font-size: 12px; color: #6b7280;"><?php echo htmlspecialchars($c['created_at'] ?? ''); ?></span>
                     </div>
-                    <div style="color: #374151; line-height: 1.5;"><?php echo nl2br(htmlspecialchars($c['comment_text'] ?? '')); ?></div>
+                    <div class="comment-content" style="color: #374151; line-height: 1.5;"><?php echo $c['comment_text'] ?? ''; ?></div>
                 </div>
                 <?php endforeach; ?>
             <?php endif; ?>
@@ -283,7 +286,69 @@ ob_start();
     </div>
 </div>
 
+<!-- Dependencias para editor de texto rico -->
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+
 <style>
+/* Estilos para el editor de texto enriquecido */
+.rich-editor-container {
+    margin-bottom: 10px;
+}
+
+.ql-editor {
+    min-height: 80px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.ql-toolbar {
+    border-top: 1px solid #d1d5db;
+    border-left: 1px solid #d1d5db;
+    border-right: 1px solid #d1d5db;
+    border-radius: 6px 6px 0 0;
+}
+
+.ql-container {
+    border-bottom: 1px solid #d1d5db;
+    border-left: 1px solid #d1d5db;
+    border-right: 1px solid #d1d5db;
+    border-radius: 0 0 6px 6px;
+}
+
+/* Estilos para checklist/bullets interactivos */
+.interactive-checklist {
+    list-style: none;
+    padding-left: 0;
+}
+
+.interactive-checklist li {
+    position: relative;
+    padding-left: 30px;
+    margin: 8px 0;
+    cursor: pointer;
+    user-select: none;
+}
+
+.interactive-checklist li:before {
+    content: '☐';
+    position: absolute;
+    left: 0;
+    font-size: 16px;
+    line-height: 1.2;
+    color: #6b7280;
+}
+
+.interactive-checklist li.checked:before {
+    content: '☑';
+    color: #10b981;
+}
+
+.interactive-checklist li.checked {
+    text-decoration: line-through;
+    color: #9ca3af;
+}
+
 /* Estilos para badges de contadores */
 .btn-with-badge {
     position: relative;
@@ -460,10 +525,100 @@ function saveNewSubtask() {
     });
 }
 
+// Variables globales para editores
+let taskCommentEditor = null;
+
+// Función para inicializar editor de comentario de tarea principal
+function initializeTaskCommentEditor() {
+    if (document.getElementById('task-comment-editor')) {
+        taskCommentEditor = new Quill('#task-comment-editor', {
+            theme: 'snow',
+            modules: {
+                toolbar: [
+                    [{ 'header': [1, 2, 3, false] }],
+                    ['bold', 'italic', 'underline', 'strike'],
+                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                    [{ 'color': [] }, { 'background': [] }],
+                    ['link'],
+                    ['clean']
+                ]
+            },
+            placeholder: 'Escribe tu comentario...\n\nUsa • para crear bullets\nUsa ☐ para crear checklist'
+        });
+    }
+}
+
+// Función para inicializar editor de comentario de subtarea
+function initializeSubtaskCommentEditor(subtaskId) {
+    const editorId = `subtask-comment-editor-${subtaskId}`;
+    const editorElement = document.getElementById(editorId);
+    
+    if (editorElement && !window[`subtaskCommentEditor_${subtaskId}`]) {
+        window[`subtaskCommentEditor_${subtaskId}`] = new Quill(`#${editorId}`, {
+            theme: 'snow',
+            modules: {
+                toolbar: [
+                    [{ 'header': [1, 2, 3, false] }],
+                    ['bold', 'italic', 'underline', 'strike'],
+                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                    [{ 'color': [] }, { 'background': [] }],
+                    ['link'],
+                    ['clean']
+                ]
+            },
+            placeholder: 'Escribe tu comentario...\n\nUsa • para crear bullets\nUsa ☐ para crear checklist'
+        });
+    }
+}
+
+// Función para convertir contenido a checklist interactivo
+function makeChecklistInteractive(element) {
+    // Buscar elementos que parezcan checklist items
+    const listItems = element.querySelectorAll('li');
+    
+    listItems.forEach(item => {
+        const text = item.textContent.trim();
+        if (text.startsWith('☐') || text.startsWith('☑') || text.startsWith('□') || text.startsWith('✓')) {
+            item.classList.add('checklist-item');
+            item.style.cursor = 'pointer';
+            item.addEventListener('click', function() {
+                toggleChecklistItem(this);
+            });
+            
+            // Verificar si ya está marcado
+            if (text.startsWith('☑') || text.startsWith('✓')) {
+                item.classList.add('checked');
+            }
+        }
+    });
+}
+
+// Función para alternar estado de checklist
+function toggleChecklistItem(item) {
+    const isChecked = item.classList.contains('checked');
+    const text = item.textContent.trim();
+    
+    if (isChecked) {
+        // Desmarcar
+        item.classList.remove('checked');
+        item.innerHTML = item.innerHTML.replace(/☑|✓/, '☐');
+    } else {
+        // Marcar
+        item.classList.add('checked');
+        item.innerHTML = item.innerHTML.replace(/☐|□/, '☑');
+    }
+}
+
 // Esperar a que el DOM esté listo
 document.addEventListener('DOMContentLoaded', function() {
     // Cargar contadores al inicializar la página
     loadSubtaskCounters();
+    
+    // Inicializar editor de comentario de tarea principal
+    initializeTaskCommentEditor();
+    
+    // Hacer interactivos los checklists existentes
+    document.querySelectorAll('.comment-content').forEach(makeChecklistInteractive);
 });
 
 // Función auxiliar para limpiar modales existentes
@@ -508,7 +663,9 @@ function showCommentsModal(subtaskId, comments) {
                 <div class="comments-section">
                     <div class="add-comment-section" style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
                         <h4 style="margin: 0 0 10px 0;">Agregar Comentario</h4>
-                        <textarea id="new-comment-text" rows="3" placeholder="Escribe tu comentario..." style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 4px; margin-bottom: 10px; resize: vertical;"></textarea>
+                        <div class="rich-editor-container">
+                            <div id="subtask-comment-editor-${subtaskId}"></div>
+                        </div>
                         <div style="display: flex; gap: 10px; justify-content: flex-end;">
                             <button onclick="addSubtaskComment(${subtaskId})" class="btn btn-primary" style="padding: 8px 16px;">Agregar Comentario</button>
                         </div>
@@ -551,12 +708,23 @@ function showCommentsModal(subtaskId, comments) {
     `;
     
     document.body.appendChild(modal);
+    
+    // Inicializar editor de comentarios para subtarea
+    setTimeout(() => {
+        initializeSubtaskCommentEditor(subtaskId);
+    }, 100);
 }
 
 function addSubtaskComment(subtaskId) {
-    const commentText = document.getElementById('new-comment-text').value.trim();
+    const editor = window[`subtaskCommentEditor_${subtaskId}`];
+    if (!editor) {
+        showNotification('Error: Editor no encontrado', 'error');
+        return;
+    }
     
-    if (!commentText) {
+    const commentText = editor.root.innerHTML.trim();
+    
+    if (!commentText || commentText === '<p><br></p>') {
         showNotification('Por favor escribe un comentario', 'error');
         return;
     }
@@ -572,6 +740,10 @@ function addSubtaskComment(subtaskId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
+            // Limpiar el editor
+            if (editor) {
+                editor.setContents([]);
+            }
             // Cerrar modal actual antes de recargar
             closeExistingModals();
             // Recargar comentarios y actualizar contadores
@@ -1048,10 +1220,34 @@ function loadSubtaskCounters() {
 // Formulario de comentarios de tarea
 document.getElementById('tdCommentForm')?.addEventListener('submit', function(e){
     e.preventDefault();
+    
+    if (taskCommentEditor) {
+        // Obtener contenido del editor rico
+        const commentContent = taskCommentEditor.root.innerHTML;
+        
+        if (!commentContent || commentContent.trim() === '<p><br></p>') {
+            showNotification('Por favor escribe un comentario', 'error');
+            return;
+        }
+        
+        // Actualizar el campo oculto con el contenido del editor
+        document.getElementById('task-comment-content').value = commentContent;
+    }
+    
     const fd = new FormData(this);
     fetch('?route=clan_leader/add-task-comment', { method:'POST', body: fd, credentials:'same-origin' })
         .then(async r=>{ const t = await r.text(); try{ return JSON.parse(t); } catch(e){ console.error(t); return {success:false,message:'Respuesta inválida'}; } })
-        .then(d=>{ if(!d.success){ showNotification(d.message||'Error', 'error'); return; } location.reload(); });
+        .then(d=>{ 
+            if(d.success){ 
+                // Limpiar el editor
+                if (taskCommentEditor) {
+                    taskCommentEditor.setContents([]);
+                }
+                location.reload(); 
+            } else { 
+                showNotification(d.message||'Error', 'error'); 
+            } 
+        });
 });
         
         // Funciones para colaboradores
