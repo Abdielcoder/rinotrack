@@ -66,17 +66,19 @@ ob_start();
         <span style="color: #374151; font-weight: 500;">Creado por: <?php echo htmlspecialchars($task['created_by_name'] ?? 'Usuario Administrador'); ?></span>
         </div>
         
+    <!-- Botón para agregar subtarea -->
+    <div style="margin-bottom: 20px;">
+        <button onclick="showAddSubtaskModal()" style="background: #1e3a8a; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: background 0.2s;">
+            <i class="fas fa-plus"></i>
+            Agregar Subtarea
+        </button>
+    </div>
+        
     <!-- Descripción -->
                 <?php if (!empty($task['description'])): ?>
     <div class="description-section" style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
         <h3 style="margin: 0 0 15px 0; color: #1f2937; font-size: 18px; font-weight: 600;">Descripción</h3>
-        <div style="color: #374151; line-height: 1.6; margin-bottom: 20px;"><?php echo nl2br(htmlspecialchars($task['description'])); ?></div>
-        
-        <!-- Botón para agregar subtarea -->
-        <button onclick="showAddSubtaskModal()" style="background: #10b981; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: background 0.2s;">
-            <i class="fas fa-plus"></i>
-            Agregar Subtarea
-        </button>
+        <div style="color: #374151; line-height: 1.6;"><?php echo nl2br(htmlspecialchars($task['description'])); ?></div>
                 </div>
                 <?php endif; ?>
                 
