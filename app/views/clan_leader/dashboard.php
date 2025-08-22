@@ -53,7 +53,7 @@ ob_start();
                                 <div class="task-compact-row">
                                     <input type="checkbox" class="task-checkbox-compact" <?php echo ($task['status'] === 'completed' || ($task['is_completed'] ?? 0) == 1) ? 'checked' : ''; ?> onchange="toggleTaskStatus(<?php echo $task['task_id']; ?>, this.checked)">
                                     <div class="task-name-compact"><?php echo htmlspecialchars($task['task_name']); ?></div>
-                                    <a href="?route=clan_leader/tasks&project_id=<?php echo $task['project_id']; ?>" class="btn-compact-action" title="Ver proyecto">
+                                    <a href="?route=clan_leader/getTaskDetails&task_id=<?php echo $task['task_id']; ?>" class="btn-compact-action" title="Ver proyecto">
                                         <i class="fas fa-eye"></i>
                                     </a>
                                 </div>
@@ -78,7 +78,7 @@ ob_start();
                                 <div class="task-compact-row">
                                     <input type="checkbox" class="task-checkbox-compact" <?php echo ($task['status'] === 'completed' || ($task['is_completed'] ?? 0) == 1) ? 'checked' : ''; ?> onchange="toggleTaskStatus(<?php echo $task['task_id']; ?>, this.checked)">
                                     <div class="task-name-compact"><?php echo htmlspecialchars($task['task_name']); ?></div>
-                                    <a href="?route=clan_leader/tasks&project_id=<?php echo $task['project_id']; ?>" class="btn-compact-action" title="Ver proyecto">
+                                    <a href="?route=clan_leader/getTaskDetails&task_id=<?php echo $task['task_id']; ?>" class="btn-compact-action" title="Ver proyecto">
                                         <i class="fas fa-eye"></i>
                                     </a>
                                 </div>
@@ -103,7 +103,7 @@ ob_start();
                                 <div class="task-compact-row">
                                     <input type="checkbox" class="task-checkbox-compact" <?php echo ($task['status'] === 'completed' || ($task['is_completed'] ?? 0) == 1) ? 'checked' : ''; ?> onchange="toggleTaskStatus(<?php echo $task['task_id']; ?>, this.checked)">
                                     <div class="task-name-compact"><?php echo htmlspecialchars($task['task_name']); ?></div>
-                                    <a href="?route=clan_leader/tasks&project_id=<?php echo $task['project_id']; ?>" class="btn-compact-action" title="Ver proyecto">
+                                    <a href="?route=clan_leader/getTaskDetails&task_id=<?php echo $task['task_id']; ?>" class="btn-compact-action" title="Ver proyecto">
                                         <i class="fas fa-eye"></i>
                                     </a>
                                 </div>

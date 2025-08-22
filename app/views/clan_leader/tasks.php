@@ -256,7 +256,7 @@ ob_start();
                                 </td>
                                 <td class="td-actions">
                                     <div class="action-buttons">
-                                        <a href="<?= APP_URL ?>?route=clan_leader/tasks&project_id=<?= $task['project_id'] ?>" class="btn-action btn-view" title="Ver proyecto">
+                                        <a href="<?= APP_URL ?>?route=clan_leader/getTaskDetails&task_id=<?= $task['task_id'] ?>" class="btn-action btn-view" title="Ver proyecto">
                                             <i class="fas fa-eye"></i>
                                         </a>
                                         <a href="<?= APP_URL ?>?route=clan_leader/tasks&action=edit&task_id=<?= $task['task_id'] ?>" class="btn-action btn-edit" title="Editar tarea">
