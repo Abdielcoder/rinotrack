@@ -1744,6 +1744,7 @@ class ClanLeaderController {
         $description = trim(Utils::sanitizeInput($_POST['description'] ?? ''));
         $status = Utils::sanitizeInput($_POST['status'] ?? 'pending');
         $completionPercentage = (float)($_POST['completion_percentage'] ?? 0);
+        $dueDate = !empty($_POST['due_date']) ? $_POST['due_date'] : null;
 
         if ($taskId <= 0) {
             Utils::jsonResponse(['success' => false, 'message' => 'ID de tarea inválido'], 400);
@@ -1784,7 +1785,7 @@ class ClanLeaderController {
                 $this->currentUser['user_id'],
                 $description,
                 $completionPercentage,
-                null, // sin fecha límite por ahora
+                $dueDate, // fecha límite
                 'medium', // prioridad por defecto
                 null  // sin usuario asignado inicialmente
             );
@@ -3997,7 +3998,8 @@ class ClanLeaderController {
                     'title' => $subtask['title'],
                     'description' => $subtask['description'] ?? '',
                     'status' => $subtask['status'],
-                    'completion_percentage' => $subtask['completion_percentage']
+                    'completion_percentage' => $subtask['completion_percentage'],
+                    'due_date' => $subtask['due_date']
                 ]
             ]);
 
@@ -4025,6 +4027,7 @@ class ClanLeaderController {
             $description = trim($input['description'] ?? '');
             $status = $input['status'] ?? null;
             $completionPercentage = isset($input['completion_percentage']) ? (int)$input['completion_percentage'] : null;
+            $dueDate = $input['due_date'] ?? null;
 
             if (!$subtaskId || !$title) {
                 http_response_code(400);
@@ -4067,6 +4070,15 @@ class ClanLeaderController {
             if ($completionPercentage !== null) {
                 $updateFields[] = 'completion_percentage = ?';
                 $params[] = $completionPercentage;
+            }
+            
+            if ($dueDate !== null) {
+                if (!empty($dueDate)) {
+                    $updateFields[] = 'due_date = ?';
+                    $params[] = $dueDate;
+                } else {
+                    $updateFields[] = 'due_date = NULL';
+                }
             }
             
             $params[] = $subtaskId;

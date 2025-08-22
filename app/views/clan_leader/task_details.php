@@ -127,6 +127,12 @@ ob_start();
                                     <?php if (!empty($subtask['assigned_user_name'])): ?>
                 <span style="color: #6b7280; font-size: 14px; margin-left: 20px;">Asignado: <?php echo htmlspecialchars($subtask['assigned_user_name']); ?></span>
                                     <?php endif; ?>
+                                    <?php if (!empty($subtask['due_date'])): ?>
+                <span style="color: #6b7280; font-size: 14px; margin-left: 20px;">
+                    <i class="fas fa-calendar-alt" style="margin-right: 4px;"></i>
+                    Vence: <?php echo date('d/m/Y', strtotime($subtask['due_date'])); ?>
+                </span>
+                                    <?php endif; ?>
                                 </div>
             
                         <div style="display: flex; align-items: center; justify-content: space-between;">
@@ -507,6 +513,11 @@ function showAddSubtaskModal() {
                     </div>
                     
                     <div class="form-group">
+                        <label for="new-subtask-due-date" style="display: block; margin-bottom: 5px; color: #374151; font-weight: 600;">Fecha de Término:</label>
+                        <input type="date" id="new-subtask-due-date" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; margin-bottom: 15px; font-size: 14px;">
+                    </div>
+                    
+                    <div class="form-group">
                         <label for="new-subtask-percentage" style="display: block; margin-bottom: 5px; color: #374151; font-weight: 600;">Porcentaje de Completación:</label>
                         <input type="number" id="new-subtask-percentage" min="0" max="100" value="0" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; margin-bottom: 20px; font-size: 14px;">
                     </div>
@@ -538,6 +549,7 @@ function saveNewSubtask() {
     const description = document.getElementById('new-subtask-description').value.trim();
     const status = document.getElementById('new-subtask-status').value;
     const percentage = parseInt(document.getElementById('new-subtask-percentage').value);
+    const dueDate = document.getElementById('new-subtask-due-date').value;
     
     if (!title) {
         showNotification('El título es requerido', 'error');
@@ -551,6 +563,7 @@ function saveNewSubtask() {
     formData.append('description', description);
     formData.append('status', status);
     formData.append('completion_percentage', percentage);
+    formData.append('due_date', dueDate);
     
     fetch('?route=clan_leader/add-subtask', {
         method: 'POST',
@@ -1463,6 +1476,10 @@ function showEditSubtaskModal(subtask) {
                         </select>
             </div>
                     <div class="form-group">
+                        <label for="edit-subtask-due-date">Fecha de Término:</label>
+                        <input type="date" id="edit-subtask-due-date" value="${subtask.due_date || ''}" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px; margin-bottom: 15px;">
+                    </div>
+                    <div class="form-group">
                         <label for="edit-subtask-percentage">Porcentaje de Completación:</label>
                         <input type="range" id="edit-subtask-percentage" min="0" max="100" value="${subtask.completion_percentage || 0}" style="width: 100%; margin-bottom: 5px;">
                         <span id="percentage-display">${subtask.completion_percentage || 0}%</span>
@@ -1499,6 +1516,7 @@ function saveSubtaskChanges(subtaskId) {
     const description = document.getElementById('edit-subtask-description').value.trim();
     const status = document.getElementById('edit-subtask-status').value;
     const completionPercentage = parseInt(document.getElementById('edit-subtask-percentage').value);
+    const dueDate = document.getElementById('edit-subtask-due-date').value;
     
     if (!title) {
         showNotification('El título es requerido', 'error');
@@ -1515,7 +1533,8 @@ function saveSubtaskChanges(subtaskId) {
             title: title,
             description: description,
             status: status,
-            completion_percentage: completionPercentage
+            completion_percentage: completionPercentage,
+            due_date: dueDate
         })
     })
     .then(response => response.json())
