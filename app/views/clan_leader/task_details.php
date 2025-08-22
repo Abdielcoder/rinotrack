@@ -648,109 +648,70 @@ function initializeSubtaskCommentEditor(subtaskId) {
 
 // Función para convertir contenido a checklist interactivo con checkboxes HTML
 function makeChecklistInteractive(element) {
-    // Buscar texto que contenga símbolos de checklist
-    const walker = document.createTreeWalker(
-        element,
-        NodeFilter.SHOW_TEXT,
-        null,
-        false
-    );
+    console.log('Procesando elemento para checklists:', element);
     
-    const textNodes = [];
-    let node;
-    while (node = walker.nextNode()) {
-        if (node.textContent.includes('☐') || node.textContent.includes('☑')) {
-            textNodes.push(node);
-        }
-    }
+    // Obtener todo el HTML del elemento
+    let html = element.innerHTML;
+    console.log('HTML original:', html);
     
-    textNodes.forEach(textNode => {
-        const text = textNode.textContent;
-        const parent = textNode.parentNode;
+    // Buscar y reemplazar patrones de checkbox en el HTML
+    const checkboxPattern = /(☐|☑)\s*([^<\n]*)/g;
+    
+    html = html.replace(checkboxPattern, function(match, checkbox, text) {
+        const isChecked = checkbox === '☑';
+        const taskText = text.trim();
         
-        // Crear un contenedor para reemplazar el texto
-        const container = document.createElement('div');
-        container.style.display = 'inline';
+        console.log('Encontrado checkbox:', checkbox, 'texto:', taskText, 'marcado:', isChecked);
         
-        // Dividir el texto por líneas para procesar cada checkbox
-        const lines = text.split('\n');
+        // Crear ID único para cada checkbox
+        const checkboxId = 'checkbox_' + Math.random().toString(36).substr(2, 9);
         
-        lines.forEach((line, index) => {
-            if (index > 0) {
-                container.appendChild(document.createElement('br'));
-            }
-            
-            // Buscar patrones de checkbox en la línea
-            const checkboxPattern = /(☐|☑)\s*(.*)/;
-            const match = line.match(checkboxPattern);
-            
-            if (match) {
-                const isChecked = match[1] === '☑';
-                const taskText = match[2];
-                
-                // Crear checkbox HTML real
-                const checkboxContainer = document.createElement('span');
-                checkboxContainer.className = 'checkbox-container';
-                checkboxContainer.style.cssText = `
-                    display: inline-flex;
-                    align-items: center;
-                    gap: 8px;
-                    margin: 2px 0;
-                    user-select: none;
-                `;
-                
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                checkbox.checked = isChecked;
-                checkbox.style.cssText = `
-                    width: 16px;
-                    height: 16px;
-                    cursor: pointer;
-                    accent-color: #10b981;
-                `;
-                
-                const label = document.createElement('span');
-                label.textContent = taskText;
-                label.style.cssText = `
-                    cursor: pointer;
-                    transition: all 0.2s ease;
-                    ${isChecked ? 'text-decoration: line-through; color: #9ca3af;' : ''}
-                `;
-                
-                // Agregar event listener para el checkbox
-                checkbox.addEventListener('change', function() {
-                    if (this.checked) {
-                        label.style.textDecoration = 'line-through';
-                        label.style.color = '#9ca3af';
-                    } else {
-                        label.style.textDecoration = 'none';
-                        label.style.color = '';
-                    }
-                    
-                    // Guardar estado del checkbox (opcional - para persistencia futura)
-                    saveCheckboxState(this, label);
-                });
-                
-                // También permitir clic en el label para toggle
-                label.addEventListener('click', function() {
-                    checkbox.checked = !checkbox.checked;
-                    checkbox.dispatchEvent(new Event('change'));
-                });
-                
-                checkboxContainer.appendChild(checkbox);
-                checkboxContainer.appendChild(label);
-                container.appendChild(checkboxContainer);
-            } else {
-                // Línea normal sin checkbox
-                const textSpan = document.createElement('span');
-                textSpan.textContent = line;
-                container.appendChild(textSpan);
-            }
-        });
-        
-        // Reemplazar el nodo de texto original con el contenedor
-        parent.replaceChild(container, textNode);
+        return `<span class="checkbox-container" style="display: inline-flex; align-items: center; gap: 8px; margin: 4px 0; user-select: none;">
+            <input type="checkbox" id="${checkboxId}" ${isChecked ? 'checked' : ''} 
+                   style="width: 16px; height: 16px; cursor: pointer; accent-color: #10b981; margin: 0; flex-shrink: 0;" 
+                   onchange="toggleTaskText(this)" />
+            <span onclick="toggleCheckbox('${checkboxId}')" 
+                  style="cursor: pointer; transition: all 0.2s ease; font-size: 14px; line-height: 1.4; ${isChecked ? 'text-decoration: line-through; color: #9ca3af;' : ''}">${taskText}</span>
+        </span>`;
     });
+    
+    // Actualizar el HTML del elemento
+    element.innerHTML = html;
+    console.log('HTML procesado:', html);
+}
+
+// Función para toggle del checkbox desde el texto
+function toggleCheckbox(checkboxId) {
+    const checkbox = document.getElementById(checkboxId);
+    if (checkbox) {
+        checkbox.checked = !checkbox.checked;
+        toggleTaskText(checkbox);
+    }
+}
+
+// Función para aplicar/quitar tachado del texto
+function toggleTaskText(checkbox) {
+    const label = checkbox.nextElementSibling;
+    if (label) {
+        if (checkbox.checked) {
+            label.style.textDecoration = 'line-through';
+            label.style.color = '#9ca3af';
+            console.log('Marcando tarea como completada');
+        } else {
+            label.style.textDecoration = 'none';
+            label.style.color = '';
+            console.log('Desmarcando tarea');
+        }
+        
+        // Añadir animación sutil
+        label.style.transform = 'scale(0.98)';
+        setTimeout(() => {
+            label.style.transform = 'scale(1)';
+        }, 100);
+        
+        // Feedback opcional
+        saveCheckboxState(checkbox, label);
+    }
 }
 
 // Función para guardar estado del checkbox (para persistencia futura)
@@ -1037,6 +998,12 @@ function showCommentsModal(subtaskId, comments) {
     // Inicializar editor de comentarios para subtarea
     setTimeout(() => {
         initializeSubtaskCommentEditor(subtaskId);
+        
+        // Hacer interactivos los checklists en los comentarios cargados
+        const commentsSection = modal.querySelector('.comments-list');
+        if (commentsSection) {
+            commentsSection.querySelectorAll('.comment-content').forEach(makeChecklistInteractive);
+        }
     }, 100);
 }
 
