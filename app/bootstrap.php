@@ -1,7 +1,7 @@
 <?php
 /**
  * Bootstrap de la aplicación
- * Carga todas las dependencias y configuraciones necesarias
+ * Carga todas las dependencias y configuraciones necesarias y configuraciones
  */
 
 // Incluir configuraciones
