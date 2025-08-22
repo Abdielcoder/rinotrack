@@ -888,6 +888,12 @@ window.onclick = function(event) {
 </style>
 
 <script>
+// Esperar a que el DOM esté listo
+document.addEventListener('DOMContentLoaded', function() {
+    // Cargar contadores al inicializar la página
+    loadSubtaskCounters();
+});
+
 // Funciones para subtareas
 function showSubtaskComments(subtaskId) {
     console.log('Mostrando comentarios de subtarea:', subtaskId);
@@ -1429,47 +1435,55 @@ function updateSubtaskStatus(subtaskId, newStatus) {
 
 // Función auxiliar para cargar contadores de comentarios y adjuntos
 function loadSubtaskCounters() {
+    console.log('Cargando contadores de subtareas...');
+    
     // Obtener todos los IDs de subtareas
     const subtaskElements = document.querySelectorAll('[data-subtask-id]');
+    console.log('Subtareas encontradas:', subtaskElements.length);
     
     subtaskElements.forEach(element => {
         const subtaskId = element.getAttribute('data-subtask-id');
+        console.log('Cargando contadores para subtarea:', subtaskId);
         
         // Cargar contadores usando la ruta existente
-            fetch('?route=clan_leader/get-subtask-counts&subtask_id=' + subtaskId)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // Actualizar badge de comentarios
-                        const commentsBadge = document.getElementById('comments-badge-' + subtaskId);
-                        if (commentsBadge && data.counts.comments_count > 0) {
-                            commentsBadge.textContent = data.counts.comments_count;
-                            commentsBadge.style.display = 'inline';
-                        }
-                        
-                        // Actualizar badge de adjuntos
-                        const attachmentsBadge = document.getElementById('attachments-badge-' + subtaskId);
-                        if (attachmentsBadge && data.counts.attachments_count > 0) {
-                            attachmentsBadge.textContent = data.counts.attachments_count;
-                            attachmentsBadge.style.display = 'inline';
-                        }
-                    } else {
-                        console.error('Error al cargar contadores:', data.message);
+        fetch('?route=clan_leader/get-subtask-counts&subtask_id=' + subtaskId)
+            .then(response => {
+                console.log('Respuesta del servidor:', response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log('Datos recibidos para subtarea', subtaskId, ':', data);
+                if (data.success) {
+                    // Actualizar badge de comentarios
+                    const commentsBadge = document.getElementById('comments-badge-' + subtaskId);
+                    if (commentsBadge && data.counts.comments_count > 0) {
+                        commentsBadge.textContent = data.counts.comments_count;
+                        commentsBadge.style.display = 'inline';
+                        console.log('Badge de comentarios actualizado:', data.counts.comments_count);
                     }
+                    
+                    // Actualizar badge de adjuntos
+                    const attachmentsBadge = document.getElementById('attachments-badge-' + subtaskId);
+                    if (attachmentsBadge && data.counts.attachments_count > 0) {
+                        attachmentsBadge.textContent = data.counts.attachments_count;
+                        attachmentsBadge.style.display = 'inline';
+                        console.log('Badge de adjuntos actualizado:', data.counts.attachments_count);
+                    }
+                } else {
+                    console.error('Error al cargar contadores:', data.message);
                 }
             })
-            .catch(error => console.log('Error cargando contadores:', error));
+            .catch(error => {
+                console.error('Error cargando contadores para subtarea', subtaskId, ':', error);
+            });
     });
 }
 
-// Cargar contadores al inicializar la página
-        document.addEventListener('DOMContentLoaded', function() {
-    loadSubtaskCounters();
-        });
+
     </script>
 
 <?php
 $content = ob_get_clean();
-$additionalCSS = [APP_URL . 'assets/css/clan-member.css'];
+$additionalCSS = [APP_URL . 'assets/css/clan-leader.css'];
 require_once __DIR__ . '/../layout.php';
 ?>
