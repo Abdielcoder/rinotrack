@@ -228,15 +228,8 @@ if (!isset($project) || !isset($tasks)) {
             background: white;
         }
 
-        /* Vista de Cards */
-        .tasks-container.cards-view {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-            gap: 20px;
-        }
-
-        /* Vista de Lista/Tabla */
-        .tasks-container.list-view {
+        /* Vista de Lista/Tabla por defecto */
+        .tasks-container {
             display: block;
         }
 
@@ -412,11 +405,22 @@ if (!isset($project) || !isset($tasks)) {
 
         /* Ocultar elementos según la vista */
         .tasks-container.cards-view .tasks-table {
-            display: none;
+            display: none !important;
         }
 
         .tasks-container.list-view .task-card {
-            display: none;
+            display: none !important;
+        }
+
+        /* Asegurar que solo se muestre la vista correcta */
+        .tasks-container.list-view {
+            display: block;
+        }
+
+        .tasks-container.cards-view {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 20px;
         }
 
         /* Tarjetas de Tareas Compactas */
@@ -1008,9 +1012,22 @@ if (!isset($project) || !isset($tasks)) {
         function switchView(viewType) {
             const container = document.querySelector('.tasks-container');
             const toggleButtons = document.querySelectorAll('.view-toggle-btn');
+            const table = document.querySelector('.tasks-table');
+            const cards = document.querySelectorAll('.task-card');
             
-            // Actualizar clases del contenedor
+            // Limpiar clases anteriores y aplicar nueva
             container.className = `tasks-container ${viewType}-view`;
+            
+            // Forzar visibilidad según el tipo de vista
+            if (viewType === 'list') {
+                // Mostrar tabla, ocultar cards
+                if (table) table.style.display = 'block';
+                cards.forEach(card => card.style.display = 'none');
+            } else {
+                // Ocultar tabla, mostrar cards
+                if (table) table.style.display = 'none';
+                cards.forEach(card => card.style.display = 'block');
+            }
             
             // Actualizar botones activos
             toggleButtons.forEach(btn => {
@@ -1023,8 +1040,8 @@ if (!isset($project) || !isset($tasks)) {
             // Guardar preferencia en localStorage
             localStorage.setItem('tasksViewType', viewType);
             
-            // Re-aplicar filtros
-            filterTasks();
+            // Re-aplicar filtros después de un breve delay
+            setTimeout(() => filterTasks(), 100);
         }
 
         // Funciones optimizadas
@@ -1040,46 +1057,53 @@ if (!isset($project) || !isset($tasks)) {
             
             let visibleCount = 0;
             
-            // Filtrar cards
-            taskCards.forEach(card => {
-                const status = card.dataset.status;
-                const priority = card.dataset.priority;
-                const searchText = card.dataset.searchText;
-                
-                const statusMatch = !statusFilter || status === statusFilter;
-                const priorityMatch = !priorityFilter || priority === priorityFilter;
-                const searchMatch = !searchInput || searchText.includes(searchInput);
-                
-                if (statusMatch && priorityMatch && searchMatch) {
-                    card.style.display = 'block';
-                    visibleCount++;
-                } else {
-                    card.style.display = 'none';
-                }
-            });
-            
-            // Filtrar filas de tabla
-            tableRows.forEach(row => {
-                const status = row.dataset.status;
-                const priority = row.dataset.priority;
-                const searchText = row.dataset.searchText;
-                
-                const statusMatch = !statusFilter || status === statusFilter;
-                const priorityMatch = !priorityFilter || priority === priorityFilter;
-                const searchMatch = !searchInput || searchText.includes(searchInput);
-                
-                if (statusMatch && priorityMatch && searchMatch) {
-                    row.style.display = 'table-row';
-                    if (taskCards.length === 0) visibleCount++; // Solo contar si no hay cards
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-            
-            // Si estamos en vista de tabla, contar filas visibles
+            // Determinar vista activa
             const container = document.querySelector('.tasks-container');
-            if (container.classList.contains('list-view')) {
-                visibleCount = Array.from(tableRows).filter(row => row.style.display !== 'none').length;
+            const isListView = container.classList.contains('list-view');
+            
+            if (isListView) {
+                // Filtrar solo filas de tabla en vista lista
+                tableRows.forEach(row => {
+                    const status = row.dataset.status;
+                    const priority = row.dataset.priority;
+                    const searchText = row.dataset.searchText;
+                    
+                    const statusMatch = !statusFilter || status === statusFilter;
+                    const priorityMatch = !priorityFilter || priority === priorityFilter;
+                    const searchMatch = !searchInput || searchText.includes(searchInput);
+                    
+                    if (statusMatch && priorityMatch && searchMatch) {
+                        row.style.display = 'table-row';
+                        visibleCount++;
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+                
+                // Asegurar que los cards estén ocultos
+                taskCards.forEach(card => card.style.display = 'none');
+            } else {
+                // Filtrar solo cards en vista cards
+                taskCards.forEach(card => {
+                    const status = card.dataset.status;
+                    const priority = card.dataset.priority;
+                    const searchText = card.dataset.searchText;
+                    
+                    const statusMatch = !statusFilter || status === statusFilter;
+                    const priorityMatch = !priorityFilter || priority === priorityFilter;
+                    const searchMatch = !searchInput || searchText.includes(searchInput);
+                    
+                    if (statusMatch && priorityMatch && searchMatch) {
+                        card.style.display = 'block';
+                        visibleCount++;
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+                
+                // Asegurar que la tabla esté oculta
+                const table = document.querySelector('.tasks-table');
+                if (table) table.style.display = 'none';
             }
             
             // Mostrar mensaje si no hay resultados
