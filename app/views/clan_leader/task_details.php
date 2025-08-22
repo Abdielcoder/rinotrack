@@ -833,12 +833,22 @@ function deleteSubtask(subtaskId) {
 }
 
 function updateSubtaskStatus(subtaskId, newStatus) {
+    // Calcular el porcentaje de completación basado en el estado
+    let completionPercentage = 0;
+    if (newStatus === 'pending') {
+        completionPercentage = 0;
+    } else if (newStatus === 'in_progress') {
+        completionPercentage = 50;
+    } else if (newStatus === 'completed') {
+        completionPercentage = 100;
+    }
+    
     fetch('?route=clan_leader/update-subtask-status', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: 'subtask_id=' + subtaskId + '&status=' + newStatus
+        body: 'subtask_id=' + subtaskId + '&status=' + newStatus + '&completion_percentage=' + completionPercentage
     })
     .then(response => response.json())
     .then(data => {
@@ -862,20 +872,11 @@ function updateSubtaskStatus(subtaskId, newStatus) {
                 const progressBar = subtaskCard.querySelector('.progress-fill');
                 const progressText = subtaskCard.querySelector('.progress-text');
                 
-                let newProgress = 0;
-                if (newStatus === 'in_progress') {
-                    newProgress = 50;
-                } else if (newStatus === 'completed') {
-                    newProgress = 100;
-                } else if (newStatus === 'pending') {
-                    newProgress = 0;
-                }
-                
                 if (progressBar) {
-                    progressBar.style.width = newProgress + '%';
+                    progressBar.style.width = completionPercentage + '%';
                 }
                 if (progressText) {
-                    progressText.textContent = newProgress + '%';
+                    progressText.textContent = completionPercentage + '%';
                 }
             }
             
