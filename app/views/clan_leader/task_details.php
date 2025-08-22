@@ -349,6 +349,20 @@ ob_start();
     color: #9ca3af;
 }
 
+/* Estilos para el botón de checklist personalizado */
+.ql-toolbar .ql-checklist-btn {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+    border: 1px solid #ccc;
+    transition: all 0.2s ease;
+}
+
+.ql-toolbar .ql-checklist-btn:hover {
+    border-color: #10b981;
+    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+}
+
 /* Estilos para badges de contadores */
 .btn-with-badge {
     position: relative;
@@ -534,17 +548,31 @@ function initializeTaskCommentEditor() {
         taskCommentEditor = new Quill('#task-comment-editor', {
             theme: 'snow',
             modules: {
-                toolbar: [
-                    [{ 'header': [1, 2, 3, false] }],
-                    ['bold', 'italic', 'underline', 'strike'],
-                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                    [{ 'color': [] }, { 'background': [] }],
-                    ['link'],
-                    ['clean']
-                ]
+                toolbar: {
+                    container: [
+                        [{ 'header': [1, 2, 3, false] }],
+                        ['bold', 'italic', 'underline', 'strike'],
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                        ['checklist-btn'], // Botón personalizado para checklist
+                        [{ 'color': [] }, { 'background': [] }],
+                        ['link'],
+                        ['clean']
+                    ],
+                    handlers: {
+                        'checklist-btn': function() {
+                            insertChecklist(taskCommentEditor);
+                        }
+                    }
+                }
             },
-            placeholder: 'Escribe tu comentario...\n\nUsa • para crear bullets\nUsa ☐ para crear checklist'
+            placeholder: 'Escribe tu comentario...\n\nTip: Usa "???" + espacio para crear checklist rápido'
         });
+        
+        // Agregar el botón personalizado al toolbar
+        addChecklistButton(taskCommentEditor, 'task');
+        
+        // Agregar detector de atajo ???
+        setupChecklistShortcut(taskCommentEditor);
     }
 }
 
@@ -557,17 +585,31 @@ function initializeSubtaskCommentEditor(subtaskId) {
         window[`subtaskCommentEditor_${subtaskId}`] = new Quill(`#${editorId}`, {
             theme: 'snow',
             modules: {
-                toolbar: [
-                    [{ 'header': [1, 2, 3, false] }],
-                    ['bold', 'italic', 'underline', 'strike'],
-                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                    [{ 'color': [] }, { 'background': [] }],
-                    ['link'],
-                    ['clean']
-                ]
+                toolbar: {
+                    container: [
+                        [{ 'header': [1, 2, 3, false] }],
+                        ['bold', 'italic', 'underline', 'strike'],
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                        ['checklist-btn'], // Botón personalizado para checklist
+                        [{ 'color': [] }, { 'background': [] }],
+                        ['link'],
+                        ['clean']
+                    ],
+                    handlers: {
+                        'checklist-btn': function() {
+                            insertChecklist(window[`subtaskCommentEditor_${subtaskId}`]);
+                        }
+                    }
+                }
             },
-            placeholder: 'Escribe tu comentario...\n\nUsa • para crear bullets\nUsa ☐ para crear checklist'
+            placeholder: 'Escribe tu comentario...\n\nTip: Usa "???" + espacio para crear checklist rápido'
         });
+        
+        // Agregar el botón personalizado al toolbar
+        addChecklistButton(window[`subtaskCommentEditor_${subtaskId}`], `subtask-${subtaskId}`);
+        
+        // Agregar detector de atajo ???
+        setupChecklistShortcut(window[`subtaskCommentEditor_${subtaskId}`]);
     }
 }
 
@@ -607,6 +649,123 @@ function toggleChecklistItem(item) {
         item.classList.add('checked');
         item.innerHTML = item.innerHTML.replace(/☐|□/, '☑');
     }
+}
+
+// Función para agregar botón de checklist al toolbar
+function addChecklistButton(editor, editorType) {
+    setTimeout(() => {
+        const toolbar = editor.getModule('toolbar');
+        const checklistBtn = toolbar.container.querySelector('.ql-checklist-btn');
+        
+        if (checklistBtn) {
+            // Agregar icono y estilo al botón
+            checklistBtn.innerHTML = '☐';
+            checklistBtn.title = 'Agregar Checklist (o escribe "???" + espacio)';
+            checklistBtn.style.fontSize = '16px';
+            checklistBtn.style.fontWeight = 'bold';
+            checklistBtn.style.color = '#374151';
+            checklistBtn.style.padding = '3px 5px';
+            checklistBtn.style.borderRadius = '3px';
+            
+            // Agregar hover effect
+            checklistBtn.addEventListener('mouseenter', function() {
+                this.style.backgroundColor = '#f3f4f6';
+                this.innerHTML = '☑';
+                this.style.color = '#10b981';
+            });
+            
+            checklistBtn.addEventListener('mouseleave', function() {
+                this.style.backgroundColor = 'transparent';
+                this.innerHTML = '☐';
+                this.style.color = '#374151';
+            });
+        }
+    }, 100);
+}
+
+// Función para insertar checklist
+function insertChecklist(editor) {
+    const range = editor.getSelection();
+    if (range) {
+        // Insertar en la posición actual del cursor
+        editor.insertText(range.index, '☐ ', 'user');
+        // Mover cursor después del checkbox
+        editor.setSelection(range.index + 2);
+    } else {
+        // Insertar al final si no hay selección
+        const length = editor.getLength();
+        editor.insertText(length, '\n☐ ', 'user');
+        editor.setSelection(length + 3);
+    }
+    
+    // Hacer focus en el editor
+    editor.focus();
+}
+
+// Función para configurar atajo ??? para checklist
+function setupChecklistShortcut(editor) {
+    editor.on('text-change', function(delta, oldDelta, source) {
+        if (source === 'user') {
+            const range = editor.getSelection();
+            if (range) {
+                const text = editor.getText(Math.max(0, range.index - 4), 4);
+                
+                // Detectar si escribió "??? " (tres signos de interrogación + espacio)
+                if (text.endsWith('??? ')) {
+                    // Eliminar los "??? " y reemplazar con checkbox
+                    editor.deleteText(range.index - 4, 4);
+                    editor.insertText(range.index - 4, '☐ ');
+                    editor.setSelection(range.index - 2);
+                    
+                    // Mostrar notificación temporal
+                    showChecklistTip();
+                }
+            }
+        }
+    });
+}
+
+// Función para mostrar tip de checklist creado
+function showChecklistTip() {
+    // Crear notificación temporal
+    const tip = document.createElement('div');
+    tip.innerHTML = '✨ ¡Checklist creado! Haz clic en ☐ para marcar/desmarcar';
+    tip.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #10b981;
+        color: white;
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 500;
+        z-index: 10000;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        animation: fadeInOut 2.5s ease-in-out;
+    `;
+    
+    // Agregar animación CSS
+    if (!document.getElementById('checklist-tip-style')) {
+        const style = document.createElement('style');
+        style.id = 'checklist-tip-style';
+        style.textContent = `
+            @keyframes fadeInOut {
+                0% { opacity: 0; transform: translateX(100%); }
+                15% { opacity: 1; transform: translateX(0); }
+                85% { opacity: 1; transform: translateX(0); }
+                100% { opacity: 0; transform: translateX(100%); }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    document.body.appendChild(tip);
+    
+    // Eliminar después de la animación
+    setTimeout(() => {
+        tip.remove();
+    }, 2500);
 }
 
 // Esperar a que el DOM esté listo
