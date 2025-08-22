@@ -400,7 +400,7 @@ function showAddSubtaskModal() {
                         <button type="button" onclick="closeExistingModals()" style="background: #6b7280; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600;">
                             Cancelar
                         </button>
-                        <button type="button" onclick="saveNewSubtask()" style="background: #10b981; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                        <button type="button" onclick="saveNewSubtask()" style="background: #1e3a8a; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600;">
                             Crear Subtarea
                         </button>
                     </div>
