@@ -432,11 +432,42 @@ if (!isset($project) || !isset($tasks)) {
             transition: all 0.2s ease;
             position: relative;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
         }
 
         .task-card:hover {
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             transform: translateY(-2px);
+        }
+
+        .task-card-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Área clickeable que cubre toda la tarjeta */
+        .task-card-clickable {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 2;
+            cursor: pointer;
+        }
+
+        /* Las acciones deben estar por encima del área clickeable */
+        .task-actions {
+            position: relative;
+            z-index: 3;
+        }
+
+        /* Prevenir click en elementos interactivos */
+        .task-checkbox,
+        .task-checkbox input,
+        .action-btn {
+            position: relative;
+            z-index: 4;
         }
 
         .task-card.urgent {
@@ -920,27 +951,32 @@ if (!isset($project) || !isset($tasks)) {
                 <!-- Vista de Cards -->
                 <?php foreach ($tasks as $task): ?>
                 <div class="task-card <?= $task['priority'] ?>" data-status="<?= $task['status'] ?>" data-priority="<?= $task['priority'] ?>" data-search-text="<?= htmlspecialchars(strtolower($task['task_name'] . ' ' . ($task['description'] ?? '') . ' ' . ($task['assigned_to_fullname'] ?? ''))) ?>">
-                    <div class="task-header">
-                        <div class="task-title-section">
-                            <div class="task-checkbox">
-                                <input type="checkbox" 
-                                       <?= $task['status'] === 'completed' ? 'checked' : '' ?>
-                                       onchange="toggleTaskStatus(<?= $task['task_id']; ?>, this.checked)">
+                    <!-- Área clickeable para navegar a detalles -->
+                    <div class="task-card-clickable" onclick="goToTaskDetails(<?= $task['task_id'] ?>)"></div>
+                    
+                    <div class="task-card-content">
+                        <div class="task-header">
+                            <div class="task-title-section">
+                                <div class="task-checkbox">
+                                    <input type="checkbox" 
+                                           <?= $task['status'] === 'completed' ? 'checked' : '' ?>
+                                           onchange="toggleTaskStatus(<?= $task['task_id']; ?>, this.checked)"
+                                           onclick="event.stopPropagation()">
+                                </div>
+                                <h3 class="task-title"><?= htmlspecialchars($task['task_name']) ?></h3>
                             </div>
-                            <h3 class="task-title"><?= htmlspecialchars($task['task_name']) ?></h3>
+                            <span class="task-status <?= $task['status'] ?>">
+                                <?php
+                                $statusLabels = [
+                                    'pending' => 'Pendiente',
+                                    'in_progress' => 'En Progreso',
+                                    'completed' => 'Completada',
+                                    'blocked' => 'Bloqueada'
+                                ];
+                                echo $statusLabels[$task['status']] ?? 'Desconocido';
+                                ?>
+                            </span>
                         </div>
-                        <span class="task-status <?= $task['status'] ?>">
-                            <?php
-                            $statusLabels = [
-                                'pending' => 'Pendiente',
-                                'in_progress' => 'En Progreso',
-                                'completed' => 'Completada',
-                                'blocked' => 'Bloqueada'
-                            ];
-                            echo $statusLabels[$task['status']] ?? 'Desconocido';
-                            ?>
-                        </span>
-                    </div>
                     
                     <?php if (!empty($task['description'])): ?>
                     <div class="task-description">
@@ -981,17 +1017,18 @@ if (!isset($project) || !isset($tasks)) {
                     </div>
                     <?php endif; ?>
                     
-                    <div class="task-actions">
-                        <a href="?route=clan_leader/get-task-details&task_id=<?= $task['task_id'] ?>" class="action-btn view">
-                            <i class="fas fa-eye"></i> Ver
-                        </a>
-                        <a href="?route=clan_leader/tasks&action=edit&task_id=<?= $task['task_id'] ?>" class="action-btn edit">
-                            <i class="fas fa-edit"></i> Editar
-                        </a>
-                        <button onclick="deleteTask(<?= $task['task_id'] ?>)" class="action-btn delete">
-                            <i class="fas fa-trash"></i> Eliminar
-                        </button>
-                    </div>
+                        <div class="task-actions">
+                            <a href="?route=clan_leader/get-task-details&task_id=<?= $task['task_id'] ?>" class="action-btn view" onclick="event.stopPropagation()">
+                                <i class="fas fa-eye"></i> Ver
+                            </a>
+                            <a href="?route=clan_leader/tasks&action=edit&task_id=<?= $task['task_id'] ?>" class="action-btn edit" onclick="event.stopPropagation()">
+                                <i class="fas fa-edit"></i> Editar
+                            </a>
+                            <button onclick="deleteTask(<?= $task['task_id'] ?>)" class="action-btn delete">
+                                <i class="fas fa-trash"></i> Eliminar
+                            </button>
+                        </div>
+                    </div> <!-- Cerrar task-card-content -->
                 </div>
                 <?php endforeach; ?>
             <?php else: ?>
@@ -1008,6 +1045,11 @@ if (!isset($project) || !isset($tasks)) {
     </div>
 
     <script>
+        // Función para navegar a detalles de tarea
+        function goToTaskDetails(taskId) {
+            window.location.href = `?route=clan_leader/get-task-details&task_id=${taskId}`;
+        }
+
         // Función para cambiar vista
         function switchView(viewType) {
             const container = document.querySelector('.tasks-container');
@@ -1126,6 +1168,9 @@ if (!isset($project) || !isset($tasks)) {
         }
 
         function toggleTaskStatus(taskId, isCompleted) {
+            // Prevenir que el click del checkbox active la navegación del card
+            event.stopPropagation();
+            
             const status = isCompleted ? 'completed' : 'pending';
             
             fetch('?route=clan_leader/toggle-task-status', {
@@ -1168,6 +1213,9 @@ if (!isset($project) || !isset($tasks)) {
         }
 
         function deleteTask(taskId) {
+            // Prevenir que el click del botón active la navegación del card
+            event.stopPropagation();
+            
             if (confirm('¿Estás seguro de que quieres eliminar esta tarea? Esta acción no se puede deshacer.')) {
                 fetch('?route=clan_leader/delete-task', {
                     method: 'POST',
