@@ -305,6 +305,12 @@ document.addEventListener('DOMContentLoaded', function() {
     loadSubtaskCounters();
 });
 
+// Función auxiliar para limpiar modales existentes
+function closeExistingModals() {
+    const existingModals = document.querySelectorAll('.modal-overlay');
+    existingModals.forEach(modal => modal.remove());
+}
+
 // Funciones para subtareas
 function showSubtaskComments(subtaskId) {
     // Cargar comentarios desde el servidor
@@ -324,6 +330,9 @@ function showSubtaskComments(subtaskId) {
 }
 
 function showCommentsModal(subtaskId, comments) {
+    // Cerrar modales existentes antes de abrir uno nuevo
+    closeExistingModals();
+    
     const modal = document.createElement('div');
     modal.className = 'modal-overlay';
     modal.innerHTML = `
@@ -402,6 +411,8 @@ function addSubtaskComment(subtaskId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
+            // Cerrar modal actual antes de recargar
+            closeExistingModals();
             // Recargar comentarios y actualizar contadores
             showSubtaskComments(subtaskId);
             loadSubtaskCounters();
@@ -433,10 +444,7 @@ function deleteSubtaskComment(commentId) {
     .then(data => {
         if (data.success) {
             // Cerrar modal y actualizar contadores
-            const modal = document.querySelector('.modal-overlay');
-            if (modal) {
-                modal.remove();
-            }
+            closeExistingModals();
             // Actualizar contadores sin recargar la página
             loadSubtaskCounters();
             showNotification('Comentario eliminado exitosamente', 'success');
@@ -468,6 +476,9 @@ function showSubtaskAttachments(subtaskId) {
 }
 
 function showAttachmentsModal(subtaskId, attachments) {
+    // Cerrar modales existentes antes de abrir uno nuevo
+    closeExistingModals();
+    
     const modal = document.createElement('div');
     modal.className = 'modal-overlay';
     modal.innerHTML = `
@@ -571,6 +582,8 @@ function uploadSubtaskAttachment(subtaskId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
+            // Cerrar modal actual antes de recargar
+            closeExistingModals();
             // Recargar adjuntos y actualizar contadores
             showSubtaskAttachments(subtaskId);
             loadSubtaskCounters();
@@ -602,10 +615,7 @@ function deleteSubtaskAttachment(attachmentId) {
     .then(data => {
         if (data.success) {
             // Cerrar modal y actualizar contadores
-            const modal = document.querySelector('.modal-overlay');
-            if (modal) {
-                modal.remove();
-            }
+            closeExistingModals();
             // Actualizar contadores sin recargar la página
             loadSubtaskCounters();
             showNotification('Archivo eliminado exitosamente', 'success');
@@ -637,6 +647,9 @@ function editSubtask(subtaskId) {
 }
 
 function showEditSubtaskModal(subtask) {
+    // Cerrar modales existentes antes de abrir uno nuevo
+    closeExistingModals();
+    
     const modal = document.createElement('div');
     modal.className = 'modal-overlay';
     modal.innerHTML = `
@@ -725,7 +738,7 @@ function saveSubtaskChanges(subtaskId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            document.querySelector('.modal-overlay').remove();
+            closeExistingModals();
             showNotification('Subtarea actualizada exitosamente', 'success');
             // Recargar la página para mostrar los cambios
             location.reload();
