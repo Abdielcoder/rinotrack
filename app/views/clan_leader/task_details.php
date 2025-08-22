@@ -934,22 +934,154 @@ function showSubtaskAttachments(subtaskId) {
 function editSubtask(subtaskId) {
     console.log('Editando subtarea:', subtaskId);
     
-    // Redirigir a la página de edición o abrir modal
-    fetch('?route=clan_leader/edit-subtask&subtask_id=' + subtaskId)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                // TODO: Crear y mostrar modal de edición con datos de la subtarea
-                console.log('Datos de subtarea:', data.subtask);
-                showNotification('Modal de edición en desarrollo', 'info');
-                    } else {
+    // Obtener datos de la subtarea
+    fetch('?route=clan_leader/get-subtask-for-edit&subtask_id=' + subtaskId)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showEditSubtaskModal(data.subtask);
+            } else {
                 showNotification('Error al cargar datos de subtarea: ' + (data.message || 'Error desconocido'), 'error');
-                    }
-                })
-                .catch(error => {
+            }
+        })
+        .catch(error => {
             console.error('Error:', error);
             showNotification('Error al cargar datos de subtarea', 'error');
         });
+}
+
+function showEditSubtaskModal(subtask) {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3><i class="fas fa-edit"></i> Editar Subtarea</h3>
+                <button class="btn-close" onclick="this.closest('.modal-overlay').remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="edit-form">
+                    <div class="form-group">
+                        <label for="edit-subtask-title">Título:</label>
+                        <input type="text" id="edit-subtask-title" value="${subtask.title}" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px; margin-bottom: 10px;">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-subtask-description">Descripción:</label>
+                        <textarea id="edit-subtask-description" rows="3" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px; margin-bottom: 15px;">${subtask.description || ''}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-subtask-status">Estado:</label>
+                        <select id="edit-subtask-status" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px; margin-bottom: 10px;">
+                            <option value="pending" ${subtask.status === 'pending' ? 'selected' : ''}>Pendiente</option>
+                            <option value="in_progress" ${subtask.status === 'in_progress' ? 'selected' : ''}>En Progreso</option>
+                            <option value="completed" ${subtask.status === 'completed' ? 'selected' : ''}>Completada</option>
+                            <option value="blocked" ${subtask.status === 'blocked' ? 'selected' : ''}>Bloqueada</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-subtask-percentage">Porcentaje de Completación:</label>
+                        <input type="range" id="edit-subtask-percentage" min="0" max="100" value="${subtask.completion_percentage || 0}" style="width: 100%; margin-bottom: 5px;">
+                        <span id="percentage-display">${subtask.completion_percentage || 0}%</span>
+                    </div>
+                    <div class="form-actions" style="display: flex; gap: 10px; justify-content: flex-end;">
+                        <button type="button" onclick="this.closest('.modal-overlay').remove()" class="btn btn-secondary">Cancelar</button>
+                        <button type="button" onclick="saveSubtaskChanges(${subtask.subtask_id})" class="btn btn-primary">Guardar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    modal.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.5); display: flex; align-items: center;
+        justify-content: center; z-index: 1000;
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Configurar el slider de porcentaje
+    const percentageSlider = document.getElementById('edit-subtask-percentage');
+    const percentageDisplay = document.getElementById('percentage-display');
+    percentageSlider.addEventListener('input', function() {
+        percentageDisplay.textContent = this.value + '%';
+    });
+    
+    document.getElementById('edit-subtask-title').focus();
+}
+
+function saveSubtaskChanges(subtaskId) {
+    const title = document.getElementById('edit-subtask-title').value.trim();
+    const description = document.getElementById('edit-subtask-description').value.trim();
+    const status = document.getElementById('edit-subtask-status').value;
+    const completionPercentage = parseInt(document.getElementById('edit-subtask-percentage').value);
+    
+    if (!title) {
+        alert('El título es requerido');
+        return;
+    }
+    
+    fetch('?route=clan_leader/edit-subtask', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            subtask_id: subtaskId,
+            title: title,
+            description: description,
+            status: status,
+            completion_percentage: completionPercentage
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Actualizar en la página sin recargar
+            const subtaskElement = document.querySelector(`[data-subtask-id="${subtaskId}"]`);
+            subtaskElement.querySelector('.subtask-title').textContent = title;
+            
+            let descElement = subtaskElement.querySelector('.subtask-description');
+            if (description) {
+                if (!descElement) {
+                    descElement = document.createElement('div');
+                    descElement.className = 'subtask-description';
+                    descElement.style.cssText = 'margin-top: 8px; font-size: 13px; color: #6b7280;';
+                    subtaskElement.querySelector('.subtask-info').appendChild(descElement);
+                }
+                descElement.textContent = description;
+            } else if (descElement) {
+                descElement.remove();
+            }
+            
+            // Actualizar estado y progreso
+            const statusElement = subtaskElement.querySelector('.subtask-status');
+            if (statusElement) {
+                statusElement.textContent = status;
+                statusElement.className = 'subtask-status status-' + status;
+            }
+            
+            const progressFill = subtaskElement.querySelector('.progress-fill');
+            const progressText = subtaskElement.querySelector('.progress-text');
+            if (progressFill) {
+                progressFill.style.width = completionPercentage + '%';
+            }
+            if (progressText) {
+                progressText.textContent = completionPercentage + '%';
+            }
+            
+            document.querySelector('.modal-overlay').remove();
+            showNotification('Subtarea actualizada exitosamente', 'success');
+        } else {
+            alert('Error al actualizar subtarea: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error de conexión');
+    });
 }
 
 function deleteSubtask(subtaskId) {

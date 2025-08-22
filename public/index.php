@@ -561,6 +561,11 @@ try {
         $controller->getSubtaskCounts();
         break;
         
+    case 'clan_leader/get-subtask-for-edit':
+        $controller = new ClanLeaderController();
+        $controller->getSubtaskForEdit();
+        break;
+        
     case 'clan_leader/edit-subtask':
         $controller = new ClanLeaderController();
         $controller->editSubtask();

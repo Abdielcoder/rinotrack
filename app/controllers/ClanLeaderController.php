@@ -2777,6 +2777,16 @@ class ClanLeaderController {
         extract($data);
         $viewPath = $viewPathBackup;
         
+        // Agregar estilos CSS específicos del clan leader
+        $additionalCSS = [
+            Utils::asset('assets/css/clan-leader.css')
+        ];
+        
+        // Agregar JavaScript específico del clan leader
+        $additionalJS = [
+            Utils::asset('assets/js/clan-leader.js')
+        ];
+        
         // Incluir archivo de vista
         $viewFile = __DIR__ . '/../views/' . $viewPath . '.php';
         
@@ -3644,6 +3654,59 @@ class ClanLeaderController {
     }
 
     /**
+     * Obtener datos de subtarea para edición
+     */
+    public function getSubtaskForEdit() {
+        $this->requireAuth();
+        if (!$this->hasClanLeaderAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+        }
+
+        $subtaskId = (int)($_GET['subtask_id'] ?? 0);
+        
+        if ($subtaskId <= 0) {
+            Utils::jsonResponse(['success' => false, 'message' => 'ID de subtarea inválido'], 400);
+        }
+
+        try {
+            // Obtener datos de la subtarea
+            $stmt = $this->db->prepare("
+                SELECT s.*, t.project_id, p.clan_id
+                FROM Subtasks s
+                JOIN Tasks t ON s.task_id = t.task_id
+                JOIN Projects p ON t.project_id = p.project_id
+                WHERE s.subtask_id = ?
+            ");
+            $stmt->execute([$subtaskId]);
+            $subtask = $stmt->fetch();
+
+            if (!$subtask) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Subtarea no encontrada'], 404);
+            }
+
+            // Verificar que pertenece al clan
+            if ($subtask['clan_id'] != $this->userClan['clan_id']) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+            }
+
+            Utils::jsonResponse([
+                'success' => true, 
+                'subtask' => [
+                    'subtask_id' => $subtask['subtask_id'],
+                    'title' => $subtask['title'],
+                    'description' => $subtask['description'] ?? '',
+                    'status' => $subtask['status'],
+                    'completion_percentage' => $subtask['completion_percentage']
+                ]
+            ]);
+
+        } catch (Exception $e) {
+            error_log("Error al obtener subtarea para edición: " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor'], 500);
+        }
+    }
+
+    /**
      * Editar subtarea
      */
     public function editSubtask() {
@@ -3659,6 +3722,8 @@ class ClanLeaderController {
             $subtaskId = $input['subtask_id'] ?? null;
             $title = trim($input['title'] ?? '');
             $description = trim($input['description'] ?? '');
+            $status = $input['status'] ?? null;
+            $completionPercentage = isset($input['completion_percentage']) ? (int)$input['completion_percentage'] : null;
 
             if (!$subtaskId || !$title) {
                 http_response_code(400);
@@ -3666,14 +3731,52 @@ class ClanLeaderController {
                 return;
             }
 
+            // Verificar que la subtarea pertenece al clan
+            $stmt = $this->db->prepare("
+                SELECT s.*, t.project_id, p.clan_id
+                FROM Subtasks s
+                JOIN Tasks t ON s.task_id = t.task_id
+                JOIN Projects p ON t.project_id = p.project_id
+                WHERE s.subtask_id = ?
+            ");
+            $stmt->execute([$subtaskId]);
+            $subtask = $stmt->fetch();
+
+            if (!$subtask) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'message' => 'Subtarea no encontrada']);
+                return;
+            }
+
+            if ($subtask['clan_id'] != $this->userClan['clan_id']) {
+                http_response_code(403);
+                echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
+                return;
+            }
+
             // Actualizar subtarea en base de datos
+            $updateFields = ['title = ?', 'description = ?', 'updated_at = CURRENT_TIMESTAMP'];
+            $params = [$title, $description];
+            
+            if ($status !== null) {
+                $updateFields[] = 'status = ?';
+                $params[] = $status;
+            }
+            
+            if ($completionPercentage !== null) {
+                $updateFields[] = 'completion_percentage = ?';
+                $params[] = $completionPercentage;
+            }
+            
+            $params[] = $subtaskId;
+            
             $stmt = $this->db->prepare("
                 UPDATE Subtasks 
-                SET title = ?, description = ?, updated_at = CURRENT_TIMESTAMP 
+                SET " . implode(', ', $updateFields) . "
                 WHERE subtask_id = ?
             ");
             
-            $result = $stmt->execute([$title, $description, $subtaskId]);
+            $result = $stmt->execute($params);
 
             if ($result) {
                 echo json_encode(['success' => true, 'message' => 'Subtarea actualizada exitosamente']);
