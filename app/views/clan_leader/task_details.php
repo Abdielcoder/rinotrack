@@ -586,304 +586,29 @@ window.onclick = function(event) {
 </script>
 
 <style>
-.motivational-card{background:linear-gradient(90deg, rgba(99,102,241,.12), rgba(59,130,246,.10)); border:1px solid var(--bg-accent)}
-.motivation{display:flex; align-items:center; gap:12px}
-.motivation-icon{width:42px; height:42px; border-radius:10px; display:flex; align-items:center; justify-content:center; background:var(--primary-gradient); color:#fff}
-.mot-quote{font-weight:600; color:var(--text-primary)}
-.mot-author{font-size:.9rem; color:var(--text-secondary); margin-top:2px}
-
-/* Estilos específicos para los botones */
-.action-btn.primary {
-  background: #1e3a8a !important;
-  color: #ffffff !important;
-  border-color: #1e3a8a !important;
-  font-weight: 700;
-  padding: 10px 14px;
-  border-radius: 10px;
-  border: 1px solid #1e3a8a;
-  cursor: pointer;
-  transition: all 0.15s ease;
+/* Estilos para badges de contadores */
+.btn-with-badge {
+    position: relative;
 }
 
-.action-btn.primary:hover {
-  background: #1e40af !important;
-  border-color: #1e40af !important;
-  transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(30, 58, 138, 0.22);
-}
-
-.btn-minimal.primary {
-  background: #1e3a8a !important;
-  color: #ffffff !important;
-  border-color: #1e3a8a !important;
-  font-weight: 600;
-  padding: 10px 14px;
-  border-radius: 8px;
-  border: 1px solid #1e3a8a;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.btn-minimal.primary:hover {
-  background: #1e40af !important;
-  border-color: #1e40af !important;
-  transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(30, 58, 138, 0.22);
-}
-
-.btn-minimal.danger {
-  background: #ef4444 !important;
-  color: #ffffff !important;
-  border-color: #ef4444 !important;
-}
-
-.btn-minimal.danger:hover {
-  background: #dc2626 !important;
-  border-color: #dc2626 !important;
-}
-
-.btn-minimal.secondary {
-  background: #f3f4f6 !important;
-  color: #374151 !important;
-  border-color: #d1d5db !important;
-}
-
-.btn-minimal.secondary:hover {
-  background: #e5e7eb !important;
-  border-color: #9ca3af !important;
-}
-
-/* Estilos para la tarjeta del proyecto */
-.project-info-card {
-  background: linear-gradient(90deg, rgba(99,102,241,.12), rgba(59,130,246,.10)) !important;
-  border: 1px solid #e5e7eb !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-  gap: 12px;
-}
-
-.project-info {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.project-icon {
-  width: 42px;
-  height: 42px;
-  border-radius: 10px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-  background: #1e3a8a;
-  color: #fff;
-  font-size: 1.2rem;
-}
-
-.project-text {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.project-title {
-  font-weight: 700;
-  color: #1e3a8a;
-  font-size: 1.1rem;
-}
-
-.project-subtitle {
-  font-size: 0.9rem;
-  color: #6b7280;
-}
-
-.project-status {
-  margin-left: auto;
-}
-
-.status-badge {
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.status-badge.pending {
-  background: #fef3c7;
-  color: #92400e;
-}
-
-.status-badge.in_progress {
-  background: #dbeafe;
-  color: #1e40af;
-}
-
-.status-badge.completed {
-  background: #d1fae5;
-  color: #065f46;
-}
-
-/* Estilos para subtareas */
-.subtasks-list {
-                display: flex;
-  flex-direction: column;
-                gap: 12px;
-  margin-top: 15px;
-}
-
-.subtask-item {
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  padding: 15px;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 15px;
-}
-
-.subtask-info {
-  flex: 1;
-}
-
-.subtask-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-}
-
-.subtask-title {
-  font-weight: 600;
-  color: #1f2937;
-  font-size: 14px;
-}
-
-.subtask-actions {
-  display: flex;
-  gap: 5px;
-}
-
-.btn-icon-small {
-  width: 24px;
-  height: 24px;
-  border: none;
-  border-radius: 4px;
-  background: #f3f4f6;
-  color: #6b7280;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-                justify-content: center;
-  font-size: 12px;
-  transition: all 0.2s ease;
-}
-
-.btn-icon-small:hover {
-  background: #e5e7eb;
-  color: #374151;
-}
-
-.subtask-meta {
-  display: flex;
-  gap: 15px;
-  font-size: 12px;
-  color: #6b7280;
-  margin-bottom: 8px;
-}
-
-.subtask-description {
-  margin-top: 8px;
-  font-size: 13px;
-  color: #6b7280;
-}
-
-.subtask-controls {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  min-width: 150px;
-}
-
-.subtask-progress {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.progress-bar {
-  width: 80px;
-  height: 8px;
-  background: #e5e7eb;
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  background: #10b981;
-  transition: width 0.3s ease;
-}
-
-.progress-percentage {
-  font-size: 12px;
-  font-weight: 600;
-  color: #374151;
-  min-width: 35px;
-}
-
-.subtask-status-controls {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.status-select {
-  padding: 4px 8px;
-  border: 1px solid #d1d5db;
-  border-radius: 4px;
-  font-size: 12px;
-  background: #fff;
-}
-
-.status-display {
-  font-size: 11px;
-  color: #6b7280;
-}
-
-/* Modal básico */
-.modal { position: fixed; inset: 0; background: rgba(17,24,39,.45); display: none; align-items: center; justify-content: center; padding: 16px; z-index: 50; }
-.modal-content { background: #fff; border-radius: 12px; border: 1px solid #e5e7eb; box-shadow: 0 20px 48px rgba(17,24,39,.18); width: 100%; max-width: 500px; overflow: hidden; }
-.modal-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid #e5e7eb; }
-.modal-header h3 { margin: 0; font-size: 1.05rem; }
-.modal-body { padding: 16px; }
-.close { border: none; background: transparent; font-size: 20px; cursor: pointer; color: #6b7280; }
-.close:hover { color: #374151; }
-
-/* User list in modal */
-.user-option {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px;
-  border-bottom: 1px solid #f3f4f6;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-.user-option:hover {
-  background-color: #f9fafb;
-}
-
-.user-option.selected {
-  background-color: #dbeafe;
-}
-
-.user-option input[type="checkbox"] {
-  margin: 0;
+.btn-with-badge .badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #ef4444;
+    color: white;
+    font-size: 10px;
+    font-weight: 600;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    min-width: 18px;
+    padding: 0;
 }
 </style>
 
@@ -896,7 +621,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Funciones para subtareas
 function showSubtaskComments(subtaskId) {
-    console.log('Mostrando comentarios de subtarea:', subtaskId);
     
     // Cargar comentarios desde el servidor
     fetch('?route=clan_leader/get-subtask-comments&subtask_id=' + subtaskId)
@@ -1042,7 +766,6 @@ function deleteSubtaskComment(commentId) {
 }
 
 function showSubtaskAttachments(subtaskId) {
-    console.log('Mostrando adjuntos de subtarea:', subtaskId);
     
     // Cargar adjuntos desde el servidor
     fetch('?route=clan_leader/get-subtask-attachments&subtask_id=' + subtaskId)
@@ -1213,7 +936,6 @@ function deleteSubtaskAttachment(attachmentId) {
 }
 
 function editSubtask(subtaskId) {
-    console.log('Editando subtarea:', subtaskId);
     
     // Obtener datos de la subtarea
     fetch('?route=clan_leader/get-subtask-for-edit&subtask_id=' + subtaskId)
@@ -1367,7 +1089,6 @@ function saveSubtaskChanges(subtaskId) {
 
 function deleteSubtask(subtaskId) {
     if (confirm('¿Estás seguro de que quieres eliminar esta subtarea?')) {
-        console.log('Eliminando subtarea:', subtaskId);
         
         fetch('?route=clan_leader/delete-subtask', {
                 method: 'POST',
@@ -1397,7 +1118,6 @@ function deleteSubtask(subtaskId) {
 }
 
 function updateSubtaskStatus(subtaskId, newStatus) {
-    console.log('Actualizando estado de subtarea:', subtaskId, 'a:', newStatus);
     
     fetch('?route=clan_leader/update-subtask-status', {
                 method: 'POST',
@@ -1435,39 +1155,37 @@ function updateSubtaskStatus(subtaskId, newStatus) {
 
 // Función auxiliar para cargar contadores de comentarios y adjuntos
 function loadSubtaskCounters() {
-    console.log('Cargando contadores de subtareas...');
-    
     // Obtener todos los IDs de subtareas
     const subtaskElements = document.querySelectorAll('[data-subtask-id]');
-    console.log('Subtareas encontradas:', subtaskElements.length);
     
     subtaskElements.forEach(element => {
         const subtaskId = element.getAttribute('data-subtask-id');
-        console.log('Cargando contadores para subtarea:', subtaskId);
         
         // Cargar contadores usando la ruta existente
         fetch('?route=clan_leader/get-subtask-counts&subtask_id=' + subtaskId)
-            .then(response => {
-                console.log('Respuesta del servidor:', response.status);
-                return response.json();
-            })
+            .then(response => response.json())
             .then(data => {
-                console.log('Datos recibidos para subtarea', subtaskId, ':', data);
                 if (data.success) {
                     // Actualizar badge de comentarios
                     const commentsBadge = document.getElementById('comments-badge-' + subtaskId);
-                    if (commentsBadge && data.counts.comments_count > 0) {
-                        commentsBadge.textContent = data.counts.comments_count;
-                        commentsBadge.style.display = 'inline';
-                        console.log('Badge de comentarios actualizado:', data.counts.comments_count);
+                    if (commentsBadge) {
+                        if (data.counts.comments_count > 0) {
+                            commentsBadge.textContent = data.counts.comments_count;
+                            commentsBadge.style.display = 'inline';
+                        } else {
+                            commentsBadge.style.display = 'none';
+                        }
                     }
                     
                     // Actualizar badge de adjuntos
                     const attachmentsBadge = document.getElementById('attachments-badge-' + subtaskId);
-                    if (attachmentsBadge && data.counts.attachments_count > 0) {
-                        attachmentsBadge.textContent = data.counts.attachments_count;
-                        attachmentsBadge.style.display = 'inline';
-                        console.log('Badge de adjuntos actualizado:', data.counts.attachments_count);
+                    if (attachmentsBadge) {
+                        if (data.counts.attachments_count > 0) {
+                            attachmentsBadge.textContent = data.counts.attachments_count;
+                            attachmentsBadge.style.display = 'inline';
+                        } else {
+                            attachmentsBadge.style.display = 'none';
+                        }
                     }
                 } else {
                     console.error('Error al cargar contadores:', data.message);
