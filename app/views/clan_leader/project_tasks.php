@@ -154,6 +154,52 @@ if (!isset($project) || !isset($tasks)) {
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
+        .filters-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .filters-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .view-toggle {
+            display: flex;
+            background: #f3f4f6;
+            border-radius: 8px;
+            padding: 4px;
+            gap: 2px;
+        }
+
+        .view-toggle-btn {
+            padding: 8px 16px;
+            border: none;
+            background: transparent;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #6b7280;
+            transition: all 0.2s ease;
+        }
+
+        .view-toggle-btn.active {
+            background: white;
+            color: #1e3a8a;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .view-toggle-btn:hover:not(.active) {
+            color: #374151;
+        }
+
         .filters-row {
             display: flex;
             gap: 20px;
@@ -182,11 +228,195 @@ if (!isset($project) || !isset($tasks)) {
             background: white;
         }
 
-        /* Grid de Tareas Optimizado */
-        .tasks-container {
+        /* Vista de Cards */
+        .tasks-container.cards-view {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
             gap: 20px;
+        }
+
+        /* Vista de Lista/Tabla */
+        .tasks-container.list-view {
+            display: block;
+        }
+
+        .tasks-table {
+            width: 100%;
+            background: white;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .tasks-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .tasks-table th {
+            background: #f8fafc;
+            padding: 16px;
+            text-align: left;
+            font-weight: 600;
+            color: #374151;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 14px;
+        }
+
+        .tasks-table td {
+            padding: 16px;
+            border-bottom: 1px solid #f3f4f6;
+            vertical-align: middle;
+        }
+
+        .tasks-table tr:hover {
+            background: #f9fafb;
+        }
+
+        .task-title-cell {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .task-title-cell input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+        }
+
+        .task-title-text {
+            font-weight: 600;
+            color: #1f2937;
+            max-width: 300px;
+        }
+
+        .task-description-cell {
+            max-width: 250px;
+            color: #6b7280;
+            font-size: 14px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .status-badge-cell {
+            white-space: nowrap;
+        }
+
+        .status-badge-cell .task-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .priority-cell {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .priority-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .priority-indicator.urgent {
+            background: #ef4444;
+        }
+
+        .priority-indicator.high {
+            background: #f59e0b;
+        }
+
+        .priority-indicator.medium {
+            background: #3b82f6;
+        }
+
+        .priority-indicator.low {
+            background: #10b981;
+        }
+
+        .progress-cell {
+            min-width: 120px;
+        }
+
+        .progress-table {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .progress-bar-table {
+            flex: 1;
+            background: #e5e7eb;
+            height: 6px;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill-table {
+            background: #10b981;
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text-table {
+            font-size: 12px;
+            font-weight: 600;
+            color: #6b7280;
+            min-width: 35px;
+        }
+
+        .actions-cell {
+            display: flex;
+            gap: 6px;
+        }
+
+        .action-btn-table {
+            padding: 6px 10px;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .action-btn-table.view {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .action-btn-table.edit {
+            background: #1e3a8a;
+            color: white;
+        }
+
+        .action-btn-table.delete {
+            background: #ef4444;
+            color: white;
+        }
+
+        .action-btn-table:hover {
+            opacity: 0.8;
+            text-decoration: none;
+        }
+
+        /* Ocultar elementos según la vista */
+        .tasks-container.cards-view .tasks-table {
+            display: none;
+        }
+
+        .tasks-container.list-view .task-card {
+            display: none;
         }
 
         /* Tarjetas de Tareas Compactas */
@@ -434,12 +664,18 @@ if (!isset($project) || !isset($tasks)) {
                 gap: 20px;
             }
 
-            .tasks-container {
+            .tasks-container.cards-view {
                 grid-template-columns: 1fr;
             }
 
             .navigation-buttons {
                 flex-wrap: wrap;
+            }
+
+            .filters-header {
+                flex-direction: column;
+                gap: 15px;
+                align-items: stretch;
             }
 
             .filters-row {
@@ -449,6 +685,29 @@ if (!isset($project) || !isset($tasks)) {
 
             .filter-group {
                 min-width: auto;
+            }
+
+            /* Tabla responsiva */
+            .tasks-table {
+                overflow-x: auto;
+            }
+
+            .tasks-table table {
+                min-width: 800px;
+            }
+
+            .tasks-table th,
+            .tasks-table td {
+                padding: 12px 8px;
+                font-size: 13px;
+            }
+
+            .task-title-text {
+                max-width: 200px;
+            }
+
+            .task-description-cell {
+                max-width: 150px;
             }
         }
 
@@ -526,6 +785,17 @@ if (!isset($project) || !isset($tasks)) {
 
         <!-- Filtros -->
         <div class="filters-section">
+            <div class="filters-header">
+                <h3 class="filters-title">Filtros y Vista</h3>
+                <div class="view-toggle">
+                    <button class="view-toggle-btn active" onclick="switchView('list')" data-view="list">
+                        <i class="fas fa-list"></i> Lista
+                    </button>
+                    <button class="view-toggle-btn" onclick="switchView('cards')" data-view="cards">
+                        <i class="fas fa-th-large"></i> Cards
+                    </button>
+                </div>
+            </div>
             <div class="filters-row">
                 <div class="filter-group">
                     <label for="statusFilter">Estado</label>
@@ -557,8 +827,93 @@ if (!isset($project) || !isset($tasks)) {
         </div>
 
         <!-- Tareas -->
-        <div class="tasks-container">
+        <div class="tasks-container list-view">
             <?php if (!empty($tasks)): ?>
+                <!-- Vista de Tabla -->
+                <div class="tasks-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 40px;"></th>
+                                <th>Tarea</th>
+                                <th>Descripción</th>
+                                <th>Estado</th>
+                                <th>Prioridad</th>
+                                <th>Asignado</th>
+                                <th>Fecha</th>
+                                <th>Progreso</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($tasks as $task): ?>
+                            <tr data-status="<?= $task['status'] ?>" data-priority="<?= $task['priority'] ?>" data-search-text="<?= htmlspecialchars(strtolower($task['task_name'] . ' ' . ($task['description'] ?? '') . ' ' . ($task['assigned_to_fullname'] ?? ''))) ?>">
+                                <td>
+                                    <input type="checkbox" 
+                                           <?= $task['status'] === 'completed' ? 'checked' : '' ?>
+                                           onchange="toggleTaskStatus(<?= $task['task_id']; ?>, this.checked)">
+                                </td>
+                                <td>
+                                    <div class="task-title-text"><?= htmlspecialchars($task['task_name']) ?></div>
+                                </td>
+                                <td>
+                                    <div class="task-description-cell">
+                                        <?= htmlspecialchars($task['description'] ?? '') ?>
+                                    </div>
+                                </td>
+                                <td class="status-badge-cell">
+                                    <span class="task-status <?= $task['status'] ?>">
+                                        <?php
+                                        $statusLabels = [
+                                            'pending' => 'Pendiente',
+                                            'in_progress' => 'En Progreso',
+                                            'completed' => 'Completada',
+                                            'blocked' => 'Bloqueada'
+                                        ];
+                                        echo $statusLabels[$task['status']] ?? 'Desconocido';
+                                        ?>
+                                    </span>
+                                </td>
+                                <td class="priority-cell">
+                                    <div class="priority-indicator <?= $task['priority'] ?>"></div>
+                                    <span><?= ucfirst($task['priority']) ?></span>
+                                </td>
+                                <td>
+                                    <?= htmlspecialchars($task['assigned_to_fullname'] ?? '-') ?>
+                                </td>
+                                <td>
+                                    <?= !empty($task['due_date']) ? date('d/m/Y', strtotime($task['due_date'])) : '-' ?>
+                                </td>
+                                <td class="progress-cell">
+                                    <?php if (isset($task['completion_percentage']) && $task['completion_percentage'] > 0): ?>
+                                    <div class="progress-table">
+                                        <div class="progress-bar-table">
+                                            <div class="progress-fill-table" style="width: <?= $task['completion_percentage'] ?>%"></div>
+                                        </div>
+                                        <span class="progress-text-table"><?= $task['completion_percentage'] ?>%</span>
+                                    </div>
+                                    <?php else: ?>
+                                    <span class="progress-text-table">0%</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td class="actions-cell">
+                                    <a href="?route=clan_leader/get-task-details&task_id=<?= $task['task_id'] ?>" class="action-btn-table view">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="?route=clan_leader/tasks&action=edit&task_id=<?= $task['task_id'] ?>" class="action-btn-table edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button onclick="deleteTask(<?= $task['task_id'] ?>)" class="action-btn-table delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Vista de Cards -->
                 <?php foreach ($tasks as $task): ?>
                 <div class="task-card <?= $task['priority'] ?>" data-status="<?= $task['status'] ?>" data-priority="<?= $task['priority'] ?>" data-search-text="<?= htmlspecialchars(strtolower($task['task_name'] . ' ' . ($task['description'] ?? '') . ' ' . ($task['assigned_to_fullname'] ?? ''))) ?>">
                     <div class="task-header">
@@ -649,15 +1004,43 @@ if (!isset($project) || !isset($tasks)) {
     </div>
 
     <script>
+        // Función para cambiar vista
+        function switchView(viewType) {
+            const container = document.querySelector('.tasks-container');
+            const toggleButtons = document.querySelectorAll('.view-toggle-btn');
+            
+            // Actualizar clases del contenedor
+            container.className = `tasks-container ${viewType}-view`;
+            
+            // Actualizar botones activos
+            toggleButtons.forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.view === viewType) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            // Guardar preferencia en localStorage
+            localStorage.setItem('tasksViewType', viewType);
+            
+            // Re-aplicar filtros
+            filterTasks();
+        }
+
         // Funciones optimizadas
         function filterTasks() {
             const statusFilter = document.getElementById('statusFilter').value;
             const priorityFilter = document.getElementById('priorityFilter').value;
             const searchInput = document.getElementById('searchInput').value.toLowerCase();
+            
+            // Filtrar cards
             const taskCards = document.querySelectorAll('.task-card');
+            // Filtrar filas de tabla
+            const tableRows = document.querySelectorAll('.tasks-table tbody tr');
             
             let visibleCount = 0;
             
+            // Filtrar cards
             taskCards.forEach(card => {
                 const status = card.dataset.status;
                 const priority = card.dataset.priority;
@@ -675,11 +1058,34 @@ if (!isset($project) || !isset($tasks)) {
                 }
             });
             
-            // Mostrar mensaje si no hay resultados
+            // Filtrar filas de tabla
+            tableRows.forEach(row => {
+                const status = row.dataset.status;
+                const priority = row.dataset.priority;
+                const searchText = row.dataset.searchText;
+                
+                const statusMatch = !statusFilter || status === statusFilter;
+                const priorityMatch = !priorityFilter || priority === priorityFilter;
+                const searchMatch = !searchInput || searchText.includes(searchInput);
+                
+                if (statusMatch && priorityMatch && searchMatch) {
+                    row.style.display = 'table-row';
+                    if (taskCards.length === 0) visibleCount++; // Solo contar si no hay cards
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            
+            // Si estamos en vista de tabla, contar filas visibles
             const container = document.querySelector('.tasks-container');
+            if (container.classList.contains('list-view')) {
+                visibleCount = Array.from(tableRows).filter(row => row.style.display !== 'none').length;
+            }
+            
+            // Mostrar mensaje si no hay resultados
             let noResultsMsg = container.querySelector('.no-results');
             
-            if (visibleCount === 0 && taskCards.length > 0) {
+            if (visibleCount === 0 && (taskCards.length > 0 || tableRows.length > 0)) {
                 if (!noResultsMsg) {
                     noResultsMsg = document.createElement('div');
                     noResultsMsg.className = 'no-results empty-state';
@@ -795,6 +1201,10 @@ if (!isset($project) || !isset($tasks)) {
 
         // Inicializar filtros al cargar la página
         document.addEventListener('DOMContentLoaded', function() {
+            // Cargar vista guardada o usar lista por defecto
+            const savedView = localStorage.getItem('tasksViewType') || 'list';
+            switchView(savedView);
+            
             // Auto-foco en búsqueda con Ctrl+F
             document.addEventListener('keydown', function(e) {
                 if (e.ctrlKey && e.key === 'f') {
@@ -802,6 +1212,24 @@ if (!isset($project) || !isset($tasks)) {
                     document.getElementById('searchInput').focus();
                 }
             });
+            
+            // Responsive: cambiar a vista de cards en móvil automáticamente
+            function checkResponsive() {
+                if (window.innerWidth <= 768) {
+                    const container = document.querySelector('.tasks-container');
+                    if (container.classList.contains('list-view')) {
+                        // En móvil, sugerir cambio a cards si la tabla es muy ancha
+                        const table = document.querySelector('.tasks-table table');
+                        if (table && table.scrollWidth > window.innerWidth) {
+                            // No cambiar automáticamente, pero añadir scroll horizontal
+                            document.querySelector('.tasks-table').style.overflowX = 'auto';
+                        }
+                    }
+                }
+            }
+            
+            checkResponsive();
+            window.addEventListener('resize', checkResponsive);
         });
     </script>
 </body>
