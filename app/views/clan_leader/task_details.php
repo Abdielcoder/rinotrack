@@ -9,7 +9,7 @@ ob_start();
         <a href="?route=clan_leader/tasks" style="background: #f3f4f6; color: #374151; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 8px;">
             <i class="fas fa-arrow-left"></i> Volver a Tareas
         </a>
-        <a href="?route=clan_leader/tasks&action=edit&task_id=<?php echo $task['task_id']; ?>" style="background: #3b82f6; color: white; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+        <a href="?route=clan_leader/tasks&action=edit&task_id=<?php echo $task['task_id']; ?>" style="background: #1e3a8a; color: white; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 8px;">
             <i class="fas fa-edit"></i> Editar Tarea
         </a>
         <button onclick="deleteTask(<?php echo $task['task_id']; ?>)" style="background: #ef4444; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;">
@@ -23,7 +23,7 @@ ob_start();
         <div class="main-column">
             
     <!-- Encabezado de la Tarea -->
-    <div class="task-header" style="background: #e0e7ff; color: #1e40af; padding: 20px; border-radius: 12px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; border: 1px solid #c7d2fe;">
+    <div class="task-header" style="background: #e0e7ff; color: #1e3a8a; padding: 20px; border-radius: 12px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; border: 1px solid #c7d2fe;">
         <div style="display: flex; align-items: center; gap: 15px;">
             <div style="width: 50px; height: 50px; background: rgba(255,255,255,0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 24px;">
                 <i class="fas fa-folder-open"></i>
@@ -55,14 +55,14 @@ ob_start();
             <i class="fas fa-lightbulb"></i>
                 </div>
         <div>
-            <div id="motQuote" style="font-weight: 600; color: #1e40af; font-size: 16px; margin-bottom: 5px;">"La excelencia no es un acto, es un hábito."</div>
+            <div id="motQuote" style="font-weight: 600; color: #1e3a8a; font-size: 16px; margin-bottom: 5px;">"La excelencia no es un acto, es un hábito."</div>
             <div id="motAuthor" style="color: #6b7280; font-size: 14px;">— Aristóteles</div>
                 </div>
                 </div>
         
     <!-- Información del Creador -->
     <div class="creator-info" style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
-        <i class="fas fa-user" style="color: #3b82f6;"></i>
+        <i class="fas fa-user" style="color: #1e3a8a;"></i>
         <span style="color: #374151; font-weight: 500;">Creado por: <?php echo htmlspecialchars($task['created_by_name'] ?? 'Usuario Administrador'); ?></span>
         </div>
         
@@ -146,7 +146,7 @@ ob_start();
             <textarea name="comment_text" placeholder="Escribe un comentario..." style="width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; resize: vertical; margin-bottom: 10px;" rows="3"></textarea>
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <input type="file" name="attachments[]" multiple style="font-size: 14px;" />
-                <button type="submit" style="background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                <button type="submit" style="background: #1e3a8a; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;">
                     <i class="fas fa-paper-plane"></i> Enviar
                 </button>
             </div>
@@ -177,9 +177,9 @@ ob_start();
             
     <!-- Colaboradores -->
     <div class="collaborators-section" style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
-        <h3 style="margin: 0 0 20px 0; color: #1e40af; font-size: 18px; font-weight: 600;">Colaboradores (<?php echo count($assignedUsers); ?>)</h3>
+        <h3 style="margin: 0 0 20px 0; color: #1e3a8a; font-size: 18px; font-weight: 600;">Colaboradores (<?php echo count($assignedUsers); ?>)</h3>
         
-        <button onclick="showAddCollaboratorModal()" style="background: #3b82f6; color: white; border: none; padding: 10px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; margin-bottom: 15px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;">
+        <button onclick="showAddCollaboratorModal()" style="background: #1e3a8a; color: white; border: none; padding: 10px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; margin-bottom: 15px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;">
             <i class="fas fa-plus"></i> Agregar Colaborador
                         </button>
                     
@@ -189,7 +189,7 @@ ob_start();
             <?php foreach ($assignedUsers as $au): ?>
             <div data-user-id="<?php echo $au['user_id']; ?>" style="display: flex; align-items: center; justify-content: space-between; padding: 12px; border: 1px solid #f3f4f6; border-radius: 6px; margin-bottom: 10px;">
                 <div style="display: flex; align-items: center; gap: 12px;">
-                    <div style="width: 40px; height: 40px; background: #3b82f6; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600;">
+                    <div style="width: 40px; height: 40px; background: #1e3a8a; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600;">
                         <?php echo strtoupper(substr($au['full_name'] ?? $au['username'] ?? '', 0, 1)); ?>
                     </div>
                     <div>
@@ -213,14 +213,14 @@ ob_start();
                 
     <!-- Historial -->
     <div class="history-section" style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
-        <h3 style="margin: 0 0 20px 0; color: #1e40af; font-size: 18px; font-weight: 600;">Historial</h3>
+        <h3 style="margin: 0 0 20px 0; color: #1e3a8a; font-size: 18px; font-weight: 600;">Historial</h3>
         
             <?php if (empty($history)): ?>
             <div style="text-align: center; color: #6b7280; font-style: italic; padding: 20px;">Sin historial</div>
         <?php else: ?>
             <?php foreach ($history as $h): ?>
             <div style="border-bottom: 1px solid #f3f4f6; padding: 12px 0;">
-                <div style="font-weight: 600; color: #1e40af; margin-bottom: 4px;"><?php 
+                <div style="font-weight: 600; color: #1e3a8a; margin-bottom: 4px;"><?php 
                     $accionesHistorial = [
                         'created' => 'Creado',
                         'updated' => 'Actualizado',
@@ -240,7 +240,7 @@ ob_start();
 
     <!-- Información -->
     <div class="info-section" style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px;">
-        <h3 style="margin: 0 0 20px 0; color: #1e40af; font-size: 18px; font-weight: 600;">Información</h3>
+        <h3 style="margin: 0 0 20px 0; color: #1e3a8a; font-size: 18px; font-weight: 600;">Información</h3>
         
         <div style="display: flex; flex-direction: column; gap: 10px;">
             <div><strong style="color: #374151;">Creado:</strong> <span style="color: #6b7280;"><?php echo date('d/m/Y H:i', strtotime($task['created_at'])); ?></span></div>
@@ -270,7 +270,7 @@ ob_start();
         </div>
         <div style="display: flex; gap: 10px; justify-content: flex-end;">
             <button onclick="closeAddCollaboratorModal()" style="background: #f3f4f6; color: #374151; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer;">Cancelar</button>
-            <button onclick="addSelectedCollaborators()" style="background: #3b82f6; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer;">Agregar Seleccionados</button>
+            <button onclick="addSelectedCollaborators()" style="background: #1e3a8a; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer;">Agregar Seleccionados</button>
         </div>
     </div>
 </div>
@@ -561,7 +561,7 @@ function showAttachmentsModal(subtaskId, attachments) {
                                     <div class="attachment-info">
                                         <div class="attachment-name" style="font-weight: 600; color: #374151; display: flex; align-items: center; gap: 8px;">
                                             <i class="fas fa-file"></i>
-                                            <a href="${attachment.file_path}" target="_blank" style="color: #3b82f6; text-decoration: none;">
+                                            <a href="${attachment.file_path}" target="_blank" style="color: #1e3a8a; text-decoration: none;">
                                                 ${attachment.file_name}
                                             </a>
                                         </div>
@@ -958,7 +958,7 @@ document.getElementById('tdCommentForm')?.addEventListener('submit', function(e)
                         userOption.className = 'user-option';
                         userOption.innerHTML = `
                             <input type="checkbox" id="user_${user.user_id}" value="${user.user_id}">
-          <div style="width: 32px; height: 32px; border-radius: 50%; background: #3b82f6; color: white; display: flex; align-items: center; justify-content: center; font-weight: 600;">
+          <div style="width: 32px; height: 32px; border-radius: 50%; background: #1e3a8a; color: white; display: flex; align-items: center; justify-content: center; font-weight: 600;">
                                 ${user.full_name ? user.full_name.charAt(0).toUpperCase() : user.username.charAt(0).toUpperCase()}
                             </div>
                             <div>
@@ -1138,8 +1138,8 @@ function showNotification(message, type = 'info') {
         notification.style.background = '#ef4444 !important';
         notification.style.backgroundColor = '#ef4444';
     } else {
-        notification.style.background = '#3b82f6 !important';
-        notification.style.backgroundColor = '#3b82f6';
+        notification.style.background = '#1e3a8a !important';
+        notification.style.backgroundColor = '#1e3a8a';
     }
     
     notification.style.display = 'block';

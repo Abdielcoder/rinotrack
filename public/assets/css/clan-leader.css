@@ -119,7 +119,7 @@
 .btn-minimal.primary:hover {
     background: #f8fafc;
     color: #1e3a8a;
-    border-color: #2563eb;
+    border-color: #1e3a8a;
     transform: translateY(-3px);
     box-shadow: 0 12px 30px rgba(30, 58, 138, 0.3);
 }
@@ -841,8 +841,8 @@ section {
 .project-card .btn-view-tasks:hover,
 .card-compact .btn-view-tasks:hover,
 .summary-card .btn-view-tasks:hover {
-    background: #1e40af !important;
-    border-color: #1e40af !important;
+    background: #1e3a8a !important;
+    border-color: #1e3a8a !important;
     transform: translateY(-1px) !important;
     box-shadow: 0 4px 12px rgba(30, 58, 138, 0.2) !important;
     opacity: 1 !important;
@@ -2319,7 +2319,7 @@ section {
 .clan-icon-large {
     width: 56px;
     height: 56px;
-    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    background: linear-gradient(135deg, #1e3a8a 0%, #1e3a8a 100%);
     border-radius: 16px;
     display: flex;
     align-items: center;
@@ -2394,15 +2394,15 @@ section {
 }
 
 .btn-minimal.active {
-    background: #3b82f6;
-    border-color: #3b82f6;
+    background: #1e3a8a;
+    border-color: #1e3a8a;
     color: white;
     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 .btn-minimal.active:hover {
-    background: #2563eb;
-    border-color: #2563eb;
+    background: #1e3a8a;
+    border-color: #1e3a8a;
     transform: translateY(-1px);
     box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
 }
@@ -2471,7 +2471,7 @@ section {
 }
 
 .rules-header i {
-    color: #3b82f6;
+    color: #1e3a8a;
     font-size: 1.25rem;
 }
 
@@ -2666,7 +2666,7 @@ section {
 }
 
 .calendar-day:hover {
-    border-color: #3b82f6;
+    border-color: #1e3a8a;
     box-shadow: 0 2px 4px rgba(59, 130, 246, 0.1);
 }
 
@@ -2677,8 +2677,8 @@ section {
 
 .calendar-day.today {
     background: #eff6ff;
-    border-color: #3b82f6;
-    color: #1e40af;
+    border-color: #1e3a8a;
+    color: #1e3a8a;
     font-weight: 600;
 }
 
@@ -2714,7 +2714,7 @@ section {
 }
 
 .task-indicator.in_progress {
-    background: #3b82f6;
+    background: #1e3a8a;
 }
 
 .task-indicator.completed {
@@ -3090,7 +3090,7 @@ section {
 
 .task-status.in_progress {
     background: #dbeafe;
-    color: #1e40af;
+    color: #1e3a8a;
 }
 
 .task-status.completed {
@@ -3454,7 +3454,7 @@ section {
 }
 
 .path-cell.regular {
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    background: linear-gradient(135deg, #1e3a8a 0%, #1e3a8a 100%);
     box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
 }
 
@@ -3799,7 +3799,7 @@ section {
 }
 
 .group-modal-content .modal-header h3 {
-    background: linear-gradient(135deg, #3b82f6, #1e40af);
+    background: linear-gradient(135deg, #1e3a8a, #1e3a8a);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -3990,7 +3990,7 @@ section {
 
 .task-status.status-in_progress {
     background: #dbeafe;
-    color: #2563eb;
+    color: #1e3a8a;
     border: 1px solid #93c5fd;
 }
 
@@ -4300,7 +4300,7 @@ section {
 
 .stat-icon.completed { background: linear-gradient(135deg, #10b981, #059669); }
 .stat-icon.pending { background: linear-gradient(135deg, #f59e0b, #d97706); }
-.stat-icon.in-progress { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+.stat-icon.in-progress { background: linear-gradient(135deg, #1e3a8a, #1e3a8a); }
 .stat-icon.overdue { background: linear-gradient(135deg, #ef4444, #dc2626); }
 
 .stat-title {
@@ -4394,7 +4394,7 @@ section {
 
 .task-item-status.in_progress {
     background-color: #dbeafe;
-    color: #1e40af;
+    color: #1e3a8a;
 }
 
 .task-item-status.overdue {
@@ -4620,7 +4620,7 @@ section {
     border-radius: 8px;
     padding: 16px 20px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-    border-left: 4px solid #3b82f6;
+    border-left: 4px solid #1e3a8a;
     display: flex;
     align-items: center;
     gap: 12px;
@@ -4660,7 +4660,7 @@ section {
 }
 
 .notification-info {
-    border-left-color: #3b82f6;
+    border-left-color: #1e3a8a;
 }
 
 /* Animaciones */
@@ -4760,7 +4760,7 @@ section {
 }
 
 .btn-add-task:hover {
-    background: #1e40af;
+    background: #1e3a8a;
     transform: translateY(-1px);
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     color: white !important;
@@ -4869,7 +4869,7 @@ section {
 }
 
 .task-card.week1 {
-    border-left: 4px solid #3b82f6;
+    border-left: 4px solid #1e3a8a;
 }
 
 .task-card.week2 {
@@ -4932,7 +4932,7 @@ input[type="checkbox"] {
 }
 
 .task-priority-badge.priority-low { background: #f0fdf4; color: #059669; }
-.task-priority-badge.priority-medium { background: #eff6ff; color: #2563eb; }
+.task-priority-badge.priority-medium { background: #eff6ff; color: #1e3a8a; }
 .task-priority-badge.priority-high { background: #fffbeb; color: #d97706; }
 .task-priority-badge.priority-critical { background: #fef2f2; color: #dc2626; }
 
@@ -4980,7 +4980,7 @@ input[type="checkbox"] {
 
 .task-type-badge.tareas-eventuales {
     background: #dbeafe;
-    color: #1e40af;
+    color: #1e3a8a;
 }
 
 .task-type-badge.tareas-personales {
@@ -4998,7 +4998,7 @@ input[type="checkbox"] {
 
 .task-status.overdue { color: #ef4444; }
 .task-status.today { color: #f59e0b; }
-.task-status.week1 { color: #3b82f6; }
+.task-status.week1 { color: #1e3a8a; }
 .task-status.week2 { color: #10b981; }
 
 .task-actions {
@@ -5024,7 +5024,7 @@ input[type="checkbox"] {
 }
 
 .btn-view:hover {
-    background: #1e40af;
+    background: #1e3a8a;
     transform: scale(1.05);
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
@@ -5191,7 +5191,7 @@ input[type="checkbox"] {
 }
 
 .btn-primary:hover {
-    background: #1e40af;
+    background: #1e3a8a;
     transform: translateY(-2px);
     box-shadow: 0 8px 16px rgba(30, 58, 138, 0.3);
 }
@@ -5252,8 +5252,8 @@ input[type="checkbox"] {
 }
 
 .notification-info {
-    background-color: #3b82f6;
-    border-left: 4px solid #2563eb;
+    background-color: #1e3a8a;
+    border-left: 4px solid #1e3a8a;
 }
 
 @keyframes slideInRight {
@@ -5304,8 +5304,8 @@ input[type="checkbox"] {
 }
 
 .btn-minimal.primary:hover {
-    background: #1e40af !important;
-    border-color: #1e40af !important;
+    background: #1e3a8a !important;
+    border-color: #1e3a8a !important;
     transform: translateY(-1px) !important;
     box-shadow: 0 6px 18px rgba(30, 58, 138, 0.22) !important;
     color: #ffffff !important;
@@ -5338,9 +5338,9 @@ input[type="checkbox"] {
     display: inline-flex !important;
     opacity: 1 !important;
     visibility: visible !important;
-    background: #1e40af !important;
+    background: #1e3a8a !important;
     color: #ffffff !important;
-    border-color: #1e40af !important;
+    border-color: #1e3a8a !important;
     transform: translateY(-1px) !important;
     box-shadow: 0 6px 18px rgba(30, 58, 138, 0.22) !important;
 }
@@ -5389,7 +5389,7 @@ input[type="checkbox"] {
 
 .kanban-column-compact .column-header.week1 {
     background: linear-gradient(135deg, #eff6ff, #f0f9ff);
-    color: #2563eb;
+    color: #1e3a8a;
     border-bottom-color: #bfdbfe;
 }
 
@@ -5448,7 +5448,7 @@ input[type="checkbox"] {
 }
 
 .task-card-compact.week1 {
-    border-left: 3px solid #3b82f6;
+    border-left: 3px solid #1e3a8a;
 }
 
 /* Fila principal de la tarea */
@@ -5508,7 +5508,7 @@ input[type="checkbox"] {
 }
 
 .btn-compact-action:hover {
-    background: #1e40af;
+    background: #1e3a8a;
     transform: scale(1.05);
     text-decoration: none;
     color: white;
@@ -5543,7 +5543,7 @@ input[type="checkbox"] {
 
 .task-due-compact.week1 {
     background: #eff6ff;
-    color: #2563eb;
+    color: #1e3a8a;
 }
 
 .task-due-compact i {
