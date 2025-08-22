@@ -24,8 +24,21 @@ ob_start();
                 <?php echo strtoupper(str_replace('_',' ', (string)$task['status'])); ?>
             </span>
                 </div>
-            </div>
-            
+                </div>
+
+    <!-- Botones de Acción -->
+    <div style="display: flex; gap: 12px; margin-bottom: 30px;">
+        <a href="?route=clan_leader/tasks" style="background: #f3f4f6; color: #374151; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-arrow-left"></i> Volver a Tareas
+        </a>
+        <a href="?route=clan_leader/tasks&action=edit&task_id=<?php echo $task['task_id']; ?>" style="background: #3b82f6; color: white; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-edit"></i> Editar Tarea
+        </a>
+        <button onclick="deleteTask(<?php echo $task['task_id']; ?>)" style="background: #ef4444; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-trash"></i> Eliminar
+        </button>
+    </div>
+
     <!-- Frase Motivacional -->
     <div class="motivational-section" style="background: #e0e7ff; padding: 20px; border-radius: 12px; margin-bottom: 20px; display: flex; align-items: center; gap: 15px; border: 1px solid #c7d2fe;">
         <div style="width: 50px; height: 50px; background: #fbbf24; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #1f2937;">
@@ -135,22 +148,9 @@ ob_start();
                 <?php endforeach; ?>
                             <?php endif; ?>
                             </div>
-                            </div>
+                                </div>
 
-    <!-- Botones de Acción -->
-    <div style="display: flex; gap: 12px; margin-bottom: 30px;">
-        <a href="?route=clan_leader/tasks" style="background: #f3f4f6; color: #374151; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 8px;">
-            <i class="fas fa-arrow-left"></i> Volver a Tareas
-        </a>
-        <a href="?route=clan_leader/tasks&action=edit&task_id=<?php echo $task['task_id']; ?>" style="background: #3b82f6; color: white; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 8px;">
-            <i class="fas fa-edit"></i> Editar Tarea
-        </a>
-        <button onclick="deleteTask(<?php echo $task['task_id']; ?>)" style="background: #ef4444; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;">
-            <i class="fas fa-trash"></i> Eliminar
-        </button>
-                    </div>
-
-            </div>
+        </div>
             
         <!-- Columna Lateral -->
         <div class="sidebar-column">
