@@ -3,6 +3,20 @@ ob_start();
 ?>
 
 <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 20px;">
+    
+    <!-- Botones de Acción -->
+    <div style="display: flex; gap: 12px; margin-bottom: 30px;">
+        <a href="?route=clan_leader/tasks" style="background: #f3f4f6; color: #374151; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-arrow-left"></i> Volver a Tareas
+        </a>
+        <a href="?route=clan_leader/tasks&action=edit&task_id=<?php echo $task['task_id']; ?>" style="background: #3b82f6; color: white; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-edit"></i> Editar Tarea
+        </a>
+        <button onclick="deleteTask(<?php echo $task['task_id']; ?>)" style="background: #ef4444; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-trash"></i> Eliminar
+        </button>
+    </div>
+    
     <div class="task-layout" style="display: grid; grid-template-columns: 1fr 350px; gap: 30px;">
         
         <!-- Columna Principal -->
@@ -25,19 +39,6 @@ ob_start();
             </span>
                 </div>
                 </div>
-
-    <!-- Botones de Acción -->
-    <div style="display: flex; gap: 12px; margin-bottom: 30px;">
-        <a href="?route=clan_leader/tasks" style="background: #f3f4f6; color: #374151; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 8px;">
-            <i class="fas fa-arrow-left"></i> Volver a Tareas
-        </a>
-        <a href="?route=clan_leader/tasks&action=edit&task_id=<?php echo $task['task_id']; ?>" style="background: #3b82f6; color: white; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 8px;">
-            <i class="fas fa-edit"></i> Editar Tarea
-        </a>
-        <button onclick="deleteTask(<?php echo $task['task_id']; ?>)" style="background: #ef4444; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;">
-            <i class="fas fa-trash"></i> Eliminar
-        </button>
-    </div>
 
     <!-- Frase Motivacional -->
     <div class="motivational-section" style="background: #e0e7ff; padding: 20px; border-radius: 12px; margin-bottom: 20px; display: flex; align-items: center; gap: 15px; border: 1px solid #c7d2fe;">
