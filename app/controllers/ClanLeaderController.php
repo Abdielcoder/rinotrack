@@ -1727,6 +1727,90 @@ class ClanLeaderController {
     }
     
     /**
+     * Agregar una subtarea individual
+     */
+    public function addSubtask() {
+        $this->requireAuth();
+        if (!$this->hasClanLeaderAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos'], 403);
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
+        }
+
+        $taskId = (int)($_POST['task_id'] ?? 0);
+        $title = trim(Utils::sanitizeInput($_POST['title'] ?? ''));
+        $description = trim(Utils::sanitizeInput($_POST['description'] ?? ''));
+        $status = Utils::sanitizeInput($_POST['status'] ?? 'pending');
+        $completionPercentage = (float)($_POST['completion_percentage'] ?? 0);
+
+        if ($taskId <= 0) {
+            Utils::jsonResponse(['success' => false, 'message' => 'ID de tarea inválido'], 400);
+        }
+
+        if (empty($title)) {
+            Utils::jsonResponse(['success' => false, 'message' => 'El título es requerido'], 400);
+        }
+
+        // Validar estado
+        $validStatuses = ['pending', 'in_progress', 'completed', 'blocked'];
+        if (!in_array($status, $validStatuses)) {
+            $status = 'pending';
+        }
+
+        // Validar porcentaje
+        if ($completionPercentage < 0 || $completionPercentage > 100) {
+            $completionPercentage = 0;
+        }
+
+        try {
+            // Verificar que la tarea existe y pertenece al clan
+            $task = $this->taskModel->findById($taskId);
+            if (!$task) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Tarea no encontrada'], 404);
+            }
+
+            // Verificar que la tarea pertenece a un proyecto del clan
+            $project = $this->projectModel->findById($task['project_id']);
+            if (!$project || $project['clan_id'] != $this->userClan['clan_id']) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+            }
+
+            // Crear la subtarea usando el método existente
+            $subtaskId = $this->taskModel->createSubtaskAdvanced(
+                $taskId,
+                $title,
+                $this->currentUser['user_id'],
+                $description,
+                $completionPercentage,
+                null, // sin fecha límite por ahora
+                'medium', // prioridad por defecto
+                null  // sin usuario asignado inicialmente
+            );
+
+            if ($subtaskId) {
+                // Actualizar el estado si no es 'pending'
+                if ($status !== 'pending') {
+                    $this->taskModel->updateSubtaskStatus($subtaskId, $status, $completionPercentage, $this->currentUser['user_id']);
+                }
+
+                Utils::jsonResponse([
+                    'success' => true, 
+                    'message' => 'Subtarea creada exitosamente',
+                    'subtask_id' => $subtaskId
+                ]);
+            } else {
+                Utils::jsonResponse(['success' => false, 'message' => 'Error al crear la subtarea'], 500);
+            }
+
+        } catch (Exception $e) {
+            error_log('Error al crear subtarea: ' . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor'], 500);
+        }
+    }
+
+    /**
      * Añadir subtareas a una tarea existente
      */
     public function addSubtasksToTask() {

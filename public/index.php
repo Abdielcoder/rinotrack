@@ -525,6 +525,11 @@ try {
         $controller->deleteSubtask();
         break;
         
+    case 'clan_leader/add-subtask':
+        $controller = new ClanLeaderController();
+        $controller->addSubtask();
+        break;
+        
     // Rutas para comentarios y documentos de subtareas
     case 'clan_leader/add-subtask-comment':
         $controller = new ClanLeaderController();
