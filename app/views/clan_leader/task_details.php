@@ -3,9 +3,8 @@ ob_start();
 ?>
 
 <div class="cm-task-details minimal">
-  <div class="content-minimal" style="max-width:1100px;">
-    <div class="task-details-grid">
-      <div class="left-pane">
+  <div class="content-minimal" style="max-width:800px; margin: 0 auto;">
+    <div class="task-details-single-column">
         <div class="summary-card project-info-card">
           <div class="project-info">
             <div class="project-icon"><i class="fas fa-folder-open"></i></div>
@@ -160,7 +159,7 @@ ob_start();
                 </div>
             </div>
             
-      <aside class="right-pane">
+        <!-- Colaboradores -->
         <div class="summary-card">
           <h3>Colaboradores (<?php echo count($assignedUsers); ?>)</h3>
                     
@@ -238,8 +237,6 @@ ob_start();
                         <?php endif; ?>
                     </div>
                 </div>
-      </aside>
-            </div>
         </div>
     </div>
     
