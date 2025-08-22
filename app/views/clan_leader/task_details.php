@@ -301,6 +301,26 @@ ob_start();
     padding: 0;
 }
 
+/* Estilos para notificaciones toast */
+#cl-notification {
+    background: #10b981 !important;
+    color: white !important;
+    border: none !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+#cl-notification * {
+    color: white !important;
+    background: none !important;
+    border: none !important;
+}
+
+#cl-notification button {
+    background: none !important;
+    border: none !important;
+    color: white !important;
+}
+
 .btn-icon-small:hover {
     background: #e5e7eb !important;
     color: #374151 !important;
@@ -1064,54 +1084,69 @@ function deleteTask(taskId) {
 }
 
 // Función simple de notificación
-        function showNotification(message, type = 'info') {
-  let notification = document.getElementById('cl-notification');
-  if (!notification) {
-    const notificationHTML = `
-      <div id="cl-notification" style="
+function showNotification(message, type = 'info') {
+    let notification = document.getElementById('cl-notification');
+    if (!notification) {
+        const notificationHTML = `
+            <div id="cl-notification" style="
                 position: fixed;
                 top: 20px;
                 right: 20px;
-        z-index: 9999;
-                padding: 12px 20px;
-        border-radius: 8px;
-        color: white;
-        font-weight: 600;
-        display: none;
-        transition: all 0.3s ease;
-      ">
-        <span id="cl-notificationMessage"></span>
-        <button onclick="closeCLNotification()" style="
-          background: none;
-          border: none;
-          color: white;
-          margin-left: 10px;
-          cursor: pointer;
-          font-size: 16px;
-        ">&times;</button>
-      </div>
-    `;
-    document.body.insertAdjacentHTML('beforeend', notificationHTML);
-    notification = document.getElementById('cl-notification');
-  }
-  
-  const messageElement = document.getElementById('cl-notificationMessage');
-  messageElement.textContent = message;
-  
-  if (type === 'success') {
-    notification.style.backgroundColor = '#10b981';
-  } else if (type === 'error') {
-    notification.style.backgroundColor = '#ef4444';
-  } else {
-    notification.style.backgroundColor = '#3b82f6';
-  }
-  
-  notification.style.display = 'block';
-  
-  setTimeout(() => {
-    notification.style.display = 'none';
-            }, 3000);
-        }
+                z-index: 9999;
+                padding: 15px 20px;
+                border-radius: 8px;
+                color: white !important;
+                font-weight: 600;
+                display: none;
+                transition: all 0.3s ease;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                border: none;
+                font-family: inherit;
+                font-size: 14px;
+                max-width: 350px;
+                word-wrap: break-word;
+            ">
+                <span id="cl-notificationMessage" style="color: white !important; background: none !important;"></span>
+                <button onclick="closeCLNotification()" style="
+                    background: none !important;
+                    border: none !important;
+                    color: white !important;
+                    margin-left: 10px;
+                    cursor: pointer;
+                    font-size: 18px;
+                    padding: 0;
+                    line-height: 1;
+                ">&times;</button>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', notificationHTML);
+        notification = document.getElementById('cl-notification');
+    }
+    
+    const messageElement = document.getElementById('cl-notificationMessage');
+    messageElement.textContent = message;
+    
+    // Limpiar estilos previos
+    notification.style.background = '';
+    notification.style.backgroundColor = '';
+    
+    if (type === 'success') {
+        notification.style.background = '#10b981 !important';
+        notification.style.backgroundColor = '#10b981';
+    } else if (type === 'error') {
+        notification.style.background = '#ef4444 !important';
+        notification.style.backgroundColor = '#ef4444';
+    } else {
+        notification.style.background = '#3b82f6 !important';
+        notification.style.backgroundColor = '#3b82f6';
+    }
+    
+    notification.style.display = 'block';
+    
+    setTimeout(() => {
+        notification.style.display = 'none';
+    }, 3000);
+}
         
 function closeCLNotification() {
   const notification = document.getElementById('cl-notification');
