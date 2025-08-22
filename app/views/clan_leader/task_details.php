@@ -447,7 +447,7 @@ function addSubtaskComment(subtaskId) {
     const commentText = document.getElementById('new-comment-text').value.trim();
     
     if (!commentText) {
-        alert('Por favor escribe un comentario');
+        showNotification('Por favor escribe un comentario', 'error');
         return;
     }
     
@@ -468,12 +468,12 @@ function addSubtaskComment(subtaskId) {
             showSubtaskComments(subtaskId);
             loadSubtaskCounters();
         } else {
-            alert('Error al agregar comentario: ' + data.message);
+            showNotification('Error al agregar comentario: ' + data.message, 'error');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Error de conexión');
+        showNotification('Error de conexión', 'error');
     });
 }
 
@@ -500,12 +500,12 @@ function deleteSubtaskComment(commentId) {
             loadSubtaskCounters();
             showNotification('Comentario eliminado exitosamente', 'success');
         } else {
-            alert('Error al eliminar comentario: ' + data.message);
+            showNotification('Error al eliminar comentario: ' + data.message, 'error');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Error de conexión');
+        showNotification('Error de conexión', 'error');
     });
 }
 
@@ -615,7 +615,7 @@ function uploadSubtaskAttachment(subtaskId) {
     const description = document.getElementById('attachment-description').value.trim();
     
     if (!fileInput.files[0]) {
-        alert('Por favor selecciona un archivo');
+        showNotification('Por favor selecciona un archivo', 'error');
         return;
     }
     
@@ -639,12 +639,12 @@ function uploadSubtaskAttachment(subtaskId) {
             showSubtaskAttachments(subtaskId);
             loadSubtaskCounters();
         } else {
-            alert('Error al subir archivo: ' + data.message);
+            showNotification('Error al subir archivo: ' + data.message, 'error');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Error de conexión');
+        showNotification('Error de conexión', 'error');
     });
 }
 
@@ -671,12 +671,12 @@ function deleteSubtaskAttachment(attachmentId) {
             loadSubtaskCounters();
             showNotification('Archivo eliminado exitosamente', 'success');
         } else {
-            alert('Error al eliminar archivo: ' + data.message);
+            showNotification('Error al eliminar archivo: ' + data.message, 'error');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Error de conexión');
+        showNotification('Error de conexión', 'error');
     });
 }
 
@@ -769,7 +769,7 @@ function saveSubtaskChanges(subtaskId) {
     const completionPercentage = parseInt(document.getElementById('edit-subtask-percentage').value);
     
     if (!title) {
-        alert('El título es requerido');
+        showNotification('El título es requerido', 'error');
         return;
     }
     
@@ -794,12 +794,12 @@ function saveSubtaskChanges(subtaskId) {
             // Recargar la página para mostrar los cambios
             location.reload();
         } else {
-            alert('Error al actualizar subtarea: ' + data.message);
+            showNotification('Error al actualizar subtarea: ' + data.message, 'error');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Error de conexión');
+        showNotification('Error de conexión', 'error');
     });
 }
 
@@ -941,7 +941,7 @@ document.getElementById('tdCommentForm')?.addEventListener('submit', function(e)
     const fd = new FormData(this);
     fetch('?route=clan_leader/add-task-comment', { method:'POST', body: fd, credentials:'same-origin' })
         .then(async r=>{ const t = await r.text(); try{ return JSON.parse(t); } catch(e){ console.error(t); return {success:false,message:'Respuesta inválida'}; } })
-        .then(d=>{ if(!d.success){ alert(d.message||'Error'); return; } location.reload(); });
+        .then(d=>{ if(!d.success){ showNotification(d.message||'Error', 'error'); return; } location.reload(); });
 });
         
         // Funciones para colaboradores
@@ -1075,13 +1075,13 @@ function deleteTask(taskId) {
     .then(r => r.json())
     .then(data => {
       if (data.success) {
-        alert('Tarea eliminada exitosamente');
+        showNotification('Tarea eliminada exitosamente', 'success');
         setTimeout(() => { window.location.href = '?route=clan_leader/tasks'; }, 800);
       } else {
-        alert('Error al eliminar la tarea: ' + (data.message || 'Error desconocido'));
+        showNotification('Error al eliminar la tarea: ' + (data.message || 'Error desconocido'), 'error');
       }
     })
-    .catch(() => alert('Error al eliminar la tarea'));
+    .catch(() => showNotification('Error al eliminar la tarea', 'error'));
 }
 
 // Función simple de notificación

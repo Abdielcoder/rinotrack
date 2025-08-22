@@ -1082,7 +1082,9 @@ function getIconForType(type) {
 
 // (Obsoleto) Versión anterior de comentarios y adjuntos eliminada para evitar duplicados.
 
-// Función para mostrar notificaciones
+// Función para mostrar notificaciones - DESACTIVADA para evitar duplicados
+// La función showNotification ahora se maneja desde task_details.php
+/*
 function showNotification(message, type = 'info') {
     // Crear notificación si no existe
     let notification = document.getElementById('notification');
@@ -1121,6 +1123,7 @@ function closeNotification() {
         notification.style.display = 'none';
     }
 }
+*/
 
 // === Utilidades globales para adjuntos en comentarios ===
 // Asegurar disponibilidad global aunque la vista no declare estas funciones
