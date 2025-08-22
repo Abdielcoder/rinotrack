@@ -3865,6 +3865,60 @@ class ClanLeaderController {
     }
 
     /**
+     * Debug: Verificar funcionamiento de checkboxes
+     */
+    public function debugCheckboxes() {
+        $this->requireAuth();
+        
+        try {
+            // Verificar si la tabla existe
+            $checkboxModel = new CheckboxState();
+            $tableCreated = $checkboxModel->createTableIfNotExists();
+            
+            // Datos de prueba
+            $testData = [
+                'comment_id' => 1,
+                'comment_type' => 'task',
+                'checkbox_index' => 0,
+                'checkbox_text' => 'Test checkbox',
+                'is_checked' => true,
+                'user_id' => $this->currentUser['user_id']
+            ];
+            
+            // Intentar guardar datos de prueba
+            $saved = $checkboxModel->saveCheckboxState(
+                $testData['comment_id'],
+                $testData['comment_type'],
+                $testData['checkbox_index'],
+                $testData['checkbox_text'],
+                $testData['is_checked'],
+                $testData['user_id']
+            );
+            
+            // Intentar obtener datos
+            $states = $checkboxModel->getCheckboxStates(1, 'task');
+            
+            Utils::jsonResponse([
+                'success' => true,
+                'debug' => [
+                    'table_created' => $tableCreated,
+                    'test_data' => $testData,
+                    'save_result' => $saved,
+                    'retrieved_states' => $states,
+                    'user_id' => $this->currentUser['user_id']
+                ]
+            ]);
+            
+        } catch (Exception $e) {
+            Utils::jsonResponse([
+                'success' => false,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+        }
+    }
+
+    /**
      * Obtener datos de subtarea para edición
      */
     public function getSubtaskForEdit() {

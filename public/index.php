@@ -576,6 +576,11 @@ try {
         $controller->getCheckboxStates();
         break;
         
+    case 'clan_leader/debug-checkboxes':
+        $controller = new ClanLeaderController();
+        $controller->debugCheckboxes();
+        break;
+        
     case 'clan_leader/get-subtask-for-edit':
         $controller = new ClanLeaderController();
         $controller->getSubtaskForEdit();

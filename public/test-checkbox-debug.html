@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Checkboxes - RinoTrack</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { background: #f8f9fa; padding: 20px; margin: 10px 0; border-radius: 8px; }
+        button { background: #1e3a8a; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; margin: 5px; }
+        button:hover { background: #1e40af; }
+        .result { background: white; padding: 15px; margin: 10px 0; border-left: 4px solid #10b981; }
+        .error { border-left-color: #ef4444; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Debug de Checkboxes - RinoTrack</h1>
+    
+    <div class="test-section">
+        <h2>1. Test de Backend</h2>
+        <p>Prueba si el backend puede crear la tabla y guardar datos:</p>
+        <button onclick="testBackend()">🧪 Probar Backend</button>
+        <div id="backend-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Test de Guardado Manual</h2>
+        <p>Prueba guardar un checkbox manualmente:</p>
+        <button onclick="testSaveCheckbox()">💾 Guardar Checkbox Test</button>
+        <div id="save-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. Test de Carga</h2>
+        <p>Prueba cargar checkboxes guardados:</p>
+        <button onclick="testLoadCheckboxes()">📥 Cargar Checkboxes</button>
+        <div id="load-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. Verificar Tabla</h2>
+        <p>Ejecuta este SQL en phpMyAdmin para ver los datos:</p>
+        <pre style="background: #1e1e1e; color: #fff; padding: 10px; border-radius: 4px;">SELECT * FROM Comment_Checkbox_States ORDER BY created_at DESC;</pre>
+    </div>
+
+    <script>
+        async function testBackend() {
+            const resultDiv = document.getElementById('backend-result');
+            resultDiv.innerHTML = '⏳ Probando backend...';
+            
+            try {
+                const response = await fetch('?route=clan_leader/debug-checkboxes');
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <div class="result">
+                            ✅ Backend funcionando correctamente<br>
+                            📊 <strong>Tabla creada:</strong> ${data.debug.table_created ? 'Sí' : 'No'}<br>
+                            💾 <strong>Guardado:</strong> ${data.debug.save_result ? 'Exitoso' : 'Falló'}<br>
+                            📥 <strong>Estados cargados:</strong> ${JSON.stringify(data.debug.retrieved_states)}<br>
+                            👤 <strong>User ID:</strong> ${data.debug.user_id}
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="result error">
+                            ❌ Error en backend:<br>
+                            ${data.error}<br>
+                            <pre>${data.trace}</pre>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        ❌ Error de conexión: ${error.message}
+                    </div>
+                `;
+            }
+        }
+        
+        async function testSaveCheckbox() {
+            const resultDiv = document.getElementById('save-result');
+            resultDiv.innerHTML = '⏳ Guardando checkbox test...';
+            
+            const testData = {
+                comment_id: 999,
+                comment_type: 'task',
+                checkbox_index: 0,
+                checkbox_text: 'Test checkbox desde frontend',
+                is_checked: true
+            };
+            
+            try {
+                const response = await fetch('?route=clan_leader/save-checkbox-state', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(testData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <div class="result">
+                            ✅ Checkbox guardado correctamente<br>
+                            📤 <strong>Datos enviados:</strong> ${JSON.stringify(testData)}
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="result error">
+                            ❌ Error al guardar: ${data.message}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        ❌ Error: ${error.message}
+                    </div>
+                `;
+            }
+        }
+        
+        async function testLoadCheckboxes() {
+            const resultDiv = document.getElementById('load-result');
+            resultDiv.innerHTML = '⏳ Cargando checkboxes...';
+            
+            try {
+                const response = await fetch('?route=clan_leader/get-checkbox-states&comment_ids=999&comment_type=task');
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <div class="result">
+                            ✅ Checkboxes cargados<br>
+                            📥 <strong>Estados:</strong> ${JSON.stringify(data.states, null, 2)}
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="result error">
+                            ❌ Error al cargar: ${data.message}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        ❌ Error: ${error.message}
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

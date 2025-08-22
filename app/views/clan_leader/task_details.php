@@ -741,15 +741,43 @@ function saveCheckboxState(checkbox) {
     const checkboxText = checkbox.dataset.checkboxText;
     const isChecked = checkbox.checked;
     
-    console.log('Guardando estado:', {commentId, commentType, checkboxIndex, checkboxText, isChecked});
+    console.log('=== CHECKBOX STATE DEBUG ===');
+    console.log('Checkbox element:', checkbox);
+    console.log('Dataset completo:', checkbox.dataset);
+    console.log('commentId:', commentId, 'tipo:', typeof commentId);
+    console.log('commentType:', commentType, 'tipo:', typeof commentType);
+    console.log('checkboxIndex:', checkboxIndex, 'tipo:', typeof checkboxIndex);
+    console.log('checkboxText:', checkboxText, 'tipo:', typeof checkboxText);
+    console.log('isChecked:', isChecked, 'tipo:', typeof isChecked);
     
-    if (!commentId || !commentType || commentId === 'null') {
-        console.log('No se puede guardar: faltan datos del comentario');
+    if (!commentId || !commentType || commentId === 'null' || commentId === 'undefined') {
+        console.error('❌ No se puede guardar: faltan datos del comentario');
+        console.log('Elemento padre del checkbox:', checkbox.closest('.comment-item'));
+        console.log('Intentando extraer commentId del elemento padre...');
+        
+        const parentComment = checkbox.closest('.comment-item');
+        if (parentComment) {
+            const extractedId = extractCommentId(parentComment);
+            const extractedType = detectCommentType(parentComment);
+            console.log('ID extraído:', extractedId, 'Tipo extraído:', extractedType);
+        }
         return;
     }
     
     // Primero aplicar el cambio visual
     toggleTaskText(checkbox);
+    
+    // Preparar datos para enviar
+    const payload = {
+        comment_id: parseInt(commentId),
+        comment_type: commentType,
+        checkbox_index: parseInt(checkboxIndex),
+        checkbox_text: checkboxText,
+        is_checked: isChecked
+    };
+    
+    console.log('📤 Enviando datos:', payload);
+    console.log('📤 URL:', '?route=clan_leader/save-checkbox-state');
     
     // Luego guardar en la base de datos
     fetch('?route=clan_leader/save-checkbox-state', {
@@ -757,25 +785,23 @@ function saveCheckboxState(checkbox) {
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-            comment_id: parseInt(commentId),
-            comment_type: commentType,
-            checkbox_index: parseInt(checkboxIndex),
-            checkbox_text: checkboxText,
-            is_checked: isChecked
-        })
+        body: JSON.stringify(payload)
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('📥 Respuesta recibida, status:', response.status);
+        return response.json();
+    })
     .then(data => {
+        console.log('📥 Datos de respuesta:', data);
         if (data.success) {
-            console.log('Estado guardado correctamente');
+            console.log('✅ Estado guardado correctamente');
         } else {
-            console.error('Error al guardar estado:', data.message);
-            showNotification('Error al guardar estado del checkbox', 'error');
+            console.error('❌ Error al guardar estado:', data.message);
+            showNotification('Error al guardar estado del checkbox: ' + data.message, 'error');
         }
     })
     .catch(error => {
-        console.error('Error:', error);
+        console.error('❌ Error de fetch:', error);
         showNotification('Error de conexión al guardar estado', 'error');
     });
 }
