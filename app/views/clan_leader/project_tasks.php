@@ -465,9 +465,16 @@ if (!isset($project) || !isset($tasks)) {
         /* Prevenir click en elementos interactivos */
         .task-checkbox,
         .task-checkbox input,
-        .action-btn {
+        .action-btn.edit,
+        .action-btn.delete {
             position: relative;
             z-index: 4;
+        }
+
+        /* El botón "Ver" debe comportarse como el resto del card */
+        .action-btn.view {
+            position: relative;
+            z-index: 1;
         }
 
         .task-card.urgent {
@@ -1018,7 +1025,7 @@ if (!isset($project) || !isset($tasks)) {
                     <?php endif; ?>
                     
                         <div class="task-actions">
-                            <a href="?route=clan_leader/get-task-details&task_id=<?= $task['task_id'] ?>" class="action-btn view" onclick="event.stopPropagation()">
+                            <a href="?route=clan_leader/get-task-details&task_id=<?= $task['task_id'] ?>" class="action-btn view">
                                 <i class="fas fa-eye"></i> Ver
                             </a>
                             <a href="?route=clan_leader/tasks&action=edit&task_id=<?= $task['task_id'] ?>" class="action-btn edit" onclick="event.stopPropagation()">
