@@ -363,6 +363,39 @@ ob_start();
     box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
 }
 
+/* Estilos para checkboxes HTML en comentarios */
+.checkbox-container {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    margin: 4px 0 !important;
+    line-height: 1.5 !important;
+}
+
+.checkbox-container input[type="checkbox"] {
+    width: 16px !important;
+    height: 16px !important;
+    cursor: pointer !important;
+    accent-color: #10b981 !important;
+    margin: 0 !important;
+    flex-shrink: 0 !important;
+}
+
+.checkbox-container span {
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    font-size: 14px !important;
+    line-height: 1.4 !important;
+}
+
+/* Hover effect para mejor UX */
+.checkbox-container:hover {
+    background-color: rgba(16, 185, 129, 0.05);
+    border-radius: 4px;
+    padding: 2px 4px;
+    margin: 2px -4px;
+}
+
 /* Estilos para badges de contadores */
 .btn-with-badge {
     position: relative;
@@ -613,41 +646,174 @@ function initializeSubtaskCommentEditor(subtaskId) {
     }
 }
 
-// Función para convertir contenido a checklist interactivo
+// Función para convertir contenido a checklist interactivo con checkboxes HTML
 function makeChecklistInteractive(element) {
-    // Buscar elementos que parezcan checklist items
-    const listItems = element.querySelectorAll('li');
+    // Buscar texto que contenga símbolos de checklist
+    const walker = document.createTreeWalker(
+        element,
+        NodeFilter.SHOW_TEXT,
+        null,
+        false
+    );
     
-    listItems.forEach(item => {
-        const text = item.textContent.trim();
-        if (text.startsWith('☐') || text.startsWith('☑') || text.startsWith('□') || text.startsWith('✓')) {
-            item.classList.add('checklist-item');
-            item.style.cursor = 'pointer';
-            item.addEventListener('click', function() {
-                toggleChecklistItem(this);
-            });
-            
-            // Verificar si ya está marcado
-            if (text.startsWith('☑') || text.startsWith('✓')) {
-                item.classList.add('checked');
-            }
+    const textNodes = [];
+    let node;
+    while (node = walker.nextNode()) {
+        if (node.textContent.includes('☐') || node.textContent.includes('☑')) {
+            textNodes.push(node);
         }
+    }
+    
+    textNodes.forEach(textNode => {
+        const text = textNode.textContent;
+        const parent = textNode.parentNode;
+        
+        // Crear un contenedor para reemplazar el texto
+        const container = document.createElement('div');
+        container.style.display = 'inline';
+        
+        // Dividir el texto por líneas para procesar cada checkbox
+        const lines = text.split('\n');
+        
+        lines.forEach((line, index) => {
+            if (index > 0) {
+                container.appendChild(document.createElement('br'));
+            }
+            
+            // Buscar patrones de checkbox en la línea
+            const checkboxPattern = /(☐|☑)\s*(.*)/;
+            const match = line.match(checkboxPattern);
+            
+            if (match) {
+                const isChecked = match[1] === '☑';
+                const taskText = match[2];
+                
+                // Crear checkbox HTML real
+                const checkboxContainer = document.createElement('span');
+                checkboxContainer.className = 'checkbox-container';
+                checkboxContainer.style.cssText = `
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 8px;
+                    margin: 2px 0;
+                    user-select: none;
+                `;
+                
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.checked = isChecked;
+                checkbox.style.cssText = `
+                    width: 16px;
+                    height: 16px;
+                    cursor: pointer;
+                    accent-color: #10b981;
+                `;
+                
+                const label = document.createElement('span');
+                label.textContent = taskText;
+                label.style.cssText = `
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                    ${isChecked ? 'text-decoration: line-through; color: #9ca3af;' : ''}
+                `;
+                
+                // Agregar event listener para el checkbox
+                checkbox.addEventListener('change', function() {
+                    if (this.checked) {
+                        label.style.textDecoration = 'line-through';
+                        label.style.color = '#9ca3af';
+                    } else {
+                        label.style.textDecoration = 'none';
+                        label.style.color = '';
+                    }
+                    
+                    // Guardar estado del checkbox (opcional - para persistencia futura)
+                    saveCheckboxState(this, label);
+                });
+                
+                // También permitir clic en el label para toggle
+                label.addEventListener('click', function() {
+                    checkbox.checked = !checkbox.checked;
+                    checkbox.dispatchEvent(new Event('change'));
+                });
+                
+                checkboxContainer.appendChild(checkbox);
+                checkboxContainer.appendChild(label);
+                container.appendChild(checkboxContainer);
+            } else {
+                // Línea normal sin checkbox
+                const textSpan = document.createElement('span');
+                textSpan.textContent = line;
+                container.appendChild(textSpan);
+            }
+        });
+        
+        // Reemplazar el nodo de texto original con el contenedor
+        parent.replaceChild(container, textNode);
     });
 }
 
-// Función para alternar estado de checklist
-function toggleChecklistItem(item) {
-    const isChecked = item.classList.contains('checked');
-    const text = item.textContent.trim();
+// Función para guardar estado del checkbox (para persistencia futura)
+function saveCheckboxState(checkbox, label) {
+    // Aquí se puede implementar persistencia en el futuro
+    // Por ahora solo agregamos una animación visual
     
-    if (isChecked) {
-        // Desmarcar
-        item.classList.remove('checked');
-        item.innerHTML = item.innerHTML.replace(/☑|✓/, '☐');
+    if (checkbox.checked) {
+        // Animación cuando se marca
+        label.style.transform = 'scale(0.98)';
+        setTimeout(() => {
+            label.style.transform = 'scale(1)';
+        }, 100);
+        
+        // Opcional: Mostrar feedback visual
+        showCheckboxFeedback('✓ Tarea marcada', 'success');
     } else {
-        // Marcar
-        item.classList.add('checked');
-        item.innerHTML = item.innerHTML.replace(/☐|□/, '☑');
+        // Animación cuando se desmarca  
+        label.style.transform = 'scale(1.02)';
+        setTimeout(() => {
+            label.style.transform = 'scale(1)';
+        }, 100);
+        
+        // Opcional: Mostrar feedback visual
+        showCheckboxFeedback('○ Tarea desmarcada', 'info');
+    }
+}
+
+// Función para mostrar feedback del checkbox
+function showCheckboxFeedback(message, type) {
+    // Solo mostrar feedback ocasionalmente para no ser molesto
+    if (Math.random() < 0.3) { // 30% de probabilidad
+        const feedback = document.createElement('div');
+        feedback.textContent = message;
+        feedback.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: ${type === 'success' ? '#10b981' : '#3b82f6'};
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            z-index: 10000;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+        `;
+        
+        document.body.appendChild(feedback);
+        
+        // Animar entrada
+        setTimeout(() => {
+            feedback.style.opacity = '1';
+            feedback.style.transform = 'translateY(0)';
+        }, 10);
+        
+        // Animar salida y eliminar
+        setTimeout(() => {
+            feedback.style.opacity = '0';
+            feedback.style.transform = 'translateY(-20px)';
+            setTimeout(() => feedback.remove(), 300);
+        }, 1500);
     }
 }
 
