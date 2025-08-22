@@ -35,7 +35,16 @@ ob_start();
         </div>
         <div>
             <span class="status-badge" style="background: #fbbf24; color: #1f2937; padding: 8px 16px; border-radius: 20px; font-weight: 600; text-transform: uppercase; font-size: 12px;">
-                <?php echo strtoupper(str_replace('_',' ', (string)$task['status'])); ?>
+                <?php 
+                    $estadosTarea = [
+                        'pending' => 'PENDIENTE',
+                        'in_progress' => 'EN PROGRESO', 
+                        'completed' => 'COMPLETADA',
+                        'blocked' => 'BLOQUEADA',
+                        'cancelled' => 'CANCELADA'
+                    ];
+                    echo $estadosTarea[$task['status']] ?? strtoupper(str_replace('_',' ', (string)$task['status'])); 
+                ?>
             </span>
                 </div>
                 </div>
@@ -95,7 +104,15 @@ ob_start();
                                 </div>
             
             <div style="margin-bottom: 15px;">
-                <span style="color: #6b7280; font-size: 14px;">Estado: <?php echo ucfirst(str_replace('_', ' ', $subtask['status'])); ?></span>
+                <span style="color: #6b7280; font-size: 14px;">Estado: <?php 
+                    $estados = [
+                        'pending' => 'Pendiente',
+                        'in_progress' => 'En Progreso', 
+                        'completed' => 'Completada',
+                        'blocked' => 'Bloqueada'
+                    ];
+                    echo $estados[$subtask['status']] ?? ucfirst(str_replace('_', ' ', $subtask['status'])); 
+                ?></span>
                                     <?php if (!empty($subtask['assigned_user_name'])): ?>
                 <span style="color: #6b7280; font-size: 14px; margin-left: 20px;">Asignado: <?php echo htmlspecialchars($subtask['assigned_user_name']); ?></span>
                                     <?php endif; ?>
@@ -203,7 +220,18 @@ ob_start();
         <?php else: ?>
             <?php foreach ($history as $h): ?>
             <div style="border-bottom: 1px solid #f3f4f6; padding: 12px 0;">
-                <div style="font-weight: 600; color: #1e40af; margin-bottom: 4px;"><?php echo htmlspecialchars(ucfirst($h['action_type'] ?? $h['notes'] ?? '')); ?></div>
+                <div style="font-weight: 600; color: #1e40af; margin-bottom: 4px;"><?php 
+                    $accionesHistorial = [
+                        'created' => 'Creado',
+                        'updated' => 'Actualizado',
+                        'assigned' => 'Asignado',
+                        'completed' => 'Completado',
+                        'commented' => 'Comentado',
+                        'attached' => 'Archivo adjuntado'
+                    ];
+                    $accion = $h['action_type'] ?? $h['notes'] ?? '';
+                    echo $accionesHistorial[strtolower($accion)] ?? htmlspecialchars(ucfirst($accion)); 
+                ?></div>
                 <div style="font-size: 12px; color: #6b7280;">Por: <?php echo htmlspecialchars($h['full_name'] ?? $h['username'] ?? ''); ?> — <?php echo htmlspecialchars($h['created_at'] ?? ''); ?></div>
                         </div>
             <?php endforeach; ?>
