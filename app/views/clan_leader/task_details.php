@@ -7,7 +7,7 @@ ob_start();
     <!-- Botones de Acción -->
     <div style="display: flex; gap: 12px; margin-bottom: 30px;">
         <a href="?route=clan_leader" style="background: #10b981; color: white; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 8px;">
-            <i class="fas fa-home"></i> Volver a Dashboard
+            <i class="fas fa-home"></i> Volver al Dashboard
         </a>
         <a href="?route=clan_leader/tasks" style="background: #f3f4f6; color: #374151; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 8px;">
             <i class="fas fa-arrow-left"></i> Volver a Tareas
