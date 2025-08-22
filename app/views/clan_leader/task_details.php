@@ -119,7 +119,8 @@ ob_start();
                 </div>
                 <?php endif; ?>
                 
-    <!-- Comentarios de la Tarea -->
+        <!-- Comentarios de la Tarea (solo si NO hay subtareas) -->
+    <?php if (empty($subtasks)): ?>
     <div class="comments-section" style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
         <h3 style="margin: 0 0 20px 0; color: #1f2937; font-size: 18px; font-weight: 600;">Comentarios (<?php echo count($comments); ?>)</h3>
         
@@ -131,25 +132,26 @@ ob_start();
                 <button type="submit" style="background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;">
                     <i class="fas fa-paper-plane"></i> Enviar
                 </button>
-                            </div>
-          </form>
+            </div>
+        </form>
 
         <div class="comments-list">
             <?php if (empty($comments)): ?>
                 <div style="text-align: center; color: #6b7280; font-style: italic; padding: 20px;">Sin comentarios</div>
-                    <?php else: ?>
+            <?php else: ?>
                 <?php foreach ($comments as $c): ?>
                 <div class="comment-item" style="border-bottom: 1px solid #f3f4f6; padding: 15px 0;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                         <span style="font-weight: 600; color: #374151;"><?php echo htmlspecialchars($c['full_name'] ?? $c['username'] ?? ''); ?></span>
                         <span style="font-size: 12px; color: #6b7280;"><?php echo htmlspecialchars($c['created_at'] ?? ''); ?></span>
-                            </div>
+                    </div>
                     <div style="color: #374151; line-height: 1.5;"><?php echo nl2br(htmlspecialchars($c['comment_text'] ?? '')); ?></div>
                 </div>
                 <?php endforeach; ?>
-                            <?php endif; ?>
-                            </div>
-                                </div>
+            <?php endif; ?>
+        </div>
+    </div>
+    <?php endif; ?>
 
         </div>
             
