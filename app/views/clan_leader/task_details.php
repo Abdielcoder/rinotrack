@@ -987,8 +987,9 @@ function addSubtaskComment(subtaskId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Recargar comentarios
+            // Recargar comentarios y actualizar contadores
             showSubtaskComments(subtaskId);
+            loadSubtaskCounters();
         } else {
             alert('Error al agregar comentario: ' + data.message);
         }
@@ -1016,13 +1017,14 @@ function deleteSubtaskComment(commentId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Recargar comentarios
+            // Cerrar modal y actualizar contadores
             const modal = document.querySelector('.modal-overlay');
             if (modal) {
                 modal.remove();
             }
-            // Recargar la página para actualizar contadores
-            location.reload();
+            // Actualizar contadores sin recargar la página
+            loadSubtaskCounters();
+            showNotification('Comentario eliminado exitosamente', 'success');
         } else {
             alert('Error al eliminar comentario: ' + data.message);
         }
@@ -1156,8 +1158,9 @@ function uploadSubtaskAttachment(subtaskId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Recargar adjuntos
+            // Recargar adjuntos y actualizar contadores
             showSubtaskAttachments(subtaskId);
+            loadSubtaskCounters();
         } else {
             alert('Error al subir archivo: ' + data.message);
         }
@@ -1185,13 +1188,14 @@ function deleteSubtaskAttachment(attachmentId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Recargar adjuntos
+            // Cerrar modal y actualizar contadores
             const modal = document.querySelector('.modal-overlay');
             if (modal) {
                 modal.remove();
             }
-            // Recargar la página para actualizar contadores
-            location.reload();
+            // Actualizar contadores sin recargar la página
+            loadSubtaskCounters();
+            showNotification('Archivo eliminado exitosamente', 'success');
         } else {
             alert('Error al eliminar archivo: ' + data.message);
         }
@@ -1436,18 +1440,21 @@ function loadSubtaskCounters() {
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                    // Actualizar badge de comentarios
-                    const commentsBadge = document.getElementById('comments-badge-' + subtaskId);
-                    if (commentsBadge && data.comments_count > 0) {
-                        commentsBadge.textContent = data.comments_count;
-                        commentsBadge.style.display = 'inline';
-                    }
-                    
-                    // Actualizar badge de adjuntos
-            const attachmentsBadge = document.getElementById('attachments-badge-' + subtaskId);
-                    if (attachmentsBadge && data.attachments_count > 0) {
-                        attachmentsBadge.textContent = data.attachments_count;
-                        attachmentsBadge.style.display = 'inline';
+                        // Actualizar badge de comentarios
+                        const commentsBadge = document.getElementById('comments-badge-' + subtaskId);
+                        if (commentsBadge && data.counts.comments_count > 0) {
+                            commentsBadge.textContent = data.counts.comments_count;
+                            commentsBadge.style.display = 'inline';
+                        }
+                        
+                        // Actualizar badge de adjuntos
+                        const attachmentsBadge = document.getElementById('attachments-badge-' + subtaskId);
+                        if (attachmentsBadge && data.counts.attachments_count > 0) {
+                            attachmentsBadge.textContent = data.counts.attachments_count;
+                            attachmentsBadge.style.display = 'inline';
+                        }
+                    } else {
+                        console.error('Error al cargar contadores:', data.message);
                     }
                 }
             })
