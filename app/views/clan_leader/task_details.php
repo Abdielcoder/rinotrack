@@ -650,12 +650,20 @@ function initializeSubtaskCommentEditor(subtaskId) {
 function makeChecklistInteractive(element) {
     console.log('Procesando elemento para checklists:', element);
     
+    // Obtener información del comentario
+    const commentContent = element.closest('.comment-item');
+    const commentId = commentContent ? extractCommentId(commentContent) : null;
+    const commentType = commentContent ? detectCommentType(commentContent) : 'unknown';
+    
+    console.log('Comment ID:', commentId, 'Type:', commentType);
+    
     // Obtener todo el HTML del elemento
     let html = element.innerHTML;
     console.log('HTML original:', html);
     
     // Buscar y reemplazar patrones de checkbox en el HTML
     const checkboxPattern = /(☐|☑)\s*([^<\n]*)/g;
+    let checkboxIndex = 0;
     
     html = html.replace(checkboxPattern, function(match, checkbox, text) {
         const isChecked = checkbox === '☑';
@@ -665,11 +673,16 @@ function makeChecklistInteractive(element) {
         
         // Crear ID único para cada checkbox
         const checkboxId = 'checkbox_' + Math.random().toString(36).substr(2, 9);
+        const currentIndex = checkboxIndex++;
         
         return `<span class="checkbox-container" style="display: inline-flex; align-items: center; gap: 8px; margin: 4px 0; user-select: none;">
             <input type="checkbox" id="${checkboxId}" ${isChecked ? 'checked' : ''} 
+                   data-comment-id="${commentId}" 
+                   data-comment-type="${commentType}" 
+                   data-checkbox-index="${currentIndex}"
+                   data-checkbox-text="${taskText}"
                    style="width: 16px; height: 16px; cursor: pointer; accent-color: #10b981; margin: 0; flex-shrink: 0;" 
-                   onchange="toggleTaskText(this)" />
+                   onchange="saveCheckboxState(this)" />
             <span onclick="toggleCheckbox('${checkboxId}')" 
                   style="cursor: pointer; transition: all 0.2s ease; font-size: 14px; line-height: 1.4; ${isChecked ? 'text-decoration: line-through; color: #9ca3af;' : ''}">${taskText}</span>
         </span>`;
@@ -678,6 +691,11 @@ function makeChecklistInteractive(element) {
     // Actualizar el HTML del elemento
     element.innerHTML = html;
     console.log('HTML procesado:', html);
+    
+    // Cargar estados guardados si tenemos commentId
+    if (commentId && commentType !== 'unknown') {
+        loadCheckboxStates(commentId, commentType);
+    }
 }
 
 // Función para toggle del checkbox desde el texto
@@ -710,35 +728,134 @@ function toggleTaskText(checkbox) {
         }, 100);
         
         // Feedback opcional
-        saveCheckboxState(checkbox, label);
+        showCheckboxFeedback(checkbox.checked ? '✓ Tarea marcada' : '○ Tarea desmarcada', 
+                           checkbox.checked ? 'success' : 'info');
     }
 }
 
-// Función para guardar estado del checkbox (para persistencia futura)
-function saveCheckboxState(checkbox, label) {
-    // Aquí se puede implementar persistencia en el futuro
-    // Por ahora solo agregamos una animación visual
+// Función para guardar el estado del checkbox en la base de datos
+function saveCheckboxState(checkbox) {
+    const commentId = checkbox.dataset.commentId;
+    const commentType = checkbox.dataset.commentType;
+    const checkboxIndex = checkbox.dataset.checkboxIndex;
+    const checkboxText = checkbox.dataset.checkboxText;
+    const isChecked = checkbox.checked;
     
-    if (checkbox.checked) {
-        // Animación cuando se marca
-        label.style.transform = 'scale(0.98)';
-        setTimeout(() => {
-            label.style.transform = 'scale(1)';
-        }, 100);
-        
-        // Opcional: Mostrar feedback visual
-        showCheckboxFeedback('✓ Tarea marcada', 'success');
-    } else {
-        // Animación cuando se desmarca  
-        label.style.transform = 'scale(1.02)';
-        setTimeout(() => {
-            label.style.transform = 'scale(1)';
-        }, 100);
-        
-        // Opcional: Mostrar feedback visual
-        showCheckboxFeedback('○ Tarea desmarcada', 'info');
+    console.log('Guardando estado:', {commentId, commentType, checkboxIndex, checkboxText, isChecked});
+    
+    if (!commentId || !commentType || commentId === 'null') {
+        console.log('No se puede guardar: faltan datos del comentario');
+        return;
     }
+    
+    // Primero aplicar el cambio visual
+    toggleTaskText(checkbox);
+    
+    // Luego guardar en la base de datos
+    fetch('?route=clan_leader/save-checkbox-state', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            comment_id: parseInt(commentId),
+            comment_type: commentType,
+            checkbox_index: parseInt(checkboxIndex),
+            checkbox_text: checkboxText,
+            is_checked: isChecked
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            console.log('Estado guardado correctamente');
+        } else {
+            console.error('Error al guardar estado:', data.message);
+            showNotification('Error al guardar estado del checkbox', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error de conexión al guardar estado', 'error');
+    });
 }
+
+// Función para cargar estados guardados de checkboxes
+function loadCheckboxStates(commentId, commentType) {
+    fetch(`?route=clan_leader/get-checkbox-states&comment_ids=${commentId}&comment_type=${commentType}`)
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.states[commentId]) {
+            const states = data.states[commentId];
+            console.log('Estados cargados:', states);
+            
+            // Aplicar estados a los checkboxes
+            Object.keys(states).forEach(index => {
+                const state = states[index];
+                const checkbox = document.querySelector(`[data-comment-id="${commentId}"][data-checkbox-index="${index}"]`);
+                
+                if (checkbox) {
+                    checkbox.checked = state.is_checked;
+                    const label = checkbox.nextElementSibling;
+                    if (label) {
+                        if (state.is_checked) {
+                            label.style.textDecoration = 'line-through';
+                            label.style.color = '#9ca3af';
+                        } else {
+                            label.style.textDecoration = 'none';
+                            label.style.color = '';
+                        }
+                    }
+                }
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error al cargar estados:', error);
+    });
+}
+
+// Función para extraer el ID del comentario
+function extractCommentId(commentElement) {
+    // Primero intentar obtener del atributo data-comment-id
+    const commentId = commentElement.getAttribute('data-comment-id');
+    if (commentId) {
+        return commentId;
+    }
+    
+    // Fallback: buscar en botones de eliminar
+    const deleteButton = commentElement.querySelector('[onclick*="deleteSubtaskComment"]');
+    if (deleteButton) {
+        const match = deleteButton.getAttribute('onclick').match(/deleteSubtaskComment\((\d+)\)/);
+        return match ? match[1] : null;
+    }
+    
+    // Si es comentario de tarea, buscar de manera diferente
+    const taskDeleteButton = commentElement.querySelector('[onclick*="deleteTaskComment"]');
+    if (taskDeleteButton) {
+        const match = taskDeleteButton.getAttribute('onclick').match(/deleteTaskComment\((\d+)\)/);
+        return match ? match[1] : null;
+    }
+    
+    return null;
+}
+
+// Función para detectar el tipo de comentario
+function detectCommentType(commentElement) {
+    // Si estamos en un modal de subtarea, es comentario de subtarea
+    if (commentElement.closest('.modal-overlay')) {
+        return 'subtask';
+    }
+    
+    // Si está en la página principal, es comentario de tarea
+    if (commentElement.closest('.comments-section')) {
+        return 'task';
+    }
+    
+    return 'unknown';
+}
+
+
 
 // Función para mostrar feedback del checkbox
 function showCheckboxFeedback(message, type) {
@@ -960,7 +1077,7 @@ function showCommentsModal(subtaskId, comments) {
                     <div class="comments-list">
                         ${comments.length === 0 ? '<p style="text-align: center; color: #6b7280; font-style: italic;">No hay comentarios aún</p>' : ''}
                         ${comments.map(comment => `
-                            <div class="comment-item" style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px; margin-bottom: 15px; background: white;">
+                            <div class="comment-item" data-comment-id="${comment.comment_id}" style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px; margin-bottom: 15px; background: white;">
                                 <div class="comment-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                                     <div class="comment-author" style="font-weight: 600; color: #374151;">
                                         ${comment.full_name || comment.username}

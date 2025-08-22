@@ -566,6 +566,16 @@ try {
         $controller->getSubtaskCounts();
         break;
         
+    case 'clan_leader/save-checkbox-state':
+        $controller = new ClanLeaderController();
+        $controller->saveCheckboxState();
+        break;
+        
+    case 'clan_leader/get-checkbox-states':
+        $controller = new ClanLeaderController();
+        $controller->getCheckboxStates();
+        break;
+        
     case 'clan_leader/get-subtask-for-edit':
         $controller = new ClanLeaderController();
         $controller->getSubtaskForEdit();

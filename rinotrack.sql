@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1:3306
--- Tiempo de generación: 20-08-2025 a las 23:40:11
+-- Tiempo de generación: 22-08-2025 a las 19:25:03
 -- Versión del servidor: 11.8.2-MariaDB
 -- Versión de PHP: 8.3.23
 
@@ -657,7 +657,15 @@ INSERT INTO `Notification_Log` (`id`, `event_type`, `entity_id`, `user_id`, `sen
 (271, 'task_assigned', 261, 4, 'desarrollo2@rinorisk.com', NULL, '2025-08-20 23:04:17'),
 (272, 'task_assigned', 262, 4, 'desarrollo2@rinorisk.com', NULL, '2025-08-20 23:09:08'),
 (273, 'task_assigned', 263, 4, 'desarrollo2@rinorisk.com', NULL, '2025-08-20 23:14:33'),
-(274, 'task_assigned', 264, 4, 'desarrollo2@rinorisk.com', NULL, '2025-08-20 23:24:47');
+(274, 'task_assigned', 264, 4, 'desarrollo2@rinorisk.com', NULL, '2025-08-20 23:24:47'),
+(275, 'task_assigned', 265, 4, 'desarrollo2@rinorisk.com', NULL, '2025-08-20 23:57:58'),
+(276, 'task_assigned', 266, 22, 'Sofia@rinorisk.com', NULL, '2025-08-21 07:03:40'),
+(277, 'task_assigned', 267, 22, 'Sofia@rinorisk.com', NULL, '2025-08-21 07:12:19'),
+(278, 'task_assigned', 268, 22, 'Sofia@rinorisk.com', NULL, '2025-08-21 07:20:11'),
+(279, 'task_assigned', 269, 22, 'Sofia@rinorisk.com', NULL, '2025-08-21 07:24:08'),
+(280, 'task_assigned', 270, 22, 'Sofia@rinorisk.com', NULL, '2025-08-21 15:56:51'),
+(281, 'task_assigned', 271, 30, 'procesos.operativos@rinorisk.com', NULL, '2025-08-21 21:16:58'),
+(282, 'task_assigned', 272, 27, 'analista.financiero@rinorisk.com', NULL, '2025-08-21 21:17:34');
 
 -- --------------------------------------------------------
 
@@ -719,12 +727,13 @@ INSERT INTO `Projects` (`project_id`, `project_name`, `description`, `clan_id`, 
 (24, 'RinoPlugin', 'Plugin de control de accesos de portales', 5, 58, 'open', 4, 4, 100.00, '2025-08-13 16:29:25', '2025-08-13 23:49:09', 11, 50, 'automatic', '2025-09-30', 0),
 (25, 'Resegmentación', 'Utilidad fuera de linea, de consulta, comparación y resegmentación de prima y negocios', 5, 58, 'open', 5, 5, 200.00, '2025-08-13 16:30:52', '2025-08-19 15:07:25', 11, 50, 'automatic', '2025-09-30', 0),
 (26, 'Nuevos Indicadores / procesos automaticos', 'Indicadores necesarios para procesos y sistemas', 5, 58, 'open', 0, 0, 0.00, '2025-08-13 16:31:33', '2025-08-13 23:49:26', 11, 350, 'automatic', '2025-09-30', 0),
-(29, 'Metas promotoria etapa 1', 'Seguimiento al proyecto, consulta de promotoria.', 5, 1, 'open', 3, 0, 0.00, '2025-08-13 17:35:38', '2025-08-20 22:31:23', 11, 300, 'automatic', '2025-09-30', 0),
+(29, 'Metas promotoria etapa 1', 'Seguimiento al proyecto, consulta de promotoria.', 5, 1, 'open', 11, 4, 33.33, '2025-08-13 17:35:38', '2025-08-22 19:00:18', 11, 300, 'automatic', '2025-09-30', 0),
 (34, 'Tareas Recurrentes', 'Tareas Recurrentes', 13, 1, 'open', 10, 1, 0.00, '2025-08-14 05:48:31', '2025-08-19 20:28:02', NULL, 0, 'automatic', NULL, 0),
 (35, 'Tareas Eventuales', 'Tareas Eventuales', 13, 1, 'open', 2, 2, 0.00, '2025-08-14 05:48:31', '2025-08-19 20:29:15', NULL, 0, 'automatic', NULL, 0),
 (42, 'Tareas Personales', 'Proyecto personal para tareas individuales del usuario', 5, 2, 'active', 0, 0, 0.00, '2025-08-19 20:29:39', '2025-08-19 20:29:39', NULL, 0, 'automatic', NULL, 1),
 (43, 'Tareas Personales', 'Proyecto personal para tareas individuales del usuario', 5, 4, 'active', 0, 0, 0.00, '2025-08-20 15:09:12', '2025-08-20 15:09:12', NULL, 0, 'automatic', NULL, 1),
-(44, 'AGENCIAS RINO', 'Proyeccion de Crecimiento 2026', 12, 22, 'open', 1, 0, 0.00, '2025-08-20 18:09:56', '2025-08-20 18:13:55', NULL, 0, 'automatic', NULL, 0);
+(44, 'AGENCIAS RINO', 'Proyeccion de Crecimiento 2026', 12, 22, 'open', 4, 0, 0.00, '2025-08-20 18:09:56', '2025-08-21 15:55:09', NULL, 0, 'automatic', NULL, 0),
+(45, 'TAREAS EVENTUALES', 'PRUEBA', 12, 22, 'open', 0, 0, 0.00, '2025-08-21 21:16:11', '2025-08-21 21:16:11', NULL, 0, 'automatic', NULL, 0);
 
 -- --------------------------------------------------------
 
@@ -811,9 +820,8 @@ INSERT INTO `Subtasks` (`subtask_id`, `task_id`, `title`, `description`, `comple
 (2, 242, 'Prueba2', '', 0.00, NULL, NULL, 'pending', 'medium', NULL, NULL, 1, 2, '2025-08-20 18:35:45', '2025-08-20 18:35:45'),
 (3, 242, 'Prueba3', '', 0.00, NULL, NULL, 'pending', 'medium', NULL, NULL, 1, 3, '2025-08-20 18:35:45', '2025-08-20 18:35:45'),
 (4, 242, 'Prueba4', '', 0.00, NULL, NULL, 'pending', 'medium', NULL, NULL, 1, 4, '2025-08-20 18:35:45', '2025-08-20 18:35:45'),
-(5, 243, 'TT2', '', 100.00, NULL, NULL, 'completed', 'medium', NULL, NULL, 1, 1, '2025-08-20 18:49:30', '2025-08-20 19:38:21'),
-(6, 243, 'TT3', '', 50.00, NULL, NULL, 'in_progress', 'medium', NULL, NULL, 1, 2, '2025-08-20 18:49:30', '2025-08-20 19:38:14'),
-(7, 243, 'TT4', '', 0.00, NULL, NULL, 'pending', 'medium', NULL, NULL, 1, 3, '2025-08-20 18:49:30', '2025-08-20 18:49:30'),
+(5, 243, 'Tarea de prueba', '', 100.00, NULL, NULL, 'completed', 'medium', NULL, NULL, 1, 1, '2025-08-20 18:49:30', '2025-08-22 18:43:51'),
+(6, 243, 'TT3', '', 50.00, NULL, NULL, 'in_progress', 'medium', NULL, NULL, 1, 2, '2025-08-20 18:49:30', '2025-08-22 18:47:08'),
 (8, 244, 'lol1', '', 0.00, NULL, NULL, 'pending', 'medium', NULL, NULL, 1, 1, '2025-08-20 18:57:06', '2025-08-20 18:57:06'),
 (9, 244, 'lol2', '', 0.00, NULL, NULL, 'pending', 'medium', NULL, NULL, 1, 2, '2025-08-20 18:57:06', '2025-08-20 18:57:06'),
 (10, 245, 'rr1', '', 0.00, NULL, NULL, 'pending', 'medium', NULL, NULL, 1, 1, '2025-08-20 19:01:10', '2025-08-20 19:01:10'),
@@ -824,8 +832,32 @@ INSERT INTO `Subtasks` (`subtask_id`, `task_id`, `title`, `description`, `comple
 (15, 256, 'erer432', 'dffds23424', 0.00, NULL, NULL, 'pending', 'medium', NULL, NULL, 2, 1, '2025-08-20 22:24:25', '2025-08-20 22:24:25'),
 (16, 256, 'erer432', 'dffds23424', 0.00, NULL, NULL, 'pending', 'medium', NULL, NULL, 2, 2, '2025-08-20 22:24:25', '2025-08-20 22:24:25'),
 (17, 264, 'ggg', '', 50.00, NULL, NULL, 'in_progress', 'medium', NULL, NULL, 2, 1, '2025-08-20 23:24:46', '2025-08-20 23:25:06'),
-(18, 264, 'ggg', '', 0.00, NULL, NULL, 'pending', 'medium', NULL, NULL, 2, 2, '2025-08-20 23:24:46', '2025-08-20 23:24:46'),
-(19, 253, 'Plan de Capacitacion Director Agencia', '', 0.00, NULL, NULL, 'pending', 'medium', NULL, NULL, 1, 1, '2025-08-20 23:28:48', '2025-08-20 23:28:48');
+(19, 253, 'Plan de Capacitacion Director Agencia', '', 0.00, NULL, NULL, 'pending', 'medium', NULL, NULL, 1, 1, '2025-08-20 23:28:48', '2025-08-20 23:28:48'),
+(20, 265, 'subatarea x', 'Esta es la descripcion', 50.00, NULL, NULL, 'in_progress', 'medium', NULL, NULL, 2, 1, '2025-08-20 23:57:57', '2025-08-21 00:16:15'),
+(22, 266, 'Proceso de Reclutamiento Agentes Novatos', '', 50.00, NULL, NULL, 'in_progress', 'medium', NULL, NULL, 22, 1, '2025-08-21 07:03:38', '2025-08-21 21:05:40'),
+(23, 266, 'Proceso de Desarrollo Agentes Novatos', '', 50.00, NULL, NULL, 'in_progress', 'medium', NULL, NULL, 22, 2, '2025-08-21 07:03:38', '2025-08-21 16:42:58'),
+(24, 266, 'Proceso de Reclutamiento Agentes con Cedula', '', 0.00, NULL, NULL, 'pending', 'medium', NULL, NULL, 22, 3, '2025-08-21 07:03:38', '2025-08-21 07:03:38'),
+(25, 266, 'Proceso de Alta Agentes Consolidados', '', 0.00, NULL, NULL, 'pending', 'medium', NULL, NULL, 22, 4, '2025-08-21 07:03:38', '2025-08-21 07:03:38'),
+(26, 266, 'Proceso Fidelización Agentes Consolidados', '', 50.00, NULL, NULL, 'in_progress', 'medium', NULL, NULL, 22, 5, '2025-08-21 07:03:38', '2025-08-21 16:42:53'),
+(27, 267, 'Perfil Director de Agencia', '', 0.00, NULL, NULL, 'pending', 'medium', NULL, NULL, 22, 1, '2025-08-21 07:12:18', '2025-08-21 07:12:18'),
+(28, 267, 'Perfil Coordinador de Agencia', '', 0.00, NULL, NULL, 'pending', 'medium', NULL, NULL, 22, 2, '2025-08-21 07:12:18', '2025-08-21 07:12:18'),
+(29, 267, 'Proceso de Enlace del Coordinador con el equipo de la Promotoria', '', 0.00, NULL, NULL, 'pending', 'medium', NULL, NULL, 22, 3, '2025-08-21 07:12:18', '2025-08-21 07:12:18'),
+(30, 267, 'Definicion de manuales y procesos necesarios para la operacion de la Agencia', '', 0.00, NULL, NULL, 'pending', 'medium', NULL, NULL, 22, 4, '2025-08-21 07:12:18', '2025-08-21 07:12:18'),
+(31, 268, 'Disciplina del Director de Agencia', '', 0.00, NULL, NULL, 'pending', 'medium', NULL, NULL, 22, 1, '2025-08-21 07:20:10', '2025-08-21 16:29:37'),
+(32, 268, 'Herramientas de seguimiento (Dashboard)', '', 50.00, NULL, NULL, 'in_progress', 'medium', NULL, NULL, 22, 2, '2025-08-21 07:20:10', '2025-08-21 16:29:12'),
+(33, 269, 'Estructura de la Plataforma', '', 0.00, NULL, NULL, 'pending', 'medium', NULL, NULL, 22, 1, '2025-08-21 07:24:07', '2025-08-21 07:24:07'),
+(34, 269, 'Alimentacion de la Plataforma', '', 0.00, NULL, NULL, 'pending', 'medium', NULL, NULL, 22, 2, '2025-08-21 07:24:07', '2025-08-21 07:24:07'),
+(35, 269, 'Distribucion de Material Arranque Rapido', '', 50.00, NULL, NULL, 'in_progress', 'medium', NULL, NULL, 22, 3, '2025-08-21 07:24:07', '2025-08-21 16:40:53'),
+(36, 269, 'Creacion de usuarios', '', 0.00, NULL, NULL, 'pending', 'medium', NULL, NULL, 22, 4, '2025-08-21 07:24:07', '2025-08-21 07:24:07'),
+(37, 269, 'Compra de Licencia', '', 100.00, NULL, NULL, 'completed', 'medium', NULL, NULL, 22, 5, '2025-08-21 07:24:07', '2025-08-21 16:26:42'),
+(38, 269, 'Agregarla a Dominio de Rino', '', 50.00, NULL, NULL, 'in_progress', 'medium', NULL, NULL, 22, 6, '2025-08-21 07:24:07', '2025-08-21 16:27:52'),
+(39, 270, 'Plan de Capacitacion Director Agencia', '', 0.00, NULL, NULL, 'pending', 'medium', NULL, NULL, 22, 1, '2025-08-21 15:56:50', '2025-08-21 15:56:50'),
+(40, 270, 'Manuales de Conocimientos de productos y procesos técnicos', '', 50.00, NULL, NULL, 'in_progress', 'medium', NULL, NULL, 22, 2, '2025-08-21 15:56:50', '2025-08-21 17:26:26'),
+(41, 270, 'Solicitud de Productos', '', 0.00, NULL, NULL, 'pending', 'medium', NULL, NULL, 22, 3, '2025-08-21 15:56:50', '2025-08-21 15:56:50'),
+(42, 270, 'Plan de Capacitacion Coordinador Agencia', '', 0.00, NULL, NULL, 'pending', 'medium', NULL, NULL, 22, 4, '2025-08-21 15:56:50', '2025-08-21 15:56:50'),
+(43, 243, 'SubTarea 3 desde tareas', 'Esto es la descripcion de la subtarea', 50.00, NULL, NULL, 'in_progress', 'medium', NULL, NULL, 2, 3, '2025-08-22 18:54:46', '2025-08-22 18:54:54'),
+(44, 258, 'Subtarea sin subtareas previas.', 'No hay', 0.00, NULL, NULL, 'pending', 'medium', NULL, NULL, 2, 1, '2025-08-22 18:58:08', '2025-08-22 18:58:08'),
+(45, 258, 'sadfasdf', 'asdfasdf', 0.00, NULL, NULL, 'pending', 'medium', NULL, NULL, 2, 2, '2025-08-22 18:59:44', '2025-08-22 18:59:44');
 
 --
 -- Disparadores `Subtasks`
@@ -875,6 +907,105 @@ CREATE TABLE `Subtasks_backup` (
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `Subtask_Attachments`
+--
+
+CREATE TABLE `Subtask_Attachments` (
+  `attachment_id` int(11) NOT NULL,
+  `subtask_id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `comment_id` int(11) DEFAULT NULL,
+  `file_name` varchar(255) NOT NULL,
+  `file_path` varchar(500) NOT NULL,
+  `file_size` int(11) DEFAULT NULL,
+  `file_type` varchar(100) DEFAULT NULL,
+  `description` text DEFAULT NULL,
+  `uploaded_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `Subtask_Attachments`
+--
+
+INSERT INTO `Subtask_Attachments` (`attachment_id`, `subtask_id`, `user_id`, `comment_id`, `file_name`, `file_path`, `file_size`, `file_type`, `description`, `uploaded_at`) VALUES
+(1, 20, 2, NULL, '17. CVJONATHANGARCIA.pdf', '/uploads/subtask_20_68a661710e691.pdf', 93612, 'application/pdf', '', '2025-08-20 23:59:45'),
+(2, 20, 2, NULL, '10. CVGENAROMARTINEZ.pdf', '/desarrollo/rinotrack/public/uploads/subtask_20_68a661e599da5.pdf', 66911, 'application/pdf', 'Bla blas', '2025-08-21 00:01:41'),
+(3, 20, 2, NULL, '4. CVYahirPatron.pdf', '/desarrollo/rinotrack/public/uploads/subtask_20_68a6632a87c91.pdf', 447968, 'application/pdf', '', '2025-08-21 00:07:06'),
+(4, 17, 2, NULL, '12.CVManuelLópezHernández.pdf', '/desarrollo/rinotrack/public/uploads/subtask_17_68a666e2dc499.pdf', 199758, 'application/pdf', '', '2025-08-21 00:22:58'),
+(5, 17, 2, NULL, '15.CVDANIELBARRIOS.pdf', '/desarrollo/rinotrack/public/uploads/subtask_17_68a66700df3f3.pdf', 34914, 'application/pdf', 'Otro archivo', '2025-08-21 00:23:28'),
+(6, 19, 22, NULL, 'PLAN DE TRABAJO CON DIRECTOR DE AGENCIA.docx', '/desarrollo/rinotrack/public/uploads/subtask_19_68a6c31f0e241.docx', 483702, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', '', '2025-08-21 06:56:31'),
+(7, 23, 22, NULL, 'PLAN DE TRABAJO AGENTES EN DESARROLLO[1].docx', '/desarrollo/rinotrack/public/uploads/subtask_23_68a6c58749b3b.docx', 471557, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', '', '2025-08-21 07:06:47'),
+(8, 23, 22, NULL, 'Manual de Arranque Rapido.docx', '/desarrollo/rinotrack/public/uploads/subtask_23_68a6c5aaf1785.docx', 1506913, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', '', '2025-08-21 07:07:22'),
+(9, 27, 22, NULL, 'Descriptivo -Director General de agencia - JUN 25.docx', '/desarrollo/rinotrack/public/uploads/subtask_27_68a6c6f058fb9.docx', 27752, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', '', '2025-08-21 07:12:48'),
+(10, 28, 22, NULL, 'Descriptivo - Coordinador de Oficina - jun25.docx', '/desarrollo/rinotrack/public/uploads/subtask_28_68a6c6fb87adb.docx', 29143, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', '', '2025-08-21 07:12:59'),
+(11, 29, 22, NULL, 'Manual de Coordinación Operativa y Comercial.docx', '/desarrollo/rinotrack/public/uploads/subtask_29_68a6c7318096c.docx', 1512165, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', '', '2025-08-21 07:13:53'),
+(12, 30, 22, NULL, 'Manual de Agencia.docx', '/desarrollo/rinotrack/public/uploads/subtask_30_68a6c760cb300.docx', 1503572, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', '', '2025-08-21 07:14:40'),
+(13, 39, 22, NULL, 'PLAN DE TRABAJO CON DIRECTOR DE AGENCIA.docx', '/desarrollo/rinotrack/public/uploads/subtask_39_68a74736a7c55.docx', 483702, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', '', '2025-08-21 16:20:06'),
+(14, 41, 22, NULL, 'Solicitudes Daños Rino (1).xls', '/desarrollo/rinotrack/public/uploads/subtask_41_68a7476a843e6.xls', 281088, 'application/vnd.ms-excel', '', '2025-08-21 16:20:58'),
+(15, 41, 22, NULL, 'Solicitudes Daños Rino (1) (1) (1).xls', '/desarrollo/rinotrack/public/uploads/subtask_41_68a74772572ea.xls', 152576, 'application/vnd.ms-excel', '', '2025-08-21 16:21:06'),
+(16, 42, 22, NULL, 'PLAN DE TRABAJO COORDINADOR DE OFICINA (1).docx', '/desarrollo/rinotrack/public/uploads/subtask_42_68a747d9a5b10.docx', 472690, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', '', '2025-08-21 16:22:49'),
+(17, 33, 22, NULL, 'Plan de Academia Rino.docx', '/desarrollo/rinotrack/public/uploads/subtask_33_68a748074352f.docx', 455253, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', '', '2025-08-21 16:23:35'),
+(18, 35, 22, NULL, 'Plan de Academia Rino.docx', '/desarrollo/rinotrack/public/uploads/subtask_35_68a748a2649dc.docx', 455253, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', '', '2025-08-21 16:26:10'),
+(19, 26, 22, NULL, 'PLAN DE TRABAJO AGENTES CONSOLIDADOS.docx', '/desarrollo/rinotrack/public/uploads/subtask_26_68a74a099a67c.docx', 474546, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', '', '2025-08-21 16:32:09'),
+(20, 22, 22, NULL, 'Manual de reclutamiento Agentes desarrollo 2.5.docx', '/desarrollo/rinotrack/public/uploads/subtask_22_68a74fbc5832b.docx', 1516424, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', '', '2025-08-21 16:56:28'),
+(24, 6, 2, NULL, '16.CVRodolfoEspinozaLópez.pdf', '/desarrollo/rinotrack/public/uploads/subtask_6_68a8bb0de102e.pdf', 167797, 'application/pdf', '', '2025-08-22 18:46:37');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `Subtask_Comments`
+--
+
+CREATE TABLE `Subtask_Comments` (
+  `comment_id` int(11) NOT NULL,
+  `subtask_id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `comment_text` text NOT NULL,
+  `comment_type` enum('comment','status_change','assignment','completion','system') DEFAULT 'comment',
+  `related_user_id` int(11) DEFAULT NULL,
+  `old_value` varchar(255) DEFAULT NULL,
+  `new_value` varchar(255) DEFAULT NULL,
+  `is_private` tinyint(1) DEFAULT 0,
+  `created_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `Subtask_Comments`
+--
+
+INSERT INTO `Subtask_Comments` (`comment_id`, `subtask_id`, `user_id`, `comment_text`, `comment_type`, `related_user_id`, `old_value`, `new_value`, `is_private`, `created_at`) VALUES
+(1, 20, 2, 'Primer comentario', 'comment', NULL, NULL, NULL, 0, '2025-08-20 23:59:45'),
+(2, 20, 2, 'Segundo comentario', 'comment', NULL, NULL, NULL, 0, '2025-08-21 00:07:06'),
+(3, 17, 2, 'primero', 'comment', NULL, NULL, NULL, 0, '2025-08-21 00:22:58'),
+(4, 34, 22, 'Pendiente el responsable de la carga de Material', 'comment', NULL, NULL, NULL, 0, '2025-08-21 16:24:00'),
+(5, 38, 22, 'Se tuvierron alguno errores en algunos enlaces que estan pendientes de corregir con Andres', 'comment', NULL, NULL, NULL, 0, '2025-08-21 16:28:17'),
+(6, 32, 22, 'https://bitacorarino.palmakt.com/?id=mdtalydfqk09t&popup=1', 'comment', NULL, NULL, NULL, 0, '2025-08-21 16:29:05'),
+(7, 39, 22, 'Agregar Temas de otras compañias de seguros \nConvenciones y bonos de otras compañias de seguros (Plan Seguro, Mapfre,Qualitas,HDI)', 'comment', NULL, NULL, NULL, 0, '2025-08-21 17:24:26'),
+(8, 40, 22, 'Se esta trabajando con actulizar presentacion con el resumen de información', 'comment', NULL, NULL, NULL, 0, '2025-08-21 17:26:16'),
+(9, 40, 22, 'Entrega de Gil para segunda revision Lunes 25', 'comment', NULL, NULL, NULL, 0, '2025-08-21 17:26:57'),
+(10, 41, 22, 'Convertirlos a PDF Editables', 'comment', NULL, NULL, NULL, 0, '2025-08-21 17:28:35'),
+(11, 41, 22, '-Objetivo: llevar el Slip a un archivo digital (plataforma) Conctarlo en un futuro con la IA\n-que se convierta en una Guia para el agente (anotaciones para cada uno de los ramos)\n-Asignacion de tarea para Nora', 'comment', NULL, NULL, NULL, 0, '2025-08-21 17:30:56'),
+(12, 41, 22, 'Considerar, condiciones especiales y exclusiones por convenios expreso \n(ej.equipo electronico)', 'comment', NULL, NULL, NULL, 0, '2025-08-21 17:32:30'),
+(13, 42, 22, '-GM Axa, pendiente producto GMMPLus\n- Vida Aliados\n- Autos Qualitas,HDI,Ana Seguros', 'comment', NULL, NULL, NULL, 0, '2025-08-21 17:38:24'),
+(14, 28, 22, '- Asignacion de Actividades (Cotizaciones)\n-', 'comment', NULL, NULL, NULL, 0, '2025-08-21 17:39:45'),
+(15, 22, 22, '- Iniciaria su proceso de Clave desde que coloca su 1er venta\n- Que pasa con un agente que saca clave y que no se logra asignar a una direccion? \n- Que pasa con los agentes que en los 3 meses no logra el resultado, cuanto tiempo se puede llegar a quedar en la incubación?? 3/4 meses despues de terminar su proceso de Arranque.\n- Cual sera el proceso para la asignacion de nuevo prospecto para las direcciones?\n- Sistema de reconocimiento e insignia para todo el proceso del prospecto agente.\n-', 'comment', NULL, NULL, NULL, 0, '2025-08-21 17:55:53'),
+(16, 26, 22, '- Esquemas de bonos y comisiones desde que el agente tiene clave \n-Ofertas de valor de las compañias de seguros \n- Agentes que solicitan de manera directa a RH, realizar el filtro con el gerente y/o direccion de agencia para realizar compromiso comercial para procesar la alta con la compañia solicitada\n-Comunicacion de reglas por compañia (Qualitas proceso de reclutamiento)\n-Plan Seguro (cambio de promotoria con Plan Seguro)(rehabilitaciones con AXA)(Cambios de promotoria con AXA)\n- Coordinador de Recluta y Desarrollo ( encargado de la revision de los acuerdos iniciales de la recluta segun su perfil, con los compromisos, las reglas de negocio que serian con ese agente)', 'comment', NULL, NULL, NULL, 0, '2025-08-21 18:10:23'),
+(17, 32, 22, 'Compromiso del llenado de plataforma todos los dias durante los ultimos 30 min de la jornada', 'comment', NULL, NULL, NULL, 0, '2025-08-21 18:22:55'),
+(18, 33, 22, 'Revisar la estructura directo en la plataforma (Andres)', 'comment', NULL, NULL, NULL, 0, '2025-08-21 18:27:03'),
+(19, 34, 22, 'Determinar responsables por Modulo (Yess que identifique quienes serian los responsables de cada etapa)', 'comment', NULL, NULL, NULL, 0, '2025-08-21 18:28:32'),
+(20, 34, 22, 'Reunion para el dia Martes navegar por la plataforma', 'comment', NULL, NULL, NULL, 0, '2025-08-21 18:29:56'),
+(21, 5, 2, 'Comentario de prueba para probar la funcionalidad', 'comment', NULL, NULL, NULL, 0, '2025-08-22 17:32:36'),
+(22, 5, 2, 'Otro comentario', 'comment', NULL, NULL, NULL, 0, '2025-08-22 17:40:40'),
+(23, 6, 2, 'Un comentario', 'comment', NULL, NULL, NULL, 0, '2025-08-22 18:09:51'),
+(25, 6, 2, 'Automatizacion', 'comment', NULL, NULL, NULL, 0, '2025-08-22 18:13:54'),
+(27, 5, 2, '<h1><strong>!@#$%^&amp;*()_+ASDFGHJKL:\"¡™£¢∞§¶•ªº–≠`π“‘«æ…¬≤≥÷œåΩ≈ß∑´∂ç√ƒ®†©∫˜˙¥¨∆µ≤˚ˆø¬≤≥÷</strong></h1>', 'comment', NULL, NULL, NULL, 0, '2025-08-22 19:10:45'),
+(28, 5, 2, '<p>☐ Tarea1</p><p>☐ Tarea2</p><p>☐ Tarea3</p>', 'comment', NULL, NULL, NULL, 0, '2025-08-22 19:15:28'),
+(29, 5, 2, '<p>☐ losmd</p>', 'comment', NULL, NULL, NULL, 0, '2025-08-22 19:18:34'),
+(30, 5, 2, '<p>☐ Otra check</p><p><span style=\"background-color: rgb(255, 255, 0);\">sdkfmklsdfnmlksdfmnklsadmf</span></p>', 'comment', NULL, NULL, NULL, 0, '2025-08-22 19:22:19');
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `Tasks`
 --
 
@@ -909,18 +1040,24 @@ CREATE TABLE `Tasks` (
 --
 
 INSERT INTO `Tasks` (`task_id`, `parent_task_id`, `task_name`, `description`, `project_id`, `assigned_to_user_id`, `created_by_user_id`, `priority`, `due_date`, `estimated_hours`, `actual_hours`, `completion_percentage`, `automatic_points`, `assigned_percentage`, `color_tag`, `is_subtask`, `subtask_order`, `status`, `is_completed`, `completed_at`, `created_at`, `updated_at`, `is_personal`) VALUES
-(240, NULL, 'METAS Y OBJETIVOS', 'El objetivo de esta tarea es establecer los objetivos que se tendran que plantear para cada direccion de agencia, los reportes que deberán llevar los directores y los reportes que se les presentaran desde el area de estadísticas.', 44, 22, 22, 'medium', '2025-10-31', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-20 18:12:58', '2025-08-20 18:34:49', 0),
 (242, NULL, 'QA', 'Pruebas funcionales.', 29, 2, 1, 'medium', '2025-08-22', NULL, NULL, 0.00, 100.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-20 18:35:45', '2025-08-20 22:31:23', 0),
-(243, NULL, 'Q2', 'Q2', 29, 2, 1, 'medium', NULL, NULL, NULL, 50.00, 100.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-20 18:49:30', '2025-08-20 22:31:23', 0),
-(248, NULL, 'Tarea con subs en clan', 'fdfsfsad', 29, 4, 2, 'medium', '2025-08-20', NULL, NULL, 0.00, 100.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-20 20:21:48', '2025-08-20 22:31:23', 0),
-(253, NULL, 'CAPACITACION Y RRHH', 'El objetivo es contar un plan de capacitacion y conocimientos para cada uno de los colaboradores que pertenezcan a la agencia.', 44, 22, 22, 'medium', '2025-10-31', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-20 20:49:33', '2025-08-20 20:49:33', 0),
+(243, NULL, 'Q2', 'Q2', 29, 2, 1, 'medium', NULL, NULL, NULL, 66.67, 100.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-20 18:49:30', '2025-08-22 18:54:54', 0),
+(248, NULL, 'Tarea con subs en clan', 'fdfsfsad', 29, 4, 2, 'medium', '2025-08-20', NULL, NULL, 0.00, 100.00, 0.00, '#3B82F6', 0, 0, 'completed', 1, '2025-08-22 19:00:08', '2025-08-20 20:21:48', '2025-08-22 19:00:08', 0),
 (258, NULL, 'Tarea de clan 33', 'Esto es un ejemplo de tarea de clan', 29, 4, 2, 'medium', '2025-08-20', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-20 22:32:33', '2025-08-20 22:32:33', 0),
 (259, NULL, 'Tarea de prueba332', '', 29, 4, 2, 'medium', '2025-08-20', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-20 22:34:02', '2025-08-20 22:34:02', 0),
-(260, NULL, 'xq2', 'fsasfasdf', 29, 4, 2, 'medium', '2025-08-20', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-20 22:39:40', '2025-08-20 22:39:40', 0),
+(260, NULL, 'xq2', 'fsasfasdf', 29, 4, 2, 'medium', '2025-08-20', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'completed', 1, '2025-08-22 19:00:11', '2025-08-20 22:39:40', '2025-08-22 19:00:11', 0),
 (261, NULL, 'wer', 'ewsdfdsf', 29, 4, 2, 'medium', '2025-08-20', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-20 23:04:16', '2025-08-20 23:04:16', 0),
-(262, NULL, 'vcvcvcvcv', 'vfdvdfsvdfs', 29, 4, 2, 'medium', '2025-08-20', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-20 23:09:06', '2025-08-20 23:09:06', 0),
+(262, NULL, 'vcvcvcvcv', 'vfdvdfsvdfs', 29, 4, 2, 'medium', '2025-08-20', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'completed', 1, '2025-08-22 19:00:15', '2025-08-20 23:09:06', '2025-08-22 19:00:15', 0),
 (263, NULL, 'g3w4gerger', 'sdafsadfsadfasd', 29, 4, 2, 'medium', '2025-08-20', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-20 23:14:32', '2025-08-20 23:14:32', 0),
-(264, NULL, 'rrrere', 'dsfaerw', 29, 4, 2, 'medium', '2025-08-20', NULL, NULL, 25.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-20 23:24:46', '2025-08-20 23:25:06', 0);
+(264, NULL, 'rrrere', 'dsfaerw', 29, 4, 2, 'medium', '2025-08-20', NULL, NULL, 25.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-20 23:24:46', '2025-08-20 23:25:06', 0),
+(265, NULL, 'xxxx', 'xczcxzc', 29, 4, 2, 'medium', '2025-08-20', NULL, NULL, 25.00, 0.00, 0.00, '#3B82F6', 0, 0, 'completed', 1, '2025-08-22 19:00:18', '2025-08-20 23:57:57', '2025-08-22 19:00:18', 0),
+(266, NULL, 'RECLUTAMIENTO DE AGENTES', 'Agentes Novatos y Consolidados', 44, 22, 22, 'medium', '2025-10-31', NULL, NULL, 30.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-21 07:03:38', '2025-08-21 21:05:40', 0),
+(267, NULL, 'PERFILES DE ORGANIGRAMA DE AGENCIA', 'DIRECTOR DE AGENCIA \r\nCOORDINADOR DE AGENCIA', 44, 22, 22, 'medium', '2025-10-31', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-21 07:12:18', '2025-08-21 07:12:18', 0),
+(268, NULL, 'DISCIPLINA COMERCIAL', 'Crear una disciplina comercial basada en el exito de la supervision y seguimiento a la fuerza de ventas', 44, 22, 22, 'medium', '2025-10-31', NULL, NULL, 25.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-21 07:20:10', '2025-08-21 16:29:37', 0),
+(269, NULL, 'ACADEMIA RINO', 'Plataforma de estudio para Agentes', 44, 22, 22, 'medium', '2025-10-31', NULL, NULL, 33.33, 0.00, 0.00, '#3B82F6', 0, 0, 'in_progress', 0, NULL, '2025-08-21 07:24:07', '2025-08-21 16:40:53', 0),
+(270, NULL, 'CAPACITACION Y RRHH', 'El objetivo es contar un plan de capacitacion y conocimientos para cada uno de los colaboradores que pertenezcan a la agencia.', 44, 22, 22, 'medium', '2025-10-31', NULL, NULL, 12.50, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-21 15:56:50', '2025-08-21 17:26:26', 0),
+(271, NULL, 'TARJETAS AMARILLAS DE PRUEBA', '', 45, 30, 22, 'medium', '2025-08-21', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-21 21:16:57', '2025-08-21 21:16:57', 0),
+(272, NULL, 'TAREA DE PRUEBA', '', 45, 27, 22, 'medium', '2025-08-21', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-21 21:17:34', '2025-08-21 21:17:34', 0);
 
 --
 -- Disparadores `Tasks`
@@ -1221,7 +1358,15 @@ INSERT INTO `Task_Assignments` (`assignment_id`, `task_id`, `user_id`, `assigned
 (350, 261, 4, 100.00, '2025-08-20 23:04:16', 2, 'assigned', NULL),
 (351, 262, 4, 100.00, '2025-08-20 23:09:06', 2, 'assigned', NULL),
 (352, 263, 4, 100.00, '2025-08-20 23:14:32', 2, 'assigned', NULL),
-(353, 264, 4, 100.00, '2025-08-20 23:24:46', 2, 'assigned', NULL);
+(353, 264, 4, 100.00, '2025-08-20 23:24:46', 2, 'assigned', NULL),
+(354, 265, 4, 100.00, '2025-08-20 23:57:57', 2, 'assigned', NULL),
+(355, 266, 22, 100.00, '2025-08-21 07:03:38', 22, 'assigned', NULL),
+(356, 267, 22, 100.00, '2025-08-21 07:12:18', 22, 'assigned', NULL),
+(357, 268, 22, 100.00, '2025-08-21 07:20:10', 22, 'assigned', NULL),
+(358, 269, 22, 100.00, '2025-08-21 07:24:07', 22, 'assigned', NULL),
+(359, 270, 22, 100.00, '2025-08-21 15:56:50', 22, 'assigned', NULL),
+(360, 271, 30, 100.00, '2025-08-21 21:16:57', 22, 'assigned', NULL),
+(361, 272, 27, 100.00, '2025-08-21 21:17:34', 22, 'assigned', NULL);
 
 -- --------------------------------------------------------
 
@@ -1335,7 +1480,8 @@ INSERT INTO `Task_Comments` (`comment_id`, `task_id`, `user_id`, `comment_text`,
 (42, 122, 4, 'Comentario desde el celular', 'comment', NULL, NULL, NULL, 0, '2025-08-18 20:51:03'),
 (43, 166, 4, 'Comentario desde el perfil de usuario normal adjunto documento', 'comment', NULL, NULL, NULL, 0, '2025-08-18 22:41:05'),
 (44, 212, 2, 'Ya acabe rutina', 'comment', NULL, NULL, NULL, 0, '2025-08-19 20:30:35'),
-(45, 212, 2, 'Djdjdj', 'comment', NULL, NULL, NULL, 0, '2025-08-19 20:32:09');
+(45, 212, 2, 'Djdjdj', 'comment', NULL, NULL, NULL, 0, '2025-08-19 20:32:09'),
+(46, 265, 2, 'Comentario de la tarea principal', 'comment', NULL, NULL, NULL, 0, '2025-08-21 00:17:38');
 
 -- --------------------------------------------------------
 
@@ -1930,7 +2076,115 @@ INSERT INTO `Task_History` (`history_id`, `task_id`, `user_id`, `action_type`, `
 (698, 264, 2, 'created', 'subtask', NULL, 'ggg', NULL, 'Subtarea creada: ggg', '2025-08-20 23:24:46'),
 (699, 264, 2, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-08-20 23:24:46'),
 (700, 264, 2, 'updated', 'subtask_status', NULL, 'in_progress', NULL, 'Estado de subtarea actualizado', '2025-08-20 23:25:06'),
-(701, 253, 1, 'created', 'subtask', NULL, 'Plan de Capacitacion Director Agencia', NULL, 'Subtarea creada: Plan de Capacitacion Director Agencia', '2025-08-20 23:28:48');
+(701, 253, 1, 'created', 'subtask', NULL, 'Plan de Capacitacion Director Agencia', NULL, 'Subtarea creada: Plan de Capacitacion Director Agencia', '2025-08-20 23:28:48'),
+(702, 265, 2, 'assigned', 'assigned_users', NULL, '4', NULL, 'Múltiples usuarios asignados', '2025-08-20 23:57:57'),
+(703, 265, 2, 'created', 'subtask', NULL, '1', NULL, 'Subtarea creada: 1', '2025-08-20 23:57:57'),
+(704, 265, 2, 'created', 'subtask', NULL, '2', NULL, 'Subtarea creada: 2', '2025-08-20 23:57:57'),
+(705, 265, 2, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-08-20 23:57:57'),
+(706, 265, 2, 'commented', 'subtask_comment', NULL, 'Primer comentario', NULL, 'Comentario agregado en subtarea: 1', '2025-08-20 23:59:45'),
+(707, 265, 2, 'commented', 'subtask_comment', NULL, 'Segundo comentario', NULL, 'Comentario agregado en subtarea: 1', '2025-08-21 00:07:06'),
+(708, 265, 2, 'updated', 'subtask_status', NULL, 'in_progress', NULL, 'Estado de subtarea actualizado', '2025-08-21 00:08:03'),
+(709, 265, 2, 'commented', 'comment', NULL, 'Comentario de la tarea principal', NULL, 'Comentario agregado', '2025-08-21 00:17:38'),
+(710, 264, 2, 'commented', 'subtask_comment', NULL, 'primero', NULL, 'Comentario agregado en subtarea: ggg', '2025-08-21 00:22:58'),
+(711, 266, 22, 'assigned', 'assigned_users', NULL, '22', NULL, 'Múltiples usuarios asignados', '2025-08-21 07:03:38'),
+(712, 266, 22, 'created', 'subtask', NULL, 'Proceso de Reclutamiento Agentes Novatos', NULL, 'Subtarea creada: Proceso de Reclutamiento Agentes Novatos', '2025-08-21 07:03:38'),
+(713, 266, 22, 'created', 'subtask', NULL, 'Proceso de Desarrollo Agentes Novatos', NULL, 'Subtarea creada: Proceso de Desarrollo Agentes Novatos', '2025-08-21 07:03:38'),
+(714, 266, 22, 'created', 'subtask', NULL, 'Proceso de Reclutamiento Agentes con Cedula', NULL, 'Subtarea creada: Proceso de Reclutamiento Agentes con Cedula', '2025-08-21 07:03:38'),
+(715, 266, 22, 'created', 'subtask', NULL, 'Proceso de Alta Agentes Consolidados', NULL, 'Subtarea creada: Proceso de Alta Agentes Consolidados', '2025-08-21 07:03:38'),
+(716, 266, 22, 'created', 'subtask', NULL, 'Proceso Fidelización Agentes Consolidados', NULL, 'Subtarea creada: Proceso Fidelización Agentes Consolidados', '2025-08-21 07:03:38'),
+(717, 266, 22, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-08-21 07:03:38'),
+(718, 267, 22, 'assigned', 'assigned_users', NULL, '22', NULL, 'Múltiples usuarios asignados', '2025-08-21 07:12:18'),
+(719, 267, 22, 'created', 'subtask', NULL, 'Perfil Director de Agencia', NULL, 'Subtarea creada: Perfil Director de Agencia', '2025-08-21 07:12:18'),
+(720, 267, 22, 'created', 'subtask', NULL, 'Perfil Coordinador de Agencia', NULL, 'Subtarea creada: Perfil Coordinador de Agencia', '2025-08-21 07:12:18'),
+(721, 267, 22, 'created', 'subtask', NULL, 'Proceso de Enlace del Coordinador con el equipo de la Promotoria', NULL, 'Subtarea creada: Proceso de Enlace del Coordinador con el equipo de la Promotoria', '2025-08-21 07:12:18'),
+(722, 267, 22, 'created', 'subtask', NULL, 'Definicion de manuales y procesos necesarios para la operacion de la Agencia', NULL, 'Subtarea creada: Definicion de manuales y procesos necesarios para la operacion de la Agencia', '2025-08-21 07:12:18'),
+(723, 267, 22, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-08-21 07:12:18'),
+(724, 268, 22, 'assigned', 'assigned_users', NULL, '22', NULL, 'Múltiples usuarios asignados', '2025-08-21 07:20:10'),
+(725, 268, 22, 'created', 'subtask', NULL, 'Disciplina del Directo de Agencia', NULL, 'Subtarea creada: Disciplina del Directo de Agencia', '2025-08-21 07:20:10'),
+(726, 268, 22, 'created', 'subtask', NULL, 'Herramientas de seguimiento (Dashboard)', NULL, 'Subtarea creada: Herramientas de seguimiento (Dashboard)', '2025-08-21 07:20:10'),
+(727, 268, 22, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-08-21 07:20:10'),
+(728, 269, 22, 'assigned', 'assigned_users', NULL, '22', NULL, 'Múltiples usuarios asignados', '2025-08-21 07:24:07'),
+(729, 269, 22, 'created', 'subtask', NULL, 'Estructura de la Plataforma', NULL, 'Subtarea creada: Estructura de la Plataforma', '2025-08-21 07:24:07'),
+(730, 269, 22, 'created', 'subtask', NULL, 'Alimentacion de la Plataforma', NULL, 'Subtarea creada: Alimentacion de la Plataforma', '2025-08-21 07:24:07'),
+(731, 269, 22, 'created', 'subtask', NULL, 'Distribucion de Material a Desarrollar', NULL, 'Subtarea creada: Distribucion de Material a Desarrollar', '2025-08-21 07:24:07'),
+(732, 269, 22, 'created', 'subtask', NULL, 'Creacion de usuarios', NULL, 'Subtarea creada: Creacion de usuarios', '2025-08-21 07:24:07'),
+(733, 269, 22, 'created', 'subtask', NULL, 'Compra de Licencia', NULL, 'Subtarea creada: Compra de Licencia', '2025-08-21 07:24:07'),
+(734, 269, 22, 'created', 'subtask', NULL, 'Agregarla a Dominio de Rino', NULL, 'Subtarea creada: Agregarla a Dominio de Rino', '2025-08-21 07:24:07'),
+(735, 269, 22, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-08-21 07:24:07'),
+(736, 269, 22, 'status_changed', 'status', 'pending', 'in_progress', NULL, 'Estado cambiado de pending a in_progress', '2025-08-21 15:15:38'),
+(737, 270, 22, 'assigned', 'assigned_users', NULL, '22', NULL, 'Múltiples usuarios asignados', '2025-08-21 15:56:50'),
+(738, 270, 22, 'created', 'subtask', NULL, 'Plan de Capacitacion Director Agencia', NULL, 'Subtarea creada: Plan de Capacitacion Director Agencia', '2025-08-21 15:56:50'),
+(739, 270, 22, 'created', 'subtask', NULL, 'Manuales de Conocimientos de productos y procesos técnicos', NULL, 'Subtarea creada: Manuales de Conocimientos de productos y procesos técnicos', '2025-08-21 15:56:50'),
+(740, 270, 22, 'created', 'subtask', NULL, 'Solicitud de Productos', NULL, 'Subtarea creada: Solicitud de Productos', '2025-08-21 15:56:50'),
+(741, 270, 22, 'created', 'subtask', NULL, 'Plan de Capacitacion Coordinador Agencia', NULL, 'Subtarea creada: Plan de Capacitacion Coordinador Agencia', '2025-08-21 15:56:50'),
+(742, 270, 22, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-08-21 15:56:50'),
+(743, 269, 22, 'commented', 'subtask_comment', NULL, 'Pendiente el responsable de la carga de Material', NULL, 'Comentario agregado en subtarea: Alimentacion de la Plataforma', '2025-08-21 16:24:00'),
+(744, 269, 22, 'updated', 'subtask_status', NULL, 'completed', NULL, 'Estado de subtarea actualizado', '2025-08-21 16:26:42'),
+(745, 269, 22, 'updated', 'subtask_status', NULL, 'in_progress', NULL, 'Estado de subtarea actualizado', '2025-08-21 16:27:52'),
+(746, 269, 22, 'commented', 'subtask_comment', NULL, 'Se tuvierron alguno errores en algunos enlaces que estan pendientes de corregir con Andres', NULL, 'Comentario agregado en subtarea: Agregarla a Dominio de Rino', '2025-08-21 16:28:17'),
+(747, 268, 22, 'commented', 'subtask_comment', NULL, 'https://bitacorarino.palmakt.com/?id=mdtalydfqk09t&popup=1', NULL, 'Comentario agregado en subtarea: Herramientas de seguimiento (Dashboard)', '2025-08-21 16:29:05'),
+(748, 268, 22, 'updated', 'subtask_status', NULL, 'completed', NULL, 'Estado de subtarea actualizado', '2025-08-21 16:29:10'),
+(749, 268, 22, 'updated', 'subtask_status', NULL, 'in_progress', NULL, 'Estado de subtarea actualizado', '2025-08-21 16:29:12'),
+(750, 266, 22, 'updated', 'subtask_status', NULL, 'in_progress', NULL, 'Estado de subtarea actualizado', '2025-08-21 16:31:00'),
+(751, 269, 22, 'updated', 'subtask_status', NULL, 'in_progress', NULL, 'Estado de subtarea actualizado', '2025-08-21 16:40:53'),
+(752, 266, 22, 'updated', 'subtask_status', NULL, 'in_progress', NULL, 'Estado de subtarea actualizado', '2025-08-21 16:42:53'),
+(753, 266, 22, 'updated', 'subtask_status', NULL, 'in_progress', NULL, 'Estado de subtarea actualizado', '2025-08-21 16:42:58'),
+(754, 270, 22, 'commented', 'subtask_comment', NULL, 'Agregar Temas de otras compañias de seguros \nConvenciones y bonos de otras compañias de seguros (Plan Seguro, Mapfre,Qualitas,HDI)', NULL, 'Comentario agregado en subtarea: Plan de Capacitacion Director Agencia', '2025-08-21 17:24:26'),
+(755, 270, 22, 'commented', 'subtask_comment', NULL, 'Se esta trabajando con actulizar presentacion con el resumen de información', NULL, 'Comentario agregado en subtarea: Manuales de Conocimientos de productos y procesos técnicos', '2025-08-21 17:26:16'),
+(756, 270, 22, 'updated', 'subtask_status', NULL, 'in_progress', NULL, 'Estado de subtarea actualizado', '2025-08-21 17:26:26'),
+(757, 270, 22, 'commented', 'subtask_comment', NULL, 'Entrega de Gil para segunda revision Lunes 25', NULL, 'Comentario agregado en subtarea: Manuales de Conocimientos de productos y procesos técnicos', '2025-08-21 17:26:57'),
+(758, 270, 22, 'commented', 'subtask_comment', NULL, 'Convertirlos a PDF Editables', NULL, 'Comentario agregado en subtarea: Solicitud de Productos', '2025-08-21 17:28:35'),
+(759, 270, 22, 'commented', 'subtask_comment', NULL, '-Objetivo: llevar el Slip a un archivo digital (plataforma) Conctarlo en un futuro con la IA\n-que se convierta en una Guia para el agente (anotaciones para cada uno de los ramos)\n-Asignacion de tarea para Nora', NULL, 'Comentario agregado en subtarea: Solicitud de Productos', '2025-08-21 17:30:56'),
+(760, 270, 22, 'commented', 'subtask_comment', NULL, 'Considerar, condiciones especiales y exclusiones por convenios expreso \n(ej.equipo electronico)', NULL, 'Comentario agregado en subtarea: Solicitud de Productos', '2025-08-21 17:32:30'),
+(761, 270, 22, 'commented', 'subtask_comment', NULL, '-GM Axa, pendiente producto GMMPLus\n- Vida Aliados\n- Autos Qualitas,HDI,Ana Seguros', NULL, 'Comentario agregado en subtarea: Plan de Capacitacion Coordinador Agencia', '2025-08-21 17:38:24'),
+(762, 267, 22, 'commented', 'subtask_comment', NULL, '- Asignacion de Actividades (Cotizaciones)\n-', NULL, 'Comentario agregado en subtarea: Perfil Coordinador de Agencia', '2025-08-21 17:39:45'),
+(763, 266, 22, 'commented', 'subtask_comment', NULL, '- Iniciaria su proceso de Clave desde que coloca su 1er venta\n- Que pasa con un agente que saca clave y que no se logra asignar a una direccion? \n- Que pasa con los agentes que en los 3 meses no logra el resultado, cuanto tiempo se puede llegar a quedar en la incubación?? 3/4 meses despues de terminar su proceso de Arranque.\n- Cual sera el proceso para la asignacion de nuevo prospecto para las direcciones?\n- Sistema de reconocimiento e insignia para todo el proceso del prospecto agente.\n-', NULL, 'Comentario agregado en subtarea: Proceso de Reclutamiento Agentes Novatos', '2025-08-21 17:55:53'),
+(764, 266, 22, 'commented', 'subtask_comment', NULL, '- Esquemas de bonos y comisiones desde que el agente tiene clave \n-Ofertas de valor de las compañias de seguros \n- Agentes que solicitan de manera directa a RH, realizar el filtro con el gerente y/o direccion de agencia para realizar compromiso comercial para procesar la alta con la compañia solicitada\n-Comunicacion de reglas por compañia (Qualitas proceso de reclutamiento)\n-Plan Seguro (cambio de promotoria con Plan Seguro)(rehabilitaciones con AXA)(Cambios de promotoria con AXA)\n- Coordinador de Recluta y Desarrollo ( encargado de la revision de los acuerdos iniciales de la recluta segun su perfil, con los compromisos, las reglas de negocio que serian con ese agente)', NULL, 'Comentario agregado en subtarea: Proceso Fidelización Agentes Consolidados', '2025-08-21 18:10:23'),
+(765, 268, 22, 'commented', 'subtask_comment', NULL, 'Compromiso del llenado de plataforma todos los dias durante los ultimos 30 min de la jornada', NULL, 'Comentario agregado en subtarea: Herramientas de seguimiento (Dashboard)', '2025-08-21 18:22:55'),
+(766, 269, 22, 'commented', 'subtask_comment', NULL, 'Revisar la estructura directo en la plataforma (Andres)', NULL, 'Comentario agregado en subtarea: Estructura de la Plataforma', '2025-08-21 18:27:03'),
+(767, 269, 22, 'commented', 'subtask_comment', NULL, 'Determinar responsables por Modulo (Yess que identifique quienes serian los responsables de cada etapa)', NULL, 'Comentario agregado en subtarea: Alimentacion de la Plataforma', '2025-08-21 18:28:32'),
+(768, 269, 22, 'commented', 'subtask_comment', NULL, 'Reunion para el dia Martes navegar por la plataforma', NULL, 'Comentario agregado en subtarea: Alimentacion de la Plataforma', '2025-08-21 18:29:56'),
+(769, 271, 22, 'assigned', 'assigned_users', NULL, '30', NULL, 'Múltiples usuarios asignados', '2025-08-21 21:16:57'),
+(770, 271, 22, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-08-21 21:16:57'),
+(771, 272, 22, 'assigned', 'assigned_users', NULL, '27', NULL, 'Múltiples usuarios asignados', '2025-08-21 21:17:34'),
+(772, 272, 22, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-08-21 21:17:34'),
+(773, 243, 2, 'commented', 'subtask_comment', NULL, 'Comentario de prueba para probar la funcionalidad', NULL, 'Comentario agregado en subtarea: TT2', '2025-08-22 17:32:36'),
+(774, 243, 2, 'updated', 'subtask_status', NULL, 'in_progress', NULL, 'Estado de subtarea actualizado', '2025-08-22 17:34:39'),
+(775, 243, 2, 'updated', 'subtask_status', NULL, 'completed', NULL, 'Estado de subtarea actualizado', '2025-08-22 17:35:25'),
+(776, 243, 2, 'commented', 'subtask_comment', NULL, 'Otro comentario', NULL, 'Comentario agregado en subtarea: TT2', '2025-08-22 17:40:40'),
+(777, 243, 2, 'commented', 'subtask_comment', NULL, 'Un comentario', NULL, 'Comentario agregado en subtarea: TT3', '2025-08-22 18:09:51'),
+(778, 243, 2, 'commented', 'subtask_comment', NULL, 'Un comentario', NULL, 'Comentario agregado en subtarea: TT4', '2025-08-22 18:13:20'),
+(779, 243, 2, 'commented', 'subtask_comment', NULL, 'Automatizacion', NULL, 'Comentario agregado en subtarea: TT3', '2025-08-22 18:13:54'),
+(780, 243, 2, 'updated', 'subtask_status', NULL, 'completed', NULL, 'Estado de subtarea actualizado', '2025-08-22 18:15:06'),
+(781, 243, 2, 'updated', 'subtask_status', NULL, 'in_progress', NULL, 'Estado de subtarea actualizado', '2025-08-22 18:15:13'),
+(782, 243, 2, 'commented', 'subtask_comment', NULL, 'Otro comentario', NULL, 'Comentario agregado en subtarea: TT4', '2025-08-22 18:20:18'),
+(783, 243, 2, 'updated', 'subtask_status', NULL, 'in_progress', NULL, 'Estado de subtarea actualizado', '2025-08-22 18:33:16'),
+(784, 243, 2, 'updated', 'subtask_status', NULL, 'in_progress', NULL, 'Estado de subtarea actualizado', '2025-08-22 18:35:26'),
+(785, 243, 2, 'updated', 'subtask_status', NULL, 'completed', NULL, 'Estado de subtarea actualizado', '2025-08-22 18:35:29'),
+(786, 243, 2, 'updated', 'subtask_status', NULL, 'in_progress', NULL, 'Estado de subtarea actualizado', '2025-08-22 18:37:19'),
+(787, 243, 2, 'updated', 'subtask_status', NULL, 'completed', NULL, 'Estado de subtarea actualizado', '2025-08-22 18:37:22'),
+(788, 243, 2, 'updated', 'subtask_status', NULL, 'in_progress', NULL, 'Estado de subtarea actualizado', '2025-08-22 18:37:52'),
+(789, 243, 2, 'updated', 'subtask_status', NULL, 'completed', NULL, 'Estado de subtarea actualizado', '2025-08-22 18:38:29'),
+(790, 243, 2, 'updated', 'subtask_status', NULL, 'in_progress', NULL, 'Estado de subtarea actualizado', '2025-08-22 18:38:42'),
+(791, 243, 2, 'updated', 'subtask_status', NULL, 'completed', NULL, 'Estado de subtarea actualizado', '2025-08-22 18:38:48'),
+(792, 243, 2, 'updated', 'subtask_status', NULL, 'in_progress', NULL, 'Estado de subtarea actualizado', '2025-08-22 18:42:37'),
+(793, 243, 2, 'updated', 'subtask_status', NULL, 'completed', NULL, 'Estado de subtarea actualizado', '2025-08-22 18:42:41'),
+(794, 243, 2, 'updated', 'subtask_status', NULL, 'completed', NULL, 'Estado de subtarea actualizado', '2025-08-22 18:43:51'),
+(795, 243, 2, 'updated', 'subtask_status', NULL, 'in_progress', NULL, 'Estado de subtarea actualizado', '2025-08-22 18:47:08'),
+(796, 243, 2, 'created', 'subtask', NULL, 'SubTarea 3 desde tareas', NULL, 'Subtarea creada: SubTarea 3 desde tareas', '2025-08-22 18:54:46'),
+(797, 243, 2, 'updated', 'subtask_status', NULL, 'in_progress', NULL, 'Estado de subtarea actualizado', '2025-08-22 18:54:54'),
+(798, 258, 2, 'created', 'subtask', NULL, 'Subtarea sin subtareas previas.', NULL, 'Subtarea creada: Subtarea sin subtareas previas.', '2025-08-22 18:58:08'),
+(799, 258, 2, 'created', 'subtask', NULL, 'sadfasdf', NULL, 'Subtarea creada: sadfasdf', '2025-08-22 18:59:44'),
+(800, 248, 4, 'status_changed', 'status', 'pending', 'completed', NULL, 'Estado cambiado de pending a completed', '2025-08-22 19:00:08'),
+(801, 260, 4, 'status_changed', 'status', 'pending', 'completed', NULL, 'Estado cambiado de pending a completed', '2025-08-22 19:00:11'),
+(802, 262, 4, 'status_changed', 'status', 'pending', 'completed', NULL, 'Estado cambiado de pending a completed', '2025-08-22 19:00:15'),
+(803, 265, 4, 'status_changed', 'status', 'pending', 'completed', NULL, 'Estado cambiado de pending a completed', '2025-08-22 19:00:18'),
+(804, 243, 2, 'deleted', 'subtask_attachment', '10. CVGENAROMARTINEZ.pdf', NULL, NULL, 'Adjunto eliminado de subtarea: Tarea de prueba', '2025-08-22 19:01:00'),
+(805, 243, 2, 'deleted', 'subtask_attachment', '15.CVDANIELBARRIOS.pdf', NULL, NULL, 'Adjunto eliminado de subtarea: Tarea de prueba', '2025-08-22 19:01:11'),
+(806, 243, 2, 'commented', 'subtask_comment', NULL, '<h1><strong>!@#$%^&amp;*()_+ASDFGHJKL:\"¡™£¢∞§¶•ªº–≠`π“‘«æ…¬≤≥÷œåΩ≈ß∑´∂ç√ƒ®†©∫˜˙¥¨∆µ≤˚ˆø¬≤≥÷</strong></h1>', NULL, 'Comentario agregado en subtarea: Tarea de prueba', '2025-08-22 19:10:45'),
+(807, 243, 2, 'commented', 'subtask_comment', NULL, '<p>☐ Tarea1</p><p>☐ Tarea2</p><p>☐ Tarea3</p>', NULL, 'Comentario agregado en subtarea: Tarea de prueba', '2025-08-22 19:15:28'),
+(808, 243, 2, 'commented', 'subtask_comment', NULL, '<p>☐ losmd</p>', NULL, 'Comentario agregado en subtarea: Tarea de prueba', '2025-08-22 19:18:34'),
+(809, 243, 2, 'commented', 'subtask_comment', NULL, '<p>☐ Otra check</p><p><span style=\"background-color: rgb(255, 255, 0);\">sdkfmklsdfnmlksdfmnklsadmf</span></p>', NULL, 'Comentario agregado en subtarea: Tarea de prueba', '2025-08-22 19:22:19');
 
 -- --------------------------------------------------------
 
@@ -2004,9 +2258,9 @@ CREATE TABLE `Users` (
 --
 
 INSERT INTO `Users` (`user_id`, `username`, `password_hash`, `email`, `full_name`, `is_active`, `last_login`, `created_at`, `avatar_path`) VALUES
-(1, 'super', '123456', 'desarrollo@rinorisk.com', 'Usuario Administrador', 1, '2025-08-20 23:27:14', '2025-07-29 22:45:12', ''),
-(2, 'abdielc', '123456', 'redskullcoder@gmail.com', 'Abdiel Carrasco', 1, '2025-08-20 23:11:02', '2025-07-29 23:23:21', ''),
-(4, 'franklinb', 'Grok2024', 'desarrollo2@rinorisk.com', 'Franklin Benitez', 1, '2025-08-20 20:00:58', '2025-07-30 17:10:05', 'uploads/avatar_4_1755619752.jpeg'),
+(1, 'super', '123456', 'desarrollo@rinorisk.com', 'Usuario Administrador', 1, '2025-08-21 15:13:27', '2025-07-29 22:45:12', ''),
+(2, 'abdielc', '123456', 'redskullcoder@gmail.com', 'Abdiel Carrasco', 1, '2025-08-22 18:01:25', '2025-07-29 23:23:21', ''),
+(4, 'franklinb', 'Grok2024', 'desarrollo2@rinorisk.com', 'Franklin Benitez', 1, '2025-08-22 18:00:33', '2025-07-30 17:10:05', 'uploads/avatar_4_1755619752.jpeg'),
 (5, 'Rubend', '123456', 'desarrollo3@rinorisk.com', 'Ruben Dorado', 1, NULL, '2025-07-30 18:20:45', ''),
 (6, 'gaelh', '123456', 'desarrollo.fulstack@rinorisk.com', 'Gael Herrera', 1, NULL, '2025-07-30 19:36:11', ''),
 (9, 'manuels', '123456', 'desarrollo.frontjr@rinorisk.com', 'Manuel Saenz', 1, '2025-08-18 23:03:16', '2025-07-30 19:46:47', ''),
@@ -2022,7 +2276,7 @@ INSERT INTO `Users` (`user_id`, `username`, `password_hash`, `email`, `full_name
 (19, 'arisbethc', '123456', 'supervisor.comercialtj@rinorisk.com', 'Arisbeth Cuevas', 1, '2025-08-07 20:20:36', '2025-08-06 21:05:25', ''),
 (20, 'marlenef', '123456', 'cobranza@rinorisk.com', 'Marlene Flores', 1, NULL, '2025-08-06 21:06:16', ''),
 (21, 'Beatrizi', '123456', 'servicio.vgmtj@rinorisk.com', 'Beatriz Ita', 1, NULL, '2025-08-06 21:07:46', ''),
-(22, 'sofiag', 'Cur7ywhoi#!', 'Sofia@rinorisk.com', 'Sofia Gallardo', 1, '2025-08-20 23:32:18', '2025-08-06 21:09:03', ''),
+(22, 'sofiag', 'Cur7ywhoi#!', 'Sofia@rinorisk.com', 'Sofia Gallardo', 1, '2025-08-22 18:12:27', '2025-08-06 21:09:03', ''),
 (23, 'taniab', '123456', 'auxiliar.inmuebles@rinorisk.com', 'Tania Barboza', 1, NULL, '2025-08-06 21:09:43', ''),
 (24, 'angelicav', '123456', 'gerente.administrativo@rinorisk.com', 'Angelica Vallejo', 1, NULL, '2025-08-06 21:10:52', ''),
 (25, 'yazmint', '123456', 'contabilidad@rinorisk.com', 'Yazmin Trejo', 1, NULL, '2025-08-06 21:11:37', ''),
@@ -2030,7 +2284,7 @@ INSERT INTO `Users` (`user_id`, `username`, `password_hash`, `email`, `full_name
 (27, 'evelynd', '123456', 'analista.financiero@rinorisk.com', 'Evelyn Duran', 1, '2025-08-20 18:16:45', '2025-08-06 21:13:10', ''),
 (28, 'thanias', '123456', 'legal@rinorisk.com', 'Thania Sanchez', 1, NULL, '2025-08-06 21:14:19', ''),
 (29, 'monsed', '123456', 'asistente.legal@rinorisk.com', 'Monserrat Diaz', 1, NULL, '2025-08-06 21:22:48', ''),
-(30, 'Ivanm', 'Jicdx#$23H', 'procesos.operativos@rinorisk.com', 'Ivan Mosqueda', 1, '2025-08-13 21:17:59', '2025-08-06 21:23:48', ''),
+(30, 'Ivanm', 'Jicdx#$23H', 'procesos.operativos@rinorisk.com', 'Ivan Mosqueda', 1, '2025-08-21 22:12:02', '2025-08-06 21:23:48', ''),
 (31, 'marisoll', '123456', 'sincorreo2@rinorisk.com', 'Marisol Lopez', 1, NULL, '2025-08-06 21:24:54', ''),
 (32, 'joseo', '123456', 'sincorreo3@rinorisk.com', 'Jose Ovando', 1, NULL, '2025-08-06 21:25:29', ''),
 (33, 'isidorob', '123456', 'sincorreo4@rinorisk.com', 'Isidoro Bravo', 1, NULL, '2025-08-06 21:26:07', ''),
@@ -2053,9 +2307,9 @@ INSERT INTO `Users` (`user_id`, `username`, `password_hash`, `email`, `full_name
 (50, 'karenf', '123456', 'sincorreo19@rinorisk.com', 'Karen Fletes', 1, '2025-08-07 20:20:10', '2025-08-06 21:54:25', ''),
 (55, 'rosaliae', '123456', 'sincorreo20@rinorisk.com', 'Rosalia Enriquez', 1, NULL, '2025-08-06 23:21:11', ''),
 (56, 'sonial', '123456', 'sincorreo21@rinorisk.com', 'Sonia Lopez', 1, NULL, '2025-08-06 23:24:15', ''),
-(57, 'ivan2', '123456', 'sincorreo23@rinorsik.com', 'Ivan Mosqueda', 1, '2025-08-20 18:09:17', '2025-08-06 23:25:11', ''),
+(57, 'ivan2', '123456', 'sincorreo23@rinorsik.com', 'Ivan Mosqueda', 1, '2025-08-21 22:11:02', '2025-08-06 23:25:11', ''),
 (58, 'norai', 'Vic$sing#$', 'asistente.direccion@rinorisk.com', 'Nora Imelda Covarrubias', 1, '2025-08-19 17:34:07', '2025-08-06 23:29:06', ''),
-(63, 'ivan3', '123456', 'sincorreo29@rinorisk.com', 'Ivan Mozqueda', 1, '2025-08-20 18:08:51', '2025-08-13 23:14:55', '');
+(63, 'ivan3', '123456', 'sincorreo29@rinorisk.com', 'Ivan Mozqueda', 1, '2025-08-21 22:11:18', '2025-08-13 23:14:55', '');
 
 -- --------------------------------------------------------
 
@@ -2242,6 +2496,26 @@ ALTER TABLE `Subtasks`
   ADD PRIMARY KEY (`subtask_id`);
 
 --
+-- Indices de la tabla `Subtask_Attachments`
+--
+ALTER TABLE `Subtask_Attachments`
+  ADD PRIMARY KEY (`attachment_id`),
+  ADD KEY `subtask_id` (`subtask_id`),
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `comment_id` (`comment_id`),
+  ADD KEY `idx_subtask_attachments_uploaded_at` (`uploaded_at`);
+
+--
+-- Indices de la tabla `Subtask_Comments`
+--
+ALTER TABLE `Subtask_Comments`
+  ADD PRIMARY KEY (`comment_id`),
+  ADD KEY `subtask_id` (`subtask_id`),
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `related_user_id` (`related_user_id`),
+  ADD KEY `idx_subtask_comments_created_at` (`created_at`);
+
+--
 -- Indices de la tabla `Tasks`
 --
 ALTER TABLE `Tasks`
@@ -2307,31 +2581,43 @@ ALTER TABLE `Clan_Members`
 -- AUTO_INCREMENT de la tabla `Notification_Log`
 --
 ALTER TABLE `Notification_Log`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=275;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=283;
 
 --
 -- AUTO_INCREMENT de la tabla `Projects`
 --
 ALTER TABLE `Projects`
-  MODIFY `project_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=45;
+  MODIFY `project_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=46;
 
 --
 -- AUTO_INCREMENT de la tabla `Subtasks`
 --
 ALTER TABLE `Subtasks`
-  MODIFY `subtask_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+  MODIFY `subtask_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=46;
+
+--
+-- AUTO_INCREMENT de la tabla `Subtask_Attachments`
+--
+ALTER TABLE `Subtask_Attachments`
+  MODIFY `attachment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
+
+--
+-- AUTO_INCREMENT de la tabla `Subtask_Comments`
+--
+ALTER TABLE `Subtask_Comments`
+  MODIFY `comment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
 
 --
 -- AUTO_INCREMENT de la tabla `Tasks`
 --
 ALTER TABLE `Tasks`
-  MODIFY `task_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=265;
+  MODIFY `task_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=273;
 
 --
 -- AUTO_INCREMENT de la tabla `Task_Assignments`
 --
 ALTER TABLE `Task_Assignments`
-  MODIFY `assignment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=354;
+  MODIFY `assignment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=362;
 
 --
 -- AUTO_INCREMENT de la tabla `Task_Attachments`
@@ -2343,13 +2629,13 @@ ALTER TABLE `Task_Attachments`
 -- AUTO_INCREMENT de la tabla `Task_Comments`
 --
 ALTER TABLE `Task_Comments`
-  MODIFY `comment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=46;
+  MODIFY `comment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=47;
 
 --
 -- AUTO_INCREMENT de la tabla `Task_History`
 --
 ALTER TABLE `Task_History`
-  MODIFY `history_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=702;
+  MODIFY `history_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=810;
 
 --
 -- AUTO_INCREMENT de la tabla `Users`
@@ -2366,95 +2652,9 @@ DROP TABLE IF EXISTS `v_subtasks_complete`;
 
 CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `v_subtasks_complete`  AS SELECT `s`.`subtask_id` AS `subtask_id`, `s`.`task_id` AS `task_id`, `t`.`task_name` AS `parent_task_name`, `s`.`title` AS `title`, `s`.`description` AS `description`, `s`.`completion_percentage` AS `completion_percentage`, `s`.`estimated_hours` AS `estimated_hours`, `s`.`actual_hours` AS `actual_hours`, `s`.`status` AS `status`, `s`.`priority` AS `priority`, `s`.`due_date` AS `due_date`, `s`.`assigned_to_user_id` AS `assigned_to_user_id`, `s`.`created_by_user_id` AS `created_by_user_id`, `s`.`subtask_order` AS `subtask_order`, `s`.`created_at` AS `created_at`, `s`.`updated_at` AS `updated_at`, `u_assigned`.`full_name` AS `assigned_to_fullname`, `u_assigned`.`username` AS `assigned_to_username`, `u_created`.`full_name` AS `created_by_fullname`, `u_created`.`username` AS `created_by_username` FROM (((`Subtasks` `s` left join `Tasks` `t` on(`s`.`task_id` = `t`.`task_id`)) left join `Users` `u_assigned` on(`s`.`assigned_to_user_id` = `u_assigned`.`user_id`)) left join `Users` `u_created` on(`s`.`created_by_user_id` = `u_created`.`user_id`)) ;
 
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `Subtask_Comments`
---
-
-CREATE TABLE `Subtask_Comments` (
-  `comment_id` int(11) NOT NULL,
-  `subtask_id` int(11) NOT NULL,
-  `user_id` int(11) NOT NULL,
-  `comment_text` text NOT NULL,
-  `comment_type` enum('comment','status_change','assignment','completion','system') DEFAULT 'comment',
-  `related_user_id` int(11) DEFAULT NULL,
-  `old_value` varchar(255) DEFAULT NULL,
-  `new_value` varchar(255) DEFAULT NULL,
-  `is_private` tinyint(1) DEFAULT 0,
-  `created_at` timestamp NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `Subtask_Attachments`
---
-
-CREATE TABLE `Subtask_Attachments` (
-  `attachment_id` int(11) NOT NULL,
-  `subtask_id` int(11) NOT NULL,
-  `user_id` int(11) NOT NULL,
-  `comment_id` int(11) DEFAULT NULL,
-  `file_name` varchar(255) NOT NULL,
-  `file_path` varchar(500) NOT NULL,
-  `file_size` int(11) DEFAULT NULL,
-  `file_type` varchar(100) DEFAULT NULL,
-  `description` text DEFAULT NULL,
-  `uploaded_at` timestamp NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Índices para tablas volcadas
---
-
---
--- Indices de la tabla `Subtask_Comments`
---
-ALTER TABLE `Subtask_Comments`
-  ADD PRIMARY KEY (`comment_id`),
-  ADD KEY `subtask_id` (`subtask_id`),
-  ADD KEY `user_id` (`user_id`),
-  ADD KEY `related_user_id` (`related_user_id`),
-  ADD KEY `idx_subtask_comments_created_at` (`created_at`);
-
---
--- Indices de la tabla `Subtask_Attachments`
---
-ALTER TABLE `Subtask_Attachments`
-  ADD PRIMARY KEY (`attachment_id`),
-  ADD KEY `subtask_id` (`subtask_id`),
-  ADD KEY `user_id` (`user_id`),
-  ADD KEY `comment_id` (`comment_id`),
-  ADD KEY `idx_subtask_attachments_uploaded_at` (`uploaded_at`);
-
---
--- AUTO_INCREMENT de las tablas volcadas
---
-
---
--- AUTO_INCREMENT de la tabla `Subtask_Comments`
---
-ALTER TABLE `Subtask_Comments`
-  MODIFY `comment_id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT de la tabla `Subtask_Attachments`
---
-ALTER TABLE `Subtask_Attachments`
-  MODIFY `attachment_id` int(11) NOT NULL AUTO_INCREMENT;
-
 --
 -- Restricciones para tablas volcadas
 --
-
---
--- Filtros para la tabla `Subtask_Comments`
---
-ALTER TABLE `Subtask_Comments`
-  ADD CONSTRAINT `subtask_comments_ibfk_1` FOREIGN KEY (`subtask_id`) REFERENCES `Subtasks` (`subtask_id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `subtask_comments_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `Users` (`user_id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `subtask_comments_ibfk_3` FOREIGN KEY (`related_user_id`) REFERENCES `Users` (`user_id`) ON DELETE SET NULL;
 
 --
 -- Filtros para la tabla `Subtask_Attachments`
@@ -2464,6 +2664,13 @@ ALTER TABLE `Subtask_Attachments`
   ADD CONSTRAINT `subtask_attachments_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `Users` (`user_id`) ON DELETE CASCADE,
   ADD CONSTRAINT `subtask_attachments_ibfk_3` FOREIGN KEY (`comment_id`) REFERENCES `Subtask_Comments` (`comment_id`) ON DELETE SET NULL;
 
+--
+-- Filtros para la tabla `Subtask_Comments`
+--
+ALTER TABLE `Subtask_Comments`
+  ADD CONSTRAINT `subtask_comments_ibfk_1` FOREIGN KEY (`subtask_id`) REFERENCES `Subtasks` (`subtask_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `subtask_comments_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `Users` (`user_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `subtask_comments_ibfk_3` FOREIGN KEY (`related_user_id`) REFERENCES `Users` (`user_id`) ON DELETE SET NULL;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

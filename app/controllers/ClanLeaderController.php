@@ -3747,6 +3747,124 @@ class ClanLeaderController {
     }
 
     /**
+     * Guardar estado de checkbox en comentario
+     */
+    public function saveCheckboxState() {
+        $this->requireAuth();
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
+        }
+        
+        $input = json_decode(file_get_contents('php://input'), true);
+        
+        $commentId = (int)($input['comment_id'] ?? 0);
+        $commentType = $input['comment_type'] ?? ''; // 'task' o 'subtask'
+        $checkboxIndex = (int)($input['checkbox_index'] ?? 0);
+        $checkboxText = trim($input['checkbox_text'] ?? '');
+        $isChecked = (bool)($input['is_checked'] ?? false);
+        
+        if ($commentId <= 0 || !in_array($commentType, ['task', 'subtask']) || empty($checkboxText)) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Datos inválidos'], 400);
+        }
+        
+        try {
+            // Verificar permisos según el tipo de comentario
+            if ($commentType === 'task') {
+                // Verificar que el comentario pertenece a una tarea del clan
+                $stmt = $this->db->prepare("
+                    SELECT tc.*, t.project_id, p.clan_id
+                    FROM Task_Comments tc
+                    JOIN Tasks t ON tc.task_id = t.task_id
+                    JOIN Projects p ON t.project_id = p.project_id
+                    WHERE tc.comment_id = ?
+                ");
+                $stmt->execute([$commentId]);
+                $comment = $stmt->fetch();
+                
+                if (!$comment || $comment['clan_id'] != $this->userClan['clan_id']) {
+                    Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+                }
+            } else {
+                // Verificar que el comentario pertenece a una subtarea del clan
+                $stmt = $this->db->prepare("
+                    SELECT sc.*, s.task_id, t.project_id, p.clan_id
+                    FROM Subtask_Comments sc
+                    JOIN Subtasks s ON sc.subtask_id = s.subtask_id
+                    JOIN Tasks t ON s.task_id = t.task_id
+                    JOIN Projects p ON t.project_id = p.project_id
+                    WHERE sc.comment_id = ?
+                ");
+                $stmt->execute([$commentId]);
+                $comment = $stmt->fetch();
+                
+                if (!$comment || $comment['clan_id'] != $this->userClan['clan_id']) {
+                    Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+                }
+            }
+            
+            // Guardar estado del checkbox
+            $checkboxModel = new CheckboxState();
+            $checkboxModel->createTableIfNotExists(); // Crear tabla si no existe
+            
+            $result = $checkboxModel->saveCheckboxState(
+                $commentId,
+                $commentType,
+                $checkboxIndex,
+                $checkboxText,
+                $isChecked,
+                $this->currentUser['user_id']
+            );
+            
+            if ($result) {
+                Utils::jsonResponse(['success' => true, 'message' => 'Estado guardado correctamente']);
+            } else {
+                Utils::jsonResponse(['success' => false, 'message' => 'Error al guardar estado'], 500);
+            }
+            
+        } catch (Exception $e) {
+            error_log("Error al guardar estado de checkbox: " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor'], 500);
+        }
+    }
+    
+    /**
+     * Obtener estados de checkboxes para comentarios
+     */
+    public function getCheckboxStates() {
+        $this->requireAuth();
+        
+        $commentIds = $_GET['comment_ids'] ?? '';
+        $commentType = $_GET['comment_type'] ?? '';
+        
+        if (empty($commentIds) || !in_array($commentType, ['task', 'subtask'])) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Parámetros inválidos'], 400);
+        }
+        
+        try {
+            $commentIdsArray = explode(',', $commentIds);
+            $checkboxModel = new CheckboxState();
+            $allStates = [];
+            
+            foreach ($commentIdsArray as $commentId) {
+                $commentId = (int)trim($commentId);
+                if ($commentId > 0) {
+                    $states = $checkboxModel->getCheckboxStates($commentId, $commentType);
+                    if (!empty($states)) {
+                        $allStates[$commentId] = $states;
+                    }
+                }
+            }
+            
+            Utils::jsonResponse(['success' => true, 'states' => $allStates]);
+            
+        } catch (Exception $e) {
+            error_log("Error al obtener estados de checkbox: " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor'], 500);
+        }
+    }
+
+    /**
      * Obtener datos de subtarea para edición
      */
     public function getSubtaskForEdit() {
