@@ -2,105 +2,109 @@
 ob_start();
 ?>
 
-<div class="container" style="max-width: 800px; margin: 0 auto; padding: 20px;">
-    
+<div class="container" style="max-width: 1200px; margin: 0 auto; padding: 20px;">
+    <div class="task-layout" style="display: grid; grid-template-columns: 1fr 350px; gap: 30px;">
+        
+        <!-- Columna Principal -->
+        <div class="main-column">
+            
     <!-- Encabezado de la Tarea -->
-    <div class="task-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between;">
+    <div class="task-header" style="background: #e0e7ff; color: #1e40af; padding: 20px; border-radius: 12px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; border: 1px solid #c7d2fe;">
         <div style="display: flex; align-items: center; gap: 15px;">
             <div style="width: 50px; height: 50px; background: rgba(255,255,255,0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 24px;">
                 <i class="fas fa-folder-open"></i>
-            </div>
+                    </div>
             <div>
                 <h1 style="margin: 0; font-size: 24px; font-weight: 700;"><?php echo htmlspecialchars($task['task_name']); ?></h1>
                 <p style="margin: 5px 0 0 0; opacity: 0.9;">Proyecto: <?php echo htmlspecialchars($task['project_name'] ?? 'N/A'); ?></p>
-            </div>
+                    </div>
         </div>
         <div>
-            <span class="status-badge" style="background: rgba(255,255,255,0.2); color: white; padding: 8px 16px; border-radius: 20px; font-weight: 600; text-transform: uppercase; font-size: 12px;">
+            <span class="status-badge" style="background: #fbbf24; color: #1f2937; padding: 8px 16px; border-radius: 20px; font-weight: 600; text-transform: uppercase; font-size: 12px;">
                 <?php echo strtoupper(str_replace('_',' ', (string)$task['status'])); ?>
             </span>
-        </div>
-    </div>
-
+                </div>
+            </div>
+            
     <!-- Frase Motivacional -->
-    <div class="motivational-section" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); padding: 20px; border-radius: 12px; margin-bottom: 20px; display: flex; align-items: center; gap: 15px;">
-        <div style="width: 50px; height: 50px; background: rgba(255,255,255,0.3); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #333;">
+    <div class="motivational-section" style="background: #e0e7ff; padding: 20px; border-radius: 12px; margin-bottom: 20px; display: flex; align-items: center; gap: 15px; border: 1px solid #c7d2fe;">
+        <div style="width: 50px; height: 50px; background: #fbbf24; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #1f2937;">
             <i class="fas fa-lightbulb"></i>
-        </div>
+                </div>
         <div>
-            <div id="motQuote" style="font-weight: 600; color: #333; font-size: 16px; margin-bottom: 5px;">"La excelencia no es un acto, es un hábito."</div>
-            <div id="motAuthor" style="color: #666; font-size: 14px;">— Aristóteles</div>
-        </div>
-    </div>
-
+            <div id="motQuote" style="font-weight: 600; color: #1e40af; font-size: 16px; margin-bottom: 5px;">"La excelencia no es un acto, es un hábito."</div>
+            <div id="motAuthor" style="color: #6b7280; font-size: 14px;">— Aristóteles</div>
+                </div>
+                </div>
+        
     <!-- Información del Creador -->
     <div class="creator-info" style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
         <i class="fas fa-user" style="color: #3b82f6;"></i>
         <span style="color: #374151; font-weight: 500;">Creado por: <?php echo htmlspecialchars($task['created_by_name'] ?? 'Usuario Administrador'); ?></span>
-    </div>
-
+        </div>
+        
     <!-- Descripción -->
-    <?php if (!empty($task['description'])): ?>
+                <?php if (!empty($task['description'])): ?>
     <div class="description-section" style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
         <h3 style="margin: 0 0 15px 0; color: #1f2937; font-size: 18px; font-weight: 600;">Descripción</h3>
         <div style="color: #374151; line-height: 1.6;"><?php echo nl2br(htmlspecialchars($task['description'])); ?></div>
-    </div>
-    <?php endif; ?>
-
+                </div>
+                <?php endif; ?>
+                
     <!-- Subtareas -->
-    <?php if (!empty($subtasks)): ?>
+                <?php if (!empty($subtasks)): ?>
     <div class="subtasks-section" style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
         <h3 style="margin: 0 0 20px 0; color: #1f2937; font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
             <i class="fas fa-tasks"></i> Subtareas (<?php echo count($subtasks); ?>)
         </h3>
         
-        <?php foreach ($subtasks as $subtask): ?>
+                        <?php foreach ($subtasks as $subtask): ?>
         <div class="subtask-card" data-subtask-id="<?php echo $subtask['subtask_id']; ?>" style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 15px; background: #f9fafb;">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
                 <h4 style="margin: 0; font-size: 16px; font-weight: 600; color: #1f2937;"><?php echo htmlspecialchars($subtask['title']); ?></h4>
                 <div style="display: flex; gap: 8px;">
                     <button class="btn-icon-small btn-with-badge" onclick="showSubtaskComments(<?php echo $subtask['subtask_id']; ?>)" title="Ver comentarios" style="position: relative; width: 32px; height: 32px; border: none; border-radius: 6px; background: #f3f4f6; color: #6b7280; cursor: pointer; display: flex; align-items: center; justify-content: center;">
-                        <i class="fas fa-comments"></i>
-                        <span class="badge" id="comments-badge-<?php echo $subtask['subtask_id']; ?>" style="display: none;">0</span>
-                    </button>
+                                            <i class="fas fa-comments"></i>
+                      <span class="badge" id="comments-badge-<?php echo $subtask['subtask_id']; ?>" style="display: none;">0</span>
+                                        </button>
                     <button class="btn-icon-small btn-with-badge" onclick="showSubtaskAttachments(<?php echo $subtask['subtask_id']; ?>)" title="Ver adjuntos" style="position: relative; width: 32px; height: 32px; border: none; border-radius: 6px; background: #f3f4f6; color: #6b7280; cursor: pointer; display: flex; align-items: center; justify-content: center;">
-                        <i class="fas fa-paperclip"></i>
-                        <span class="badge" id="attachments-badge-<?php echo $subtask['subtask_id']; ?>" style="display: none;">0</span>
-                    </button>
+                                            <i class="fas fa-paperclip"></i>
+                      <span class="badge" id="attachments-badge-<?php echo $subtask['subtask_id']; ?>" style="display: none;">0</span>
+                                        </button>
                     <button class="btn-icon-small" onclick="editSubtask(<?php echo $subtask['subtask_id']; ?>)" title="Editar" style="width: 32px; height: 32px; border: none; border-radius: 6px; background: #f3f4f6; color: #6b7280; cursor: pointer; display: flex; align-items: center; justify-content: center;">
-                        <i class="fas fa-edit"></i>
-                    </button>
+                                            <i class="fas fa-edit"></i>
+                                        </button>
                     <button class="btn-icon-small" onclick="deleteSubtask(<?php echo $subtask['subtask_id']; ?>)" title="Eliminar" style="width: 32px; height: 32px; border: none; border-radius: 6px; background: #fee2e2; color: #dc2626; cursor: pointer; display: flex; align-items: center; justify-content: center;">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            </div>
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
             
             <div style="margin-bottom: 15px;">
                 <span style="color: #6b7280; font-size: 14px;">Estado: <?php echo ucfirst(str_replace('_', ' ', $subtask['status'])); ?></span>
-                <?php if (!empty($subtask['assigned_user_name'])): ?>
+                                    <?php if (!empty($subtask['assigned_user_name'])): ?>
                 <span style="color: #6b7280; font-size: 14px; margin-left: 20px;">Asignado: <?php echo htmlspecialchars($subtask['assigned_user_name']); ?></span>
-                <?php endif; ?>
-            </div>
+                                    <?php endif; ?>
+                                </div>
             
             <div style="display: flex; align-items: center; justify-content: space-between;">
                 <div style="flex: 1; margin-right: 20px;">
                     <div style="background: #e5e7eb; height: 8px; border-radius: 4px; overflow: hidden;">
                         <div style="background: #10b981; height: 100%; width: <?php echo $subtask['completion_percentage']; ?>%; transition: width 0.3s ease;"></div>
-                    </div>
+                                </div>
                     <span style="font-size: 14px; font-weight: 600; color: #374151;"><?php echo $subtask['completion_percentage']; ?>%</span>
-                </div>
+                            </div>
                 <select onchange="updateSubtaskStatus(<?php echo $subtask['subtask_id']; ?>, this.value)" style="padding: 6px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; background: white;">
                     <option value="pending" <?php echo $subtask['status'] === 'pending' ? 'selected' : ''; ?>>Pendiente</option>
                     <option value="in_progress" <?php echo $subtask['status'] === 'in_progress' ? 'selected' : ''; ?>>En Progreso</option>
                     <option value="completed" <?php echo $subtask['status'] === 'completed' ? 'selected' : ''; ?>>Completada</option>
-                </select>
-            </div>
-        </div>
-        <?php endforeach; ?>
-    </div>
-    <?php endif; ?>
-
+                                    </select>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                </div>
+                <?php endif; ?>
+                
     <!-- Comentarios de la Tarea -->
     <div class="comments-section" style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
         <h3 style="margin: 0 0 20px 0; color: #1f2937; font-size: 18px; font-weight: 600;">Comentarios (<?php echo count($comments); ?>)</h3>
@@ -113,25 +117,25 @@ ob_start();
                 <button type="submit" style="background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;">
                     <i class="fas fa-paper-plane"></i> Enviar
                 </button>
-            </div>
-        </form>
+                            </div>
+          </form>
 
         <div class="comments-list">
             <?php if (empty($comments)): ?>
                 <div style="text-align: center; color: #6b7280; font-style: italic; padding: 20px;">Sin comentarios</div>
-            <?php else: ?>
+                    <?php else: ?>
                 <?php foreach ($comments as $c): ?>
                 <div class="comment-item" style="border-bottom: 1px solid #f3f4f6; padding: 15px 0;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                         <span style="font-weight: 600; color: #374151;"><?php echo htmlspecialchars($c['full_name'] ?? $c['username'] ?? ''); ?></span>
                         <span style="font-size: 12px; color: #6b7280;"><?php echo htmlspecialchars($c['created_at'] ?? ''); ?></span>
-                    </div>
+                            </div>
                     <div style="color: #374151; line-height: 1.5;"><?php echo nl2br(htmlspecialchars($c['comment_text'] ?? '')); ?></div>
                 </div>
                 <?php endforeach; ?>
-            <?php endif; ?>
-        </div>
-    </div>
+                            <?php endif; ?>
+                            </div>
+                            </div>
 
     <!-- Botones de Acción -->
     <div style="display: flex; gap: 12px; margin-bottom: 30px;">
@@ -144,16 +148,21 @@ ob_start();
         <button onclick="deleteTask(<?php echo $task['task_id']; ?>)" style="background: #ef4444; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;">
             <i class="fas fa-trash"></i> Eliminar
         </button>
-    </div>
+                    </div>
 
+            </div>
+            
+        <!-- Columna Lateral -->
+        <div class="sidebar-column">
+            
     <!-- Colaboradores -->
     <div class="collaborators-section" style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
-        <h3 style="margin: 0 0 20px 0; color: #1f2937; font-size: 18px; font-weight: 600;">Colaboradores (<?php echo count($assignedUsers); ?>)</h3>
+        <h3 style="margin: 0 0 20px 0; color: #1e40af; font-size: 18px; font-weight: 600;">Colaboradores (<?php echo count($assignedUsers); ?>)</h3>
         
         <button onclick="showAddCollaboratorModal()" style="background: #3b82f6; color: white; border: none; padding: 10px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; margin-bottom: 15px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;">
             <i class="fas fa-plus"></i> Agregar Colaborador
-        </button>
-        
+                        </button>
+                    
         <?php if (empty($assignedUsers)): ?>
             <div style="text-align: center; color: #6b7280; font-style: italic; padding: 20px;">Sin colaboradores</div>
         <?php else: ?>
@@ -167,55 +176,58 @@ ob_start();
                         <div style="font-weight: 600; color: #374151;"><?php echo htmlspecialchars($au['full_name'] ?? $au['username'] ?? ''); ?></div>
                         <div style="font-size: 12px; color: #6b7280;"><?php echo htmlspecialchars($au['username'] ?? ''); ?></div>
                     </div>
-                </div>
+                                </div>
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <input type="number" min="0" max="100" value="<?php echo $au['assigned_percentage'] ?? 0; ?>" 
                            onchange="updateUserPercentage(<?php echo $au['user_id']; ?>, this.value)"
                            style="width: 60px; padding: 6px; border: 1px solid #d1d5db; border-radius: 4px; text-align: center;">
                     <span style="font-size: 14px;">%</span>
                     <button onclick="removeCollaborator(<?php echo $au['user_id']; ?>)" style="background: #fee2e2; color: #dc2626; border: none; padding: 6px 8px; border-radius: 4px; cursor: pointer;">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-            </div>
-            <?php endforeach; ?>
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <?php endforeach; ?>
         <?php endif; ?>
-    </div>
-
+                </div>
+                
     <!-- Historial -->
     <div class="history-section" style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
-        <h3 style="margin: 0 0 20px 0; color: #1f2937; font-size: 18px; font-weight: 600;">Historial</h3>
+        <h3 style="margin: 0 0 20px 0; color: #1e40af; font-size: 18px; font-weight: 600;">Historial</h3>
         
-        <?php if (empty($history)): ?>
+            <?php if (empty($history)): ?>
             <div style="text-align: center; color: #6b7280; font-style: italic; padding: 20px;">Sin historial</div>
         <?php else: ?>
             <?php foreach ($history as $h): ?>
             <div style="border-bottom: 1px solid #f3f4f6; padding: 12px 0;">
-                <div style="font-weight: 600; color: #374151; margin-bottom: 4px;"><?php echo htmlspecialchars(ucfirst($h['action_type'] ?? $h['notes'] ?? '')); ?></div>
+                <div style="font-weight: 600; color: #1e40af; margin-bottom: 4px;"><?php echo htmlspecialchars(ucfirst($h['action_type'] ?? $h['notes'] ?? '')); ?></div>
                 <div style="font-size: 12px; color: #6b7280;">Por: <?php echo htmlspecialchars($h['full_name'] ?? $h['username'] ?? ''); ?> — <?php echo htmlspecialchars($h['created_at'] ?? ''); ?></div>
-            </div>
+                        </div>
             <?php endforeach; ?>
         <?php endif; ?>
-    </div>
+                        </div>
 
     <!-- Información -->
     <div class="info-section" style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px;">
-        <h3 style="margin: 0 0 20px 0; color: #1f2937; font-size: 18px; font-weight: 600;">Información</h3>
+        <h3 style="margin: 0 0 20px 0; color: #1e40af; font-size: 18px; font-weight: 600;">Información</h3>
         
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+        <div style="display: flex; flex-direction: column; gap: 10px;">
             <div><strong style="color: #374151;">Creado:</strong> <span style="color: #6b7280;"><?php echo date('d/m/Y H:i', strtotime($task['created_at'])); ?></span></div>
-            <?php if ($task['updated_at'] !== $task['created_at']): ?>
+                        <?php if ($task['updated_at'] !== $task['created_at']): ?>
             <div><strong style="color: #374151;">Actualizado:</strong> <span style="color: #6b7280;"><?php echo date('d/m/Y H:i', strtotime($task['updated_at'])); ?></span></div>
-            <?php endif; ?>
+                        <?php endif; ?>
             <div><strong style="color: #374151;">Progreso:</strong> <span style="color: #6b7280;"><?php echo (int)($task['completion_percentage'] ?? 0); ?>%</span></div>
-            <?php if ($task['actual_hours']): ?>
+                        <?php if ($task['actual_hours']): ?>
             <div><strong style="color: #374151;">Horas reales:</strong> <span style="color: #6b7280;"><?php echo $task['actual_hours']; ?>h</span></div>
-            <?php endif; ?>
+                        <?php endif; ?>
+                    </div>
+                </div>
+    
+            </div>
         </div>
     </div>
-</div>
-
-<!-- Modal para agregar colaborador -->
+    
+    <!-- Modal para agregar colaborador -->
 <div id="addCollaboratorModal" class="modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); display: none; align-items: center; justify-content: center; z-index: 1000;">
     <div class="modal-content" style="background: white; border-radius: 12px; padding: 20px; max-width: 500px; width: 90%;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
@@ -640,11 +652,11 @@ function showEditSubtaskModal(subtask) {
                     <div class="form-group">
                         <label for="edit-subtask-title">Título:</label>
                         <input type="text" id="edit-subtask-title" value="${subtask.title}" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px; margin-bottom: 10px;">
-                    </div>
+                </div>
                     <div class="form-group">
                         <label for="edit-subtask-description">Descripción:</label>
                         <textarea id="edit-subtask-description" rows="3" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px; margin-bottom: 15px;">${subtask.description || ''}</textarea>
-                    </div>
+                </div>
                     <div class="form-group">
                         <label for="edit-subtask-status">Estado:</label>
                         <select id="edit-subtask-status" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px; margin-bottom: 10px;">
@@ -653,16 +665,16 @@ function showEditSubtaskModal(subtask) {
                             <option value="completed" ${subtask.status === 'completed' ? 'selected' : ''}>Completada</option>
                             <option value="blocked" ${subtask.status === 'blocked' ? 'selected' : ''}>Bloqueada</option>
                         </select>
-                    </div>
+            </div>
                     <div class="form-group">
                         <label for="edit-subtask-percentage">Porcentaje de Completación:</label>
                         <input type="range" id="edit-subtask-percentage" min="0" max="100" value="${subtask.completion_percentage || 0}" style="width: 100%; margin-bottom: 5px;">
                         <span id="percentage-display">${subtask.completion_percentage || 0}%</span>
-                    </div>
+        </div>
                     <div class="form-actions" style="display: flex; gap: 10px; justify-content: flex-end;">
                         <button type="button" onclick="this.closest('.modal-overlay').remove()" class="btn btn-secondary">Cancelar</button>
                         <button type="button" onclick="saveSubtaskChanges(${subtask.subtask_id})" class="btn btn-primary">Guardar</button>
-                    </div>
+    </div>
                 </div>
             </div>
         </div>
@@ -832,212 +844,212 @@ document.getElementById('tdCommentForm')?.addEventListener('submit', function(e)
         .then(async r=>{ const t = await r.text(); try{ return JSON.parse(t); } catch(e){ console.error(t); return {success:false,message:'Respuesta inválida'}; } })
         .then(d=>{ if(!d.success){ alert(d.message||'Error'); return; } location.reload(); });
 });
-
-// Funciones para colaboradores
-function showAddCollaboratorModal() {
-    fetch('?route=clan_leader/get-available-users')
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            const userList = document.getElementById('availableUsersList');
-            userList.innerHTML = '';
-            
-            data.users.forEach(user => {
-                const userOption = document.createElement('div');
-                userOption.className = 'user-option';
-                userOption.innerHTML = `
-                    <input type="checkbox" id="user_${user.user_id}" value="${user.user_id}">
-                    <div style="width: 32px; height: 32px; border-radius: 50%; background: #3b82f6; color: white; display: flex; align-items: center; justify-content: center; font-weight: 600;">
-                        ${user.full_name ? user.full_name.charAt(0).toUpperCase() : user.username.charAt(0).toUpperCase()}
-                    </div>
-                    <div>
-                        <div style="font-weight: 600;">${user.full_name || user.username}</div>
-                        <div style="font-size: 12px; color: #6b7280;">${user.username}</div>
-                    </div>
-                `;
-                userList.appendChild(userOption);
+        
+        // Funciones para colaboradores
+        function showAddCollaboratorModal() {
+            fetch('?route=clan_leader/get-available-users')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const userList = document.getElementById('availableUsersList');
+                    userList.innerHTML = '';
+                    
+                    data.users.forEach(user => {
+                        const userOption = document.createElement('div');
+                        userOption.className = 'user-option';
+                        userOption.innerHTML = `
+                            <input type="checkbox" id="user_${user.user_id}" value="${user.user_id}">
+          <div style="width: 32px; height: 32px; border-radius: 50%; background: #3b82f6; color: white; display: flex; align-items: center; justify-content: center; font-weight: 600;">
+                                ${user.full_name ? user.full_name.charAt(0).toUpperCase() : user.username.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                                <div style="font-weight: 600;">${user.full_name || user.username}</div>
+                                <div style="font-size: 12px; color: #6b7280;">${user.username}</div>
+                            </div>
+                        `;
+                        userList.appendChild(userOption);
+                    });
+                    
+      document.getElementById('addCollaboratorModal').style.display = 'flex';
+                } else {
+                    showNotification('Error al cargar usuarios: ' + data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Error al cargar usuarios', 'error');
             });
+        }
+        
+        function closeAddCollaboratorModal() {
+            document.getElementById('addCollaboratorModal').style.display = 'none';
+        }
+        
+        function addSelectedCollaborators() {
+            const checkboxes = document.querySelectorAll('#availableUsersList input[type="checkbox"]:checked');
+            const userIds = Array.from(checkboxes).map(cb => cb.value);
             
-            document.getElementById('addCollaboratorModal').style.display = 'flex';
-        } else {
-            showNotification('Error al cargar usuarios: ' + data.message, 'error');
+            if (userIds.length === 0) {
+                showNotification('Por favor selecciona al menos un usuario', 'error');
+                return;
+            }
+            
+            fetch('?route=clan_leader/add-collaborators', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+    body: `task_id=<?php echo $task['task_id']; ?>&user_ids=${userIds.join(',')}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    closeAddCollaboratorModal();
+                    showNotification('Colaboradores agregados exitosamente', 'success');
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showNotification('Error al agregar colaboradores: ' + data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Error al agregar colaboradores', 'error');
+            });
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showNotification('Error al cargar usuarios', 'error');
-    });
-}
-
-function closeAddCollaboratorModal() {
-    document.getElementById('addCollaboratorModal').style.display = 'none';
-}
-
-function addSelectedCollaborators() {
-    const checkboxes = document.querySelectorAll('#availableUsersList input[type="checkbox"]:checked');
-    const userIds = Array.from(checkboxes).map(cb => cb.value);
-    
-    if (userIds.length === 0) {
-        showNotification('Por favor selecciona al menos un usuario', 'error');
-        return;
-    }
-    
-    fetch('?route=clan_leader/add-collaborators', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: `task_id=<?php echo $task['task_id']; ?>&user_ids=${userIds.join(',')}`
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            closeAddCollaboratorModal();
-            showNotification('Colaboradores agregados exitosamente', 'success');
-            setTimeout(() => location.reload(), 1000);
-        } else {
-            showNotification('Error al agregar colaboradores: ' + data.message, 'error');
+        
+        function updateUserPercentage(userId, percentage) {
+            fetch('?route=clan_leader/update-user-percentage', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+    body: `task_id=<?php echo $task['task_id']; ?>&user_id=${userId}&percentage=${percentage}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('Porcentaje actualizado', 'success');
+                } else {
+                    showNotification('Error al actualizar porcentaje: ' + data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Error al actualizar porcentaje', 'error');
+            });
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showNotification('Error al agregar colaboradores', 'error');
-    });
-}
-
-function updateUserPercentage(userId, percentage) {
-    fetch('?route=clan_leader/update-user-percentage', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: `task_id=<?php echo $task['task_id']; ?>&user_id=${userId}&percentage=${percentage}`
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showNotification('Porcentaje actualizado', 'success');
-        } else {
-            showNotification('Error al actualizar porcentaje: ' + data.message, 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showNotification('Error al actualizar porcentaje', 'error');
-    });
-}
-
-function removeCollaborator(userId) {
+        
+        function removeCollaborator(userId) {
     if (!confirm('¿Estás seguro de que quieres remover este colaborador?')) return;
     
-    fetch('?route=clan_leader/remove-collaborator', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: `task_id=<?php echo $task['task_id']; ?>&user_id=${userId}`
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            const userItem = document.querySelector(`[data-user-id="${userId}"]`);
-            if (userItem) userItem.remove();
+                fetch('?route=clan_leader/remove-collaborator', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+          body: `task_id=<?php echo $task['task_id']; ?>&user_id=${userId}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const userItem = document.querySelector(`[data-user-id="${userId}"]`);
+                        if (userItem) userItem.remove();
             showNotification('Colaborador removido exitosamente', 'success');
-        } else {
-            showNotification('Error al remover colaborador: ' + data.message, 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showNotification('Error al remover colaborador', 'error');
-    });
+                    } else {
+                        showNotification('Error al remover colaborador: ' + data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showNotification('Error al remover colaborador', 'error');
+                });
 }
 
 function deleteTask(taskId) {
     if (!confirm('¿Estás seguro de que quieres eliminar esta tarea?')) return;
     
     fetch('?route=clan_leader/delete-task', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: 'task_id=' + taskId
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'task_id=' + taskId
     })
     .then(r => r.json())
     .then(data => {
-        if (data.success) {
-            alert('Tarea eliminada exitosamente');
-            setTimeout(() => { window.location.href = '?route=clan_leader/tasks'; }, 800);
-        } else {
-            alert('Error al eliminar la tarea: ' + (data.message || 'Error desconocido'));
-        }
+      if (data.success) {
+        alert('Tarea eliminada exitosamente');
+        setTimeout(() => { window.location.href = '?route=clan_leader/tasks'; }, 800);
+      } else {
+        alert('Error al eliminar la tarea: ' + (data.message || 'Error desconocido'));
+      }
     })
     .catch(() => alert('Error al eliminar la tarea'));
 }
 
 // Función simple de notificación
-function showNotification(message, type = 'info') {
-    let notification = document.getElementById('cl-notification');
-    if (!notification) {
-        const notificationHTML = `
-            <div id="cl-notification" style="
+        function showNotification(message, type = 'info') {
+  let notification = document.getElementById('cl-notification');
+  if (!notification) {
+    const notificationHTML = `
+      <div id="cl-notification" style="
                 position: fixed;
                 top: 20px;
                 right: 20px;
-                z-index: 9999;
+        z-index: 9999;
                 padding: 12px 20px;
-                border-radius: 8px;
-                color: white;
-                font-weight: 600;
-                display: none;
-                transition: all 0.3s ease;
-            ">
-                <span id="cl-notificationMessage"></span>
-                <button onclick="closeCLNotification()" style="
-                    background: none;
-                    border: none;
-                    color: white;
-                    margin-left: 10px;
-                    cursor: pointer;
-                    font-size: 16px;
-                ">&times;</button>
-            </div>
-        `;
-        document.body.insertAdjacentHTML('beforeend', notificationHTML);
-        notification = document.getElementById('cl-notification');
-    }
-    
-    const messageElement = document.getElementById('cl-notificationMessage');
-    messageElement.textContent = message;
-    
-    if (type === 'success') {
-        notification.style.backgroundColor = '#10b981';
-    } else if (type === 'error') {
-        notification.style.backgroundColor = '#ef4444';
-    } else {
-        notification.style.backgroundColor = '#3b82f6';
-    }
-    
-    notification.style.display = 'block';
-    
-    setTimeout(() => {
-        notification.style.display = 'none';
-    }, 3000);
-}
-
+        border-radius: 8px;
+        color: white;
+        font-weight: 600;
+        display: none;
+        transition: all 0.3s ease;
+      ">
+        <span id="cl-notificationMessage"></span>
+        <button onclick="closeCLNotification()" style="
+          background: none;
+          border: none;
+          color: white;
+          margin-left: 10px;
+          cursor: pointer;
+          font-size: 16px;
+        ">&times;</button>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', notificationHTML);
+    notification = document.getElementById('cl-notification');
+  }
+  
+  const messageElement = document.getElementById('cl-notificationMessage');
+  messageElement.textContent = message;
+  
+  if (type === 'success') {
+    notification.style.backgroundColor = '#10b981';
+  } else if (type === 'error') {
+    notification.style.backgroundColor = '#ef4444';
+  } else {
+    notification.style.backgroundColor = '#3b82f6';
+  }
+  
+  notification.style.display = 'block';
+  
+  setTimeout(() => {
+    notification.style.display = 'none';
+            }, 3000);
+        }
+        
 function closeCLNotification() {
-    const notification = document.getElementById('cl-notification');
-    if (notification) {
-        notification.style.display = 'none';
-    }
+  const notification = document.getElementById('cl-notification');
+  if (notification) {
+    notification.style.display = 'none';
+  }
 }
 
 // Cerrar modal al hacer clic fuera
 window.onclick = function(event) {
-    const modal = document.getElementById('addCollaboratorModal');
-    if (event.target === modal) {
-        closeAddCollaboratorModal();
-    }
+  const modal = document.getElementById('addCollaboratorModal');
+  if (event.target === modal) {
+    closeAddCollaboratorModal();
+  }
 }
-</script>
+    </script>
 
 <?php
 $content = ob_get_clean();
