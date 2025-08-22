@@ -3356,9 +3356,18 @@ class ClanLeaderController {
         }
 
         try {
-            $input = json_decode(file_get_contents('php://input'), true);
-            $subtaskId = $input['subtask_id'] ?? null;
-            $commentText = trim($input['comment_text'] ?? '');
+            // Manejar tanto JSON como FormData
+            $subtaskId = null;
+            $commentText = '';
+            
+            if ($_SERVER['CONTENT_TYPE'] && strpos($_SERVER['CONTENT_TYPE'], 'application/json') !== false) {
+                $input = json_decode(file_get_contents('php://input'), true);
+                $subtaskId = $input['subtask_id'] ?? null;
+                $commentText = trim($input['comment_text'] ?? '');
+            } else {
+                $subtaskId = $_POST['subtask_id'] ?? null;
+                $commentText = trim($_POST['comment_text'] ?? '');
+            }
 
             if (!$subtaskId || !$commentText) {
                 http_response_code(400);

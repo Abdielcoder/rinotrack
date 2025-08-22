@@ -893,42 +893,303 @@ function showSubtaskComments(subtaskId) {
     console.log('Mostrando comentarios de subtarea:', subtaskId);
     
     // Cargar comentarios desde el servidor
-            fetch('?route=clan_leader/get-subtask-comments&subtask_id=' + subtaskId)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                // TODO: Crear y mostrar modal con comentarios
-                console.log('Comentarios cargados:', data.comments);
-                showNotification('Comentarios cargados correctamente', 'info');
-                        } else {
+    fetch('?route=clan_leader/get-subtask-comments&subtask_id=' + subtaskId)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showCommentsModal(subtaskId, data.comments);
+            } else {
                 showNotification('Error al cargar comentarios: ' + (data.message || 'Error desconocido'), 'error');
-                    }
-                })
-                .catch(error => {
+            }
+        })
+        .catch(error => {
             console.error('Error:', error);
             showNotification('Error al cargar comentarios', 'error');
-                });
+        });
+}
+
+function showCommentsModal(subtaskId, comments) {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.style.display = 'flex';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 800px; max-height: 80vh;">
+            <div class="modal-header">
+                <h3><i class="fas fa-comments"></i> Comentarios de la Subtarea</h3>
+                <button class="btn-close" onclick="this.closest('.modal-overlay').remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" style="padding: 20px;">
+                <div class="comments-section">
+                    <div class="add-comment-section" style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                        <h4 style="margin: 0 0 10px 0;">Agregar Comentario</h4>
+                        <textarea id="new-comment-text" rows="3" placeholder="Escribe tu comentario..." style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 4px; margin-bottom: 10px; resize: vertical;"></textarea>
+                        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                            <button onclick="addSubtaskComment(${subtaskId})" class="btn btn-primary" style="padding: 8px 16px;">Agregar Comentario</button>
+                        </div>
+                    </div>
+                    
+                    <div class="comments-list">
+                        ${comments.length === 0 ? '<p style="text-align: center; color: #6b7280; font-style: italic;">No hay comentarios aún</p>' : ''}
+                        ${comments.map(comment => `
+                            <div class="comment-item" style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px; margin-bottom: 15px; background: white;">
+                                <div class="comment-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                    <div class="comment-author" style="font-weight: 600; color: #374151;">
+                                        ${comment.full_name || comment.username}
+                                    </div>
+                                    <div class="comment-meta" style="display: flex; align-items: center; gap: 10px;">
+                                        <span style="font-size: 12px; color: #6b7280;">
+                                            ${new Date(comment.created_at).toLocaleString('es-ES')}
+                                        </span>
+                                        ${comment.user_id == <?php echo $this->currentUser['user_id'] ?? 0; ?> ? 
+                                            `<button onclick="deleteSubtaskComment(${comment.comment_id})" class="btn-icon-small" style="background: #ef4444; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;">
+                                                <i class="fas fa-trash"></i>
+                                            </button>` : ''
+                                        }
+                                    </div>
+                                </div>
+                                <div class="comment-content" style="color: #374151; line-height: 1.5;">
+                                    ${comment.comment_text}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+function addSubtaskComment(subtaskId) {
+    const commentText = document.getElementById('new-comment-text').value.trim();
+    
+    if (!commentText) {
+        alert('Por favor escribe un comentario');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('subtask_id', subtaskId);
+    formData.append('comment_text', commentText);
+    
+    fetch('?route=clan_leader/add-subtask-comment', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Recargar comentarios
+            showSubtaskComments(subtaskId);
+        } else {
+            alert('Error al agregar comentario: ' + data.message);
         }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error de conexión');
+    });
+}
+
+function deleteSubtaskComment(commentId) {
+    if (!confirm('¿Estás seguro de que quieres eliminar este comentario?')) {
+        return;
+    }
+    
+    fetch('?route=clan_leader/delete-subtask-comment', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            comment_id: commentId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Recargar comentarios
+            const modal = document.querySelector('.modal-overlay');
+            if (modal) {
+                modal.remove();
+            }
+            // Recargar la página para actualizar contadores
+            location.reload();
+        } else {
+            alert('Error al eliminar comentario: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error de conexión');
+    });
+}
 
 function showSubtaskAttachments(subtaskId) {
     console.log('Mostrando adjuntos de subtarea:', subtaskId);
     
     // Cargar adjuntos desde el servidor
-            fetch('?route=clan_leader/get-subtask-attachments&subtask_id=' + subtaskId)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                // TODO: Crear y mostrar modal con adjuntos
-                console.log('Adjuntos cargados:', data.attachments);
-                showNotification('Adjuntos cargados correctamente', 'info');
-                        } else {
+    fetch('?route=clan_leader/get-subtask-attachments&subtask_id=' + subtaskId)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAttachmentsModal(subtaskId, data.attachments);
+            } else {
                 showNotification('Error al cargar adjuntos: ' + (data.message || 'Error desconocido'), 'error');
-                    }
-                })
-                .catch(error => {
+            }
+        })
+        .catch(error => {
             console.error('Error:', error);
             showNotification('Error al cargar adjuntos', 'error');
         });
+}
+
+function showAttachmentsModal(subtaskId, attachments) {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.style.display = 'flex';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 800px; max-height: 80vh;">
+            <div class="modal-header">
+                <h3><i class="fas fa-paperclip"></i> Adjuntos de la Subtarea</h3>
+                <button class="btn-close" onclick="this.closest('.modal-overlay').remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" style="padding: 20px;">
+                <div class="attachments-section">
+                    <div class="add-attachment-section" style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                        <h4 style="margin: 0 0 10px 0;">Subir Archivo</h4>
+                        <form id="upload-form" enctype="multipart/form-data">
+                            <input type="file" id="attachment-file" style="margin-bottom: 10px;" accept="*/*">
+                            <textarea id="attachment-description" rows="2" placeholder="Descripción del archivo (opcional)..." style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px; margin-bottom: 10px; resize: vertical;"></textarea>
+                            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                                <button type="button" onclick="uploadSubtaskAttachment(${subtaskId})" class="btn btn-primary" style="padding: 8px 16px;">Subir Archivo</button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <div class="attachments-list">
+                        ${attachments.length === 0 ? '<p style="text-align: center; color: #6b7280; font-style: italic;">No hay adjuntos aún</p>' : ''}
+                        ${attachments.map(attachment => `
+                            <div class="attachment-item" style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px; margin-bottom: 15px; background: white;">
+                                <div class="attachment-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                    <div class="attachment-info">
+                                        <div class="attachment-name" style="font-weight: 600; color: #374151; display: flex; align-items: center; gap: 8px;">
+                                            <i class="fas fa-file"></i>
+                                            <a href="${attachment.file_path}" target="_blank" style="color: #3b82f6; text-decoration: none;">
+                                                ${attachment.file_name}
+                                            </a>
+                                        </div>
+                                        <div class="attachment-meta" style="font-size: 12px; color: #6b7280; margin-top: 4px;">
+                                            ${formatFileSize(attachment.file_size)} • ${attachment.file_type} • ${new Date(attachment.uploaded_at).toLocaleString('es-ES')}
+                                        </div>
+                                    </div>
+                                    <div class="attachment-actions">
+                                        <a href="${attachment.file_path}" download="${attachment.file_name}" class="btn-icon-small" style="background: #10b981; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; text-decoration: none; margin-right: 5px;">
+                                            <i class="fas fa-download"></i>
+                                        </a>
+                                        ${attachment.user_id == <?php echo $this->currentUser['user_id'] ?? 0; ?> ? 
+                                            `<button onclick="deleteSubtaskAttachment(${attachment.attachment_id})" class="btn-icon-small" style="background: #ef4444; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;">
+                                                <i class="fas fa-trash"></i>
+                                            </button>` : ''
+                                        }
+                                    </div>
+                                </div>
+                                ${attachment.description ? `
+                                    <div class="attachment-description" style="color: #6b7280; font-size: 14px; margin-top: 8px; padding-top: 8px; border-top: 1px solid #f3f4f6;">
+                                        ${attachment.description}
+                                    </div>
+                                ` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+function uploadSubtaskAttachment(subtaskId) {
+    const fileInput = document.getElementById('attachment-file');
+    const description = document.getElementById('attachment-description').value.trim();
+    
+    if (!fileInput.files[0]) {
+        alert('Por favor selecciona un archivo');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('subtask_id', subtaskId);
+    formData.append('file', fileInput.files[0]);
+    if (description) {
+        formData.append('description', description);
+    }
+    
+    fetch('?route=clan_leader/upload-subtask-attachment', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Recargar adjuntos
+            showSubtaskAttachments(subtaskId);
+        } else {
+            alert('Error al subir archivo: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error de conexión');
+    });
+}
+
+function deleteSubtaskAttachment(attachmentId) {
+    if (!confirm('¿Estás seguro de que quieres eliminar este archivo?')) {
+        return;
+    }
+    
+    fetch('?route=clan_leader/delete-subtask-attachment', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            attachment_id: attachmentId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Recargar adjuntos
+            const modal = document.querySelector('.modal-overlay');
+            if (modal) {
+                modal.remove();
+            }
+            // Recargar la página para actualizar contadores
+            location.reload();
+        } else {
+            alert('Error al eliminar archivo: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error de conexión');
+    });
 }
 
 function editSubtask(subtaskId) {
