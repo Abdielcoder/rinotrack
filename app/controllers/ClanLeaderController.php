@@ -291,7 +291,7 @@ class ClanLeaderController {
                 return;
             }
             
-            // Consulta simple para obtener todos los miembros del clan
+            // Consulta corregida usando la estructura real de la base de datos
             $stmt = $this->db->prepare("
                 SELECT 
                     u.user_id,
@@ -299,13 +299,15 @@ class ClanLeaderController {
                     u.full_name,
                     u.email,
                     u.is_active,
-                    'member' as role,
+                    COALESCE(r.role_name, 'usuario_normal') as role,
                     CASE 
                         WHEN cm.user_id IS NOT NULL THEN 'Miembro del clan'
                         ELSE 'Usuario externo'
                     END as membership_status
                 FROM Users u
                 LEFT JOIN Clan_Members cm ON u.user_id = cm.user_id AND cm.clan_id = ?
+                LEFT JOIN User_Roles ur ON u.user_id = ur.user_id
+                LEFT JOIN Roles r ON ur.role_id = r.role_id
                 WHERE u.is_active = 1 
                 ORDER BY 
                     CASE WHEN cm.user_id IS NOT NULL THEN 0 ELSE 1 END,

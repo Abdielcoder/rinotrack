@@ -1795,6 +1795,17 @@ document.getElementById('tdCommentForm')?.addEventListener('submit', function(e)
         // Variable global para almacenar todos los usuarios
         let allUsers = [];
         
+        // Función para mostrar nombres amigables de roles
+        function getRoleDisplayName(role) {
+            const roleNames = {
+                'super_admin': 'Super Administrador',
+                'admin': 'Administrador',
+                'lider_clan': 'Líder de Clan',
+                'usuario_normal': 'Usuario Normal'
+            };
+            return roleNames[role] || role;
+        }
+        
         // Funciones para colaboradores
         function showAddCollaboratorModal() {
             fetch('?route=clan_leader/get-available-users')
@@ -1850,7 +1861,7 @@ document.getElementById('tdCommentForm')?.addEventListener('submit', function(e)
                             </div>
                             <div style="font-size: 14px; color: #6b7280; margin-top: 2px;">@${user.username}</div>
                             ${user.email ? `<div style="font-size: 12px; color: #9ca3af; margin-top: 1px;">${user.email}</div>` : ''}
-                            ${user.role ? `<div style="font-size: 12px; color: #1e3a8a; margin-top: 1px; font-weight: 500;">Rol: ${user.role}</div>` : ''}
+                            ${user.role ? `<div style="font-size: 12px; color: #1e3a8a; margin-top: 1px; font-weight: 500;">Rol: ${getRoleDisplayName(user.role)}</div>` : ''}
                         </div>
                     </div>
                 `;
