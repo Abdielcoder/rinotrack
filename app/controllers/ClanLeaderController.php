@@ -273,34 +273,23 @@ class ClanLeaderController {
      */
     public function getAvailableUsers() {
         try {
-            error_log("getAvailableUsers: Método iniciado");
-            
             // Verificar autenticación
             if (!$this->auth || !$this->auth->isLoggedIn()) {
-                error_log("getAvailableUsers: Usuario no autenticado");
                 Utils::jsonResponse(['success' => false, 'message' => 'No autenticado'], 401);
                 return;
             }
             
-            error_log("getAvailableUsers: Usuario autenticado");
-            
             // Verificar permisos de líder de clan
             if (!$this->hasClanLeaderAccess()) {
-                error_log("getAvailableUsers: Sin permisos de líder de clan");
                 Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos de líder de clan'], 403);
                 return;
             }
             
-            error_log("getAvailableUsers: Permisos verificados");
-            
             // Verificar que el usuario tiene clan asignado
             if (!$this->userClan || !isset($this->userClan['clan_id'])) {
-                error_log("getAvailableUsers: No hay clan asignado");
                 Utils::jsonResponse(['success' => false, 'message' => 'No tienes un clan asignado'], 403);
                 return;
             }
-            
-            error_log("getAvailableUsers: Iniciando para clan_id: " . $this->userClan['clan_id']);
             
             // Consulta simple para obtener todos los miembros del clan
             $stmt = $this->db->prepare("
@@ -310,7 +299,7 @@ class ClanLeaderController {
                     u.full_name,
                     u.email,
                     u.is_active,
-                    COALESCE(cm.role, 'member') as role,
+                    'member' as role,
                     CASE 
                         WHEN cm.user_id IS NOT NULL THEN 'Miembro del clan'
                         ELSE 'Usuario externo'
@@ -324,8 +313,6 @@ class ClanLeaderController {
             ");
             $stmt->execute([$this->userClan['clan_id']]);
             $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
-            error_log("getAvailableUsers: Usuarios encontrados: " . count($users));
             
             Utils::jsonResponse([
                 'success' => true,
