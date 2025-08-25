@@ -211,10 +211,6 @@ ob_start();
                                             <?php endif; ?>
                                         <?php endif; ?>
                                     </div>
-                                    <div class="task-status overdue">
-                                        <i class="fas fa-exclamation-triangle"></i>
-                                        Vencida hace <?php echo abs($task['days_until_due']); ?> días
-                                    </div>
                                 </div>
                             </div>
                         <?php endforeach; ?>
@@ -278,10 +274,6 @@ ob_start();
                                             <?php endif; ?>
                                         <?php endif; ?>
                                     </div>
-                                    <div class="task-status today">
-                                        <i class="fas fa-clock"></i>
-                                        Vence hoy
-                                    </div>
                                 </div>
                             </div>
                         <?php endforeach; ?>
@@ -341,10 +333,6 @@ ob_start();
                                             <?php endif; ?>
                                         <?php endif; ?>
                                     </div>
-                                    <div class="task-status week1">
-                                        <i class="fas fa-calendar"></i>
-                                        En <?php echo $task['days_until_due']; ?> días
-                                    </div>
                                 </div>
                             </div>
                         <?php endforeach; ?>
@@ -403,17 +391,6 @@ ob_start();
                                                 </span>
                                             <?php endif; ?>
                                         <?php endif; ?>
-                                    </div>
-                                    <div class="task-status week2">
-                                        <i class="fas fa-calendar"></i>
-                                        Vence: <?php 
-                                            if (!empty($task['due_date'])) {
-                                                echo Utils::formatDate($task['due_date']); 
-                                                echo ' (' . $task['days_until_due'] . ' días)';
-                                            } else {
-                                                echo 'Sin fecha límite';
-                                            }
-                                        ?>
                                     </div>
                                 </div>
                             </div>
