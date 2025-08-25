@@ -4,6 +4,23 @@ ob_start();
 
 <div class="cm-task-details minimal">
   <div class="content-minimal" style="max-width:1100px;">
+    
+    <!-- Botones de Acción Superior -->
+    <div class="header-actions" style="display: flex; gap: 12px; margin-bottom: 20px; padding: 0 0 15px 0; border-bottom: 1px solid #e5e7eb;">
+      <button onclick="history.back()" style="background: #f3f4f6; color: #374151; padding: 12px 20px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+        <i class="fas fa-arrow-left"></i> Volver Atrás
+      </button>
+      <?php if ($canEdit): ?>
+        <button class="btn-minimal primary" onclick="openEditTaskModal()" style="padding: 12px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+          <i class="fas fa-edit"></i> Editar Tarea
+        </button>
+      <?php else: ?>
+        <button class="btn-minimal" onclick="noPermissionModal()" style="padding: 12px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+          <i class="fas fa-edit"></i> Editar Tarea
+        </button>
+      <?php endif; ?>
+    </div>
+    
     <div class="task-details-grid">
       <div class="left-pane">
         <div class="summary-card project-info-card">
@@ -158,14 +175,7 @@ ob_start();
           </div>
         </div>
 
-        <div class="footer-actions" style="display:flex; gap:10px; margin-top:12px;">
-          <a href="?route=clan_member" class="btn-minimal"><i class="fas fa-arrow-left"></i> Volver a Tareas</a>
-          <?php if ($canEdit): ?>
-            <button class="btn-minimal primary" onclick="openEditTaskModal()"><i class="fas fa-edit"></i> Editar Tarea</button>
-          <?php else: ?>
-            <button class="btn-minimal" onclick="noPermissionModal()"><i class="fas fa-edit"></i> Editar Tarea</button>
-          <?php endif; ?>
-        </div>
+
       </div>
 
       <aside class="right-pane">
