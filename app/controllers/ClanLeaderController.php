@@ -27,7 +27,16 @@ class ClanLeaderController {
         }
         $this->taskModel = new Task();
         $this->subtaskModel = new Subtask();
-        $this->subtaskAssignmentModel = new SubtaskAssignment();
+        
+        // Cargar SubtaskAssignment si existe, sino crear una implementación básica
+        if (class_exists('SubtaskAssignment')) {
+            $this->subtaskAssignmentModel = new SubtaskAssignment();
+        } else {
+            // Fallback temporal hasta que se cargue el modelo
+            require_once __DIR__ . '/../models/SubtaskAssignment.php';
+            $this->subtaskAssignmentModel = new SubtaskAssignment();
+        }
+        
         $this->db = Database::getConnection();
         
         // Limpiar cualquier transacción activa al inicializar

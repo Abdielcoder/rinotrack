@@ -5,6 +5,88 @@ class SubtaskAssignment {
     
     public function __construct() {
         $this->db = Database::getConnection();
+        $this->ensureTableExists();
+    }
+    
+    /**
+     * Verificar que la tabla Subtask_Assignments existe y crearla si no existe
+     */
+    private function ensureTableExists() {
+        try {
+            // Verificar si la tabla existe
+            $stmt = $this->db->prepare("SHOW TABLES LIKE 'Subtask_Assignments'");
+            $stmt->execute();
+            
+            if ($stmt->rowCount() === 0) {
+                // La tabla no existe, crearla
+                $this->createTable();
+            }
+        } catch (Exception $e) {
+            error_log("Error verificando tabla Subtask_Assignments: " . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Crear la tabla Subtask_Assignments y migrar datos existentes
+     */
+    private function createTable() {
+        try {
+            $sql = "
+                CREATE TABLE `Subtask_Assignments` (
+                  `assignment_id` int(11) NOT NULL AUTO_INCREMENT,
+                  `subtask_id` int(11) NOT NULL,
+                  `user_id` int(11) NOT NULL,
+                  `assigned_percentage` decimal(5,2) DEFAULT 100.00,
+                  `assigned_by_user_id` int(11) NOT NULL,
+                  `assigned_at` timestamp NULL DEFAULT current_timestamp(),
+                  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+                  PRIMARY KEY (`assignment_id`),
+                  UNIQUE KEY `unique_subtask_user` (`subtask_id`, `user_id`),
+                  KEY `idx_subtask_id` (`subtask_id`),
+                  KEY `idx_user_id` (`user_id`),
+                  KEY `idx_assigned_by` (`assigned_by_user_id`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Asignaciones múltiples de usuarios a subtareas'
+            ";
+            
+            $this->db->exec($sql);
+            
+            // Migrar datos existentes
+            $this->migrateExistingData();
+            
+            error_log("Tabla Subtask_Assignments creada exitosamente");
+            
+        } catch (Exception $e) {
+            error_log("Error creando tabla Subtask_Assignments: " . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Migrar datos existentes de assigned_to_user_id a la nueva tabla
+     */
+    private function migrateExistingData() {
+        try {
+            $stmt = $this->db->prepare("
+                INSERT IGNORE INTO Subtask_Assignments (subtask_id, user_id, assigned_percentage, assigned_by_user_id, assigned_at)
+                SELECT 
+                    subtask_id, 
+                    assigned_to_user_id, 
+                    100.00, 
+                    created_by_user_id, 
+                    created_at
+                FROM Subtasks 
+                WHERE assigned_to_user_id IS NOT NULL
+            ");
+            
+            $stmt->execute();
+            $migratedRows = $stmt->rowCount();
+            
+            if ($migratedRows > 0) {
+                error_log("Migrados {$migratedRows} registros de asignaciones existentes");
+            }
+            
+        } catch (Exception $e) {
+            error_log("Error migrando datos existentes: " . $e->getMessage());
+        }
     }
     
     /**

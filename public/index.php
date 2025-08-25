@@ -40,6 +40,7 @@ $models = [
     __DIR__ . '/../app/models/KPI.php',
     __DIR__ . '/../app/models/Task.php',
     __DIR__ . '/../app/models/Subtask.php',
+    __DIR__ . '/../app/models/SubtaskAssignment.php',
     __DIR__ . '/../app/models/Gamification.php',
     __DIR__ . '/../app/models/Notification.php',
     __DIR__ . '/../app/services/Mailer.php',
