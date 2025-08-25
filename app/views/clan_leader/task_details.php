@@ -9,9 +9,9 @@ ob_start();
         <a href="?route=clan_leader" style="background: #10b981; color: white; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 8px;">
             <i class="fas fa-home"></i> Volver al Dashboard
         </a>
-        <a href="?route=clan_leader/tasks" style="background: #f3f4f6; color: #374151; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 8px;">
-            <i class="fas fa-arrow-left"></i> Volver a Tareas
-        </a>
+        <button onclick="history.back()" style="background: #f3f4f6; color: #374151; padding: 12px 20px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-arrow-left"></i> Volver Atrás
+        </button>
         <a href="?route=clan_leader/tasks&action=edit&task_id=<?php echo $task['task_id']; ?>" style="background: #1e3a8a; color: white; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 8px;">
             <i class="fas fa-edit"></i> Editar Tarea
         </a>
