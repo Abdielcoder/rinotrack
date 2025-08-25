@@ -619,10 +619,10 @@ class AdminController {
             // Obtener adjuntos de la tarea principal
             try {
                 $stmt = $db->prepare("
-                    SELECT ta.attachment_id, ta.filename, ta.file_path, ta.uploaded_at,
+                    SELECT ta.attachment_id, ta.file_name as filename, ta.file_path, ta.uploaded_at,
                            u.username, u.full_name
                     FROM Task_Attachments ta
-                    LEFT JOIN Users u ON ta.uploaded_by = u.user_id
+                    LEFT JOIN Users u ON ta.user_id = u.user_id
                     WHERE ta.task_id = ?
                     ORDER BY ta.uploaded_at DESC
                 ");
@@ -664,11 +664,11 @@ class AdminController {
                     try {
                         $placeholders = implode(',', array_fill(0, count($subtaskIds), '?'));
                         $stmt = $db->prepare("
-                            SELECT sa.attachment_id, sa.subtask_id, sa.filename, sa.file_path, sa.uploaded_at,
+                            SELECT sa.attachment_id, sa.subtask_id, sa.file_name as filename, sa.file_path, sa.uploaded_at,
                                    u.username, u.full_name,
                                    s.title as subtask_title
                             FROM Subtask_Attachments sa
-                            LEFT JOIN Users u ON sa.uploaded_by = u.user_id
+                            LEFT JOIN Users u ON sa.user_id = u.user_id
                             LEFT JOIN Subtasks s ON sa.subtask_id = s.subtask_id
                             WHERE sa.subtask_id IN ($placeholders)
                             ORDER BY sa.uploaded_at DESC
@@ -744,6 +744,22 @@ class AdminController {
             // Combinar todos los comentarios y adjuntos (tarea principal + subtareas)
             $allComments = array_merge($comments, $subtaskComments);
             $allAttachments = array_merge($attachments, $subtaskAttachments);
+
+            // Debug logs detallados
+            error_log("=== RESUMEN DE ADJUNTOS ===");
+            error_log("Adjuntos de tarea principal: " . count($attachments));
+            if (!empty($attachments)) {
+                foreach ($attachments as $att) {
+                    error_log("- Tarea: " . $att['filename'] . " -> " . $att['file_path']);
+                }
+            }
+            error_log("Adjuntos de subtareas: " . count($subtaskAttachments));
+            if (!empty($subtaskAttachments)) {
+                foreach ($subtaskAttachments as $att) {
+                    error_log("- Subtarea {$att['subtask_id']}: " . $att['filename'] . " -> " . $att['file_path']);
+                }
+            }
+            error_log("Total adjuntos: " . count($allAttachments));
 
             $response = [
                 'success' => true,
