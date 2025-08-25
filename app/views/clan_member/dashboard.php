@@ -832,7 +832,7 @@ ob_start();
     box-shadow: var(--shadow-sm);
     transition: all var(--transition-normal);
     min-height: 50px;
-    max-height: 85px;
+    max-height: 90px;
     overflow: visible;
     display: flex;
     flex-direction: column;
@@ -841,8 +841,7 @@ ob_start();
 }
 
 .task-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .task-card.overdue {
@@ -973,6 +972,9 @@ ob_start();
     align-items: center;
     padding: 2px 0;
     margin-top: 4px;
+    min-height: 32px;
+    position: relative;
+    z-index: 5;
 }
 
 .btn-edit {
@@ -990,19 +992,29 @@ ob_start();
     width: 28px;
     height: 28px;
     border: 1px solid #1e3a8a;
+    position: relative;
+    z-index: 10;
+    flex-shrink: 0;
 }
 
 .btn-edit:hover {
     background: #1e40af;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(30, 58, 138, 0.3);
     text-decoration: none;
     color: #ffffff;
+    opacity: 0.9;
+    box-shadow: 0 2px 4px rgba(30, 58, 138, 0.3);
 }
 
 .btn-edit i {
     font-size: 0.85rem;
     color: #ffffff;
+}
+
+/* Evitar que el hover de la tarjeta afecte el botón */
+.task-card:hover .btn-edit {
+    display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
 }
 
 /* Responsive para el Kanban */
