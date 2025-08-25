@@ -483,8 +483,8 @@ function getActiveTasksCount($userId) {
 
 <script>
 function closeTaskEdit() {
-    // Redirigir de vuelta a la página de tareas
-    window.location.href = '?route=clan_leader/tasks';
+    // Regresar a la página anterior en el historial
+    history.back();
 }
 
 function updateTask() {
