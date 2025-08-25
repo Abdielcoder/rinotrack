@@ -2030,7 +2030,7 @@ class ClanLeaderController {
             }
             
             $userIdsArray = explode(',', $userIds);
-            $result = $this->taskModel->assignMultipleUsers($taskId, $userIdsArray, $this->currentUser['user_id']);
+            $result = $this->taskModel->addCollaborators($taskId, $userIdsArray, $this->currentUser['user_id']);
             
             if ($result) {
                 Utils::jsonResponse(['success' => true, 'message' => 'Colaboradores agregados exitosamente']);

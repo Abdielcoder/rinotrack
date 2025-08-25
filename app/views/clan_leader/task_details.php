@@ -1806,8 +1806,15 @@ document.getElementById('tdCommentForm')?.addEventListener('submit', function(e)
             return roleNames[role] || role;
         }
         
+        // Variable para almacenar usuarios ya asignados
+        let assignedUsers = [];
+        
         // Funciones para colaboradores
         function showAddCollaboratorModal() {
+            // Obtener usuarios ya asignados a la tarea
+            const assignedUserElements = document.querySelectorAll('[data-user-id]');
+            assignedUsers = Array.from(assignedUserElements).map(el => parseInt(el.getAttribute('data-user-id')));
+            
             fetch('?route=clan_leader/get-available-users')
             .then(response => response.json())
             .then(data => {
@@ -1844,36 +1851,50 @@ document.getElementById('tdCommentForm')?.addEventListener('submit', function(e)
                 userOption.className = 'user-option';
                 userOption.setAttribute('data-user-search', `${user.full_name || ''} ${user.username} ${user.email || ''}`.toLowerCase());
                 
+                const isAlreadyAssigned = assignedUsers.includes(parseInt(user.user_id));
+                
                 const membershipBadge = user.membership_status === 'Miembro del clan' 
                     ? '<span style="background: #10b981; color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 8px;">CLAN</span>'
                     : '<span style="background: #6b7280; color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 8px;">EXTERNO</span>';
                 
+                const assignedBadge = isAlreadyAssigned 
+                    ? '<span style="background: #f59e0b; color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 8px; font-weight: bold;">YA ASIGNADO</span>'
+                    : '';
+                
+                const borderColor = isAlreadyAssigned ? '#f59e0b' : '#f3f4f6';
+                const backgroundColor = isAlreadyAssigned ? '#fffbeb' : 'white';
+                const opacity = isAlreadyAssigned ? '0.7' : '1';
+                
                 userOption.innerHTML = `
-                    <div style="display: flex; align-items: center; padding: 12px; border: 2px solid #f3f4f6; border-radius: 8px; margin-bottom: 8px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='#e5e7eb'; this.style.backgroundColor='#f9fafb'" onmouseout="this.style.borderColor='#f3f4f6'; this.style.backgroundColor='white'">
-                        <input type="checkbox" id="user_${user.user_id}" value="${user.user_id}" style="margin-right: 12px; width: 18px; height: 18px; cursor: pointer;" onchange="updateSelectedCount()">
+                    <div style="display: flex; align-items: center; padding: 12px; border: 2px solid ${borderColor}; border-radius: 8px; margin-bottom: 8px; cursor: pointer; transition: all 0.2s; background-color: ${backgroundColor}; opacity: ${opacity};" onmouseover="if(!${isAlreadyAssigned}) {this.style.borderColor='#e5e7eb'; this.style.backgroundColor='#f9fafb'}" onmouseout="this.style.borderColor='${borderColor}'; this.style.backgroundColor='${backgroundColor}'">
+                        <input type="checkbox" id="user_${user.user_id}" value="${user.user_id}" style="margin-right: 12px; width: 18px; height: 18px; cursor: pointer;" onchange="updateSelectedCount()" ${isAlreadyAssigned ? 'disabled' : ''}>
                         <div style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #1e3a8a, #3b82f6); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 18px; margin-right: 12px; flex-shrink: 0;">
                             ${user.full_name ? user.full_name.charAt(0).toUpperCase() : user.username.charAt(0).toUpperCase()}
                         </div>
                         <div style="flex: 1; min-width: 0;">
-                            <div style="font-weight: 600; color: #1f2937; font-size: 16px; display: flex; align-items: center;">
+                            <div style="font-weight: 600; color: #1f2937; font-size: 16px; display: flex; align-items: center; flex-wrap: wrap; gap: 4px;">
                                 ${user.full_name || user.username}
                                 ${membershipBadge}
+                                ${assignedBadge}
                             </div>
                             <div style="font-size: 14px; color: #6b7280; margin-top: 2px;">@${user.username}</div>
                             ${user.email ? `<div style="font-size: 12px; color: #9ca3af; margin-top: 1px;">${user.email}</div>` : ''}
                             ${user.role ? `<div style="font-size: 12px; color: #1e3a8a; margin-top: 1px; font-weight: 500;">Rol: ${getRoleDisplayName(user.role)}</div>` : ''}
+                            ${isAlreadyAssigned ? '<div style="font-size: 11px; color: #d97706; margin-top: 2px; font-style: italic;">Este usuario ya está asignado a la tarea</div>' : ''}
                         </div>
                     </div>
                 `;
                 
-                // Hacer que todo el div sea clickeable
-                userOption.onclick = function(e) {
-                    if (e.target.type !== 'checkbox') {
-                        const checkbox = this.querySelector('input[type="checkbox"]');
-                        checkbox.checked = !checkbox.checked;
-                        updateSelectedCount();
-                    }
-                };
+                // Hacer que todo el div sea clickeable (solo si no está ya asignado)
+                if (!isAlreadyAssigned) {
+                    userOption.onclick = function(e) {
+                        if (e.target.type !== 'checkbox') {
+                            const checkbox = this.querySelector('input[type="checkbox"]');
+                            checkbox.checked = !checkbox.checked;
+                            updateSelectedCount();
+                        }
+                    };
+                }
                 
                 userList.appendChild(userOption);
             });

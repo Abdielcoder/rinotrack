@@ -286,6 +286,85 @@ class Task {
     }
     
     /**
+     * Agregar nuevos usuarios a una tarea sin borrar los existentes
+     */
+    public function addCollaborators($taskId, $userIds, $assignedByUserId) {
+        try {
+            
+            // Validar que userIds es array y no está vacío
+            if (!is_array($userIds) || empty($userIds)) {
+                error_log('Task::addCollaborators - Error: userIds no es array válido');
+                throw new Exception('userIds debe ser un array no vacío');
+            }
+            
+            // Obtener usuarios ya asignados para evitar duplicados
+            $stmt = $this->db->prepare("SELECT user_id FROM Task_Assignments WHERE task_id = ?");
+            $stmt->execute([$taskId]);
+            $existingUsers = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+            
+            // Filtrar usuarios que ya están asignados
+            $newUserIds = array_diff($userIds, $existingUsers);
+            
+            // También verificar el assigned_to_user_id de la tabla Tasks
+            $taskStmt = $this->db->prepare("SELECT assigned_to_user_id FROM Tasks WHERE task_id = ?");
+            $taskStmt->execute([$taskId]);
+            $primaryAssignedUser = $taskStmt->fetchColumn();
+            if ($primaryAssignedUser) {
+                $newUserIds = array_diff($newUserIds, [$primaryAssignedUser]);
+            }
+            
+            if (empty($newUserIds)) {
+                return true; // No es error, simplemente no hay nada que hacer
+            }
+            
+            // Obtener el total de usuarios asignados después de agregar los nuevos
+            $totalUsers = count($existingUsers) + count($newUserIds);
+            if ($primaryAssignedUser && !in_array($primaryAssignedUser, $existingUsers)) {
+                $totalUsers++;
+            }
+            
+            // Calcular porcentaje por usuario
+            $percentagePerUser = $totalUsers > 0 ? 100.00 / $totalUsers : 0;
+            
+            // Insertar nuevas asignaciones
+            $stmt = $this->db->prepare("
+                INSERT INTO Task_Assignments (task_id, user_id, assigned_percentage, assigned_by_user_id, status) 
+                VALUES (?, ?, ?, ?, 'assigned')
+            ");
+            
+            foreach ($newUserIds as $userId) {
+                $userIdInt = (int)$userId;
+                
+                $ok = $stmt->execute([$taskId, $userIdInt, $percentagePerUser, $assignedByUserId]);
+                if (!$ok) {
+                    $err = $stmt->errorInfo();
+                    error_log('Task::addCollaborators - Error insert assignment (user ' . $userIdInt . '): ' . json_encode($err));
+                    throw new Exception('Error al asignar usuario ' . $userIdInt . ' a la tarea');
+                }
+            }
+            
+            // Actualizar porcentajes de todos los usuarios asignados
+            $updateStmt = $this->db->prepare("
+                UPDATE Task_Assignments 
+                SET assigned_percentage = ? 
+                WHERE task_id = ?
+            ");
+            $updateStmt->execute([$percentagePerUser, $taskId]);
+            
+            // Registrar en el historial
+            $this->logTaskAction($taskId, $assignedByUserId, 'assigned', 'added_collaborators', null, implode(',', $newUserIds), count($newUserIds) . ' nuevos colaboradores agregados');
+            
+            return true;
+            
+        } catch (Exception $e) {
+            error_log("Error al agregar colaboradores: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
+            throw new Exception("addCollaborators falló: " . $e->getMessage());
+        }
+    }
+    
+    /**
      * Crear subtarea avanzada
      */
     public function createSubtaskAdvanced($taskId, $title, $createdByUserId, $description = '', $percentage = 0, $dueDate = null, $priority = self::PRIORITY_MEDIUM, $assignedUserId = null) {
