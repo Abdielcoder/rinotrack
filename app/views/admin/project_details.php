@@ -1266,6 +1266,9 @@ function renderTaskDetails(data) {
         `;
         
         subtasks.forEach(subtask => {
+            const subtaskComments = subtask.comments || [];
+            const subtaskAttachments = subtask.attachments || [];
+            
             html += `
                 <div class="subtask-item-detail">
                     <div class="subtask-header-detail">
@@ -1277,8 +1280,42 @@ function renderTaskDetails(data) {
                         <span><i class="fas fa-calendar"></i> ${subtask.due_date ? formatDate(subtask.due_date) : 'Sin fecha'}</span>
                         <span><i class="fas fa-chart-pie"></i> ${subtask.completion_percentage || 0}%</span>
                         <span><i class="fas fa-flag"></i> ${getPriorityText(subtask.priority)}</span>
+                        <span><i class="fas fa-comments"></i> ${subtaskComments.length} comentarios</span>
+                        <span><i class="fas fa-paperclip"></i> ${subtaskAttachments.length} adjuntos</span>
                     </div>
                     ${subtask.description ? `<div class="subtask-description">${escapeHtml(subtask.description)}</div>` : ''}
+                    
+                    ${subtaskComments.length > 0 ? `
+                        <div class="subtask-comments" style="margin-top: 12px;">
+                            <h5 style="margin: 0 0 8px 0; font-size: 0.9rem; color: #374151;">Comentarios:</h5>
+                            ${subtaskComments.map(comment => `
+                                <div class="comment-item-detail" style="margin-bottom: 8px; padding: 8px; font-size: 0.85rem;">
+                                    <div class="comment-header-detail">
+                                        <span class="comment-author-detail">${escapeHtml(comment.full_name || comment.username || 'Usuario')}</span>
+                                        <span class="comment-date-detail">${formatDate(comment.created_at)}</span>
+                                    </div>
+                                    <div>${comment.comment_text || ''}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                    
+                    ${subtaskAttachments.length > 0 ? `
+                        <div class="subtask-attachments" style="margin-top: 12px;">
+                            <h5 style="margin: 0 0 8px 0; font-size: 0.9rem; color: #374151;">Adjuntos:</h5>
+                            <div class="attachment-list">
+                                ${subtaskAttachments.map(attachment => `
+                                    <div class="attachment-item" style="font-size: 0.85rem;">
+                                        <i class="fas fa-file attachment-icon"></i>
+                                        <a href="${attachment.file_path}" target="_blank" class="attachment-link">
+                                            ${escapeHtml(attachment.filename)}
+                                        </a>
+                                        <span style="color: #9ca3af; margin-left: 8px;">por ${escapeHtml(attachment.full_name || attachment.username || 'Usuario')}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
                 </div>
             `;
         });
@@ -1289,26 +1326,81 @@ function renderTaskDetails(data) {
         `;
     }
     
-    // Comentarios
+    // Comentarios (separar tarea principal y subtareas)
+    const taskComments = data.taskComments || [];
+    const allComments = data.comments || [];
+    const totalComments = allComments.length;
+    
     html += `
         <div class="task-section">
-            <h3><i class="fas fa-comments"></i> Comentarios (${comments.length})</h3>
+            <h3><i class="fas fa-comments"></i> Todos los Comentarios (${totalComments})</h3>
     `;
     
-    if (comments.length === 0) {
+    if (totalComments === 0) {
         html += '<div style="color: #6b7280; font-style: italic; text-align: center; padding: 20px;">Sin comentarios</div>';
     } else {
-        comments.forEach(comment => {
+        // Comentarios de la tarea principal
+        if (taskComments.length > 0) {
             html += `
-                <div class="comment-item-detail">
-                    <div class="comment-header-detail">
-                        <span class="comment-author-detail">${escapeHtml(comment.full_name || comment.username || 'Usuario')}</span>
-                        <span class="comment-date-detail">${formatDate(comment.created_at)}</span>
-                    </div>
-                    <div>${comment.comment_text || ''}</div>
-                </div>
+                <div style="margin-bottom: 20px;">
+                    <h4 style="margin: 0 0 12px 0; color: #1f2937; font-size: 1rem; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px;">
+                        <i class="fas fa-task" style="color: #3b82f6;"></i> Comentarios de la Tarea Principal (${taskComments.length})
+                    </h4>
             `;
-        });
+            taskComments.forEach(comment => {
+                html += `
+                    <div class="comment-item-detail">
+                        <div class="comment-header-detail">
+                            <span class="comment-author-detail">${escapeHtml(comment.full_name || comment.username || 'Usuario')}</span>
+                            <span class="comment-date-detail">${formatDate(comment.created_at)}</span>
+                        </div>
+                        <div>${comment.comment_text || ''}</div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+        }
+        
+        // Comentarios de subtareas agrupados
+        const subtaskCommentsGrouped = data.subtaskComments || {};
+        const hasSubtaskComments = Object.keys(subtaskCommentsGrouped).length > 0;
+        
+        if (hasSubtaskComments) {
+            html += `
+                <div>
+                    <h4 style="margin: 0 0 12px 0; color: #1f2937; font-size: 1rem; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px;">
+                        <i class="fas fa-tasks" style="color: #10b981;"></i> Comentarios de Subtareas
+                    </h4>
+            `;
+            
+            Object.entries(subtaskCommentsGrouped).forEach(([subtaskId, comments]) => {
+                if (comments.length > 0) {
+                    const subtaskTitle = comments[0].subtask_title || `Subtarea ${subtaskId}`;
+                    html += `
+                        <div style="margin-bottom: 16px; background: #f8fafc; border-left: 3px solid #10b981; padding: 12px;">
+                            <h5 style="margin: 0 0 8px 0; color: #059669; font-size: 0.9rem;">
+                                ${escapeHtml(subtaskTitle)} (${comments.length} comentarios)
+                            </h5>
+                    `;
+                    
+                    comments.forEach(comment => {
+                        html += `
+                            <div class="comment-item-detail" style="margin-bottom: 8px;">
+                                <div class="comment-header-detail">
+                                    <span class="comment-author-detail">${escapeHtml(comment.full_name || comment.username || 'Usuario')}</span>
+                                    <span class="comment-date-detail">${formatDate(comment.created_at)}</span>
+                                </div>
+                                <div>${comment.comment_text || ''}</div>
+                            </div>
+                        `;
+                    });
+                    
+                    html += '</div>';
+                }
+            });
+            
+            html += '</div>';
+        }
     }
     
     html += `
@@ -1331,27 +1423,83 @@ function renderTaskDetails(data) {
         </div>
     `;
     
-    // Adjuntos
+    // Adjuntos (separar tarea principal y subtareas)
+    const taskAttachments = data.taskAttachments || [];
+    const allAttachments = data.attachments || [];
+    const totalAttachments = allAttachments.length;
+    
     html += `
         <div class="task-section">
-            <h3><i class="fas fa-paperclip"></i> Adjuntos (${attachments.length})</h3>
+            <h3><i class="fas fa-paperclip"></i> Todos los Adjuntos (${totalAttachments})</h3>
     `;
     
-    if (attachments.length === 0) {
+    if (totalAttachments === 0) {
         html += '<div style="color: #6b7280; font-style: italic;">Sin adjuntos</div>';
     } else {
-        html += '<div class="attachment-list">';
-        attachments.forEach(attachment => {
+        // Adjuntos de la tarea principal
+        if (taskAttachments.length > 0) {
             html += `
-                <div class="attachment-item">
-                    <i class="fas fa-file attachment-icon"></i>
-                    <a href="${attachment.file_path}" target="_blank" class="attachment-link">
-                        ${escapeHtml(attachment.filename)}
-                    </a>
-                </div>
+                <div style="margin-bottom: 20px;">
+                    <h4 style="margin: 0 0 12px 0; color: #1f2937; font-size: 1rem; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px;">
+                        <i class="fas fa-task" style="color: #3b82f6;"></i> Adjuntos de la Tarea Principal (${taskAttachments.length})
+                    </h4>
+                    <div class="attachment-list">
             `;
-        });
-        html += '</div>';
+            taskAttachments.forEach(attachment => {
+                html += `
+                    <div class="attachment-item">
+                        <i class="fas fa-file attachment-icon"></i>
+                        <a href="${attachment.file_path}" target="_blank" class="attachment-link">
+                            ${escapeHtml(attachment.filename)}
+                        </a>
+                        <span style="color: #9ca3af; margin-left: 8px;">por ${escapeHtml(attachment.full_name || attachment.username || 'Usuario')}</span>
+                    </div>
+                `;
+            });
+            html += '</div></div>';
+        }
+        
+        // Adjuntos de subtareas agrupados
+        const subtaskAttachmentsGrouped = data.subtaskAttachments || {};
+        const hasSubtaskAttachments = Object.keys(subtaskAttachmentsGrouped).length > 0;
+        
+        if (hasSubtaskAttachments) {
+            html += `
+                <div>
+                    <h4 style="margin: 0 0 12px 0; color: #1f2937; font-size: 1rem; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px;">
+                        <i class="fas fa-tasks" style="color: #10b981;"></i> Adjuntos de Subtareas
+                    </h4>
+            `;
+            
+            Object.entries(subtaskAttachmentsGrouped).forEach(([subtaskId, attachments]) => {
+                if (attachments.length > 0) {
+                    const subtaskTitle = attachments[0].subtask_title || `Subtarea ${subtaskId}`;
+                    html += `
+                        <div style="margin-bottom: 16px; background: #f8fafc; border-left: 3px solid #10b981; padding: 12px;">
+                            <h5 style="margin: 0 0 8px 0; color: #059669; font-size: 0.9rem;">
+                                ${escapeHtml(subtaskTitle)} (${attachments.length} adjuntos)
+                            </h5>
+                            <div class="attachment-list">
+                    `;
+                    
+                    attachments.forEach(attachment => {
+                        html += `
+                            <div class="attachment-item" style="font-size: 0.9rem;">
+                                <i class="fas fa-file attachment-icon"></i>
+                                <a href="${attachment.file_path}" target="_blank" class="attachment-link">
+                                    ${escapeHtml(attachment.filename)}
+                                </a>
+                                <span style="color: #9ca3af; margin-left: 8px;">por ${escapeHtml(attachment.full_name || attachment.username || 'Usuario')}</span>
+                            </div>
+                        `;
+                    });
+                    
+                    html += '</div></div>';
+                }
+            });
+            
+            html += '</div>';
+        }
     }
     
     html += `

@@ -573,30 +573,198 @@ class AdminController {
         }
 
         try {
-            // Crear respuesta básica para probar
+            error_log("=== DEBUG getTaskDetails ===");
+            error_log("Task ID: " . $taskId);
+            
+            $taskModel = new Task();
+            $task = $taskModel->findById($taskId);
+            
+            if (!$task) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Tarea no encontrada'], 404);
+                return;
+            }
+
+            error_log("Task encontrada: " . $task['task_name']);
+
+            // Obtener subtareas
+            $subtasks = $taskModel->getSubtasks($taskId);
+            error_log("Subtareas encontradas: " . count($subtasks));
+            
+            // Inicializar arrays
+            $comments = [];
+            $attachments = [];
+            $subtaskComments = [];
+            $subtaskAttachments = [];
+            
+            $db = Database::getConnection();
+            
+            // Obtener comentarios de la tarea principal
+            try {
+                $stmt = $db->prepare("
+                    SELECT tc.comment_id, tc.comment_text, tc.created_at, tc.comment_type,
+                           u.username, u.full_name, u.email
+                    FROM Task_Comments tc
+                    LEFT JOIN Users u ON tc.user_id = u.user_id
+                    WHERE tc.task_id = ?
+                    ORDER BY tc.created_at DESC
+                ");
+                $stmt->execute([$taskId]);
+                $comments = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+                error_log("Comentarios de tarea encontrados: " . count($comments));
+            } catch (Exception $e) {
+                error_log('Error al obtener comentarios de tarea: ' . $e->getMessage());
+                $comments = [];
+            }
+
+            // Obtener adjuntos de la tarea principal
+            try {
+                $stmt = $db->prepare("
+                    SELECT ta.attachment_id, ta.filename, ta.file_path, ta.uploaded_at,
+                           u.username, u.full_name
+                    FROM Task_Attachments ta
+                    LEFT JOIN Users u ON ta.uploaded_by = u.user_id
+                    WHERE ta.task_id = ?
+                    ORDER BY ta.uploaded_at DESC
+                ");
+                $stmt->execute([$taskId]);
+                $attachments = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+                error_log("Adjuntos de tarea encontrados: " . count($attachments));
+            } catch (Exception $e) {
+                error_log('Error al obtener adjuntos de tarea: ' . $e->getMessage());
+                $attachments = [];
+            }
+
+            // Obtener comentarios y adjuntos de subtareas
+            if (!empty($subtasks)) {
+                $subtaskIds = array_column($subtasks, 'subtask_id');
+                
+                if (!empty($subtaskIds)) {
+                    // Comentarios de subtareas
+                    try {
+                        $placeholders = implode(',', array_fill(0, count($subtaskIds), '?'));
+                        $stmt = $db->prepare("
+                            SELECT sc.comment_id, sc.subtask_id, sc.comment_text, sc.created_at,
+                                   u.username, u.full_name, u.email,
+                                   s.title as subtask_title
+                            FROM Subtask_Comments sc
+                            LEFT JOIN Users u ON sc.user_id = u.user_id
+                            LEFT JOIN Subtasks s ON sc.subtask_id = s.subtask_id
+                            WHERE sc.subtask_id IN ($placeholders)
+                            ORDER BY sc.created_at DESC
+                        ");
+                        $stmt->execute($subtaskIds);
+                        $subtaskComments = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+                        error_log("Comentarios de subtareas encontrados: " . count($subtaskComments));
+                    } catch (Exception $e) {
+                        error_log('Error al obtener comentarios de subtareas: ' . $e->getMessage());
+                        $subtaskComments = [];
+                    }
+
+                    // Adjuntos de subtareas
+                    try {
+                        $placeholders = implode(',', array_fill(0, count($subtaskIds), '?'));
+                        $stmt = $db->prepare("
+                            SELECT sa.attachment_id, sa.subtask_id, sa.filename, sa.file_path, sa.uploaded_at,
+                                   u.username, u.full_name,
+                                   s.title as subtask_title
+                            FROM Subtask_Attachments sa
+                            LEFT JOIN Users u ON sa.uploaded_by = u.user_id
+                            LEFT JOIN Subtasks s ON sa.subtask_id = s.subtask_id
+                            WHERE sa.subtask_id IN ($placeholders)
+                            ORDER BY sa.uploaded_at DESC
+                        ");
+                        $stmt->execute($subtaskIds);
+                        $subtaskAttachments = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+                        error_log("Adjuntos de subtareas encontrados: " . count($subtaskAttachments));
+                    } catch (Exception $e) {
+                        error_log('Error al obtener adjuntos de subtareas: ' . $e->getMessage());
+                        $subtaskAttachments = [];
+                    }
+                }
+            }
+
+            // Agrupar comentarios y adjuntos por subtarea
+            $subtaskCommentsGrouped = [];
+            $subtaskAttachmentsGrouped = [];
+
+            foreach ($subtaskComments as $comment) {
+                $subtaskId = $comment['subtask_id'];
+                if (!isset($subtaskCommentsGrouped[$subtaskId])) {
+                    $subtaskCommentsGrouped[$subtaskId] = [];
+                }
+                $subtaskCommentsGrouped[$subtaskId][] = $comment;
+            }
+
+            foreach ($subtaskAttachments as $attachment) {
+                $subtaskId = $attachment['subtask_id'];
+                if (!isset($subtaskAttachmentsGrouped[$subtaskId])) {
+                    $subtaskAttachmentsGrouped[$subtaskId] = [];
+                }
+                $subtaskAttachmentsGrouped[$subtaskId][] = $attachment;
+            }
+
+            // Agregar comentarios y adjuntos a cada subtarea
+            foreach ($subtasks as &$subtask) {
+                $subtaskId = $subtask['subtask_id'];
+                $subtask['comments'] = $subtaskCommentsGrouped[$subtaskId] ?? [];
+                $subtask['attachments'] = $subtaskAttachmentsGrouped[$subtaskId] ?? [];
+            }
+            unset($subtask);
+
+            // Obtener información del proyecto
+            $projectModel = new Project();
+            $project = $projectModel->findById($task['project_id']);
+            
+            // Añadir información del proyecto a la tarea
+            $task['project_name'] = $project['project_name'] ?? '';
+            
+            // Obtener información del creador y asignado
+            try {
+                if (!empty($task['created_by'])) {
+                    $stmt = $db->prepare("SELECT full_name, username FROM Users WHERE user_id = ?");
+                    $stmt->execute([$task['created_by']]);
+                    $creator = $stmt->fetch(PDO::FETCH_ASSOC);
+                    if ($creator) {
+                        $task['created_by_name'] = $creator['full_name'] ?: $creator['username'];
+                    }
+                }
+                
+                if (!empty($task['assigned_to'])) {
+                    $stmt = $db->prepare("SELECT full_name, username FROM Users WHERE user_id = ?");
+                    $stmt->execute([$task['assigned_to']]);
+                    $assigned = $stmt->fetch(PDO::FETCH_ASSOC);
+                    if ($assigned) {
+                        $task['assigned_to_fullname'] = $assigned['full_name'] ?: $assigned['username'];
+                    }
+                }
+            } catch (Exception $e) {
+                error_log('Error al obtener usuarios: ' . $e->getMessage());
+            }
+
+            // Combinar todos los comentarios y adjuntos (tarea principal + subtareas)
+            $allComments = array_merge($comments, $subtaskComments);
+            $allAttachments = array_merge($attachments, $subtaskAttachments);
+
             $response = [
                 'success' => true,
-                'task' => [
-                    'task_id' => $taskId,
-                    'task_name' => 'Tarea de prueba',
-                    'description' => 'Descripción de prueba',
-                    'status' => 'pending',
-                    'project_name' => 'Proyecto de prueba',
-                    'created_at' => date('Y-m-d H:i:s'),
-                    'created_by_name' => 'Usuario de prueba'
-                ],
-                'subtasks' => [],
-                'comments' => [],
-                'attachments' => []
+                'task' => $task,
+                'subtasks' => $subtasks,
+                'comments' => $allComments,
+                'attachments' => $allAttachments,
+                'taskComments' => $comments,
+                'taskAttachments' => $attachments,
+                'subtaskComments' => $subtaskCommentsGrouped,
+                'subtaskAttachments' => $subtaskAttachmentsGrouped
             ];
             
+            error_log("Respuesta preparada, enviando JSON...");
+            
             Utils::jsonResponse($response);
-            exit;
             
         } catch (Exception $e) {
             error_log('Error general en getTaskDetails: ' . $e->getMessage());
-            Utils::jsonResponse(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
-            exit;
+            error_log('Stack trace: ' . $e->getTraceAsString());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor: ' . $e->getMessage()], 500);
         }
     }
 
