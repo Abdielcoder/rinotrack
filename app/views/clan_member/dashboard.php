@@ -771,21 +771,23 @@ ob_start();
 .kanban-board {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: var(--spacing-lg);
+    gap: 15px;
     margin: 0 auto;
-    max-width: 1400px;
+    max-width: 100%;
 }
 
 .kanban-column {
     background: #ffffff;
-    border-radius: var(--radius-lg);
+    border-radius: 10px;
     box-shadow: var(--shadow-md);
     border: 1px solid #e5e7eb;
-    min-height: 400px;
+    min-height: 300px;
+    max-width: 100%;
+    flex: 1;
 }
 
 .column-header {
-    padding: var(--spacing-lg);
+    padding: 12px 16px;
     border-bottom: 1px solid #e5e7eb;
     display: flex;
     justify-content: space-between;
@@ -794,7 +796,7 @@ ob_start();
 
 .column-header h3 {
     margin: 0;
-    font-size: 1.1rem;
+    font-size: 0.95rem;
     font-weight: var(--font-weight-semibold);
     color: #1e3a8a;
 }
@@ -824,15 +826,16 @@ ob_start();
 .task-card {
     background: #ffffff;
     border: 1px solid #e5e7eb;
-    border-radius: var(--radius-md);
-    padding: var(--spacing-sm);
-    margin-bottom: var(--spacing-sm);
+    border-radius: 6px;
+    padding: 10px;
+    margin-bottom: 8px;
     box-shadow: var(--shadow-sm);
     transition: all var(--transition-normal);
-    min-height: 80px;
+    min-height: 70px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    font-size: 0.85rem;
 }
 
 .task-card:hover {
@@ -988,16 +991,24 @@ ob_start();
 @media (max-width: 1200px) {
     .kanban-board {
         grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
     }
 }
 
 @media (max-width: 768px) {
     .kanban-board {
         grid-template-columns: 1fr;
+        gap: 10px;
     }
     
     .kanban-column {
-        min-height: 300px;
+        min-height: 250px;
+        max-height: 400px;
+    }
+    
+    .column-content {
+        max-height: 300px;
+        overflow-y: auto;
     }
 }
 .content-section{margin-bottom:var(--spacing-2xl)}
