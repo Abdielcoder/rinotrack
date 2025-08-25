@@ -308,14 +308,14 @@ if (!isset($user)) {
 /* Reset y Base */
 .clan-member-project-tasks-container {
     min-height: 100vh;
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
     padding: 0;
     margin: 0;
 }
 
 /* Header Mejorado */
 .page-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #1e3a8a 0%, #374151 100%);
     color: white;
     padding: 2rem 0;
     margin-bottom: 2rem;
@@ -500,8 +500,8 @@ if (!isset($user)) {
 }
 
 .stat-icon.progress {
-    background: rgba(59, 130, 246, 0.1);
-    color: #3b82f6;
+    background: rgba(30, 58, 138, 0.1);
+    color: #1e3a8a;
 }
 
 .stat-icon.kpi {
@@ -543,7 +543,7 @@ if (!isset($user)) {
 
 .progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, #10b981, #34d399);
+    background: linear-gradient(90deg, #1e3a8a, #3b82f6);
     border-radius: 4px;
     transition: width 0.3s ease;
 }
@@ -619,8 +619,8 @@ if (!isset($user)) {
 
 .filter-select:focus {
     outline: none;
-    border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    border-color: #1e3a8a;
+    box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
 }
 
 /* Tabla de Tareas */
@@ -849,12 +849,12 @@ if (!isset($user)) {
 }
 
 .btn-action.btn-view {
-    background: #3b82f6;
+    background: #1e3a8a;
     color: white;
 }
 
 .btn-action.btn-view:hover {
-    background: #2563eb;
+    background: #1e40af;
     transform: translateY(-1px);
 }
 
@@ -928,7 +928,7 @@ if (!isset($user)) {
 }
 
 .modal-header-gradient {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #1e3a8a 0%, #374151 100%);
     color: white;
 }
 
@@ -1005,8 +1005,8 @@ if (!isset($user)) {
 .form-group textarea:focus,
 .form-group select:focus {
     outline: none;
-    border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    border-color: #1e3a8a;
+    box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
 }
 
 .field-help {
@@ -1038,12 +1038,12 @@ if (!isset($user)) {
 }
 
 .action-btn.primary {
-    background: #667eea;
+    background: #1e3a8a;
     color: white;
 }
 
 .action-btn.primary:hover {
-    background: #5a67d8;
+    background: #1e40af;
     transform: translateY(-1px);
 }
 
