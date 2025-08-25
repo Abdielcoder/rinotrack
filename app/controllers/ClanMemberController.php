@@ -51,8 +51,8 @@ class ClanMemberController {
         $userTaskStats = $this->getUserTaskStats($this->currentUser['user_id'], $this->userClan['clan_id']);
         $ownContribution = $this->getOwnContribution($this->currentUser, $userTaskStats);
         
-        // Obtener solo proyectos donde el usuario tiene tareas asignadas
-        $projects = $this->projectModel->getByClanForUser($this->userClan['clan_id'], $this->currentUser['user_id']);
+        // Obtener proyectos donde el usuario tiene tareas asignadas (incluyendo de otros clanes)
+        $projects = $this->projectModel->getProjectsForUser($this->currentUser['user_id'], $this->userClan['clan_id'] ?? null);
         
         $ownTasksDetails = $this->getUserTasksForModal($this->currentUser['user_id'], $this->userClan['clan_id']);
         
@@ -96,8 +96,8 @@ class ClanMemberController {
             Utils::redirect('dashboard');
             return;
         }
-        // Obtener solo proyectos donde el usuario tiene tareas asignadas
-        $projects = $this->userClan ? $this->projectModel->getByClanForUser($this->userClan['clan_id'], $this->currentUser['user_id']) : [];
+        // Obtener proyectos donde el usuario tiene tareas asignadas (incluyendo de otros clanes)
+        $projects = $this->projectModel->getProjectsForUser($this->currentUser['user_id'], $this->userClan['clan_id'] ?? null);
         
         $data = [
             'currentPage' => 'clan_member',
@@ -225,64 +225,64 @@ class ClanMemberController {
 
         // Resumen de proyectos: SOLO proyectos donde el usuario esté asignado a tareas
         $projectsSummary = [];
-        if ($this->userClan) {
-            // Solo proyectos del clan donde el usuario tenga tareas asignadas
-            $clanProjects = $this->projectModel->getByClanForUser($this->userClan['clan_id'], $this->currentUser['user_id']);
-            foreach ($clanProjects as $p) {
-                $pid = (int)$p['project_id'];
-                $projectName = $p['project_name'];
-                
-                // Obtener solo las tareas asignadas al usuario en este proyecto
-                $userTasksInProject = $this->taskModel->getUserTasksByProject($this->currentUser['user_id'], $pid);
-                $total = count($userTasksInProject);
-                $completed = 0;
-                foreach ($userTasksInProject as $t) {
-                    if (($t['status'] ?? '') === 'completed' || ($t['is_completed'] ?? 0) == 1) { $completed++; }
-                }
-                $progress = $total > 0 ? round(($completed / $total) * 100, 2) : 0;
-                $projectsSummary[] = [
+        // Proyectos donde el usuario tenga tareas asignadas (incluyendo de otros clanes)
+        $clanProjects = $this->projectModel->getProjectsForUser($this->currentUser['user_id'], $this->userClan['clan_id'] ?? null);
+        foreach ($clanProjects as $p) {
+            $pid = (int)$p['project_id'];
+            $projectName = $p['project_name'];
+            
+            // Obtener solo las tareas asignadas al usuario en este proyecto
+            $userTasksInProject = $this->taskModel->getUserTasksByProject($this->currentUser['user_id'], $pid);
+            $total = count($userTasksInProject);
+            $completed = 0;
+            foreach ($userTasksInProject as $t) {
+                if (($t['status'] ?? '') === 'completed' || ($t['is_completed'] ?? 0) == 1) { $completed++; }
+            }
+            $progress = $total > 0 ? round(($completed / $total) * 100, 2) : 0;
+            $projectsSummary[] = [
+                'project_id' => $pid,
+                'project_name' => $projectName,
+                'status' => $p['status'],
+                'total_tasks' => $total,
+                'completed_tasks' => $completed,
+                'progress_percentage' => $progress
+            ];
+        }
+        
+        // Agregar proyectos lógicos donde el usuario tenga tareas asignadas
+        $tasks = $result['tasks'] ?? [];
+        $byProject = [];
+        foreach ($tasks as $t) {
+            $pid = (int)$t['project_id'];
+            $projectName = $t['project_name'];
+            
+            if (!isset($byProject[$pid])) {
+                $byProject[$pid] = [
                     'project_id' => $pid,
                     'project_name' => $projectName,
-                    'status' => $p['status'],
-                    'total_tasks' => $total,
-                    'completed_tasks' => $completed,
-                    'progress_percentage' => $progress
+                    'status' => 'open',
+                    'total_tasks' => 0,
+                    'completed_tasks' => 0
                 ];
             }
-            // Agregar proyectos lógicos donde el usuario tenga tareas asignadas
-            $tasks = $result['tasks'] ?? [];
-            $byProject = [];
-            foreach ($tasks as $t) {
-                $pid = (int)$t['project_id'];
-                $projectName = $t['project_name'];
-                
-                if (!isset($byProject[$pid])) {
-                    $byProject[$pid] = [
-                        'project_id' => $pid,
-                        'project_name' => $projectName,
-                        'status' => 'open',
-                        'total_tasks' => 0,
-                        'completed_tasks' => 0
-                    ];
-                }
-                $byProject[$pid]['total_tasks']++;
-                if (($t['status'] ?? '') === 'completed') { $byProject[$pid]['completed_tasks']++; }
-            }
-            foreach ($byProject as $pid => $info) {
-                // Evitar duplicar si ya existe en projectsSummary
-                $exists = false;
-                foreach ($projectsSummary as $ps) { if ((int)$ps['project_id'] === $pid) { $exists = true; break; } }
-                if (!$exists) {
-                    $progress = $info['total_tasks'] > 0 ? round(($info['completed_tasks'] / $info['total_tasks']) * 100, 1) : 0;
-                    $projectsSummary[] = [
-                        'project_id' => $pid,
-                        'project_name' => $info['project_name'],
-                        'status' => $info['status'],
-                        'total_tasks' => $info['total_tasks'],
-                        'completed_tasks' => $info['completed_tasks'],
-                        'progress_percentage' => $progress
-                    ];
-                }
+            $byProject[$pid]['total_tasks']++;
+            if (($t['status'] ?? '') === 'completed') { $byProject[$pid]['completed_tasks']++; }
+        }
+        
+        foreach ($byProject as $pid => $info) {
+            // Evitar duplicar si ya existe en projectsSummary
+            $exists = false;
+            foreach ($projectsSummary as $ps) { if ((int)$ps['project_id'] === $pid) { $exists = true; break; } }
+            if (!$exists) {
+                $progress = $info['total_tasks'] > 0 ? round(($info['completed_tasks'] / $info['total_tasks']) * 100, 1) : 0;
+                $projectsSummary[] = [
+                    'project_id' => $pid,
+                    'project_name' => $info['project_name'],
+                    'status' => $info['status'],
+                    'total_tasks' => $info['total_tasks'],
+                    'completed_tasks' => $info['completed_tasks'],
+                    'progress_percentage' => $progress
+                ];
             }
         }
 

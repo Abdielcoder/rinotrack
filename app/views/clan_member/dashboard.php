@@ -199,8 +199,13 @@ ob_start();
                                                 <?php endif; ?>
                                             </span>
                                         <?php else: ?>
-                                            <!-- Mostrar project-name solo para tareas normales del clan -->
+                                            <!-- Mostrar project-name para tareas normales -->
                                             <span class="project-name"><?php echo htmlspecialchars($task['project_name']); ?></span>
+                                            <?php if (isset($task['clan_name']) && $task['clan_name'] !== ($clan['clan_name'] ?? '')): ?>
+                                                <span class="external-clan-badge" title="Proyecto de otro clan: <?php echo htmlspecialchars($task['clan_name']); ?>">
+                                                    <i class="fas fa-external-link-alt"></i> <?php echo htmlspecialchars($task['clan_name']); ?>
+                                                </span>
+                                            <?php endif; ?>
                                         <?php endif; ?>
                                     </div>
                                     <div class="task-status overdue">
@@ -263,8 +268,13 @@ ob_start();
                                                 <?php endif; ?>
                                             </span>
                                         <?php else: ?>
-                                            <!-- Mostrar project-name solo para tareas normales del clan -->
+                                            <!-- Mostrar project-name para tareas normales -->
                                             <span class="project-name"><?php echo htmlspecialchars($task['project_name']); ?></span>
+                                            <?php if (isset($task['clan_name']) && $task['clan_name'] !== ($clan['clan_name'] ?? '')): ?>
+                                                <span class="external-clan-badge" title="Proyecto de otro clan: <?php echo htmlspecialchars($task['clan_name']); ?>">
+                                                    <i class="fas fa-external-link-alt"></i> <?php echo htmlspecialchars($task['clan_name']); ?>
+                                                </span>
+                                            <?php endif; ?>
                                         <?php endif; ?>
                                     </div>
                                     <div class="task-status today">
@@ -323,8 +333,13 @@ ob_start();
                                                 <?php endif; ?>
                                             </span>
                                         <?php else: ?>
-                                            <!-- Mostrar project-name solo para tareas normales del clan -->
+                                            <!-- Mostrar project-name para tareas normales -->
                                             <span class="project-name"><?php echo htmlspecialchars($task['project_name']); ?></span>
+                                            <?php if (isset($task['clan_name']) && $task['clan_name'] !== ($clan['clan_name'] ?? '')): ?>
+                                                <span class="external-clan-badge" title="Proyecto de otro clan: <?php echo htmlspecialchars($task['clan_name']); ?>">
+                                                    <i class="fas fa-external-link-alt"></i> <?php echo htmlspecialchars($task['clan_name']); ?>
+                                                </span>
+                                            <?php endif; ?>
                                         <?php endif; ?>
                                     </div>
                                     <div class="task-status week1">
@@ -383,8 +398,13 @@ ob_start();
                                                 <?php endif; ?>
                                             </span>
                                         <?php else: ?>
-                                            <!-- Mostrar project-name solo para tareas normales del clan -->
+                                            <!-- Mostrar project-name para tareas normales -->
                                             <span class="project-name"><?php echo htmlspecialchars($task['project_name']); ?></span>
+                                            <?php if (isset($task['clan_name']) && $task['clan_name'] !== ($clan['clan_name'] ?? '')): ?>
+                                                <span class="external-clan-badge" title="Proyecto de otro clan: <?php echo htmlspecialchars($task['clan_name']); ?>">
+                                                    <i class="fas fa-external-link-alt"></i> <?php echo htmlspecialchars($task['clan_name']); ?>
+                                                </span>
+                                            <?php endif; ?>
                                         <?php endif; ?>
                                     </div>
                                     <div class="task-status week2">
@@ -1305,6 +1325,26 @@ ob_start();
     font-size: 0.85rem;
     color: #6b7280;
     font-weight: 500;
+}
+
+/* === BADGE PARA CLAN EXTERNO === */
+.external-clan-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 6px;
+    margin-left: 8px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 600;
+    box-shadow: 0 1px 3px rgba(239, 68, 68, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.external-clan-badge i {
+    font-size: 0.6rem;
 }
 
 .task-description {
