@@ -801,6 +801,12 @@ try {
             $controller->updateSubtaskStatus();
             break;
             
+        // Ruta para crear subtarea
+        case 'clan_member/add-subtask':
+            $controller = new ClanMemberController();
+            $controller->addSubtask();
+            break;
+            
         // Rutas para comentarios y documentos de subtareas
         case 'clan_member/add-subtask-comment':
             $controller = new ClanMemberController();

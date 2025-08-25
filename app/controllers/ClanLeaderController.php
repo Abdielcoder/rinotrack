@@ -1772,16 +1772,31 @@ class ClanLeaderController {
         }
 
         try {
-            // Verificar que la tarea existe y pertenece al clan
+            // Verificar que la tarea existe
             $task = $this->taskModel->findById($taskId);
             if (!$task) {
                 Utils::jsonResponse(['success' => false, 'message' => 'Tarea no encontrada'], 404);
             }
 
-            // Verificar que la tarea pertenece a un proyecto del clan
+            // Verificar que el usuario tiene acceso a la tarea
             $project = $this->projectModel->findById($task['project_id']);
-            if (!$project || $project['clan_id'] != $this->userClan['clan_id']) {
-                Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+            if (!$project) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Proyecto no encontrado'], 404);
+            }
+            
+            // Permitir si es líder del clan del proyecto O si está asignado a la tarea
+            $isProjectClanLeader = ($project['clan_id'] == $this->userClan['clan_id']);
+            $isTaskAssigned = ($task['assigned_to_user_id'] == $this->currentUser['user_id']);
+            
+            // Verificar también si está asignado via Task_Assignments
+            if (!$isTaskAssigned) {
+                $stmt = $this->db->prepare("SELECT COUNT(*) FROM Task_Assignments WHERE task_id = ? AND user_id = ?");
+                $stmt->execute([$taskId, $this->currentUser['user_id']]);
+                $isTaskAssigned = $stmt->fetchColumn() > 0;
+            }
+            
+            if (!$isProjectClanLeader && !$isTaskAssigned) {
+                Utils::jsonResponse(['success' => false, 'message' => 'No tienes permisos para agregar subtareas a esta tarea'], 403);
             }
 
             // Crear la subtarea usando el método existente

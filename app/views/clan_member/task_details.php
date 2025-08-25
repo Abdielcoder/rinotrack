@@ -44,6 +44,14 @@ ob_start();
           <div><?php echo nl2br(htmlspecialchars($task['description'] ?? '')); ?></div>
         </div>
 
+        <!-- Botón para agregar subtarea -->
+        <div style="margin-bottom: 20px;">
+            <button onclick="showAddSubtaskModal()" style="background: #1e3a8a; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: background 0.2s;">
+                <i class="fas fa-plus"></i>
+                Agregar Subtarea
+            </button>
+        </div>
+
         <!-- Sección de Subtareas -->
         <?php if (!empty($subtasks)): ?>
         <div class="summary-card">
@@ -1300,6 +1308,126 @@ document.addEventListener('DOMContentLoaded', function() {
     margin-left: 4px;
 }
 </style>
+
+<script>
+// Función para mostrar modal de agregar subtarea
+function showAddSubtaskModal() {
+    closeExistingModals();
+    
+    const modalHTML = `
+        <div class="modal-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); display: flex; justify-content: center; align-items: center; z-index: 1000;">
+            <div class="modal-content" style="background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 500px; max-height: 80vh; overflow-y: auto;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h3 style="margin: 0; color: #1f2937; font-size: 20px; font-weight: 600;">Agregar Nueva Subtarea</h3>
+                    <button onclick="closeExistingModals()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #6b7280;">&times;</button>
+                </div>
+                
+                <form id="new-subtask-form">
+                    <div style="margin-bottom: 15px;">
+                        <label for="new-subtask-title" style="display: block; margin-bottom: 5px; font-weight: 600; color: #374151;">Título *</label>
+                        <input type="text" id="new-subtask-title" style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 6px; font-size: 14px; outline: none; transition: border-color 0.2s;" placeholder="Ingresa el título de la subtarea">
+                    </div>
+                    
+                    <div style="margin-bottom: 15px;">
+                        <label for="new-subtask-description" style="display: block; margin-bottom: 5px; font-weight: 600; color: #374151;">Descripción</label>
+                        <textarea id="new-subtask-description" rows="3" style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 6px; font-size: 14px; outline: none; transition: border-color 0.2s; resize: vertical;" placeholder="Descripción opcional"></textarea>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                        <div>
+                            <label for="new-subtask-status" style="display: block; margin-bottom: 5px; font-weight: 600; color: #374151;">Estado</label>
+                            <select id="new-subtask-status" style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 6px; font-size: 14px; outline: none;">
+                                <option value="pending">Pendiente</option>
+                                <option value="in_progress">En Progreso</option>
+                                <option value="completed">Completada</option>
+                                <option value="blocked">Bloqueada</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label for="new-subtask-percentage" style="display: block; margin-bottom: 5px; font-weight: 600; color: #374151;">Progreso (%)</label>
+                            <input type="number" id="new-subtask-percentage" min="0" max="100" value="0" style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 6px; font-size: 14px; outline: none;">
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <label for="new-subtask-due-date" style="display: block; margin-bottom: 5px; font-weight: 600; color: #374151;">Fecha límite</label>
+                        <input type="date" id="new-subtask-due-date" style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 6px; font-size: 14px; outline: none;">
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                        <button type="button" onclick="closeExistingModals()" style="background: #6b7280; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                            Cancelar
+                        </button>
+                        <button type="button" onclick="saveNewSubtaskForMember()" style="background: #1e3a8a; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                            Crear Subtarea
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Focus en el campo título después de un pequeño delay
+    setTimeout(() => {
+        document.getElementById('new-subtask-title').focus();
+    }, 100);
+}
+
+// Función para guardar nueva subtarea (específica para miembros de clan)
+function saveNewSubtaskForMember() {
+    const title = document.getElementById('new-subtask-title').value.trim();
+    const description = document.getElementById('new-subtask-description').value.trim();
+    const status = document.getElementById('new-subtask-status').value;
+    const percentage = parseInt(document.getElementById('new-subtask-percentage').value);
+    const dueDate = document.getElementById('new-subtask-due-date').value;
+    
+    if (!title) {
+        alert('El título es requerido');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('task_id', '<?php echo $task['task_id']; ?>');
+    formData.append('title', title);
+    formData.append('description', description);
+    formData.append('status', status);
+    formData.append('completion_percentage', percentage);
+    if (dueDate) {
+        formData.append('due_date', dueDate);
+    }
+    
+    fetch('?route=clan_member/add-subtask', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            closeExistingModals();
+            alert('Subtarea creada exitosamente');
+            // Recargar la página para mostrar la nueva subtarea
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        } else {
+            alert('Error al crear subtarea: ' + (data.message || 'Error desconocido'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error de conexión');
+    });
+}
+
+// Función auxiliar para cerrar modales existentes
+function closeExistingModals() {
+    const existingModals = document.querySelectorAll('.modal-overlay');
+    existingModals.forEach(modal => modal.remove());
+}
+</script>
 
 <?php
 $content = ob_get_clean();
