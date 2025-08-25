@@ -107,8 +107,8 @@ class ClanLeaderController {
         error_log("Task Stats: " . json_encode($taskStats));
         error_log("Member Contributions Count: " . count($memberContributions));
 
-        // Obtener tareas para el tablero Kanban
-        $kanbanTasks = $this->getKanbanTasksForClan($this->userClan['clan_id']);
+        // Obtener tareas para el tablero Kanban (incluye tareas de otros clanes)
+        $kanbanTasks = $this->getKanbanTasksForLeader($this->currentUser['user_id'], $this->userClan['clan_id']);
         
         $data = [
             'userStats' => $this->getUserStats(),
@@ -3048,6 +3048,138 @@ class ClanLeaderController {
             'months' => $months,
             'display_name' => $quarter . ' ' . $year
         ];
+    }
+
+    /**
+     * Obtener tareas para el tablero Kanban del líder (incluye tareas de otros clanes donde hay miembros asignados)
+     */
+    private function getKanbanTasksForLeader($userId, $primaryClanId) {
+        try {
+            
+            // Obtener TODAS las tareas donde miembros del clan estén asignados + tareas del clan
+            $stmt = $this->db->prepare(
+                "SELECT 
+                    t.task_id,
+                    t.task_name,
+                    t.description,
+                    t.due_date,
+                    t.priority,
+                    t.status,
+                    t.completion_percentage,
+                    t.automatic_points,
+                    p.project_name,
+                    p.project_id,
+                    p.clan_id,
+                    c.clan_name,
+                    u_assigned.full_name as assigned_to_name,
+                    u_assigned.username as assigned_to_username,
+                    CASE 
+                        WHEN t.due_date IS NULL THEN 999
+                        ELSE DATEDIFF(t.due_date, CURDATE())
+                    END as days_until_due,
+                    CASE 
+                        WHEN p.clan_id = ? THEN 1
+                        ELSE 0
+                    END as is_primary_clan
+                 FROM Tasks t
+                 INNER JOIN Projects p ON p.project_id = t.project_id
+                 LEFT JOIN Clans c ON p.clan_id = c.clan_id
+                 LEFT JOIN Task_Assignments ta ON ta.task_id = t.task_id
+                 LEFT JOIN Clan_Members cm ON (t.assigned_to_user_id = cm.user_id OR ta.user_id = cm.user_id)
+                 LEFT JOIN Users u_assigned ON t.assigned_to_user_id = u_assigned.user_id
+                 WHERE (
+                        -- Tareas del clan principal (todas)
+                        (p.clan_id = ? AND (p.is_personal IS NULL OR p.is_personal != 1))
+                        -- Tareas personales del clan principal asignadas a miembros del clan
+                        OR (p.clan_id = ? AND p.is_personal = 1 AND p.created_by_user_id = ? AND (
+                            t.assigned_to_user_id IN (SELECT user_id FROM Clan_Members WHERE clan_id = ?) 
+                            OR ta.user_id IN (SELECT user_id FROM Clan_Members WHERE clan_id = ?)
+                            OR t.assigned_to_user_id = ?
+                            OR t.created_by_user_id = ?
+                        ))
+                        -- Tareas especiales del clan principal asignadas a miembros del clan
+                        OR (p.clan_id = ? AND p.project_name IN ('Tareas Recurrentes', 'Tareas Eventuales') AND (
+                            t.assigned_to_user_id IN (SELECT user_id FROM Clan_Members WHERE clan_id = ?)
+                            OR ta.user_id IN (SELECT user_id FROM Clan_Members WHERE clan_id = ?)
+                            OR t.assigned_to_user_id = ?
+                            OR ta.user_id = ?
+                        ))
+                        -- Tareas de OTROS clanes donde CUALQUIER miembro del clan esté asignado
+                        OR (p.clan_id != ? AND cm.clan_id = ? AND cm.clan_id IS NOT NULL)
+                       )
+                   AND t.is_subtask = 0
+                   AND t.status != 'completed'
+                 GROUP BY t.task_id
+                 ORDER BY is_primary_clan DESC, t.due_date ASC, t.task_id ASC"
+            );
+            
+            $params = [
+                $primaryClanId, // is_primary_clan CASE
+                $primaryClanId, // tareas del clan principal
+                $primaryClanId, // tareas personales del clan principal
+                $userId, // creador de tareas personales
+                $primaryClanId, $primaryClanId, // miembros asignados a tareas personales
+                $userId, $userId, // líder asignado a tareas personales
+                $primaryClanId, // tareas especiales del clan principal  
+                $primaryClanId, $primaryClanId, // miembros asignados a tareas especiales
+                $userId, $userId, // líder asignado a tareas especiales
+                $primaryClanId, // para excluir clan principal de otros clanes
+                $primaryClanId // clan de los miembros asignados en otros clanes
+            ];
+            
+            $stmt->execute($params);
+            $allTasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Organizar en columnas Kanban
+            $kanbanTasks = [
+                'vencidas' => [],
+                'hoy' => [],
+                '1_semana' => [],
+                '2_semanas' => []
+            ];
+
+            foreach ($allTasks as $task) {
+                $daysUntilDue = (int)$task['days_until_due'];
+                
+                if ($daysUntilDue < 0) {
+                    $kanbanTasks['vencidas'][] = $task;
+                } elseif ($daysUntilDue <= 0) {
+                    $kanbanTasks['hoy'][] = $task;
+                } elseif ($daysUntilDue <= 7) {
+                    $kanbanTasks['1_semana'][] = $task;
+                } elseif ($daysUntilDue <= 14) {
+                    $kanbanTasks['2_semanas'][] = $task;
+                }
+            }
+
+            // Ordenar cada columna por prioridad
+            $priorityOrder = ['high' => 1, 'medium' => 2, 'low' => 3];
+            
+            foreach ($kanbanTasks as $column => &$tasks) {
+                usort($tasks, function($a, $b) use ($priorityOrder) {
+                    $priorityA = $priorityOrder[$a['priority']] ?? 4;
+                    $priorityB = $priorityOrder[$b['priority']] ?? 4;
+                    
+                    if ($priorityA === $priorityB) {
+                        return strtotime($a['due_date']) - strtotime($b['due_date']);
+                    }
+                    
+                    return $priorityA - $priorityB;
+                });
+            }
+
+
+
+            return $kanbanTasks;
+        } catch (Exception $e) {
+            error_log('Error getKanbanTasksForLeader: ' . $e->getMessage());
+            return [
+                'vencidas' => [],
+                'hoy' => [],
+                '1_semana' => [],
+                '2_semanas' => []
+            ];
+        }
     }
 
     /**

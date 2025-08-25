@@ -57,6 +57,19 @@ ob_start();
                                         <i class="fas fa-eye"></i>
                                     </a>
                                 </div>
+                                <div class="task-info-compact">
+                                    <span class="project-name-compact"><?php echo htmlspecialchars($task['project_name']); ?></span>
+                                    <?php if (isset($task['is_primary_clan']) && $task['is_primary_clan'] == 0): ?>
+                                        <span class="external-clan-badge-compact" title="Tarea de otro clan: <?php echo htmlspecialchars($task['clan_name']); ?>">
+                                            <i class="fas fa-external-link-alt"></i> <?php echo htmlspecialchars($task['clan_name']); ?>
+                                        </span>
+                                    <?php endif; ?>
+                                    <?php if (!empty($task['assigned_to_name'])): ?>
+                                        <span class="assignee-info-compact" title="Asignado a: <?php echo htmlspecialchars($task['assigned_to_name']); ?>">
+                                            <i class="fas fa-user"></i> <?php echo htmlspecialchars($task['assigned_to_name']); ?>
+                                        </span>
+                                    <?php endif; ?>
+                                </div>
                                 <div class="task-due-compact overdue">
                                     <i class="fas fa-exclamation-triangle"></i>
                                     Vencida hace <?php echo abs($task['days_until_due']); ?> días
@@ -81,6 +94,19 @@ ob_start();
                                     <a href="?route=clan_leader/get-task-details&task_id=<?php echo $task['task_id']; ?>" class="btn-compact-action" title="Ver proyecto">
                                         <i class="fas fa-eye"></i>
                                     </a>
+                                </div>
+                                <div class="task-info-compact">
+                                    <span class="project-name-compact"><?php echo htmlspecialchars($task['project_name']); ?></span>
+                                    <?php if (isset($task['is_primary_clan']) && $task['is_primary_clan'] == 0): ?>
+                                        <span class="external-clan-badge-compact" title="Tarea de otro clan: <?php echo htmlspecialchars($task['clan_name']); ?>">
+                                            <i class="fas fa-external-link-alt"></i> <?php echo htmlspecialchars($task['clan_name']); ?>
+                                        </span>
+                                    <?php endif; ?>
+                                    <?php if (!empty($task['assigned_to_name'])): ?>
+                                        <span class="assignee-info-compact" title="Asignado a: <?php echo htmlspecialchars($task['assigned_to_name']); ?>">
+                                            <i class="fas fa-user"></i> <?php echo htmlspecialchars($task['assigned_to_name']); ?>
+                                        </span>
+                                    <?php endif; ?>
                                 </div>
                                 <div class="task-due-compact today">
                                     <i class="fas fa-clock"></i>
@@ -107,7 +133,58 @@ ob_start();
                                         <i class="fas fa-eye"></i>
                                     </a>
                                 </div>
+                                <div class="task-info-compact">
+                                    <span class="project-name-compact"><?php echo htmlspecialchars($task['project_name']); ?></span>
+                                    <?php if (isset($task['is_primary_clan']) && $task['is_primary_clan'] == 0): ?>
+                                        <span class="external-clan-badge-compact" title="Tarea de otro clan: <?php echo htmlspecialchars($task['clan_name']); ?>">
+                                            <i class="fas fa-external-link-alt"></i> <?php echo htmlspecialchars($task['clan_name']); ?>
+                                        </span>
+                                    <?php endif; ?>
+                                    <?php if (!empty($task['assigned_to_name'])): ?>
+                                        <span class="assignee-info-compact" title="Asignado a: <?php echo htmlspecialchars($task['assigned_to_name']); ?>">
+                                            <i class="fas fa-user"></i> <?php echo htmlspecialchars($task['assigned_to_name']); ?>
+                                        </span>
+                                    <?php endif; ?>
+                                </div>
                                 <div class="task-due-compact week1">
+                                    <i class="fas fa-calendar"></i>
+                                    En <?php echo $task['days_until_due']; ?> días
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+
+                <!-- Columna: 2 Semanas -->
+                <div class="kanban-column-compact">
+                    <div class="column-header week2">
+                        <h4>2 Semanas</h4>
+                        <span class="task-count"><?php echo count($kanbanTasks['2_semanas'] ?? []); ?></span>
+                    </div>
+                    <div class="column-content-compact">
+                        <?php foreach ($kanbanTasks['2_semanas'] ?? [] as $task): ?>
+                            <div class="task-card-compact week2" data-task-id="<?php echo $task['task_id']; ?>">
+                                <div class="task-compact-row">
+                                    <input type="checkbox" class="task-checkbox-compact" <?php echo ($task['status'] === 'completed' || ($task['is_completed'] ?? 0) == 1) ? 'checked' : ''; ?> onchange="toggleTaskStatus(<?php echo $task['task_id']; ?>, this.checked)">
+                                    <div class="task-name-compact"><?php echo htmlspecialchars($task['task_name']); ?></div>
+                                    <a href="?route=clan_leader/get-task-details&task_id=<?php echo $task['task_id']; ?>" class="btn-compact-action" title="Ver proyecto">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </div>
+                                <div class="task-info-compact">
+                                    <span class="project-name-compact"><?php echo htmlspecialchars($task['project_name']); ?></span>
+                                    <?php if (isset($task['is_primary_clan']) && $task['is_primary_clan'] == 0): ?>
+                                        <span class="external-clan-badge-compact" title="Tarea de otro clan: <?php echo htmlspecialchars($task['clan_name']); ?>">
+                                            <i class="fas fa-external-link-alt"></i> <?php echo htmlspecialchars($task['clan_name']); ?>
+                                        </span>
+                                    <?php endif; ?>
+                                    <?php if (!empty($task['assigned_to_name'])): ?>
+                                        <span class="assignee-info-compact" title="Asignado a: <?php echo htmlspecialchars($task['assigned_to_name']); ?>">
+                                            <i class="fas fa-user"></i> <?php echo htmlspecialchars($task['assigned_to_name']); ?>
+                                        </span>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="task-due-compact week2">
                                     <i class="fas fa-calendar"></i>
                                     En <?php echo $task['days_until_due']; ?> días
                                 </div>
@@ -752,6 +829,71 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+// Agregar estilos para badges de clan externo
+const additionalStyles = `
+    .task-info-compact {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 4px 0;
+        flex-wrap: wrap;
+    }
+    
+    .project-name-compact {
+        font-size: 0.75rem;
+        color: #6b7280;
+        font-weight: 500;
+    }
+    
+    .external-clan-badge-compact {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        padding: 2px 5px;
+        border-radius: 6px;
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        color: white;
+        font-size: 0.65rem;
+        font-weight: 600;
+        box-shadow: 0 1px 2px rgba(239, 68, 68, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .external-clan-badge-compact i {
+        font-size: 0.55rem;
+    }
+    
+    .assignee-info-compact {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        padding: 2px 5px;
+        border-radius: 6px;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        font-size: 0.65rem;
+        font-weight: 600;
+        box-shadow: 0 1px 2px rgba(16, 185, 129, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .assignee-info-compact i {
+        font-size: 0.55rem;
+    }
+    
+    .task-card-compact {
+        position: relative;
+    }
+    
+    .task-card-compact .task-info-compact {
+        padding: 0 8px;
+    }
+`;
+
+const additionalStyleElement = document.createElement('style');
+additionalStyleElement.textContent = additionalStyles;
+document.head.appendChild(additionalStyleElement);
 
 // Funciones específicas para el dashboard del clan leader
 document.addEventListener('DOMContentLoaded', function() {
