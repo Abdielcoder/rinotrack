@@ -832,8 +832,8 @@ ob_start();
     box-shadow: var(--shadow-sm);
     transition: all var(--transition-normal);
     min-height: 50px;
-    max-height: 70px;
-    overflow: hidden;
+    max-height: 85px;
+    overflow: visible;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -970,29 +970,39 @@ ob_start();
 .task-actions {
     display: flex;
     justify-content: center;
+    align-items: center;
+    padding: 4px 0;
+    margin-top: 2px;
 }
 
 .btn-edit {
-    background: var(--primary-color);
+    background: #1e3a8a;
     color: #ffffff;
-    padding: var(--spacing-xs);
-    border-radius: var(--radius-md);
+    padding: 6px 8px;
+    border-radius: 6px;
     text-decoration: none;
-    font-size: 0.8rem;
-    font-weight: var(--font-weight-medium);
-    transition: all var(--transition-normal);
-    display: flex;
+    font-size: 0.75rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     width: 32px;
     height: 32px;
-    border: 1px solid var(--primary-color);
+    border: 1px solid #1e3a8a;
 }
 
 .btn-edit:hover {
-    background: var(--primary-dark);
-    transform: scale(1.05);
-    box-shadow: var(--shadow-md);
+    background: #1e40af;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(30, 58, 138, 0.3);
+    text-decoration: none;
+    color: #ffffff;
+}
+
+.btn-edit i {
+    font-size: 0.85rem;
+    color: #ffffff;
 }
 
 /* Responsive para el Kanban */
