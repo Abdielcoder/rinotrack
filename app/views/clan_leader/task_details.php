@@ -105,6 +105,9 @@ ob_start();
                                             <i class="fas fa-paperclip"></i>
                       <span class="badge" id="attachments-badge-<?php echo $subtask['subtask_id']; ?>" style="display: none;">0</span>
                                         </button>
+                    <button class="btn-icon-small" onclick="showAssignSubtaskModal(<?php echo $subtask['subtask_id']; ?>)" title="Asignar Usuario" style="width: 32px; height: 32px; border: none; border-radius: 6px; background: #dbeafe; color: #1e3a8a; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                                            <i class="fas fa-user-plus"></i>
+                                        </button>
                     <button class="btn-icon-small" onclick="editSubtask(<?php echo $subtask['subtask_id']; ?>)" title="Editar" style="width: 32px; height: 32px; border: none; border-radius: 6px; background: #f3f4f6; color: #6b7280; cursor: pointer; display: flex; align-items: center; justify-content: center;">
                                             <i class="fas fa-edit"></i>
                                         </button>
@@ -124,9 +127,9 @@ ob_start();
                     ];
                     echo $estados[$subtask['status']] ?? ucfirst(str_replace('_', ' ', $subtask['status'])); 
                 ?></span>
-                                    <?php if (!empty($subtask['assigned_user_name'])): ?>
-                <span style="color: #6b7280; font-size: 14px; margin-left: 20px;">Asignado: <?php echo htmlspecialchars($subtask['assigned_user_name']); ?></span>
-                                    <?php endif; ?>
+                                    <div style="margin-left: 20px; margin-top: 5px;" id="assigned-users-<?php echo $subtask['subtask_id']; ?>">
+                                        <!-- Los usuarios asignados se cargarán dinámicamente -->
+                                    </div>
                                     <?php if (!empty($subtask['due_date'])): ?>
                 <span style="color: #6b7280; font-size: 14px; margin-left: 20px;">
                     <i class="fas fa-calendar-alt" style="margin-right: 4px;"></i>
@@ -1139,10 +1142,97 @@ function showChecklistTip() {
     }, 2500);
 }
 
+// Función para cargar usuarios asignados a una subtarea
+function loadSubtaskAssignedUsers() {
+    const subtaskElements = document.querySelectorAll('[data-subtask-id]');
+    
+    subtaskElements.forEach(element => {
+        const subtaskId = element.getAttribute('data-subtask-id');
+        
+        fetch(`?route=clan_leader/get-subtask-assigned-users&subtask_id=${subtaskId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    displayAssignedUsers(subtaskId, data.users);
+                } else {
+                    console.error('Error al cargar usuarios asignados:', data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error cargando usuarios asignados para subtarea', subtaskId, ':', error);
+            });
+    });
+}
+
+function displayAssignedUsers(subtaskId, users) {
+    const container = document.getElementById(`assigned-users-${subtaskId}`);
+    if (!container) return;
+    
+    if (users.length === 0) {
+        container.innerHTML = '<span style="color: #ef4444; font-size: 14px;">Sin asignar</span>';
+        return;
+    }
+    
+    let html = '<div style="display: flex; align-items: center; flex-wrap: wrap; gap: 8px;">';
+    html += '<span style="color: #6b7280; font-size: 14px;">Asignado a:</span>';
+    
+    users.forEach((user, index) => {
+        const initial = user.full_name ? user.full_name.charAt(0).toUpperCase() : user.username.charAt(0).toUpperCase();
+        const name = user.full_name || user.username;
+        
+        html += `
+            <div style="display: flex; align-items: center; gap: 4px; background: #dbeafe; padding: 4px 8px; border-radius: 12px; font-size: 12px;">
+                <div style="width: 20px; height: 20px; border-radius: 50%; background: #1e3a8a; color: white; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600;">
+                    ${initial}
+                </div>
+                <span style="color: #1e3a8a; font-weight: 500;">${name}</span>
+                <button onclick="removeUserFromSubtask(${subtaskId}, ${user.user_id})" style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 10px; padding: 0; margin-left: 2px;" title="Remover usuario">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+function removeUserFromSubtask(subtaskId, userId) {
+    if (!confirm('¿Deseas remover este usuario de la subtarea?')) {
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('subtask_id', subtaskId);
+    formData.append('user_id', userId);
+    
+    fetch('?route=clan_leader/remove-subtask-user', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Usuario removido exitosamente', 'success');
+            // Recargar solo los usuarios asignados sin recargar toda la página
+            loadSubtaskAssignedUsers();
+        } else {
+            showNotification('Error al remover usuario: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error de conexión', 'error');
+    });
+}
+
 // Esperar a que el DOM esté listo
 document.addEventListener('DOMContentLoaded', function() {
     // Cargar contadores al inicializar la página
     loadSubtaskCounters();
+    
+    // Cargar usuarios asignados a subtareas
+    loadSubtaskAssignedUsers();
     
     // Inicializar editor de comentario de tarea principal
     initializeTaskCommentEditor();
@@ -1712,6 +1802,231 @@ function updateSubtaskStatus(subtaskId, newStatus) {
     .catch(error => {
         console.error('Error:', error);
         showNotification('Error al actualizar el estado de la subtarea', 'error');
+    });
+}
+
+// Función para mostrar modal de asignación de subtarea
+function showAssignSubtaskModal(subtaskId) {
+    // Cargar usuarios disponibles desde el servidor
+    fetch('?route=clan_leader/get-available-users')
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            displayAssignSubtaskModal(subtaskId, data.users);
+        } else {
+            showNotification('Error al cargar usuarios: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error al cargar usuarios', 'error');
+    });
+}
+
+function displayAssignSubtaskModal(subtaskId, users) {
+    // Cerrar modales existentes antes de abrir uno nuevo
+    closeExistingModals();
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 600px; max-height: 80vh;">
+            <div class="modal-header">
+                <h3><i class="fas fa-user-plus"></i> Asignar Usuario a Subtarea</h3>
+                <button class="btn-close" onclick="this.closest('.modal-overlay').remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" style="padding: 20px;">
+                <div class="assign-user-section">
+                    <div style="margin-bottom: 20px;">
+                        <div style="position: relative;">
+                            <input 
+                                type="text" 
+                                id="assignUserSearchInput" 
+                                placeholder="Buscar usuario por nombre o email..." 
+                                style="width: 100%; padding: 12px 16px 12px 44px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; outline: none; transition: border-color 0.2s;"
+                                onkeyup="filterAssignUsers(this.value)"
+                                onfocus="this.style.borderColor='#1e3a8a'" 
+                                onblur="this.style.borderColor='#e5e7eb'"
+                            >
+                            <i class="fas fa-search" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #6b7280; font-size: 16px;"></i>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 12px; color: #6b7280; font-size: 14px; display: flex; justify-content: space-between; align-items: center;">
+                        <span>Selecciona uno o más usuarios para asignar a la subtarea:</span>
+                        <span id="selectedUsersCount" style="background: #1e3a8a; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: 600;">0 seleccionados</span>
+                    </div>
+                    <div id="assignUsersList" style="max-height: 350px; overflow-y: auto; border: 2px solid #f3f4f6; border-radius: 8px; padding: 8px;">
+                        ${users.length === 0 ? '<div style="text-align: center; color: #6b7280; padding: 20px; font-style: italic;">No hay usuarios disponibles</div>' : ''}
+                        ${users.map(user => `
+                            <div class="assign-user-option" data-user-id="${user.user_id}" data-user-search="${(user.full_name || '') + ' ' + user.username + ' ' + (user.email || '')}".toLowerCase() style="display: flex; align-items: center; padding: 12px; border: 2px solid #f3f4f6; border-radius: 8px; margin-bottom: 8px; cursor: pointer; transition: all 0.2s; background-color: white;" onclick="toggleUserSelection(this, ${user.user_id})" onmouseover="this.style.borderColor='#e5e7eb'; this.style.backgroundColor='#f9fafb'" onmouseout="updateUserOptionStyle(this)">
+                                <input type="checkbox" class="user-checkbox" data-user-id="${user.user_id}" style="margin-right: 12px; width: 18px; height: 18px; cursor: pointer; accent-color: #1e3a8a;" onchange="updateSelectionCount()">
+                                <div style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #1e3a8a, #3b82f6); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 18px; margin-right: 12px; flex-shrink: 0;">
+                                    ${user.full_name ? user.full_name.charAt(0).toUpperCase() : user.username.charAt(0).toUpperCase()}
+                                </div>
+                                <div style="flex: 1; min-width: 0;">
+                                    <div style="font-weight: 600; color: #1f2937; font-size: 16px; display: flex; align-items: center; flex-wrap: wrap; gap: 4px;">
+                                        ${user.full_name || user.username}
+                                        ${user.membership_status === 'Miembro del clan' 
+                                            ? '<span style="background: #10b981; color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 8px;">CLAN</span>'
+                                            : '<span style="background: #6b7280; color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 8px;">EXTERNO</span>'
+                                        }
+                                    </div>
+                                    <div style="font-size: 14px; color: #6b7280; margin-top: 2px;">@${user.username}</div>
+                                    ${user.email ? `<div style="font-size: 12px; color: #9ca3af; margin-top: 1px;">${user.email}</div>` : ''}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #f3f4f6; display: flex; gap: 10px;">
+                        <button id="assignSelectedUsersBtn" onclick="assignSelectedUsers(${subtaskId})" style="background: #10b981; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 500; flex: 1; opacity: 0.5;" disabled>
+                            <i class="fas fa-user-plus" style="margin-right: 8px;"></i>Asignar Seleccionados
+                        </button>
+                        <button onclick="unassignSubtaskUser(${subtaskId})" style="background: #ef4444; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 500; flex: 1;">
+                            <i class="fas fa-user-times" style="margin-right: 8px;"></i>Desasignar Todos
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    modal.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.5); display: flex; align-items: center;
+        justify-content: center; z-index: 1000;
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+function filterAssignUsers(searchTerm) {
+    const userOptions = document.querySelectorAll('.assign-user-option');
+    
+    userOptions.forEach(option => {
+        const searchText = option.getAttribute('data-user-search').toLowerCase();
+        const shouldShow = searchText.includes(searchTerm.toLowerCase());
+        option.style.display = shouldShow ? 'flex' : 'none';
+    });
+}
+
+function toggleUserSelection(element, userId) {
+    const checkbox = element.querySelector('.user-checkbox');
+    checkbox.checked = !checkbox.checked;
+    updateSelectionCount();
+}
+
+function updateSelectionCount() {
+    const selectedCheckboxes = document.querySelectorAll('.user-checkbox:checked');
+    const count = selectedCheckboxes.length;
+    const countElement = document.getElementById('selectedUsersCount');
+    const assignBtn = document.getElementById('assignSelectedUsersBtn');
+    
+    if (countElement) {
+        countElement.textContent = `${count} seleccionado${count !== 1 ? 's' : ''}`;
+    }
+    
+    if (assignBtn) {
+        if (count > 0) {
+            assignBtn.disabled = false;
+            assignBtn.style.opacity = '1';
+            assignBtn.style.cursor = 'pointer';
+        } else {
+            assignBtn.disabled = true;
+            assignBtn.style.opacity = '0.5';
+            assignBtn.style.cursor = 'not-allowed';
+        }
+    }
+}
+
+function updateUserOptionStyle(element) {
+    const checkbox = element.querySelector('.user-checkbox');
+    if (checkbox.checked) {
+        element.style.borderColor = '#1e3a8a';
+        element.style.backgroundColor = '#dbeafe';
+    } else {
+        element.style.borderColor = '#f3f4f6';
+        element.style.backgroundColor = 'white';
+    }
+}
+
+function assignSelectedUsers(subtaskId) {
+    const selectedCheckboxes = document.querySelectorAll('.user-checkbox:checked');
+    const selectedUserIds = Array.from(selectedCheckboxes).map(cb => cb.dataset.userId);
+    
+    if (selectedUserIds.length === 0) {
+        showNotification('Por favor selecciona al menos un usuario', 'error');
+        return;
+    }
+    
+    const userNames = Array.from(selectedCheckboxes).map(cb => {
+        const option = cb.closest('.assign-user-option');
+        const nameElement = option.querySelector('[style*="font-weight: 600"]');
+        return nameElement ? nameElement.textContent.trim() : 'Usuario';
+    });
+    
+    if (!confirm(`¿Deseas asignar la subtarea a ${selectedUserIds.length} usuario${selectedUserIds.length !== 1 ? 's' : ''}?\n\n${userNames.join(', ')}`)) {
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('subtask_id', subtaskId);
+    formData.append('user_ids', JSON.stringify(selectedUserIds));
+    
+    fetch('?route=clan_leader/assign-subtask-users', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            closeExistingModals();
+            showNotification(`${selectedUserIds.length} usuario${selectedUserIds.length !== 1 ? 's' : ''} asignado${selectedUserIds.length !== 1 ? 's' : ''} exitosamente`, 'success');
+            // Recargar la página para mostrar el cambio
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        } else {
+            showNotification('Error al asignar usuarios: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error de conexión', 'error');
+    });
+}
+
+function unassignSubtaskUser(subtaskId) {
+    if (!confirm('¿Deseas desasignar TODOS los usuarios de esta subtarea?')) {
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('subtask_id', subtaskId);
+    
+    fetch('?route=clan_leader/unassign-subtask-users', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            closeExistingModals();
+            showNotification('Todos los usuarios desasignados exitosamente', 'success');
+            // Recargar la página para mostrar el cambio
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        } else {
+            showNotification('Error al desasignar usuarios: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error de conexión', 'error');
     });
 }
 

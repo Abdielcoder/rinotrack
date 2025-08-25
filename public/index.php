@@ -561,6 +561,26 @@ try {
         $controller->deleteSubtaskAttachment();
         break;
         
+    case 'clan_leader/assign-subtask-users':
+        $controller = new ClanLeaderController();
+        $controller->assignSubtaskUsers();
+        break;
+        
+    case 'clan_leader/unassign-subtask-users':
+        $controller = new ClanLeaderController();
+        $controller->unassignSubtaskUsers();
+        break;
+        
+    case 'clan_leader/get-subtask-assigned-users':
+        $controller = new ClanLeaderController();
+        $controller->getSubtaskAssignedUsers();
+        break;
+        
+    case 'clan_leader/remove-subtask-user':
+        $controller = new ClanLeaderController();
+        $controller->removeSubtaskUser();
+        break;
+        
     case 'clan_leader/get-subtask-counts':
         $controller = new ClanLeaderController();
         $controller->getSubtaskCounts();
