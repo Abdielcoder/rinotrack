@@ -186,9 +186,7 @@ ob_start();
                                 </div>
                                 <div class="task-content">
                                     <h4 class="task-title"><?php echo htmlspecialchars($task['task_name']); ?></h4>
-                                    <?php if (!empty($task['description'])): ?>
-                                        <p class="task-description"><?php echo htmlspecialchars($task['description']); ?></p>
-                                    <?php endif; ?>
+
                                     <div class="task-project-info">
                                         <?php if (in_array($task['project_name'], ['Tareas Recurrentes', 'Tareas Eventuales', 'Tareas Personales'])): ?>
                                             <!-- Solo mostrar etiqueta para tareas especiales -->
@@ -249,9 +247,7 @@ ob_start();
                                 </div>
                                 <div class="task-content">
                                     <h4 class="task-title"><?php echo htmlspecialchars($task['task_name']); ?></h4>
-                                    <?php if (!empty($task['description'])): ?>
-                                        <p class="task-description"><?php echo htmlspecialchars($task['description']); ?></p>
-                                    <?php endif; ?>
+
                                     <div class="task-project-info">
                                         <?php if (in_array($task['project_name'], ['Tareas Recurrentes', 'Tareas Eventuales', 'Tareas Personales'])): ?>
                                             <!-- Solo mostrar etiqueta para tareas especiales -->
@@ -308,9 +304,7 @@ ob_start();
                                 </div>
                                 <div class="task-content">
                                     <h4 class="task-title"><?php echo htmlspecialchars($task['task_name']); ?></h4>
-                                    <?php if (!empty($task['description'])): ?>
-                                        <p class="task-description"><?php echo htmlspecialchars($task['description']); ?></p>
-                                    <?php endif; ?>
+
                                     <div class="task-project-info">
                                         <?php if (in_array($task['project_name'], ['Tareas Recurrentes', 'Tareas Eventuales', 'Tareas Personales'])): ?>
                                             <!-- Solo mostrar etiqueta para tareas especiales -->
@@ -367,9 +361,7 @@ ob_start();
                                 </div>
                                 <div class="task-content">
                                     <h4 class="task-title"><?php echo htmlspecialchars($task['task_name']); ?></h4>
-                                    <?php if (!empty($task['description'])): ?>
-                                        <p class="task-description"><?php echo htmlspecialchars($task['description']); ?></p>
-                                    <?php endif; ?>
+
                                     <div class="task-project-info">
                                         <?php if (in_array($task['project_name'], ['Tareas Recurrentes', 'Tareas Eventuales', 'Tareas Personales'])): ?>
                                             <!-- Solo mostrar etiqueta para tareas especiales -->
