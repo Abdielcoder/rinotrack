@@ -1501,6 +1501,12 @@ class ClanLeaderController {
             Utils::jsonResponse(['success' => false, 'message' => 'ID de tarea inválido'], 400);
         }
         
+        // Si no es líder de clan, redirigir a la vista de miembro
+        if (!$this->hasClanLeaderAccess()) {
+            header("Location: ?route=clan_member/task-details&task_id=" . $taskId);
+            exit;
+        }
+        
         try {
             // Obtener información completa de la tarea
             $task = $this->taskModel->findById($taskId);
@@ -1508,10 +1514,32 @@ class ClanLeaderController {
                 Utils::jsonResponse(['success' => false, 'message' => 'Tarea no encontrada'], 404);
             }
             
-            // Verificar acceso: pertenece al clan del líder o la tarea está asignada al líder
+            // Verificar acceso: pertenece al clan del líder, la tarea está asignada al usuario actual, 
+            // o el usuario es miembro del clan y la tarea tiene asignados miembros del clan
             $project = $this->projectModel->findById($task['project_id']);
             $isAssigned = $this->isTaskAssignedToUser($taskId, $this->currentUser['user_id']);
-            if (!$project || ((int)$project['clan_id'] !== (int)$this->userClan['clan_id'] && !$isAssigned)) {
+            $isProjectFromClan = ((int)$project['clan_id'] === (int)$this->userClan['clan_id']);
+            
+            // Verificar si es miembro del clan y hay miembros del clan asignados a la tarea
+            $hasTeamMembersAssigned = false;
+            if (!$isProjectFromClan && !$isAssigned && $this->userClan) {
+                $stmt = $this->db->prepare("
+                    SELECT COUNT(*) as count 
+                    FROM Task_Assignments ta 
+                    INNER JOIN Clan_Members cm ON ta.user_id = cm.user_id 
+                    WHERE ta.task_id = ? AND cm.clan_id = ?
+                    UNION
+                    SELECT COUNT(*) as count 
+                    FROM Tasks t 
+                    INNER JOIN Clan_Members cm ON t.assigned_to_user_id = cm.user_id 
+                    WHERE t.task_id = ? AND cm.clan_id = ?
+                ");
+                $stmt->execute([$taskId, $this->userClan['clan_id'], $taskId, $this->userClan['clan_id']]);
+                $results = $stmt->fetchAll();
+                $hasTeamMembersAssigned = array_sum(array_column($results, 'count')) > 0;
+            }
+            
+            if (!$project || (!$isProjectFromClan && !$isAssigned && !$hasTeamMembersAssigned)) {
                 Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
             }
             
