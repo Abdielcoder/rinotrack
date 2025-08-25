@@ -446,6 +446,50 @@ class Task {
     }
     
     /**
+     * Obtener subtareas de una tarea filtradas por usuario asignado
+     */
+    public function getSubtasksForUser($taskId, $userId) {
+        try {
+            // Usar directamente la tabla Subtasks con LEFT JOINs y filtrar por usuario asignado
+            $stmt = $this->db->prepare("
+                SELECT 
+                    s.subtask_id,
+                    s.task_id,
+                    t.task_name as parent_task_name,
+                    s.title,
+                    s.description,
+                    s.completion_percentage,
+                    s.estimated_hours,
+                    s.actual_hours,
+                    s.status,
+                    s.priority,
+                    s.due_date,
+                    s.assigned_to_user_id,
+                    s.created_by_user_id,
+                    s.subtask_order,
+                    s.created_at,
+                    s.updated_at,
+                    u_assigned.full_name as assigned_to_fullname,
+                    u_assigned.username as assigned_to_username,
+                    u_created.full_name as created_by_fullname,
+                    u_created.username as created_by_username
+                FROM Subtasks s
+                LEFT JOIN Tasks t ON s.task_id = t.task_id
+                LEFT JOIN Users u_assigned ON s.assigned_to_user_id = u_assigned.user_id
+                LEFT JOIN Users u_created ON s.created_by_user_id = u_created.user_id
+                WHERE s.task_id = ? 
+                  AND (s.assigned_to_user_id = ? OR s.created_by_user_id = ?)
+                ORDER BY s.subtask_order ASC
+            ");
+            $stmt->execute([$taskId, $userId, $userId]);
+            return $stmt->fetchAll();
+        } catch (Exception $e) {
+            error_log("Error al obtener subtareas para usuario: " . $e->getMessage());
+            return [];
+        }
+    }
+    
+    /**
      * Obtener comentarios de una tarea
      */
     public function getComments($taskId) {

@@ -50,10 +50,9 @@ class ClanMemberController {
         // Solo estadísticas del usuario
         $userTaskStats = $this->getUserTaskStats($this->currentUser['user_id'], $this->userClan['clan_id']);
         $ownContribution = $this->getOwnContribution($this->currentUser, $userTaskStats);
-        $allProjects = $this->projectModel->getByClan($this->userClan['clan_id']);
         
-        // Incluir todos los proyectos, incluyendo "Tareas Eventuales" y "Tareas Recurrentes"
-        $projects = $allProjects;
+        // Obtener solo proyectos donde el usuario tiene tareas asignadas
+        $projects = $this->projectModel->getByClanForUser($this->userClan['clan_id'], $this->currentUser['user_id']);
         
         $ownTasksDetails = $this->getUserTasksForModal($this->currentUser['user_id'], $this->userClan['clan_id']);
         
@@ -97,10 +96,8 @@ class ClanMemberController {
             Utils::redirect('dashboard');
             return;
         }
-        $allProjects = $this->userClan ? $this->projectModel->getByClan($this->userClan['clan_id']) : [];
-        
-        // Incluir todos los proyectos, incluyendo "Tareas Eventuales" y "Tareas Recurrentes"
-        $projects = $allProjects;
+        // Obtener solo proyectos donde el usuario tiene tareas asignadas
+        $projects = $this->userClan ? $this->projectModel->getByClanForUser($this->userClan['clan_id'], $this->currentUser['user_id']) : [];
         
         $data = [
             'currentPage' => 'clan_member',
@@ -123,7 +120,8 @@ class ClanMemberController {
         if (!$project || (int)$project['clan_id'] !== (int)$this->userClan['clan_id']) {
             die('Acceso denegado al proyecto');
         }
-        $tasks = $this->taskModel->getByProject($projectId);
+        // Obtener solo las tareas del proyecto que están asignadas al usuario
+        $tasks = $this->taskModel->getUserTasksByProject($this->currentUser['user_id'], $projectId);
         $data = [
             'currentPage' => 'clan_member',
             'user' => $this->currentUser,
@@ -146,9 +144,12 @@ class ClanMemberController {
         if (!$task) { die('Tarea no encontrada'); }
         $project = $this->projectModel->findById($task['project_id']);
         $isAssigned = $this->isTaskAssignedToUser($taskId, $this->currentUser['user_id']);
-        if (!$project || ((int)$project['clan_id'] !== (int)$this->userClan['clan_id'] && !$isAssigned)) { die('Acceso denegado'); }
+        
+        // Solo permitir acceso si la tarea está asignada al usuario
+        if (!$project || !$isAssigned) { die('Acceso denegado - Tarea no asignada'); }
 
-        $subtasks = $this->taskModel->getSubtasks($taskId);
+        // Obtener solo las subtareas asignadas al usuario actual
+        $subtasks = $this->taskModel->getSubtasksForUser($taskId, $this->currentUser['user_id']);
         $comments = $this->taskModel->getComments($taskId);
         $history = $this->taskModel->getHistory($taskId);
         $assignedUsers = $this->taskModel->getAssignedUsers($taskId);
@@ -226,30 +227,27 @@ class ClanMemberController {
         $projectsSummary = [];
         if ($this->userClan) {
             // Solo proyectos del clan donde el usuario tenga tareas asignadas
-            $clanProjects = $this->projectModel->getByClan($this->userClan['clan_id']);
+            $clanProjects = $this->projectModel->getByClanForUser($this->userClan['clan_id'], $this->currentUser['user_id']);
             foreach ($clanProjects as $p) {
                 $pid = (int)$p['project_id'];
                 $projectName = $p['project_name'];
                 
-                // Verificar si el usuario tiene tareas asignadas en este proyecto
+                // Obtener solo las tareas asignadas al usuario en este proyecto
                 $userTasksInProject = $this->taskModel->getUserTasksByProject($this->currentUser['user_id'], $pid);
-                if (!empty($userTasksInProject)) {
-                    $projectTasks = $this->taskModel->getByProject($pid);
-                    $total = count($projectTasks);
-                    $completed = 0;
-                    foreach ($projectTasks as $t) {
-                        if (($t['status'] ?? '') === 'completed' || ($t['is_completed'] ?? 0) == 1) { $completed++; }
-                    }
-                    $progress = $total > 0 ? round(($completed / $total) * 100, 2) : 0;
-                    $projectsSummary[] = [
-                        'project_id' => $pid,
-                        'project_name' => $projectName,
-                        'status' => $p['status'],
-                        'total_tasks' => $total,
-                        'completed_tasks' => $completed,
-                        'progress_percentage' => $progress
-                    ];
+                $total = count($userTasksInProject);
+                $completed = 0;
+                foreach ($userTasksInProject as $t) {
+                    if (($t['status'] ?? '') === 'completed' || ($t['is_completed'] ?? 0) == 1) { $completed++; }
                 }
+                $progress = $total > 0 ? round(($completed / $total) * 100, 2) : 0;
+                $projectsSummary[] = [
+                    'project_id' => $pid,
+                    'project_name' => $projectName,
+                    'status' => $p['status'],
+                    'total_tasks' => $total,
+                    'completed_tasks' => $completed,
+                    'progress_percentage' => $progress
+                ];
             }
             // Agregar proyectos lógicos donde el usuario tenga tareas asignadas
             $tasks = $result['tasks'] ?? [];
