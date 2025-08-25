@@ -291,24 +291,35 @@ class ClanLeaderController {
                 return;
             }
             
-            // Obtener todos los usuarios que no están en el clan
+            // Obtener todos los miembros del clan
             $stmt = $this->db->prepare("
                 SELECT 
                     u.user_id,
                     u.username,
                     u.full_name,
                     u.email,
-                    u.is_active
+                    u.is_active,
+                    cm.role,
+                    CASE 
+                        WHEN cm.user_id IS NOT NULL THEN 'Miembro del clan'
+                        ELSE 'Usuario externo'
+                    END as membership_status
                 FROM Users u
+                LEFT JOIN Clan_Members cm ON u.user_id = cm.user_id AND cm.clan_id = ?
                 WHERE u.is_active = 1 
-                AND u.user_id NOT IN (
-                    SELECT cm.user_id 
-                    FROM Clan_Members cm 
-                    WHERE cm.clan_id = ?
+                AND (
+                    cm.clan_id = ? 
+                    OR u.user_id NOT IN (
+                        SELECT cm2.user_id 
+                        FROM Clan_Members cm2 
+                        WHERE cm2.clan_id != ? OR cm2.clan_id IS NULL
+                    )
                 )
-                ORDER BY u.full_name
+                ORDER BY 
+                    CASE WHEN cm.user_id IS NOT NULL THEN 0 ELSE 1 END,
+                    u.full_name ASC
             ");
-            $stmt->execute([$this->userClan['clan_id']]);
+            $stmt->execute([$this->userClan['clan_id'], $this->userClan['clan_id'], $this->userClan['clan_id']]);
             $users = $stmt->fetchAll();
             
             Utils::jsonResponse([

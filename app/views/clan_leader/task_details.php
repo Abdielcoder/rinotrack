@@ -280,17 +280,47 @@ ob_start();
     
     <!-- Modal para agregar colaborador -->
 <div id="addCollaboratorModal" class="modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); display: none; align-items: center; justify-content: center; z-index: 1000;">
-    <div class="modal-content" style="background: white; border-radius: 12px; padding: 20px; max-width: 500px; width: 90%;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h3 style="margin: 0; color: #1f2937;">Agregar Colaborador</h3>
-            <button onclick="closeAddCollaboratorModal()" style="background: none; border: none; font-size: 24px; color: #6b7280; cursor: pointer;">&times;</button>
+    <div class="modal-content" style="background: white; border-radius: 12px; padding: 24px; max-width: 600px; width: 95%; max-height: 90vh; display: flex; flex-direction: column;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+            <h3 style="margin: 0; color: #1f2937; font-size: 20px; font-weight: 600;">Agregar Colaborador</h3>
+            <button onclick="closeAddCollaboratorModal()" style="background: none; border: none; font-size: 28px; color: #6b7280; cursor: pointer; padding: 4px; line-height: 1;">&times;</button>
         </div>
-        <div id="availableUsersList" style="max-height: 300px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 6px; margin-bottom: 20px;">
-            <!-- Los usuarios se cargarán dinámicamente -->
+        
+        <!-- Buscador -->
+        <div style="margin-bottom: 20px;">
+            <div style="position: relative;">
+                <input 
+                    type="text" 
+                    id="userSearchInput" 
+                    placeholder="Buscar por nombre, usuario o email..." 
+                    style="width: 100%; padding: 12px 16px 12px 44px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; outline: none; transition: border-color 0.2s;"
+                    onkeyup="filterUsers(this.value)"
+                    onfocus="this.style.borderColor='#1e3a8a'" 
+                    onblur="this.style.borderColor='#e5e7eb'"
+                >
+                <i class="fas fa-search" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #6b7280; font-size: 16px;"></i>
+            </div>
         </div>
-        <div style="display: flex; gap: 10px; justify-content: flex-end;">
-            <button onclick="closeAddCollaboratorModal()" style="background: #f3f4f6; color: #374151; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer;">Cancelar</button>
-            <button onclick="addSelectedCollaborators()" style="background: #1e3a8a; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer;">Agregar Seleccionados</button>
+        
+        <!-- Lista de usuarios -->
+        <div style="flex: 1; overflow: hidden; display: flex; flex-direction: column;">
+            <div style="margin-bottom: 12px; color: #6b7280; font-size: 14px; display: flex; justify-content: space-between; align-items: center;">
+                <span>Selecciona los colaboradores:</span>
+                <span id="userCount" style="font-weight: 500;">0 usuarios</span>
+            </div>
+            <div id="availableUsersList" style="flex: 1; overflow-y: auto; border: 2px solid #f3f4f6; border-radius: 8px; padding: 8px; max-height: 350px;">
+                <!-- Los usuarios se cargarán dinámicamente -->
+            </div>
+        </div>
+        
+        <!-- Botones -->
+        <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; padding-top: 20px; border-top: 1px solid #f3f4f6;">
+            <button onclick="closeAddCollaboratorModal()" style="background: #f9fafb; color: #374151; border: 2px solid #e5e7eb; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 500; transition: all 0.2s;">
+                Cancelar
+            </button>
+            <button onclick="addSelectedCollaborators()" style="background: #1e3a8a; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 500; transition: all 0.2s; box-shadow: 0 2px 4px rgba(30, 58, 138, 0.2);">
+                <i class="fas fa-plus" style="margin-right: 8px;"></i>Agregar Seleccionados
+            </button>
         </div>
     </div>
 </div>
@@ -475,6 +505,49 @@ ob_start();
 
 .user-option input[type="checkbox"] {
     margin: 0;
+}
+
+/* Estilos para el modal de colaboradores mejorado */
+#addCollaboratorModal .user-option {
+    transition: all 0.2s ease;
+}
+
+#addCollaboratorModal .user-option:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+#addCollaboratorModal input[type="checkbox"] {
+    accent-color: #1e3a8a;
+    transform: scale(1.1);
+}
+
+#addCollaboratorModal button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+#addCollaboratorModal #userSearchInput:focus {
+    box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
+}
+
+/* Scrollbar personalizada para la lista de usuarios */
+#availableUsersList::-webkit-scrollbar {
+    width: 8px;
+}
+
+#availableUsersList::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 4px;
+}
+
+#availableUsersList::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+#availableUsersList::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
 }
 </style>
 
@@ -1719,32 +1792,23 @@ document.getElementById('tdCommentForm')?.addEventListener('submit', function(e)
         });
 });
         
+        // Variable global para almacenar todos los usuarios
+        let allUsers = [];
+        
         // Funciones para colaboradores
         function showAddCollaboratorModal() {
             fetch('?route=clan_leader/get-available-users')
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    const userList = document.getElementById('availableUsersList');
-                    userList.innerHTML = '';
+                    allUsers = data.users;
+                    displayUsers(allUsers);
+                    updateUserCount(allUsers.length);
                     
-                    data.users.forEach(user => {
-                        const userOption = document.createElement('div');
-                        userOption.className = 'user-option';
-                        userOption.innerHTML = `
-                            <input type="checkbox" id="user_${user.user_id}" value="${user.user_id}">
-          <div style="width: 32px; height: 32px; border-radius: 50%; background: #1e3a8a; color: white; display: flex; align-items: center; justify-content: center; font-weight: 600;">
-                                ${user.full_name ? user.full_name.charAt(0).toUpperCase() : user.username.charAt(0).toUpperCase()}
-                            </div>
-                            <div>
-                                <div style="font-weight: 600;">${user.full_name || user.username}</div>
-                                <div style="font-size: 12px; color: #6b7280;">${user.username}</div>
-                            </div>
-                        `;
-                        userList.appendChild(userOption);
-                    });
+                    // Limpiar el campo de búsqueda
+                    document.getElementById('userSearchInput').value = '';
                     
-      document.getElementById('addCollaboratorModal').style.display = 'flex';
+                    document.getElementById('addCollaboratorModal').style.display = 'flex';
                 } else {
                     showNotification('Error al cargar usuarios: ' + data.message, 'error');
                 }
@@ -1755,8 +1819,94 @@ document.getElementById('tdCommentForm')?.addEventListener('submit', function(e)
             });
         }
         
+        function displayUsers(users) {
+            const userList = document.getElementById('availableUsersList');
+            userList.innerHTML = '';
+            
+            if (users.length === 0) {
+                userList.innerHTML = '<div style="text-align: center; color: #6b7280; padding: 20px; font-style: italic;">No se encontraron usuarios</div>';
+                return;
+            }
+            
+            users.forEach(user => {
+                const userOption = document.createElement('div');
+                userOption.className = 'user-option';
+                userOption.setAttribute('data-user-search', `${user.full_name || ''} ${user.username} ${user.email || ''}`.toLowerCase());
+                
+                const membershipBadge = user.membership_status === 'Miembro del clan' 
+                    ? '<span style="background: #10b981; color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 8px;">CLAN</span>'
+                    : '<span style="background: #6b7280; color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 8px;">EXTERNO</span>';
+                
+                userOption.innerHTML = `
+                    <div style="display: flex; align-items: center; padding: 12px; border: 2px solid #f3f4f6; border-radius: 8px; margin-bottom: 8px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='#e5e7eb'; this.style.backgroundColor='#f9fafb'" onmouseout="this.style.borderColor='#f3f4f6'; this.style.backgroundColor='white'">
+                        <input type="checkbox" id="user_${user.user_id}" value="${user.user_id}" style="margin-right: 12px; width: 18px; height: 18px; cursor: pointer;" onchange="updateSelectedCount()">
+                        <div style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #1e3a8a, #3b82f6); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 18px; margin-right: 12px; flex-shrink: 0;">
+                            ${user.full_name ? user.full_name.charAt(0).toUpperCase() : user.username.charAt(0).toUpperCase()}
+                        </div>
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="font-weight: 600; color: #1f2937; font-size: 16px; display: flex; align-items: center;">
+                                ${user.full_name || user.username}
+                                ${membershipBadge}
+                            </div>
+                            <div style="font-size: 14px; color: #6b7280; margin-top: 2px;">@${user.username}</div>
+                            ${user.email ? `<div style="font-size: 12px; color: #9ca3af; margin-top: 1px;">${user.email}</div>` : ''}
+                            ${user.role ? `<div style="font-size: 12px; color: #1e3a8a; margin-top: 1px; font-weight: 500;">Rol: ${user.role}</div>` : ''}
+                        </div>
+                    </div>
+                `;
+                
+                // Hacer que todo el div sea clickeable
+                userOption.onclick = function(e) {
+                    if (e.target.type !== 'checkbox') {
+                        const checkbox = this.querySelector('input[type="checkbox"]');
+                        checkbox.checked = !checkbox.checked;
+                        updateSelectedCount();
+                    }
+                };
+                
+                userList.appendChild(userOption);
+            });
+        }
+        
+        function filterUsers(searchTerm) {
+            const filteredUsers = allUsers.filter(user => {
+                const searchText = `${user.full_name || ''} ${user.username} ${user.email || ''}`.toLowerCase();
+                return searchText.includes(searchTerm.toLowerCase());
+            });
+            
+            displayUsers(filteredUsers);
+            updateUserCount(filteredUsers.length);
+        }
+        
+        function updateUserCount(count) {
+            document.getElementById('userCount').textContent = `${count} usuario${count !== 1 ? 's' : ''}`;
+        }
+        
+        function updateSelectedCount() {
+            const selectedCount = document.querySelectorAll('#availableUsersList input[type="checkbox"]:checked').length;
+            const button = document.querySelector('button[onclick="addSelectedCollaborators()"]');
+            
+            if (selectedCount > 0) {
+                button.innerHTML = `<i class="fas fa-plus" style="margin-right: 8px;"></i>Agregar ${selectedCount} Seleccionado${selectedCount !== 1 ? 's' : ''}`;
+                button.style.opacity = '1';
+            } else {
+                button.innerHTML = '<i class="fas fa-plus" style="margin-right: 8px;"></i>Agregar Seleccionados';
+                button.style.opacity = '0.7';
+            }
+        }
+        
         function closeAddCollaboratorModal() {
             document.getElementById('addCollaboratorModal').style.display = 'none';
+            
+            // Limpiar el campo de búsqueda
+            document.getElementById('userSearchInput').value = '';
+            
+            // Desmarcar todos los checkboxes
+            const checkboxes = document.querySelectorAll('#availableUsersList input[type="checkbox"]');
+            checkboxes.forEach(checkbox => checkbox.checked = false);
+            
+            // Resetear el estado del botón
+            updateSelectedCount();
         }
         
         function addSelectedCollaborators() {
