@@ -57,7 +57,32 @@ ob_start();
 
       <div class="two-cols">
         <div class="col">
-          <h4>Tareas</h4>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:15px;">
+            <h4 style="margin:0">Tareas</h4>
+          </div>
+          
+          <!-- Filtros -->
+          <div class="filters" style="display:flex;gap:10px;align-items:center;margin:12px 0;flex-wrap:wrap">
+            <input type="text" id="taskSearch" class="search-input" placeholder="Buscar tarea..." value="" style="min-width:200px;padding:8px 12px;border:1px solid var(--bg-accent);border-radius:6px;background:var(--bg-primary);">
+            <select id="statusFilter" class="filter-select" style="padding:8px 12px;border:1px solid var(--bg-accent);border-radius:6px;background:var(--bg-primary);">
+              <option value="">Todos los estados</option>
+              <option value="pending">Pendientes</option>
+              <option value="in_progress">En progreso</option>
+              <option value="completed">Completadas</option>
+              <option value="cancelled">Canceladas</option>
+            </select>
+            <select id="assignedFilter" class="filter-select" style="padding:8px 12px;border:1px solid var(--bg-accent);border-radius:6px;background:var(--bg-primary);">
+              <option value="">Asignado: todos</option>
+              <?php if (!empty($clanMembers)): ?>
+                <?php foreach ($clanMembers as $m): ?>
+                  <option value="<?php echo (int)$m['user_id']; ?>"><?php echo Utils::escape($m['full_name'] ?: $m['username']); ?></option>
+                <?php endforeach; ?>
+              <?php endif; ?>
+            </select>
+            <button id="applyFilters" class="btn btn-secondary" style="padding:8px 16px;">Aplicar</button>
+            <button id="resetFilters" class="btn btn-secondary" style="padding:8px 16px;">Reset</button>
+          </div>
+          
           <div class="table-wrapper">
             <table class="data-table">
               <thead>
@@ -69,7 +94,12 @@ ob_start();
                 <?php else: foreach ($tasks as $t): ?>
                 <tr>
                   <td>
-                    <?php echo Utils::escape($t['task_name']); ?>
+                    <a href="javascript:void(0)" onclick="openTaskDetailsModal(<?php echo intval($t['task_id']); ?>)" 
+                       style="color: #1e3a8a; text-decoration: none; font-weight: 500; cursor: pointer;"
+                       onmouseover="this.style.textDecoration='underline'" 
+                       onmouseout="this.style.textDecoration='none'">
+                      <?php echo Utils::escape($t['task_name']); ?>
+                    </a>
                     <?php if (($t['subtasks_count'] ?? 0) > 0): ?>
                       <span class="subtask-count-badge"><?php echo $t['subtasks_count']; ?> subtareas</span>
                     <?php endif; ?>
@@ -199,6 +229,34 @@ ob_start();
         </button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- Modal de Detalles Completos de Tarea -->
+<div id="taskDetailsModal" class="modal" style="display: none;">
+  <div class="modal-content modal-task-details">
+    <div class="modal-header">
+      <h3 id="taskDetailsModalTitle">
+        <i class="fas fa-tasks" style="margin-right: 8px; color: #3b82f6;"></i>
+        Detalles de Tarea
+      </h3>
+      <button class="modal-close" onclick="closeTaskDetailsModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    
+    <div class="modal-body" id="taskDetailsContent">
+      <div class="loading">
+        <i class="fas fa-spinner fa-spin"></i>
+        Cargando detalles de la tarea...
+      </div>
+    </div>
+    
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeTaskDetailsModal()">
+        Cerrar
+      </button>
+    </div>
   </div>
 </div>
 
@@ -722,6 +780,163 @@ ob_start();
   transform: rotate(90deg);
 }
 
+/* Estilos para modal de detalles de tarea */
+.modal-task-details {
+  max-width: 1200px;
+  max-height: 90vh;
+}
+
+.task-details-header {
+  background: linear-gradient(135deg, #e0e7ff 0%, #dbeafe 100%);
+  border: 1px solid #c7d2fe;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.task-details-info h2 {
+  margin: 0 0 5px 0;
+  color: #1e3a8a;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.task-details-info .project-info {
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.task-status-badge {
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+}
+
+.task-details-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+  margin-top: 20px;
+}
+
+.task-section {
+  background: var(--bg-primary);
+  border: 1px solid var(--bg-accent);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.task-section h3 {
+  margin: 0 0 15px 0;
+  color: var(--text-primary);
+  font-size: 1.1rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.subtask-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.subtask-item-detail {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 16px;
+  transition: all 0.2s ease;
+}
+
+.subtask-item-detail:hover {
+  border-color: #1e3a8a;
+  box-shadow: 0 2px 8px rgba(30, 58, 138, 0.1);
+}
+
+.subtask-header-detail {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+
+.subtask-title-detail {
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+}
+
+.subtask-meta-detail {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin: 8px 0;
+}
+
+.comment-item-detail {
+  background: #f9fafb;
+  border: 1px solid #f3f4f6;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.comment-header-detail {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.comment-author-detail {
+  font-weight: 600;
+  color: #374151;
+}
+
+.comment-date-detail {
+  font-size: 0.8rem;
+  color: #9ca3af;
+}
+
+.attachment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.attachment-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #f3f4f6;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.attachment-icon {
+  color: #6b7280;
+}
+
+.attachment-link {
+  color: #1e3a8a;
+  text-decoration: none;
+}
+
+.attachment-link:hover {
+  text-decoration: underline;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   #addSubtasksModal .modal-content {
@@ -746,6 +961,16 @@ ob_start();
   
   #addSubtasksModal .modal-footer button {
     width: 100%;
+  }
+  
+  .task-details-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .task-details-header {
+    flex-direction: column;
+    gap: 15px;
+    align-items: flex-start;
   }
 }
 </style>
@@ -793,6 +1018,11 @@ document.addEventListener('DOMContentLoaded', function() {
         if (e.target === addModal) {
             closeAddSubtasksModal();
         }
+        
+        const taskModal = document.getElementById('taskDetailsModal');
+        if (e.target === taskModal) {
+            closeTaskDetailsModal();
+        }
     });
 
     // Cerrar modal con ESC
@@ -800,6 +1030,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (e.key === 'Escape') {
             closeSubtasksModal();
             closeAddSubtasksModal();
+            closeTaskDetailsModal();
         }
     });
 
@@ -850,7 +1081,287 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
+    
+    // Event listeners para filtros
+    const applyFiltersBtn = document.getElementById('applyFilters');
+    const resetFiltersBtn = document.getElementById('resetFilters');
+    
+    if (applyFiltersBtn) {
+        applyFiltersBtn.addEventListener('click', function() {
+            applyTaskFilters();
+        });
+    }
+    
+    if (resetFiltersBtn) {
+        resetFiltersBtn.addEventListener('click', function() {
+            resetTaskFilters();
+        });
+    }
+    
+    // Aplicar filtros al presionar Enter en el campo de búsqueda
+    const searchInput = document.getElementById('taskSearch');
+    if (searchInput) {
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                applyTaskFilters();
+            }
+        });
+    }
 });
+
+function applyTaskFilters() {
+    const search = document.getElementById('taskSearch')?.value.toLowerCase() || '';
+    const status = document.getElementById('statusFilter')?.value || '';
+    const assigned = document.getElementById('assignedFilter')?.value || '';
+    
+    const tableBody = document.querySelector('.data-table tbody');
+    if (!tableBody) return;
+    
+    const rows = tableBody.querySelectorAll('tr:not(.empty)');
+    let visibleCount = 0;
+    
+    rows.forEach(row => {
+        const taskName = row.cells[0]?.textContent.toLowerCase() || '';
+        const assignedUser = row.cells[1]?.textContent || '';
+        const taskStatus = row.querySelector('.badge')?.textContent.trim() || '';
+        
+        // Mapear estados para comparación
+        const statusMap = {
+            'pending': 'Pendientes',
+            'in_progress': 'En progreso',
+            'completed': 'Completadas',
+            'cancelled': 'Canceladas'
+        };
+        
+        let statusMatch = !status || taskStatus === statusMap[status] || taskStatus.toLowerCase() === status;
+        let searchMatch = !search || taskName.includes(search);
+        let assignedMatch = !assigned || assignedUser.includes(assigned);
+        
+        if (searchMatch && statusMatch && assignedMatch) {
+            row.style.display = '';
+            visibleCount++;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+    
+    // Mostrar mensaje si no hay resultados
+    const emptyRow = tableBody.querySelector('.empty');
+    if (visibleCount === 0 && !emptyRow) {
+        const newRow = document.createElement('tr');
+        newRow.className = 'empty-filter';
+        newRow.innerHTML = '<td colspan="5" class="empty">No se encontraron tareas que coincidan con los filtros</td>';
+        tableBody.appendChild(newRow);
+    } else if (visibleCount > 0) {
+        const emptyFilterRow = tableBody.querySelector('.empty-filter');
+        if (emptyFilterRow) {
+            emptyFilterRow.remove();
+        }
+    }
+}
+
+function resetTaskFilters() {
+    document.getElementById('taskSearch').value = '';
+    document.getElementById('statusFilter').value = '';
+    document.getElementById('assignedFilter').value = '';
+    
+    const tableBody = document.querySelector('.data-table tbody');
+    if (tableBody) {
+        const rows = tableBody.querySelectorAll('tr');
+        rows.forEach(row => {
+            if (!row.classList.contains('empty-filter')) {
+                row.style.display = '';
+            } else {
+                row.remove();
+            }
+        });
+    }
+}
+
+function openTaskDetailsModal(taskId) {
+    const modal = document.getElementById('taskDetailsModal');
+    const content = document.getElementById('taskDetailsContent');
+    
+    // Mostrar modal con loading
+    modal.style.display = 'flex';
+    content.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Cargando detalles de la tarea...</div>';
+    
+    // Cargar detalles de la tarea por AJAX
+    fetch(`?route=admin/get-task-details&taskId=${encodeURIComponent(taskId)}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                renderTaskDetails(data);
+            } else {
+                content.innerHTML = `<div class="task-section">Error: ${data.message}</div>`;
+            }
+        })
+        .catch(error => {
+            console.error('Error al cargar detalles de la tarea:', error);
+            content.innerHTML = '<div class="task-section">Error al cargar los detalles de la tarea. Inténtalo de nuevo.</div>';
+        });
+}
+
+function closeTaskDetailsModal() {
+    const modal = document.getElementById('taskDetailsModal');
+    modal.style.display = 'none';
+}
+
+function renderTaskDetails(data) {
+    const content = document.getElementById('taskDetailsContent');
+    const task = data.task;
+    const subtasks = data.subtasks || [];
+    const comments = data.comments || [];
+    const attachments = data.attachments || [];
+    
+    const statusColors = {
+        'pending': '#fbbf24',
+        'in_progress': '#3b82f6',
+        'completed': '#10b981',
+        'cancelled': '#ef4444',
+        'blocked': '#f97316'
+    };
+    
+    const statusNames = {
+        'pending': 'PENDIENTE',
+        'in_progress': 'EN PROGRESO',
+        'completed': 'COMPLETADA',
+        'cancelled': 'CANCELADA',
+        'blocked': 'BLOQUEADA'
+    };
+    
+    let html = `
+        <div class="task-details-header">
+            <div class="task-details-info">
+                <h2>${escapeHtml(task.task_name)}</h2>
+                <div class="project-info">Proyecto: ${escapeHtml(task.project_name || 'N/A')}</div>
+            </div>
+            <div>
+                <span class="task-status-badge" style="background: ${statusColors[task.status] || '#6b7280'}; color: white;">
+                    ${statusNames[task.status] || task.status.toUpperCase()}
+                </span>
+            </div>
+        </div>
+        
+        <div class="task-details-grid">
+            <div class="main-details">
+    `;
+    
+    // Descripción
+    if (task.description) {
+        html += `
+            <div class="task-section">
+                <h3><i class="fas fa-align-left"></i> Descripción</h3>
+                <div>${escapeHtml(task.description).replace(/\n/g, '<br>')}</div>
+            </div>
+        `;
+    }
+    
+    // Subtareas
+    if (subtasks.length > 0) {
+        html += `
+            <div class="task-section">
+                <h3><i class="fas fa-tasks"></i> Subtareas (${subtasks.length})</h3>
+                <div class="subtask-list">
+        `;
+        
+        subtasks.forEach(subtask => {
+            html += `
+                <div class="subtask-item-detail">
+                    <div class="subtask-header-detail">
+                        <h4 class="subtask-title-detail">${escapeHtml(subtask.title)}</h4>
+                        <span class="badge status-${subtask.status}">${getStatusText(subtask.status)}</span>
+                    </div>
+                    <div class="subtask-meta-detail">
+                        <span><i class="fas fa-user"></i> ${escapeHtml(subtask.assigned_to_fullname || subtask.assigned_to_username || 'Sin asignar')}</span>
+                        <span><i class="fas fa-calendar"></i> ${subtask.due_date ? formatDate(subtask.due_date) : 'Sin fecha'}</span>
+                        <span><i class="fas fa-chart-pie"></i> ${subtask.completion_percentage || 0}%</span>
+                        <span><i class="fas fa-flag"></i> ${getPriorityText(subtask.priority)}</span>
+                    </div>
+                    ${subtask.description ? `<div class="subtask-description">${escapeHtml(subtask.description)}</div>` : ''}
+                </div>
+            `;
+        });
+        
+        html += `
+                </div>
+            </div>
+        `;
+    }
+    
+    // Comentarios
+    html += `
+        <div class="task-section">
+            <h3><i class="fas fa-comments"></i> Comentarios (${comments.length})</h3>
+    `;
+    
+    if (comments.length === 0) {
+        html += '<div style="color: #6b7280; font-style: italic; text-align: center; padding: 20px;">Sin comentarios</div>';
+    } else {
+        comments.forEach(comment => {
+            html += `
+                <div class="comment-item-detail">
+                    <div class="comment-header-detail">
+                        <span class="comment-author-detail">${escapeHtml(comment.full_name || comment.username || 'Usuario')}</span>
+                        <span class="comment-date-detail">${formatDate(comment.created_at)}</span>
+                    </div>
+                    <div>${comment.comment_text || ''}</div>
+                </div>
+            `;
+        });
+    }
+    
+    html += `
+        </div>
+            </div>
+            
+            <div class="sidebar-details">
+    `;
+    
+    // Información adicional
+    html += `
+        <div class="task-section">
+            <h3><i class="fas fa-info-circle"></i> Información</h3>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                <div><strong>Creado:</strong> ${formatDate(task.created_at)}</div>
+                ${task.due_date ? `<div><strong>Vence:</strong> ${formatDate(task.due_date)}</div>` : ''}
+                <div><strong>Asignado:</strong> ${escapeHtml(task.assigned_to_fullname || task.all_assigned_users || 'Sin asignar')}</div>
+                <div><strong>Creado por:</strong> ${escapeHtml(task.created_by_name || 'Sistema')}</div>
+            </div>
+        </div>
+    `;
+    
+    // Adjuntos
+    html += `
+        <div class="task-section">
+            <h3><i class="fas fa-paperclip"></i> Adjuntos (${attachments.length})</h3>
+    `;
+    
+    if (attachments.length === 0) {
+        html += '<div style="color: #6b7280; font-style: italic;">Sin adjuntos</div>';
+    } else {
+        html += '<div class="attachment-list">';
+        attachments.forEach(attachment => {
+            html += `
+                <div class="attachment-item">
+                    <i class="fas fa-file attachment-icon"></i>
+                    <a href="${attachment.file_path}" target="_blank" class="attachment-link">
+                        ${escapeHtml(attachment.filename)}
+                    </a>
+                </div>
+            `;
+        });
+        html += '</div>';
+    }
+    
+    html += `
+        </div>
+            </div>
+        </div>
+    `;
+    
+    content.innerHTML = html;
+}
 
 function openSubtasksModal(taskId) {
     const modal = document.getElementById('subtasksModal');

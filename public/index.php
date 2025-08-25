@@ -224,6 +224,11 @@ try {
             $controller->getTaskSubtasks();
             break;
             
+        case 'admin/get-task-details':
+            $controller = new AdminController();
+            $controller->getTaskDetails();
+            break;
+            
         case 'admin/add-subtasks-to-task':
             $controller = new AdminController();
             $controller->addSubtasksToTask();

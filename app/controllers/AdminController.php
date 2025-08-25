@@ -545,6 +545,98 @@ class AdminController {
     }
 
     /**
+     * Obtener detalles completos de una tarea (AJAX)
+     */
+    public function getTaskDetails() {
+        $this->requireAuth();
+        if (!$this->hasAdminAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos'], 403);
+        }
+
+        $taskId = (int)($_GET['taskId'] ?? 0);
+        if ($taskId <= 0) {
+            Utils::jsonResponse(['success' => false, 'message' => 'ID de tarea inválido'], 400);
+        }
+
+        $taskModel = new Task();
+        $task = $taskModel->findById($taskId);
+        
+        if (!$task) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Tarea no encontrada'], 404);
+        }
+
+        // Obtener subtareas
+        $subtasks = $taskModel->getSubtasks($taskId);
+        
+        // Obtener comentarios de la tarea
+        $comments = [];
+        try {
+            $db = Database::getConnection();
+            $stmt = $db->prepare("
+                SELECT tc.*, u.username, u.full_name, u.email
+                FROM Task_Comments tc
+                LEFT JOIN Users u ON tc.user_id = u.user_id
+                WHERE tc.task_id = ?
+                ORDER BY tc.created_at DESC
+            ");
+            $stmt->execute([$taskId]);
+            $comments = $stmt->fetchAll();
+        } catch (Exception $e) {
+            error_log('Error al obtener comentarios de tarea: ' . $e->getMessage());
+        }
+
+        // Obtener adjuntos de la tarea
+        $attachments = [];
+        try {
+            $stmt = $db->prepare("
+                SELECT ta.*, u.username, u.full_name
+                FROM Task_Attachments ta
+                LEFT JOIN Users u ON ta.uploaded_by = u.user_id
+                WHERE ta.task_id = ?
+                ORDER BY ta.uploaded_at DESC
+            ");
+            $stmt->execute([$taskId]);
+            $attachments = $stmt->fetchAll();
+        } catch (Exception $e) {
+            error_log('Error al obtener adjuntos de tarea: ' . $e->getMessage());
+        }
+
+        // Obtener información del proyecto
+        $projectModel = new Project();
+        $project = $projectModel->findById($task['project_id']);
+        
+        // Añadir información del proyecto a la tarea
+        $task['project_name'] = $project['project_name'] ?? '';
+        
+        // Obtener información del creador y asignado
+        try {
+            if ($task['created_by']) {
+                $stmt = $db->prepare("SELECT full_name, username FROM Users WHERE user_id = ?");
+                $stmt->execute([$task['created_by']]);
+                $creator = $stmt->fetch();
+                $task['created_by_name'] = $creator['full_name'] ?: $creator['username'];
+            }
+            
+            if ($task['assigned_to']) {
+                $stmt = $db->prepare("SELECT full_name, username FROM Users WHERE user_id = ?");
+                $stmt->execute([$task['assigned_to']]);
+                $assigned = $stmt->fetch();
+                $task['assigned_to_fullname'] = $assigned['full_name'] ?: $assigned['username'];
+            }
+        } catch (Exception $e) {
+            error_log('Error al obtener usuarios: ' . $e->getMessage());
+        }
+
+        Utils::jsonResponse([
+            'success' => true,
+            'task' => $task,
+            'subtasks' => $subtasks,
+            'comments' => $comments,
+            'attachments' => $attachments
+        ]);
+    }
+
+    /**
      * Eliminar proyecto (ADMIN)
      */
     public function deleteProject() {
