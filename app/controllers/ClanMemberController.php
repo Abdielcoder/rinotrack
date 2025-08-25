@@ -47,14 +47,14 @@ class ClanMemberController {
             return;
         }
 
-        // Solo estadísticas del usuario
-        $userTaskStats = $this->getUserTaskStats($this->currentUser['user_id'], $this->userClan['clan_id']);
+        // Estadísticas del usuario (incluye tareas de otros clanes)
+        $userTaskStats = $this->getUserTaskStatsForAllClans($this->currentUser['user_id'], $this->userClan['clan_id'] ?? null);
         $ownContribution = $this->getOwnContribution($this->currentUser, $userTaskStats);
         
         // Obtener proyectos donde el usuario tiene tareas asignadas (incluyendo de otros clanes)
         $projects = $this->projectModel->getProjectsForUser($this->currentUser['user_id'], $this->userClan['clan_id'] ?? null);
         
-        $ownTasksDetails = $this->getUserTasksForModal($this->currentUser['user_id'], $this->userClan['clan_id']);
+        $ownTasksDetails = $this->getUserTasksForModalAllClans($this->currentUser['user_id'], $this->userClan['clan_id'] ?? null);
         
         // Verificar si se quiere editar una tarea
         $editTaskId = (int)($_GET['edit_task'] ?? 0);
@@ -72,8 +72,8 @@ class ClanMemberController {
             }
         }
         
-        // Obtener tareas para el tablero Kanban
-        $kanbanTasks = $this->getKanbanTasks($this->currentUser['user_id'], $this->userClan['clan_id']);
+        // Obtener tareas para el tablero Kanban (incluye tareas de otros clanes)
+        $kanbanTasks = $this->getKanbanTasksForUser($this->currentUser['user_id'], $this->userClan['clan_id'] ?? null);
 
         $data = [
             'currentPage' => 'clan_member',
@@ -770,6 +770,37 @@ class ClanMemberController {
         }
     }
 
+    /**
+     * Obtener estadísticas de tareas del usuario incluyendo de todos los clanes
+     */
+    private function getUserTaskStatsForAllClans($userId, $primaryClanId = null) {
+        try {
+            $stmt = $this->db->prepare(
+                "SELECT 
+                    COUNT(DISTINCT t.task_id) AS total_tasks,
+                    SUM(CASE WHEN t.is_completed = 1 THEN 1 ELSE 0 END) AS completed_tasks
+                 FROM Tasks t
+                 INNER JOIN Projects p ON p.project_id = t.project_id
+                 LEFT JOIN Task_Assignments ta ON ta.task_id = t.task_id
+                 WHERE t.is_subtask = 0
+                   AND (t.assigned_to_user_id = ? OR ta.user_id = ?)"
+            );
+            $stmt->execute([$userId, $userId]);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC) ?: ['total_tasks' => 0, 'completed_tasks' => 0];
+            $total = (int)($row['total_tasks'] ?? 0);
+            $completed = (int)($row['completed_tasks'] ?? 0);
+            $pct = $total > 0 ? round(($completed / $total) * 100, 1) : 0;
+            return [
+                'total_tasks' => $total,
+                'completed_tasks' => $completed,
+                'completion_percentage' => $pct
+            ];
+        } catch (Exception $e) {
+            error_log('Error getUserTaskStatsForAllClans: ' . $e->getMessage());
+            return ['total_tasks' => 0, 'completed_tasks' => 0, 'completion_percentage' => 0];
+        }
+    }
+
     private function getUserTaskStats($userId, $clanId) {
         try {
             $stmt = $this->db->prepare(
@@ -810,6 +841,43 @@ class ClanMemberController {
             'contribution_percentage' => ($userTaskStats['total_tasks'] ?? 0) > 0 ? 100 : 0,
             'initial' => $initial
         ];
+    }
+
+    /**
+     * Obtener tareas del usuario para modal incluyendo de todos los clanes
+     */
+    private function getUserTasksForModalAllClans($userId, $primaryClanId = null) {
+        try {
+            $stmt = $this->db->prepare(
+                "SELECT 
+                    t.task_id,
+                    t.task_name,
+                    t.status,
+                    t.due_date,
+                    t.created_at,
+                    p.project_name,
+                    p.clan_id,
+                    c.clan_name,
+                    CASE 
+                        WHEN p.clan_id = ? THEN 1
+                        ELSE 0
+                    END as is_primary_clan
+                 FROM Tasks t
+                 INNER JOIN Projects p ON p.project_id = t.project_id
+                 LEFT JOIN Clans c ON p.clan_id = c.clan_id
+                 LEFT JOIN Task_Assignments ta ON ta.task_id = t.task_id
+                 WHERE t.is_subtask = 0
+                   AND (t.assigned_to_user_id = ? OR ta.user_id = ?)
+                 GROUP BY t.task_id
+                 ORDER BY is_primary_clan DESC, t.created_at DESC
+                 LIMIT 20"
+            );
+            $stmt->execute([$primaryClanId, $userId, $userId]);
+            return $stmt->fetchAll();
+        } catch (Exception $e) {
+            error_log('Error getUserTasksForModalAllClans: ' . $e->getMessage());
+            return [];
+        }
     }
 
     private function getUserTasksForModal($userId, $clanId) {
@@ -866,6 +934,135 @@ class ClanMemberController {
     private function requireAuth() {
         if (!$this->auth->isLoggedIn()) {
             Utils::redirect('login');
+        }
+    }
+
+    /**
+     * Obtener tareas Kanban para el usuario incluyendo de otros clanes
+     */
+    private function getKanbanTasksForUser($userId, $primaryClanId = null) {
+        try {
+            
+            // Obtener TODAS las tareas asignadas al usuario (de cualquier clan)
+            $allTasks = [];
+            $stmt = $this->db->prepare(
+                "SELECT 
+                    t.task_id,
+                    t.task_name,
+                    t.description,
+                    t.due_date,
+                    t.priority,
+                    t.status,
+                    t.completion_percentage,
+                    t.automatic_points,
+                    p.project_name,
+                    p.project_id,
+                    p.clan_id,
+                    c.clan_name,
+                    DATEDIFF(t.due_date, CURDATE()) as days_until_due,
+                    CASE 
+                        WHEN p.clan_id = ? THEN 1
+                        ELSE 0
+                    END as is_primary_clan
+                 FROM Tasks t
+                 INNER JOIN Projects p ON p.project_id = t.project_id
+                 LEFT JOIN Clans c ON p.clan_id = c.clan_id
+                 LEFT JOIN Task_Assignments ta ON ta.task_id = t.task_id
+                 WHERE t.is_subtask = 0
+                   AND t.is_personal = 0
+                   AND t.status != 'completed'
+                   AND (t.assigned_to_user_id = ? OR ta.user_id = ?)
+                 GROUP BY t.task_id
+                 ORDER BY is_primary_clan DESC, t.due_date ASC"
+            );
+            $stmt->execute([$primaryClanId, $userId, $userId]);
+            $allTasks = $stmt->fetchAll();
+            
+            // Obtener tareas especiales (eventuales y recurrentes) del clan principal
+            $specialTasks = [];
+            if ($primaryClanId) {
+                $specialStmt = $this->db->prepare(
+                    "SELECT 
+                        t.task_id,
+                        t.task_name,
+                        t.description,
+                        t.due_date,
+                        t.priority,
+                        t.status,
+                        t.completion_percentage,
+                        t.automatic_points,
+                        p.project_name,
+                        p.project_id,
+                        p.clan_id,
+                        c.clan_name,
+                        DATEDIFF(t.due_date, CURDATE()) as days_until_due,
+                        1 as is_primary_clan
+                     FROM Tasks t
+                     INNER JOIN Projects p ON p.project_id = t.project_id
+                     LEFT JOIN Clans c ON p.clan_id = c.clan_id
+                     LEFT JOIN Task_Assignments ta ON ta.task_id = t.task_id
+                     WHERE p.clan_id = ?
+                       AND p.project_name IN ('Tareas Recurrentes', 'Tareas Eventuales')
+                       AND t.is_subtask = 0
+                       AND t.status != 'completed'
+                       AND (t.assigned_to_user_id = ? OR ta.user_id = ?)
+                     GROUP BY t.task_id
+                     ORDER BY t.due_date ASC"
+                );
+                $specialStmt->execute([$primaryClanId, $userId, $userId]);
+                $specialTasks = $specialStmt->fetchAll();
+            }
+            
+            // Combinar todas las tareas
+            $allCombinedTasks = array_merge($allTasks, $specialTasks);
+            
+            // Clasificar tareas por tiempo hasta vencimiento
+            $kanbanColumns = [
+                'vencidas' => [],
+                'hoy' => [],
+                '1_semana' => [],
+                '2_semanas' => []
+            ];
+            
+            foreach ($allCombinedTasks as $task) {
+                $daysUntilDue = (int)$task['days_until_due'];
+                
+                if ($daysUntilDue < 0) {
+                    $kanbanColumns['vencidas'][] = $task;
+                } elseif ($daysUntilDue <= 0) {
+                    $kanbanColumns['hoy'][] = $task;
+                } elseif ($daysUntilDue <= 7) {
+                    $kanbanColumns['1_semana'][] = $task;
+                } elseif ($daysUntilDue <= 14) {
+                    $kanbanColumns['2_semanas'][] = $task;
+                }
+            }
+            
+            // Ordenar cada columna por prioridad y fecha
+            $priorityOrder = ['high' => 1, 'medium' => 2, 'low' => 3];
+            
+            foreach ($kanbanColumns as $column => &$tasks) {
+                usort($tasks, function($a, $b) use ($priorityOrder) {
+                    $priorityA = $priorityOrder[$a['priority']] ?? 4;
+                    $priorityB = $priorityOrder[$b['priority']] ?? 4;
+                    
+                    if ($priorityA === $priorityB) {
+                        return strtotime($a['due_date']) - strtotime($b['due_date']);
+                    }
+                    
+                    return $priorityA - $priorityB;
+                });
+            }
+
+            return $kanbanColumns;
+        } catch (Exception $e) {
+            error_log('Error getKanbanTasksForUser: ' . $e->getMessage());
+            return [
+                'vencidas' => [],
+                'hoy' => [],
+                '1_semana' => [],
+                '2_semanas' => []
+            ];
         }
     }
 
