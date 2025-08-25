@@ -1,9 +1,18 @@
 <?php
 // Guardar el contenido en una variable
 ob_start();
-?>
 
-<?php include __DIR__ . '/../layout.php'; ?>
+// Verificar que las variables existen
+if (!isset($project)) {
+    $project = ['project_name' => 'Proyecto', 'status' => 'active', 'description' => '', 'project_id' => 0];
+}
+if (!isset($tasks)) {
+    $tasks = [];
+}
+if (!isset($user)) {
+    $user = ['user_id' => 0];
+}
+?>
 
 <div class="clan-member-project-tasks-container">
     <!-- Header Mejorado -->
@@ -11,7 +20,7 @@ ob_start();
         <div class="header-content">
             <div class="header-left">
                 <h1 class="page-title">Tareas del Proyecto</h1>
-                <p class="page-subtitle"><?php echo htmlspecialchars($project['project_name']); ?></p>
+                <p class="page-subtitle"><?php echo htmlspecialchars($project['project_name'] ?? 'Proyecto'); ?></p>
             </div>
             <div class="header-actions">
                 <button onclick="history.back()" class="btn-back">
@@ -32,7 +41,7 @@ ob_start();
         <div class="project-info-section">
             <div class="project-info-card">
                 <div class="project-header">
-                    <h3 class="project-name"><?= htmlspecialchars($project['project_name']) ?></h3>
+                    <h3 class="project-name"><?= htmlspecialchars($project['project_name'] ?? 'Proyecto') ?></h3>
                     <div class="project-status status-<?= $project['status'] ?? 'active' ?>">
                         <?= ucfirst($project['status'] ?? 'Activo') ?>
                     </div>
@@ -99,7 +108,7 @@ ob_start();
             </div>
         </div>
 
-        <?php if (!empty($tasks)): ?>
+        <?php if (isset($tasks) && !empty($tasks)): ?>
         <!-- Tareas del Proyecto -->
         <div class="project-tasks-section">
             <div class="section-header">
@@ -256,7 +265,7 @@ ob_start();
       <button class="modal-close" onclick="closeCreateTaskModal()">&times;</button>
     </div>
     <form id="createTaskForm" class="modal-body create-task-body">
-      <input type="hidden" name="project_id" value="<?php echo (int)$project['project_id']; ?>" />
+      <input type="hidden" name="project_id" value="<?php echo (int)($project['project_id'] ?? 0); ?>" />
       <div class="form-grid">
         <div class="form-group form-span-2">
           <label>Título</label>
