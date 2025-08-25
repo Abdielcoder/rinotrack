@@ -180,6 +180,9 @@ ob_start();
                                         echo $priorityLabels[$task['priority']] ?? 'MEDIA';
                                         ?>
                                     </div>
+                                    <a href="?route=clan_member/task-details&task_id=<?php echo $task['task_id']; ?>" class="btn-edit" title="Ver detalles">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
                                 </div>
                                 <div class="task-content">
                                     <h4 class="task-title"><?php echo htmlspecialchars($task['task_name']); ?></h4>
@@ -211,11 +214,6 @@ ob_start();
                                     <div class="task-status overdue">
                                         <i class="fas fa-exclamation-triangle"></i>
                                         Vencida hace <?php echo abs($task['days_until_due']); ?> días
-                                    </div>
-                                    <div class="task-actions">
-                                        <a href="?route=clan_member/task-details&task_id=<?php echo $task['task_id']; ?>" class="btn-edit" title="Ver detalles">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
                                     </div>
                                 </div>
                             </div>
@@ -249,6 +247,9 @@ ob_start();
                                         echo $priorityLabels[$task['priority']] ?? 'MEDIA';
                                         ?>
                                     </div>
+                                    <a href="?route=clan_member/task-details&task_id=<?php echo $task['task_id']; ?>" class="btn-edit" title="Ver detalles">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
                                 </div>
                                 <div class="task-content">
                                     <h4 class="task-title"><?php echo htmlspecialchars($task['task_name']); ?></h4>
@@ -281,11 +282,6 @@ ob_start();
                                         <i class="fas fa-clock"></i>
                                         Vence hoy
                                     </div>
-                                    <div class="task-actions">
-                                        <a href="?route=clan_member/task-details&task_id=<?php echo $task['task_id']; ?>" class="btn-edit" title="Ver detalles">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                    </div>
                                 </div>
                             </div>
                         <?php endforeach; ?>
@@ -314,6 +310,9 @@ ob_start();
                                         echo $priorityLabels[$task['priority']] ?? 'MEDIA';
                                         ?>
                                     </div>
+                                    <a href="?route=clan_member/task-details&task_id=<?php echo $task['task_id']; ?>" class="btn-edit" title="Ver detalles">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
                                 </div>
                                 <div class="task-content">
                                     <h4 class="task-title"><?php echo htmlspecialchars($task['task_name']); ?></h4>
@@ -346,11 +345,6 @@ ob_start();
                                         <i class="fas fa-calendar"></i>
                                         En <?php echo $task['days_until_due']; ?> días
                                     </div>
-                                    <div class="task-actions">
-                                        <a href="?route=clan_member/task-details&task_id=<?php echo $task['task_id']; ?>" class="btn-edit" title="Ver detalles">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                    </div>
                                 </div>
                             </div>
                         <?php endforeach; ?>
@@ -379,6 +373,9 @@ ob_start();
                                         echo $priorityLabels[$task['priority']] ?? 'MEDIA';
                                         ?>
                                     </div>
+                                    <a href="?route=clan_member/task-details&task_id=<?php echo $task['task_id']; ?>" class="btn-edit" title="Ver detalles">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
                                 </div>
                                 <div class="task-content">
                                     <h4 class="task-title"><?php echo htmlspecialchars($task['task_name']); ?></h4>
@@ -417,11 +414,6 @@ ob_start();
                                                 echo 'Sin fecha límite';
                                             }
                                         ?>
-                                    </div>
-                                    <div class="task-actions">
-                                        <a href="?route=clan_member/task-details&task_id=<?php echo $task['task_id']; ?>" class="btn-edit" title="Ver detalles">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
                                     </div>
                                 </div>
                             </div>
@@ -882,6 +874,7 @@ ob_start();
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 8px;
     margin-bottom: var(--spacing-xs);
 }
 
@@ -979,21 +972,20 @@ ob_start();
 
 .btn-edit {
     background: #1e3a8a;
-    color: #ffffff;
-    padding: 6px 8px;
+    color: white;
+    border: none;
     border-radius: 6px;
+    padding: 6px 8px;
     text-decoration: none;
     font-size: 0.75rem;
     font-weight: 600;
     transition: all 0.2s ease;
+    cursor: pointer;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     width: 28px;
     height: 28px;
-    border: 1px solid #1e3a8a;
-    position: relative;
-    z-index: 10;
     flex-shrink: 0;
 }
 
