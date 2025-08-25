@@ -827,11 +827,13 @@ ob_start();
     background: #ffffff;
     border: 1px solid #e5e7eb;
     border-radius: 6px;
-    padding: 10px;
-    margin-bottom: 8px;
+    padding: 8px;
+    margin-bottom: 6px;
     box-shadow: var(--shadow-sm);
     transition: all var(--transition-normal);
-    min-height: 70px;
+    min-height: 50px;
+    max-height: 70px;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -935,9 +937,15 @@ ob_start();
 .task-title {
     font-weight: var(--font-weight-semibold);
     color: #1e3a8a;
-    margin-bottom: var(--spacing-xs);
-    font-size: 0.9rem;
+    margin-bottom: 4px;
+    font-size: 0.85rem;
     line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    white-space: normal;
 }
 
 .task-project {
@@ -1327,15 +1335,19 @@ ob_start();
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin: 8px 0;
+    margin: 3px 0;
     flex-wrap: wrap;
     gap: 8px;
 }
 
 .project-name {
-    font-size: 0.85rem;
+    font-size: 0.75rem;
     color: #6b7280;
     font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 150px;
 }
 
 /* === BADGE PARA CLAN EXTERNO === */
@@ -1359,12 +1371,12 @@ ob_start();
 }
 
 .task-description {
-    font-size: 0.85rem;
+    font-size: 0.75rem;
     color: #6b7280;
-    margin: 6px 0;
-    line-height: 1.4;
+    margin: 3px 0;
+    line-height: 1.3;
     display: -webkit-box;
-    -webkit-line-clamp: 2;
+    -webkit-line-clamp: 1;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
@@ -1372,10 +1384,10 @@ ob_start();
 .task-status {
     display: flex;
     align-items: center;
-    gap: 6px;
-    font-size: 0.8rem;
+    gap: 4px;
+    font-size: 0.7rem;
     font-weight: 500;
-    margin-top: 8px;
+    margin-top: 3px;
 }
 
 .task-status.overdue {
@@ -1395,7 +1407,7 @@ ob_start();
 }
 
 .task-status i {
-    font-size: 0.9rem;
+    font-size: 0.7rem;
 }
 </style>
 
