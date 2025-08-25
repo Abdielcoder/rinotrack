@@ -9,6 +9,7 @@ class ClanLeaderController {
     private $kpiModel;
     private $taskModel;
     private $subtaskModel;
+    private $subtaskAssignmentModel;
     private $currentUser;
     private $userClan;
     private $db;
