@@ -85,7 +85,7 @@ class User {
             $passwordHash = password_hash($password, PASSWORD_DEFAULT);
             error_log("Password hash generated successfully: " . (empty($passwordHash) ? "FAILED" : "SUCCESS"));
             
-            $sql = "INSERT INTO Users (username, email, password_hash, full_name, created_at) VALUES (?, ?, ?, ?, NOW())";
+            $sql = "INSERT INTO Users (username, email, password_hash, full_name, avatar_path, created_at) VALUES (?, ?, ?, ?, '', NOW())";
             error_log("SQL query: $sql");
             
             $stmt = $this->db->prepare($sql);

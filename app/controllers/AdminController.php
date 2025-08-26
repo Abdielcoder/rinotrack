@@ -9,12 +9,26 @@ class AdminController {
     private $notificationModel;
     
     public function __construct() {
-        $this->auth = new Auth();
-        $this->userModel = new User();
-        $this->projectModel = new Project();
-        $this->clanModel = new Clan();
-        $this->roleModel = new Role();
-        $this->notificationModel = new Notification();
+        try {
+            error_log("AdminController::__construct() - Starting initialization");
+            $this->auth = new Auth();
+            error_log("Auth initialized successfully");
+            $this->userModel = new User();
+            error_log("User model initialized successfully");
+            $this->projectModel = new Project();
+            error_log("Project model initialized successfully");
+            $this->clanModel = new Clan();
+            error_log("Clan model initialized successfully");
+            $this->roleModel = new Role();
+            error_log("Role model initialized successfully");
+            $this->notificationModel = new Notification();
+            error_log("Notification model initialized successfully");
+            error_log("AdminController::__construct() - All models initialized successfully");
+        } catch (Exception $e) {
+            error_log("FATAL ERROR in AdminController::__construct(): " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
+            throw $e;
+        }
     }
     
     /**
