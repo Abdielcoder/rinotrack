@@ -653,20 +653,57 @@ class ClanMemberController {
 
     // Actualiza datos básicos (nombre, email, username)
     public function updateProfile() {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { Utils::jsonResponse(['success'=>false,'message'=>'Método no permitido'],405); }
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { 
+            Utils::jsonResponse(['success'=>false,'message'=>'Método no permitido'],405); 
+        }
+        
         $this->requireAuth();
-        if (!$this->hasMemberAccess()) { Utils::jsonResponse(['success'=>false,'message'=>'Acceso denegado'],403); }
-        $username = trim($_POST['username'] ?? '');
+        if (!$this->hasMemberAccess()) { 
+            Utils::jsonResponse(['success'=>false,'message'=>'Acceso denegado'],403); 
+        }
+        
+        // Debug logging
+        error_log("updateProfile called - POST data: " . print_r($_POST, true));
+        
+        // El username no se puede cambiar desde el perfil, usar el username actual
+        $username = $this->currentUser['username'];
         $email = trim($_POST['email'] ?? '');
         $fullName = trim($_POST['full_name'] ?? '');
-        if ($username==='' || $email==='' || $fullName==='') { Utils::jsonResponse(['success'=>false,'message'=>'Campos requeridos'],400); }
-        $ok = $this->userModel->update($this->currentUser['user_id'], $username, $email, $fullName, 1);
-        if ($ok) {
-            // refrescar sesión en memoria
-            $_SESSION['username'] = $username; $_SESSION['email'] = $email; $_SESSION['full_name'] = $fullName;
-            Utils::jsonResponse(['success'=>true,'message'=>'Perfil actualizado']);
+        
+        error_log("Profile update data - username: '$username', email: '$email', fullName: '$fullName'");
+        
+        // Validar campos requeridos
+        if ($email === '' || $fullName === '') { 
+            error_log("Validation failed - empty fields: email='$email', fullName='$fullName'");
+            Utils::jsonResponse(['success'=>false,'message'=>'Email y nombre completo son requeridos'],400); 
         }
-        Utils::jsonResponse(['success'=>false,'message'=>'No se pudo actualizar']);
+        
+        // Validar email
+        if (!Utils::isValidEmail($email)) {
+            error_log("Validation failed - invalid email: '$email'");
+            Utils::jsonResponse(['success'=>false,'message'=>'El email no es válido'],400);
+        }
+        
+        try {
+            error_log("Attempting to update user profile for user ID: " . $this->currentUser['user_id']);
+            $ok = $this->userModel->update($this->currentUser['user_id'], $username, $email, $fullName, 1);
+            error_log("Update result: " . ($ok ? "SUCCESS" : "FAILED"));
+            
+            if ($ok) {
+                // refrescar sesión en memoria
+                $_SESSION['username'] = $username; 
+                $_SESSION['email'] = $email; 
+                $_SESSION['full_name'] = $fullName;
+                error_log("Profile updated successfully for user: " . $this->currentUser['user_id']);
+                Utils::jsonResponse(['success'=>true,'message'=>'Perfil actualizado']);
+            } else {
+                error_log("Failed to update profile for user: " . $this->currentUser['user_id']);
+                Utils::jsonResponse(['success'=>false,'message'=>'No se pudo actualizar el perfil']);
+            }
+        } catch (Exception $e) {
+            error_log("Exception in updateProfile: " . $e->getMessage());
+            Utils::jsonResponse(['success'=>false,'message'=>'Error interno: ' . $e->getMessage()], 500);
+        }
     }
 
     // Actualiza contraseña en texto plano (según requerimiento)

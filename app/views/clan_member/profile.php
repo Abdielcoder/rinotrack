@@ -150,13 +150,26 @@ document.getElementById('profileForm')?.addEventListener('submit', function(e){
     submitBtn.disabled = true;
     
     const fd = new FormData(form);
+    // Debug: Log form data
+    console.log("=== ACTUALIZACIÓN DE PERFIL ===");
+    for (let [key, value] of fd.entries()) {
+        console.log(`${key}: ${value}`);
+    }
+    
     fetch('?route=clan_member/update-profile', { 
         method: 'POST', 
         body: fd, 
         credentials: 'same-origin' 
     })
-    .then(r => r.json())
+    .then(response => {
+        console.log("Response status:", response.status);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    })
     .then(d => {
+        console.log("Response data:", d);
         if(d.success) {
             showNotification('Perfil actualizado correctamente', 'success');
             setTimeout(() => location.reload(), 1500);
@@ -165,7 +178,8 @@ document.getElementById('profileForm')?.addEventListener('submit', function(e){
         }
     })
     .catch(error => {
-        showNotification('Error de conexión', 'error');
+        console.error("Error en actualización de perfil:", error);
+        showNotification('Error de conexión: ' + error.message, 'error');
     })
     .finally(() => {
         submitBtn.innerHTML = originalText;
