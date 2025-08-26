@@ -158,6 +158,27 @@ document.addEventListener("DOMContentLoaded", function() {
                 return response.json();
             })
             .then(data => {
+                // Debug: Mostrar información completa en consola
+                console.log("=== RESPUESTA DEL SERVIDOR ===");
+                console.log("Success:", data.success);
+                console.log("Message:", data.message);
+                if (data.debug) {
+                    console.log("Debug Info:");
+                    data.debug.forEach((msg, index) => {
+                        console.log(`  ${index + 1}. ${msg}`);
+                    });
+                }
+                if (data.exception) {
+                    console.error("Exception:", data.exception);
+                }
+                if (data.trace) {
+                    console.error("Stack Trace:", data.trace);
+                }
+                if (data.errors) {
+                    console.log("Validation Errors:", data.errors);
+                }
+                console.log("=== FIN RESPUESTA ===");
+                
                 if (data.success) {
                     alert(data.message);
                     closeUserModal();
@@ -178,7 +199,11 @@ document.addEventListener("DOMContentLoaded", function() {
                 }
             })
             .catch(error => {
-                console.error("Error:", error);
+                console.error("=== ERROR DE CONEXIÓN ===");
+                console.error("Error completo:", error);
+                console.error("Mensaje:", error.message);
+                console.error("Stack:", error.stack);
+                console.error("=== FIN ERROR ===");
                 alert("Error de conexión: " + error.message);
             })
             .finally(() => {

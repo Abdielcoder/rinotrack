@@ -73,11 +73,23 @@ class AdminController {
         error_log("=== CREATE USER DEBUG ===");
         error_log("createUser called - Method: " . $_SERVER['REQUEST_METHOD']);
         error_log("POST data: " . print_r($_POST, true));
+        error_log("SESSION data: " . print_r($_SESSION ?? [], true));
+        error_log("Headers: " . print_r(getallheaders(), true));
         
-        $this->requireAuth();
-        if (!$this->hasAdminAccess()) {
-            error_log("Access denied - user doesn't have admin access");
-            Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos'], 403);
+        try {
+            error_log("Calling requireAuth()...");
+            $this->requireAuth();
+            error_log("requireAuth() completed successfully");
+            
+            error_log("Checking admin access...");
+            if (!$this->hasAdminAccess()) {
+                error_log("Access denied - user doesn't have admin access");
+                Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos'], 403);
+            }
+            error_log("Admin access verified successfully");
+        } catch (Exception $e) {
+            error_log("ERROR in auth/access check: " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error de autenticación: ' . $e->getMessage()], 500);
         }
         
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -133,34 +145,63 @@ class AdminController {
         
         // Crear usuario con manejo mejorado de errores
         try {
-            error_log("Attempting to create user with data: username=$username, email=$email, fullName=$fullName");
+            $debugInfo = [];
+            $debugInfo[] = "Attempting to create user with data: username=$username, email=$email, fullName=$fullName";
+            error_log($debugInfo[count($debugInfo)-1]);
             
             $userId = $this->userModel->create($username, $email, $password, $fullName);
-            error_log("User creation result: " . ($userId ? "SUCCESS (ID: $userId)" : "FAILED"));
+            $debugInfo[] = "User creation result: " . ($userId ? "SUCCESS (ID: $userId)" : "FAILED");
+            error_log($debugInfo[count($debugInfo)-1]);
             
             if ($userId) {
                 // Asignar rol
-                error_log("Attempting to assign role $roleId to user $userId");
+                $debugInfo[] = "Attempting to assign role $roleId to user $userId";
+                error_log($debugInfo[count($debugInfo)-1]);
+                
                 $roleAssigned = $this->roleModel->assignToUser($userId, $roleId);
-                error_log("Role assignment result: " . ($roleAssigned ? "SUCCESS" : "FAILED"));
+                $debugInfo[] = "Role assignment result: " . ($roleAssigned ? "SUCCESS" : "FAILED");
+                error_log($debugInfo[count($debugInfo)-1]);
                 
                 if ($roleAssigned) {
-                    error_log("User created successfully: $userId");
-                    Utils::jsonResponse(['success' => true, 'message' => 'Usuario creado exitosamente']);
+                    $debugInfo[] = "User created successfully: $userId";
+                    error_log($debugInfo[count($debugInfo)-1]);
+                    Utils::jsonResponse([
+                        'success' => true, 
+                        'message' => 'Usuario creado exitosamente',
+                        'debug' => $debugInfo
+                    ]);
                 } else {
                     // Si falla la asignación de rol, eliminar el usuario creado
-                    error_log("Role assignment failed, cleaning up user $userId");
+                    $debugInfo[] = "Role assignment failed, cleaning up user $userId";
+                    error_log($debugInfo[count($debugInfo)-1]);
                     $this->userModel->delete($userId);
-                    Utils::jsonResponse(['success' => false, 'message' => 'Error al asignar rol al usuario'], 500);
+                    Utils::jsonResponse([
+                        'success' => false, 
+                        'message' => 'Error al asignar rol al usuario',
+                        'debug' => $debugInfo
+                    ], 500);
                 }
             } else {
-                error_log("User creation failed for: $username / $email");
-                Utils::jsonResponse(['success' => false, 'message' => 'Error al crear usuario'], 500);
+                $debugInfo[] = "User creation failed for: $username / $email";
+                error_log($debugInfo[count($debugInfo)-1]);
+                Utils::jsonResponse([
+                    'success' => false, 
+                    'message' => 'Error al crear usuario',
+                    'debug' => $debugInfo
+                ], 500);
             }
         } catch (Exception $e) {
-            error_log("EXCEPTION in createUser: " . $e->getMessage());
-            error_log("Stack trace: " . $e->getTraceAsString());
-            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor: ' . $e->getMessage()], 500);
+            $debugInfo[] = "EXCEPTION in createUser: " . $e->getMessage();
+            $debugInfo[] = "Stack trace: " . $e->getTraceAsString();
+            error_log($debugInfo[count($debugInfo)-2]);
+            error_log($debugInfo[count($debugInfo)-1]);
+            Utils::jsonResponse([
+                'success' => false, 
+                'message' => 'Error interno del servidor: ' . $e->getMessage(),
+                'debug' => $debugInfo,
+                'exception' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ], 500);
         }
     }
     
