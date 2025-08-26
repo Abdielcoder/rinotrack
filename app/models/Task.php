@@ -1156,12 +1156,21 @@ class Task {
      */
     public function update($taskId, $taskName, $description, $assignedUserId = null, $priority = null, $dueDate = null, $assignedPercentage = null, $status = null) {
         try {
+            error_log("=== TASK UPDATE DEBUG ===");
+            error_log("Task::update called with taskId: $taskId");
+            error_log("Parameters: taskName='$taskName', description='$description', assignedUserId=" . ($assignedUserId ?? 'NULL') . 
+                     ", priority='$priority', dueDate='$dueDate', assignedPercentage=" . ($assignedPercentage ?? 'NULL') . ", status='$status'");
+            
             $this->db->beginTransaction();
+            error_log("Transaction started");
             
             $task = $this->findById($taskId);
+            error_log("Task found: " . ($task ? "YES" : "NO"));
             if (!$task) {
+                error_log("Task not found with ID: $taskId");
                 throw new Exception("Tarea no encontrada");
             }
+            error_log("Task data: " . print_r($task, true));
             
             // Construir query dinámicamente
             $fields = [];
@@ -1170,48 +1179,60 @@ class Task {
             if ($taskName !== null) {
                 $fields[] = "task_name = ?";
                 $values[] = $taskName;
+                error_log("Adding task_name to update");
             }
             
             if ($description !== null) {
                 $fields[] = "description = ?";
                 $values[] = $description;
+                error_log("Adding description to update");
             }
             
             // Manejar assigned_to_user_id - puede ser null para desasignar
             if ($assignedUserId !== null) {
                 $fields[] = "assigned_to_user_id = ?";
                 $values[] = $assignedUserId;
+                error_log("Adding assigned_to_user_id to update");
             }
             
             if ($priority !== null) {
                 $fields[] = "priority = ?";
                 $values[] = $priority;
+                error_log("Adding priority to update");
             }
             
             if ($dueDate !== null) {
                 $fields[] = "due_date = ?";
                 $values[] = $dueDate;
+                error_log("Adding due_date to update");
             }
             
-            if ($assignedPercentage !== null && $task['task_distribution_mode'] === 'percentage') {
+            if ($assignedPercentage !== null) {
                 $fields[] = "assigned_percentage = ?";
                 $values[] = $assignedPercentage;
+                error_log("Adding assigned_percentage to update");
             }
             
             // Manejar estado
             if ($status !== null) {
                 $fields[] = "status = ?";
                 $values[] = $status;
+                error_log("Adding status to update");
                 
                 // Si el estado es completed, establecer completed_at
                 if ($status === 'completed') {
                     $fields[] = "completed_at = NOW()";
                     $fields[] = "is_completed = 1";
+                    error_log("Setting completed_at and is_completed for completed status");
                 } else {
                     $fields[] = "completed_at = NULL";
                     $fields[] = "is_completed = 0";
+                    error_log("Setting completed_at = NULL and is_completed = 0 for non-completed status");
                 }
             }
+            
+            error_log("Total fields to update: " . count($fields));
+            error_log("Fields array: " . print_r($fields, true));
             
             if (!empty($fields)) {
                 $fields[] = "updated_at = NOW()";
@@ -1220,32 +1241,49 @@ class Task {
                 $sql = "UPDATE Tasks SET " . implode(", ", $fields) . " WHERE task_id = ?";
                 
                 // Log para debugging
-                error_log("SQL Query: " . $sql);
-                error_log("Values: " . json_encode($values));
+                error_log("Final SQL Query: " . $sql);
+                error_log("Final Values: " . json_encode($values));
                 
                 $stmt = $this->db->prepare($sql);
+                if (!$stmt) {
+                    $errorInfo = $this->db->errorInfo();
+                    error_log("PREPARE FAILED: " . json_encode($errorInfo));
+                    throw new Exception("Error al preparar la consulta SQL: " . json_encode($errorInfo));
+                }
+                
                 $result = $stmt->execute($values);
+                error_log("Execute result: " . ($result ? "SUCCESS" : "FAILED"));
                 
                 if (!$result) {
                     $errorInfo = $stmt->errorInfo();
+                    error_log("EXECUTE ERROR: " . json_encode($errorInfo));
                     throw new Exception("Error al ejecutar la consulta SQL: " . json_encode($errorInfo));
                 }
+                
+                $rowCount = $stmt->rowCount();
+                error_log("Rows affected: $rowCount");
+            } else {
+                error_log("No fields to update - skipping SQL execution");
             }
             
             // Actualizar progreso del proyecto si se cambió el estado
             if ($status !== null) {
+                error_log("Updating project progress for project_id: " . $task['project_id']);
                 $projectModel = new Project();
                 $projectModel->updateProgress($task['project_id']);
             }
             
             $this->db->commit();
+            error_log("Transaction committed successfully");
             return true;
             
         } catch (Exception $e) {
+            error_log("EXCEPTION in Task::update: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
             if ($this->db->inTransaction()) {
                 $this->db->rollback();
+                error_log("Transaction rolled back");
             }
-            error_log("Error al actualizar tarea: " . $e->getMessage());
             return false;
         }
     }
