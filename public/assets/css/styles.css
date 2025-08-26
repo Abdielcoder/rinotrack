@@ -104,6 +104,44 @@ a:hover { text-decoration: none; }
     font-size: 0.9rem;
 }
 
+/* Estilos para el slogan de POLARIS */
+.slogan-container {
+    margin: 15px 0 20px 0;
+    padding: 15px;
+    background: linear-gradient(135deg, rgba(30, 58, 138, 0.05) 0%, rgba(30, 64, 175, 0.05) 100%);
+    border-radius: 12px;
+    border: 1px solid rgba(30, 58, 138, 0.1);
+}
+
+.main-slogan {
+    color: #1e3a8a;
+    font-size: 0.85rem;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    line-height: 1.4;
+    margin-bottom: 8px;
+}
+
+.main-slogan strong {
+    color: #1e40af;
+    font-weight: 700;
+    font-size: 1.05em;
+}
+
+.login-subtitle {
+    color: #4b5563;
+    font-size: 0.8rem;
+    font-style: italic;
+    margin: 0;
+    opacity: 0.8;
+}
+
+.login-instruction {
+    color: #666;
+    font-size: 0.9rem;
+    margin-top: 15px;
+}
+
 /* Formulario */
 .login-form {
     width: 100%;
@@ -358,5 +396,20 @@ a:hover { text-decoration: none; }
         flex-direction: column;
         gap: 15px;
         align-items: flex-start;
+    }
+    
+    /* Estilos responsivos para el slogan */
+    .slogan-container {
+        padding: 12px;
+        margin: 12px 0 15px 0;
+    }
+    
+    .main-slogan {
+        font-size: 0.75rem;
+        letter-spacing: 0.3px;
+    }
+    
+    .login-subtitle {
+        font-size: 0.75rem;
     }
 } 

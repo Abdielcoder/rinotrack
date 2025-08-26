@@ -8,7 +8,13 @@ ob_start();
         <div class="login-header">
             <i class="fas fa-star logo"></i>
             <h1><?php echo APP_NAME; ?></h1>
-            <p>Inicia sesión en tu cuenta</p>
+            <div class="slogan-container">
+                <p class="main-slogan">
+                    <strong>P</strong>royecta • <strong>O</strong>rganiza • <strong>L</strong>anza • <strong>A</strong>naliza • <strong>R</strong>evisa • <strong>I</strong>nteractúa • <strong>S</strong>ocializa
+                </p>
+                <p class="login-subtitle">Tu estrella guía para la gestión de proyectos</p>
+            </div>
+            <p class="login-instruction">Inicia sesión en tu cuenta</p>
         </div>
         
         <form id="loginForm" class="login-form">
