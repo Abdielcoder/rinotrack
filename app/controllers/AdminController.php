@@ -118,7 +118,11 @@ class AdminController {
         }
         
         // Verificar si ya existe
-        if ($this->userModel->exists($username, $email)) {
+        error_log("Checking if user exists: username=$username, email=$email");
+        $userExists = $this->userModel->exists($username, $email);
+        error_log("User exists check result: " . ($userExists ? "EXISTS" : "NOT_EXISTS"));
+        
+        if ($userExists) {
             $errors['general'] = 'Ya existe un usuario con ese nombre de usuario o email';
         }
         
@@ -127,22 +131,36 @@ class AdminController {
             Utils::jsonResponse(['success' => false, 'errors' => $errors], 400);
         }
         
-        // Crear usuario
-        $userId = $this->userModel->create($username, $email, $password, $fullName);
-        
-        if ($userId) {
-            // Asignar rol
-            $roleAssigned = $this->roleModel->assignToUser($userId, $roleId);
+        // Crear usuario con manejo mejorado de errores
+        try {
+            error_log("Attempting to create user with data: username=$username, email=$email, fullName=$fullName");
             
-            if ($roleAssigned) {
-                Utils::jsonResponse(['success' => true, 'message' => 'Usuario creado exitosamente']);
+            $userId = $this->userModel->create($username, $email, $password, $fullName);
+            error_log("User creation result: " . ($userId ? "SUCCESS (ID: $userId)" : "FAILED"));
+            
+            if ($userId) {
+                // Asignar rol
+                error_log("Attempting to assign role $roleId to user $userId");
+                $roleAssigned = $this->roleModel->assignToUser($userId, $roleId);
+                error_log("Role assignment result: " . ($roleAssigned ? "SUCCESS" : "FAILED"));
+                
+                if ($roleAssigned) {
+                    error_log("User created successfully: $userId");
+                    Utils::jsonResponse(['success' => true, 'message' => 'Usuario creado exitosamente']);
+                } else {
+                    // Si falla la asignación de rol, eliminar el usuario creado
+                    error_log("Role assignment failed, cleaning up user $userId");
+                    $this->userModel->delete($userId);
+                    Utils::jsonResponse(['success' => false, 'message' => 'Error al asignar rol al usuario'], 500);
+                }
             } else {
-                // Si falla la asignación de rol, eliminar el usuario creado
-                $this->userModel->delete($userId);
-                Utils::jsonResponse(['success' => false, 'message' => 'Error al asignar rol al usuario'], 500);
+                error_log("User creation failed for: $username / $email");
+                Utils::jsonResponse(['success' => false, 'message' => 'Error al crear usuario'], 500);
             }
-        } else {
-            Utils::jsonResponse(['success' => false, 'message' => 'Error al crear usuario'], 500);
+        } catch (Exception $e) {
+            error_log("EXCEPTION in createUser: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor: ' . $e->getMessage()], 500);
         }
     }
     

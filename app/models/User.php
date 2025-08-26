@@ -79,19 +79,40 @@ class User {
      */
     public function create($username, $email, $password, $fullName) {
         try {
-            $passwordHash = password_hash($password, PASSWORD_DEFAULT);
-            $stmt = $this->db->prepare("
-                INSERT INTO Users (username, email, password_hash, full_name, created_at) 
-                VALUES (?, ?, ?, ?, NOW())
-            ");
-            $result = $stmt->execute([$username, $email, $passwordHash, $fullName]);
+            error_log("User::create - Starting user creation");
+            error_log("Parameters: username='$username', email='$email', fullName='$fullName', password_length=" . strlen($password));
             
-            if ($result) {
-                return $this->db->lastInsertId();
+            $passwordHash = password_hash($password, PASSWORD_DEFAULT);
+            error_log("Password hash generated successfully: " . (empty($passwordHash) ? "FAILED" : "SUCCESS"));
+            
+            $sql = "INSERT INTO Users (username, email, password_hash, full_name, created_at) VALUES (?, ?, ?, ?, NOW())";
+            error_log("SQL query: $sql");
+            
+            $stmt = $this->db->prepare($sql);
+            if (!$stmt) {
+                error_log("PREPARE FAILED: " . print_r($this->db->errorInfo(), true));
+                return false;
             }
-            return false;
+            
+            $result = $stmt->execute([$username, $email, $passwordHash, $fullName]);
+            error_log("Execute result: " . ($result ? "SUCCESS" : "FAILED"));
+            
+            if (!$result) {
+                error_log("EXECUTE ERROR: " . print_r($stmt->errorInfo(), true));
+                return false;
+            }
+            
+            $lastId = $this->db->lastInsertId();
+            error_log("Last insert ID: $lastId");
+            
+            return $lastId;
         } catch (PDOException $e) {
-            error_log("Error al crear usuario: " . $e->getMessage());
+            error_log("PDOException in User::create: " . $e->getMessage());
+            error_log("Error Code: " . $e->getCode());
+            error_log("SQL State: " . ($e->errorInfo[0] ?? 'N/A'));
+            return false;
+        } catch (Exception $e) {
+            error_log("General Exception in User::create: " . $e->getMessage());
             return false;
         }
     }
