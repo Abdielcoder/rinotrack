@@ -10,7 +10,7 @@ ob_start();
             <h1><?php echo APP_NAME; ?></h1>
             <div class="slogan-container">
                 <p class="main-slogan">
-                    <strong>P</strong>royecta • <strong>O</strong>rganiza • <strong>L</strong>anza • <strong>A</strong>naliza • <strong>R</strong>evisa • <strong>I</strong>nteractúa • <strong>S</strong>ocializa
+                    <strong>P</strong>royecta • <strong>O</strong>rganiza • <strong>L</strong>anza • <strong>A</strong>naliza • <strong>R</strong>evisa • <strong>I</strong>tera • <strong>S</strong>ocializa
                 </p>
                 <p class="login-subtitle">Tu estrella guía.</p>
             </div>
