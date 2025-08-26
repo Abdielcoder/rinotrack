@@ -385,7 +385,7 @@ class ClanMemberController {
                     error_log("Project data: " . print_r($project, true));
                 }
             } else {
-                error_log("No project_id - this is a personal task");
+                error_log("No project_id - this is a personal task without project");
             }
             
             $isAssignedToUser = $this->isTaskAssignedToUser($taskId, $this->currentUser['user_id']);
@@ -393,10 +393,16 @@ class ClanMemberController {
             error_log("Is assigned to user: " . ($isAssignedToUser ? "YES" : "NO"));
             error_log("Is personal task: " . ($isPersonalTask ? "YES" : "NO"));
             
-            // Para tareas personales, solo verificar que el usuario sea el propietario
+            // Para tareas personales, solo verificar que el usuario sea el propietario o creador
             if ($isPersonalTask) {
                 $isOwner = (int)($task['assigned_to_user_id'] ?? 0) === (int)$this->currentUser['user_id'];
                 $isCreator = (int)($task['created_by_user_id'] ?? 0) === (int)$this->currentUser['user_id'];
+                
+                error_log("Personal task permission check - isOwner: " . ($isOwner ? "YES" : "NO") . 
+                         ", isCreator: " . ($isCreator ? "YES" : "NO") . 
+                         ", currentUser: " . $this->currentUser['user_id'] . 
+                         ", assignedTo: " . ($task['assigned_to_user_id'] ?? 'NULL') . 
+                         ", createdBy: " . ($task['created_by_user_id'] ?? 'NULL'));
                 
                 if (!($isOwner || $isCreator)) {
                     error_log("Access denied - user is not owner or creator of personal task");

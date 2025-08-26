@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1:3306
--- Tiempo de generación: 22-08-2025 a las 19:25:03
+-- Tiempo de generación: 26-08-2025 a las 23:56:15
 -- Versión del servidor: 11.8.2-MariaDB
 -- Versión de PHP: 8.3.23
 
@@ -46,7 +46,8 @@ INSERT INTO `Clans` (`clan_id`, `clan_name`, `clan_departamento`, `created_at`) 
 (10, 'Deméter (ZAX)', 'ZAX', '2025-08-04 17:57:03'),
 (11, 'Helios (COM)', 'Comercial', '2025-08-06 20:43:53'),
 (12, 'GAIA', 'Operación/Proyectos', '2025-08-06 20:50:45'),
-(13, 'Olympo', 'Dirección', '2025-08-06 20:56:30');
+(13, 'Olympo', 'Dirección', '2025-08-06 20:56:30'),
+(15, 'Loki (pruebas)', 'Pruebas', '2025-08-26 23:02:34');
 
 -- --------------------------------------------------------
 
@@ -180,7 +181,43 @@ INSERT INTO `Clan_Members` (`clan_member_id`, `clan_id`, `user_id`) VALUES
 (91, 13, 55),
 (90, 13, 56),
 (96, 13, 58),
-(139, 13, 63);
+(139, 13, 63),
+(142, 15, 30),
+(141, 15, 57),
+(140, 15, 63);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `Comment_Checkbox_States`
+--
+
+CREATE TABLE `Comment_Checkbox_States` (
+  `state_id` int(11) NOT NULL,
+  `comment_id` int(11) NOT NULL COMMENT 'ID del comentario (Task_Comments o Subtask_Comments)',
+  `comment_type` enum('task','subtask') NOT NULL COMMENT 'Tipo de comentario: task o subtask',
+  `checkbox_index` int(11) NOT NULL COMMENT 'Índice del checkbox dentro del comentario (0, 1, 2...)',
+  `checkbox_text` text NOT NULL COMMENT 'Texto de la tarea del checkbox',
+  `is_checked` tinyint(1) DEFAULT 0 COMMENT 'Estado del checkbox: 0=desmarcado, 1=marcado',
+  `user_id` int(11) NOT NULL COMMENT 'Usuario que marcó/desmarcó el checkbox',
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Estados de checkboxes en comentarios de tareas y subtareas';
+
+--
+-- Volcado de datos para la tabla `Comment_Checkbox_States`
+--
+
+INSERT INTO `Comment_Checkbox_States` (`state_id`, `comment_id`, `comment_type`, `checkbox_index`, `checkbox_text`, `is_checked`, `user_id`, `created_at`, `updated_at`) VALUES
+(1, 32, 'subtask', 0, 'dsfsdfsdf', 1, 2, '2025-08-22 19:54:43', '2025-08-22 19:54:43'),
+(2, 31, 'subtask', 0, 'esto es una tarea 1', 1, 2, '2025-08-22 19:54:45', '2025-08-22 19:54:45'),
+(3, 29, 'subtask', 0, 'losmd', 1, 2, '2025-08-22 19:55:04', '2025-08-22 19:55:04'),
+(4, 30, 'subtask', 0, 'Otra check', 1, 2, '2025-08-22 19:55:05', '2025-08-22 19:55:05'),
+(5, 28, 'subtask', 0, 'Tarea1', 1, 2, '2025-08-22 19:55:07', '2025-08-22 19:55:07'),
+(6, 28, 'subtask', 1, 'Tarea2', 1, 2, '2025-08-22 19:55:07', '2025-08-22 19:55:07'),
+(7, 28, 'subtask', 2, 'Tarea3', 1, 2, '2025-08-22 19:55:08', '2025-08-22 19:55:08'),
+(8, 42, 'subtask', 0, 'TAREA1', 1, 2, '2025-08-26 22:23:17', '2025-08-26 22:23:17'),
+(9, 42, 'subtask', 1, 'Tarea2', 1, 2, '2025-08-26 22:23:21', '2025-08-26 22:23:21');
 
 -- --------------------------------------------------------
 
@@ -665,7 +702,68 @@ INSERT INTO `Notification_Log` (`id`, `event_type`, `entity_id`, `user_id`, `sen
 (279, 'task_assigned', 269, 22, 'Sofia@rinorisk.com', NULL, '2025-08-21 07:24:08'),
 (280, 'task_assigned', 270, 22, 'Sofia@rinorisk.com', NULL, '2025-08-21 15:56:51'),
 (281, 'task_assigned', 271, 30, 'procesos.operativos@rinorisk.com', NULL, '2025-08-21 21:16:58'),
-(282, 'task_assigned', 272, 27, 'analista.financiero@rinorisk.com', NULL, '2025-08-21 21:17:34');
+(282, 'task_assigned', 272, 27, 'analista.financiero@rinorisk.com', NULL, '2025-08-21 21:17:34'),
+(283, 'task_assigned', 273, 2, 'redskullcoder@gmail.com', NULL, '2025-08-22 20:19:10'),
+(284, 'task_assigned', 275, 40, 'sincorreo9@rinorisk.com', NULL, '2025-08-26 21:18:49'),
+(285, 'task_assigned', 277, 4, 'desarrollo2@rinorisk.com', NULL, '2025-08-26 22:31:17'),
+(286, 'task_assigned', 279, 4, 'desarrollo2@rinorisk.com', NULL, '2025-08-26 22:38:59'),
+(287, 'project_assigned_to_clan', 48, 30, 'procesos.operativos@rinorisk.com', NULL, '2025-08-26 23:04:12'),
+(288, 'project_assigned_to_clan', 48, 57, 'sincorreo23@rinorsik.com', NULL, '2025-08-26 23:04:14'),
+(289, 'project_assigned_to_clan', 48, 63, 'sincorreo29@rinorisk.com', NULL, '2025-08-26 23:04:15'),
+(290, 'task_assigned', 281, 57, 'sincorreo23@rinorsik.com', NULL, '2025-08-26 23:06:04'),
+(291, 'task_assigned', 281, 63, 'sincorreo29@rinorisk.com', NULL, '2025-08-26 23:06:04'),
+(292, 'task_assigned', 282, 63, 'sincorreo29@rinorisk.com', NULL, '2025-08-26 23:06:55'),
+(293, 'project_assigned_to_clan', 49, 2, 'redskullcoder@gmail.com', NULL, '2025-08-26 23:09:56'),
+(294, 'project_assigned_to_clan', 49, 4, 'desarrollo2@rinorisk.com', NULL, '2025-08-26 23:09:58'),
+(295, 'project_assigned_to_clan', 49, 5, 'desarrollo3@rinorisk.com', NULL, '2025-08-26 23:09:59'),
+(296, 'project_assigned_to_clan', 49, 6, 'desarrollo.fulstack@rinorisk.com', NULL, '2025-08-26 23:10:01'),
+(297, 'project_assigned_to_clan', 49, 9, 'desarrollo.frontjr@rinorisk.com', NULL, '2025-08-26 23:10:02'),
+(298, 'project_assigned_to_clan', 49, 10, 'desarrollo.dataanalyst@rinorisk.com', NULL, '2025-08-26 23:10:03'),
+(299, 'project_assigned_to_clan', 49, 11, 'desarrollo.backend@rinorisk.com', NULL, '2025-08-26 23:10:04'),
+(300, 'project_assigned_to_clan', 49, 12, 'desarrollo.fullstack.2@rinorisk.com', NULL, '2025-08-26 23:10:05'),
+(301, 'project_assigned_to_clan', 49, 13, 'gerente.mkt@rinorisk.com', NULL, '2025-08-26 23:10:06'),
+(302, 'project_assigned_to_clan', 49, 14, 'gerente.rh@rinorisk.com', NULL, '2025-08-26 23:10:08'),
+(303, 'project_assigned_to_clan', 49, 15, 'cultura.organizacional@rinorisk.com', NULL, '2025-08-26 23:10:09'),
+(304, 'project_assigned_to_clan', 49, 16, 'sincorreo1@rinorisk.com', NULL, '2025-08-26 23:10:10'),
+(305, 'project_assigned_to_clan', 49, 17, 'redes@rinorisk.com', NULL, '2025-08-26 23:10:11'),
+(306, 'project_assigned_to_clan', 49, 18, 'publicidad@rinorisk.com', NULL, '2025-08-26 23:10:12'),
+(307, 'project_assigned_to_clan', 49, 19, 'supervisor.comercialtj@rinorisk.com', NULL, '2025-08-26 23:10:13'),
+(308, 'project_assigned_to_clan', 49, 20, 'cobranza@rinorisk.com', NULL, '2025-08-26 23:10:14'),
+(309, 'project_assigned_to_clan', 49, 21, 'servicio.vgmtj@rinorisk.com', NULL, '2025-08-26 23:10:15'),
+(310, 'project_assigned_to_clan', 49, 22, 'Sofia@rinorisk.com', NULL, '2025-08-26 23:10:16'),
+(311, 'project_assigned_to_clan', 49, 23, 'auxiliar.inmuebles@rinorisk.com', NULL, '2025-08-26 23:10:17'),
+(312, 'project_assigned_to_clan', 49, 24, 'gerente.administrativo@rinorisk.com', NULL, '2025-08-26 23:10:18'),
+(313, 'project_assigned_to_clan', 49, 25, 'contabilidad@rinorisk.com', NULL, '2025-08-26 23:10:19'),
+(314, 'project_assigned_to_clan', 49, 26, 'auxiliar.contable@rinorisk.com', NULL, '2025-08-26 23:10:21'),
+(315, 'project_assigned_to_clan', 49, 27, 'analista.financiero@rinorisk.com', NULL, '2025-08-26 23:10:22'),
+(316, 'project_assigned_to_clan', 49, 28, 'legal@rinorisk.com', NULL, '2025-08-26 23:10:23'),
+(317, 'project_assigned_to_clan', 49, 29, 'asistente.legal@rinorisk.com', NULL, '2025-08-26 23:10:23'),
+(318, 'project_assigned_to_clan', 49, 31, 'sincorreo2@rinorisk.com', NULL, '2025-08-26 23:10:24'),
+(319, 'project_assigned_to_clan', 49, 32, 'sincorreo3@rinorisk.com', NULL, '2025-08-26 23:10:25'),
+(320, 'project_assigned_to_clan', 49, 33, 'sincorreo4@rinorisk.com', NULL, '2025-08-26 23:10:26'),
+(321, 'project_assigned_to_clan', 49, 34, 'sincorreo5@rinorisk.com', NULL, '2025-08-26 23:10:27'),
+(322, 'project_assigned_to_clan', 49, 35, 'sincorreo6@rinorisk.com', NULL, '2025-08-26 23:10:28'),
+(323, 'project_assigned_to_clan', 49, 36, 'sincorreo7@rinorisk.com', NULL, '2025-08-26 23:10:29'),
+(324, 'project_assigned_to_clan', 49, 37, 'sincorreo8@rinorisk.com', NULL, '2025-08-26 23:10:30'),
+(325, 'project_assigned_to_clan', 49, 38, 'sistemas@rinorisk.com', NULL, '2025-08-26 23:10:31'),
+(326, 'project_assigned_to_clan', 49, 39, 'capacitacion@rinorisk.com', NULL, '2025-08-26 23:10:32'),
+(327, 'project_assigned_to_clan', 49, 40, 'sincorreo9@rinorisk.com', NULL, '2025-08-26 23:10:33'),
+(328, 'project_assigned_to_clan', 49, 41, 'sincorreo10@rinorisk.com', NULL, '2025-08-26 23:10:35'),
+(329, 'project_assigned_to_clan', 49, 42, 'sincorreo11@rinorisk.com', NULL, '2025-08-26 23:10:36'),
+(330, 'project_assigned_to_clan', 49, 43, 'sincorreo12@rinorisk.com', NULL, '2025-08-26 23:10:37'),
+(331, 'project_assigned_to_clan', 49, 44, 'sincorreo13@rinorisk.com', NULL, '2025-08-26 23:10:38'),
+(332, 'project_assigned_to_clan', 49, 45, 'sincorrreo14@rinorisk.com', NULL, '2025-08-26 23:10:39'),
+(333, 'project_assigned_to_clan', 49, 46, 'sincorreo15@rinorisk.com', NULL, '2025-08-26 23:10:40'),
+(334, 'project_assigned_to_clan', 49, 47, 'sincorreo16@rinorisk.com', NULL, '2025-08-26 23:10:41'),
+(335, 'project_assigned_to_clan', 49, 48, 'sincorreo17@rinorisk.com', NULL, '2025-08-26 23:10:42'),
+(336, 'project_assigned_to_clan', 49, 49, 'sincorreo18@rinorisk.com', NULL, '2025-08-26 23:10:43'),
+(337, 'project_assigned_to_clan', 49, 50, 'sincorreo19@rinorisk.com', NULL, '2025-08-26 23:10:44'),
+(338, 'project_assigned_to_clan', 49, 55, 'sincorreo20@rinorisk.com', NULL, '2025-08-26 23:10:45'),
+(339, 'project_assigned_to_clan', 49, 56, 'sincorreo21@rinorisk.com', NULL, '2025-08-26 23:10:47'),
+(340, 'project_assigned_to_clan', 49, 58, 'asistente.direccion@rinorisk.com', NULL, '2025-08-26 23:10:48'),
+(341, 'project_assigned_to_clan', 49, 63, 'sincorreo29@rinorisk.com', NULL, '2025-08-26 23:10:49'),
+(342, 'task_assigned', 283, 2, 'redskullcoder@gmail.com', NULL, '2025-08-26 23:11:54'),
+(343, 'task_assigned', 283, 16, 'sincorreo1@rinorisk.com', NULL, '2025-08-26 23:11:55');
 
 -- --------------------------------------------------------
 
@@ -727,13 +825,18 @@ INSERT INTO `Projects` (`project_id`, `project_name`, `description`, `clan_id`, 
 (24, 'RinoPlugin', 'Plugin de control de accesos de portales', 5, 58, 'open', 4, 4, 100.00, '2025-08-13 16:29:25', '2025-08-13 23:49:09', 11, 50, 'automatic', '2025-09-30', 0),
 (25, 'Resegmentación', 'Utilidad fuera de linea, de consulta, comparación y resegmentación de prima y negocios', 5, 58, 'open', 5, 5, 200.00, '2025-08-13 16:30:52', '2025-08-19 15:07:25', 11, 50, 'automatic', '2025-09-30', 0),
 (26, 'Nuevos Indicadores / procesos automaticos', 'Indicadores necesarios para procesos y sistemas', 5, 58, 'open', 0, 0, 0.00, '2025-08-13 16:31:33', '2025-08-13 23:49:26', 11, 350, 'automatic', '2025-09-30', 0),
-(29, 'Metas promotoria etapa 1', 'Seguimiento al proyecto, consulta de promotoria.', 5, 1, 'open', 11, 4, 33.33, '2025-08-13 17:35:38', '2025-08-22 19:00:18', 11, 300, 'automatic', '2025-09-30', 0),
+(29, 'Metas promotoria etapa 1', 'Seguimiento al proyecto, consulta de promotoria.', 5, 1, 'open', 12, 8, 33.33, '2025-08-13 17:35:38', '2025-08-26 22:35:26', 11, 300, 'automatic', '2025-09-30', 0),
 (34, 'Tareas Recurrentes', 'Tareas Recurrentes', 13, 1, 'open', 10, 1, 0.00, '2025-08-14 05:48:31', '2025-08-19 20:28:02', NULL, 0, 'automatic', NULL, 0),
 (35, 'Tareas Eventuales', 'Tareas Eventuales', 13, 1, 'open', 2, 2, 0.00, '2025-08-14 05:48:31', '2025-08-19 20:29:15', NULL, 0, 'automatic', NULL, 0),
 (42, 'Tareas Personales', 'Proyecto personal para tareas individuales del usuario', 5, 2, 'active', 0, 0, 0.00, '2025-08-19 20:29:39', '2025-08-19 20:29:39', NULL, 0, 'automatic', NULL, 1),
 (43, 'Tareas Personales', 'Proyecto personal para tareas individuales del usuario', 5, 4, 'active', 0, 0, 0.00, '2025-08-20 15:09:12', '2025-08-20 15:09:12', NULL, 0, 'automatic', NULL, 1),
 (44, 'AGENCIAS RINO', 'Proyeccion de Crecimiento 2026', 12, 22, 'open', 4, 0, 0.00, '2025-08-20 18:09:56', '2025-08-21 15:55:09', NULL, 0, 'automatic', NULL, 0),
-(45, 'TAREAS EVENTUALES', 'PRUEBA', 12, 22, 'open', 0, 0, 0.00, '2025-08-21 21:16:11', '2025-08-21 21:16:11', NULL, 0, 'automatic', NULL, 0);
+(45, 'TAREAS EVENTUALES', 'PRUEBA', 12, 22, 'open', 0, 0, 0.00, '2025-08-21 21:16:11', '2025-08-21 21:16:11', NULL, 0, 'automatic', NULL, 0),
+(46, 'Tareas Personales', 'Proyecto personal para tareas individuales del usuario', 7, 40, 'active', 0, 0, 0.00, '2025-08-26 21:15:04', '2025-08-26 21:15:04', NULL, 0, 'automatic', NULL, 1),
+(47, 'Proyecto 1 de prueba', 'Des', 7, 14, 'open', 0, 0, 0.00, '2025-08-26 21:18:16', '2025-08-26 21:18:16', NULL, 0, 'automatic', NULL, 0),
+(48, 'Proyecto prueba', 'prueba', 15, 30, 'open', 0, 0, 0.00, '2025-08-26 23:04:11', '2025-08-26 23:04:11', NULL, 0, 'automatic', '2025-08-29', 0),
+(49, 'Proyecto Inicial2', 'desc', 13, 1, 'open', 0, 0, 0.00, '2025-08-26 23:09:56', '2025-08-26 23:09:56', NULL, 0, 'automatic', '2025-08-30', 0),
+(50, 'Tareas Personales', 'Proyecto personal para tareas individuales del usuario', 15, 63, 'active', 0, 0, 0.00, '2025-08-26 23:21:34', '2025-08-26 23:21:34', NULL, 0, 'automatic', NULL, 1);
 
 -- --------------------------------------------------------
 
@@ -820,7 +923,7 @@ INSERT INTO `Subtasks` (`subtask_id`, `task_id`, `title`, `description`, `comple
 (2, 242, 'Prueba2', '', 0.00, NULL, NULL, 'pending', 'medium', NULL, NULL, 1, 2, '2025-08-20 18:35:45', '2025-08-20 18:35:45'),
 (3, 242, 'Prueba3', '', 0.00, NULL, NULL, 'pending', 'medium', NULL, NULL, 1, 3, '2025-08-20 18:35:45', '2025-08-20 18:35:45'),
 (4, 242, 'Prueba4', '', 0.00, NULL, NULL, 'pending', 'medium', NULL, NULL, 1, 4, '2025-08-20 18:35:45', '2025-08-20 18:35:45'),
-(5, 243, 'Tarea de prueba', '', 100.00, NULL, NULL, 'completed', 'medium', NULL, NULL, 1, 1, '2025-08-20 18:49:30', '2025-08-22 18:43:51'),
+(5, 243, 'Tarea de prueba', '', 100.00, NULL, NULL, 'completed', 'medium', '2025-08-23', NULL, 1, 1, '2025-08-20 18:49:30', '2025-08-22 20:17:53'),
 (6, 243, 'TT3', '', 50.00, NULL, NULL, 'in_progress', 'medium', NULL, NULL, 1, 2, '2025-08-20 18:49:30', '2025-08-22 18:47:08'),
 (8, 244, 'lol1', '', 0.00, NULL, NULL, 'pending', 'medium', NULL, NULL, 1, 1, '2025-08-20 18:57:06', '2025-08-20 18:57:06'),
 (9, 244, 'lol2', '', 0.00, NULL, NULL, 'pending', 'medium', NULL, NULL, 1, 2, '2025-08-20 18:57:06', '2025-08-20 18:57:06'),
@@ -831,7 +934,7 @@ INSERT INTO `Subtasks` (`subtask_id`, `task_id`, `title`, `description`, `comple
 (14, 246, 'ww2', '', 50.00, NULL, NULL, 'in_progress', 'medium', NULL, NULL, 1, 2, '2025-08-20 19:39:59', '2025-08-20 20:20:40'),
 (15, 256, 'erer432', 'dffds23424', 0.00, NULL, NULL, 'pending', 'medium', NULL, NULL, 2, 1, '2025-08-20 22:24:25', '2025-08-20 22:24:25'),
 (16, 256, 'erer432', 'dffds23424', 0.00, NULL, NULL, 'pending', 'medium', NULL, NULL, 2, 2, '2025-08-20 22:24:25', '2025-08-20 22:24:25'),
-(17, 264, 'ggg', '', 50.00, NULL, NULL, 'in_progress', 'medium', NULL, NULL, 2, 1, '2025-08-20 23:24:46', '2025-08-20 23:25:06'),
+(17, 264, 'ggg', '', 50.00, NULL, NULL, 'in_progress', 'medium', NULL, 4, 2, 1, '2025-08-20 23:24:46', '2025-08-25 17:17:04'),
 (19, 253, 'Plan de Capacitacion Director Agencia', '', 0.00, NULL, NULL, 'pending', 'medium', NULL, NULL, 1, 1, '2025-08-20 23:28:48', '2025-08-20 23:28:48'),
 (20, 265, 'subatarea x', 'Esta es la descripcion', 50.00, NULL, NULL, 'in_progress', 'medium', NULL, NULL, 2, 1, '2025-08-20 23:57:57', '2025-08-21 00:16:15'),
 (22, 266, 'Proceso de Reclutamiento Agentes Novatos', '', 50.00, NULL, NULL, 'in_progress', 'medium', NULL, NULL, 22, 1, '2025-08-21 07:03:38', '2025-08-21 21:05:40'),
@@ -856,8 +959,27 @@ INSERT INTO `Subtasks` (`subtask_id`, `task_id`, `title`, `description`, `comple
 (41, 270, 'Solicitud de Productos', '', 0.00, NULL, NULL, 'pending', 'medium', NULL, NULL, 22, 3, '2025-08-21 15:56:50', '2025-08-21 15:56:50'),
 (42, 270, 'Plan de Capacitacion Coordinador Agencia', '', 0.00, NULL, NULL, 'pending', 'medium', NULL, NULL, 22, 4, '2025-08-21 15:56:50', '2025-08-21 15:56:50'),
 (43, 243, 'SubTarea 3 desde tareas', 'Esto es la descripcion de la subtarea', 50.00, NULL, NULL, 'in_progress', 'medium', NULL, NULL, 2, 3, '2025-08-22 18:54:46', '2025-08-22 18:54:54'),
-(44, 258, 'Subtarea sin subtareas previas.', 'No hay', 0.00, NULL, NULL, 'pending', 'medium', NULL, NULL, 2, 1, '2025-08-22 18:58:08', '2025-08-22 18:58:08'),
-(45, 258, 'sadfasdf', 'asdfasdf', 0.00, NULL, NULL, 'pending', 'medium', NULL, NULL, 2, 2, '2025-08-22 18:59:44', '2025-08-22 18:59:44');
+(44, 258, 'Subtarea sin subtareas previas.', 'Desc', 11.00, NULL, NULL, 'in_progress', 'medium', '2025-08-29', 4, 2, 1, '2025-08-22 18:58:08', '2025-08-26 22:21:24'),
+(45, 258, 'sadfasdf', 'asdfasdf', 0.00, NULL, NULL, 'pending', 'medium', NULL, NULL, 2, 2, '2025-08-22 18:59:44', '2025-08-22 18:59:44'),
+(46, 243, 'Subtarea con fecha', 'sdfasdfasdfd', 0.00, NULL, NULL, 'pending', 'medium', '2025-08-29', NULL, 2, 4, '2025-08-22 20:17:10', '2025-08-22 20:17:10'),
+(47, 273, '23', '', 50.00, NULL, NULL, 'in_progress', 'medium', '2025-08-29', NULL, 2, 1, '2025-08-22 20:19:09', '2025-08-22 20:19:42'),
+(48, 273, 'ss2', '', 0.00, NULL, NULL, 'pending', 'medium', NULL, NULL, 2, 2, '2025-08-22 20:19:09', '2025-08-22 20:19:09'),
+(49, 264, 'dasfasdfsad', 'asdfasdf', 50.00, NULL, NULL, 'in_progress', 'medium', '2025-08-29', 4, 14, 2, '2025-08-25 16:24:56', '2025-08-25 18:45:33'),
+(50, 264, 'Una nueva', 'Nueva sub', 100.00, NULL, NULL, 'completed', 'medium', '2025-08-29', 4, 2, 3, '2025-08-25 16:25:56', '2025-08-25 19:11:41'),
+(51, 264, 'desde', 'desde', 50.00, NULL, NULL, 'in_progress', 'medium', '2025-08-29', 4, 4, 4, '2025-08-25 16:51:07', '2025-08-25 19:11:44'),
+(52, 264, 'TAREA MUCHOS DESDE EL CLAN', 'DEC', 0.00, NULL, NULL, 'pending', 'medium', '2025-08-29', 4, 2, 5, '2025-08-25 17:18:00', '2025-08-25 17:18:36'),
+(53, 276, 'Una subtarea', 'Sin descripcion', 50.00, NULL, NULL, 'in_progress', 'medium', '2025-08-26', 40, 40, 1, '2025-08-26 21:21:11', '2025-08-26 21:24:13'),
+(54, 258, 'Tarea sistemas', 'Desc', 0.00, NULL, NULL, 'pending', 'medium', '2025-08-29', 38, 2, 3, '2025-08-26 22:26:52', '2025-08-26 22:27:05'),
+(55, 280, 'sub', 'sub', 50.00, NULL, NULL, 'in_progress', 'medium', '2025-08-26', 40, 40, 1, '2025-08-26 22:52:04', '2025-08-26 22:52:13'),
+(56, 281, 'sub prueba 1', '', 0.00, NULL, NULL, 'pending', 'medium', NULL, NULL, 30, 1, '2025-08-26 23:06:03', '2025-08-26 23:06:03'),
+(57, 281, 'sub prueba 2', '', 0.00, NULL, NULL, 'pending', 'medium', NULL, NULL, 30, 2, '2025-08-26 23:06:03', '2025-08-26 23:06:03'),
+(58, 281, 'sub prueba 3', '', 0.00, NULL, NULL, 'pending', 'medium', NULL, NULL, 30, 3, '2025-08-26 23:06:03', '2025-08-26 23:06:03'),
+(59, 282, 'sub prueba 2.1', '', 0.00, NULL, NULL, 'pending', 'medium', NULL, NULL, 30, 1, '2025-08-26 23:06:54', '2025-08-26 23:06:54'),
+(60, 282, 'sub prueba 2.2', '', 0.00, NULL, NULL, 'pending', 'medium', NULL, NULL, 30, 2, '2025-08-26 23:06:54', '2025-08-26 23:06:54'),
+(61, 283, '1', '', 0.00, NULL, NULL, 'pending', 'medium', NULL, NULL, 1, 1, '2025-08-26 23:11:53', '2025-08-26 23:11:53'),
+(62, 283, '2', '', 0.00, NULL, NULL, 'pending', 'medium', NULL, NULL, 1, 2, '2025-08-26 23:11:53', '2025-08-26 23:11:53'),
+(63, 283, '3', '', 0.00, NULL, NULL, 'pending', 'medium', NULL, NULL, 1, 3, '2025-08-26 23:11:53', '2025-08-26 23:11:53'),
+(64, 283, '4', '', 0.00, NULL, NULL, 'pending', 'medium', NULL, NULL, 1, 4, '2025-08-26 23:11:53', '2025-08-26 23:11:53');
 
 --
 -- Disparadores `Subtasks`
@@ -907,6 +1029,38 @@ CREATE TABLE `Subtasks_backup` (
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `Subtask_Assignments`
+--
+
+CREATE TABLE `Subtask_Assignments` (
+  `assignment_id` int(11) NOT NULL,
+  `subtask_id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `assigned_percentage` decimal(5,2) DEFAULT 100.00,
+  `assigned_by_user_id` int(11) NOT NULL,
+  `assigned_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Asignaciones múltiples de usuarios a subtareas';
+
+--
+-- Volcado de datos para la tabla `Subtask_Assignments`
+--
+
+INSERT INTO `Subtask_Assignments` (`assignment_id`, `subtask_id`, `user_id`, `assigned_percentage`, `assigned_by_user_id`, `assigned_at`, `updated_at`) VALUES
+(1, 51, 4, 100.00, 4, '2025-08-25 16:51:07', '2025-08-25 17:15:20'),
+(2, 17, 4, 100.00, 2, '2025-08-25 17:17:04', '2025-08-25 17:17:04'),
+(3, 52, 4, 100.00, 2, '2025-08-25 17:18:36', '2025-08-25 17:18:36'),
+(4, 52, 14, 100.00, 2, '2025-08-25 17:18:36', '2025-08-25 17:18:36'),
+(5, 52, 15, 100.00, 2, '2025-08-25 17:18:36', '2025-08-25 17:18:36'),
+(6, 49, 4, 100.00, 2, '2025-08-25 17:18:52', '2025-08-25 17:18:52'),
+(7, 50, 4, 100.00, 2, '2025-08-25 17:18:59', '2025-08-25 17:18:59'),
+(8, 44, 4, 100.00, 2, '2025-08-26 22:20:22', '2025-08-26 22:20:22'),
+(9, 44, 5, 100.00, 2, '2025-08-26 22:20:22', '2025-08-26 22:20:22'),
+(10, 54, 38, 100.00, 2, '2025-08-26 22:27:05', '2025-08-26 22:27:05');
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `Subtask_Attachments`
 --
 
@@ -948,7 +1102,10 @@ INSERT INTO `Subtask_Attachments` (`attachment_id`, `subtask_id`, `user_id`, `co
 (18, 35, 22, NULL, 'Plan de Academia Rino.docx', '/desarrollo/rinotrack/public/uploads/subtask_35_68a748a2649dc.docx', 455253, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', '', '2025-08-21 16:26:10'),
 (19, 26, 22, NULL, 'PLAN DE TRABAJO AGENTES CONSOLIDADOS.docx', '/desarrollo/rinotrack/public/uploads/subtask_26_68a74a099a67c.docx', 474546, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', '', '2025-08-21 16:32:09'),
 (20, 22, 22, NULL, 'Manual de reclutamiento Agentes desarrollo 2.5.docx', '/desarrollo/rinotrack/public/uploads/subtask_22_68a74fbc5832b.docx', 1516424, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', '', '2025-08-21 16:56:28'),
-(24, 6, 2, NULL, '16.CVRodolfoEspinozaLópez.pdf', '/desarrollo/rinotrack/public/uploads/subtask_6_68a8bb0de102e.pdf', 167797, 'application/pdf', '', '2025-08-22 18:46:37');
+(24, 6, 2, NULL, '16.CVRodolfoEspinozaLópez.pdf', '/desarrollo/rinotrack/public/uploads/subtask_6_68a8bb0de102e.pdf', 167797, 'application/pdf', '', '2025-08-22 18:46:37'),
+(25, 52, 14, NULL, '17. CVJONATHANGARCIA.pdf', '/desarrollo/rinotrack/public/uploads/subtask_52_68ac9ba3c6b4c.pdf', 93612, 'application/pdf', 'dsfa', '2025-08-25 17:21:39'),
+(26, 53, 40, NULL, 'iconos_app.pdf', '/desarrollo/rinotrack/public/uploads/subtask_53_68ae256dbf8a2.pdf', 178899, 'application/pdf', 'UN ADJUNTO', '2025-08-26 21:21:49'),
+(27, 44, 2, NULL, 'iconos_app.pdf', '/desarrollo/rinotrack/public/uploads/subtask_44_68ae34000622f.pdf', 178899, 'application/pdf', 'UN archivo', '2025-08-26 22:24:00');
 
 -- --------------------------------------------------------
 
@@ -1001,7 +1158,20 @@ INSERT INTO `Subtask_Comments` (`comment_id`, `subtask_id`, `user_id`, `comment_
 (27, 5, 2, '<h1><strong>!@#$%^&amp;*()_+ASDFGHJKL:\"¡™£¢∞§¶•ªº–≠`π“‘«æ…¬≤≥÷œåΩ≈ß∑´∂ç√ƒ®†©∫˜˙¥¨∆µ≤˚ˆø¬≤≥÷</strong></h1>', 'comment', NULL, NULL, NULL, 0, '2025-08-22 19:10:45'),
 (28, 5, 2, '<p>☐ Tarea1</p><p>☐ Tarea2</p><p>☐ Tarea3</p>', 'comment', NULL, NULL, NULL, 0, '2025-08-22 19:15:28'),
 (29, 5, 2, '<p>☐ losmd</p>', 'comment', NULL, NULL, NULL, 0, '2025-08-22 19:18:34'),
-(30, 5, 2, '<p>☐ Otra check</p><p><span style=\"background-color: rgb(255, 255, 0);\">sdkfmklsdfnmlksdfmnklsadmf</span></p>', 'comment', NULL, NULL, NULL, 0, '2025-08-22 19:22:19');
+(30, 5, 2, '<p>☐ Otra check</p><p><span style=\"background-color: rgb(255, 255, 0);\">sdkfmklsdfnmlksdfmnklsadmf</span></p>', 'comment', NULL, NULL, NULL, 0, '2025-08-22 19:22:19'),
+(31, 43, 2, '<p>☐ esto es una tarea 1</p>', 'comment', NULL, NULL, NULL, 0, '2025-08-22 19:31:00'),
+(32, 43, 2, '<p>☐ dsfsdfsdf</p>', 'comment', NULL, NULL, NULL, 0, '2025-08-22 19:32:13'),
+(33, 17, 15, '<p>Este es un comentario desde otro perfil </p>', 'comment', NULL, NULL, NULL, 0, '2025-08-25 16:16:44'),
+(34, 20, 15, '<p>Esto es un comentario desde otro perfil </p>', 'comment', NULL, NULL, NULL, 0, '2025-08-25 16:17:16'),
+(35, 17, 14, '<p>Este es otro comentario desde otro perfil </p>', 'comment', NULL, NULL, NULL, 0, '2025-08-25 16:18:00'),
+(36, 49, 2, '<p>Comentario desde el clan lider</p>', 'comment', NULL, NULL, NULL, 0, '2025-08-25 16:25:39'),
+(37, 50, 15, '<p>sdfasdfasdfas</p>', 'comment', NULL, NULL, NULL, 0, '2025-08-25 16:26:53'),
+(38, 52, 4, 'Hola un comentario .', 'comment', NULL, NULL, NULL, 0, '2025-08-25 17:20:23'),
+(39, 52, 14, '<p>Otro comentario. </p>', 'comment', NULL, NULL, NULL, 0, '2025-08-25 17:21:28'),
+(40, 51, 4, 'En progreso.', 'comment', NULL, NULL, NULL, 0, '2025-08-25 19:11:50'),
+(41, 53, 40, 'Un comentario.', 'comment', NULL, NULL, NULL, 0, '2025-08-26 21:21:23'),
+(42, 44, 2, '<p>☐ TAREA1</p><p>☐ Tarea2</p>', 'comment', NULL, NULL, NULL, 0, '2025-08-26 22:23:02'),
+(43, 55, 40, 'asdfasdfadsf', 'comment', NULL, NULL, NULL, 0, '2025-08-26 22:52:21');
 
 -- --------------------------------------------------------
 
@@ -1041,23 +1211,35 @@ CREATE TABLE `Tasks` (
 
 INSERT INTO `Tasks` (`task_id`, `parent_task_id`, `task_name`, `description`, `project_id`, `assigned_to_user_id`, `created_by_user_id`, `priority`, `due_date`, `estimated_hours`, `actual_hours`, `completion_percentage`, `automatic_points`, `assigned_percentage`, `color_tag`, `is_subtask`, `subtask_order`, `status`, `is_completed`, `completed_at`, `created_at`, `updated_at`, `is_personal`) VALUES
 (242, NULL, 'QA', 'Pruebas funcionales.', 29, 2, 1, 'medium', '2025-08-22', NULL, NULL, 0.00, 100.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-20 18:35:45', '2025-08-20 22:31:23', 0),
-(243, NULL, 'Q2', 'Q2', 29, 2, 1, 'medium', NULL, NULL, NULL, 66.67, 100.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-20 18:49:30', '2025-08-22 18:54:54', 0),
+(243, NULL, 'Q2', 'Q2', 29, 2, 1, 'medium', '2025-08-30', NULL, NULL, 50.00, 100.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-20 18:49:30', '2025-08-22 20:33:01', 0),
 (248, NULL, 'Tarea con subs en clan', 'fdfsfsad', 29, 4, 2, 'medium', '2025-08-20', NULL, NULL, 0.00, 100.00, 0.00, '#3B82F6', 0, 0, 'completed', 1, '2025-08-22 19:00:08', '2025-08-20 20:21:48', '2025-08-22 19:00:08', 0),
-(258, NULL, 'Tarea de clan 33', 'Esto es un ejemplo de tarea de clan', 29, 4, 2, 'medium', '2025-08-20', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-20 22:32:33', '2025-08-20 22:32:33', 0),
-(259, NULL, 'Tarea de prueba332', '', 29, 4, 2, 'medium', '2025-08-20', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-20 22:34:02', '2025-08-20 22:34:02', 0),
+(258, NULL, 'Tarea MUESTRA', 'Esto es un ejemplo de tarea de clan', 29, 4, 2, 'high', '2025-08-20', NULL, NULL, 3.67, 0.00, 0.00, '#3B82F6', 0, 0, 'completed', 0, '2025-08-26 22:35:24', '2025-08-20 22:32:33', '2025-08-26 22:35:24', 0),
+(259, NULL, 'Tarea de prueba332', '', 29, 4, 2, 'medium', '2025-08-20', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'completed', 0, '2025-08-26 22:35:26', '2025-08-20 22:34:02', '2025-08-26 22:35:26', 0),
 (260, NULL, 'xq2', 'fsasfasdf', 29, 4, 2, 'medium', '2025-08-20', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'completed', 1, '2025-08-22 19:00:11', '2025-08-20 22:39:40', '2025-08-22 19:00:11', 0),
-(261, NULL, 'wer', 'ewsdfdsf', 29, 4, 2, 'medium', '2025-08-20', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-20 23:04:16', '2025-08-20 23:04:16', 0),
-(262, NULL, 'vcvcvcvcv', 'vfdvdfsvdfs', 29, 4, 2, 'medium', '2025-08-20', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'completed', 1, '2025-08-22 19:00:15', '2025-08-20 23:09:06', '2025-08-22 19:00:15', 0),
+(261, NULL, 'wer', 'ewsdfdsf', 29, 4, 2, 'medium', '2025-08-20', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'completed', 0, '2025-08-25 19:11:22', '2025-08-20 23:04:16', '2025-08-25 19:11:22', 0),
+(262, NULL, 'vcvcvcvcv', 'vfdvdfsvdfs', 29, 4, 2, 'critical', '2025-08-20', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'completed', 1, '2025-08-26 22:58:19', '2025-08-20 23:09:06', '2025-08-26 22:58:19', 0),
 (263, NULL, 'g3w4gerger', 'sdafsadfsadfasd', 29, 4, 2, 'medium', '2025-08-20', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-20 23:14:32', '2025-08-20 23:14:32', 0),
-(264, NULL, 'rrrere', 'dsfaerw', 29, 4, 2, 'medium', '2025-08-20', NULL, NULL, 25.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-20 23:24:46', '2025-08-20 23:25:06', 0),
-(265, NULL, 'xxxx', 'xczcxzc', 29, 4, 2, 'medium', '2025-08-20', NULL, NULL, 25.00, 0.00, 0.00, '#3B82F6', 0, 0, 'completed', 1, '2025-08-22 19:00:18', '2025-08-20 23:57:57', '2025-08-22 19:00:18', 0),
+(264, NULL, 'rrrere', 'dsfaerw', 29, 4, 2, 'medium', '2025-08-20', NULL, NULL, 50.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-20 23:24:46', '2025-08-25 19:11:44', 0),
+(265, NULL, 'xxxx', 'xczcxzc', 29, 4, 2, 'critical', '2025-08-20', NULL, NULL, 25.00, 0.00, 0.00, '#3B82F6', 0, 0, 'completed', 1, '2025-08-25 15:44:20', '2025-08-20 23:57:57', '2025-08-25 16:02:01', 0),
 (266, NULL, 'RECLUTAMIENTO DE AGENTES', 'Agentes Novatos y Consolidados', 44, 22, 22, 'medium', '2025-10-31', NULL, NULL, 30.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-21 07:03:38', '2025-08-21 21:05:40', 0),
 (267, NULL, 'PERFILES DE ORGANIGRAMA DE AGENCIA', 'DIRECTOR DE AGENCIA \r\nCOORDINADOR DE AGENCIA', 44, 22, 22, 'medium', '2025-10-31', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-21 07:12:18', '2025-08-21 07:12:18', 0),
 (268, NULL, 'DISCIPLINA COMERCIAL', 'Crear una disciplina comercial basada en el exito de la supervision y seguimiento a la fuerza de ventas', 44, 22, 22, 'medium', '2025-10-31', NULL, NULL, 25.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-21 07:20:10', '2025-08-21 16:29:37', 0),
 (269, NULL, 'ACADEMIA RINO', 'Plataforma de estudio para Agentes', 44, 22, 22, 'medium', '2025-10-31', NULL, NULL, 33.33, 0.00, 0.00, '#3B82F6', 0, 0, 'in_progress', 0, NULL, '2025-08-21 07:24:07', '2025-08-21 16:40:53', 0),
 (270, NULL, 'CAPACITACION Y RRHH', 'El objetivo es contar un plan de capacitacion y conocimientos para cada uno de los colaboradores que pertenezcan a la agencia.', 44, 22, 22, 'medium', '2025-10-31', NULL, NULL, 12.50, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-21 15:56:50', '2025-08-21 17:26:26', 0),
 (271, NULL, 'TARJETAS AMARILLAS DE PRUEBA', '', 45, 30, 22, 'medium', '2025-08-21', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-21 21:16:57', '2025-08-21 21:16:57', 0),
-(272, NULL, 'TAREA DE PRUEBA', '', 45, 27, 22, 'medium', '2025-08-21', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-21 21:17:34', '2025-08-21 21:17:34', 0);
+(272, NULL, 'TAREA DE PRUEBA', '', 45, 27, 22, 'medium', '2025-08-21', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-21 21:17:34', '2025-08-21 21:17:34', 0),
+(273, NULL, 'fff', 'ewdsssasa', 29, 2, 2, 'medium', '2025-08-29', NULL, NULL, 25.00, 0.00, 0.00, '#3B82F6', 0, 0, 'completed', 1, '2025-08-26 22:19:05', '2025-08-22 20:19:09', '2025-08-26 22:19:05', 0),
+(274, NULL, 'Tarea de prueba1', 'Descripcion 1', 46, 40, 40, 'medium', '2025-08-29', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-26 21:15:04', '2025-08-26 21:15:04', 1),
+(275, NULL, 'Tarea desde clan', 'No hay', 47, 40, 14, 'medium', '2025-08-29', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-26 21:18:48', '2025-08-26 21:18:48', 0),
+(276, NULL, 'Tare 3', 'Sin descripcion', 46, 40, 40, 'medium', '2025-08-26', NULL, NULL, 50.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-26 21:20:46', '2025-08-26 21:24:13', 1),
+(277, NULL, 'Tarea1', 'sdafasdfasd', 26, 4, 2, 'medium', '2025-08-29', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-26 22:31:16', '2025-08-26 22:31:16', 0),
+(278, NULL, 'mi TAREA', 'desc', 43, 4, 4, 'medium', '2025-08-29', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-26 22:37:21', '2025-08-26 22:37:21', 1),
+(279, NULL, 'Desde el adminb', 'desc', 35, 4, 1, 'medium', '2025-08-26', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-26 22:38:58', '2025-08-26 22:38:58', 0),
+(280, NULL, 'Tarea Karen', 'Desc', 46, 40, 40, 'critical', '2025-08-26', NULL, NULL, 50.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-26 22:51:33', '2025-08-26 22:52:13', 1),
+(281, NULL, 'prueba 1', 'prueba 1', 48, 57, 30, 'medium', '2025-08-28', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-26 23:06:03', '2025-08-26 23:06:03', 0),
+(282, NULL, 'prueba 2', 'prueba dos', 48, 63, 30, 'medium', '2025-08-29', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-26 23:06:54', '2025-08-26 23:06:54', 0),
+(283, NULL, 'TAREA2', 'DESC', 49, 2, 1, 'medium', '2025-08-29', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-26 23:11:53', '2025-08-26 23:11:53', 0),
+(284, NULL, 'prueba 4', 'prueba 4', 50, 63, 63, 'low', '2025-09-04', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-08-26 23:21:34', '2025-08-26 23:21:34', 1);
 
 --
 -- Disparadores `Tasks`
@@ -1352,21 +1534,36 @@ INSERT INTO `Task_Assignments` (`assignment_id`, `task_id`, `user_id`, `assigned
 (344, 255, 4, 100.00, '2025-08-20 22:18:45', 2, 'assigned', NULL),
 (345, 256, 4, 100.00, '2025-08-20 22:24:25', 2, 'assigned', NULL),
 (346, 257, 4, 100.00, '2025-08-20 22:26:36', 2, 'assigned', NULL),
-(347, 258, 4, 100.00, '2025-08-20 22:32:33', 2, 'assigned', NULL),
+(347, 258, 4, 50.00, '2025-08-20 22:32:33', 2, 'assigned', NULL),
 (348, 259, 4, 100.00, '2025-08-20 22:34:02', 2, 'assigned', NULL),
 (349, 260, 4, 100.00, '2025-08-20 22:39:40', 2, 'assigned', NULL),
 (350, 261, 4, 100.00, '2025-08-20 23:04:16', 2, 'assigned', NULL),
 (351, 262, 4, 100.00, '2025-08-20 23:09:06', 2, 'assigned', NULL),
 (352, 263, 4, 100.00, '2025-08-20 23:14:32', 2, 'assigned', NULL),
-(353, 264, 4, 100.00, '2025-08-20 23:24:46', 2, 'assigned', NULL),
-(354, 265, 4, 100.00, '2025-08-20 23:57:57', 2, 'assigned', NULL),
+(353, 264, 4, 25.00, '2025-08-20 23:24:46', 2, 'assigned', NULL),
 (355, 266, 22, 100.00, '2025-08-21 07:03:38', 22, 'assigned', NULL),
 (356, 267, 22, 100.00, '2025-08-21 07:12:18', 22, 'assigned', NULL),
 (357, 268, 22, 100.00, '2025-08-21 07:20:10', 22, 'assigned', NULL),
 (358, 269, 22, 100.00, '2025-08-21 07:24:07', 22, 'assigned', NULL),
 (359, 270, 22, 100.00, '2025-08-21 15:56:50', 22, 'assigned', NULL),
 (360, 271, 30, 100.00, '2025-08-21 21:16:57', 22, 'assigned', NULL),
-(361, 272, 27, 100.00, '2025-08-21 21:17:34', 22, 'assigned', NULL);
+(361, 272, 27, 100.00, '2025-08-21 21:17:34', 22, 'assigned', NULL),
+(362, 273, 2, 100.00, '2025-08-22 20:19:09', 2, 'assigned', NULL),
+(364, 265, 4, 33.33, '2025-08-25 16:02:01', 2, 'assigned', NULL),
+(365, 265, 14, 33.33, '2025-08-25 16:02:01', 2, 'assigned', NULL),
+(366, 265, 15, 33.33, '2025-08-25 16:06:47', 2, 'assigned', NULL),
+(367, 264, 15, 25.00, '2025-08-25 16:15:14', 2, 'assigned', NULL),
+(368, 264, 14, 25.00, '2025-08-25 16:15:31', 2, 'assigned', NULL),
+(371, 264, 49, 25.00, '2025-08-25 16:52:58', 2, 'assigned', NULL),
+(372, 275, 40, 100.00, '2025-08-26 21:18:48', 14, 'assigned', NULL),
+(373, 258, 38, 50.00, '2025-08-26 22:25:38', 2, 'assigned', NULL),
+(374, 277, 4, 100.00, '2025-08-26 22:31:16', 2, 'assigned', NULL),
+(375, 279, 4, 100.00, '2025-08-26 22:38:58', 1, 'assigned', NULL),
+(376, 281, 57, 50.00, '2025-08-26 23:06:03', 30, 'assigned', NULL),
+(377, 281, 63, 50.00, '2025-08-26 23:06:03', 30, 'assigned', NULL),
+(378, 282, 63, 100.00, '2025-08-26 23:06:54', 30, 'assigned', NULL),
+(379, 283, 2, 50.00, '2025-08-26 23:11:53', 1, 'assigned', NULL),
+(380, 283, 16, 50.00, '2025-08-26 23:11:53', 1, 'assigned', NULL);
 
 -- --------------------------------------------------------
 
@@ -1481,7 +1678,8 @@ INSERT INTO `Task_Comments` (`comment_id`, `task_id`, `user_id`, `comment_text`,
 (43, 166, 4, 'Comentario desde el perfil de usuario normal adjunto documento', 'comment', NULL, NULL, NULL, 0, '2025-08-18 22:41:05'),
 (44, 212, 2, 'Ya acabe rutina', 'comment', NULL, NULL, NULL, 0, '2025-08-19 20:30:35'),
 (45, 212, 2, 'Djdjdj', 'comment', NULL, NULL, NULL, 0, '2025-08-19 20:32:09'),
-(46, 265, 2, 'Comentario de la tarea principal', 'comment', NULL, NULL, NULL, 0, '2025-08-21 00:17:38');
+(46, 265, 2, 'Comentario de la tarea principal', 'comment', NULL, NULL, NULL, 0, '2025-08-21 00:17:38'),
+(47, 281, 63, 'comentario prueba colaborador', 'comment', NULL, NULL, NULL, 0, '2025-08-26 23:16:36');
 
 -- --------------------------------------------------------
 
@@ -2184,7 +2382,82 @@ INSERT INTO `Task_History` (`history_id`, `task_id`, `user_id`, `action_type`, `
 (806, 243, 2, 'commented', 'subtask_comment', NULL, '<h1><strong>!@#$%^&amp;*()_+ASDFGHJKL:\"¡™£¢∞§¶•ªº–≠`π“‘«æ…¬≤≥÷œåΩ≈ß∑´∂ç√ƒ®†©∫˜˙¥¨∆µ≤˚ˆø¬≤≥÷</strong></h1>', NULL, 'Comentario agregado en subtarea: Tarea de prueba', '2025-08-22 19:10:45'),
 (807, 243, 2, 'commented', 'subtask_comment', NULL, '<p>☐ Tarea1</p><p>☐ Tarea2</p><p>☐ Tarea3</p>', NULL, 'Comentario agregado en subtarea: Tarea de prueba', '2025-08-22 19:15:28'),
 (808, 243, 2, 'commented', 'subtask_comment', NULL, '<p>☐ losmd</p>', NULL, 'Comentario agregado en subtarea: Tarea de prueba', '2025-08-22 19:18:34'),
-(809, 243, 2, 'commented', 'subtask_comment', NULL, '<p>☐ Otra check</p><p><span style=\"background-color: rgb(255, 255, 0);\">sdkfmklsdfnmlksdfmnklsadmf</span></p>', NULL, 'Comentario agregado en subtarea: Tarea de prueba', '2025-08-22 19:22:19');
+(809, 243, 2, 'commented', 'subtask_comment', NULL, '<p>☐ Otra check</p><p><span style=\"background-color: rgb(255, 255, 0);\">sdkfmklsdfnmlksdfmnklsadmf</span></p>', NULL, 'Comentario agregado en subtarea: Tarea de prueba', '2025-08-22 19:22:19'),
+(810, 243, 2, 'commented', 'subtask_comment', NULL, '<p>☐ esto es una tarea 1</p>', NULL, 'Comentario agregado en subtarea: SubTarea 3 desde tareas', '2025-08-22 19:31:00'),
+(811, 243, 2, 'commented', 'subtask_comment', NULL, '<p>☐ dsfsdfsdf</p>', NULL, 'Comentario agregado en subtarea: SubTarea 3 desde tareas', '2025-08-22 19:32:13'),
+(812, 243, 2, 'created', 'subtask', NULL, 'Subtarea con fecha', NULL, 'Subtarea creada: Subtarea con fecha', '2025-08-22 20:17:10'),
+(813, 273, 2, 'assigned', 'assigned_users', NULL, '2', NULL, 'Múltiples usuarios asignados', '2025-08-22 20:19:09'),
+(814, 273, 2, 'created', 'subtask', NULL, 'ss1', NULL, 'Subtarea creada: ss1', '2025-08-22 20:19:09'),
+(815, 273, 2, 'created', 'subtask', NULL, 'ss2', NULL, 'Subtarea creada: ss2', '2025-08-22 20:19:09'),
+(816, 273, 2, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-08-22 20:19:09'),
+(817, 273, 2, 'updated', 'subtask_status', NULL, 'in_progress', NULL, 'Estado de subtarea actualizado', '2025-08-22 20:19:42'),
+(818, 265, 15, 'assigned', 'assigned_to_user_id', '4', '15', 15, 'Usuario asignado a la tarea', '2025-08-25 15:49:44'),
+(819, 265, 2, 'assigned', 'assigned_users', NULL, '15', NULL, 'Múltiples usuarios asignados', '2025-08-25 15:49:44'),
+(820, 265, 4, 'assigned', 'assigned_to_user_id', '15', '4', 4, 'Usuario asignado a la tarea', '2025-08-25 16:02:01'),
+(821, 265, 2, 'assigned', 'assigned_users', NULL, '4,14', NULL, 'Múltiples usuarios asignados', '2025-08-25 16:02:01'),
+(822, 265, 2, 'assigned', 'added_collaborators', NULL, '15', NULL, '1 nuevos colaboradores agregados', '2025-08-25 16:06:47'),
+(823, 264, 2, 'assigned', 'added_collaborators', NULL, '15', NULL, '1 nuevos colaboradores agregados', '2025-08-25 16:15:14'),
+(824, 264, 2, 'assigned', 'added_collaborators', NULL, '14', NULL, '1 nuevos colaboradores agregados', '2025-08-25 16:15:31'),
+(825, 264, 2, 'assigned', 'added_collaborators', NULL, '5,47', NULL, '2 nuevos colaboradores agregados', '2025-08-25 16:15:44'),
+(826, 264, 15, 'commented', 'subtask_comment', NULL, '<p>Este es un comentario desde otro perfil </p>', NULL, 'Comentario agregado en subtarea: ggg', '2025-08-25 16:16:44'),
+(827, 265, 15, 'commented', 'subtask_comment', NULL, '<p>Esto es un comentario desde otro perfil </p>', NULL, 'Comentario agregado en subtarea: subatarea x', '2025-08-25 16:17:16'),
+(828, 264, 14, 'commented', 'subtask_comment', NULL, '<p>Este es otro comentario desde otro perfil </p>', NULL, 'Comentario agregado en subtarea: ggg', '2025-08-25 16:18:00'),
+(829, 264, 14, 'created', 'subtask', NULL, 'dasfasdfsad', NULL, 'Subtarea creada: dasfasdfsad', '2025-08-25 16:24:56'),
+(830, 264, 2, 'commented', 'subtask_comment', NULL, '<p>Comentario desde el clan lider</p>', NULL, 'Comentario agregado en subtarea: dasfasdfsad', '2025-08-25 16:25:39'),
+(831, 264, 2, 'created', 'subtask', NULL, 'Una nueva', NULL, 'Subtarea creada: Una nueva', '2025-08-25 16:25:56'),
+(832, 264, 15, 'commented', 'subtask_comment', NULL, '<p>sdfasdfasdfas</p>', NULL, 'Comentario agregado en subtarea: Una nueva', '2025-08-25 16:26:53'),
+(833, 264, 4, 'created', 'subtask', NULL, 'desde', NULL, 'Subtarea creada: desde', '2025-08-25 16:51:07'),
+(834, 264, 2, 'assigned', 'added_collaborators', NULL, '49', NULL, '1 nuevos colaboradores agregados', '2025-08-25 16:52:58'),
+(835, 264, 2, 'assigned', 'subtask_assignment', 'múltiples usuarios', 'Franklin Benitez', NULL, 'Subtarea \"ggg\" asignada a 1 usuario(s): Franklin Benitez', '2025-08-25 17:17:04'),
+(836, 264, 2, 'created', 'subtask', NULL, 'TAREA MUCHOS DESDE EL CLAN', NULL, 'Subtarea creada: TAREA MUCHOS DESDE EL CLAN', '2025-08-25 17:18:00'),
+(837, 264, 2, 'assigned', 'subtask_assignment', 'múltiples usuarios', 'Franklin Benitez, Berenice Hernandez, Valeria Garcia', NULL, 'Subtarea \"TAREA MUCHOS DESDE EL CLAN\" asignada a 3 usuario(s): Franklin Benitez, Berenice Hernandez, Valeria Garcia', '2025-08-25 17:18:36'),
+(838, 264, 2, 'assigned', 'subtask_assignment', 'múltiples usuarios', 'Franklin Benitez', NULL, 'Subtarea \"dasfasdfsad\" asignada a 1 usuario(s): Franklin Benitez', '2025-08-25 17:18:52'),
+(839, 264, 2, 'assigned', 'subtask_assignment', 'múltiples usuarios', 'Franklin Benitez', NULL, 'Subtarea \"Una nueva\" asignada a 1 usuario(s): Franklin Benitez', '2025-08-25 17:18:59'),
+(840, 264, 4, 'commented', 'subtask_comment', NULL, 'Hola un comentario .', NULL, 'Comentario agregado en subtarea: TAREA MUCHOS DESDE EL CLAN', '2025-08-25 17:20:23'),
+(841, 264, 14, 'commented', 'subtask_comment', NULL, '<p>Otro comentario. </p>', NULL, 'Comentario agregado en subtarea: TAREA MUCHOS DESDE EL CLAN', '2025-08-25 17:21:28'),
+(842, 264, 4, 'updated', 'subtask_status', NULL, 'in_progress', NULL, 'Estado de subtarea actualizado', '2025-08-25 18:45:33'),
+(843, 261, 4, 'status_changed', 'status', 'pending', 'completed', NULL, 'Estado cambiado de pending a completed', '2025-08-25 19:11:22'),
+(844, 264, 4, 'updated', 'subtask_status', NULL, 'completed', NULL, 'Estado de subtarea actualizado', '2025-08-25 19:11:41'),
+(845, 264, 4, 'updated', 'subtask_status', NULL, 'in_progress', NULL, 'Estado de subtarea actualizado', '2025-08-25 19:11:44'),
+(846, 264, 4, 'commented', 'subtask_comment', NULL, 'En progreso.', NULL, 'Comentario agregado en subtarea: desde', '2025-08-25 19:11:50'),
+(847, 275, 14, 'assigned', 'assigned_users', NULL, '40', NULL, 'Múltiples usuarios asignados', '2025-08-26 21:18:48'),
+(848, 275, 14, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-08-26 21:18:48'),
+(849, 276, 40, 'created', 'subtask', NULL, 'Una subtarea', NULL, 'Subtarea creada: Una subtarea', '2025-08-26 21:21:11'),
+(850, 276, 40, 'commented', 'subtask_comment', NULL, 'Un comentario.', NULL, 'Comentario agregado en subtarea: Una subtarea', '2025-08-26 21:21:23'),
+(851, 276, 40, 'updated', 'subtask_status', NULL, 'in_progress', NULL, 'Estado de subtarea actualizado', '2025-08-26 21:24:13'),
+(852, 273, 2, 'status_changed', 'status', 'pending', 'completed', NULL, 'Estado cambiado de pending a completed', '2025-08-26 22:19:05'),
+(853, 258, 2, 'assigned', 'subtask_assignment', 'múltiples usuarios', 'Franklin Benitez, Ruben Dorado', NULL, 'Subtarea \"Subtarea sin subtareas previas.\" asignada a 2 usuario(s): Franklin Benitez, Ruben Dorado', '2025-08-26 22:20:22'),
+(854, 258, 2, 'updated', 'subtask_status', NULL, 'in_progress', NULL, 'Estado de subtarea actualizado', '2025-08-26 22:20:41'),
+(855, 258, 2, 'updated', 'subtask_status', NULL, 'completed', NULL, 'Estado de subtarea actualizado', '2025-08-26 22:20:49'),
+(856, 258, 2, 'commented', 'subtask_comment', NULL, '<p>☐ TAREA1</p><p>☐ Tarea2</p>', NULL, 'Comentario agregado en subtarea: Subtarea sin subtareas previas.', '2025-08-26 22:23:02'),
+(857, 258, 2, 'assigned', 'added_collaborators', NULL, '38', NULL, '1 nuevos colaboradores agregados', '2025-08-26 22:25:38'),
+(858, 258, 2, 'created', 'subtask', NULL, 'Tarea sistemas', NULL, 'Subtarea creada: Tarea sistemas', '2025-08-26 22:26:52'),
+(859, 258, 2, 'assigned', 'subtask_assignment', 'múltiples usuarios', 'Juan Lopez', NULL, 'Subtarea \"Tarea sistemas\" asignada a 1 usuario(s): Juan Lopez', '2025-08-26 22:27:05'),
+(860, 277, 2, 'assigned', 'assigned_users', NULL, '4', NULL, 'Múltiples usuarios asignados', '2025-08-26 22:31:16'),
+(861, 277, 2, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-08-26 22:31:16'),
+(862, 258, 4, 'status_changed', 'status', 'pending', 'completed', NULL, 'Estado cambiado de pending a completed', '2025-08-26 22:35:24'),
+(863, 259, 4, 'status_changed', 'status', 'pending', 'completed', NULL, 'Estado cambiado de pending a completed', '2025-08-26 22:35:26'),
+(864, 279, 1, 'assigned', 'assigned_users', NULL, '4', NULL, 'Múltiples usuarios asignados', '2025-08-26 22:38:58'),
+(865, 279, 1, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-08-26 22:38:58'),
+(866, 280, 40, 'created', 'subtask', NULL, 'sub', NULL, 'Subtarea creada: sub', '2025-08-26 22:52:04'),
+(867, 280, 40, 'updated', 'subtask_status', NULL, 'in_progress', NULL, 'Estado de subtarea actualizado', '2025-08-26 22:52:13'),
+(868, 280, 40, 'commented', 'subtask_comment', NULL, 'asdfasdfadsf', NULL, 'Comentario agregado en subtarea: sub', '2025-08-26 22:52:21'),
+(869, 281, 30, 'assigned', 'assigned_users', NULL, '57,63', NULL, 'Múltiples usuarios asignados', '2025-08-26 23:06:03'),
+(870, 281, 30, 'created', 'subtask', NULL, 'sub prueba 1', NULL, 'Subtarea creada: sub prueba 1', '2025-08-26 23:06:03'),
+(871, 281, 30, 'created', 'subtask', NULL, 'sub prueba 2', NULL, 'Subtarea creada: sub prueba 2', '2025-08-26 23:06:03'),
+(872, 281, 30, 'created', 'subtask', NULL, 'sub prueba 3', NULL, 'Subtarea creada: sub prueba 3', '2025-08-26 23:06:03'),
+(873, 281, 30, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-08-26 23:06:03'),
+(874, 282, 30, 'assigned', 'assigned_users', NULL, '63', NULL, 'Múltiples usuarios asignados', '2025-08-26 23:06:54'),
+(875, 282, 30, 'created', 'subtask', NULL, 'sub prueba 2.1', NULL, 'Subtarea creada: sub prueba 2.1', '2025-08-26 23:06:54'),
+(876, 282, 30, 'created', 'subtask', NULL, 'sub prueba 2.2', NULL, 'Subtarea creada: sub prueba 2.2', '2025-08-26 23:06:54'),
+(877, 282, 30, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-08-26 23:06:54'),
+(878, 283, 1, 'assigned', 'assigned_users', NULL, '2,16', NULL, 'Múltiples usuarios asignados', '2025-08-26 23:11:53'),
+(879, 283, 1, 'created', 'subtask', NULL, '1', NULL, 'Subtarea creada: 1', '2025-08-26 23:11:53'),
+(880, 283, 1, 'created', 'subtask', NULL, '2', NULL, 'Subtarea creada: 2', '2025-08-26 23:11:53'),
+(881, 283, 1, 'created', 'subtask', NULL, '3', NULL, 'Subtarea creada: 3', '2025-08-26 23:11:53'),
+(882, 283, 1, 'created', 'subtask', NULL, '4', NULL, 'Subtarea creada: 4', '2025-08-26 23:11:53'),
+(883, 283, 1, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-08-26 23:11:53'),
+(884, 281, 63, 'commented', 'comment', NULL, 'comentario prueba colaborador', NULL, 'Comentario agregado', '2025-08-26 23:16:36');
 
 -- --------------------------------------------------------
 
@@ -2258,18 +2531,18 @@ CREATE TABLE `Users` (
 --
 
 INSERT INTO `Users` (`user_id`, `username`, `password_hash`, `email`, `full_name`, `is_active`, `last_login`, `created_at`, `avatar_path`) VALUES
-(1, 'super', '123456', 'desarrollo@rinorisk.com', 'Usuario Administrador', 1, '2025-08-21 15:13:27', '2025-07-29 22:45:12', ''),
-(2, 'abdielc', '123456', 'redskullcoder@gmail.com', 'Abdiel Carrasco', 1, '2025-08-22 18:01:25', '2025-07-29 23:23:21', ''),
-(4, 'franklinb', 'Grok2024', 'desarrollo2@rinorisk.com', 'Franklin Benitez', 1, '2025-08-22 18:00:33', '2025-07-30 17:10:05', 'uploads/avatar_4_1755619752.jpeg'),
+(1, 'super', '123456', 'desarrollo@rinorisk.com', 'Usuario Administrador', 1, '2025-08-26 23:19:37', '2025-07-29 22:45:12', ''),
+(2, 'abdielc', '123456', 'redskullcoder@gmail.com', 'Abdiel Carrasco', 1, '2025-08-26 23:12:20', '2025-07-29 23:23:21', ''),
+(4, 'franklinb', 'Grok2024', 'desarrollo2@rinorisk.com', 'Franklin Benitez', 1, '2025-08-26 23:39:14', '2025-07-30 17:10:05', 'uploads/avatar_4_1755619752.jpeg'),
 (5, 'Rubend', '123456', 'desarrollo3@rinorisk.com', 'Ruben Dorado', 1, NULL, '2025-07-30 18:20:45', ''),
 (6, 'gaelh', '123456', 'desarrollo.fulstack@rinorisk.com', 'Gael Herrera', 1, NULL, '2025-07-30 19:36:11', ''),
-(9, 'manuels', '123456', 'desarrollo.frontjr@rinorisk.com', 'Manuel Saenz', 1, '2025-08-18 23:03:16', '2025-07-30 19:46:47', ''),
+(9, 'manuels', '123456', 'desarrollo.frontjr@rinorisk.com', 'Manuel Saenz', 1, '2025-08-25 15:47:05', '2025-07-30 19:46:47', ''),
 (10, 'piña', '123456', 'desarrollo.dataanalyst@rinorisk.com', 'Jaen Piña', 1, NULL, '2025-07-30 19:47:38', ''),
 (11, 'isaccg', '123456', 'desarrollo.backend@rinorisk.com', 'Isaac Garcia', 1, NULL, '2025-07-30 19:48:29', ''),
 (12, 'janathanm', '123456', 'desarrollo.fullstack.2@rinorisk.com', 'Jonathan Martinez', 1, NULL, '2025-07-30 19:51:19', ''),
-(13, 'jessicam', '123456', 'gerente.mkt@rinorisk.com', 'Jessica Mejia', 1, '2025-08-13 22:02:51', '2025-07-30 19:54:06', ''),
-(14, 'bereniceh', '123456', 'gerente.rh@rinorisk.com', 'Berenice Hernandez', 1, '2025-08-07 18:40:03', '2025-07-30 20:35:34', ''),
-(15, 'Valeriag', '123456', 'cultura.organizacional@rinorisk.com', 'Valeria Garcia', 1, NULL, '2025-08-04 19:11:54', ''),
+(13, 'jessicam', '123456', 'gerente.mkt@rinorisk.com', 'Jessica Mejia', 1, '2025-08-26 22:55:29', '2025-07-30 19:54:06', ''),
+(14, 'bereniceh', '123456', 'gerente.rh@rinorisk.com', 'Berenice Hernandez', 1, '2025-08-26 21:17:48', '2025-07-30 20:35:34', ''),
+(15, 'Valeriag', '123456', 'cultura.organizacional@rinorisk.com', 'Valeria Garcia', 1, '2025-08-25 16:51:54', '2025-08-04 19:11:54', ''),
 (16, 'Nora', '123456', 'sincorreo1@rinorisk.com', 'Nora', 1, NULL, '2025-08-06 21:01:29', ''),
 (17, 'ricardov', '123456', 'redes@rinorisk.com', 'Ricardo Vidaño', 1, NULL, '2025-08-06 21:03:34', ''),
 (18, 'israell', '123456', 'publicidad@rinorisk.com', 'Israel Lovato', 1, NULL, '2025-08-06 21:04:17', ''),
@@ -2284,7 +2557,7 @@ INSERT INTO `Users` (`user_id`, `username`, `password_hash`, `email`, `full_name
 (27, 'evelynd', '123456', 'analista.financiero@rinorisk.com', 'Evelyn Duran', 1, '2025-08-20 18:16:45', '2025-08-06 21:13:10', ''),
 (28, 'thanias', '123456', 'legal@rinorisk.com', 'Thania Sanchez', 1, NULL, '2025-08-06 21:14:19', ''),
 (29, 'monsed', '123456', 'asistente.legal@rinorisk.com', 'Monserrat Diaz', 1, NULL, '2025-08-06 21:22:48', ''),
-(30, 'Ivanm', 'Jicdx#$23H', 'procesos.operativos@rinorisk.com', 'Ivan Mosqueda', 1, '2025-08-21 22:12:02', '2025-08-06 21:23:48', ''),
+(30, 'Ivanm', 'Jicdx#$23H', 'procesos.operativos@rinorisk.com', 'Ivan Mosqueda', 1, '2025-08-25 20:16:42', '2025-08-06 21:23:48', ''),
 (31, 'marisoll', '123456', 'sincorreo2@rinorisk.com', 'Marisol Lopez', 1, NULL, '2025-08-06 21:24:54', ''),
 (32, 'joseo', '123456', 'sincorreo3@rinorisk.com', 'Jose Ovando', 1, NULL, '2025-08-06 21:25:29', ''),
 (33, 'isidorob', '123456', 'sincorreo4@rinorisk.com', 'Isidoro Bravo', 1, NULL, '2025-08-06 21:26:07', ''),
@@ -2292,9 +2565,9 @@ INSERT INTO `Users` (`user_id`, `username`, `password_hash`, `email`, `full_name
 (35, 'hildan', '123456', 'sincorreo6@rinorisk.com', 'Hilda Nuñez', 1, NULL, '2025-08-06 21:27:48', ''),
 (36, 'porfiriog', '123456', 'sincorreo7@rinorisk.com', 'Porfirio Gonzales', 1, NULL, '2025-08-06 21:28:22', ''),
 (37, 'ronym', '123456', 'sincorreo8@rinorisk.com', 'Rony Marquez', 1, NULL, '2025-08-06 21:29:47', ''),
-(38, 'juanl', '123456', 'sistemas@rinorisk.com', 'Juan Lopez', 1, NULL, '2025-08-06 21:30:21', ''),
+(38, 'juanl', 'P01475#2025', 'sistemas@rinorisk.com', 'Juan Lopez', 1, '2025-08-26 23:50:48', '2025-08-06 21:30:21', ''),
 (39, 'yesseniav', '123456', 'capacitacion@rinorisk.com', 'Yessenia', 1, NULL, '2025-08-06 21:46:27', ''),
-(40, 'karenv', '123456', 'sincorreo9@rinorisk.com', 'Karen Vazques', 1, NULL, '2025-08-06 21:47:02', ''),
+(40, 'karenv', '123456', 'sincorreo9@rinorisk.com', 'Karen Vazquez', 1, '2025-08-26 22:50:46', '2025-08-06 21:47:02', 'uploads/avatar_40_1756248285.png'),
 (41, 'angelr', '123456', 'sincorreo10@rinorisk.com', 'Angel Ramos', 1, NULL, '2025-08-06 21:47:43', ''),
 (42, 'fernandam', '123456', 'sincorreo11@rinorisk.com', 'Fernanda Moreno', 1, NULL, '2025-08-06 21:48:14', ''),
 (43, 'dulces', '123456', 'sincorreo12@rinorisk.com', 'Dulce de santiago', 1, NULL, '2025-08-06 21:48:55', ''),
@@ -2303,13 +2576,14 @@ INSERT INTO `Users` (`user_id`, `username`, `password_hash`, `email`, `full_name
 (46, 'lisbethv', '123456', 'sincorreo15@rinorisk.com', 'Lisbeth Vega', 1, NULL, '2025-08-06 21:50:57', ''),
 (47, 'alejandrar', '123456', 'sincorreo16@rinorisk.com', 'Alejandra Ramos', 1, NULL, '2025-08-06 21:51:48', ''),
 (48, 'myriamt', '123456', 'sincorreo17@rinorisk.com', 'Myriam Torres', 1, NULL, '2025-08-06 21:52:21', ''),
-(49, 'dianag', '123456', 'sincorreo18@rinorisk.com', 'Diana Gonzales', 1, NULL, '2025-08-06 21:52:51', ''),
+(49, 'dianag', '123456', 'sincorreo18@rinorisk.com', 'Diana Gonzales', 1, '2025-08-25 16:53:10', '2025-08-06 21:52:51', ''),
 (50, 'karenf', '123456', 'sincorreo19@rinorisk.com', 'Karen Fletes', 1, '2025-08-07 20:20:10', '2025-08-06 21:54:25', ''),
 (55, 'rosaliae', '123456', 'sincorreo20@rinorisk.com', 'Rosalia Enriquez', 1, NULL, '2025-08-06 23:21:11', ''),
 (56, 'sonial', '123456', 'sincorreo21@rinorisk.com', 'Sonia Lopez', 1, NULL, '2025-08-06 23:24:15', ''),
-(57, 'ivan2', '123456', 'sincorreo23@rinorsik.com', 'Ivan Mosqueda', 1, '2025-08-21 22:11:02', '2025-08-06 23:25:11', ''),
+(57, 'ivan2', '123456', 'sincorreo23@rinorsik.com', 'Ivan Mosqueda', 1, '2025-08-26 23:07:37', '2025-08-06 23:25:11', ''),
 (58, 'norai', 'Vic$sing#$', 'asistente.direccion@rinorisk.com', 'Nora Imelda Covarrubias', 1, '2025-08-19 17:34:07', '2025-08-06 23:29:06', ''),
-(63, 'ivan3', '123456', 'sincorreo29@rinorisk.com', 'Ivan Mozqueda', 1, '2025-08-21 22:11:18', '2025-08-13 23:14:55', '');
+(63, 'ivan3', '123456', 'sincorreo29@rinorisk.com', 'Ivan Mozqueda', 1, '2025-08-26 23:08:08', '2025-08-13 23:14:55', ''),
+(64, 'jbasdjkfnsajdk', '$2y$10$ry33Kpy25SvaZDxNuVgrFuixFhM.XLqE7.VWLb92E98dQEQH0NHzK', 'dsfnaslk@rinorisk.com', 'asdkfsakdlf', 1, NULL, '2025-08-26 23:37:26', '');
 
 -- --------------------------------------------------------
 
@@ -2360,7 +2634,6 @@ INSERT INTO `User_Roles` (`user_id`, `role_id`) VALUES
 (35, 4),
 (36, 4),
 (37, 4),
-(38, 4),
 (39, 4),
 (40, 4),
 (41, 4),
@@ -2378,7 +2651,9 @@ INSERT INTO `User_Roles` (`user_id`, `role_id`) VALUES
 (58, 1),
 (4, 4),
 (2, 3),
-(63, 4);
+(63, 4),
+(38, 1),
+(64, 1);
 
 -- --------------------------------------------------------
 
@@ -2467,6 +2742,15 @@ ALTER TABLE `Clan_Members`
   ADD UNIQUE KEY `uniq_clan_user` (`clan_id`,`user_id`);
 
 --
+-- Indices de la tabla `Comment_Checkbox_States`
+--
+ALTER TABLE `Comment_Checkbox_States`
+  ADD PRIMARY KEY (`state_id`),
+  ADD UNIQUE KEY `unique_checkbox` (`comment_id`,`comment_type`,`checkbox_index`) COMMENT 'Un checkbox por comentario y posición',
+  ADD KEY `idx_comment_type` (`comment_id`,`comment_type`) COMMENT 'Índice para búsquedas por comentario',
+  ADD KEY `idx_user` (`user_id`) COMMENT 'Índice para búsquedas por usuario';
+
+--
 -- Indices de la tabla `Notification_Log`
 --
 ALTER TABLE `Notification_Log`
@@ -2494,6 +2778,16 @@ ALTER TABLE `Projects`
 --
 ALTER TABLE `Subtasks`
   ADD PRIMARY KEY (`subtask_id`);
+
+--
+-- Indices de la tabla `Subtask_Assignments`
+--
+ALTER TABLE `Subtask_Assignments`
+  ADD PRIMARY KEY (`assignment_id`),
+  ADD UNIQUE KEY `unique_subtask_user` (`subtask_id`,`user_id`),
+  ADD KEY `idx_subtask_id` (`subtask_id`),
+  ADD KEY `idx_user_id` (`user_id`),
+  ADD KEY `idx_assigned_by` (`assigned_by_user_id`);
 
 --
 -- Indices de la tabla `Subtask_Attachments`
@@ -2569,55 +2863,67 @@ ALTER TABLE `User_Roles`
 -- AUTO_INCREMENT de la tabla `Clans`
 --
 ALTER TABLE `Clans`
-  MODIFY `clan_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+  MODIFY `clan_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT de la tabla `Clan_Members`
 --
 ALTER TABLE `Clan_Members`
-  MODIFY `clan_member_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=140;
+  MODIFY `clan_member_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=143;
+
+--
+-- AUTO_INCREMENT de la tabla `Comment_Checkbox_States`
+--
+ALTER TABLE `Comment_Checkbox_States`
+  MODIFY `state_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT de la tabla `Notification_Log`
 --
 ALTER TABLE `Notification_Log`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=283;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=344;
 
 --
 -- AUTO_INCREMENT de la tabla `Projects`
 --
 ALTER TABLE `Projects`
-  MODIFY `project_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=46;
+  MODIFY `project_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
 
 --
 -- AUTO_INCREMENT de la tabla `Subtasks`
 --
 ALTER TABLE `Subtasks`
-  MODIFY `subtask_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=46;
+  MODIFY `subtask_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=65;
+
+--
+-- AUTO_INCREMENT de la tabla `Subtask_Assignments`
+--
+ALTER TABLE `Subtask_Assignments`
+  MODIFY `assignment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT de la tabla `Subtask_Attachments`
 --
 ALTER TABLE `Subtask_Attachments`
-  MODIFY `attachment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
+  MODIFY `attachment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
 
 --
 -- AUTO_INCREMENT de la tabla `Subtask_Comments`
 --
 ALTER TABLE `Subtask_Comments`
-  MODIFY `comment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
+  MODIFY `comment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=44;
 
 --
 -- AUTO_INCREMENT de la tabla `Tasks`
 --
 ALTER TABLE `Tasks`
-  MODIFY `task_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=273;
+  MODIFY `task_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=285;
 
 --
 -- AUTO_INCREMENT de la tabla `Task_Assignments`
 --
 ALTER TABLE `Task_Assignments`
-  MODIFY `assignment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=362;
+  MODIFY `assignment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=381;
 
 --
 -- AUTO_INCREMENT de la tabla `Task_Attachments`
@@ -2629,19 +2935,19 @@ ALTER TABLE `Task_Attachments`
 -- AUTO_INCREMENT de la tabla `Task_Comments`
 --
 ALTER TABLE `Task_Comments`
-  MODIFY `comment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=47;
+  MODIFY `comment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=48;
 
 --
 -- AUTO_INCREMENT de la tabla `Task_History`
 --
 ALTER TABLE `Task_History`
-  MODIFY `history_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=810;
+  MODIFY `history_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=885;
 
 --
 -- AUTO_INCREMENT de la tabla `Users`
 --
 ALTER TABLE `Users`
-  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=64;
+  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=65;
 
 -- --------------------------------------------------------
 
