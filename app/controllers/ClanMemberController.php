@@ -377,35 +377,60 @@ class ClanMemberController {
             error_log("Task data: " . print_r($task, true));
 
             // Verificar clan o asignación
-            $project = $this->projectModel->findById($task['project_id']);
-            error_log("Project found: " . ($project ? "YES" : "NO"));
-            if ($project) {
-                error_log("Project data: " . print_r($project, true));
+            $project = null;
+            if ($task['project_id']) {
+                $project = $this->projectModel->findById($task['project_id']);
+                error_log("Project found: " . ($project ? "YES" : "NO"));
+                if ($project) {
+                    error_log("Project data: " . print_r($project, true));
+                }
+            } else {
+                error_log("No project_id - this is a personal task");
             }
             
             $isAssignedToUser = $this->isTaskAssignedToUser($taskId, $this->currentUser['user_id']);
+            $isPersonalTask = (int)($task['is_personal'] ?? 0) === 1;
             error_log("Is assigned to user: " . ($isAssignedToUser ? "YES" : "NO"));
+            error_log("Is personal task: " . ($isPersonalTask ? "YES" : "NO"));
             
-            if (!$project || ($project['clan_id'] != $this->userClan['clan_id'] && !$isAssignedToUser)) {
-                error_log("Access denied - project or clan mismatch");
-                Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+            // Para tareas personales, solo verificar que el usuario sea el propietario
+            if ($isPersonalTask) {
+                $isOwner = (int)($task['assigned_to_user_id'] ?? 0) === (int)$this->currentUser['user_id'];
+                $isCreator = (int)($task['created_by_user_id'] ?? 0) === (int)$this->currentUser['user_id'];
+                
+                if (!($isOwner || $isCreator)) {
+                    error_log("Access denied - user is not owner or creator of personal task");
+                    Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+                }
+                error_log("Personal task access granted");
+            } else {
+                // Para tareas normales, verificar clan o asignación
+                if (!$project || ($project['clan_id'] != $this->userClan['clan_id'] && !$isAssignedToUser)) {
+                    error_log("Access denied - project or clan mismatch");
+                    Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+                }
+                error_log("Project/clan access granted");
             }
-            error_log("Project/clan access granted");
 
-            // Solo permitir actualizar si está asignado, es dueño (assigned_to_user_id) o creador
-            $isAssigned = $this->isTaskAssignedToUser($taskId, $this->currentUser['user_id']);
-            $isOwner = (int)($task['assigned_to_user_id'] ?? 0) === (int)$this->currentUser['user_id'];
-            $isCreator = (int)($task['created_by_user_id'] ?? 0) === (int)$this->currentUser['user_id'];
-            
-            error_log("Permission check - isAssigned: " . ($isAssigned ? "YES" : "NO") . 
-                     ", isOwner: " . ($isOwner ? "YES" : "NO") . 
-                     ", isCreator: " . ($isCreator ? "YES" : "NO"));
-            
-            if (!($isAssigned || $isOwner || $isCreator)) {
-                error_log("Permission denied - user cannot update this task");
-                Utils::jsonResponse(['success' => false, 'message' => 'Solo puedes actualizar tareas que te corresponden'], 403);
+            // Para tareas personales, ya verificamos permisos arriba
+            // Para tareas normales, verificar permisos adicionales
+            if (!$isPersonalTask) {
+                $isAssigned = $this->isTaskAssignedToUser($taskId, $this->currentUser['user_id']);
+                $isOwner = (int)($task['assigned_to_user_id'] ?? 0) === (int)$this->currentUser['user_id'];
+                $isCreator = (int)($task['created_by_user_id'] ?? 0) === (int)$this->currentUser['user_id'];
+                
+                error_log("Permission check for normal task - isAssigned: " . ($isAssigned ? "YES" : "NO") . 
+                         ", isOwner: " . ($isOwner ? "YES" : "NO") . 
+                         ", isCreator: " . ($isCreator ? "YES" : "NO"));
+                
+                if (!($isAssigned || $isOwner || $isCreator)) {
+                    error_log("Permission denied - user cannot update this task");
+                    Utils::jsonResponse(['success' => false, 'message' => 'Solo puedes actualizar tareas que te corresponden'], 403);
+                }
+                error_log("Normal task permission granted");
+            } else {
+                error_log("Personal task - permissions already verified above");
             }
-            error_log("Permission granted");
 
             $taskName = Utils::sanitizeInput($_POST['task_name'] ?? null);
             $description = Utils::sanitizeInput($_POST['description'] ?? null);
