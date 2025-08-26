@@ -978,6 +978,39 @@ class ClanMemberController {
             $stmt->execute([$primaryClanId, $userId, $userId]);
             $allTasks = $stmt->fetchAll();
             
+            // Obtener tareas personales del usuario
+            $personalTasks = [];
+            $personalStmt = $this->db->prepare(
+                "SELECT 
+                    t.task_id,
+                    t.task_name,
+                    t.description,
+                    t.due_date,
+                    t.priority,
+                    t.status,
+                    t.completion_percentage,
+                    t.automatic_points,
+                    p.project_name,
+                    p.project_id,
+                    p.clan_id,
+                    c.clan_name,
+                    CASE 
+                        WHEN t.due_date IS NULL THEN 999
+                        ELSE DATEDIFF(t.due_date, CURDATE())
+                    END as days_until_due,
+                    1 as is_primary_clan
+                 FROM Tasks t
+                 INNER JOIN Projects p ON p.project_id = t.project_id
+                 LEFT JOIN Clans c ON p.clan_id = c.clan_id
+                 WHERE t.is_personal = 1
+                   AND t.assigned_to_user_id = ?
+                   AND t.status != 'completed'
+                   AND t.is_subtask = 0
+                 ORDER BY t.due_date ASC"
+            );
+            $personalStmt->execute([$userId]);
+            $personalTasks = $personalStmt->fetchAll();
+            
             // Obtener tareas especiales (eventuales y recurrentes) del clan principal
             $specialTasks = [];
             if ($primaryClanId) {
@@ -1013,8 +1046,8 @@ class ClanMemberController {
                 $specialTasks = $specialStmt->fetchAll();
             }
             
-            // Combinar todas las tareas
-            $allCombinedTasks = array_merge($allTasks, $specialTasks);
+            // Combinar todas las tareas (clan, especiales y personales)
+            $allCombinedTasks = array_merge($allTasks, $specialTasks, $personalTasks);
             
             // Clasificar tareas por tiempo hasta vencimiento
             $kanbanColumns = [
