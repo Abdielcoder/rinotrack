@@ -340,54 +340,101 @@ class ClanMemberController {
     }
 
     public function updateTask() {
+        error_log("=== UPDATE TASK DEBUG ===");
+        error_log("updateTask called - Method: " . $_SERVER['REQUEST_METHOD']);
+        error_log("POST data: " . print_r($_POST, true));
+        error_log("SESSION data: " . print_r($_SESSION ?? [], true));
+        
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            error_log("Method not allowed");
             Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
         }
-        $this->requireAuth();
-        if (!$this->hasMemberAccess()) {
-            Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
-        }
+        
+        try {
+            $this->requireAuth();
+            error_log("Auth check passed");
+            
+            if (!$this->hasMemberAccess()) {
+                error_log("Member access denied");
+                Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+            }
+            error_log("Member access granted");
 
-        $taskId = (int)($_POST['task_id'] ?? 0);
-        if ($taskId <= 0) {
-            Utils::jsonResponse(['success' => false, 'message' => 'ID de tarea inválido'], 400);
-        }
+            $taskId = (int)($_POST['task_id'] ?? 0);
+            error_log("Task ID: $taskId");
+            
+            if ($taskId <= 0) {
+                error_log("Invalid task ID");
+                Utils::jsonResponse(['success' => false, 'message' => 'ID de tarea inválido'], 400);
+            }
 
-        $task = $this->taskModel->findById($taskId);
-        if (!$task) {
-            Utils::jsonResponse(['success' => false, 'message' => 'Tarea no encontrada'], 404);
-        }
+            $task = $this->taskModel->findById($taskId);
+            error_log("Task found: " . ($task ? "YES" : "NO"));
+            if (!$task) {
+                error_log("Task not found");
+                Utils::jsonResponse(['success' => false, 'message' => 'Tarea no encontrada'], 404);
+            }
+            error_log("Task data: " . print_r($task, true));
 
-        // Verificar clan o asignación
-        $project = $this->projectModel->findById($task['project_id']);
-        $isAssignedToUser = $this->isTaskAssignedToUser($taskId, $this->currentUser['user_id']);
-        if (!$project || ($project['clan_id'] != $this->userClan['clan_id'] && !$isAssignedToUser)) {
-            Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
-        }
+            // Verificar clan o asignación
+            $project = $this->projectModel->findById($task['project_id']);
+            error_log("Project found: " . ($project ? "YES" : "NO"));
+            if ($project) {
+                error_log("Project data: " . print_r($project, true));
+            }
+            
+            $isAssignedToUser = $this->isTaskAssignedToUser($taskId, $this->currentUser['user_id']);
+            error_log("Is assigned to user: " . ($isAssignedToUser ? "YES" : "NO"));
+            
+            if (!$project || ($project['clan_id'] != $this->userClan['clan_id'] && !$isAssignedToUser)) {
+                error_log("Access denied - project or clan mismatch");
+                Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+            }
+            error_log("Project/clan access granted");
 
-        // Solo permitir actualizar si está asignado, es dueño (assigned_to_user_id) o creador
-        $isAssigned = $this->isTaskAssignedToUser($taskId, $this->currentUser['user_id']);
-        $isOwner = (int)($task['assigned_to_user_id'] ?? 0) === (int)$this->currentUser['user_id'];
-        $isCreator = (int)($task['created_by_user_id'] ?? 0) === (int)$this->currentUser['user_id'];
-        if (!($isAssigned || $isOwner || $isCreator)) {
-            Utils::jsonResponse(['success' => false, 'message' => 'Solo puedes actualizar tareas que te corresponden'], 403);
-        }
+            // Solo permitir actualizar si está asignado, es dueño (assigned_to_user_id) o creador
+            $isAssigned = $this->isTaskAssignedToUser($taskId, $this->currentUser['user_id']);
+            $isOwner = (int)($task['assigned_to_user_id'] ?? 0) === (int)$this->currentUser['user_id'];
+            $isCreator = (int)($task['created_by_user_id'] ?? 0) === (int)$this->currentUser['user_id'];
+            
+            error_log("Permission check - isAssigned: " . ($isAssigned ? "YES" : "NO") . 
+                     ", isOwner: " . ($isOwner ? "YES" : "NO") . 
+                     ", isCreator: " . ($isCreator ? "YES" : "NO"));
+            
+            if (!($isAssigned || $isOwner || $isCreator)) {
+                error_log("Permission denied - user cannot update this task");
+                Utils::jsonResponse(['success' => false, 'message' => 'Solo puedes actualizar tareas que te corresponden'], 403);
+            }
+            error_log("Permission granted");
 
-        $taskName = Utils::sanitizeInput($_POST['task_name'] ?? null);
-        $description = Utils::sanitizeInput($_POST['description'] ?? null);
-        $priority = $_POST['priority'] ?? null;
-        $dueDate = $_POST['due_date'] ?? null;
-        $status = $_POST['status'] ?? null;
+            $taskName = Utils::sanitizeInput($_POST['task_name'] ?? null);
+            $description = Utils::sanitizeInput($_POST['description'] ?? null);
+            $priority = $_POST['priority'] ?? null;
+            $dueDate = $_POST['due_date'] ?? null;
+            $status = $_POST['status'] ?? null;
 
-        // No permitir cambios de asignación ni porcentajes desde el rol miembro
-        $assignedUserId = null;
-        $assignedPercentage = null;
+            error_log("Update data - taskName: '$taskName', description: '$description', priority: '$priority', dueDate: '$dueDate', status: '$status'");
 
-        $ok = $this->taskModel->update($taskId, $taskName, $description, $assignedUserId, $priority, $dueDate, $assignedPercentage, $status);
-        if ($ok) {
-            Utils::jsonResponse(['success' => true, 'message' => 'Tarea actualizada']);
-        } else {
-            Utils::jsonResponse(['success' => false, 'message' => 'No se pudo actualizar la tarea'], 500);
+            // No permitir cambios de asignación ni porcentajes desde el rol miembro
+            $assignedUserId = null;
+            $assignedPercentage = null;
+
+            error_log("Calling taskModel->update with taskId: $taskId");
+            $ok = $this->taskModel->update($taskId, $taskName, $description, $assignedUserId, $priority, $dueDate, $assignedPercentage, $status);
+            error_log("Update result: " . ($ok ? "SUCCESS" : "FAILED"));
+            
+            if ($ok) {
+                error_log("Task updated successfully");
+                Utils::jsonResponse(['success' => true, 'message' => 'Tarea actualizada']);
+            } else {
+                error_log("Failed to update task");
+                Utils::jsonResponse(['success' => false, 'message' => 'No se pudo actualizar la tarea'], 500);
+            }
+            
+        } catch (Exception $e) {
+            error_log("EXCEPTION in updateTask: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno: ' . $e->getMessage()], 500);
         }
     }
 

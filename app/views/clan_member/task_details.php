@@ -817,16 +817,43 @@ document.getElementById('editTaskForm')?.addEventListener('submit', function(e){
   errorBox.style.display = 'none';
   btn.classList.add('is-loading');
   const fd = new FormData(this);
+  
+  // Debug: Log form data
+  console.log("=== ACTUALIZACIÓN DE TAREA ===");
+  for (let [key, value] of fd.entries()) {
+    console.log(`${key}: ${value}`);
+  }
+  
   fetch('?route=clan_member/update-task', { method:'POST', body: fd, credentials:'same-origin' })
-    .then(async r=>{ const t = await r.text(); try{ return JSON.parse(t); } catch(e){ console.error(t); return {success:false,message:'Respuesta inválida'}; } })
-    .then(d=>{
+    .then(async r => { 
+      console.log("Response status:", r.status);
+      const t = await r.text(); 
+      console.log("Response text:", t);
+      try{ 
+        return JSON.parse(t); 
+      } catch(e){ 
+        console.error("JSON parse error:", e);
+        console.error("Raw response:", t);
+        return {success:false,message:'Respuesta inválida'}; 
+      } 
+    })
+    .then(d => {
+      console.log("Parsed response:", d);
       if(!d.success){
-        errorBox.style.display='block'; errorBox.textContent=d.message||'No se pudo guardar'; btn.classList.remove('is-loading'); return;
+        errorBox.style.display='block'; 
+        errorBox.textContent=d.message||'No se pudo guardar'; 
+        btn.classList.remove('is-loading'); 
+        return;
       }
       // Siempre regresar al listado después de guardar
       window.location.href='?route=clan_member/tasks';
     })
-    .catch(()=>{ errorBox.style.display='block'; errorBox.textContent='Error de red'; btn.classList.remove('is-loading'); });
+    .catch(error => {
+      console.error("Fetch error:", error);
+      errorBox.style.display='block'; 
+      errorBox.textContent='Error de red: ' + error.message; 
+      btn.classList.remove('is-loading'); 
+    });
 });
 
 // Ya no auto-abrimos el panel al cargar, solo al presionar "Editar Tarea"
