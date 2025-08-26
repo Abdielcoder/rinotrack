@@ -12,7 +12,7 @@ ob_start();
                 <p class="main-slogan">
                     <strong>P</strong>royecta • <strong>O</strong>rganiza • <strong>L</strong>anza • <strong>A</strong>naliza • <strong>R</strong>evisa • <strong>I</strong>nteractúa • <strong>S</strong>ocializa
                 </p>
-                <p class="login-subtitle">Tu estrella guía para la gestión de proyectos</p>
+                <p class="login-subtitle">Tu estrella guía.</p>
             </div>
             <p class="login-instruction">Inicia sesión en tu cuenta</p>
         </div>
