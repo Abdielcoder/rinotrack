@@ -212,14 +212,19 @@ class ClanMemberController {
         $search = trim($_GET['search'] ?? '');
         $status = trim($_GET['status'] ?? '');
 
-        // Tabla: SOLO tareas donde el usuario esté asignado
+        // Tabla: Incluir tanto tareas asignadas como tareas personales creadas por el usuario
         // - Proyectos del clan: solo tareas asignadas al usuario
-        // - Proyectos lógicos: solo sus propias tareas
+        // - Proyectos lógicos: solo sus propias tareas  
+        // - Tareas personales: tareas creadas por el usuario
         $clanPart = $this->userClan ? $this->taskModel->getUserTasks($this->currentUser['user_id'], $page, $perPage, $search, $status) : ['tasks' => [], 'total' => 0, 'page' => 1, 'per_page' => $perPage, 'total_pages' => 0];
         $ownLogical = $this->taskModel->getUserTasksByProjectNames($this->currentUser['user_id'], ['Tareas Recurrentes','Tareas Eventuales']);
+        $personalTasks = $this->taskModel->getUserCreatedTasks($this->currentUser['user_id'], $search, $status);
+        
         $merged = [];
         foreach ($clanPart['tasks'] as $t) { $merged[$t['task_id']] = $t; }
         foreach ($ownLogical as $t) { $merged[$t['task_id']] = $t; }
+        foreach ($personalTasks as $t) { $merged[$t['task_id']] = $t; }
+        
         $result = $clanPart;
         $result['tasks'] = array_values($merged);
 

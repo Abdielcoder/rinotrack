@@ -2243,5 +2243,64 @@ class Task {
             return false;
         }
     }
+
+    /**
+     * Obtener tareas creadas por el usuario (tareas personales)
+     */
+    public function getUserCreatedTasks($userId, $search = '', $statusFilter = '') {
+        try {
+            $baseQuery = "
+                FROM Tasks t
+                JOIN Projects p ON t.project_id = p.project_id
+                LEFT JOIN Users u ON t.assigned_to_user_id = u.user_id
+                LEFT JOIN Users creator ON t.created_by_user_id = creator.user_id
+                WHERE t.is_subtask = 0
+                  AND t.created_by_user_id = ?
+                  AND p.is_personal = 1
+            ";
+
+            $params = [$userId];
+            
+            if (!empty($search)) {
+                $baseQuery .= " AND (t.task_name LIKE ? OR t.description LIKE ?)";
+                $params[] = "%$search%";
+                $params[] = "%$search%";
+            }
+            
+            if (!empty($statusFilter)) {
+                $baseQuery .= " AND t.status = ?";
+                $params[] = $statusFilter;
+            }
+
+            $sql = "
+                SELECT DISTINCT
+                    t.task_id,
+                    t.task_name,
+                    t.description,
+                    t.due_date,
+                    t.priority,
+                    t.status,
+                    t.completion_percentage,
+                    t.automatic_points,
+                    t.created_by_user_id,
+                    p.project_name,
+                    p.project_id,
+                    creator.full_name as created_by_fullname,
+                    u.full_name as assigned_user_name,
+                    DATEDIFF(t.due_date, CURDATE()) as days_until_due,
+                    NULL as all_assigned_users
+                $baseQuery
+                ORDER BY t.created_at DESC
+            ";
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute($params);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+        } catch (Exception $e) {
+            error_log("Error al obtener tareas creadas por usuario: " . $e->getMessage());
+            return [];
+        }
+    }
 }
 ?>

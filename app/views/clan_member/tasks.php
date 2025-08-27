@@ -114,7 +114,7 @@ ob_start();
                 <div class="table-wrapper">
                     <table class="data-table">
                         <thead>
-                            <tr><th>Prioridad</th><th>Tarea</th><th>Proyecto</th><th>Asignado(s)</th><th>Vence</th><th>Estado</th><th>Puntos</th><th>Acciones</th></tr>
+                            <tr><th>Prioridad</th><th>Tarea</th><th>Proyecto</th><th>Asignado(s)</th><th>Vence</th><th>Estado</th><th>Progreso</th><th>Acciones</th></tr>
                         </thead>
                         <tbody>
                             <?php if (empty($tasksData['tasks'])): ?>
@@ -151,7 +151,15 @@ ob_start();
                                         <?php if ($dueLabel): ?><span class="badge badge-due <?php echo $dueCls; ?>"><i class="fas fa-calendar"></i> <?php echo $dueLabel; ?></span><?php else: ?>–<?php endif; ?>
                                     </td>
                                     <td><span class="chip chip-status <?php echo $statusClass; ?>"><?php echo str_replace('_',' ', (string)$t['status']); ?></span></td>
-                                    <td class="cell-points"><?php echo isset($t['automatic_points']) ? number_format((float)$t['automatic_points'], 2) : '–'; ?></td>
+                                    <td class="cell-progress">
+                                        <?php $progress = (int)($t['completion_percentage'] ?? 0); ?>
+                                        <div class="progress-container">
+                                            <div class="progress-bar-small">
+                                                <div class="progress-fill-small" style="width: <?php echo $progress; ?>%"></div>
+                                            </div>
+                                            <span class="progress-text-small"><?php echo $progress; ?>%</span>
+                                        </div>
+                                    </td>
                                     <td class="cell-actions">
                                         <a class="action-btn" href="?route=clan_member/task-details&task_id=<?php echo (int)$t['task_id']; ?>&action=edit" title="Editar tarea"><i class="fas fa-edit"></i></a>
                                     </td>
@@ -239,6 +247,40 @@ ob_start();
 .chip-status.completed{background:#dcfce7;color:#166534}
 .chip-status.in_progress{background:#dbeafe;color:#1e40af}
 .chip-status.pending{background:#f1f5f9;color:#334155}
+
+/* Estilos para barra de progreso en tabla */
+.cell-progress {
+    min-width: 120px;
+}
+
+.progress-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.progress-bar-small {
+    width: 60px;
+    height: 8px;
+    background: #f3f4f6;
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+}
+
+.progress-fill-small {
+    height: 100%;
+    background: linear-gradient(90deg, #10b981, #22c55e);
+    transition: width 0.3s ease;
+    border-radius: 3px;
+}
+
+.progress-text-small {
+    font-size: 12px;
+    font-weight: 600;
+    color: #374151;
+    min-width: 35px;
+}
 /* Cards de proyectos (resumen) */
 .cm-project-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px}
 .cm-project-card{border:1px solid var(--bg-accent);background:#fff;border-radius:16px;box-shadow:0 10px 20px rgba(2,6,23,.06);padding:16px;display:grid;gap:14px}
