@@ -147,7 +147,7 @@ ob_start();
                     <h3><i class="fas fa-bolt"></i> Actividad Reciente</h3>
                     <button class="btn btn-secondary" id="toggleRecentActivity">Mostrar/Ocultar</button>
                 </div>
-                <div class="activity-list" id="recentActivityContent">
+                <div class="activity-list" id="recentActivityContent" style="display: none;">
                     <?php if (empty($recentActivity ?? [])): ?>
                         <div class="empty">Sin actividad reciente</div>
                     <?php else: foreach (($recentActivity ?? []) as $h): ?>
