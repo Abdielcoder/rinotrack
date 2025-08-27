@@ -479,7 +479,7 @@ try {
         
     case 'clan_leader/tasks':
         $controller = new ClanLeaderController();
-        $controller->tasksList();
+        $controller->tasks();
         break;
         
     case 'clan_leader/add-task':

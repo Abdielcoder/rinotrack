@@ -2348,48 +2348,6 @@ class ClanLeaderController {
         }
     }
     
-    /**
-     * Vista de tareas del líder de clan - nueva implementación
-     */
-    public function tasksList() {
-        $this->requireAuth();
-        error_log("=== ClanLeaderController::tasksList() called ===");
-        
-        $projectId = $_GET['project_id'] ?? null;
-        error_log("Project ID: " . ($projectId ?? 'NULL'));
-        
-        try {
-            if ($projectId) {
-                // Obtener tareas del proyecto específico
-                $allTasks = $this->taskModel->getByProject($projectId);
-                $project = $this->projectModel->findById($projectId);
-                error_log("Tasks for project $projectId: " . count($allTasks));
-            } else {
-                // Obtener todas las tareas del clan
-                $allTasks = $this->taskModel->getAllTasksByClan($this->userClan['clan_id']);
-                $project = null;
-                error_log("Tasks for clan: " . count($allTasks));
-            }
-            
-            if (!empty($allTasks)) {
-                error_log("First task sample: " . print_r($allTasks[0], true));
-            }
-            
-            $data = [
-                'allTasks' => $allTasks,
-                'project' => $project,
-                'currentPage' => 'clan_leader',
-                'user' => $this->currentUser,
-                'clan' => $this->userClan
-            ];
-            
-            $this->loadView('clan_leader/tasks', $data);
-            
-        } catch (Exception $e) {
-            error_log("Error in tasksList(): " . $e->getMessage());
-            echo "Error: " . $e->getMessage();
-        }
-    }
     
     /**
      * Método simple para cambiar estado de tarea

@@ -183,28 +183,48 @@ ob_start();
                             <?php 
                             // Debug: verificar si allTasks existe
                             error_log("DEBUG VIEW - allTasks isset: " . (isset($allTasks) ? 'YES' : 'NO'));
-                            error_log("DEBUG VIEW - allTasks count: " . (isset($allTasks) ? count($allTasks) : 'N/A'));
-                            if (!isset($allTasks)) {
-                                echo '<tr><td colspan="9">ERROR: $allTasks no está definida</td></tr>';
-                                return;
+                            error_log("DEBUG VIEW - allTasks type: " . gettype($allTasks ?? null));
+                            if (isset($allTasks)) {
+                                error_log("DEBUG VIEW - allTasks count: " . count($allTasks));
+                                if (!empty($allTasks)) {
+                                    error_log("DEBUG VIEW - First item type: " . gettype($allTasks[0]));
+                                    error_log("DEBUG VIEW - First item: " . print_r($allTasks[0], true));
+                                }
                             }
+                            
+                            if (!isset($allTasks) || empty($allTasks)) {
+                                echo '<tr><td colspan="9">No hay tareas disponibles</td></tr>';
+                            } else {
+                                foreach ($allTasks as $index => $task) {
+                                    // Verificar si $task es un array o solo un número
+                                    if (!is_array($task)) {
+                                        error_log("ERROR: Task at index $index is not an array: " . print_r($task, true));
+                                        continue;
+                                    }
+                                    
+                                    // Valores por defecto para evitar errores
+                                    $taskId = $task['task_id'] ?? 0;
+                                    $taskName = $task['task_name'] ?? 'Sin nombre';
+                                    $priority = $task['priority'] ?? 'medium';
+                                    $status = $task['status'] ?? 'pending';
+                                    $daysUntilDue = $task['days_until_due'] ?? 0;
+                                    $projectName = $task['project_name'] ?? 'Sin proyecto';
+                                    $dueDate = $task['due_date'] ?? null;
+                                    $completionPercentage = $task['completion_percentage'] ?? 0;
+                                    
+                                    error_log("DEBUG HTML - Task ID: $taskId, Task name: $taskName");
                             ?>
-                            <?php foreach ($allTasks as $task): ?>
-                            <?php 
-                            // Debug: verificar task_id
-                            error_log("DEBUG HTML - Task ID: " . ($task['task_id'] ?? 'NULL') . ", Task name: " . ($task['task_name'] ?? 'NULL'));
-                            ?>
-                            <tr class="task-row priority-<?= $task['priority'] ?> <?= ($task['days_until_due'] < 0) ? 'overdue' : '' ?> <?= ($task['status'] === 'completed') ? 'completed' : '' ?>" data-task-id="<?= $task['task_id'] ?? 'undefined' ?>">
+                            <tr class="task-row priority-<?= $priority ?> <?= ($daysUntilDue < 0) ? 'overdue' : '' ?> <?= ($status === 'completed') ? 'completed' : '' ?>" data-task-id="<?= $taskId ?>">
                                 <td class="td-checkbox">
                                     <input type="checkbox" 
-                                           id="task-<?= $task['task_id'] ?>" 
-                                           <?= ($task['status'] === 'completed') ? 'checked' : '' ?>
-                                           onchange="console.log('HTML task_id: <?= $task['task_id'] ?>'); toggleTaskStatus(<?= $task['task_id'] ?>, this.checked)">
+                                           id="task-<?= $taskId ?>" 
+                                           <?= ($status === 'completed') ? 'checked' : '' ?>
+                                           onchange="console.log('HTML task_id: <?= $taskId ?>'); toggleTaskStatus(<?= $taskId ?>, this.checked)">
                                 </td>
                                 <td class="td-priority">
-                                    <span class="priority-badge priority-<?= $task['priority'] ?>">
+                                    <span class="priority-badge priority-<?= $priority ?>">
                                         <?php 
-                                        switch($task['priority']) {
+                                        switch($priority) {
                                             case 'critical': echo 'Urgente'; break;
                                             case 'high': echo 'Alta'; break;
                                             case 'low': echo 'Baja'; break;
@@ -215,14 +235,14 @@ ob_start();
                                 </td>
                                 <td class="td-task">
                                     <div class="task-info">
-                                        <div class="task-title"><?= htmlspecialchars($task['task_name']) ?></div>
+                                        <div class="task-title"><?= htmlspecialchars($taskName) ?></div>
                                         <?php if (!empty($task['description'])): ?>
                                         <div class="task-description"><?= htmlspecialchars(substr($task['description'], 0, 80)) ?><?= strlen($task['description']) > 80 ? '...' : '' ?></div>
                                         <?php endif; ?>
                                     </div>
                                 </td>
                                 <td class="td-project">
-                                    <span class="project-name"><?= htmlspecialchars($task['project_name']) ?></span>
+                                    <span class="project-name"><?= htmlspecialchars($projectName) ?></span>
                                 </td>
                                 <td class="td-assigned">
                                     <?php if (!empty($task['all_assigned_users'])): ?>
