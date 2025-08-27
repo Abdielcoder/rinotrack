@@ -229,6 +229,26 @@ try {
             $controller->getTaskDetails();
             break;
             
+        case 'admin/add-task-comment':
+            $controller = new AdminController();
+            $controller->addTaskComment();
+            break;
+            
+        case 'admin/add-task-attachment':
+            $controller = new AdminController();
+            $controller->addTaskAttachment();
+            break;
+            
+        case 'admin/add-task-reply':
+            $controller = new AdminController();
+            $controller->addTaskReply();
+            break;
+            
+        case 'admin/get-comment-replies':
+            $controller = new AdminController();
+            $controller->getCommentReplies();
+            break;
+            
         case 'admin/add-subtasks-to-task':
             $controller = new AdminController();
             $controller->addSubtasksToTask();
