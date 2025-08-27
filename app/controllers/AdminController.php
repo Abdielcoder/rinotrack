@@ -942,12 +942,19 @@ class AdminController {
                 return;
             }
             
-            // Insertar comentario
+            // Insertar comentario con la estructura correcta
             $stmt = $db->prepare("
                 INSERT INTO Task_Comments (task_id, user_id, comment_text, comment_type, created_at) 
                 VALUES (?, ?, ?, 'comment', NOW())
             ");
-            $stmt->execute([$taskId, $currentUser['user_id'], $commentText]);
+            $result = $stmt->execute([$taskId, $currentUser['user_id'], $commentText]);
+            
+            if (!$result) {
+                $error = $stmt->errorInfo();
+                error_log("addTaskComment: Error en base de datos - " . json_encode($error));
+                Utils::jsonResponse(['success' => false, 'message' => 'Error al guardar comentario en base de datos'], 500);
+                return;
+            }
             
             Utils::jsonResponse([
                 'success' => true, 
@@ -1040,23 +1047,20 @@ class AdminController {
                 return;
             }
             
-            // Usar directorio existente task_attachments - misma lógica que otros controladores
-            $publicRoot = dirname(__DIR__, 2) . '/public';
-            $baseUploads = $publicRoot . '/uploads';
-            $uploadDir = $baseUploads . '/task_attachments';
+            // Usar el directorio correcto según indicación del usuario
+            $uploadDir = dirname(__DIR__, 2) . '/public/uploads/task_attachments';
             
-            // Crear rutas si no existen
-            if (!is_dir($baseUploads)) { 
-                if (!mkdir($baseUploads, 0775, true)) {
-                    Utils::jsonResponse(['success' => false, 'message' => 'Error al crear directorio base de uploads'], 500);
-                    return;
-                }
-            }
-            if (!is_dir($uploadDir)) { 
+            error_log("addTaskAttachment: Directorio de destino: $uploadDir");
+            
+            // Verificar que el directorio existe
+            if (!is_dir($uploadDir)) {
+                error_log("addTaskAttachment: Directorio no existe, intentando crear...");
                 if (!mkdir($uploadDir, 0775, true)) {
-                    Utils::jsonResponse(['success' => false, 'message' => 'Error al crear directorio de task_attachments'], 500);
+                    error_log("addTaskAttachment: No se pudo crear el directorio");
+                    Utils::jsonResponse(['success' => false, 'message' => 'Error al crear directorio de uploads'], 500);
                     return;
                 }
+                error_log("addTaskAttachment: Directorio creado exitosamente");
             }
             
             // Generar nombre único para el archivo
@@ -1079,13 +1083,20 @@ class AdminController {
             
             error_log("addTaskAttachment: Archivo movido exitosamente a '$filePath'");
             
-            // Insertar en base de datos
+            // Insertar en base de datos con la estructura correcta
             error_log("addTaskAttachment: Insertando en base de datos...");
             $stmt = $db->prepare("
-                INSERT INTO Task_Attachments (task_id, file_name, file_path, uploaded_by, uploaded_at) 
-                VALUES (?, ?, ?, ?, NOW())
+                INSERT INTO Task_Attachments (task_id, user_id, file_name, file_path, file_size, file_type, uploaded_at) 
+                VALUES (?, ?, ?, ?, ?, ?, NOW())
             ");
-            $result = $stmt->execute([$taskId, $file['name'], $webPath, $currentUser['user_id']]);
+            $result = $stmt->execute([
+                $taskId, 
+                $currentUser['user_id'], 
+                $file['name'], 
+                $webPath, 
+                $file['size'],
+                $file['type']
+            ]);
             
             if (!$result) {
                 $error = $stmt->errorInfo();
@@ -1173,24 +1184,21 @@ class AdminController {
                 return;
             }
             
-            $db->beginTransaction();
+            // Por ahora, usar Task_Attachments con comment_id para simular replies
+            // Insertar como comentario normal por compatibilidad con la base de datos actual
+            $stmt = $db->prepare("
+                INSERT INTO Task_Comments (task_id, user_id, comment_text, comment_type, created_at) 
+                VALUES (?, ?, ?, 'comment', NOW())
+            ");
+            $result = $stmt->execute([$taskId, $currentUser['user_id'], $replyText]);
             
-            // Primero verificar si existe la columna parent_comment_id
-            $checkColumn = $db->query("SHOW COLUMNS FROM Task_Comments LIKE 'parent_comment_id'");
-            $hasParentColumn = (bool)$checkColumn->fetch();
-            
-            if (!$hasParentColumn) {
-                // Agregar la columna si no existe
-                $db->exec("ALTER TABLE Task_Comments ADD COLUMN parent_comment_id INT(11) NULL DEFAULT NULL AFTER task_id");
-                $db->exec("ALTER TABLE Task_Comments ADD INDEX idx_parent_comment (parent_comment_id)");
+            if (!$result) {
+                $error = $stmt->errorInfo();
+                error_log("addTaskReply: Error en base de datos - " . json_encode($error));
+                Utils::jsonResponse(['success' => false, 'message' => 'Error al guardar respuesta en base de datos'], 500);
+                return;
             }
             
-            // Insertar respuesta
-            $stmt = $db->prepare("
-                INSERT INTO Task_Comments (task_id, parent_comment_id, user_id, comment_text, comment_type, created_at) 
-                VALUES (?, ?, ?, ?, 'reply', NOW())
-            ");
-            $stmt->execute([$taskId, $parentCommentId, $currentUser['user_id'], $replyText]);
             $replyId = $db->lastInsertId();
             
             // Manejar archivo adjunto si se envió
@@ -1210,14 +1218,8 @@ class AdminController {
                     ];
                     
                     if (in_array($file['type'], $allowedTypes)) {
-                        // Usar directorio existente task_attachments - misma lógica que otros controladores
-                        $publicRoot = dirname(__DIR__, 2) . '/public';
-                        $baseUploads = $publicRoot . '/uploads';
-                        $uploadDir = $baseUploads . '/task_attachments';
-                        
-                        // Crear rutas si no existen
-                        if (!is_dir($baseUploads)) { @mkdir($baseUploads, 0775, true); }
-                        if (!is_dir($uploadDir)) { @mkdir($uploadDir, 0775, true); }
+                        // Usar el directorio correcto
+                        $uploadDir = dirname(__DIR__, 2) . '/public/uploads/task_attachments';
                         
                         if (is_dir($uploadDir)) {
                             // Generar nombre único para el archivo
@@ -1230,30 +1232,25 @@ class AdminController {
                                 $attachmentPath = $webPath;
                                 $attachmentName = $file['name'];
                                 
-                                // Verificar si existe columna attachment_path en Task_Comments
-                                $checkAttachmentColumn = $db->query("SHOW COLUMNS FROM Task_Comments LIKE 'attachment_path'");
-                                $hasAttachmentColumn = (bool)$checkAttachmentColumn->fetch();
-                                
-                                if (!$hasAttachmentColumn) {
-                                    // Agregar columnas para adjuntos
-                                    $db->exec("ALTER TABLE Task_Comments ADD COLUMN attachment_path VARCHAR(500) NULL DEFAULT NULL");
-                                    $db->exec("ALTER TABLE Task_Comments ADD COLUMN attachment_name VARCHAR(255) NULL DEFAULT NULL");
-                                }
-                                
-                                // Actualizar la respuesta con el adjunto
+                                // Guardar en Task_Attachments con comment_id
                                 $stmt = $db->prepare("
-                                    UPDATE Task_Comments 
-                                    SET attachment_path = ?, attachment_name = ? 
-                                    WHERE comment_id = ?
+                                    INSERT INTO Task_Attachments (task_id, user_id, comment_id, file_name, file_path, file_size, file_type, uploaded_at) 
+                                    VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
                                 ");
-                                $stmt->execute([$attachmentPath, $attachmentName, $replyId]);
+                                $stmt->execute([
+                                    $taskId, 
+                                    $currentUser['user_id'], 
+                                    $replyId,
+                                    $file['name'], 
+                                    $webPath, 
+                                    $file['size'],
+                                    $file['type']
+                                ]);
                             }
                         }
                     }
                 }
             }
-            
-            $db->commit();
             
             Utils::jsonResponse([
                 'success' => true, 
@@ -1264,9 +1261,6 @@ class AdminController {
             ]);
             
         } catch (Exception $e) {
-            if ($db->inTransaction()) {
-                $db->rollBack();
-            }
             error_log('Error al agregar respuesta: ' . $e->getMessage());
             Utils::jsonResponse(['success' => false, 'message' => 'Error al agregar respuesta'], 500);
         }
@@ -1303,33 +1297,13 @@ class AdminController {
         }
 
         try {
-            $db = Database::getConnection();
-            
-            // Verificar si existe la columna parent_comment_id
-            $checkColumn = $db->query("SHOW COLUMNS FROM Task_Comments LIKE 'parent_comment_id'");
-            $hasParentColumn = (bool)$checkColumn->fetch();
-            
-            if (!$hasParentColumn) {
-                // Si no existe la columna, no hay respuestas
-                Utils::jsonResponse(['success' => true, 'replies' => []]);
-                return;
-            }
-            
-            // Obtener respuestas del comentario
-            $stmt = $db->prepare("
-                SELECT tc.comment_id, tc.comment_text, tc.attachment_path, tc.attachment_name, tc.created_at,
-                       u.username, u.full_name, u.email
-                FROM Task_Comments tc
-                LEFT JOIN Users u ON tc.user_id = u.user_id
-                WHERE tc.parent_comment_id = ? AND tc.task_id = ?
-                ORDER BY tc.created_at ASC
-            ");
-            $stmt->execute([$commentId, $taskId]);
-            $replies = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+            // Por ahora, devolver lista vacía ya que la estructura actual no soporta respuestas anidadas
+            // En el futuro se puede implementar agregando parent_comment_id a Task_Comments
+            error_log("getCommentReplies: Devolviendo lista vacía - estructura actual no soporta replies");
             
             Utils::jsonResponse([
                 'success' => true, 
-                'replies' => $replies
+                'replies' => []
             ]);
             
         } catch (Exception $e) {
