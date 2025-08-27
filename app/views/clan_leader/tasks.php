@@ -308,7 +308,10 @@ ob_start();
                                     </div>
                                 </td>
                             </tr>
-                            <?php endforeach; ?>
+                            <?php 
+                                } // end foreach
+                            } // end if/else
+                            ?>
                         </tbody>
                     </table>
                 </div>
