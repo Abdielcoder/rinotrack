@@ -316,10 +316,10 @@ class AdminController {
             Utils::jsonResponse(['success' => false, 'message' => 'Usuario no encontrado'], 404);
         }
         
-        // Protección: No permitir desactivar al super admin
+        // Protección: No permitir desactivar al super admin (usuario ID 1)
         $userRole = $this->roleModel->getUserRole($userId);
-        if ($userRole && $userRole['role_name'] === 'super_admin') {
-            Utils::jsonResponse(['success' => false, 'message' => 'No se puede desactivar al super administrador'], 403);
+        if ($userRole && $userRole['role_name'] === 'super_admin' && $userId === 1) {
+            Utils::jsonResponse(['success' => false, 'message' => 'No se puede desactivar al super administrador principal'], 403);
         }
         
         // Cambiar el estado (toggle)
@@ -1655,8 +1655,8 @@ class AdminController {
             Utils::jsonResponse(['success' => false, 'message' => 'No puedes eliminar tu propio usuario'], 400);
         }
         $userRole = $this->roleModel->getUserRole($userId);
-        if ($userRole && $userRole['role_name'] === 'super_admin') {
-            Utils::jsonResponse(['success' => false, 'message' => 'No se puede eliminar al super administrador'], 403);
+        if ($userRole && $userRole['role_name'] === 'super_admin' && $userId === 1) {
+            Utils::jsonResponse(['success' => false, 'message' => 'No se puede eliminar al super administrador principal'], 403);
         }
 
         // Verificar existencia
