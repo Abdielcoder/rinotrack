@@ -219,6 +219,7 @@ class ClanMemberController {
         $clanPart = $this->userClan ? $this->taskModel->getUserTasks($this->currentUser['user_id'], $page, $perPage, $search, $status) : ['tasks' => [], 'total' => 0, 'page' => 1, 'per_page' => $perPage, 'total_pages' => 0];
         $ownLogical = $this->taskModel->getUserTasksByProjectNames($this->currentUser['user_id'], ['Tareas Recurrentes','Tareas Eventuales']);
         $personalTasks = $this->taskModel->getUserCreatedTasks($this->currentUser['user_id'], $search, $status);
+
         
         $merged = [];
         foreach ($clanPart['tasks'] as $t) { $merged[$t['task_id']] = $t; }

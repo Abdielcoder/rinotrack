@@ -1782,7 +1782,7 @@ class Task {
 
             $baseQuery = "
                 FROM Tasks t
-                JOIN Projects p ON t.project_id = p.project_id
+                LEFT JOIN Projects p ON t.project_id = p.project_id
                 LEFT JOIN Users u ON t.assigned_to_user_id = u.user_id
                 LEFT JOIN Users creator ON t.created_by_user_id = creator.user_id
                 LEFT JOIN Task_Assignments ta ON t.task_id = ta.task_id
@@ -1790,9 +1790,9 @@ class Task {
                 WHERE t.is_subtask = 0
                   AND (
                     t.assigned_to_user_id = ?
-                    OR ta.user_id = ?
+                    OR EXISTS (SELECT 1 FROM Task_Assignments ta2 WHERE ta2.task_id = t.task_id AND ta2.user_id = ?)
                   )
-                  AND (p.is_personal IS NULL OR p.is_personal != 1)
+                  AND (t.is_personal IS NULL OR t.is_personal != 1)
             ";
 
             $params = [$userId, $userId];
@@ -1801,6 +1801,8 @@ class Task {
                 $term = "%{$search}%";
                 $params = array_merge($params, [$term, $term, $term, $term, $term]);
             }
+            
+
 
             if (!empty($statusFilter)) {
                 $baseQuery .= " AND t.status = ?";
