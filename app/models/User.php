@@ -137,6 +137,25 @@ class User {
     }
     
     /**
+     * Verificar si un username o email ya existe excluyendo un usuario específico
+     */
+    public function existsExcludingUser($excludeUserId, $username, $email) {
+        try {
+            $stmt = $this->db->prepare("
+                SELECT COUNT(*) as count 
+                FROM Users 
+                WHERE (username = ? OR email = ?) AND user_id != ?
+            ");
+            $stmt->execute([$username, $email, $excludeUserId]);
+            $result = $stmt->fetch();
+            return $result['count'] > 0;
+        } catch (PDOException $e) {
+            error_log("Error al verificar existencia de usuario (excluyendo): " . $e->getMessage());
+            return true; // En caso de error, asumir que existe para evitar duplicados
+        }
+    }
+    
+    /**
      * Activar/desactivar usuario
      */
     public function setActive($userId, $active = true) {

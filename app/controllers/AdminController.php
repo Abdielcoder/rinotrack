@@ -223,15 +223,34 @@ class AdminController {
      * Actualizar usuario
      */
     public function updateUser() {
-        $this->requireAuth();
-        if (!$this->hasAdminAccess()) {
-            Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos'], 403);
+        // DEBUG: Log para diagnosticar el problema
+        error_log("=== UPDATE USER DEBUG ===");
+        error_log("updateUser called - Method: " . $_SERVER['REQUEST_METHOD']);
+        error_log("POST data: " . print_r($_POST, true));
+        error_log("SESSION data: " . print_r($_SESSION ?? [], true));
+        
+        try {
+            error_log("Calling requireAuth()...");
+            $this->requireAuth();
+            error_log("requireAuth() completed successfully");
+            
+            error_log("Checking admin access...");
+            if (!$this->hasAdminAccess()) {
+                error_log("Access denied - user doesn't have admin access");
+                Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos'], 403);
+            }
+            error_log("Admin access verified successfully");
+        } catch (Exception $e) {
+            error_log("ERROR in auth/access check: " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error de autenticación: ' . $e->getMessage()], 500);
         }
         
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            error_log("Invalid method: " . $_SERVER['REQUEST_METHOD']);
             Utils::redirect('admin/users');
         }
         
+        // Validar y extraer datos
         $userId = (int)($_POST['userId'] ?? 0);
         $username = Utils::sanitizeInput($_POST['username'] ?? '');
         $email = Utils::sanitizeInput($_POST['email'] ?? '');
@@ -239,22 +258,79 @@ class AdminController {
         $roleId = (int)($_POST['roleId'] ?? 0);
         $isActive = isset($_POST['isActive']) ? 1 : 0;
         
+        error_log("Parsed data - userId: $userId, username: '$username', email: '$email', fullName: '$fullName', roleId: $roleId, isActive: $isActive");
+        
         if ($userId <= 0) {
+            error_log("Invalid user ID: $userId");
             Utils::jsonResponse(['success' => false, 'message' => 'ID de usuario inválido'], 400);
         }
         
-        // Actualizar usuario
-        $result = $this->userModel->update($userId, $username, $email, $fullName, $isActive);
+        // Validaciones
+        $errors = [];
         
-        if ($result && $roleId > 0) {
-            // Actualizar rol
-            $this->roleModel->assignToUser($userId, $roleId);
+        if (empty($username) || strlen($username) < 3) {
+            $errors['username'] = 'El nombre de usuario debe tener al menos 3 caracteres';
         }
         
-        if ($result) {
-            Utils::jsonResponse(['success' => true, 'message' => 'Usuario actualizado exitosamente']);
-        } else {
-            Utils::jsonResponse(['success' => false, 'message' => 'Error al actualizar usuario'], 500);
+        if (empty($email) || !Utils::isValidEmail($email)) {
+            $errors['email'] = 'Debe proporcionar un email válido';
+        }
+        
+        if (empty($fullName)) {
+            $errors['fullName'] = 'El nombre completo es requerido';
+        }
+        
+        if ($roleId <= 0) {
+            $errors['roleId'] = 'Debe seleccionar un rol válido';
+        }
+        
+        // Verificar si el usuario existe
+        $existingUser = $this->userModel->findByIdAnyStatus($userId);
+        if (!$existingUser) {
+            error_log("User not found: $userId");
+            Utils::jsonResponse(['success' => false, 'message' => 'Usuario no encontrado'], 404);
+        }
+        
+        // Verificar si username/email ya existen (excluyendo el usuario actual)
+        $duplicateCheck = $this->userModel->existsExcludingUser($userId, $username, $email);
+        if ($duplicateCheck) {
+            $errors['general'] = 'Ya existe otro usuario con ese nombre de usuario o email';
+        }
+        
+        if (!empty($errors)) {
+            error_log("Validation errors: " . print_r($errors, true));
+            Utils::jsonResponse(['success' => false, 'errors' => $errors], 400);
+        }
+        
+        try {
+            // Actualizar usuario
+            error_log("Attempting to update user $userId");
+            $result = $this->userModel->update($userId, $username, $email, $fullName, $isActive);
+            error_log("User update result: " . ($result ? "SUCCESS" : "FAILED"));
+            
+            if ($result && $roleId > 0) {
+                // Actualizar rol
+                error_log("Attempting to update role for user $userId to role $roleId");
+                $roleResult = $this->roleModel->assignToUser($userId, $roleId);
+                error_log("Role update result: " . ($roleResult ? "SUCCESS" : "FAILED"));
+            }
+            
+            if ($result) {
+                error_log("User updated successfully: $userId");
+                Utils::jsonResponse(['success' => true, 'message' => 'Usuario actualizado exitosamente']);
+            } else {
+                error_log("Failed to update user: $userId");
+                Utils::jsonResponse(['success' => false, 'message' => 'Error al actualizar usuario'], 500);
+            }
+        } catch (Exception $e) {
+            error_log("Exception in updateUser: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
+            Utils::jsonResponse([
+                'success' => false, 
+                'message' => 'Error interno del servidor: ' . $e->getMessage(),
+                'exception' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ], 500);
         }
     }
     
