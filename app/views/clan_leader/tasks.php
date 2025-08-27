@@ -166,19 +166,28 @@ ob_start();
                     <table class="tasks-table">
                         <thead>
                             <tr>
+                                <th class="th-checkbox" style="width: 40px;">
+                                    <input type="checkbox" id="select-all" onchange="toggleAllTasks(this)">
+                                </th>
                                 <th class="th-priority">Prioridad</th>
                                 <th class="th-task">Tarea</th>
                                 <th class="th-project">Proyecto</th>
                                 <th class="th-assigned">Asignado</th>
                                 <th class="th-due-date">Fecha Límite</th>
                                 <th class="th-status">Estado</th>
-                                <th class="th-points">Puntos</th>
+                                <th class="th-progress">Progreso</th>
                                 <th class="th-actions">Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php foreach ($allTasks as $task): ?>
                             <tr class="task-row priority-<?= $task['priority'] ?> <?= ($task['days_until_due'] < 0) ? 'overdue' : '' ?> <?= ($task['status'] === 'completed') ? 'completed' : '' ?>">
+                                <td class="td-checkbox">
+                                    <input type="checkbox" 
+                                           id="task-<?= $task['task_id'] ?>" 
+                                           <?= ($task['status'] === 'completed') ? 'checked' : '' ?>
+                                           onchange="toggleTaskStatus(<?= $task['task_id'] ?>, this.checked)">
+                                </td>
                                 <td class="td-priority">
                                     <span class="priority-badge priority-<?= $task['priority'] ?>">
                                         <?php 
@@ -247,12 +256,13 @@ ob_start();
                                         ?>
                                     </span>
                                 </td>
-                                <td class="td-points">
-                                    <?php if ($task['automatic_points'] > 0): ?>
-                                    <span class="points-value"><?= $task['automatic_points'] ?></span>
-                                    <?php else: ?>
-                                    <span class="no-points">-</span>
-                                    <?php endif; ?>
+                                <td class="td-progress">
+                                    <div class="progress-container">
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" style="width: <?= ($task['status'] === 'completed') ? '100' : ($task['completion_percentage'] ?? 0) ?>%;"></div>
+                                        </div>
+                                        <span class="progress-text"><?= ($task['status'] === 'completed') ? '100' : ($task['completion_percentage'] ?? 0) ?>%</span>
+                                    </div>
                                 </td>
                                 <td class="td-actions">
                                     <div class="action-buttons">
@@ -1426,9 +1436,50 @@ ob_start();
     text-align: center;
 }
 
-.th-points, .td-points {
-    width: 80px;
+.th-progress, .td-progress {
+    width: 120px;
     text-align: center;
+}
+
+/* Estilos para checkbox */
+.th-checkbox, .td-checkbox {
+    width: 40px;
+    text-align: center;
+}
+
+.td-checkbox input[type="checkbox"] {
+    cursor: pointer;
+    width: 18px;
+    height: 18px;
+}
+
+/* Estilos para la barra de progreso */
+.progress-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: center;
+}
+
+.progress-bar {
+    width: 70px;
+    height: 6px;
+    background: #e5e7eb;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: #10b981;
+    transition: width 0.3s ease;
+}
+
+.progress-text {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #6b7280;
+    min-width: 35px;
 }
 
 .th-actions, .td-actions {
@@ -2144,5 +2195,64 @@ function debounceSearch(input) {
     searchTimeout = setTimeout(() => {
         input.form.submit();
     }, 500); // 500ms de delay
+}
+// Función para cambiar el estado de una tarea
+function toggleTaskStatus(taskId, isChecked) {
+    const newStatus = isChecked ? 'completed' : 'pending';
+    
+    fetch('?route=clan_leader/toggle-task-status', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'task_id=' + taskId + '&status=' + newStatus
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Actualizar la barra de progreso
+            const row = document.querySelector(`#task-${taskId}`).closest('tr');
+            const progressFill = row.querySelector('.progress-fill');
+            const progressText = row.querySelector('.progress-text');
+            
+            if (isChecked) {
+                progressFill.style.width = '100%';
+                progressText.textContent = '100%';
+                row.classList.add('completed');
+            } else {
+                progressFill.style.width = (data.completion_percentage || 0) + '%';
+                progressText.textContent = (data.completion_percentage || 0) + '%';
+                row.classList.remove('completed');
+            }
+            
+            // Actualizar el badge de estado
+            const statusBadge = row.querySelector('.status-badge');
+            statusBadge.className = 'status-badge status-' + newStatus;
+            statusBadge.textContent = isChecked ? 'Completada' : 'Pendiente';
+            
+            showNotification(data.message || 'Estado actualizado correctamente', 'success');
+        } else {
+            // Revertir el checkbox si hay error
+            document.querySelector(`#task-${taskId}`).checked = !isChecked;
+            showNotification(data.message || 'Error al actualizar el estado', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        // Revertir el checkbox si hay error
+        document.querySelector(`#task-${taskId}`).checked = !isChecked;
+        showNotification('Error al actualizar el estado de la tarea', 'error');
+    });
+}
+
+// Función para seleccionar/deseleccionar todas las tareas
+function toggleAllTasks(checkbox) {
+    const taskCheckboxes = document.querySelectorAll('.td-checkbox input[type="checkbox"]');
+    taskCheckboxes.forEach(taskCheckbox => {
+        if (taskCheckbox.checked !== checkbox.checked) {
+            taskCheckbox.checked = checkbox.checked;
+            // No llamamos a toggleTaskStatus aquí para evitar múltiples llamadas al servidor
+        }
+    });
 }
 </script> 
