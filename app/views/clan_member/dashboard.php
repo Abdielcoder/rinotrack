@@ -166,8 +166,14 @@ ob_start();
                             // Debug: Log de la tarea para verificar el project_name
                             error_log("DEBUG TAREA VENCIDA - ID: {$task['task_id']}, Nombre: {$task['task_name']}, Proyecto: {$task['project_name']}");
                             ?>
-                            <div class="task-card overdue" data-task-id="<?php echo $task['task_id']; ?>">
+                            <div class="task-card overdue <?php echo ($task['item_type'] ?? 'task') === 'subtask' ? 'subtask-card' : ''; ?>" data-task-id="<?php echo $task['task_id']; ?>">
                                 <div class="task-header">
+                                    <?php if (($task['item_type'] ?? 'task') === 'subtask'): ?>
+                                        <div class="subtask-indicator">
+                                            <i class="fas fa-list-ul"></i>
+                                            <span>Subtarea</span>
+                                        </div>
+                                    <?php endif; ?>
                                     <input type="checkbox" class="task-checkbox" <?php echo ($task['status'] === 'completed' || ($task['is_completed'] ?? 0) == 1) ? 'checked' : ''; ?> onchange="toggleTaskStatus(<?php echo $task['task_id']; ?>, this.checked)">
                                     <div class="task-priority-badge <?php echo $task['priority']; ?>">
                                         <?php
@@ -227,8 +233,14 @@ ob_start();
                             // Debug: Log de la tarea para verificar el project_name
                             error_log("DEBUG TAREA HOY - ID: {$task['task_id']}, Nombre: {$task['task_name']}, Proyecto: {$task['project_name']}");
                             ?>
-                            <div class="task-card today" data-task-id="<?php echo $task['task_id']; ?>">
+                            <div class="task-card today <?php echo ($task['item_type'] ?? 'task') === 'subtask' ? 'subtask-card' : ''; ?>" data-task-id="<?php echo $task['task_id']; ?>">
                                 <div class="task-header">
+                                    <?php if (($task['item_type'] ?? 'task') === 'subtask'): ?>
+                                        <div class="subtask-indicator">
+                                            <i class="fas fa-list-ul"></i>
+                                            <span>Subtarea</span>
+                                        </div>
+                                    <?php endif; ?>
                                     <input type="checkbox" class="task-checkbox" <?php echo ($task['status'] === 'completed' || ($task['is_completed'] ?? 0) == 1) ? 'checked' : ''; ?> onchange="toggleTaskStatus(<?php echo $task['task_id']; ?>, this.checked)">
                                     <div class="task-priority-badge <?php echo $task['priority']; ?>">
                                         <?php
@@ -284,8 +296,14 @@ ob_start();
                     </div>
                     <div class="column-content">
                         <?php foreach ($kanbanTasks['1_semana'] ?? [] as $task): ?>
-                            <div class="task-card week1" data-task-id="<?php echo $task['task_id']; ?>">
+                            <div class="task-card week1 <?php echo ($task['item_type'] ?? 'task') === 'subtask' ? 'subtask-card' : ''; ?>" data-task-id="<?php echo $task['task_id']; ?>">
                                 <div class="task-header">
+                                    <?php if (($task['item_type'] ?? 'task') === 'subtask'): ?>
+                                        <div class="subtask-indicator">
+                                            <i class="fas fa-list-ul"></i>
+                                            <span>Subtarea</span>
+                                        </div>
+                                    <?php endif; ?>
                                     <input type="checkbox" class="task-checkbox" <?php echo ($task['status'] === 'completed' || ($task['is_completed'] ?? 0) == 1) ? 'checked' : ''; ?> onchange="toggleTaskStatus(<?php echo $task['task_id']; ?>, this.checked)">
                                     <div class="task-priority-badge <?php echo $task['priority']; ?>">
                                         <?php
@@ -341,8 +359,14 @@ ob_start();
                     </div>
                     <div class="column-content">
                         <?php foreach ($kanbanTasks['2_semanas'] as $task): ?>
-                            <div class="task-card week2" data-task-id="<?php echo $task['task_id']; ?>">
+                            <div class="task-card week2 <?php echo ($task['item_type'] ?? 'task') === 'subtask' ? 'subtask-card' : ''; ?>" data-task-id="<?php echo $task['task_id']; ?>">
                                 <div class="task-header">
+                                    <?php if (($task['item_type'] ?? 'task') === 'subtask'): ?>
+                                        <div class="subtask-indicator">
+                                            <i class="fas fa-list-ul"></i>
+                                            <span>Subtarea</span>
+                                        </div>
+                                    <?php endif; ?>
                                     <input type="checkbox" class="task-checkbox" <?php echo ($task['status'] === 'completed' || ($task['is_completed'] ?? 0) == 1) ? 'checked' : ''; ?> onchange="toggleTaskStatus(<?php echo $task['task_id']; ?>, this.checked)">
                                     <div class="task-priority-badge <?php echo $task['priority']; ?>">
                                         <?php
@@ -1391,6 +1415,34 @@ ob_start();
 
 .task-status i {
     font-size: 0.7rem;
+}
+
+/* Estilos para subtareas */
+.subtask-card {
+    border-left-style: dashed !important;
+    opacity: 0.9;
+    background: rgba(255, 255, 255, 0.95) !important;
+}
+
+.subtask-indicator {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: #f3f4f6;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    color: #6b7280;
+    margin-bottom: 4px;
+}
+
+.subtask-indicator i {
+    font-size: 0.65rem;
+}
+
+.subtask-card .task-title {
+    font-size: 0.85rem !important;
+    color: #4b5563 !important;
 }
 </style>
 

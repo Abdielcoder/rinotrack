@@ -3148,7 +3148,8 @@ class ClanLeaderController {
                     CASE 
                         WHEN p.clan_id = ? THEN 1
                         ELSE 0
-                    END as is_primary_clan
+                    END as is_primary_clan,
+                    'task' as item_type
                  FROM Tasks t
                  INNER JOIN Projects p ON p.project_id = t.project_id
                  LEFT JOIN Clans c ON p.clan_id = c.clan_id
@@ -3197,6 +3198,62 @@ class ClanLeaderController {
             
             $stmt->execute($params);
             $allTasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Obtener subtareas asignadas a miembros del clan
+            $subtaskStmt = $this->db->prepare(
+                "SELECT 
+                    s.subtask_id as task_id,
+                    s.title as task_name,
+                    s.description,
+                    s.due_date,
+                    'medium' as priority,  -- Las subtareas tendrán prioridad media por defecto
+                    s.status,
+                    s.completion_percentage,
+                    0 as automatic_points,
+                    CONCAT('Subtarea de: ', t.task_name) as project_name,
+                    t.project_id,
+                    p.clan_id,
+                    c.clan_name,
+                    u_assigned.full_name as assigned_to_name,
+                    u_assigned.username as assigned_to_username,
+                    CASE 
+                        WHEN s.due_date IS NULL THEN 999
+                        ELSE DATEDIFF(s.due_date, CURDATE())
+                    END as days_until_due,
+                    CASE 
+                        WHEN p.clan_id = ? THEN 1
+                        ELSE 0
+                    END as is_primary_clan,
+                    'subtask' as item_type
+                 FROM Subtasks s
+                 INNER JOIN Tasks t ON s.task_id = t.task_id
+                 INNER JOIN Projects p ON t.project_id = p.project_id
+                 LEFT JOIN Clans c ON p.clan_id = c.clan_id
+                 LEFT JOIN Users u_assigned ON s.assigned_to_user_id = u_assigned.user_id
+                 LEFT JOIN Clan_Members cm ON s.assigned_to_user_id = cm.user_id
+                 WHERE s.status != 'completed'
+                   AND (
+                       -- Subtareas del clan principal
+                       (p.clan_id = ? AND cm.clan_id = ?)
+                       -- Subtareas de otros clanes donde miembros del clan estén asignados
+                       OR (p.clan_id != ? AND cm.clan_id = ?)
+                   )
+                 ORDER BY s.due_date ASC"
+            );
+            
+            $subtaskParams = [
+                $primaryClanId, // is_primary_clan CASE
+                $primaryClanId, // subtareas del clan principal
+                $primaryClanId, // miembros del clan principal
+                $primaryClanId, // para excluir clan principal de otros clanes
+                $primaryClanId  // clan de los miembros asignados en otros clanes
+            ];
+            
+            $subtaskStmt->execute($subtaskParams);
+            $allSubtasks = $subtaskStmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Combinar tareas y subtareas
+            $allTasks = array_merge($allTasks, $allSubtasks);
             
             // Organizar en columnas Kanban
             $kanbanTasks = [

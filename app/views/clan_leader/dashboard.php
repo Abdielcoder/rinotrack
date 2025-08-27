@@ -49,10 +49,17 @@ ob_start();
                     </div>
                     <div class="column-content-compact">
                         <?php foreach ($kanbanTasks['vencidas'] ?? [] as $task): ?>
-                            <div class="task-card-compact overdue" data-task-id="<?php echo $task['task_id']; ?>">
+                            <div class="task-card-compact overdue <?php echo ($task['item_type'] ?? 'task') === 'subtask' ? 'subtask-card-compact' : ''; ?>" data-task-id="<?php echo $task['task_id']; ?>">
                                 <div class="task-compact-row">
                                     <input type="checkbox" class="task-checkbox-compact" <?php echo ($task['status'] === 'completed' || ($task['is_completed'] ?? 0) == 1) ? 'checked' : ''; ?> onchange="toggleTaskStatus(<?php echo $task['task_id']; ?>, this.checked)">
-                                    <div class="task-name-compact"><?php echo htmlspecialchars($task['task_name']); ?></div>
+                                    <div class="task-name-compact">
+                                        <?php if (($task['item_type'] ?? 'task') === 'subtask'): ?>
+                                            <div class="subtask-indicator-compact">
+                                                <i class="fas fa-list-ul"></i>
+                                            </div>
+                                        <?php endif; ?>
+                                        <?php echo htmlspecialchars($task['task_name']); ?>
+                                    </div>
                                     <a href="?route=clan_leader/get-task-details&task_id=<?php echo $task['task_id']; ?>" class="btn-compact-action" title="Ver proyecto">
                                         <i class="fas fa-eye"></i>
                                     </a>
@@ -87,10 +94,17 @@ ob_start();
                     </div>
                     <div class="column-content-compact">
                         <?php foreach ($kanbanTasks['hoy'] ?? [] as $task): ?>
-                            <div class="task-card-compact today" data-task-id="<?php echo $task['task_id']; ?>">
+                            <div class="task-card-compact today <?php echo ($task['item_type'] ?? 'task') === 'subtask' ? 'subtask-card-compact' : ''; ?>" data-task-id="<?php echo $task['task_id']; ?>">
                                 <div class="task-compact-row">
                                     <input type="checkbox" class="task-checkbox-compact" <?php echo ($task['status'] === 'completed' || ($task['is_completed'] ?? 0) == 1) ? 'checked' : ''; ?> onchange="toggleTaskStatus(<?php echo $task['task_id']; ?>, this.checked)">
-                                    <div class="task-name-compact"><?php echo htmlspecialchars($task['task_name']); ?></div>
+                                    <div class="task-name-compact">
+                                        <?php if (($task['item_type'] ?? 'task') === 'subtask'): ?>
+                                            <div class="subtask-indicator-compact">
+                                                <i class="fas fa-list-ul"></i>
+                                            </div>
+                                        <?php endif; ?>
+                                        <?php echo htmlspecialchars($task['task_name']); ?>
+                                    </div>
                                     <a href="?route=clan_leader/get-task-details&task_id=<?php echo $task['task_id']; ?>" class="btn-compact-action" title="Ver proyecto">
                                         <i class="fas fa-eye"></i>
                                     </a>
@@ -125,10 +139,17 @@ ob_start();
                     </div>
                     <div class="column-content-compact">
                         <?php foreach ($kanbanTasks['1_semana'] ?? [] as $task): ?>
-                            <div class="task-card-compact week1" data-task-id="<?php echo $task['task_id']; ?>">
+                            <div class="task-card-compact week1 <?php echo ($task['item_type'] ?? 'task') === 'subtask' ? 'subtask-card-compact' : ''; ?>" data-task-id="<?php echo $task['task_id']; ?>">
                                 <div class="task-compact-row">
                                     <input type="checkbox" class="task-checkbox-compact" <?php echo ($task['status'] === 'completed' || ($task['is_completed'] ?? 0) == 1) ? 'checked' : ''; ?> onchange="toggleTaskStatus(<?php echo $task['task_id']; ?>, this.checked)">
-                                    <div class="task-name-compact"><?php echo htmlspecialchars($task['task_name']); ?></div>
+                                    <div class="task-name-compact">
+                                        <?php if (($task['item_type'] ?? 'task') === 'subtask'): ?>
+                                            <div class="subtask-indicator-compact">
+                                                <i class="fas fa-list-ul"></i>
+                                            </div>
+                                        <?php endif; ?>
+                                        <?php echo htmlspecialchars($task['task_name']); ?>
+                                    </div>
                                     <a href="?route=clan_leader/get-task-details&task_id=<?php echo $task['task_id']; ?>" class="btn-compact-action" title="Ver proyecto">
                                         <i class="fas fa-eye"></i>
                                     </a>
@@ -163,10 +184,17 @@ ob_start();
                     </div>
                     <div class="column-content-compact">
                         <?php foreach ($kanbanTasks['2_semanas'] ?? [] as $task): ?>
-                            <div class="task-card-compact week2" data-task-id="<?php echo $task['task_id']; ?>">
+                            <div class="task-card-compact week2 <?php echo ($task['item_type'] ?? 'task') === 'subtask' ? 'subtask-card-compact' : ''; ?>" data-task-id="<?php echo $task['task_id']; ?>">
                                 <div class="task-compact-row">
                                     <input type="checkbox" class="task-checkbox-compact" <?php echo ($task['status'] === 'completed' || ($task['is_completed'] ?? 0) == 1) ? 'checked' : ''; ?> onchange="toggleTaskStatus(<?php echo $task['task_id']; ?>, this.checked)">
-                                    <div class="task-name-compact"><?php echo htmlspecialchars($task['task_name']); ?></div>
+                                    <div class="task-name-compact">
+                                        <?php if (($task['item_type'] ?? 'task') === 'subtask'): ?>
+                                            <div class="subtask-indicator-compact">
+                                                <i class="fas fa-list-ul"></i>
+                                            </div>
+                                        <?php endif; ?>
+                                        <?php echo htmlspecialchars($task['task_name']); ?>
+                                    </div>
                                     <a href="?route=clan_leader/get-task-details&task_id=<?php echo $task['task_id']; ?>" class="btn-compact-action" title="Ver proyecto">
                                         <i class="fas fa-eye"></i>
                                     </a>

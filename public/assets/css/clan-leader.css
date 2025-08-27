@@ -5660,3 +5660,26 @@ input[type="checkbox"] {
     min-width: 18px;
     padding: 0;
 }
+
+/* Estilos para subtareas en kanban */
+.subtask-card-compact {
+    border-left-style: dashed !important;
+    opacity: 0.9;
+    background: rgba(255, 255, 255, 0.95) !important;
+}
+
+.subtask-indicator-compact {
+    display: inline-block;
+    margin-right: 6px;
+    color: #6b7280;
+    font-size: 0.75rem;
+}
+
+.subtask-card-compact .task-name-compact {
+    color: #4b5563 !important;
+    font-size: 0.85rem !important;
+}
+
+.subtask-card-compact .project-name-compact {
+    font-style: italic;
+}
