@@ -2091,6 +2091,11 @@ class ClanMemberController {
     }
 
     public function updateTaskProgress() {
+        // Debug log
+        error_log("=== updateTaskProgress called ===");
+        error_log("REQUEST_METHOD: " . $_SERVER['REQUEST_METHOD']);
+        error_log("POST data: " . print_r($_POST, true));
+        
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
         }

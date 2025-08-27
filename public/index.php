@@ -903,6 +903,12 @@ try {
             $controller = new ClanMemberController();
             $controller->editSubtask();
             break;
+
+        case 'clan_member/update-task-progress':
+            error_log("=== Ruta clan_member/update-task-progress reconocida ===");
+            $controller = new ClanMemberController();
+            $controller->updateTaskProgress();
+            break;
             
         default:
             // Verificar si es un asset
