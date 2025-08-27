@@ -181,12 +181,16 @@ ob_start();
                         </thead>
                         <tbody>
                             <?php foreach ($allTasks as $task): ?>
-                            <tr class="task-row priority-<?= $task['priority'] ?> <?= ($task['days_until_due'] < 0) ? 'overdue' : '' ?> <?= ($task['status'] === 'completed') ? 'completed' : '' ?>">
+                            <?php 
+                            // Debug: verificar task_id
+                            error_log("DEBUG HTML - Task ID: " . ($task['task_id'] ?? 'NULL') . ", Task name: " . ($task['task_name'] ?? 'NULL'));
+                            ?>
+                            <tr class="task-row priority-<?= $task['priority'] ?> <?= ($task['days_until_due'] < 0) ? 'overdue' : '' ?> <?= ($task['status'] === 'completed') ? 'completed' : '' ?>" data-task-id="<?= $task['task_id'] ?? 'undefined' ?>">
                                 <td class="td-checkbox">
                                     <input type="checkbox" 
                                            id="task-<?= $task['task_id'] ?>" 
                                            <?= ($task['status'] === 'completed') ? 'checked' : '' ?>
-                                           onchange="toggleTaskStatus(<?= $task['task_id'] ?>, this.checked)">
+                                           onchange="console.log('HTML task_id: <?= $task['task_id'] ?>'); toggleTaskStatus(<?= $task['task_id'] ?>, this.checked)">
                                 </td>
                                 <td class="td-priority">
                                     <span class="priority-badge priority-<?= $task['priority'] ?>">
@@ -2196,16 +2200,25 @@ function debounceSearch(input) {
         input.form.submit();
     }, 500); // 500ms de delay
 }
-// Función para cambiar el estado de una tarea
+// Función para cambiar el estado de una tarea - VERSIÓN NUEVA
 function toggleTaskStatus(taskId, isChecked) {
-    console.log('=== toggleTaskStatus Debug ===');
+    console.log('=== toggleTaskStatus Debug V2.0 ===');
     console.log('taskId:', taskId, 'Type:', typeof taskId);
     console.log('isChecked:', isChecked);
+    
+    // Forzar conversión a número
+    const numericTaskId = parseInt(taskId);
+    console.log('numericTaskId:', numericTaskId);
+    
+    if (!numericTaskId || numericTaskId <= 0) {
+        alert('Error: ID de tarea inválido: ' + taskId);
+        return;
+    }
     
     const newStatus = isChecked ? 'completed' : 'pending';
     console.log('newStatus:', newStatus);
     
-    const requestBody = 'task_id=' + taskId + '&status=' + newStatus;
+    const requestBody = 'task_id=' + numericTaskId + '&status=' + newStatus;
     console.log('Request body:', requestBody);
     
     fetch('?route=clan_leader/simple-toggle-task', {
@@ -2267,4 +2280,6 @@ function toggleAllTasks(checkbox) {
         }
     });
 }
+
+// Timestamp para forzar recarga: <?= time() ?>
 </script> 
