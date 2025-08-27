@@ -782,6 +782,12 @@ function saveSubtaskChanges(subtaskId) {
         return;
     }
     
+    // Solo permitir actualizar si el estado es 'in_progress' o 'completed'
+    if (status === 'pending') {
+        alert('No se pueden guardar cambios con estado "Pendiente". Cambie a "En Progreso" o "Completado".');
+        return;
+    }
+    
     fetch('?route=clan_member/edit-subtask', {
         method: 'POST',
         headers: {

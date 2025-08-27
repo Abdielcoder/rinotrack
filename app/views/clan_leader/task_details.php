@@ -1736,19 +1736,21 @@ function saveSubtaskChanges(subtaskId) {
         return;
     }
     
+    // Solo permitir actualizar si el estado es 'in_progress' o 'completed'
+    if (status === 'pending') {
+        showNotification('No se pueden guardar cambios con estado "Pendiente". Cambie a "En Progreso" o "Completado".', 'warning');
+        return;
+    }
+    
     // Preparar el cuerpo de la petición
     const requestBody = {
         subtask_id: subtaskId,
         title: title,
         description: description,
         status: status,
+        completion_percentage: completionPercentage,
         due_date: dueDate
     };
-    
-    // Solo incluir completion_percentage si NO es estado pendiente
-    if (status !== 'pending') {
-        requestBody.completion_percentage = completionPercentage;
-    }
     
     fetch('?route=clan_leader/edit-subtask', {
         method: 'POST',
