@@ -2349,55 +2349,45 @@ class ClanLeaderController {
     }
     
     /**
-     * Mostrar todas las tareas del clan o de un proyecto específico
+     * Vista de tareas del líder de clan - nueva implementación
      */
-    public function tasks() {
+    public function tasksList() {
         $this->requireAuth();
+        error_log("=== ClanLeaderController::tasksList() called ===");
         
-        if (!$this->hasClanLeaderAccess()) {
-            Utils::redirect('dashboard');
-        }
-        
-        // Verificar si se está filtrando por proyecto específico
         $projectId = $_GET['project_id'] ?? null;
+        error_log("Project ID: " . ($projectId ?? 'NULL'));
         
         try {
             if ($projectId) {
-                // Tareas de un proyecto específico
-                error_log("Getting tasks for project: " . $projectId);
-                $tasks = $this->taskModel->getByProject($projectId);
-                
-                // Obtener información del proyecto
+                // Obtener tareas del proyecto específico
+                $allTasks = $this->taskModel->getByProject($projectId);
                 $project = $this->projectModel->findById($projectId);
-                $data = [
-                    'allTasks' => $tasks,
-                    'project' => $project,
-                    'currentPage' => 'clan_leader',
-                    'user' => $this->currentUser,
-                    'clan' => $this->userClan
-                ];
+                error_log("Tasks for project $projectId: " . count($allTasks));
             } else {
-                // Todas las tareas del clan
-                error_log("Getting all tasks for clan: " . $this->userClan['clan_id']);
-                $tasks = $this->taskModel->getAllTasksByClan($this->userClan['clan_id']);
-                $data = [
-                    'allTasks' => $tasks,
-                    'currentPage' => 'clan_leader',
-                    'user' => $this->currentUser,
-                    'clan' => $this->userClan
-                ];
+                // Obtener todas las tareas del clan
+                $allTasks = $this->taskModel->getAllTasksByClan($this->userClan['clan_id']);
+                $project = null;
+                error_log("Tasks for clan: " . count($allTasks));
             }
             
-            error_log("Tasks count: " . count($tasks));
-            if (!empty($tasks)) {
-                error_log("Sample task: " . print_r($tasks[0], true));
+            if (!empty($allTasks)) {
+                error_log("First task sample: " . print_r($allTasks[0], true));
             }
+            
+            $data = [
+                'allTasks' => $allTasks,
+                'project' => $project,
+                'currentPage' => 'clan_leader',
+                'user' => $this->currentUser,
+                'clan' => $this->userClan
+            ];
             
             $this->loadView('clan_leader/tasks', $data);
             
         } catch (Exception $e) {
-            error_log("Error in ClanLeaderController::tasks: " . $e->getMessage());
-            Utils::redirect('clan_leader');
+            error_log("Error in tasksList(): " . $e->getMessage());
+            echo "Error: " . $e->getMessage();
         }
     }
     

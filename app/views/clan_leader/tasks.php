@@ -180,6 +180,15 @@ ob_start();
                             </tr>
                         </thead>
                         <tbody>
+                            <?php 
+                            // Debug: verificar si allTasks existe
+                            error_log("DEBUG VIEW - allTasks isset: " . (isset($allTasks) ? 'YES' : 'NO'));
+                            error_log("DEBUG VIEW - allTasks count: " . (isset($allTasks) ? count($allTasks) : 'N/A'));
+                            if (!isset($allTasks)) {
+                                echo '<tr><td colspan="9">ERROR: $allTasks no está definida</td></tr>';
+                                return;
+                            }
+                            ?>
                             <?php foreach ($allTasks as $task): ?>
                             <?php 
                             // Debug: verificar task_id
