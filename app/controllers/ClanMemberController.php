@@ -2089,6 +2089,57 @@ class ClanMemberController {
             echo json_encode(['success' => false, 'message' => 'Error interno del servidor']);
         }
     }
+
+    public function updateTaskProgress() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
+        }
+        
+        $this->requireAuth();
+        if (!$this->hasMemberAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+        }
+
+        $taskId = (int)($_POST['task_id'] ?? 0);
+        $completionPercentage = (int)($_POST['completion_percentage'] ?? 0);
+
+        if ($taskId <= 0 || $completionPercentage < 0 || $completionPercentage > 100) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Datos inválidos'], 400);
+        }
+
+        // Verificar que la tarea existe y pertenece al clan del usuario
+        $task = $this->taskModel->findById($taskId);
+        if (!$task) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Tarea no encontrada'], 404);
+        }
+
+        $project = $this->projectModel->findById($task['project_id']);
+        if (!$project || (int)$project['clan_id'] !== (int)$this->userClan['clan_id']) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado al proyecto'], 403);
+        }
+
+        // Verificar que el usuario NO es el creador de la tarea
+        if ((int)($task['created_by_user_id'] ?? 0) === (int)$this->currentUser['user_id']) {
+            Utils::jsonResponse(['success' => false, 'message' => 'No puedes editar el progreso de tareas que creaste'], 403);
+        }
+
+        // Verificar que el usuario está asignado a la tarea
+        $isAssigned = $this->isTaskAssignedToUser($taskId, $this->currentUser['user_id'])
+            || (int)($task['assigned_to_user_id'] ?? 0) === (int)$this->currentUser['user_id'];
+        
+        if (!$isAssigned) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Solo puedes editar el progreso de tareas asignadas a ti'], 403);
+        }
+
+        // Actualizar solo el porcentaje de completion
+        $success = $this->taskModel->updateTaskProgress($taskId, $completionPercentage);
+
+        if ($success) {
+            Utils::jsonResponse(['success' => true, 'message' => 'Progreso actualizado correctamente']);
+        } else {
+            Utils::jsonResponse(['success' => false, 'message' => 'Error al actualizar el progreso'], 500);
+        }
+    }
 }
 
 ?>

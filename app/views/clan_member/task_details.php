@@ -214,7 +214,35 @@ ob_start();
           <div class="info-grid">
             <div><strong>Creado:</strong> <?php echo htmlspecialchars($task['created_at'] ?? ''); ?></div>
             <div><strong>Actualizado:</strong> <?php echo htmlspecialchars($task['updated_at'] ?? ''); ?></div>
-            <div><strong>Progreso:</strong> <?php echo (int)($task['completion_percentage'] ?? 0); ?>%</div>
+            <?php 
+                // Solo permitir editar progreso si NO fue creado por el usuario actual
+                $canEditProgress = (int)($task['created_by_user_id'] ?? 0) !== (int)$user['user_id']; 
+                $currentProgress = (int)($task['completion_percentage'] ?? 0);
+            ?>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <strong>Progreso de la Tarea:</strong>
+              <?php if ($canEditProgress): ?>
+                <div class="task-progress-container">
+                  <div class="task-progress-bar" onclick="updateTaskProgress(event)">
+                    <div class="task-progress-fill" style="width: <?php echo $currentProgress; ?>%"></div>
+                    <span class="task-progress-text"><?php echo $currentProgress; ?>%</span>
+                  </div>
+                  <input type="range" id="taskProgressSlider" min="0" max="100" value="<?php echo $currentProgress; ?>" 
+                         onchange="updateTaskProgressFromSlider(this.value)" 
+                         style="width: 100%; margin-top: 5px;">
+                </div>
+              <?php else: ?>
+                <div class="task-progress-readonly">
+                  <div class="task-progress-bar">
+                    <div class="task-progress-fill" style="width: <?php echo $currentProgress; ?>%"></div>
+                    <span class="task-progress-text"><?php echo $currentProgress; ?>%</span>
+                  </div>
+                  <div style="font-size: 12px; color: #6b7280; margin-top: 5px;">
+                    Solo puedes editar el progreso de tareas asignadas a ti
+                  </div>
+                </div>
+              <?php endif; ?>
+            </div>
           </div>
         </div>
       </aside>
@@ -1179,6 +1207,68 @@ function updateBadges(subtaskId, counts) {
 document.addEventListener('DOMContentLoaded', function() {
     loadAllSubtaskCounts();
 });
+
+// Funciones para actualizar el progreso de la tarea principal
+function updateTaskProgress(event) {
+    const progressBar = event.currentTarget;
+    const rect = progressBar.getBoundingClientRect();
+    const clickX = event.clientX - rect.left;
+    const percentage = Math.round((clickX / rect.width) * 100);
+    
+    if (percentage >= 0 && percentage <= 100) {
+        updateTaskProgressValue(percentage);
+    }
+}
+
+function updateTaskProgressFromSlider(percentage) {
+    updateTaskProgressValue(parseInt(percentage));
+}
+
+function updateTaskProgressValue(percentage) {
+    // Actualizar UI inmediatamente
+    const progressFill = document.querySelector('.task-progress-fill');
+    const progressText = document.querySelector('.task-progress-text');
+    const slider = document.getElementById('taskProgressSlider');
+    
+    if (progressFill) progressFill.style.width = percentage + '%';
+    if (progressText) progressText.textContent = percentage + '%';
+    if (slider) slider.value = percentage;
+    
+    // Enviar actualización al servidor
+    const taskId = <?php echo (int)$task['task_id']; ?>;
+    
+    fetch('?route=clan_member/update-task-progress', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `task_id=${taskId}&completion_percentage=${percentage}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Progreso actualizado correctamente', 'success');
+        } else {
+            // Revertir cambios en caso de error
+            const originalProgress = <?php echo $currentProgress; ?>;
+            if (progressFill) progressFill.style.width = originalProgress + '%';
+            if (progressText) progressText.textContent = originalProgress + '%';
+            if (slider) slider.value = originalProgress;
+            
+            showNotification('Error al actualizar progreso: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        // Revertir cambios en caso de error
+        const originalProgress = <?php echo $currentProgress; ?>;
+        if (progressFill) progressFill.style.width = originalProgress + '%';
+        if (progressText) progressText.textContent = originalProgress + '%';
+        if (slider) slider.value = originalProgress;
+        
+        console.error('Error:', error);
+        showNotification('Error de conexión al actualizar progreso', 'error');
+    });
+}
 </script>
 
 <style>
@@ -1343,6 +1433,103 @@ document.addEventListener('DOMContentLoaded', function() {
     color: #9ca3af;
     font-size: 10px;
     margin-left: 4px;
+}
+
+/* Estilos para la barra de progreso de la tarea principal */
+.task-progress-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.task-progress-bar {
+    position: relative;
+    width: 100%;
+    height: 24px;
+    background: #f3f4f6;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid #e5e7eb;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.task-progress-bar:hover {
+    border-color: #3b82f6;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+.task-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #10b981, #22c55e);
+    transition: width 0.3s ease;
+    border-radius: 8px;
+}
+
+.task-progress-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 12px;
+    font-weight: 600;
+    color: #374151;
+    text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+.task-progress-readonly .task-progress-bar {
+    cursor: default;
+    opacity: 0.7;
+}
+
+.task-progress-readonly .task-progress-bar:hover {
+    border-color: #e5e7eb;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Estilos para el slider */
+#taskProgressSlider {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 6px;
+    background: #e5e7eb;
+    border-radius: 3px;
+    outline: none;
+}
+
+#taskProgressSlider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    background: #1e3a8a;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+#taskProgressSlider::-webkit-slider-thumb:hover {
+    background: #1e40af;
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(30, 58, 138, 0.3);
+}
+
+#taskProgressSlider::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    background: #1e3a8a;
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s ease;
+}
+
+#taskProgressSlider::-moz-range-thumb:hover {
+    background: #1e40af;
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(30, 58, 138, 0.3);
 }
 </style>
 

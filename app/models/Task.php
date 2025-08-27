@@ -2209,5 +2209,39 @@ class Task {
             return false;
         }
     }
+
+    /**
+     * Actualizar solo el porcentaje de progreso de una tarea
+     */
+    public function updateTaskProgress($taskId, $completionPercentage) {
+        try {
+            $stmt = $this->db->prepare("
+                UPDATE Tasks 
+                SET 
+                    completion_percentage = ?,
+                    updated_at = NOW()
+                WHERE task_id = ?
+            ");
+            
+            $result = $stmt->execute([$completionPercentage, $taskId]);
+            
+            if ($result) {
+                // Actualizar el progreso del proyecto padre
+                $task = $this->findById($taskId);
+                if ($task && !empty($task['project_id'])) {
+                    $projectModel = new Project();
+                    $projectModel->updateProgress($task['project_id']);
+                }
+                
+                return true;
+            }
+            
+            return false;
+            
+        } catch (Exception $e) {
+            error_log("Error al actualizar progreso de tarea: " . $e->getMessage());
+            return false;
+        }
+    }
 }
 ?>
