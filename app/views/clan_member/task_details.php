@@ -629,25 +629,39 @@ function updateSubtaskStatus(subtaskId, status) {
 }
 
 function editSubtask(subtaskId) {
+    console.log('=== EDIT SUBTASK DEBUG ===');
+    console.log('Subtask ID:', subtaskId);
+    
     // Obtener datos actuales de la subtarea
     const subtaskElement = document.querySelector(`[data-subtask-id="${subtaskId}"]`);
+    console.log('Subtask element found:', !!subtaskElement);
+    
+    if (!subtaskElement) {
+        console.error('No se encontró el elemento de subtarea con ID:', subtaskId);
+        return;
+    }
+    
     const currentTitle = subtaskElement.querySelector('.subtask-title').textContent.trim();
     const currentDescription = subtaskElement.querySelector('.subtask-description')?.textContent.trim() || '';
     
     // Obtener estado actual
     const statusSelect = subtaskElement.querySelector('.status-select');
     const currentStatus = statusSelect ? statusSelect.value : 'pending';
+    console.log('Current status:', currentStatus);
     
     // Obtener progreso actual
-    const progressText = subtaskElement.querySelector('.progress-percentage').textContent;
-    const currentProgress = parseInt(progressText.replace('%', ''));
+    const progressElement = subtaskElement.querySelector('.progress-percentage');
+    const progressText = progressElement ? progressElement.textContent : '0%';
+    const currentProgress = parseInt(progressText.replace('%', '')) || 0;
+    console.log('Progress element found:', !!progressElement);
+    console.log('Current progress:', currentProgress);
     
     const modal = document.createElement('div');
     modal.className = 'modal-overlay';
     modal.innerHTML = `
         <div class="modal-content" style="max-width: 700px;">
             <div class="modal-header">
-                <h3><i class="fas fa-edit"></i> Editar Subtarea</h3>
+                <h3><i class="fas fa-edit"></i> Editar Subtarea (Nuevo Modal v2.0)</h3>
                 <button class="btn-close" onclick="this.closest('.modal-overlay').remove()">
                     <i class="fas fa-times"></i>
                 </button>
@@ -696,6 +710,12 @@ function editSubtask(subtaskId) {
     `;
     
     document.body.appendChild(modal);
+    
+    console.log('Modal HTML agregado al DOM');
+    console.log('Verificando elementos del modal:');
+    console.log('Estado select:', !!document.getElementById('edit-subtask-status'));
+    console.log('Progress container:', !!document.querySelector('.progress-control-container'));
+    console.log('Progress bar:', !!document.querySelector('.progress-bar-edit'));
     
     // Configurar estado inicial de la barra de progreso
     toggleProgressBar();
