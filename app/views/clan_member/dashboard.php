@@ -23,8 +23,8 @@ ob_start();
             <ul class="nav-menu">
                 <li class="nav-item active"><a href="?route=clan_member" class="nav-link"><i class="fas fa-home"></i><span>Dashboard</span></a></li>
                 <li class="nav-item"><a href="?route=clan_member/tasks" class="nav-link"><i class="fas fa-tasks"></i><span>Tareas</span></a></li>
-                <li class="nav-item"><a href="?route=clan_member/kpi-dashboard" class="nav-link"><i class="fas fa-chart-line"></i><span>KPI</span></a></li>
-                <li class="nav-item"><a href="?route=clan_member/availability" class="nav-link"><i class="fas fa-user-clock"></i><span>Disponibilidad</span></a></li>
+                <!-- <li class="nav-item"><a href="?route=clan_member/kpi-dashboard" class="nav-link"><i class="fas fa-chart-line"></i><span>KPI</span></a></li> -->
+                <li class="nav-item"><a href="?route=clan_member/availability" class="nav-link"><i class="fas fa-user-clock"></i><span>Agenda</span></a></li>
                 <li class="nav-item"><a href="?route=clan_member/profile" class="nav-link"><i class="fas fa-user"></i><span>Perfil</span></a></li>
             </ul>
             
@@ -57,16 +57,16 @@ ob_start();
                                 <span>Tareas</span>
                             </a>
                         </li>
-                        <li class="mobile-nav-item" style="border-bottom: 1px solid #e5e7eb;">
+                        <!-- <li class="mobile-nav-item" style="border-bottom: 1px solid #e5e7eb;">
                             <a href="?route=clan_member/kpi-dashboard" class="mobile-nav-link" style="display: flex; align-items: center; gap: 16px; padding: 20px; text-decoration: none; color: #6b7280; font-weight: 500; transition: all 0.2s ease;">
                                 <i class="fas fa-chart-line" style="width: 20px; text-align: center; font-size: 1.1rem;"></i>
                                 <span>KPI</span>
                             </a>
-                        </li>
+                        </li> -->
                         <li class="mobile-nav-item" style="border-bottom: 1px solid #e5e7eb;">
                             <a href="?route=clan_member/availability" class="mobile-nav-link" style="display: flex; align-items: center; gap: 16px; padding: 20px; text-decoration: none; color: #6b7280; font-weight: 500; transition: all 0.2s ease;">
                                 <i class="fas fa-user-clock" style="width: 20px; text-align: center; font-size: 1.1rem;"></i>
-                                <span>Disponibilidad</span>
+                                <span>Agenda</span>
                             </a>
                         </li>
                         <li class="mobile-nav-item" style="border-bottom: 1px solid #e5e7eb;">
