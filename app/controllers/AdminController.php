@@ -1073,6 +1073,226 @@ class AdminController {
     }
 
     /**
+     * Agregar respuesta a un comentario (AJAX)
+     */
+    public function addTaskReply() {
+        // Evitar cualquier salida que no sea JSON
+        if (ob_get_level()) {
+            ob_clean();
+        }
+        
+        header('Content-Type: application/json');
+        
+        // Verificar autenticación
+        if (!$this->auth->isLoggedIn()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'No autenticado'], 401);
+            return;
+        }
+        
+        if (!$this->hasAdminAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos'], 403);
+            return;
+        }
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
+            return;
+        }
+
+        $taskId = (int)($_GET['taskId'] ?? 0);
+        $parentCommentId = (int)($_POST['parent_comment_id'] ?? 0);
+        $replyText = trim($_POST['reply_text'] ?? '');
+        
+        if ($taskId <= 0) {
+            Utils::jsonResponse(['success' => false, 'message' => 'ID de tarea inválido'], 400);
+            return;
+        }
+        
+        if ($parentCommentId <= 0) {
+            Utils::jsonResponse(['success' => false, 'message' => 'ID de comentario padre inválido'], 400);
+            return;
+        }
+        
+        if (empty($replyText)) {
+            Utils::jsonResponse(['success' => false, 'message' => 'La respuesta no puede estar vacía'], 400);
+            return;
+        }
+
+        try {
+            $db = Database::getConnection();
+            $currentUser = $this->auth->getCurrentUser();
+            
+            // Verificar que la tarea y el comentario padre existen
+            $stmt = $db->prepare("
+                SELECT tc.comment_id 
+                FROM Task_Comments tc 
+                WHERE tc.comment_id = ? AND tc.task_id = ?
+            ");
+            $stmt->execute([$parentCommentId, $taskId]);
+            if (!$stmt->fetch()) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Comentario padre no encontrado'], 404);
+                return;
+            }
+            
+            $db->beginTransaction();
+            
+            // Primero verificar si existe la columna parent_comment_id
+            $checkColumn = $db->query("SHOW COLUMNS FROM Task_Comments LIKE 'parent_comment_id'");
+            $hasParentColumn = (bool)$checkColumn->fetch();
+            
+            if (!$hasParentColumn) {
+                // Agregar la columna si no existe
+                $db->exec("ALTER TABLE Task_Comments ADD COLUMN parent_comment_id INT(11) NULL DEFAULT NULL AFTER task_id");
+                $db->exec("ALTER TABLE Task_Comments ADD INDEX idx_parent_comment (parent_comment_id)");
+            }
+            
+            // Insertar respuesta
+            $stmt = $db->prepare("
+                INSERT INTO Task_Comments (task_id, parent_comment_id, user_id, comment_text, comment_type, created_at) 
+                VALUES (?, ?, ?, ?, 'reply', NOW())
+            ");
+            $stmt->execute([$taskId, $parentCommentId, $currentUser['user_id'], $replyText]);
+            $replyId = $db->lastInsertId();
+            
+            // Manejar archivo adjunto si se envió
+            $attachmentPath = null;
+            $attachmentName = null;
+            
+            if (isset($_FILES['reply_attachment']) && $_FILES['reply_attachment']['error'] === UPLOAD_ERR_OK) {
+                $file = $_FILES['reply_attachment'];
+                
+                // Validaciones del archivo
+                $maxSize = 10 * 1024 * 1024; // 10MB
+                if ($file['size'] <= $maxSize) {
+                    $allowedTypes = [
+                        'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                        'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                        'text/plain', 'image/jpeg', 'image/png', 'image/gif', 'application/zip', 'application/x-rar-compressed'
+                    ];
+                    
+                    if (in_array($file['type'], $allowedTypes)) {
+                        // Usar directorio existente task_attachments
+                        $uploadDir = $_SERVER['DOCUMENT_ROOT'] . '/rinotrack/public/uploads/task_attachments/';
+                        if (is_dir($uploadDir)) {
+                            // Generar nombre único para el archivo
+                            $fileExtension = pathinfo($file['name'], PATHINFO_EXTENSION);
+                            $fileName = 'reply_' . time() . '_' . uniqid() . '.' . $fileExtension;
+                            $filePath = $uploadDir . $fileName;
+                            $webPath = '/rinotrack/public/uploads/task_attachments/' . $fileName;
+                            
+                            if (move_uploaded_file($file['tmp_name'], $filePath)) {
+                                $attachmentPath = $webPath;
+                                $attachmentName = $file['name'];
+                                
+                                // Verificar si existe columna attachment_path en Task_Comments
+                                $checkAttachmentColumn = $db->query("SHOW COLUMNS FROM Task_Comments LIKE 'attachment_path'");
+                                $hasAttachmentColumn = (bool)$checkAttachmentColumn->fetch();
+                                
+                                if (!$hasAttachmentColumn) {
+                                    // Agregar columnas para adjuntos
+                                    $db->exec("ALTER TABLE Task_Comments ADD COLUMN attachment_path VARCHAR(500) NULL DEFAULT NULL");
+                                    $db->exec("ALTER TABLE Task_Comments ADD COLUMN attachment_name VARCHAR(255) NULL DEFAULT NULL");
+                                }
+                                
+                                // Actualizar la respuesta con el adjunto
+                                $stmt = $db->prepare("
+                                    UPDATE Task_Comments 
+                                    SET attachment_path = ?, attachment_name = ? 
+                                    WHERE comment_id = ?
+                                ");
+                                $stmt->execute([$attachmentPath, $attachmentName, $replyId]);
+                            }
+                        }
+                    }
+                }
+            }
+            
+            $db->commit();
+            
+            Utils::jsonResponse([
+                'success' => true, 
+                'message' => 'Respuesta agregada exitosamente',
+                'reply_id' => $replyId,
+                'attachment_path' => $attachmentPath,
+                'attachment_name' => $attachmentName
+            ]);
+            
+        } catch (Exception $e) {
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
+            error_log('Error al agregar respuesta: ' . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error al agregar respuesta'], 500);
+        }
+    }
+
+    /**
+     * Obtener respuestas de un comentario (AJAX)
+     */
+    public function getCommentReplies() {
+        // Evitar cualquier salida que no sea JSON
+        if (ob_get_level()) {
+            ob_clean();
+        }
+        
+        header('Content-Type: application/json');
+        
+        // Verificar autenticación
+        if (!$this->auth->isLoggedIn()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'No autenticado'], 401);
+            return;
+        }
+        
+        if (!$this->hasAdminAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos'], 403);
+            return;
+        }
+
+        $commentId = (int)($_GET['commentId'] ?? 0);
+        $taskId = (int)($_GET['taskId'] ?? 0);
+        
+        if ($commentId <= 0 || $taskId <= 0) {
+            Utils::jsonResponse(['success' => false, 'message' => 'IDs inválidos'], 400);
+            return;
+        }
+
+        try {
+            $db = Database::getConnection();
+            
+            // Verificar si existe la columna parent_comment_id
+            $checkColumn = $db->query("SHOW COLUMNS FROM Task_Comments LIKE 'parent_comment_id'");
+            $hasParentColumn = (bool)$checkColumn->fetch();
+            
+            if (!$hasParentColumn) {
+                // Si no existe la columna, no hay respuestas
+                Utils::jsonResponse(['success' => true, 'replies' => []]);
+                return;
+            }
+            
+            // Obtener respuestas del comentario
+            $stmt = $db->prepare("
+                SELECT tc.comment_id, tc.comment_text, tc.attachment_path, tc.attachment_name, tc.created_at,
+                       u.username, u.full_name, u.email
+                FROM Task_Comments tc
+                LEFT JOIN Users u ON tc.user_id = u.user_id
+                WHERE tc.parent_comment_id = ? AND tc.task_id = ?
+                ORDER BY tc.created_at ASC
+            ");
+            $stmt->execute([$commentId, $taskId]);
+            $replies = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+            
+            Utils::jsonResponse([
+                'success' => true, 
+                'replies' => $replies
+            ]);
+            
+        } catch (Exception $e) {
+            error_log('Error al obtener respuestas: ' . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error al cargar respuestas'], 500);
+        }
+    }
+
+    /**
      * Eliminar proyecto (ADMIN)
      */
     public function deleteProject() {

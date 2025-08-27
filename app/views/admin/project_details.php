@@ -988,6 +988,252 @@ ob_start();
   }
 }
 
+/* Estilos para comentarios y respuestas */
+.comment-item-detail {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--bg-accent);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  transition: all 0.3s ease;
+}
+
+.comment-item-detail:hover {
+  border-color: var(--primary);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+}
+
+.comment-header-detail {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--bg-accent);
+}
+
+.comment-author-detail {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.comment-date-detail {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.comment-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-reply {
+  background: none;
+  border: 1px solid var(--bg-accent);
+  color: var(--text-muted);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn-reply:hover {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+  transform: translateY(-1px);
+}
+
+.comment-content {
+  color: var(--text-primary);
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+
+/* Estilos para respuestas anidadas */
+.comment-replies {
+  margin-top: 16px;
+  padding-left: 20px;
+  border-left: 3px solid var(--bg-accent);
+}
+
+.reply-item {
+  background: var(--bg-primary);
+  border: 1px solid var(--bg-accent);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+  position: relative;
+}
+
+.reply-item::before {
+  content: '';
+  position: absolute;
+  left: -23px;
+  top: 16px;
+  width: 20px;
+  height: 2px;
+  background: var(--bg-accent);
+}
+
+.reply-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+}
+
+.reply-author {
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.reply-date {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.reply-content {
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.reply-attachment {
+  margin-top: 8px;
+  padding: 8px;
+  background: var(--bg-tertiary);
+  border-radius: 6px;
+  font-size: 0.85rem;
+}
+
+.reply-attachment a {
+  color: var(--primary);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.reply-attachment a:hover {
+  text-decoration: underline;
+}
+
+/* Estilos para formulario de respuesta */
+.reply-form-container {
+  margin-top: 16px;
+  padding: 16px;
+  background: var(--bg-primary);
+  border: 1px solid var(--bg-accent);
+  border-radius: 8px;
+  animation: slideDown 0.3s ease;
+}
+
+.reply-form .form-group {
+  margin-bottom: 16px;
+}
+
+.reply-form label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+  display: block;
+}
+
+.reply-form textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--bg-accent);
+  border-radius: 6px;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.9rem;
+  resize: vertical;
+  transition: border-color 0.3s ease;
+}
+
+.reply-form textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.reply-attachments-section {
+  margin-bottom: 16px;
+}
+
+.attachment-toggle {
+  margin-bottom: 8px;
+}
+
+.attachment-toggle label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.attachment-toggle input[type="checkbox"] {
+  margin: 0;
+}
+
+.reply-attachment-input {
+  padding: 12px;
+  background: var(--bg-tertiary);
+  border: 1px dashed var(--bg-accent);
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+.reply-attachment-input:hover {
+  border-color: var(--primary);
+  background: var(--bg-primary);
+}
+
+.reply-attachment-input input[type="file"] {
+  width: 100%;
+  padding: 8px;
+  border: none;
+  background: none;
+  color: var(--text-primary);
+  font-size: 0.85rem;
+}
+
+.reply-form .form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.reply-form .btn {
+  padding: 8px 16px;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Estilos para modal de detalles de tarea */
 .modal-task-details {
   max-width: 1200px;
@@ -1557,12 +1803,52 @@ function renderTaskDetails(data) {
             `;
             taskComments.forEach(comment => {
                 html += `
-                    <div class="comment-item-detail">
+                    <div class="comment-item-detail" data-comment-id="${comment.comment_id}">
                         <div class="comment-header-detail">
                             <span class="comment-author-detail">${escapeHtml(comment.full_name || comment.username || 'Usuario')}</span>
                             <span class="comment-date-detail">${formatDate(comment.created_at)}</span>
+                            <div class="comment-actions">
+                                <button class="btn-reply" onclick="showReplyForm(${comment.comment_id}, ${task.task_id})" title="Responder">
+                                    <i class="fas fa-reply"></i> Responder
+                                </button>
+                            </div>
                         </div>
-                        <div>${comment.comment_text || ''}</div>
+                        <div class="comment-content">${comment.comment_text || ''}</div>
+                        
+                        <!-- Área para mostrar respuestas -->
+                        <div class="comment-replies" id="replies-${comment.comment_id}">
+                            <!-- Las respuestas se cargarán aquí -->
+                        </div>
+                        
+                        <!-- Formulario de respuesta (inicialmente oculto) -->
+                        <div class="reply-form-container" id="reply-form-${comment.comment_id}" style="display: none;">
+                            <form class="reply-form" onsubmit="submitReply(event, ${comment.comment_id}, ${task.task_id})">
+                                <div class="form-group">
+                                    <label>Responder a ${escapeHtml(comment.full_name || comment.username || 'Usuario')}:</label>
+                                    <textarea name="reply_text" rows="3" placeholder="Escribe tu respuesta..." required></textarea>
+                                </div>
+                                <div class="reply-attachments-section">
+                                    <div class="attachment-toggle">
+                                        <label>
+                                            <input type="checkbox" onchange="toggleReplyAttachment(${comment.comment_id})"> 
+                                            Adjuntar archivo
+                                        </label>
+                                    </div>
+                                    <div class="reply-attachment-input" id="reply-attachment-${comment.comment_id}" style="display: none;">
+                                        <input type="file" name="reply_attachment" accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.jpg,.jpeg,.png,.gif,.zip,.rar">
+                                        <div class="file-input-info">Opcional: PDF, DOC, DOCX, XLS, XLSX, TXT, JPG, PNG, GIF, ZIP, RAR (máx. 10MB)</div>
+                                    </div>
+                                </div>
+                                <div class="form-actions">
+                                    <button type="button" class="btn btn-secondary" onclick="hideReplyForm(${comment.comment_id})">
+                                        Cancelar
+                                    </button>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-paper-plane"></i> Enviar Respuesta
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 `;
             });
@@ -1779,6 +2065,11 @@ function renderTaskDetails(data) {
     `;
     
     content.innerHTML = html;
+    
+    // Cargar respuestas existentes para todos los comentarios
+    setTimeout(() => {
+        loadAllCommentReplies(task.task_id);
+    }, 100);
 }
 
 function openSubtasksModal(taskId) {
@@ -2002,6 +2293,170 @@ function showNotification(message, type = 'info') {
             notification.remove();
         }
     }, 5000);
+}
+
+// Funciones para manejar respuestas a comentarios
+function showReplyForm(commentId, taskId) {
+    // Ocultar todos los formularios de respuesta abiertos
+    const openForms = document.querySelectorAll('.reply-form-container');
+    openForms.forEach(form => {
+        if (form.id !== `reply-form-${commentId}`) {
+            form.style.display = 'none';
+        }
+    });
+    
+    // Mostrar el formulario específico
+    const replyForm = document.getElementById(`reply-form-${commentId}`);
+    if (replyForm) {
+        replyForm.style.display = 'block';
+        // Hacer focus en el textarea
+        const textarea = replyForm.querySelector('textarea[name="reply_text"]');
+        if (textarea) {
+            textarea.focus();
+        }
+    }
+}
+
+function hideReplyForm(commentId) {
+    const replyForm = document.getElementById(`reply-form-${commentId}`);
+    if (replyForm) {
+        replyForm.style.display = 'none';
+        // Limpiar el formulario
+        const form = replyForm.querySelector('form');
+        if (form) {
+            form.reset();
+            // Ocultar adjunto si estaba visible
+            const attachmentInput = document.getElementById(`reply-attachment-${commentId}`);
+            if (attachmentInput) {
+                attachmentInput.style.display = 'none';
+            }
+        }
+    }
+}
+
+function toggleReplyAttachment(commentId) {
+    const checkbox = event.target;
+    const attachmentInput = document.getElementById(`reply-attachment-${commentId}`);
+    
+    if (attachmentInput) {
+        attachmentInput.style.display = checkbox.checked ? 'block' : 'none';
+        if (!checkbox.checked) {
+            // Limpiar el input de archivo si se desmarca
+            const fileInput = attachmentInput.querySelector('input[type="file"]');
+            if (fileInput) {
+                fileInput.value = '';
+            }
+        }
+    }
+}
+
+function submitReply(event, parentCommentId, taskId) {
+    event.preventDefault();
+    
+    const form = event.target;
+    const formData = new FormData(form);
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    
+    // Agregar ID del comentario padre
+    formData.append('parent_comment_id', parentCommentId);
+    
+    // Deshabilitar botón y mostrar loading
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+    
+    fetch(`?route=admin/add-task-reply&taskId=${taskId}`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Limpiar y ocultar formulario
+            form.reset();
+            hideReplyForm(parentCommentId);
+            
+            // Mostrar mensaje de éxito
+            showNotification('Respuesta agregada exitosamente', 'success');
+            
+            // Cargar respuestas del comentario padre
+            loadCommentReplies(parentCommentId, taskId);
+        } else {
+            showNotification(data.message || 'Error al agregar respuesta', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error al enviar respuesta', 'error');
+    })
+    .finally(() => {
+        // Restaurar botón
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+    });
+}
+
+function loadCommentReplies(commentId, taskId) {
+    const repliesContainer = document.getElementById(`replies-${commentId}`);
+    if (!repliesContainer) return;
+    
+    // Mostrar loading
+    repliesContainer.innerHTML = '<div style="text-align: center; padding: 12px; color: var(--text-muted);"><i class="fas fa-spinner fa-spin"></i> Cargando respuestas...</div>';
+    
+    fetch(`?route=admin/get-comment-replies&commentId=${commentId}&taskId=${taskId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                renderCommentReplies(data.replies, repliesContainer);
+            } else {
+                repliesContainer.innerHTML = '';
+            }
+        })
+        .catch(error => {
+            console.error('Error al cargar respuestas:', error);
+            repliesContainer.innerHTML = '';
+        });
+}
+
+function renderCommentReplies(replies, container) {
+    if (!replies || replies.length === 0) {
+        container.innerHTML = '';
+        return;
+    }
+    
+    let html = '';
+    replies.forEach(reply => {
+        html += `
+            <div class="reply-item">
+                <div class="reply-header">
+                    <span class="reply-author">${escapeHtml(reply.full_name || reply.username || 'Usuario')}</span>
+                    <span class="reply-date">${formatDate(reply.created_at)}</span>
+                </div>
+                <div class="reply-content">${escapeHtml(reply.comment_text)}</div>
+                ${reply.attachment_path ? `
+                    <div class="reply-attachment">
+                        <a href="${reply.attachment_path}" target="_blank">
+                            <i class="fas fa-file"></i>
+                            ${escapeHtml(reply.attachment_name || 'Archivo adjunto')}
+                        </a>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+// Cargar respuestas existentes al renderizar el modal
+function loadAllCommentReplies(taskId) {
+    const commentElements = document.querySelectorAll('.comment-item-detail[data-comment-id]');
+    commentElements.forEach(commentEl => {
+        const commentId = commentEl.getAttribute('data-comment-id');
+        if (commentId) {
+            loadCommentReplies(commentId, taskId);
+        }
+    });
 }
 
 // -------- Modal para añadir subtareas --------
