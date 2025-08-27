@@ -1806,11 +1806,19 @@ function deleteSubtask(subtaskId) {
 }
 
 function updateSubtaskStatus(subtaskId, newStatus) {
+    console.log('=== UPDATE SUBTASK STATUS (LEADER) ===');
+    console.log('Subtask ID:', subtaskId);
+    console.log('New Status:', newStatus);
+    
     // Calcular el porcentaje de completación basado en el estado
     // Obtener el porcentaje actual para no modificarlo si se selecciona 'pending'
     const subtaskCard = document.querySelector(`[data-subtask-id="${subtaskId}"]`);
     const progressElement = subtaskCard.querySelector('.progress-percentage');
     const currentProgress = progressElement ? parseInt(progressElement.textContent.replace('%', '')) : 0;
+    
+    console.log('Progress element found:', !!progressElement);
+    console.log('Current progress text:', progressElement ? progressElement.textContent : 'no element');
+    console.log('Current progress parsed:', currentProgress);
     
     let completionPercentage = currentProgress; // Mantener el actual por defecto
     if (newStatus === 'in_progress') {
@@ -1820,12 +1828,25 @@ function updateSubtaskStatus(subtaskId, newStatus) {
     }
     // Nota: Para 'pending' mantenemos el porcentaje actual sin cambios
     
+    console.log('Final completion percentage to send:', completionPercentage);
+    
+    // Preparar el cuerpo de la petición
+    let requestBody = 'subtask_id=' + subtaskId + '&status=' + newStatus;
+    
+    // Solo enviar completion_percentage si NO es 'pending'
+    if (newStatus !== 'pending') {
+        requestBody += '&completion_percentage=' + completionPercentage;
+        console.log('Sending completion_percentage for non-pending status');
+    } else {
+        console.log('NOT sending completion_percentage for pending status - will preserve current value');
+    }
+    
     fetch('?route=clan_leader/update-subtask-status', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: 'subtask_id=' + subtaskId + '&status=' + newStatus + '&completion_percentage=' + completionPercentage
+        body: requestBody
     })
     .then(response => response.json())
     .then(data => {
@@ -1845,16 +1866,27 @@ function updateSubtaskStatus(subtaskId, newStatus) {
                     estadoSpan.textContent = 'Estado: ' + estados[newStatus];
                 }
                 
-                // Actualizar la barra de progreso según el estado
+                // Actualizar la barra de progreso solo si no es 'pending' o si el backend envía un nuevo valor
                 const progressBar = subtaskCard.querySelector('.progress-fill');
                 const progressText = subtaskCard.querySelector('.progress-text');
                 
+                let finalPercentage = completionPercentage;
+                if (data.completion_percentage !== undefined) {
+                    // Si el backend envía un nuevo porcentaje, usarlo
+                    finalPercentage = data.completion_percentage;
+                } else if (newStatus === 'pending') {
+                    // Si es pending y no hay respuesta del backend, mantener el valor actual
+                    finalPercentage = currentProgress;
+                }
+                
                 if (progressBar) {
-                    progressBar.style.width = completionPercentage + '%';
+                    progressBar.style.width = finalPercentage + '%';
                 }
                 if (progressText) {
-                    progressText.textContent = completionPercentage + '%';
+                    progressText.textContent = finalPercentage + '%';
                 }
+                
+                console.log('UI updated with percentage:', finalPercentage);
             }
             
             showNotification('Estado de subtarea actualizado correctamente', 'success');
