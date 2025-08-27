@@ -891,6 +891,188 @@ class AdminController {
     }
 
     /**
+     * Agregar comentario a una tarea (AJAX)
+     */
+    public function addTaskComment() {
+        // Evitar cualquier salida que no sea JSON
+        if (ob_get_level()) {
+            ob_clean();
+        }
+        
+        header('Content-Type: application/json');
+        
+        // Verificar autenticación
+        if (!$this->auth->isLoggedIn()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'No autenticado'], 401);
+            return;
+        }
+        
+        if (!$this->hasAdminAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos'], 403);
+            return;
+        }
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
+            return;
+        }
+
+        $taskId = (int)($_GET['taskId'] ?? 0);
+        $commentText = trim($_POST['comment_text'] ?? '');
+        
+        if ($taskId <= 0) {
+            Utils::jsonResponse(['success' => false, 'message' => 'ID de tarea inválido'], 400);
+            return;
+        }
+        
+        if (empty($commentText)) {
+            Utils::jsonResponse(['success' => false, 'message' => 'El comentario no puede estar vacío'], 400);
+            return;
+        }
+
+        try {
+            $db = Database::getConnection();
+            $currentUser = $this->auth->getCurrentUser();
+            
+            // Verificar que la tarea existe
+            $stmt = $db->prepare("SELECT task_id FROM Tasks WHERE task_id = ?");
+            $stmt->execute([$taskId]);
+            if (!$stmt->fetch()) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Tarea no encontrada'], 404);
+                return;
+            }
+            
+            // Insertar comentario
+            $stmt = $db->prepare("
+                INSERT INTO Task_Comments (task_id, user_id, comment_text, comment_type, created_at) 
+                VALUES (?, ?, ?, 'comment', NOW())
+            ");
+            $stmt->execute([$taskId, $currentUser['user_id'], $commentText]);
+            
+            Utils::jsonResponse([
+                'success' => true, 
+                'message' => 'Comentario agregado exitosamente',
+                'comment_id' => $db->lastInsertId()
+            ]);
+            
+        } catch (Exception $e) {
+            error_log('Error al agregar comentario: ' . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error al agregar comentario'], 500);
+        }
+    }
+
+    /**
+     * Agregar adjunto a una tarea (AJAX)
+     */
+    public function addTaskAttachment() {
+        // Evitar cualquier salida que no sea JSON
+        if (ob_get_level()) {
+            ob_clean();
+        }
+        
+        header('Content-Type: application/json');
+        
+        // Verificar autenticación
+        if (!$this->auth->isLoggedIn()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'No autenticado'], 401);
+            return;
+        }
+        
+        if (!$this->hasAdminAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos'], 403);
+            return;
+        }
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
+            return;
+        }
+
+        $taskId = (int)($_GET['taskId'] ?? 0);
+        
+        if ($taskId <= 0) {
+            Utils::jsonResponse(['success' => false, 'message' => 'ID de tarea inválido'], 400);
+            return;
+        }
+        
+        if (!isset($_FILES['attachment_file']) || $_FILES['attachment_file']['error'] !== UPLOAD_ERR_OK) {
+            Utils::jsonResponse(['success' => false, 'message' => 'No se recibió ningún archivo o hubo un error en la subida'], 400);
+            return;
+        }
+
+        try {
+            $db = Database::getConnection();
+            $currentUser = $this->auth->getCurrentUser();
+            
+            // Verificar que la tarea existe
+            $stmt = $db->prepare("SELECT task_id FROM Tasks WHERE task_id = ?");
+            $stmt->execute([$taskId]);
+            if (!$stmt->fetch()) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Tarea no encontrada'], 404);
+                return;
+            }
+            
+            $file = $_FILES['attachment_file'];
+            
+            // Validaciones del archivo
+            $maxSize = 10 * 1024 * 1024; // 10MB
+            if ($file['size'] > $maxSize) {
+                Utils::jsonResponse(['success' => false, 'message' => 'El archivo es muy grande. Máximo 10MB permitido.'], 400);
+                return;
+            }
+            
+            $allowedTypes = [
+                'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'text/plain', 'image/jpeg', 'image/png', 'image/gif', 'application/zip', 'application/x-rar-compressed'
+            ];
+            
+            if (!in_array($file['type'], $allowedTypes)) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Tipo de archivo no permitido'], 400);
+                return;
+            }
+            
+            // Usar directorio existente task_attachments
+            $uploadDir = $_SERVER['DOCUMENT_ROOT'] . '/rinotrack/public/uploads/task_attachments/';
+            if (!is_dir($uploadDir)) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Directorio de subida no encontrado'], 500);
+                return;
+            }
+            
+            // Generar nombre único para el archivo
+            $fileExtension = pathinfo($file['name'], PATHINFO_EXTENSION);
+            $fileName = time() . '_' . uniqid() . '.' . $fileExtension;
+            $filePath = $uploadDir . $fileName;
+            $webPath = '/rinotrack/public/uploads/task_attachments/' . $fileName;
+            
+            // Mover archivo
+            if (!move_uploaded_file($file['tmp_name'], $filePath)) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Error al subir archivo'], 500);
+                return;
+            }
+            
+            // Insertar en base de datos
+            $stmt = $db->prepare("
+                INSERT INTO Task_Attachments (task_id, file_name, file_path, uploaded_by, uploaded_at) 
+                VALUES (?, ?, ?, ?, NOW())
+            ");
+            $stmt->execute([$taskId, $file['name'], $webPath, $currentUser['user_id']]);
+            
+            Utils::jsonResponse([
+                'success' => true, 
+                'message' => 'Archivo subido exitosamente',
+                'attachment_id' => $db->lastInsertId(),
+                'file_name' => $file['name'],
+                'file_path' => $webPath
+            ]);
+            
+        } catch (Exception $e) {
+            error_log('Error al agregar adjunto: ' . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error al subir archivo'], 500);
+        }
+    }
+
+    /**
      * Eliminar proyecto (ADMIN)
      */
     public function deleteProject() {

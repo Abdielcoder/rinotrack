@@ -780,6 +780,214 @@ ob_start();
   transform: rotate(90deg);
 }
 
+/* Estilos para tabs de interacciones */
+.task-interactions-tabs {
+  display: flex;
+  border-bottom: 2px solid var(--bg-accent);
+  margin-bottom: 20px;
+}
+
+.tab-btn {
+  background: none;
+  border: none;
+  padding: 12px 20px;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-weight: 500;
+  transition: all 0.3s ease;
+  border-bottom: 3px solid transparent;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tab-btn:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.tab-btn.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+  background: var(--bg-tertiary);
+}
+
+.tab-content {
+  margin-top: 20px;
+}
+
+.tab-panel {
+  display: none;
+}
+
+.tab-panel.active {
+  display: block;
+}
+
+/* Estilos para formularios */
+.comment-form, .attachment-form {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--bg-accent);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.form-group textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--bg-accent);
+  border-radius: 8px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: inherit;
+  resize: vertical;
+  transition: border-color 0.3s ease;
+}
+
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.file-input-wrapper {
+  position: relative;
+}
+
+.file-input-wrapper input[type="file"] {
+  width: 100%;
+  padding: 12px;
+  border: 2px dashed var(--bg-accent);
+  border-radius: 8px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  transition: border-color 0.3s ease;
+  cursor: pointer;
+}
+
+.file-input-wrapper input[type="file"]:hover {
+  border-color: var(--primary);
+  background: var(--bg-tertiary);
+}
+
+.file-input-info {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-top: 8px;
+  padding: 8px;
+  background: var(--bg-accent);
+  border-radius: 6px;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.form-actions .btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.form-actions .btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+/* Estilos para notificaciones */
+.notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: var(--bg-primary);
+  border: 1px solid var(--bg-accent);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 400px;
+  box-shadow: var(--shadow-lg);
+  z-index: 9999;
+  animation: slideInRight 0.3s ease;
+}
+
+.notification-success {
+  border-left: 4px solid #10b981;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%);
+}
+
+.notification-error {
+  border-left: 4px solid #ef4444;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.05) 100%);
+}
+
+.notification-info {
+  border-left: 4px solid #3b82f6;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0.05) 100%);
+}
+
+.notification-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--text-primary);
+}
+
+.notification-success .notification-content i {
+  color: #10b981;
+}
+
+.notification-error .notification-content i {
+  color: #ef4444;
+}
+
+.notification-info .notification-content i {
+  color: #3b82f6;
+}
+
+.notification-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.notification-close:hover {
+  background: var(--bg-accent);
+  color: var(--text-primary);
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
 /* Estilos para modal de detalles de tarea */
 .modal-task-details {
   max-width: 1200px;
@@ -1502,8 +1710,70 @@ function renderTaskDetails(data) {
         }
     }
     
+    // Agregar formularios para comentarios y adjuntos
     html += `
         </div>
+            </div>
+        </div>
+        
+        <!-- Formularios para agregar comentarios y adjuntos -->
+        <div class="task-section" style="margin-top: 20px;">
+            <div class="task-interactions-tabs">
+                <button class="tab-btn active" onclick="switchTab('comments', ${task.task_id})">
+                    <i class="fas fa-comment-plus"></i> Agregar Comentario
+                </button>
+                <button class="tab-btn" onclick="switchTab('attachments', ${task.task_id})">
+                    <i class="fas fa-paperclip"></i> Adjuntar Archivo
+                </button>
+            </div>
+            
+            <div class="tab-content">
+                <!-- Tab de comentarios -->
+                <div id="comments-tab-${task.task_id}" class="tab-panel active">
+                    <form id="comment-form-${task.task_id}" class="comment-form" onsubmit="submitComment(event, ${task.task_id})">
+                        <div class="form-group">
+                            <label for="comment-text-${task.task_id}">Nuevo Comentario:</label>
+                            <textarea 
+                                id="comment-text-${task.task_id}" 
+                                name="comment_text" 
+                                rows="4" 
+                                placeholder="Escribe tu comentario aquí..."
+                                required
+                            ></textarea>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane"></i> Enviar Comentario
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Tab de adjuntos -->
+                <div id="attachments-tab-${task.task_id}" class="tab-panel">
+                    <form id="attachment-form-${task.task_id}" class="attachment-form" onsubmit="submitAttachment(event, ${task.task_id})" enctype="multipart/form-data">
+                        <div class="form-group">
+                            <label for="attachment-file-${task.task_id}">Seleccionar Archivo:</label>
+                            <div class="file-input-wrapper">
+                                <input 
+                                    type="file" 
+                                    id="attachment-file-${task.task_id}" 
+                                    name="attachment_file" 
+                                    accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.jpg,.jpeg,.png,.gif,.zip,.rar"
+                                    required
+                                >
+                                <div class="file-input-info">
+                                    Formatos permitidos: PDF, DOC, DOCX, XLS, XLSX, TXT, JPG, PNG, GIF, ZIP, RAR (máx. 10MB)
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-upload"></i> Subir Archivo
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     `;
@@ -1584,6 +1854,154 @@ function renderSubtasks(subtasks) {
 function closeSubtasksModal() {
     const modal = document.getElementById('subtasksModal');
     modal.style.display = 'none';
+}
+
+// Funciones para tabs de interacciones
+function switchTab(tabType, taskId) {
+    // Remover clase active de todos los botones
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    tabBtns.forEach(btn => btn.classList.remove('active'));
+    
+    // Remover clase active de todos los paneles
+    const tabPanels = document.querySelectorAll('.tab-panel');
+    tabPanels.forEach(panel => panel.classList.remove('active'));
+    
+    // Activar el botón y panel correspondiente
+    const activeBtn = event.target.closest('.tab-btn');
+    const activePanel = document.getElementById(`${tabType}-tab-${taskId}`);
+    
+    if (activeBtn) activeBtn.classList.add('active');
+    if (activePanel) activePanel.classList.add('active');
+}
+
+// Función para enviar comentario
+function submitComment(event, taskId) {
+    event.preventDefault();
+    
+    const form = event.target;
+    const formData = new FormData(form);
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    
+    // Deshabilitar botón y mostrar loading
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+    
+    fetch(`?route=admin/add-task-comment&taskId=${taskId}`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Limpiar formulario
+            form.reset();
+            
+            // Mostrar mensaje de éxito
+            showNotification('Comentario agregado exitosamente', 'success');
+            
+            // Recargar detalles de la tarea
+            setTimeout(() => {
+                openTaskDetailsModal(taskId);
+            }, 1000);
+        } else {
+            showNotification(data.message || 'Error al agregar comentario', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error al enviar comentario', 'error');
+    })
+    .finally(() => {
+        // Restaurar botón
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+    });
+}
+
+// Función para enviar adjunto
+function submitAttachment(event, taskId) {
+    event.preventDefault();
+    
+    const form = event.target;
+    const formData = new FormData(form);
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    const fileInput = form.querySelector('input[type="file"]');
+    
+    // Validar archivo
+    if (!fileInput.files[0]) {
+        showNotification('Por favor selecciona un archivo', 'error');
+        return;
+    }
+    
+    // Validar tamaño del archivo (10MB max)
+    const maxSize = 10 * 1024 * 1024; // 10MB en bytes
+    if (fileInput.files[0].size > maxSize) {
+        showNotification('El archivo es muy grande. Máximo 10MB permitidos.', 'error');
+        return;
+    }
+    
+    // Deshabilitar botón y mostrar loading
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Subiendo...';
+    
+    fetch(`?route=admin/add-task-attachment&taskId=${taskId}`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Limpiar formulario
+            form.reset();
+            
+            // Mostrar mensaje de éxito
+            showNotification('Archivo adjuntado exitosamente', 'success');
+            
+            // Recargar detalles de la tarea
+            setTimeout(() => {
+                openTaskDetailsModal(taskId);
+            }, 1000);
+        } else {
+            showNotification(data.message || 'Error al adjuntar archivo', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error al subir archivo', 'error');
+    })
+    .finally(() => {
+        // Restaurar botón
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+    });
+}
+
+// Función para mostrar notificaciones
+function showNotification(message, type = 'info') {
+    // Crear elemento de notificación
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.innerHTML = `
+        <div class="notification-content">
+            <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i>
+            <span>${message}</span>
+        </div>
+        <button class="notification-close" onclick="this.parentElement.remove()">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+    
+    // Agregar al DOM
+    document.body.appendChild(notification);
+    
+    // Auto-remover después de 5 segundos
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.remove();
+        }
+    }, 5000);
 }
 
 // -------- Modal para añadir subtareas --------
