@@ -662,18 +662,25 @@ function saveSubtaskChanges(subtaskId) {
         return;
     }
     
+    // Preparar el cuerpo de la petición
+    const requestBody = {
+        subtask_id: subtaskId,
+        title: title,
+        description: description,
+        status: status
+    };
+    
+    // Solo incluir completion_percentage si NO es estado pendiente
+    if (status !== 'pending') {
+        requestBody.completion_percentage = completionPercentage;
+    }
+    
     fetch('?route=clan_leader/edit-subtask', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-            subtask_id: subtaskId,
-            title: title,
-            description: description,
-            status: status,
-            completion_percentage: completionPercentage
-        })
+        body: JSON.stringify(requestBody)
     })
     .then(response => response.json())
     .then(data => {
