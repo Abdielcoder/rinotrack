@@ -1001,6 +1001,7 @@ class AdminController {
         }
 
         try {
+            error_log("addTaskAttachment: Iniciando para taskId=$taskId");
             $db = Database::getConnection();
             $currentUser = $this->auth->getCurrentUser();
             
@@ -1008,11 +1009,18 @@ class AdminController {
             $stmt = $db->prepare("SELECT task_id FROM Tasks WHERE task_id = ?");
             $stmt->execute([$taskId]);
             if (!$stmt->fetch()) {
+                error_log("addTaskAttachment: Tarea $taskId no encontrada");
                 Utils::jsonResponse(['success' => false, 'message' => 'Tarea no encontrada'], 404);
                 return;
             }
             
             $file = $_FILES['attachment_file'];
+            error_log("addTaskAttachment: Archivo recibido - " . json_encode([
+                'name' => $file['name'],
+                'type' => $file['type'],
+                'size' => $file['size'],
+                'error' => $file['error']
+            ]));
             
             // Validaciones del archivo
             $maxSize = 10 * 1024 * 1024; // 10MB
@@ -1032,36 +1040,67 @@ class AdminController {
                 return;
             }
             
-            // Usar directorio existente task_attachments
-            $uploadDir = $_SERVER['DOCUMENT_ROOT'] . '/rinotrack/public/uploads/task_attachments/';
-            if (!is_dir($uploadDir)) {
-                Utils::jsonResponse(['success' => false, 'message' => 'Directorio de subida no encontrado'], 500);
-                return;
+            // Usar directorio existente task_attachments - misma lógica que otros controladores
+            $publicRoot = dirname(__DIR__, 2) . '/public';
+            $baseUploads = $publicRoot . '/uploads';
+            $uploadDir = $baseUploads . '/task_attachments';
+            
+            // Crear rutas si no existen
+            if (!is_dir($baseUploads)) { 
+                if (!mkdir($baseUploads, 0775, true)) {
+                    Utils::jsonResponse(['success' => false, 'message' => 'Error al crear directorio base de uploads'], 500);
+                    return;
+                }
+            }
+            if (!is_dir($uploadDir)) { 
+                if (!mkdir($uploadDir, 0775, true)) {
+                    Utils::jsonResponse(['success' => false, 'message' => 'Error al crear directorio de task_attachments'], 500);
+                    return;
+                }
             }
             
             // Generar nombre único para el archivo
             $fileExtension = pathinfo($file['name'], PATHINFO_EXTENSION);
-            $fileName = time() . '_' . uniqid() . '.' . $fileExtension;
-            $filePath = $uploadDir . $fileName;
-            $webPath = '/rinotrack/public/uploads/task_attachments/' . $fileName;
+            $fileName = 'att_' . time() . '_' . uniqid() . '.' . $fileExtension;
+            $filePath = $uploadDir . '/' . $fileName;
+            $webPath = 'uploads/task_attachments/' . $fileName;
+            
+            error_log("addTaskAttachment: Intentando mover archivo de '{$file['tmp_name']}' a '$filePath'");
+            error_log("addTaskAttachment: Directorio de destino existe: " . (is_dir($uploadDir) ? 'SI' : 'NO'));
+            error_log("addTaskAttachment: Directorio de destino es escribible: " . (is_writable($uploadDir) ? 'SI' : 'NO'));
             
             // Mover archivo
             if (!move_uploaded_file($file['tmp_name'], $filePath)) {
+                $error = error_get_last();
+                error_log("addTaskAttachment: Error al mover archivo - " . ($error ? $error['message'] : 'desconocido'));
                 Utils::jsonResponse(['success' => false, 'message' => 'Error al subir archivo'], 500);
                 return;
             }
             
+            error_log("addTaskAttachment: Archivo movido exitosamente a '$filePath'");
+            
             // Insertar en base de datos
+            error_log("addTaskAttachment: Insertando en base de datos...");
             $stmt = $db->prepare("
                 INSERT INTO Task_Attachments (task_id, file_name, file_path, uploaded_by, uploaded_at) 
                 VALUES (?, ?, ?, ?, NOW())
             ");
-            $stmt->execute([$taskId, $file['name'], $webPath, $currentUser['user_id']]);
+            $result = $stmt->execute([$taskId, $file['name'], $webPath, $currentUser['user_id']]);
+            
+            if (!$result) {
+                $error = $stmt->errorInfo();
+                error_log("addTaskAttachment: Error en base de datos - " . json_encode($error));
+                Utils::jsonResponse(['success' => false, 'message' => 'Error al guardar en base de datos'], 500);
+                return;
+            }
+            
+            $attachmentId = $db->lastInsertId();
+            error_log("addTaskAttachment: Adjunto insertado exitosamente con ID $attachmentId");
             
             Utils::jsonResponse([
                 'success' => true, 
                 'message' => 'Archivo subido exitosamente',
-                'attachment_id' => $db->lastInsertId(),
+                'attachment_id' => $attachmentId,
                 'file_name' => $file['name'],
                 'file_path' => $webPath
             ]);
@@ -1171,14 +1210,21 @@ class AdminController {
                     ];
                     
                     if (in_array($file['type'], $allowedTypes)) {
-                        // Usar directorio existente task_attachments
-                        $uploadDir = $_SERVER['DOCUMENT_ROOT'] . '/rinotrack/public/uploads/task_attachments/';
+                        // Usar directorio existente task_attachments - misma lógica que otros controladores
+                        $publicRoot = dirname(__DIR__, 2) . '/public';
+                        $baseUploads = $publicRoot . '/uploads';
+                        $uploadDir = $baseUploads . '/task_attachments';
+                        
+                        // Crear rutas si no existen
+                        if (!is_dir($baseUploads)) { @mkdir($baseUploads, 0775, true); }
+                        if (!is_dir($uploadDir)) { @mkdir($uploadDir, 0775, true); }
+                        
                         if (is_dir($uploadDir)) {
                             // Generar nombre único para el archivo
                             $fileExtension = pathinfo($file['name'], PATHINFO_EXTENSION);
                             $fileName = 'reply_' . time() . '_' . uniqid() . '.' . $fileExtension;
-                            $filePath = $uploadDir . $fileName;
-                            $webPath = '/rinotrack/public/uploads/task_attachments/' . $fileName;
+                            $filePath = $uploadDir . '/' . $fileName;
+                            $webPath = 'uploads/task_attachments/' . $fileName;
                             
                             if (move_uploaded_file($file['tmp_name'], $filePath)) {
                                 $attachmentPath = $webPath;
