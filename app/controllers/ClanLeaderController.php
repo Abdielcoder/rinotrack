@@ -2263,12 +2263,22 @@ class ClanLeaderController {
                 return;
             }
             
+            // Debug logging para identificar el problema
+            error_log("=== TOGGLE TASK STATUS DEBUG ===");
+            error_log("POST data: " . print_r($_POST, true));
+            error_log("Raw input: " . file_get_contents('php://input'));
+            
             $taskId = (int)($_POST['task_id'] ?? 0);
             $newStatus = $_POST['status'] ?? '';
             $isCompleted = ($newStatus === 'completed');
             
+            error_log("Parsed taskId: " . $taskId);
+            error_log("Parsed newStatus: " . $newStatus);
+            error_log("isCompleted: " . ($isCompleted ? 'true' : 'false'));
+            
             if ($taskId <= 0) {
-                Utils::jsonResponse(['success' => false, 'message' => 'ID de tarea inválido'], 400);
+                error_log("Task ID validation failed. taskId: " . $taskId);
+                Utils::jsonResponse(['success' => false, 'message' => 'ID de tarea inválido - ID recibido: ' . $taskId], 400);
                 return;
             }
             

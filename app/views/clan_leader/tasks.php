@@ -2198,17 +2198,29 @@ function debounceSearch(input) {
 }
 // Función para cambiar el estado de una tarea
 function toggleTaskStatus(taskId, isChecked) {
+    console.log('=== toggleTaskStatus Debug ===');
+    console.log('taskId:', taskId, 'Type:', typeof taskId);
+    console.log('isChecked:', isChecked);
+    
     const newStatus = isChecked ? 'completed' : 'pending';
+    console.log('newStatus:', newStatus);
+    
+    const requestBody = 'task_id=' + taskId + '&status=' + newStatus;
+    console.log('Request body:', requestBody);
     
     fetch('?route=clan_leader/toggle-task-status', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: 'task_id=' + taskId + '&status=' + newStatus
+        body: requestBody
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('Response status:', response.status);
+        return response.json();
+    })
     .then(data => {
+        console.log('Response data:', data);
         if (data.success) {
             // Actualizar la barra de progreso
             const row = document.querySelector(`#task-${taskId}`).closest('tr');
@@ -2230,18 +2242,18 @@ function toggleTaskStatus(taskId, isChecked) {
             statusBadge.className = 'status-badge status-' + newStatus;
             statusBadge.textContent = isChecked ? 'Completada' : 'Pendiente';
             
-            showNotification(data.message || 'Estado actualizado correctamente', 'success');
+            alert(data.message || 'Estado actualizado correctamente');
         } else {
             // Revertir el checkbox si hay error
             document.querySelector(`#task-${taskId}`).checked = !isChecked;
-            showNotification(data.message || 'Error al actualizar el estado', 'error');
+            alert(data.message || 'Error al actualizar el estado');
         }
     })
     .catch(error => {
         console.error('Error:', error);
         // Revertir el checkbox si hay error
         document.querySelector(`#task-${taskId}`).checked = !isChecked;
-        showNotification('Error al actualizar el estado de la tarea', 'error');
+        alert('Error al actualizar el estado de la tarea');
     });
 }
 
