@@ -254,6 +254,11 @@ try {
             $controller->getCommentReplies();
             break;
             
+        case 'admin/add-subtask-reply':
+            $controller = new AdminController();
+            $controller->addSubtaskReply();
+            break;
+            
         case 'admin/add-subtasks-to-task':
             $controller = new AdminController();
             $controller->addSubtasksToTask();

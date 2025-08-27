@@ -1035,9 +1035,21 @@ ob_start();
   border-bottom: 1px solid var(--bg-accent);
 }
 
+.comment-author-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .comment-author-detail {
   font-weight: 600;
   color: var(--text-primary);
+}
+
+.comment-attachment-icon {
+  color: var(--primary);
+  font-size: 0.85rem;
+  opacity: 0.8;
 }
 
 .comment-date-detail {
@@ -1075,6 +1087,44 @@ ob_start();
   color: var(--text-primary);
   line-height: 1.5;
   margin-bottom: 12px;
+}
+
+.comment-attachments {
+  margin-top: 12px;
+  padding: 12px;
+  background: var(--bg-primary);
+  border: 1px solid var(--bg-accent);
+  border-radius: 8px;
+}
+
+.attachments-header {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.comment-attachments .attachment-item {
+  padding: 6px 0;
+  border-bottom: 1px solid var(--bg-accent);
+  font-size: 0.9rem;
+}
+
+.comment-attachments .attachment-item:last-child {
+  border-bottom: none;
+}
+
+.comment-attachments .attachment-link {
+  color: var(--primary);
+  text-decoration: none;
+  margin-left: 6px;
+}
+
+.comment-attachments .attachment-link:hover {
+  text-decoration: underline;
 }
 
 /* Estilos para respuestas anidadas */
@@ -1825,10 +1875,16 @@ function renderTaskDetails(data) {
                     </h4>
             `;
             taskComments.forEach(comment => {
+                // Verificar si el comentario tiene adjuntos
+                const hasAttachments = data.taskAttachments && data.taskAttachments.some(att => att.comment_id == comment.comment_id);
+                
                 html += `
                     <div class="comment-item-detail" data-comment-id="${comment.comment_id}">
                         <div class="comment-header-detail">
-                            <span class="comment-author-detail">${escapeHtml(comment.full_name || comment.username || 'Usuario')}</span>
+                            <div class="comment-author-info">
+                                <span class="comment-author-detail">${escapeHtml(comment.full_name || comment.username || 'Usuario')}</span>
+                                ${hasAttachments ? '<i class="fas fa-paperclip comment-attachment-icon" title="Tiene archivos adjuntos"></i>' : ''}
+                            </div>
                             <span class="comment-date-detail">${formatDate(comment.created_at)}</span>
                             <div class="comment-actions">
                                 <button class="btn-reply" onclick="showReplyForm(${comment.comment_id}, ${task.task_id})" title="Responder">
@@ -1837,6 +1893,22 @@ function renderTaskDetails(data) {
                             </div>
                         </div>
                         <div class="comment-content">${comment.comment_text || ''}</div>
+                        
+                        ${hasAttachments ? `
+                            <div class="comment-attachments">
+                                <div class="attachments-header">
+                                    <i class="fas fa-paperclip"></i> Archivos adjuntos:
+                                </div>
+                                ${data.taskAttachments.filter(att => att.comment_id == comment.comment_id).map(attachment => `
+                                    <div class="attachment-item">
+                                        <i class="fas fa-file attachment-icon"></i>
+                                        <a href="${attachment.file_path}" target="_blank" class="attachment-link">
+                                            ${escapeHtml(attachment.file_name)}
+                                        </a>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
                         
                         <!-- Área para mostrar respuestas -->
                         <div class="comment-replies" id="replies-${comment.comment_id}">
@@ -1901,13 +1973,76 @@ function renderTaskDetails(data) {
                     `;
                     
                     comments.forEach(comment => {
+                        // Verificar si el comentario de subtarea tiene adjuntos
+                        const hasAttachments = data.subtaskAttachments && data.subtaskAttachments[subtaskId] && 
+                                             data.subtaskAttachments[subtaskId].some(att => att.comment_id == comment.comment_id);
+                        
                         html += `
-                            <div class="comment-item-detail" style="margin-bottom: 8px;">
+                            <div class="comment-item-detail subtask-comment" data-comment-id="${comment.comment_id}" data-subtask-id="${subtaskId}" style="margin-bottom: 12px;">
                                 <div class="comment-header-detail">
-                                    <span class="comment-author-detail">${escapeHtml(comment.full_name || comment.username || 'Usuario')}</span>
+                                    <div class="comment-author-info">
+                                        <span class="comment-author-detail">${escapeHtml(comment.full_name || comment.username || 'Usuario')}</span>
+                                        ${hasAttachments ? '<i class="fas fa-paperclip comment-attachment-icon" title="Tiene archivos adjuntos"></i>' : ''}
+                                    </div>
                                     <span class="comment-date-detail">${formatDate(comment.created_at)}</span>
+                                    <div class="comment-actions">
+                                        <button class="btn-reply" onclick="showSubtaskReplyForm(${comment.comment_id}, ${subtaskId}, ${task.task_id})" title="Responder">
+                                            <i class="fas fa-reply"></i> Responder
+                                        </button>
+                                    </div>
                                 </div>
-                                <div>${comment.comment_text || ''}</div>
+                                <div class="comment-content">${comment.comment_text || ''}</div>
+                                
+                                ${hasAttachments ? `
+                                    <div class="comment-attachments">
+                                        <div class="attachments-header">
+                                            <i class="fas fa-paperclip"></i> Archivos adjuntos:
+                                        </div>
+                                        ${data.subtaskAttachments[subtaskId].filter(att => att.comment_id == comment.comment_id).map(attachment => `
+                                            <div class="attachment-item">
+                                                <i class="fas fa-file attachment-icon"></i>
+                                                <a href="${attachment.file_path}" target="_blank" class="attachment-link">
+                                                    ${escapeHtml(attachment.filename)}
+                                                </a>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                ` : ''}
+                                
+                                <!-- Área para mostrar respuestas de subtarea -->
+                                <div class="comment-replies" id="subtask-replies-${comment.comment_id}">
+                                    <!-- Las respuestas se cargarán aquí -->
+                                </div>
+                                
+                                <!-- Formulario de respuesta para subtarea (inicialmente oculto) -->
+                                <div class="reply-form-container" id="subtask-reply-form-${comment.comment_id}" style="display: none;">
+                                    <form class="reply-form" onsubmit="submitSubtaskReply(event, ${comment.comment_id}, ${subtaskId}, ${task.task_id})" enctype="multipart/form-data">
+                                        <div class="form-group">
+                                            <label>Responder a ${escapeHtml(comment.full_name || comment.username || 'Usuario')}:</label>
+                                            <textarea name="reply_text" rows="3" placeholder="Escribe tu respuesta..." required></textarea>
+                                        </div>
+                                        <div class="form-group">
+                                            <div class="attachment-section">
+                                                <label>
+                                                    <input type="checkbox" id="subtask-reply-attachment-check-${comment.comment_id}" onchange="toggleSubtaskReplyAttachment(${comment.comment_id})"> 
+                                                    Adjuntar archivo (opcional)
+                                                </label>
+                                                <div class="file-input-container" id="subtask-reply-attachment-${comment.comment_id}" style="display: none;">
+                                                    <input type="file" name="reply_attachment" accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.jpg,.jpeg,.png,.gif,.zip,.rar">
+                                                    <div class="file-input-info">Opcional: PDF, DOC, DOCX, XLS, XLSX, TXT, JPG, PNG, GIF, ZIP, RAR (máx. 10MB)</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-actions">
+                                            <button type="button" class="btn btn-secondary" onclick="hideSubtaskReplyForm(${comment.comment_id})">
+                                                Cancelar
+                                            </button>
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="fas fa-paper-plane"></i> Enviar Respuesta
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
                             </div>
                         `;
                     });
@@ -2545,6 +2680,110 @@ function loadAllCommentReplies(taskId) {
         if (commentId) {
             loadCommentReplies(commentId, taskId);
         }
+    });
+}
+
+// Funciones para manejar respuestas de comentarios de subtareas
+function showSubtaskReplyForm(commentId, subtaskId, taskId) {
+    // Ocultar todos los formularios de respuesta abiertos
+    const openForms = document.querySelectorAll('.reply-form-container');
+    openForms.forEach(form => {
+        if (form.id !== `subtask-reply-form-${commentId}`) {
+            form.style.display = 'none';
+        }
+    });
+    
+    // Mostrar el formulario específico
+    const replyForm = document.getElementById(`subtask-reply-form-${commentId}`);
+    if (replyForm) {
+        replyForm.style.display = 'block';
+        // Hacer focus en el textarea
+        const textarea = replyForm.querySelector('textarea[name="reply_text"]');
+        if (textarea) {
+            textarea.focus();
+        }
+    }
+}
+
+function hideSubtaskReplyForm(commentId) {
+    const replyForm = document.getElementById(`subtask-reply-form-${commentId}`);
+    if (replyForm) {
+        replyForm.style.display = 'none';
+        // Limpiar el formulario
+        const form = replyForm.querySelector('form');
+        if (form) {
+            form.reset();
+            // Ocultar adjunto si estaba visible
+            const attachmentInput = document.getElementById(`subtask-reply-attachment-${commentId}`);
+            if (attachmentInput) {
+                attachmentInput.style.display = 'none';
+            }
+        }
+    }
+}
+
+function toggleSubtaskReplyAttachment(commentId) {
+    const checkbox = document.getElementById(`subtask-reply-attachment-check-${commentId}`);
+    const attachmentInput = document.getElementById(`subtask-reply-attachment-${commentId}`);
+    
+    if (attachmentInput && checkbox) {
+        attachmentInput.style.display = checkbox.checked ? 'block' : 'none';
+        if (!checkbox.checked) {
+            // Limpiar el input de archivo si se desmarca
+            const fileInput = attachmentInput.querySelector('input[type="file"]');
+            if (fileInput) {
+                fileInput.value = '';
+            }
+        }
+    }
+}
+
+function submitSubtaskReply(event, parentCommentId, subtaskId, taskId) {
+    event.preventDefault();
+    
+    const form = event.target;
+    const formData = new FormData(form);
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    
+    // Agregar IDs necesarios
+    formData.append('parent_comment_id', parentCommentId);
+    formData.append('subtask_id', subtaskId);
+    
+    // Deshabilitar botón y mostrar loading
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+    
+    fetch(`?route=admin/add-subtask-reply&taskId=${taskId}`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Limpiar y ocultar formulario
+            form.reset();
+            hideSubtaskReplyForm(parentCommentId);
+            
+            // Mostrar mensaje de éxito
+            showNotification('Respuesta agregada exitosamente', 'success');
+            
+            // Recargar detalles de la tarea
+            setTimeout(() => {
+                openTaskDetailsModal(taskId);
+            }, 1000);
+        } else {
+            showNotification(data.message || 'Error al agregar respuesta', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error al enviar respuesta', 'error');
+    })
+    .finally(() => {
+        // Restaurar botón
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
     });
 }
 

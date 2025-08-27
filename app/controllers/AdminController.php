@@ -1484,6 +1484,165 @@ class AdminController {
     }
 
     /**
+     * Agregar respuesta a un comentario de subtarea (AJAX)
+     */
+    public function addSubtaskReply() {
+        // Evitar cualquier salida que no sea JSON
+        if (ob_get_level()) {
+            ob_clean();
+        }
+        
+        header('Content-Type: application/json');
+        
+        // Verificar autenticación
+        if (!$this->auth->isLoggedIn()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'No autenticado'], 401);
+            return;
+        }
+        
+        if (!$this->hasAdminAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos'], 403);
+            return;
+        }
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
+            return;
+        }
+
+        $taskId = (int)($_GET['taskId'] ?? 0);
+        $parentCommentId = (int)($_POST['parent_comment_id'] ?? 0);
+        $subtaskId = (int)($_POST['subtask_id'] ?? 0);
+        $replyText = trim($_POST['reply_text'] ?? '');
+        
+        if ($taskId <= 0) {
+            Utils::jsonResponse(['success' => false, 'message' => 'ID de tarea inválido'], 400);
+            return;
+        }
+        
+        if ($parentCommentId <= 0) {
+            Utils::jsonResponse(['success' => false, 'message' => 'ID de comentario padre inválido'], 400);
+            return;
+        }
+        
+        if ($subtaskId <= 0) {
+            Utils::jsonResponse(['success' => false, 'message' => 'ID de subtarea inválido'], 400);
+            return;
+        }
+        
+        if (empty($replyText)) {
+            Utils::jsonResponse(['success' => false, 'message' => 'La respuesta no puede estar vacía'], 400);
+            return;
+        }
+
+        try {
+            error_log("addSubtaskReply: Iniciando para taskId=$taskId, subtaskId=$subtaskId, parentCommentId=$parentCommentId");
+            $db = Database::getConnection();
+            $currentUser = $this->auth->getCurrentUser();
+            
+            // Verificar que la subtarea y el comentario padre existen
+            $stmt = $db->prepare("
+                SELECT sc.comment_id 
+                FROM Subtask_Comments sc 
+                WHERE sc.comment_id = ? AND sc.subtask_id = ?
+            ");
+            $stmt->execute([$parentCommentId, $subtaskId]);
+            if (!$stmt->fetch()) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Comentario padre de subtarea no encontrado'], 404);
+                return;
+            }
+            
+            // Insertar respuesta como comentario normal de subtarea
+            $stmt = $db->prepare("
+                INSERT INTO Subtask_Comments (subtask_id, user_id, comment_text, comment_type, created_at) 
+                VALUES (?, ?, ?, 'comment', NOW())
+            ");
+            $result = $stmt->execute([$subtaskId, $currentUser['user_id'], $replyText]);
+            
+            if (!$result) {
+                $error = $stmt->errorInfo();
+                error_log("addSubtaskReply: Error en base de datos - " . json_encode($error));
+                Utils::jsonResponse(['success' => false, 'message' => 'Error al guardar respuesta en base de datos'], 500);
+                return;
+            }
+            
+            $replyId = $db->lastInsertId();
+            error_log("addSubtaskReply: Respuesta insertada con ID $replyId");
+            
+            // Manejar archivo adjunto si se envió
+            $attachmentInfo = null;
+            if (isset($_FILES['reply_attachment']) && $_FILES['reply_attachment']['error'] === UPLOAD_ERR_OK) {
+                $file = $_FILES['reply_attachment'];
+                error_log("addSubtaskReply: Procesando archivo adjunto - " . $file['name']);
+                
+                // Validaciones del archivo
+                $maxSize = 10 * 1024 * 1024; // 10MB
+                if ($file['size'] <= $maxSize) {
+                    $allowedTypes = [
+                        'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                        'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                        'text/plain', 'image/jpeg', 'image/png', 'image/gif', 'application/zip', 'application/x-rar-compressed'
+                    ];
+                    
+                    if (in_array($file['type'], $allowedTypes)) {
+                        // Usar el directorio correcto
+                        $uploadDir = dirname(__DIR__, 2) . '/public/uploads/task_attachments';
+                        
+                        if (is_dir($uploadDir)) {
+                            // Generar nombre único para el archivo
+                            $fileExtension = pathinfo($file['name'], PATHINFO_EXTENSION);
+                            $fileName = 'subtask_reply_' . time() . '_' . uniqid() . '.' . $fileExtension;
+                            $filePath = $uploadDir . '/' . $fileName;
+                            $webPath = 'uploads/task_attachments/' . $fileName;
+                            
+                            if (move_uploaded_file($file['tmp_name'], $filePath)) {
+                                $attachmentInfo = [
+                                    'file_name' => $file['name'],
+                                    'file_path' => $webPath
+                                ];
+                                
+                                // Guardar en Subtask_Attachments con comment_id
+                                $stmt = $db->prepare("
+                                    INSERT INTO Subtask_Attachments (subtask_id, user_id, comment_id, file_name, file_path, file_size, file_type, uploaded_at) 
+                                    VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
+                                ");
+                                $stmt->execute([
+                                    $subtaskId, 
+                                    $currentUser['user_id'], 
+                                    $replyId,
+                                    $file['name'], 
+                                    $webPath, 
+                                    $file['size'],
+                                    $file['type']
+                                ]);
+                                
+                                error_log("addSubtaskReply: Adjunto guardado exitosamente");
+                            }
+                        }
+                    }
+                }
+            }
+            
+            $response = [
+                'success' => true, 
+                'message' => 'Respuesta agregada exitosamente',
+                'reply_id' => $replyId
+            ];
+            
+            if ($attachmentInfo) {
+                $response['attachment'] = $attachmentInfo;
+                $response['message'] = 'Respuesta con archivo agregada exitosamente';
+            }
+            
+            Utils::jsonResponse($response);
+            
+        } catch (Exception $e) {
+            error_log('Error al agregar respuesta de subtarea: ' . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error al agregar respuesta'], 500);
+        }
+    }
+
+    /**
      * Eliminar proyecto (ADMIN)
      */
     public function deleteProject() {
