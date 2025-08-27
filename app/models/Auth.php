@@ -70,7 +70,7 @@ class Auth {
             $stmt->execute([$userId, hash('sha256', $remember_token)]);
             
             // Establecer cookie (30 días)
-            setcookie('remember_token', $remember_token, time() + (30 * 24 * 60 * 60), '/', '', false, true);
+            setcookie('remember_token', $remember_token, time() + (30 * 24 * 60 * 60), '/', '', false, false);
         } catch (PDOException $e) {
             error_log("Error al configurar token de recordar: " . $e->getMessage());
         }
@@ -141,7 +141,7 @@ class Auth {
             $stmt->execute([$userId, $hashedToken]);
             
             // Renovar cookie también
-            setcookie('remember_token', $_COOKIE['remember_token'], time() + (30 * 24 * 60 * 60), '/', '', false, true);
+            setcookie('remember_token', $_COOKIE['remember_token'], time() + (30 * 24 * 60 * 60), '/', '', false, false);
         } catch (PDOException $e) {
             error_log("Error al renovar token de recordar: " . $e->getMessage());
         }
@@ -167,7 +167,7 @@ class Auth {
         // Eliminar token de "recordarme" si existe
         if (isset($_COOKIE['remember_token']) && $user) {
             $this->removeRememberToken($user['user_id']);
-            setcookie('remember_token', '', time() - 3600, '/', '', false, true);
+            setcookie('remember_token', '', time() - 3600, '/', '', false, false);
         }
         
         // Destruir todas las variables de sesión

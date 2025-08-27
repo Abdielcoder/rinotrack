@@ -15,6 +15,7 @@ date_default_timezone_set('America/Mexico_City');
 ini_set('session.cookie_httponly', 1);
 ini_set('session.use_only_cookies', 1);
 ini_set('session.cookie_secure', 0); // Cambiar a 1 en HTTPS
+ini_set('session.cookie_samesite', 'Lax'); // Agregar configuración de SameSite
 
 // Configuración de errores (solo en desarrollo)
 if (APP_DEBUG) {

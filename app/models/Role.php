@@ -158,15 +158,21 @@ class Role {
      */
     public function userHasMinimumRole($userId, $minimumRole) {
         try {
+            error_log("userHasMinimumRole: Checking user $userId for minimum role $minimumRole");
             $userRole = $this->getUserRole($userId);
             if (!$userRole) {
+                error_log("userHasMinimumRole: No role found for user $userId");
                 return false;
             }
             
+            error_log("userHasMinimumRole: User role = " . $userRole['role_name']);
             $userLevel = self::ROLE_HIERARCHY[$userRole['role_name']] ?? 999;
             $minimumLevel = self::ROLE_HIERARCHY[$minimumRole] ?? 999;
             
-            return $userLevel <= $minimumLevel;
+            error_log("userHasMinimumRole: User level = $userLevel, Minimum level = $minimumLevel");
+            $result = $userLevel <= $minimumLevel;
+            error_log("userHasMinimumRole: Result = " . ($result ? 'true' : 'false'));
+            return $result;
         } catch (Exception $e) {
             error_log("Error al verificar nivel de rol: " . $e->getMessage());
             return false;

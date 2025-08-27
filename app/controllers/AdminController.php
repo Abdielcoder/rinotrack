@@ -262,9 +262,26 @@ class AdminController {
      * Cambiar estado activo/inactivo del usuario
      */
     public function toggleUserStatus() {
-        $this->requireAuth();
-        if (!$this->hasAdminAccess()) {
-            Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos'], 403);
+        // DEBUG: Log para diagnosticar el problema
+        error_log("=== TOGGLE USER STATUS DEBUG ===");
+        error_log("toggleUserStatus called - Method: " . $_SERVER['REQUEST_METHOD']);
+        error_log("POST data: " . print_r($_POST, true));
+        error_log("SESSION data: " . print_r($_SESSION ?? [], true));
+        
+        try {
+            error_log("Calling requireAuth()...");
+            $this->requireAuth();
+            error_log("requireAuth() completed successfully");
+            
+            error_log("Checking admin access...");
+            if (!$this->hasAdminAccess()) {
+                error_log("Access denied - user doesn't have admin access");
+                Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos'], 403);
+            }
+            error_log("Admin access verified successfully");
+        } catch (Exception $e) {
+            error_log("ERROR in auth/access check: " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error de autenticación: ' . $e->getMessage()], 500);
         }
         
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -1563,12 +1580,17 @@ class AdminController {
      * Verificar si el usuario tiene acceso de administración
      */
     private function hasAdminAccess() {
+        error_log("hasAdminAccess called");
         $currentUser = $this->auth->getCurrentUser();
         if (!$currentUser) {
+            error_log("hasAdminAccess: No current user found");
             return false;
         }
         
-        return $this->roleModel->userHasMinimumRole($currentUser['user_id'], Role::ADMIN);
+        error_log("hasAdminAccess: Checking user ID " . $currentUser['user_id'] . " for admin role");
+        $hasAccess = $this->roleModel->userHasMinimumRole($currentUser['user_id'], Role::ADMIN);
+        error_log("hasAdminAccess: Result = " . ($hasAccess ? 'true' : 'false'));
+        return $hasAccess;
     }
     
     /**
