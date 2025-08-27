@@ -969,6 +969,177 @@ class AdminController {
     }
 
     /**
+     * Agregar comentario unificado con archivo adjunto opcional (AJAX)
+     */
+    public function addUnifiedComment() {
+        // Evitar cualquier salida que no sea JSON
+        if (ob_get_level()) {
+            ob_clean();
+        }
+        
+        header('Content-Type: application/json');
+        
+        // Verificar autenticación
+        if (!$this->auth->isLoggedIn()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'No autenticado'], 401);
+            return;
+        }
+        
+        if (!$this->hasAdminAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos'], 403);
+            return;
+        }
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
+            return;
+        }
+
+        $taskId = (int)($_GET['taskId'] ?? 0);
+        $commentText = trim($_POST['comment_text'] ?? '');
+        
+        if ($taskId <= 0) {
+            Utils::jsonResponse(['success' => false, 'message' => 'ID de tarea inválido'], 400);
+            return;
+        }
+        
+        if (empty($commentText)) {
+            Utils::jsonResponse(['success' => false, 'message' => 'El comentario no puede estar vacío'], 400);
+            return;
+        }
+
+        try {
+            error_log("addUnifiedComment: Iniciando para taskId=$taskId");
+            $db = Database::getConnection();
+            $currentUser = $this->auth->getCurrentUser();
+            
+            // Verificar que la tarea existe
+            $stmt = $db->prepare("SELECT task_id FROM Tasks WHERE task_id = ?");
+            $stmt->execute([$taskId]);
+            if (!$stmt->fetch()) {
+                error_log("addUnifiedComment: Tarea $taskId no encontrada");
+                Utils::jsonResponse(['success' => false, 'message' => 'Tarea no encontrada'], 404);
+                return;
+            }
+            
+            // Insertar comentario primero
+            error_log("addUnifiedComment: Insertando comentario...");
+            $stmt = $db->prepare("
+                INSERT INTO Task_Comments (task_id, user_id, comment_text, comment_type, created_at) 
+                VALUES (?, ?, ?, 'comment', NOW())
+            ");
+            $result = $stmt->execute([$taskId, $currentUser['user_id'], $commentText]);
+            
+            if (!$result) {
+                $error = $stmt->errorInfo();
+                error_log("addUnifiedComment: Error en base de datos - " . json_encode($error));
+                Utils::jsonResponse(['success' => false, 'message' => 'Error al guardar comentario en base de datos'], 500);
+                return;
+            }
+            
+            $commentId = $db->lastInsertId();
+            error_log("addUnifiedComment: Comentario insertado con ID $commentId");
+            
+            // Verificar si hay archivo adjunto
+            $attachmentInfo = null;
+            if (isset($_FILES['attachment_file']) && $_FILES['attachment_file']['error'] === UPLOAD_ERR_OK) {
+                $file = $_FILES['attachment_file'];
+                error_log("addUnifiedComment: Procesando archivo adjunto - " . $file['name']);
+                
+                // Validaciones del archivo
+                $maxSize = 10 * 1024 * 1024; // 10MB
+                if ($file['size'] > $maxSize) {
+                    Utils::jsonResponse(['success' => false, 'message' => 'El archivo es muy grande. Máximo 10MB permitido.'], 400);
+                    return;
+                }
+                
+                $allowedTypes = [
+                    'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                    'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                    'text/plain', 'image/jpeg', 'image/png', 'image/gif', 'application/zip', 'application/x-rar-compressed'
+                ];
+                
+                if (!in_array($file['type'], $allowedTypes)) {
+                    Utils::jsonResponse(['success' => false, 'message' => 'Tipo de archivo no permitido'], 400);
+                    return;
+                }
+                
+                // Usar el directorio correcto
+                $uploadDir = dirname(__DIR__, 2) . '/public/uploads/task_attachments';
+                
+                if (!is_dir($uploadDir)) {
+                    if (!mkdir($uploadDir, 0775, true)) {
+                        Utils::jsonResponse(['success' => false, 'message' => 'Error al crear directorio de uploads'], 500);
+                        return;
+                    }
+                }
+                
+                // Generar nombre único para el archivo
+                $fileExtension = pathinfo($file['name'], PATHINFO_EXTENSION);
+                $fileName = 'comment_' . time() . '_' . uniqid() . '.' . $fileExtension;
+                $filePath = $uploadDir . '/' . $fileName;
+                $webPath = 'uploads/task_attachments/' . $fileName;
+                
+                error_log("addUnifiedComment: Intentando mover archivo a '$filePath'");
+                
+                // Mover archivo
+                if (!move_uploaded_file($file['tmp_name'], $filePath)) {
+                    $error = error_get_last();
+                    error_log("addUnifiedComment: Error al mover archivo - " . ($error ? $error['message'] : 'desconocido'));
+                    Utils::jsonResponse(['success' => false, 'message' => 'Error al subir archivo'], 500);
+                    return;
+                }
+                
+                error_log("addUnifiedComment: Archivo movido exitosamente");
+                
+                // Insertar en Task_Attachments
+                $stmt = $db->prepare("
+                    INSERT INTO Task_Attachments (task_id, user_id, comment_id, file_name, file_path, file_size, file_type, uploaded_at) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
+                ");
+                $result = $stmt->execute([
+                    $taskId, 
+                    $currentUser['user_id'], 
+                    $commentId,
+                    $file['name'], 
+                    $webPath, 
+                    $file['size'],
+                    $file['type']
+                ]);
+                
+                if ($result) {
+                    $attachmentId = $db->lastInsertId();
+                    error_log("addUnifiedComment: Adjunto insertado con ID $attachmentId");
+                    $attachmentInfo = [
+                        'attachment_id' => $attachmentId,
+                        'file_name' => $file['name'],
+                        'file_path' => $webPath
+                    ];
+                } else {
+                    error_log("addUnifiedComment: Error al insertar adjunto en base de datos");
+                }
+            }
+            
+            $response = [
+                'success' => true, 
+                'message' => 'Comentario agregado exitosamente',
+                'comment_id' => $commentId
+            ];
+            
+            if ($attachmentInfo) {
+                $response['attachment'] = $attachmentInfo;
+                $response['message'] = 'Comentario con archivo agregado exitosamente';
+            }
+            
+            Utils::jsonResponse($response);
+            
+        } catch (Exception $e) {
+            error_log('Error al agregar comentario unificado: ' . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error al agregar comentario'], 500);
+        }
+    }
+
+    /**
      * Agregar adjunto a una tarea (AJAX)
      */
     public function addTaskAttachment() {

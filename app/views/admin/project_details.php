@@ -780,52 +780,28 @@ ob_start();
   transform: rotate(90deg);
 }
 
-/* Estilos para tabs de interacciones */
-.task-interactions-tabs {
-  display: flex;
+/* Estilos para formulario unificado */
+.task-interactions-header {
   border-bottom: 2px solid var(--bg-accent);
   margin-bottom: 20px;
+  padding-bottom: 12px;
 }
 
-.tab-btn {
-  background: none;
-  border: none;
-  padding: 12px 20px;
-  cursor: pointer;
-  color: var(--text-muted);
-  font-weight: 500;
-  transition: all 0.3s ease;
-  border-bottom: 3px solid transparent;
+.task-interactions-header h3 {
+  margin: 0;
+  color: var(--text-primary);
   display: flex;
   align-items: center;
   gap: 8px;
+  font-size: 1.1rem;
 }
 
-.tab-btn:hover {
-  background: var(--bg-tertiary);
-  color: var(--text-primary);
-}
-
-.tab-btn.active {
+.task-interactions-header i {
   color: var(--primary);
-  border-bottom-color: var(--primary);
-  background: var(--bg-tertiary);
-}
-
-.tab-content {
-  margin-top: 20px;
-}
-
-.tab-panel {
-  display: none;
-}
-
-.tab-panel.active {
-  display: block;
 }
 
 /* Estilos para formularios */
-.comment-form, .attachment-form {
+.comment-form, .attachment-form, .unified-comment-form {
   background: var(--bg-tertiary);
   border: 1px solid var(--bg-accent);
   border-radius: 12px;
@@ -908,6 +884,53 @@ ob_start();
 .form-actions .btn:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+/* Estilos para sección de adjuntos en formulario unificado */
+.attachment-section {
+  background: var(--bg-primary);
+  border: 1px solid var(--bg-accent);
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 12px;
+}
+
+.attachment-section label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 0;
+}
+
+.attachment-section input[type="checkbox"] {
+  margin: 0;
+  transform: scale(1.1);
+}
+
+.file-input-container {
+  margin-top: 12px;
+  padding: 12px;
+  background: var(--bg-tertiary);
+  border: 1px dashed var(--bg-accent);
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+.file-input-container:hover {
+  border-color: var(--primary);
+  background: var(--bg-primary);
+}
+
+.file-input-container input[type="file"] {
+  width: 100%;
+  padding: 8px;
+  border: none;
+  background: none;
+  color: var(--text-primary);
+  font-size: 0.9rem;
 }
 
 /* Estilos para notificaciones */
@@ -1820,23 +1843,23 @@ function renderTaskDetails(data) {
                             <!-- Las respuestas se cargarán aquí -->
                         </div>
                         
-                        <!-- Formulario de respuesta (inicialmente oculto) -->
+                        <!-- Formulario de respuesta unificado (inicialmente oculto) -->
                         <div class="reply-form-container" id="reply-form-${comment.comment_id}" style="display: none;">
-                            <form class="reply-form" onsubmit="submitReply(event, ${comment.comment_id}, ${task.task_id})">
+                            <form class="reply-form" onsubmit="submitReply(event, ${comment.comment_id}, ${task.task_id})" enctype="multipart/form-data">
                                 <div class="form-group">
                                     <label>Responder a ${escapeHtml(comment.full_name || comment.username || 'Usuario')}:</label>
                                     <textarea name="reply_text" rows="3" placeholder="Escribe tu respuesta..." required></textarea>
                                 </div>
-                                <div class="reply-attachments-section">
-                                    <div class="attachment-toggle">
+                                <div class="form-group">
+                                    <div class="attachment-section">
                                         <label>
-                                            <input type="checkbox" onchange="toggleReplyAttachment(${comment.comment_id})"> 
-                                            Adjuntar archivo
+                                            <input type="checkbox" id="reply-attachment-check-${comment.comment_id}" onchange="toggleReplyAttachment(${comment.comment_id})"> 
+                                            Adjuntar archivo (opcional)
                                         </label>
-                                    </div>
-                                    <div class="reply-attachment-input" id="reply-attachment-${comment.comment_id}" style="display: none;">
-                                        <input type="file" name="reply_attachment" accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.jpg,.jpeg,.png,.gif,.zip,.rar">
-                                        <div class="file-input-info">Opcional: PDF, DOC, DOCX, XLS, XLSX, TXT, JPG, PNG, GIF, ZIP, RAR (máx. 10MB)</div>
+                                        <div class="file-input-container" id="reply-attachment-${comment.comment_id}" style="display: none;">
+                                            <input type="file" name="reply_attachment" accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.jpg,.jpeg,.png,.gif,.zip,.rar">
+                                            <div class="file-input-info">Opcional: PDF, DOC, DOCX, XLS, XLSX, TXT, JPG, PNG, GIF, ZIP, RAR (máx. 10MB)</div>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="form-actions">
@@ -2002,65 +2025,49 @@ function renderTaskDetails(data) {
             </div>
         </div>
         
-        <!-- Formularios para agregar comentarios y adjuntos -->
+        <!-- Formulario unificado para comentarios y adjuntos -->
         <div class="task-section" style="margin-top: 20px;">
-            <div class="task-interactions-tabs">
-                <button class="tab-btn active" onclick="switchTab('comments', ${task.task_id})">
-                    <i class="fas fa-comment-plus"></i> Agregar Comentario
-                </button>
-                <button class="tab-btn" onclick="switchTab('attachments', ${task.task_id})">
-                    <i class="fas fa-paperclip"></i> Adjuntar Archivo
-                </button>
+            <div class="task-interactions-header">
+                <h3><i class="fas fa-comment-plus"></i> Agregar Comentario</h3>
             </div>
             
-            <div class="tab-content">
-                <!-- Tab de comentarios -->
-                <div id="comments-tab-${task.task_id}" class="tab-panel active">
-                    <form id="comment-form-${task.task_id}" class="comment-form" onsubmit="submitComment(event, ${task.task_id})">
-                        <div class="form-group">
-                            <label for="comment-text-${task.task_id}">Nuevo Comentario:</label>
-                            <textarea 
-                                id="comment-text-${task.task_id}" 
-                                name="comment_text" 
-                                rows="4" 
-                                placeholder="Escribe tu comentario aquí..."
-                                required
-                            ></textarea>
-                        </div>
-                        <div class="form-actions">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-paper-plane"></i> Enviar Comentario
-                            </button>
-                        </div>
-                    </form>
+            <form id="unified-comment-form-${task.task_id}" class="unified-comment-form" onsubmit="submitUnifiedComment(event, ${task.task_id})" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="comment-text-${task.task_id}">Comentario:</label>
+                    <textarea 
+                        id="comment-text-${task.task_id}" 
+                        name="comment_text" 
+                        rows="4" 
+                        placeholder="Escribe tu comentario aquí..."
+                        required
+                    ></textarea>
                 </div>
                 
-                <!-- Tab de adjuntos -->
-                <div id="attachments-tab-${task.task_id}" class="tab-panel">
-                    <form id="attachment-form-${task.task_id}" class="attachment-form" onsubmit="submitAttachment(event, ${task.task_id})" enctype="multipart/form-data">
-                        <div class="form-group">
-                            <label for="attachment-file-${task.task_id}">Seleccionar Archivo:</label>
-                            <div class="file-input-wrapper">
-                                <input 
-                                    type="file" 
-                                    id="attachment-file-${task.task_id}" 
-                                    name="attachment_file" 
-                                    accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.jpg,.jpeg,.png,.gif,.zip,.rar"
-                                    required
-                                >
-                                <div class="file-input-info">
-                                    Formatos permitidos: PDF, DOC, DOCX, XLS, XLSX, TXT, JPG, PNG, GIF, ZIP, RAR (máx. 10MB)
-                                </div>
+                <div class="form-group">
+                    <div class="attachment-section">
+                        <label>
+                            <input type="checkbox" id="include-attachment-${task.task_id}" onchange="toggleAttachmentInput(${task.task_id})"> 
+                            Adjuntar archivo (opcional)
+                        </label>
+                        <div class="file-input-container" id="file-input-${task.task_id}" style="display: none;">
+                            <input 
+                                type="file" 
+                                name="attachment_file" 
+                                accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.jpg,.jpeg,.png,.gif,.zip,.rar"
+                            >
+                            <div class="file-input-info">
+                                Formatos permitidos: PDF, DOC, DOCX, XLS, XLSX, TXT, JPG, PNG, GIF, ZIP, RAR (máx. 10MB)
                             </div>
                         </div>
-                        <div class="form-actions">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-upload"></i> Subir Archivo
-                            </button>
-                        </div>
-                    </form>
+                    </div>
                 </div>
-            </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i> Enviar Comentario
+                    </button>
+                </div>
+            </form>
         </div>
     `;
     
@@ -2147,25 +2154,107 @@ function closeSubtasksModal() {
     modal.style.display = 'none';
 }
 
-// Funciones para tabs de interacciones
-function switchTab(tabType, taskId) {
-    // Remover clase active de todos los botones
-    const tabBtns = document.querySelectorAll('.tab-btn');
-    tabBtns.forEach(btn => btn.classList.remove('active'));
+// Función para mostrar/ocultar input de archivo
+function toggleAttachmentInput(taskId) {
+    const checkbox = document.getElementById(`include-attachment-${taskId}`);
+    const fileContainer = document.getElementById(`file-input-${taskId}`);
     
-    // Remover clase active de todos los paneles
-    const tabPanels = document.querySelectorAll('.tab-panel');
-    tabPanels.forEach(panel => panel.classList.remove('active'));
-    
-    // Activar el botón y panel correspondiente
-    const activeBtn = event.target.closest('.tab-btn');
-    const activePanel = document.getElementById(`${tabType}-tab-${taskId}`);
-    
-    if (activeBtn) activeBtn.classList.add('active');
-    if (activePanel) activePanel.classList.add('active');
+    if (fileContainer) {
+        fileContainer.style.display = checkbox.checked ? 'block' : 'none';
+        if (!checkbox.checked) {
+            // Limpiar el input de archivo si se desmarca
+            const fileInput = fileContainer.querySelector('input[type="file"]');
+            if (fileInput) {
+                fileInput.value = '';
+            }
+        }
+    }
 }
 
-// Función para enviar comentario
+// Función para enviar comentario unificado (con archivo opcional)
+function submitUnifiedComment(event, taskId) {
+    event.preventDefault();
+    
+    const form = event.target;
+    const formData = new FormData(form);
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    const checkbox = document.getElementById(`include-attachment-${taskId}`);
+    const hasAttachment = checkbox && checkbox.checked;
+    
+    // Validar que hay comentario
+    const commentText = formData.get('comment_text');
+    if (!commentText || commentText.trim() === '') {
+        showNotification('Por favor escribe un comentario', 'error');
+        return;
+    }
+    
+    // Si hay archivo adjunto, validar el archivo
+    if (hasAttachment) {
+        const fileInput = form.querySelector('input[type="file"]');
+        if (!fileInput || !fileInput.files[0]) {
+            showNotification('Por favor selecciona un archivo o desmarca la opción de adjuntar', 'error');
+            return;
+        }
+        
+        // Validar tamaño del archivo (10MB max)
+        const maxSize = 10 * 1024 * 1024; // 10MB en bytes
+        if (fileInput.files[0].size > maxSize) {
+            showNotification('El archivo es muy grande. Máximo 10MB permitidos.', 'error');
+            return;
+        }
+    } else {
+        // Si no hay archivo, removerlo del FormData para evitar enviar vacío
+        formData.delete('attachment_file');
+    }
+    
+    // Deshabilitar botón y mostrar loading
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+    
+    // Elegir endpoint según si hay archivo o no
+    const endpoint = hasAttachment 
+        ? `?route=admin/add-unified-comment&taskId=${taskId}`
+        : `?route=admin/add-task-comment&taskId=${taskId}`;
+    
+    fetch(endpoint, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Limpiar formulario
+            form.reset();
+            checkbox.checked = false;
+            toggleAttachmentInput(taskId);
+            
+            // Mostrar mensaje de éxito
+            const message = hasAttachment 
+                ? 'Comentario con archivo agregado exitosamente' 
+                : 'Comentario agregado exitosamente';
+            showNotification(message, 'success');
+            
+            // Recargar detalles de la tarea
+            setTimeout(() => {
+                openTaskDetailsModal(taskId);
+            }, 1000);
+        } else {
+            showNotification(data.message || 'Error al agregar comentario', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error al enviar comentario', 'error');
+    })
+    .finally(() => {
+        // Restaurar botón
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+    });
+}
+
+// Función para enviar comentario (mantenida para compatibilidad)
 function submitComment(event, taskId) {
     event.preventDefault();
     
@@ -2335,10 +2424,10 @@ function hideReplyForm(commentId) {
 }
 
 function toggleReplyAttachment(commentId) {
-    const checkbox = event.target;
+    const checkbox = document.getElementById(`reply-attachment-check-${commentId}`);
     const attachmentInput = document.getElementById(`reply-attachment-${commentId}`);
     
-    if (attachmentInput) {
+    if (attachmentInput && checkbox) {
         attachmentInput.style.display = checkbox.checked ? 'block' : 'none';
         if (!checkbox.checked) {
             // Limpiar el input de archivo si se desmarca

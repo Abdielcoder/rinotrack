@@ -234,6 +234,11 @@ try {
             $controller->addTaskComment();
             break;
             
+        case 'admin/add-unified-comment':
+            $controller = new AdminController();
+            $controller->addUnifiedComment();
+            break;
+            
         case 'admin/add-task-attachment':
             $controller = new AdminController();
             $controller->addTaskAttachment();
