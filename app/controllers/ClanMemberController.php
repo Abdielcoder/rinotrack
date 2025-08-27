@@ -2123,17 +2123,13 @@ class ClanMemberController {
             Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado al proyecto'], 403);
         }
 
-        // Verificar que el usuario NO es el creador de la tarea
-        if ((int)($task['created_by_user_id'] ?? 0) === (int)$this->currentUser['user_id']) {
-            Utils::jsonResponse(['success' => false, 'message' => 'No puedes editar el progreso de tareas que creaste'], 403);
-        }
-
-        // Verificar que el usuario está asignado a la tarea
+        // Verificar permisos: debe ser el creador O estar asignado a la tarea
+        $isCreator = (int)($task['created_by_user_id'] ?? 0) === (int)$this->currentUser['user_id'];
         $isAssigned = $this->isTaskAssignedToUser($taskId, $this->currentUser['user_id'])
             || (int)($task['assigned_to_user_id'] ?? 0) === (int)$this->currentUser['user_id'];
         
-        if (!$isAssigned) {
-            Utils::jsonResponse(['success' => false, 'message' => 'Solo puedes editar el progreso de tareas asignadas a ti'], 403);
+        if (!$isCreator && !$isAssigned) {
+            Utils::jsonResponse(['success' => false, 'message' => 'No tienes permisos para editar el progreso de esta tarea'], 403);
         }
 
         // Actualizar solo el porcentaje de completion

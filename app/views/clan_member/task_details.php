@@ -215,8 +215,10 @@ ob_start();
             <div><strong>Creado:</strong> <?php echo htmlspecialchars($task['created_at'] ?? ''); ?></div>
             <div><strong>Actualizado:</strong> <?php echo htmlspecialchars($task['updated_at'] ?? ''); ?></div>
             <?php 
-                // Solo permitir editar progreso si NO fue creado por el usuario actual
-                $canEditProgress = (int)($task['created_by_user_id'] ?? 0) !== (int)$user['user_id']; 
+                // Permitir editar progreso si la tarea fue creada por el usuario (personal) O si está asignada al usuario
+                $isTaskCreator = (int)($task['created_by_user_id'] ?? 0) === (int)$user['user_id'];
+                $isAssignedToUser = $canEdit; // $canEdit ya verifica si está asignado
+                $canEditProgress = $isTaskCreator || $isAssignedToUser;
                 $currentProgress = (int)($task['completion_percentage'] ?? 0);
             ?>
             <div style="display: flex; flex-direction: column; gap: 8px;">
@@ -238,7 +240,7 @@ ob_start();
                     <span class="task-progress-text"><?php echo $currentProgress; ?>%</span>
                   </div>
                   <div style="font-size: 12px; color: #6b7280; margin-top: 5px;">
-                    No puedes editar el progreso de tareas que creaste
+                    Solo lectura: No tienes permisos para editar esta tarea
                   </div>
                 </div>
               <?php endif; ?>
