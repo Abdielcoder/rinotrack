@@ -43,7 +43,7 @@ window.editUser = function(userId) {
     document.getElementById("password").required = false;
     
     // Cargar datos del usuario desde la tabla - método mejorado
-    const editButton = document.querySelector(`button[onclick="editUser(${userId})"]`);
+    const editButton = document.querySelector(`button[onclick=\"editUser(${userId})\"]`);
     console.log("Edit button found:", editButton);
     
     if (editButton) {
@@ -146,7 +146,7 @@ window.toggleUserStatus = function(userId) {
     console.log("toggleUserStatus called with userId:", userId);
     
     // Encontrar el botón y determinar el estado actual
-    const toggleButton = document.querySelector(`button[onclick="toggleUserStatus(${userId})"]`);
+    const toggleButton = document.querySelector(`button[onclick=\"toggleUserStatus(${userId})\"]`);
     const userRow = toggleButton ? toggleButton.closest("tr") : null;
     const statusBadge = userRow ? userRow.querySelector(".status-badge") : null;
     const isCurrentlyActive = statusBadge ? statusBadge.classList.contains("active") : false;
@@ -162,7 +162,7 @@ window.toggleUserStatus = function(userId) {
     if (toggleButton) {
         toggleButton.disabled = true;
         const originalContent = toggleButton.innerHTML;
-        toggleButton.innerHTML = '<i class=\"fas fa-spinner fa-spin\"></i>';
+        toggleButton.innerHTML = \'<i class="fas fa-spinner fa-spin"></i>\';
         
         // Restaurar botón después de 10 segundos como fallback
         setTimeout(() => {
@@ -196,7 +196,7 @@ window.toggleUserStatus = function(userId) {
             // Restaurar botón en caso de error
             if (toggleButton) {
                 toggleButton.disabled = false;
-                toggleButton.innerHTML = isCurrentlyActive ? '<i class=\"fas fa-ban\"></i>' : '<i class=\"fas fa-check\"></i>';
+                toggleButton.innerHTML = isCurrentlyActive ? \'<i class="fas fa-ban"></i>\' : \'<i class="fas fa-check"></i>\';
             }
         }
     })
@@ -206,7 +206,7 @@ window.toggleUserStatus = function(userId) {
         // Restaurar botón en caso de error
         if (toggleButton) {
             toggleButton.disabled = false;
-            toggleButton.innerHTML = isCurrentlyActive ? '<i class=\"fas fa-ban\"></i>' : '<i class=\"fas fa-check\"></i>';
+            toggleButton.innerHTML = isCurrentlyActive ? \'<i class="fas fa-ban"></i>\' : \'<i class="fas fa-check"></i>\';
         }
     });
 };
@@ -219,11 +219,11 @@ window.deleteUser = function(userId) {
     }
     
     // Mostrar indicador de carga
-    const deleteButton = document.querySelector(`button[onclick="deleteUser(${userId})"]`);
+    const deleteButton = document.querySelector(`button[onclick=\"deleteUser(${userId})\"]`);
     if (deleteButton) {
         deleteButton.disabled = true;
         const originalContent = deleteButton.innerHTML;
-        deleteButton.innerHTML = '<i class=\"fas fa-spinner fa-spin\"></i>';
+        deleteButton.innerHTML = \'<i class="fas fa-spinner fa-spin"></i>\';
         
         // Restaurar botón después de 10 segundos como fallback
         setTimeout(() => {
@@ -257,7 +257,7 @@ window.deleteUser = function(userId) {
             // Restaurar botón en caso de error
             if (deleteButton) {
                 deleteButton.disabled = false;
-                deleteButton.innerHTML = '<i class=\"fas fa-trash\"></i>';
+                deleteButton.innerHTML = \'<i class="fas fa-trash"></i>\';
             }
         }
     })
@@ -267,7 +267,7 @@ window.deleteUser = function(userId) {
         // Restaurar botón en caso de error
         if (deleteButton) {
             deleteButton.disabled = false;
-            deleteButton.innerHTML = '<i class=\"fas fa-trash\"></i>';
+            deleteButton.innerHTML = \'<i class="fas fa-trash"></i>\';
         }
     });
 };
