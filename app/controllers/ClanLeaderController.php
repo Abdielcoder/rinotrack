@@ -2388,14 +2388,22 @@ class ClanLeaderController {
         error_log("Final status: " . $status);
         
         if (!$taskId || $taskId <= 0) {
+            $debugInfo = [
+                'received_task_id' => $_POST['task_id'] ?? 'no POST task_id',
+                'parsed_task_id' => $parsedData['task_id'] ?? 'no parsed task_id',
+                'final_task_id' => $taskId,
+                'post_data' => $_POST,
+                'parsed_data' => $parsedData ?? null,
+                'raw_input' => file_get_contents('php://input'),
+                'content_type' => $_SERVER['CONTENT_TYPE'] ?? 'no content type'
+            ];
+            
+            error_log("Task ID validation failed. Debug info: " . print_r($debugInfo, true));
+            
             echo json_encode([
                 'success' => false, 
-                'message' => 'Task ID inválido: ' . $taskId,
-                'debug' => [
-                    'post' => $_POST,
-                    'parsed' => $parsedData ?? null,
-                    'taskId' => $taskId
-                ]
+                'message' => 'ID de tarea inválido. Recibido: ' . var_export($taskId, true) . '. Verifique que está enviando un número válido mayor que 0.',
+                'debug' => $debugInfo
             ]);
             return;
         }

@@ -218,8 +218,9 @@ ob_start();
                                 <td class="td-checkbox">
                                     <input type="checkbox" 
                                            id="task-<?= $taskId ?>" 
+                                           data-task-id="<?= $taskId ?>"
                                            <?= ($status === 'completed') ? 'checked' : '' ?>
-                                           onchange="console.log('HTML task_id: <?= $taskId ?>'); toggleTaskStatus(<?= $taskId ?>, this.checked)">
+                                           onchange="console.log('HTML task_id: <?= $taskId ?>, tipo: <?= gettype($taskId) ?>'); toggleTaskStatus('<?= $taskId ?>', this.checked)">
                                 </td>
                                 <td class="td-priority">
                                     <span class="priority-badge priority-<?= $priority ?>">
@@ -2232,25 +2233,43 @@ function debounceSearch(input) {
         input.form.submit();
     }, 500); // 500ms de delay
 }
-// Función para cambiar el estado de una tarea - VERSIÓN NUEVA
+// Función para cambiar el estado de una tarea - VERSIÓN CORREGIDA
 function toggleTaskStatus(taskId, isChecked) {
-    console.log('=== toggleTaskStatus Debug V2.0 ===');
-    console.log('taskId:', taskId, 'Type:', typeof taskId);
+    console.log('=== toggleTaskStatus Debug V3.0 ===');
+    console.log('taskId recibido:', taskId, 'Type:', typeof taskId);
     console.log('isChecked:', isChecked);
     
-    // Forzar conversión a número
-    const numericTaskId = parseInt(taskId);
-    console.log('numericTaskId:', numericTaskId);
+    // Validación más robusta del ID de tarea
+    let numericTaskId;
+    if (typeof taskId === 'string') {
+        numericTaskId = parseInt(taskId, 10);
+    } else if (typeof taskId === 'number') {
+        numericTaskId = taskId;
+    } else {
+        console.error('taskId no es string ni number:', taskId);
+        alert('Error: ID de tarea inválido (tipo incorrecto): ' + typeof taskId);
+        // Revertir el checkbox
+        const checkbox = document.querySelector(`#task-${taskId}`);
+        if (checkbox) checkbox.checked = !isChecked;
+        return;
+    }
     
-    if (!numericTaskId || numericTaskId <= 0) {
-        alert('Error: ID de tarea inválido: ' + taskId);
+    console.log('numericTaskId procesado:', numericTaskId);
+    
+    // Validar que el ID es un número válido y positivo
+    if (isNaN(numericTaskId) || numericTaskId <= 0) {
+        console.error('ID de tarea inválido después de conversión:', numericTaskId);
+        alert('Error: ID de tarea inválido. ID recibido: ' + taskId + ', convertido a: ' + numericTaskId);
+        // Revertir el checkbox
+        const checkbox = document.querySelector(`#task-${taskId}`);
+        if (checkbox) checkbox.checked = !isChecked;
         return;
     }
     
     const newStatus = isChecked ? 'completed' : 'pending';
     console.log('newStatus:', newStatus);
     
-    const requestBody = 'task_id=' + numericTaskId + '&status=' + newStatus;
+    const requestBody = 'task_id=' + numericTaskId + '&status=' + encodeURIComponent(newStatus);
     console.log('Request body:', requestBody);
     
     fetch('?route=clan_leader/simple-toggle-task', {
@@ -2262,44 +2281,99 @@ function toggleTaskStatus(taskId, isChecked) {
     })
     .then(response => {
         console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         return response.json();
     })
     .then(data => {
-        console.log('Response data:', data);
+        console.log('Response data completa:', data);
+        
         if (data.success) {
+            console.log('Actualizando UI para tarea:', numericTaskId);
+            
+            // Buscar la fila de la tabla usando el ID numérico
+            const checkbox = document.querySelector(`#task-${numericTaskId}`);
+            if (!checkbox) {
+                console.error('No se encontró checkbox para task ID:', numericTaskId);
+                alert('Error: No se pudo encontrar la tarea en la interfaz');
+                return;
+            }
+            
+            const row = checkbox.closest('tr');
+            if (!row) {
+                console.error('No se encontró fila para el checkbox');
+                alert('Error: No se pudo encontrar la fila de la tarea');
+                return;
+            }
+            
             // Actualizar la barra de progreso
-            const row = document.querySelector(`#task-${taskId}`).closest('tr');
             const progressFill = row.querySelector('.progress-fill');
             const progressText = row.querySelector('.progress-text');
             
-            if (isChecked) {
-                progressFill.style.width = '100%';
-                progressText.textContent = '100%';
-                row.classList.add('completed');
-            } else {
-                progressFill.style.width = (data.completion_percentage || 0) + '%';
-                progressText.textContent = (data.completion_percentage || 0) + '%';
-                row.classList.remove('completed');
+            if (progressFill && progressText) {
+                if (isChecked) {
+                    progressFill.style.width = '100%';
+                    progressText.textContent = '100%';
+                    row.classList.add('completed');
+                } else {
+                    const percentage = data.completion_percentage || 0;
+                    progressFill.style.width = percentage + '%';
+                    progressText.textContent = percentage + '%';
+                    row.classList.remove('completed');
+                }
             }
             
             // Actualizar el badge de estado
             const statusBadge = row.querySelector('.status-badge');
-            statusBadge.className = 'status-badge status-' + newStatus;
-            statusBadge.textContent = isChecked ? 'Completada' : 'Pendiente';
+            if (statusBadge) {
+                statusBadge.className = 'status-badge status-' + newStatus;
+                statusBadge.textContent = isChecked ? 'Completada' : 'Pendiente';
+            }
             
-            alert(data.message || 'Estado actualizado correctamente');
+            // Mostrar mensaje de éxito con información detallada
+            const message = data.message || 'Estado actualizado correctamente';
+            console.log('Operación exitosa:', message);
+            showToast(message, 'success');
+            
         } else {
+            console.error('Error del servidor:', data.message);
+            console.error('Debug info:', data.debug);
+            
             // Revertir el checkbox si hay error
-            document.querySelector(`#task-${taskId}`).checked = !isChecked;
-            alert(data.message || 'Error al actualizar el estado');
+            const checkbox = document.querySelector(`#task-${numericTaskId}`);
+            if (checkbox) {
+                checkbox.checked = !isChecked;
+            }
+            
+            const errorMessage = data.message || 'Error al actualizar el estado';
+            console.error('Mostrando error:', errorMessage);
+            showToast(errorMessage, 'error');
         }
     })
     .catch(error => {
-        console.error('Error:', error);
+        console.error('Error de red o parsing:', error);
+        
         // Revertir el checkbox si hay error
-        document.querySelector(`#task-${taskId}`).checked = !isChecked;
-        alert('Error al actualizar el estado de la tarea');
+        const checkbox = document.querySelector(`#task-${numericTaskId}`);
+        if (checkbox) {
+            checkbox.checked = !isChecked;
+        }
+        
+        showToast('Error de conexión al actualizar la tarea: ' + error.message, 'error');
     });
+}
+
+// Función alternativa que usa data-attribute como respaldo
+function toggleTaskStatusByElement(checkbox) {
+    const taskId = checkbox.dataset.taskId || checkbox.id.replace('task-', '');
+    const isChecked = checkbox.checked;
+    
+    console.log('toggleTaskStatusByElement - taskId from data-attribute:', taskId);
+    toggleTaskStatus(taskId, isChecked);
 }
 
 // Función para seleccionar/deseleccionar todas las tareas
