@@ -550,9 +550,16 @@ class ClanLeaderController {
         $projectId = (int)($_POST['projectId'] ?? 0);
         $projectName = Utils::sanitizeInput($_POST['projectName'] ?? '');
         $description = Utils::sanitizeInput($_POST['description'] ?? '');
+        $timeLimit = !empty($_POST['timeLimit']) ? $_POST['timeLimit'] : null;
         
         if ($projectId <= 0) {
             Utils::jsonResponse(['success' => false, 'message' => 'ID de proyecto inválido'], 400);
+        }
+        
+        // Validar fecha límite si se proporciona
+        if ($timeLimit && !strtotime($timeLimit)) {
+            Utils::jsonResponse(['success' => false, 'message' => 'La fecha límite no es válida'], 400);
+            return;
         }
         
         // Verificar que el proyecto pertenece al clan
@@ -561,8 +568,8 @@ class ClanLeaderController {
             Utils::jsonResponse(['success' => false, 'message' => 'Proyecto no encontrado'], 404);
         }
         
-        // Actualizar proyecto
-        $result = $this->projectModel->update($projectId, $projectName, $description, $this->userClan['clan_id']);
+        // Actualizar proyecto con fecha límite
+        $result = $this->projectModel->update($projectId, $projectName, $description, $this->userClan['clan_id'], null, $timeLimit);
         
         if ($result) {
             Utils::jsonResponse(['success' => true, 'message' => 'Proyecto actualizado exitosamente']);

@@ -84,7 +84,7 @@ ob_start();
                             </div>
                             
                             <div class="project-actions">
-                                <button class="btn-minimal" onclick="openEditProjectModal(<?php echo $project['project_id']; ?>, '<?php echo htmlspecialchars($project['project_name']); ?>', '<?php echo htmlspecialchars($project['description']); ?>')">
+                                <button class="btn-minimal" onclick="openEditProjectModal(<?php echo $project['project_id']; ?>, '<?php echo htmlspecialchars($project['project_name']); ?>', '<?php echo htmlspecialchars($project['description']); ?>', '<?php echo $project['time_limit'] ?? ''; ?>')">
                                     <i class="fas fa-edit"></i>
                                     Editar
                                 </button>
@@ -204,6 +204,15 @@ ob_start();
                     <textarea id="editDescription" name="description" required 
                               placeholder="Describa el proyecto" rows="4"></textarea>
                 </div>
+                
+                <div class="form-group">
+                    <label for="editTimeLimit">
+                        <i class="fas fa-calendar-alt"></i>
+                        Fecha Límite
+                    </label>
+                    <input type="date" id="editTimeLimit" name="timeLimit" 
+                           placeholder="Seleccione la fecha límite del proyecto">
+                </div>
             </form>
         </div>
         
@@ -232,10 +241,11 @@ function closeCreateProjectModal() {
 }
 
 // Funciones para el modal de editar proyecto
-function openEditProjectModal(projectId, projectName, description) {
+function openEditProjectModal(projectId, projectName, description, timeLimit) {
     document.getElementById('editProjectId').value = projectId;
     document.getElementById('editProjectName').value = projectName;
     document.getElementById('editDescription').value = description;
+    document.getElementById('editTimeLimit').value = timeLimit || '';
     document.getElementById('editProjectModal').style.display = 'flex';
 }
 
