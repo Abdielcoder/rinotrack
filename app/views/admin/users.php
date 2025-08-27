@@ -721,7 +721,7 @@ $additionalJS[] = $inlineJS;
 }
 
 .search-btn {
-    background: var(--primary-color);
+    background: #1e3a8a;
     border: none;
     padding: var(--spacing-sm);
     border-radius: var(--radius-sm);
@@ -731,7 +731,7 @@ $additionalJS[] = $inlineJS;
 }
 
 .search-btn:hover {
-    background: var(--primary-dark);
+    background: #1e40af;
 }
 
 .table-container {
