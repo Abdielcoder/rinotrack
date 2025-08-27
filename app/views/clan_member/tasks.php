@@ -87,49 +87,6 @@ ob_start();
 
         <section class="content-section animate-fade-in">
             <div class="content-card">
-                <div class="card-header"><h3><i class="fas fa-diagram-project icon-gradient"></i> Proyectos del Clan</h3></div>
-                <?php if (empty($projectsSummary)): ?>
-                    <div class="empty">No hay proyectos para mostrar</div>
-                <?php else: ?>
-                <div class="cm-project-cards">
-                    <?php foreach ($projectsSummary as $p): ?>
-                        <?php 
-                            // Ocultar proyectos especiales del sistema
-                            if (in_array($p['project_name'], ['Tareas Recurrentes', 'Tareas Eventuales'])) {
-                                continue;
-                            }
-                            
-                            $pid = (int)($p['project_id'] ?? 0);
-                            $prog = (float)($p['progress_percentage'] ?? 0);
-                            $status = strtoupper($p['status'] ?? 'open');
-                        ?>
-                        <div class="cm-project-card">
-                            <div class="pc-top">
-                                <div class="pc-title"><?php echo Utils::escape($p['project_name'] ?? ''); ?></div>
-                                <div class="pc-status"><?php echo Utils::escape($status); ?></div>
-                            </div>
-                            <div class="pc-metrics">
-                                <div class="pc-metric"><i class="fas fa-list"></i><div><div class="num"><?php echo (int)($p['total_tasks'] ?? 0); ?></div><div class="cap">Total</div></div></div>
-                                <div class="pc-metric"><i class="fas fa-check-circle"></i><div><div class="num"><?php echo (int)($p['completed_tasks'] ?? 0); ?></div><div class="cap">Completadas</div></div></div>
-                                <div class="pc-metric"><i class="fas fa-chart-line"></i><div><div class="num"><?php echo number_format($prog, 2); ?>%</div><div class="cap">Progreso</div></div></div>
-                            </div>
-                            <div class="pc-progress"><span style="width: <?php echo $prog; ?>%"></span></div>
-                            <div class="pc-actions">
-                                <?php if ($pid > 0): ?>
-                                <a class="btn btn-secondary" href="?route=clan_member/project-tasks&project_id=<?php echo $pid; ?>">
-                                    <i class="fas fa-eye"></i> Ver Tareas
-                                </a>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-                <?php endif; ?>
-            </div>
-        </section>
-
-        <section class="content-section animate-fade-in">
-            <div class="content-card">
                 <div class="card-header">
                     <h3><i class="fas fa-filter icon-gradient"></i> Filtros</h3>
                 </div>
@@ -206,6 +163,49 @@ ob_start();
                 <?php if ($totalPages > 1): ?>
                 <div class="pagination" style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">
                     <span>Página <?php echo $page; ?> de <?php echo $totalPages; ?></span>
+                </div>
+                <?php endif; ?>
+            </div>
+        </section>
+
+        <section class="content-section animate-fade-in">
+            <div class="content-card">
+                <div class="card-header"><h3><i class="fas fa-diagram-project icon-gradient"></i> Proyectos del Clan</h3></div>
+                <?php if (empty($projectsSummary)): ?>
+                    <div class="empty">No hay proyectos para mostrar</div>
+                <?php else: ?>
+                <div class="cm-project-cards">
+                    <?php foreach ($projectsSummary as $p): ?>
+                        <?php 
+                            // Ocultar proyectos especiales del sistema
+                            if (in_array($p['project_name'], ['Tareas Recurrentes', 'Tareas Eventuales'])) {
+                                continue;
+                            }
+                            
+                            $pid = (int)($p['project_id'] ?? 0);
+                            $prog = (float)($p['progress_percentage'] ?? 0);
+                            $status = strtoupper($p['status'] ?? 'open');
+                        ?>
+                        <div class="cm-project-card">
+                            <div class="pc-top">
+                                <div class="pc-title"><?php echo Utils::escape($p['project_name'] ?? ''); ?></div>
+                                <div class="pc-status"><?php echo Utils::escape($status); ?></div>
+                            </div>
+                            <div class="pc-metrics">
+                                <div class="pc-metric"><i class="fas fa-list"></i><div><div class="num"><?php echo (int)($p['total_tasks'] ?? 0); ?></div><div class="cap">Total</div></div></div>
+                                <div class="pc-metric"><i class="fas fa-check-circle"></i><div><div class="num"><?php echo (int)($p['completed_tasks'] ?? 0); ?></div><div class="cap">Completadas</div></div></div>
+                                <div class="pc-metric"><i class="fas fa-chart-line"></i><div><div class="num"><?php echo number_format($prog, 2); ?>%</div><div class="cap">Progreso</div></div></div>
+                            </div>
+                            <div class="pc-progress"><span style="width: <?php echo $prog; ?>%"></span></div>
+                            <div class="pc-actions">
+                                <?php if ($pid > 0): ?>
+                                <a class="btn btn-secondary" href="?route=clan_member/project-tasks&project_id=<?php echo $pid; ?>">
+                                    <i class="fas fa-eye"></i> Ver Tareas
+                                </a>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
                 </div>
                 <?php endif; ?>
             </div>
