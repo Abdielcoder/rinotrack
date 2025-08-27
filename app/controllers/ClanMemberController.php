@@ -2114,6 +2114,8 @@ class ClanMemberController {
             $subtaskId = $input['subtask_id'] ?? null;
             $title = trim($input['title'] ?? '');
             $description = trim($input['description'] ?? '');
+            $status = $input['status'] ?? null;
+            $completionPercentage = $input['completion_percentage'] ?? null;
 
             if (!$subtaskId || !$title) {
                 http_response_code(400);
@@ -2121,14 +2123,30 @@ class ClanMemberController {
                 return;
             }
 
+            // Construir query dinámicamente
+            $fields = ['title = ?', 'description = ?', 'updated_at = CURRENT_TIMESTAMP'];
+            $params = [$title, $description];
+            
+            if ($status !== null) {
+                $fields[] = 'status = ?';
+                $params[] = $status;
+            }
+            
+            if ($completionPercentage !== null) {
+                $fields[] = 'completion_percentage = ?';
+                $params[] = $completionPercentage;
+            }
+            
+            $params[] = $subtaskId; // Para el WHERE
+
             // Actualizar subtarea en base de datos
             $stmt = $this->db->prepare("
                 UPDATE Subtasks 
-                SET title = ?, description = ?, updated_at = CURRENT_TIMESTAMP 
+                SET " . implode(', ', $fields) . "
                 WHERE subtask_id = ?
             ");
             
-            $result = $stmt->execute([$title, $description, $subtaskId]);
+            $result = $stmt->execute($params);
 
             if ($result) {
                 echo json_encode(['success' => true, 'message' => 'Subtarea actualizada exitosamente']);

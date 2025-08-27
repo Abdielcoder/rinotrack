@@ -634,10 +634,18 @@ function editSubtask(subtaskId) {
     const currentTitle = subtaskElement.querySelector('.subtask-title').textContent.trim();
     const currentDescription = subtaskElement.querySelector('.subtask-description')?.textContent.trim() || '';
     
+    // Obtener estado actual
+    const statusSelect = subtaskElement.querySelector('.status-select');
+    const currentStatus = statusSelect ? statusSelect.value : 'pending';
+    
+    // Obtener progreso actual
+    const progressText = subtaskElement.querySelector('.progress-percentage').textContent;
+    const currentProgress = parseInt(progressText.replace('%', ''));
+    
     const modal = document.createElement('div');
     modal.className = 'modal-overlay';
     modal.innerHTML = `
-        <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-content" style="max-width: 700px;">
             <div class="modal-header">
                 <h3><i class="fas fa-edit"></i> Editar Subtarea</h3>
                 <button class="btn-close" onclick="this.closest('.modal-overlay').remove()">
@@ -653,6 +661,24 @@ function editSubtask(subtaskId) {
                     <div class="form-group">
                         <label for="edit-subtask-description">Descripción:</label>
                         <textarea id="edit-subtask-description" rows="3" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px; margin-bottom: 15px;">${currentDescription}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-subtask-status">Estado:</label>
+                        <select id="edit-subtask-status" onchange="toggleProgressBar()" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px; margin-bottom: 15px;">
+                            <option value="pending" ${currentStatus === 'pending' ? 'selected' : ''}>Pendiente</option>
+                            <option value="in_progress" ${currentStatus === 'in_progress' ? 'selected' : ''}>En Progreso</option>
+                            <option value="completed" ${currentStatus === 'completed' ? 'selected' : ''}>Completado</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-subtask-progress">Progreso:</label>
+                        <div class="progress-control-container" style="margin-bottom: 15px;">
+                            <div class="progress-bar-edit" onclick="updateProgressFromClick(event)" style="position: relative; width: 100%; height: 24px; background: #f3f4f6; border-radius: 12px; border: 2px solid #e5e7eb; cursor: pointer; margin-bottom: 8px;">
+                                <div class="progress-fill-edit" id="progressFillEdit" style="height: 100%; background: linear-gradient(90deg, #10b981, #22c55e); border-radius: 10px; width: ${currentProgress}%; transition: width 0.3s ease;"></div>
+                                <span class="progress-text-edit" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 12px; font-weight: 600; color: #374151;">${currentProgress}%</span>
+                            </div>
+                            <input type="range" id="edit-subtask-progress" min="0" max="100" value="${currentProgress}" oninput="updateProgressDisplay(this.value)" style="width: 100%;">
+                        </div>
                     </div>
                     <div class="form-actions" style="display: flex; gap: 10px; justify-content: flex-end;">
                         <button type="button" onclick="this.closest('.modal-overlay').remove()" class="btn btn-secondary">Cancelar</button>
@@ -670,12 +696,66 @@ function editSubtask(subtaskId) {
     `;
     
     document.body.appendChild(modal);
+    
+    // Configurar estado inicial de la barra de progreso
+    toggleProgressBar();
     document.getElementById('edit-subtask-title').focus();
+}
+
+// Función para habilitar/deshabilitar la barra de progreso según el estado
+function toggleProgressBar() {
+    const status = document.getElementById('edit-subtask-status').value;
+    const progressContainer = document.querySelector('.progress-control-container');
+    const progressBar = document.querySelector('.progress-bar-edit');
+    const progressSlider = document.getElementById('edit-subtask-progress');
+    
+    if (status === 'pending') {
+        // Deshabilitar controles de progreso
+        progressContainer.style.opacity = '0.5';
+        progressBar.style.cursor = 'not-allowed';
+        progressBar.onclick = null;
+        progressSlider.disabled = true;
+        progressSlider.style.cursor = 'not-allowed';
+    } else {
+        // Habilitar controles de progreso
+        progressContainer.style.opacity = '1';
+        progressBar.style.cursor = 'pointer';
+        progressBar.onclick = updateProgressFromClick;
+        progressSlider.disabled = false;
+        progressSlider.style.cursor = 'pointer';
+    }
+}
+
+// Función para actualizar el progreso desde el click en la barra
+function updateProgressFromClick(event) {
+    const status = document.getElementById('edit-subtask-status').value;
+    if (status === 'pending') return; // No permitir cambios si está pendiente
+    
+    const progressBar = event.currentTarget;
+    const rect = progressBar.getBoundingClientRect();
+    const clickX = event.clientX - rect.left;
+    const percentage = Math.round((clickX / rect.width) * 100);
+    
+    if (percentage >= 0 && percentage <= 100) {
+        updateProgressDisplay(percentage);
+        document.getElementById('edit-subtask-progress').value = percentage;
+    }
+}
+
+// Función para actualizar la visualización del progreso
+function updateProgressDisplay(percentage) {
+    const progressFill = document.getElementById('progressFillEdit');
+    const progressText = document.querySelector('.progress-text-edit');
+    
+    if (progressFill) progressFill.style.width = percentage + '%';
+    if (progressText) progressText.textContent = percentage + '%';
 }
 
 function saveSubtaskChanges(subtaskId) {
     const title = document.getElementById('edit-subtask-title').value.trim();
     const description = document.getElementById('edit-subtask-description').value.trim();
+    const status = document.getElementById('edit-subtask-status').value;
+    const progress = parseInt(document.getElementById('edit-subtask-progress').value);
     
     if (!title) {
         alert('El título es requerido');
@@ -690,7 +770,9 @@ function saveSubtaskChanges(subtaskId) {
         body: JSON.stringify({
             subtask_id: subtaskId,
             title: title,
-            description: description
+            description: description,
+            status: status,
+            completion_percentage: progress
         })
     })
     .then(response => response.json())
@@ -700,6 +782,7 @@ function saveSubtaskChanges(subtaskId) {
             const subtaskElement = document.querySelector(`[data-subtask-id="${subtaskId}"]`);
             subtaskElement.querySelector('.subtask-title').textContent = title;
             
+            // Actualizar descripción
             let descElement = subtaskElement.querySelector('.subtask-description');
             if (description) {
                 if (!descElement) {
@@ -712,6 +795,22 @@ function saveSubtaskChanges(subtaskId) {
             } else if (descElement) {
                 descElement.remove();
             }
+            
+            // Actualizar estado en la meta
+            const statusSpan = subtaskElement.querySelector('.subtask-meta span:first-child');
+            if (statusSpan) {
+                statusSpan.textContent = `Estado: ${status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ')}`;
+            }
+            
+            // Actualizar progreso
+            const progressFill = subtaskElement.querySelector('.progress-fill');
+            const progressPercentage = subtaskElement.querySelector('.progress-percentage');
+            if (progressFill) progressFill.style.width = progress + '%';
+            if (progressPercentage) progressPercentage.textContent = progress + '%';
+            
+            // Actualizar el select de estado
+            const statusSelect = subtaskElement.querySelector('.status-select');
+            if (statusSelect) statusSelect.value = status;
             
             document.querySelector('.modal-overlay').remove();
             showNotification('Subtarea actualizada exitosamente', 'success');
