@@ -105,10 +105,10 @@ class Role {
             $currentRole = $this->getUserRole($userId);
             $newRole = $this->findById($roleId);
             
-            // PROTECCIÓN CRÍTICA: No permitir degradar el rol del super admin existente
-            if ($currentRole && $currentRole['role_name'] === 'super_admin' && 
+            // PROTECCIÓN CRÍTICA: No permitir degradar el rol del super admin principal (ID 1)
+            if ($currentRole && $currentRole['role_name'] === 'super_admin' && $userId === 1 &&
                 (!$newRole || $newRole['role_name'] !== 'super_admin')) {
-                error_log("SECURITY WARNING: Intento de degradar rol del super admin (User ID: $userId). Operación bloqueada.");
+                error_log("SECURITY WARNING: Intento de degradar rol del super admin principal (User ID: $userId). Operación bloqueada.");
                 return false;
             }
             
