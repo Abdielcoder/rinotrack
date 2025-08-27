@@ -493,6 +493,8 @@ class ClanLeaderController {
             // Validar datos
             $projectName = Utils::sanitizeInput($_POST['projectName'] ?? '');
             $description = Utils::sanitizeInput($_POST['description'] ?? '');
+            $timeLimit = !empty($_POST['timeLimit']) ? $_POST['timeLimit'] : null;
+            $isEditable = isset($_POST['isEditable']) ? 1 : 0;
             
             // Validaciones
             if (empty($projectName) || strlen($projectName) < 3) {
@@ -505,13 +507,25 @@ class ClanLeaderController {
                 return;
             }
             
-            // Crear proyecto
+            // Validar fecha límite si se proporciona
+            if ($timeLimit && !strtotime($timeLimit)) {
+                Utils::jsonResponse(['success' => false, 'message' => 'La fecha límite no es válida'], 400);
+                return;
+            }
+            
+            // Crear proyecto con fecha límite (usando método existente)
             $result = $this->projectModel->create(
                 $projectName, 
                 $description, 
                 $this->userClan['clan_id'], 
-                $this->currentUser['user_id']
+                $this->currentUser['user_id'],
+                null, // kpiQuarterId 
+                0,    // kpiPoints
+                'automatic', // taskDistributionMode
+                $timeLimit
             );
+            
+            // TODO: Implementar funcionalidad de is_editable cuando se defina la estructura
             
             if ($result) {
                 Utils::jsonResponse(['success' => true, 'message' => 'Proyecto creado exitosamente']);

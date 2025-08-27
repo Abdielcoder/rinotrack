@@ -139,6 +139,24 @@ ob_start();
                     <textarea id="description" name="description" required 
                               placeholder="Describa el proyecto" rows="4"></textarea>
                 </div>
+                
+                <div class="form-group">
+                    <label for="timeLimit">
+                        <i class="fas fa-calendar-alt"></i>
+                        Fecha Límite
+                    </label>
+                    <input type="date" id="timeLimit" name="timeLimit" 
+                           placeholder="Seleccione la fecha límite del proyecto">
+                </div>
+                
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="isEditable" name="isEditable" value="1">
+                        <span class="checkmark"></span>
+                        <i class="fas fa-edit"></i>
+                        Permitir edición por miembros del clan
+                    </label>
+                </div>
             </form>
         </div>
         
@@ -326,6 +344,61 @@ document.getElementById('editProjectModal').addEventListener('click', function(e
     }
 });
 </script>
+
+<style>
+/* Estilos para checkbox personalizado */
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    gap: 10px;
+    padding: 10px 0;
+}
+
+.checkbox-label input[type="checkbox"] {
+    display: none;
+}
+
+.checkmark {
+    width: 20px;
+    height: 20px;
+    background-color: #fff;
+    border: 2px solid #d1d5db;
+    border-radius: 4px;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.checkbox-label:hover .checkmark {
+    border-color: #3b82f6;
+}
+
+.checkbox-label input[type="checkbox"]:checked + .checkmark {
+    background-color: #3b82f6;
+    border-color: #3b82f6;
+}
+
+.checkbox-label input[type="checkbox"]:checked + .checkmark::after {
+    content: '';
+    position: absolute;
+    left: 6px;
+    top: 2px;
+    width: 6px;
+    height: 12px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.checkbox-label i {
+    color: #6b7280;
+    margin-right: 5px;
+}
+
+.checkbox-label input[type="checkbox"]:checked ~ i {
+    color: #3b82f6;
+}
+</style>
 
 <?php
 // Guardar el contenido en una variable
