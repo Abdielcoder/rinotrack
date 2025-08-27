@@ -810,7 +810,7 @@ function closeCMNotification() {
             <option value="low" <?php echo ($task['priority']==='low')?'selected':''; ?>>Baja</option>
             <option value="medium" <?php echo ($task['priority']==='medium')?'selected':''; ?>>Media</option>
             <option value="high" <?php echo ($task['priority']==='high')?'selected':''; ?>>Alta</option>
-            <option value="urgent" <?php echo ($task['priority']==='urgent')?'selected':''; ?>>Urgente</option>
+            <option value="critical" <?php echo ($task['priority']==='critical')?'selected':''; ?>>Urgente</option>
           </select>
         </div>
         <div class="form-group">

@@ -474,6 +474,19 @@ class ClanMemberController {
             $dueDate = $_POST['due_date'] ?? null;
             $status = $_POST['status'] ?? null;
 
+            // Mapear 'urgent' a 'critical' para compatibilidad con el enum de la BD
+            if ($priority === 'urgent') {
+                $priority = 'critical';
+                error_log("Priority mapped from 'urgent' to 'critical' for DB compatibility");
+            }
+            
+            // Validar que el priority sea válido
+            $validPriorities = ['low', 'medium', 'high', 'critical'];
+            if ($priority !== null && !in_array($priority, $validPriorities)) {
+                error_log("Invalid priority value: '$priority'. Valid values are: " . implode(', ', $validPriorities));
+                Utils::jsonResponse(['success' => false, 'message' => 'Prioridad inválida'], 400);
+            }
+
             error_log("Update data - taskName: '$taskName', description: '$description', priority: '$priority', dueDate: '$dueDate', status: '$status'");
 
             // No permitir cambios de asignación ni porcentajes desde el rol miembro
@@ -481,6 +494,16 @@ class ClanMemberController {
             $assignedPercentage = null;
 
             error_log("Calling taskModel->update with taskId: $taskId");
+            error_log("Parameters being passed to update method:");
+            error_log("- taskId: $taskId");
+            error_log("- taskName: '$taskName'");
+            error_log("- description: '$description'");
+            error_log("- assignedUserId: " . ($assignedUserId ?? 'NULL'));
+            error_log("- priority: '$priority'");
+            error_log("- dueDate: '$dueDate'");
+            error_log("- assignedPercentage: " . ($assignedPercentage ?? 'NULL'));
+            error_log("- status: '$status'");
+            
             $ok = $this->taskModel->update($taskId, $taskName, $description, $assignedUserId, $priority, $dueDate, $assignedPercentage, $status);
             error_log("Update result: " . ($ok ? "SUCCESS" : "FAILED"));
             
