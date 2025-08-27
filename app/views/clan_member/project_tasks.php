@@ -27,10 +27,12 @@ if (!isset($user)) {
                     <i class="fas fa-arrow-left"></i>
                     Volver Atrás
                 </button>
+                <?php if (isset($project['is_personal']) && $project['is_personal'] == 1): ?>
                 <button class="btn-create" onclick="openCreateTaskModal()">
                     <i class="fas fa-plus"></i>
                     Nueva Tarea
                 </button>
+                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -244,17 +246,22 @@ if (!isset($user)) {
                 <i class="fas fa-tasks"></i>
             </div>
             <h3>No hay tareas en este proyecto</h3>
+            <?php if (isset($project['is_personal']) && $project['is_personal'] == 1): ?>
             <p>Comienza creando tu primera tarea para este proyecto.</p>
             <button class="btn-create" onclick="openCreateTaskModal()">
                 <i class="fas fa-plus"></i>
                 Crear Primera Tarea
             </button>
+            <?php else: ?>
+            <p>Las tareas de este proyecto son gestionadas por el líder de clan.</p>
+            <?php endif; ?>
         </div>
         <?php endif; ?>
     </div>
 </div>
 
-<!-- Modal crear tarea -->
+<!-- Modal crear tarea (solo para proyectos personales) -->
+<?php if (isset($project['is_personal']) && $project['is_personal'] == 1): ?>
 <div class="modal create-task-modal" id="createTaskModal">
   <div class="modal-content modal-lg">
     <div class="modal-header modal-header-gradient">
@@ -303,6 +310,7 @@ if (!isset($user)) {
     </form>
   </div>
 </div>
+<?php endif; ?>
 
 <style>
 /* Reset y Base */
