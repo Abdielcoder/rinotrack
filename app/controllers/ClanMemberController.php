@@ -383,20 +383,45 @@ class ClanMemberController {
 
             // Verificar clan o asignación
             $project = null;
-            if ($task['project_id']) {
+            if (!empty($task['project_id'])) {
                 $project = $this->projectModel->findById($task['project_id']);
                 error_log("Project found: " . ($project ? "YES" : "NO"));
                 if ($project) {
                     error_log("Project data: " . print_r($project, true));
                 }
             } else {
-                error_log("No project_id - this is a personal task without project");
+                error_log("No project_id - this might be a personal task without project");
             }
             
             $isAssignedToUser = $this->isTaskAssignedToUser($taskId, $this->currentUser['user_id']);
-            $isPersonalTask = (int)($task['is_personal'] ?? 0) === 1;
+            
+            // Verificar si es tarea personal de varias formas
+            $isPersonalTask = false;
+            
+            // 1. Si el proyecto tiene is_personal = 1
+            if ($project) {
+                $isPersonalTask = (int)($project['is_personal'] ?? 0) === 1;
+            }
+            
+            // 2. Si la tarea misma tiene el campo is_personal
+            if (!$isPersonalTask) {
+                $isPersonalTask = (int)($task['is_personal'] ?? 0) === 1;
+            }
+            
+            // 3. Si no hay proyecto pero el usuario es creador y asignado (típico de tareas personales)
+            if (!$isPersonalTask && empty($task['project_id'])) {
+                $isCreator = (int)($task['created_by_user_id'] ?? 0) === (int)$this->currentUser['user_id'];
+                $isAssigned = (int)($task['assigned_to_user_id'] ?? 0) === (int)$this->currentUser['user_id'];
+                if ($isCreator && $isAssigned) {
+                    $isPersonalTask = true;
+                    error_log("Detected personal task by creator+assigned pattern");
+                }
+            }
+            
             error_log("Is assigned to user: " . ($isAssignedToUser ? "YES" : "NO"));
             error_log("Is personal task: " . ($isPersonalTask ? "YES" : "NO"));
+            error_log("Project is_personal: " . (isset($project['is_personal']) ? $project['is_personal'] : 'NULL'));
+            error_log("Task is_personal: " . (isset($task['is_personal']) ? $task['is_personal'] : 'NULL'));
             
             // Para tareas personales, solo verificar que el usuario sea el propietario o creador
             if ($isPersonalTask) {

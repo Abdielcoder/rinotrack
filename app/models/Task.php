@@ -1266,11 +1266,19 @@ class Task {
                 error_log("No fields to update - skipping SQL execution");
             }
             
-            // Actualizar progreso del proyecto si se cambió el estado
-            if ($status !== null) {
+            // Actualizar progreso del proyecto si se cambió el estado y existe project_id
+            if ($status !== null && !empty($task['project_id'])) {
                 error_log("Updating project progress for project_id: " . $task['project_id']);
-                $projectModel = new Project();
-                $projectModel->updateProgress($task['project_id']);
+                try {
+                    $projectModel = new Project();
+                    $projectModel->updateProgress($task['project_id']);
+                    error_log("Project progress updated successfully");
+                } catch (Exception $projectError) {
+                    error_log("ERROR updating project progress: " . $projectError->getMessage());
+                    // No fallar la actualización de tarea por un error de proyecto
+                }
+            } else if ($status !== null) {
+                error_log("Skipping project progress update - no project_id or empty project_id");
             }
             
             $this->db->commit();
