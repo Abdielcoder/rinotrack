@@ -162,7 +162,7 @@ window.toggleUserStatus = function(userId) {
     if (toggleButton) {
         toggleButton.disabled = true;
         const originalContent = toggleButton.innerHTML;
-        toggleButton.innerHTML = \'<i class="fas fa-spinner fa-spin"></i>\';
+        toggleButton.innerHTML = "<i class=\"fas fa-spinner fa-spin\"></i>";
         
         // Restaurar botón después de 10 segundos como fallback
         setTimeout(() => {
@@ -196,7 +196,7 @@ window.toggleUserStatus = function(userId) {
             // Restaurar botón en caso de error
             if (toggleButton) {
                 toggleButton.disabled = false;
-                toggleButton.innerHTML = isCurrentlyActive ? \'<i class="fas fa-ban"></i>\' : \'<i class="fas fa-check"></i>\';
+                toggleButton.innerHTML = isCurrentlyActive ? "<i class=\"fas fa-ban\"></i>" : "<i class=\"fas fa-check\"></i>";
             }
         }
     })
@@ -206,7 +206,7 @@ window.toggleUserStatus = function(userId) {
         // Restaurar botón en caso de error
         if (toggleButton) {
             toggleButton.disabled = false;
-            toggleButton.innerHTML = isCurrentlyActive ? \'<i class="fas fa-ban"></i>\' : \'<i class="fas fa-check"></i>\';
+            toggleButton.innerHTML = isCurrentlyActive ? "<i class=\"fas fa-ban\"></i>" : "<i class=\"fas fa-check\"></i>";
         }
     });
 };
@@ -223,7 +223,7 @@ window.deleteUser = function(userId) {
     if (deleteButton) {
         deleteButton.disabled = true;
         const originalContent = deleteButton.innerHTML;
-        deleteButton.innerHTML = \'<i class="fas fa-spinner fa-spin"></i>\';
+        deleteButton.innerHTML = "<i class=\"fas fa-spinner fa-spin\"></i>";
         
         // Restaurar botón después de 10 segundos como fallback
         setTimeout(() => {
@@ -257,7 +257,7 @@ window.deleteUser = function(userId) {
             // Restaurar botón en caso de error
             if (deleteButton) {
                 deleteButton.disabled = false;
-                deleteButton.innerHTML = \'<i class="fas fa-trash"></i>\';
+                deleteButton.innerHTML = "<i class=\"fas fa-trash\"></i>";
             }
         }
     })
@@ -267,7 +267,7 @@ window.deleteUser = function(userId) {
         // Restaurar botón en caso de error
         if (deleteButton) {
             deleteButton.disabled = false;
-            deleteButton.innerHTML = \'<i class="fas fa-trash"></i>\';
+            deleteButton.innerHTML = "<i class=\"fas fa-trash\"></i>";
         }
     });
 };

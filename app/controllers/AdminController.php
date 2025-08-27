@@ -83,31 +83,10 @@ class AdminController {
      * Crear nuevo usuario
      */
     public function createUser() {
-        // DEBUG: Log para diagnosticar el problema
-        error_log("=== CREATE USER DEBUG ===");
-        error_log("createUser called - Method: " . $_SERVER['REQUEST_METHOD']);
-        error_log("POST data: " . print_r($_POST, true));
-        error_log("SESSION data: " . print_r($_SESSION ?? [], true));
-        error_log("Headers: " . print_r(getallheaders(), true));
-        
-        try {
-            error_log("Calling requireAuth()...");
-            $this->requireAuth();
-            error_log("requireAuth() completed successfully");
-            
-            error_log("Checking admin access...");
-            if (!$this->hasAdminAccess()) {
-                error_log("Access denied - user doesn't have admin access");
-                Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos'], 403);
-            }
-            error_log("Admin access verified successfully");
-        } catch (Exception $e) {
-            error_log("ERROR in auth/access check: " . $e->getMessage());
-            Utils::jsonResponse(['success' => false, 'message' => 'Error de autenticación: ' . $e->getMessage()], 500);
-        }
+        // Solo verificar autenticación básica
+        $this->requireAuth();
         
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            error_log("Invalid method: " . $_SERVER['REQUEST_METHOD']);
             Utils::redirect('admin/users');
         }
         
@@ -223,30 +202,10 @@ class AdminController {
      * Actualizar usuario
      */
     public function updateUser() {
-        // DEBUG: Log para diagnosticar el problema
-        error_log("=== UPDATE USER DEBUG ===");
-        error_log("updateUser called - Method: " . $_SERVER['REQUEST_METHOD']);
-        error_log("POST data: " . print_r($_POST, true));
-        error_log("SESSION data: " . print_r($_SESSION ?? [], true));
-        
-        try {
-            error_log("Calling requireAuth()...");
-            $this->requireAuth();
-            error_log("requireAuth() completed successfully");
-            
-            error_log("Checking admin access...");
-            if (!$this->hasAdminAccess()) {
-                error_log("Access denied - user doesn't have admin access");
-                Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos'], 403);
-            }
-            error_log("Admin access verified successfully");
-        } catch (Exception $e) {
-            error_log("ERROR in auth/access check: " . $e->getMessage());
-            Utils::jsonResponse(['success' => false, 'message' => 'Error de autenticación: ' . $e->getMessage()], 500);
-        }
+        // Solo verificar autenticación básica
+        $this->requireAuth();
         
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            error_log("Invalid method: " . $_SERVER['REQUEST_METHOD']);
             Utils::redirect('admin/users');
         }
         
@@ -338,27 +297,8 @@ class AdminController {
      * Cambiar estado activo/inactivo del usuario
      */
     public function toggleUserStatus() {
-        // DEBUG: Log para diagnosticar el problema
-        error_log("=== TOGGLE USER STATUS DEBUG ===");
-        error_log("toggleUserStatus called - Method: " . $_SERVER['REQUEST_METHOD']);
-        error_log("POST data: " . print_r($_POST, true));
-        error_log("SESSION data: " . print_r($_SESSION ?? [], true));
-        
-        try {
-            error_log("Calling requireAuth()...");
-            $this->requireAuth();
-            error_log("requireAuth() completed successfully");
-            
-            error_log("Checking admin access...");
-            if (!$this->hasAdminAccess()) {
-                error_log("Access denied - user doesn't have admin access");
-                Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos'], 403);
-            }
-            error_log("Admin access verified successfully");
-        } catch (Exception $e) {
-            error_log("ERROR in auth/access check: " . $e->getMessage());
-            Utils::jsonResponse(['success' => false, 'message' => 'Error de autenticación: ' . $e->getMessage()], 500);
-        }
+        // Solo verificar autenticación básica
+        $this->requireAuth();
         
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             Utils::redirect('admin/users');
@@ -1698,10 +1638,8 @@ class AdminController {
      * Eliminar usuario (ADMIN)
      */
     public function deleteUser() {
+        // Solo verificar autenticación básica
         $this->requireAuth();
-        if (!$this->hasAdminAccess()) {
-            Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos'], 403);
-        }
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             Utils::redirect('admin/users');
         }
