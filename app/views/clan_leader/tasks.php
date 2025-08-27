@@ -2208,7 +2208,7 @@ function toggleTaskStatus(taskId, isChecked) {
     const requestBody = 'task_id=' + taskId + '&status=' + newStatus;
     console.log('Request body:', requestBody);
     
-    fetch('?route=clan_leader/toggle-task-status', {
+    fetch('?route=clan_leader/simple-toggle-task', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',

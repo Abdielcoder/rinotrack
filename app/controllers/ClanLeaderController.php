@@ -2349,6 +2349,102 @@ class ClanLeaderController {
     }
     
     /**
+     * Método simple para cambiar estado de tarea
+     */
+    public function simpleToggleTask() {
+        header('Content-Type: application/json');
+        
+        // Logging detallado
+        error_log("=== SIMPLE TOGGLE TASK ===");
+        error_log("REQUEST_METHOD: " . $_SERVER['REQUEST_METHOD']);
+        error_log("POST: " . print_r($_POST, true));
+        error_log("GET: " . print_r($_GET, true));
+        error_log("Raw input: " . file_get_contents('php://input'));
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+            return;
+        }
+        
+        // Intentar obtener task_id de diferentes formas
+        $taskId = null;
+        if (isset($_POST['task_id'])) {
+            $taskId = (int)$_POST['task_id'];
+            error_log("task_id desde POST: " . $taskId);
+        } else {
+            // Intentar desde raw input
+            $rawInput = file_get_contents('php://input');
+            parse_str($rawInput, $parsedData);
+            if (isset($parsedData['task_id'])) {
+                $taskId = (int)$parsedData['task_id'];
+                error_log("task_id desde raw input: " . $taskId);
+            }
+        }
+        
+        $status = $_POST['status'] ?? $parsedData['status'] ?? '';
+        
+        error_log("Final taskId: " . $taskId);
+        error_log("Final status: " . $status);
+        
+        if (!$taskId || $taskId <= 0) {
+            echo json_encode([
+                'success' => false, 
+                'message' => 'Task ID inválido: ' . $taskId,
+                'debug' => [
+                    'post' => $_POST,
+                    'parsed' => $parsedData ?? null,
+                    'taskId' => $taskId
+                ]
+            ]);
+            return;
+        }
+        
+        if (!in_array($status, ['pending', 'completed', 'in_progress', 'cancelled'])) {
+            echo json_encode(['success' => false, 'message' => 'Estado inválido: ' . $status]);
+            return;
+        }
+        
+        try {
+            // Buscar la tarea
+            $stmt = $this->db->prepare("SELECT * FROM Tasks WHERE task_id = ?");
+            $stmt->execute([$taskId]);
+            $task = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$task) {
+                echo json_encode(['success' => false, 'message' => 'Tarea no encontrada']);
+                return;
+            }
+            
+            // Calcular completion_percentage
+            $completionPercentage = ($status === 'completed') ? 100 : ($task['completion_percentage'] ?? 0);
+            
+            // Actualizar la tarea
+            $updateStmt = $this->db->prepare("
+                UPDATE Tasks 
+                SET status = ?, completion_percentage = ?, updated_at = NOW() 
+                WHERE task_id = ?
+            ");
+            
+            $result = $updateStmt->execute([$status, $completionPercentage, $taskId]);
+            
+            if ($result) {
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Tarea actualizada correctamente',
+                    'completion_percentage' => $completionPercentage,
+                    'status' => $status
+                ]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Error al actualizar la tarea']);
+            }
+            
+        } catch (Exception $e) {
+            error_log("Error en simpleToggleTask: " . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+        }
+    }
+    
+    /**
      * Buscar miembros del clan
      */
     private function searchMembers($searchTerm) {
