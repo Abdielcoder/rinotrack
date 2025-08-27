@@ -10,12 +10,12 @@ ob_start();
       <button onclick="history.back()" style="background: #f3f4f6; color: #374151; padding: 12px 20px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;">
         <i class="fas fa-arrow-left"></i> Volver Atrás
       </button>
-      <?php if ($canEdit): ?>
+      <?php 
+        // Solo mostrar botón editar si la tarea fue creada por el usuario actual (tareas personales)
+        $canEditTask = (int)($task['created_by_user_id'] ?? 0) === (int)$user['user_id']; 
+      ?>
+      <?php if ($canEditTask): ?>
         <button class="btn-minimal primary" onclick="openEditTaskModal()" style="padding: 12px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;">
-          <i class="fas fa-edit"></i> Editar Tarea
-        </button>
-      <?php else: ?>
-        <button class="btn-minimal" onclick="noPermissionModal()" style="padding: 12px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;">
           <i class="fas fa-edit"></i> Editar Tarea
         </button>
       <?php endif; ?>
@@ -238,7 +238,7 @@ ob_start();
                     <span class="task-progress-text"><?php echo $currentProgress; ?>%</span>
                   </div>
                   <div style="font-size: 12px; color: #6b7280; margin-top: 5px;">
-                    Solo puedes editar el progreso de tareas asignadas a ti
+                    No puedes editar el progreso de tareas que creaste
                   </div>
                 </div>
               <?php endif; ?>
@@ -781,7 +781,7 @@ function closeCMNotification() {
 </script>
 
 <!-- Modal editar tarea -->
-<?php if ($canEdit): ?>
+<?php if ($canEditTask): ?>
 <div class="modal" id="editTaskModal">
   <div class="modal-content modal-lg">
     <div class="modal-header modal-header-gradient">
