@@ -1134,6 +1134,91 @@ ob_start();
   border-left: 3px solid var(--bg-accent);
 }
 
+.subtask-replies {
+  padding-left: 30px;
+  border-left: 3px solid #10b981;
+}
+
+/* Estilos para comentarios cronológicos */
+.chronological-comments {
+  position: relative;
+}
+
+.chronological-comment-item {
+  display: flex;
+  margin-bottom: 24px;
+  position: relative;
+}
+
+.comment-timeline-marker {
+  position: relative;
+  flex-shrink: 0;
+  width: 24px;
+  margin-right: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.timeline-dot {
+  width: 12px;
+  height: 12px;
+  background: #10b981;
+  border: 3px solid var(--bg-primary);
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px #10b981;
+  z-index: 2;
+}
+
+.timeline-line {
+  width: 2px;
+  flex: 1;
+  background: linear-gradient(to bottom, #10b981, #d1fae5);
+  margin-top: 8px;
+  min-height: 40px;
+}
+
+.comment-content-wrapper {
+  flex: 1;
+  position: relative;
+}
+
+.subtask-context {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  padding: 4px 8px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: #059669;
+  font-weight: 500;
+}
+
+.subtask-context i {
+  color: #10b981;
+}
+
+.subtask-name {
+  color: #047857;
+  font-weight: 600;
+}
+
+.chronological-comment {
+  background: var(--bg-primary);
+  border: 1px solid var(--bg-accent);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.chronological-comment:hover {
+  border-color: #10b981;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+  transform: translateY(-1px);
+}
+
 .reply-item {
   background: var(--bg-primary);
   border: 1px solid var(--bg-accent);
@@ -1812,21 +1897,6 @@ function renderTaskDetails(data) {
                     </div>
                     ${subtask.description ? `<div class="subtask-description">${escapeHtml(subtask.description)}</div>` : ''}
                     
-                    ${subtaskComments.length > 0 ? `
-                        <div class="subtask-comments" style="margin-top: 12px;">
-                            <h5 style="margin: 0 0 8px 0; font-size: 0.9rem; color: #374151;">Comentarios:</h5>
-                            ${subtaskComments.map(comment => `
-                                <div class="comment-item-detail" style="margin-bottom: 8px; padding: 8px; font-size: 0.85rem;">
-                                    <div class="comment-header-detail">
-                                        <span class="comment-author-detail">${escapeHtml(comment.full_name || comment.username || 'Usuario')}</span>
-                                        <span class="comment-date-detail">${formatDate(comment.created_at)}</span>
-                                    </div>
-                                    <div>${comment.comment_text || ''}</div>
-                                </div>
-                            `).join('')}
-                        </div>
-                    ` : ''}
-                    
                     ${subtaskAttachments.length > 0 ? `
                         <div class="subtask-attachments" style="margin-top: 12px;">
                             <h5 style="margin: 0 0 8px 0; font-size: 0.9rem; color: #374151;">Adjuntos:</h5>
@@ -1950,35 +2020,51 @@ function renderTaskDetails(data) {
             html += '</div>';
         }
         
-        // Comentarios de subtareas agrupados
+        // Comentarios de subtareas reorganizados cronológicamente
         const subtaskCommentsGrouped = data.subtaskComments || {};
         const hasSubtaskComments = Object.keys(subtaskCommentsGrouped).length > 0;
         
         if (hasSubtaskComments) {
+            // Crear lista plana de todos los comentarios con información de subtarea
+            let allSubtaskComments = [];
+            Object.entries(subtaskCommentsGrouped).forEach(([subtaskId, comments]) => {
+                comments.forEach(comment => {
+                    allSubtaskComments.push({
+                        ...comment,
+                        subtask_id: subtaskId,
+                        subtask_title: comment.subtask_title || `Subtarea ${subtaskId}`
+                    });
+                });
+            });
+            
+            // Ordenar todos los comentarios por fecha
+            allSubtaskComments.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+            
             html += `
                 <div>
-                    <h4 style="margin: 0 0 12px 0; color: #1f2937; font-size: 1rem; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px;">
-                        <i class="fas fa-tasks" style="color: #10b981;"></i> Comentarios de Subtareas
+                    <h4 style="margin: 0 0 16px 0; color: #1f2937; font-size: 1rem; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px;">
+                        <i class="fas fa-tasks" style="color: #10b981;"></i> Comentarios de Subtareas (${allSubtaskComments.length} total)
                     </h4>
+                    <div class="chronological-comments">
             `;
             
-            Object.entries(subtaskCommentsGrouped).forEach(([subtaskId, comments]) => {
-                if (comments.length > 0) {
-                    const subtaskTitle = comments[0].subtask_title || `Subtarea ${subtaskId}`;
-                    html += `
-                        <div style="margin-bottom: 16px; background: #f8fafc; border-left: 3px solid #10b981; padding: 12px;">
-                            <h5 style="margin: 0 0 8px 0; color: #059669; font-size: 0.9rem;">
-                                ${escapeHtml(subtaskTitle)} (${comments.length} comentarios)
-                            </h5>
-                    `;
-                    
-                    comments.forEach(comment => {
-                        // Verificar si el comentario de subtarea tiene adjuntos
-                        const hasAttachments = data.subtaskAttachments && data.subtaskAttachments[subtaskId] && 
-                                             data.subtaskAttachments[subtaskId].some(att => att.comment_id == comment.comment_id);
-                        
-                        html += `
-                            <div class="comment-item-detail subtask-comment" data-comment-id="${comment.comment_id}" data-subtask-id="${subtaskId}" style="margin-bottom: 12px;">
+            allSubtaskComments.forEach((comment, index) => {
+                // Verificar si el comentario de subtarea tiene adjuntos
+                const hasAttachments = data.subtaskAttachments && data.subtaskAttachments[comment.subtask_id] && 
+                                     data.subtaskAttachments[comment.subtask_id].some(att => att.comment_id == comment.comment_id);
+                
+                html += `
+                    <div class="chronological-comment-item" data-comment-id="${comment.comment_id}" data-subtask-id="${comment.subtask_id}">
+                        <div class="comment-timeline-marker">
+                            <div class="timeline-dot"></div>
+                            ${index < allSubtaskComments.length - 1 ? '<div class="timeline-line"></div>' : ''}
+                        </div>
+                        <div class="comment-content-wrapper">
+                            <div class="subtask-context">
+                                <i class="fas fa-layer-group"></i>
+                                <span class="subtask-name">${escapeHtml(comment.subtask_title)}</span>
+                            </div>
+                            <div class="comment-item-detail chronological-comment" style="margin-bottom: 0;">
                                 <div class="comment-header-detail">
                                     <div class="comment-author-info">
                                         <span class="comment-author-detail">${escapeHtml(comment.full_name || comment.username || 'Usuario')}</span>
@@ -1986,7 +2072,7 @@ function renderTaskDetails(data) {
                                     </div>
                                     <span class="comment-date-detail">${formatDate(comment.created_at)}</span>
                                     <div class="comment-actions">
-                                        <button class="btn-reply" onclick="showSubtaskReplyForm(${comment.comment_id}, ${subtaskId}, ${task.task_id})" title="Responder">
+                                        <button class="btn-reply" onclick="showSubtaskReplyForm(${comment.comment_id}, ${comment.subtask_id}, ${task.task_id})" title="Responder">
                                             <i class="fas fa-reply"></i> Responder
                                         </button>
                                     </div>
@@ -1998,7 +2084,7 @@ function renderTaskDetails(data) {
                                         <div class="attachments-header">
                                             <i class="fas fa-paperclip"></i> Archivos adjuntos:
                                         </div>
-                                        ${data.subtaskAttachments[subtaskId].filter(att => att.comment_id == comment.comment_id).map(attachment => `
+                                        ${data.subtaskAttachments[comment.subtask_id].filter(att => att.comment_id == comment.comment_id).map(attachment => `
                                             <div class="attachment-item">
                                                 <i class="fas fa-file attachment-icon"></i>
                                                 <a href="${attachment.file_path}" target="_blank" class="attachment-link">
@@ -2010,13 +2096,13 @@ function renderTaskDetails(data) {
                                 ` : ''}
                                 
                                 <!-- Área para mostrar respuestas de subtarea -->
-                                <div class="comment-replies" id="subtask-replies-${comment.comment_id}">
+                                <div class="comment-replies subtask-replies" id="subtask-replies-${comment.comment_id}">
                                     <!-- Las respuestas se cargarán aquí -->
                                 </div>
                                 
                                 <!-- Formulario de respuesta para subtarea (inicialmente oculto) -->
                                 <div class="reply-form-container" id="subtask-reply-form-${comment.comment_id}" style="display: none;">
-                                    <form class="reply-form" onsubmit="submitSubtaskReply(event, ${comment.comment_id}, ${subtaskId}, ${task.task_id})" enctype="multipart/form-data">
+                                    <form class="reply-form" onsubmit="submitSubtaskReply(event, ${comment.comment_id}, ${comment.subtask_id}, ${task.task_id})" enctype="multipart/form-data">
                                         <div class="form-group">
                                             <label>Responder a ${escapeHtml(comment.full_name || comment.username || 'Usuario')}:</label>
                                             <textarea name="reply_text" rows="3" placeholder="Escribe tu respuesta..." required></textarea>
@@ -2044,14 +2130,15 @@ function renderTaskDetails(data) {
                                     </form>
                                 </div>
                             </div>
-                        `;
-                    });
-                    
-                    html += '</div>';
-                }
+                        </div>
+                    </div>
+                `;
             });
             
-            html += '</div>';
+            html += `
+                    </div>
+                </div>
+            `;
         }
     }
     
