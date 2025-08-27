@@ -2025,65 +2025,6 @@ class ClanLeaderController {
         }
     }
     
-    /**
-     * Cambiar el estado de una tarea (completada/pendiente)
-     */
-    public function toggleTaskStatus() {
-        $this->requireAuth();
-        
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
-        }
-        
-        $taskId = (int)($_POST['task_id'] ?? 0);
-        $newStatus = $_POST['status'] ?? '';
-        
-        if ($taskId <= 0 || !in_array($newStatus, ['pending', 'completed', 'in_progress', 'cancelled'])) {
-            Utils::jsonResponse(['success' => false, 'message' => 'Datos inválidos'], 400);
-        }
-        
-        try {
-            // Verificar que la tarea pertenece al clan del líder
-            $task = $this->taskModel->findById($taskId);
-            if (!$task) {
-                Utils::jsonResponse(['success' => false, 'message' => 'Tarea no encontrada'], 404);
-            }
-            
-            $project = $this->projectModel->findById($task['project_id']);
-            if (!$project || $project['clan_id'] != $this->userClan['clan_id']) {
-                Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
-            }
-            
-            // Preparar datos para actualizar
-            $updateData = [
-                'status' => $newStatus,
-                'completion_percentage' => ($newStatus === 'completed') ? 100 : $task['completion_percentage']
-            ];
-            
-            // Actualizar la tarea
-            $result = $this->taskModel->update($taskId, $updateData);
-            
-            if ($result) {
-                // Si se completó la tarea, actualizar el progreso del proyecto
-                if ($newStatus === 'completed') {
-                    $this->projectModel->updateProgress($task['project_id']);
-                }
-                
-                Utils::jsonResponse([
-                    'success' => true, 
-                    'message' => 'Estado actualizado correctamente',
-                    'completion_percentage' => $updateData['completion_percentage']
-                ]);
-            } else {
-                Utils::jsonResponse(['success' => false, 'message' => 'Error al actualizar el estado'], 500);
-            }
-            
-        } catch (Exception $e) {
-            error_log("Error en toggleTaskStatus: " . $e->getMessage());
-            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor'], 500);
-        }
-    }
-
     
     /**
      * Agregar comentario a una tarea
@@ -2322,8 +2263,9 @@ class ClanLeaderController {
                 return;
             }
             
-            $taskId = (int)($_POST['taskId'] ?? 0);
-            $isCompleted = (bool)($_POST['isCompleted'] ?? false);
+            $taskId = (int)($_POST['task_id'] ?? 0);
+            $newStatus = $_POST['status'] ?? '';
+            $isCompleted = ($newStatus === 'completed');
             
             if ($taskId <= 0) {
                 Utils::jsonResponse(['success' => false, 'message' => 'ID de tarea inválido'], 400);
@@ -2355,6 +2297,9 @@ class ClanLeaderController {
                 $newStatus = 'pending';
             }
             
+            // Calcular el completion_percentage basado en el estado
+            $completionPercentage = ($newStatus === 'completed') ? 100 : ($task['completion_percentage'] ?? 0);
+            
             // Actualizar estado usando el método update del modelo
             $result = $this->taskModel->update(
                 $taskId,
@@ -2367,8 +2312,22 @@ class ClanLeaderController {
                 $newStatus // nuevo parámetro para estado
             );
             
+            // Si se actualizó el estado, también actualizar el completion_percentage
+            if ($result && $newStatus === 'completed') {
+                $this->taskModel->updateTaskProgress($taskId, $completionPercentage);
+            }
+            
             if ($result) {
-                Utils::jsonResponse(['success' => true, 'message' => 'Estado de tarea actualizado']);
+                // Si se completó la tarea, actualizar el progreso del proyecto
+                if ($newStatus === 'completed') {
+                    $this->projectModel->updateProgress($task['project_id']);
+                }
+                
+                Utils::jsonResponse([
+                    'success' => true, 
+                    'message' => 'Estado de tarea actualizado',
+                    'completion_percentage' => $completionPercentage
+                ]);
             } else {
                 Utils::jsonResponse(['success' => false, 'message' => 'Error al actualizar tarea'], 500);
             }
