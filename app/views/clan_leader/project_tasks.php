@@ -1255,6 +1255,32 @@ if (!isset($project) || !isset($tasks)) {
             checkResponsive();
             window.addEventListener('resize', checkResponsive);
         });
+
+        // Función para eliminar tarea
+        function deleteTask(taskId) {
+            if (confirm('¿Estás seguro de que quieres eliminar esta tarea?')) {
+                fetch('?route=clan_leader/delete-task', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'task_id=' + taskId
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Tarea eliminada exitosamente');
+                        location.reload();
+                    } else {
+                        alert('Error al eliminar la tarea: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error al eliminar la tarea');
+                });
+            }
+        }
     </script>
 </body>
 </html>

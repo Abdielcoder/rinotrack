@@ -1980,13 +1980,21 @@ class ClanLeaderController {
      * Eliminar una tarea
      */
     public function deleteTask() {
+        // Debug logging
+        error_log("=== DELETE TASK DEBUG ===");
+        error_log("REQUEST_METHOD: " . $_SERVER['REQUEST_METHOD']);
+        error_log("POST data: " . print_r($_POST, true));
+        error_log("Raw input: " . file_get_contents('php://input'));
+        
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
         }
         
         $taskId = (int)($_POST['task_id'] ?? 0);
+        error_log("Parsed task_id: " . $taskId);
         
         if ($taskId <= 0) {
+            error_log("Task ID inválido: " . $taskId);
             Utils::jsonResponse(['success' => false, 'message' => 'ID de tarea inválido'], 400);
         }
         
