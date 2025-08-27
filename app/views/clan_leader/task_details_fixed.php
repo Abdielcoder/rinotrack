@@ -757,6 +757,8 @@ function deleteSubtask(subtaskId) {
 function updateSubtaskStatus(subtaskId, newStatus) {
     console.log('Actualizando estado de subtarea:', subtaskId, 'a:', newStatus);
     
+    // Solo enviar el estado, no el porcentaje, para que el backend no lo cambie automáticamente
+    // Esto permite que 'pending' mantenga el porcentaje actual
     fetch('?route=clan_leader/update-subtask-status', {
                 method: 'POST',
         headers: {

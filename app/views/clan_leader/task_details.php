@@ -1748,14 +1748,18 @@ function deleteSubtask(subtaskId) {
 
 function updateSubtaskStatus(subtaskId, newStatus) {
     // Calcular el porcentaje de completación basado en el estado
-    let completionPercentage = 0;
-    if (newStatus === 'pending') {
-        completionPercentage = 0;
-    } else if (newStatus === 'in_progress') {
+    // Obtener el porcentaje actual para no modificarlo si se selecciona 'pending'
+    const subtaskCard = document.querySelector(`[data-subtask-id="${subtaskId}"]`);
+    const progressElement = subtaskCard.querySelector('.progress-percentage');
+    const currentProgress = progressElement ? parseInt(progressElement.textContent.replace('%', '')) : 0;
+    
+    let completionPercentage = currentProgress; // Mantener el actual por defecto
+    if (newStatus === 'in_progress') {
         completionPercentage = 50;
     } else if (newStatus === 'completed') {
         completionPercentage = 100;
     }
+    // Nota: Para 'pending' mantenemos el porcentaje actual sin cambios
     
     fetch('?route=clan_leader/update-subtask-status', {
         method: 'POST',

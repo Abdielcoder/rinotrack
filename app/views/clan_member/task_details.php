@@ -568,14 +568,18 @@ function noPermissionModal(){
 // Funciones para subtareas
 function updateSubtaskStatus(subtaskId, status) {
   // Determinar porcentaje automático basado en el estado
-  let completion_percentage = 0;
+  // Obtener el porcentaje actual para no modificarlo si se selecciona 'pending'
+  const subtaskItem = document.querySelector(`[data-subtask-id="${subtaskId}"]`);
+  const currentProgressText = subtaskItem.querySelector('.progress-percentage').textContent;
+  const currentProgress = parseInt(currentProgressText.replace('%', ''));
+  
+  let completion_percentage = currentProgress; // Mantener el actual por defecto
   if (status === 'in_progress') {
     completion_percentage = 50;
   } else if (status === 'completed') {
     completion_percentage = 100;
-  } else if (status === 'pending') {
-    completion_percentage = 0;
-  }
+  } 
+  // Nota: Para 'pending' mantenemos el porcentaje actual sin cambios
   
   fetch('?route=clan_member/update-subtask-status', {
     method: 'POST',
