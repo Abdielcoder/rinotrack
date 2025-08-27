@@ -1128,15 +1128,12 @@ if (!isset($project) || !isset($tasks)) {
         function toggleTaskStatus(taskId, isCompleted) {
             const status = isCompleted ? 'completed' : 'pending';
             
-            fetch('?route=clan_leader/toggle-task-status', {
+            fetch('?route=clan_leader/simple-toggle-task', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'application/x-www-form-urlencoded',
                 },
-                body: JSON.stringify({
-                    task_id: taskId,
-                    status: status
-                })
+                body: 'task_id=' + taskId + '&status=' + status
             })
             .then(response => response.json())
             .then(data => {
@@ -1281,6 +1278,9 @@ if (!isset($project) || !isset($tasks)) {
                 });
             }
         }
+        
+        // Cache-bust timestamp: <?= time() ?> - v3.1.<?= date('His') ?>
+        console.log('Project Tasks JS cargado - usando simple-toggle-task route');
     </script>
 </body>
 </html>

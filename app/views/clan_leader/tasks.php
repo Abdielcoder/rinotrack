@@ -2388,4 +2388,5 @@ function toggleAllTasks(checkbox) {
 }
 
 // Timestamp para forzar recarga: <?= time() ?>
+// Cache-bust version: v3.1.<?= date('His') ?>
 </script> 

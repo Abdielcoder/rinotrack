@@ -511,12 +511,12 @@ function toggleTaskStatus(taskId, isChecked) {
     }
     
     // Enviar petición AJAX para cambiar el estado
-    fetch('?route=clan_leader/toggle-task-status', {
+    fetch('?route=clan_leader/simple-toggle-task', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: 'taskId=' + taskId + '&isCompleted=' + (isChecked ? '1' : '0')
+        body: 'task_id=' + taskId + '&status=' + (isChecked ? 'completed' : 'pending')
     })
     .then(response => response.json())
     .then(data => {
@@ -928,6 +928,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Inicialización del dashboard compacto
     console.log('Dashboard compacto cargado');
 });
+
+// Cache-bust timestamp: <?= time() ?> - v3.1.<?= date('His') ?>
+console.log('Dashboard JS cargado - usando simple-toggle-task route');
 </script>
 
 <?php
