@@ -2349,6 +2349,59 @@ class ClanLeaderController {
     }
     
     /**
+     * Mostrar todas las tareas del clan o de un proyecto específico
+     */
+    public function tasks() {
+        $this->requireAuth();
+        
+        if (!$this->hasClanLeaderAccess()) {
+            Utils::redirect('dashboard');
+        }
+        
+        // Verificar si se está filtrando por proyecto específico
+        $projectId = $_GET['project_id'] ?? null;
+        
+        try {
+            if ($projectId) {
+                // Tareas de un proyecto específico
+                error_log("Getting tasks for project: " . $projectId);
+                $tasks = $this->taskModel->getByProject($projectId);
+                
+                // Obtener información del proyecto
+                $project = $this->projectModel->findById($projectId);
+                $data = [
+                    'allTasks' => $tasks,
+                    'project' => $project,
+                    'currentPage' => 'clan_leader',
+                    'user' => $this->currentUser,
+                    'clan' => $this->userClan
+                ];
+            } else {
+                // Todas las tareas del clan
+                error_log("Getting all tasks for clan: " . $this->userClan['clan_id']);
+                $tasks = $this->taskModel->getAllTasksByClan($this->userClan['clan_id']);
+                $data = [
+                    'allTasks' => $tasks,
+                    'currentPage' => 'clan_leader',
+                    'user' => $this->currentUser,
+                    'clan' => $this->userClan
+                ];
+            }
+            
+            error_log("Tasks count: " . count($tasks));
+            if (!empty($tasks)) {
+                error_log("Sample task: " . print_r($tasks[0], true));
+            }
+            
+            $this->loadView('clan_leader/tasks', $data);
+            
+        } catch (Exception $e) {
+            error_log("Error in ClanLeaderController::tasks: " . $e->getMessage());
+            Utils::redirect('clan_leader');
+        }
+    }
+    
+    /**
      * Método simple para cambiar estado de tarea
      */
     public function simpleToggleTask() {
