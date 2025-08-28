@@ -2351,6 +2351,83 @@ class ClanLeaderController {
         }
     }
     
+    /**
+     * Método para actualizar estado de subtarea
+     */
+    public function simpleToggleSubtask() {
+        header('Content-Type: application/json');
+        
+        // Logging detallado
+        error_log("=== SIMPLE TOGGLE SUBTASK ===");
+        error_log("REQUEST_METHOD: " . $_SERVER['REQUEST_METHOD']);
+        error_log("POST: " . print_r($_POST, true));
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+            return;
+        }
+        
+        // Obtener parámetros
+        $subtaskId = (int)($_POST['subtask_id'] ?? 0);
+        $status = $_POST['status'] ?? '';
+        
+        error_log("Final subtaskId: " . $subtaskId);
+        error_log("Final status: " . $status);
+        
+        if (!$subtaskId || $subtaskId <= 0) {
+            echo json_encode(['success' => false, 'message' => 'ID de subtarea inválido: ' . $subtaskId]);
+            return;
+        }
+        
+        if (!in_array($status, ['pending', 'completed', 'in_progress', 'cancelled'])) {
+            echo json_encode(['success' => false, 'message' => 'Estado inválido: ' . $status]);
+            return;
+        }
+        
+        try {
+            // Buscar la subtarea
+            $stmt = $this->db->prepare("SELECT * FROM Subtasks WHERE subtask_id = ?");
+            $stmt->execute([$subtaskId]);
+            $subtask = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$subtask) {
+                echo json_encode(['success' => false, 'message' => 'Subtarea no encontrada']);
+                return;
+            }
+            
+            // Calcular completion_percentage - 100% si completada, 0% si no completada
+            $completionPercentage = ($status === 'completed') ? 100 : 0;
+            
+            error_log("Actualizando subtarea con: status=$status, completion_percentage=$completionPercentage%");
+            
+            // Actualizar la subtarea
+            $updateStmt = $this->db->prepare("
+                UPDATE Subtasks 
+                SET status = ?, completion_percentage = ?, updated_at = NOW() 
+                WHERE subtask_id = ?
+            ");
+            
+            $result = $updateStmt->execute([$status, $completionPercentage, $subtaskId]);
+            
+            if ($result) {
+                // También actualizar el progreso de la tarea padre
+                $this->taskModel->updateTaskProgressFromSubtasks($subtask['task_id']);
+                
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Subtarea actualizada correctamente (status y completion_percentage)',
+                    'completion_percentage' => $completionPercentage,
+                    'status' => $status
+                ]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Error al actualizar la subtarea']);
+            }
+            
+        } catch (Exception $e) {
+            error_log("Error en simpleToggleSubtask: " . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+        }
+    }
     
     /**
      * Método simple para cambiar estado de tarea

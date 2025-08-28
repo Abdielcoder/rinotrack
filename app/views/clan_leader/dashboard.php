@@ -502,7 +502,7 @@ ob_start();
 <script>
 // Función para cambiar el estado de una tarea
 function toggleTaskStatus(taskId, isChecked) {
-    console.log('Cambiando estado de tarea:', taskId, 'a:', isChecked);
+    console.log('Cambiando estado de tarea/subtarea:', taskId, 'a:', isChecked);
     
     // Mostrar indicador de carga
     const taskCard = document.querySelector(`[data-task-id="${taskId}"]`);
@@ -510,26 +510,35 @@ function toggleTaskStatus(taskId, isChecked) {
         taskCard.style.opacity = '0.7';
     }
     
+    // Detectar si es una tarea o subtarea basándose en la clase CSS
+    const isSubtask = taskCard && taskCard.classList.contains('subtask-card-compact');
+    const route = isSubtask ? 'clan_leader/simple-toggle-subtask' : 'clan_leader/simple-toggle-task';
+    const paramName = isSubtask ? 'subtask_id' : 'task_id';
+    
+    console.log('Tipo detectado:', isSubtask ? 'Subtarea' : 'Tarea', '- Ruta:', route);
+    
     // Enviar petición AJAX para cambiar el estado
-    fetch('?route=clan_leader/simple-toggle-task', {
+    fetch('?route=' + route, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: 'task_id=' + taskId + '&status=' + (isChecked ? 'completed' : 'pending')
+        body: paramName + '=' + taskId + '&status=' + (isChecked ? 'completed' : 'pending')
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
             console.log('Estado de tarea actualizado exitosamente');
             
-            // Si la tarea se marcó como completada, removerla del tablero
+            // Si la tarea se marcó como completada, removerla del tablero Kanban
             if (isChecked) {
                 if (taskCard) {
+                    console.log('Removiendo tarea del tablero Kanban:', taskId);
                     // Agregar animación de desvanecimiento
                     taskCard.style.transition = 'all 0.5s ease-out';
                     taskCard.style.opacity = '0';
                     taskCard.style.transform = 'scale(0.8)';
+                    taskCard.style.background = '#d1fae5'; // Verde suave para indicar completada
                     
                     // Remover la tarea del DOM después de la animación
                     setTimeout(() => {
@@ -537,10 +546,15 @@ function toggleTaskStatus(taskId, isChecked) {
                         
                         // Actualizar contadores de tareas por columna
                         updateColumnCounts();
+                        console.log('Tarea removida del tablero y contadores actualizados');
                     }, 500);
                 }
             } else {
-                // Si se desmarcó, restaurar el estilo normal
+                // Si se desmarca, podríamos mostrar un mensaje pero no agregar de vuelta al tablero
+                console.log('Tarea desmarcada:', taskId, '- se requiere recarga para ver en el tablero');
+                showNotification('Tarea desmarcada. Recarga la página para ver los cambios.', 'info');
+                
+                // Restaurar el estilo normal
                 if (taskCard) {
                     taskCard.style.opacity = '1';
                     taskCard.style.textDecoration = 'none';

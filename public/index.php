@@ -507,6 +507,11 @@ try {
         $controller->simpleToggleTask();
         break;
         
+    case 'clan_leader/simple-toggle-subtask':
+        $controller = new ClanLeaderController();
+        $controller->simpleToggleSubtask();
+        break;
+        
     case 'clan_leader/get-task-details':
         $controller = new ClanLeaderController();
         $controller->getTaskDetails();
@@ -788,6 +793,11 @@ try {
         case 'clan_member/toggle-task-status':
             $controller = new ClanMemberController();
             $controller->toggleTaskStatus();
+            break;
+            
+        case 'clan_member/simple-toggle-subtask':
+            $controller = new ClanMemberController();
+            $controller->simpleToggleSubtask();
             break;
 
         case 'clan_member/update-task':

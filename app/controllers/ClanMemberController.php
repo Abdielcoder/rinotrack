@@ -2252,6 +2252,79 @@ class ClanMemberController {
             Utils::jsonResponse(['success' => false, 'message' => 'Error al actualizar el progreso'], 500);
         }
     }
+    
+    /**
+     * Método para actualizar estado de subtarea
+     */
+    public function simpleToggleSubtask() {
+        header('Content-Type: application/json');
+        
+        error_log("=== SIMPLE TOGGLE SUBTASK (MEMBER) ===");
+        error_log("POST: " . print_r($_POST, true));
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+            return;
+        }
+        
+        $subtaskId = (int)($_POST['subtask_id'] ?? 0);
+        $status = $_POST['status'] ?? '';
+        
+        if (!$subtaskId || $subtaskId <= 0) {
+            echo json_encode(['success' => false, 'message' => 'ID de subtarea inválido: ' . $subtaskId]);
+            return;
+        }
+        
+        if (!in_array($status, ['pending', 'completed', 'in_progress', 'cancelled'])) {
+            echo json_encode(['success' => false, 'message' => 'Estado inválido: ' . $status]);
+            return;
+        }
+        
+        try {
+            // Buscar la subtarea
+            $stmt = $this->db->prepare("SELECT * FROM Subtasks WHERE subtask_id = ?");
+            $stmt->execute([$subtaskId]);
+            $subtask = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$subtask) {
+                echo json_encode(['success' => false, 'message' => 'Subtarea no encontrada']);
+                return;
+            }
+            
+            // Verificar que el usuario tenga permisos (debe estar asignado a la subtarea)
+            if ($subtask['assigned_to_user_id'] != $this->currentUser['user_id']) {
+                echo json_encode(['success' => false, 'message' => 'No tienes permisos para modificar esta subtarea']);
+                return;
+            }
+            
+            // Calcular completion_percentage - 100% si completada, 0% si no completada
+            $completionPercentage = ($status === 'completed') ? 100 : 0;
+            
+            // Actualizar la subtarea
+            $updateStmt = $this->db->prepare("
+                UPDATE Subtasks 
+                SET status = ?, completion_percentage = ?, updated_at = NOW() 
+                WHERE subtask_id = ?
+            ");
+            
+            $result = $updateStmt->execute([$status, $completionPercentage, $subtaskId]);
+            
+            if ($result) {
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Subtarea actualizada correctamente',
+                    'completion_percentage' => $completionPercentage,
+                    'status' => $status
+                ]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Error al actualizar la subtarea']);
+            }
+            
+        } catch (Exception $e) {
+            error_log("Error en simpleToggleSubtask (member): " . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+        }
+    }
 }
 
 ?>

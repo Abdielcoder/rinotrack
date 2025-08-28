@@ -1475,27 +1475,61 @@ ob_start();
 
 // Función para cambiar el estado de las tareas
 function toggleTaskStatus(taskId, isCompleted) {
-  fetch('?route=clan_member/toggle-task-status', {
+  console.log('Cambiando estado de tarea/subtarea:', taskId, 'a:', isCompleted);
+  
+  // Detectar si es una tarea o subtarea basándose en la clase CSS
+  const taskCard = document.querySelector(`[data-task-id="${taskId}"]`);
+  const isSubtask = taskCard && taskCard.classList.contains('subtask-card');
+  const route = isSubtask ? 'clan_member/simple-toggle-subtask' : 'clan_member/toggle-task-status';
+  
+  console.log('Tipo detectado:', isSubtask ? 'Subtarea' : 'Tarea', '- Ruta:', route);
+  
+  let requestBody;
+  if (isSubtask) {
+    // Para subtareas usar el nuevo formato
+    requestBody = `subtask_id=${taskId}&status=${isCompleted ? 'completed' : 'pending'}`;
+  } else {
+    // Para tareas usar el formato original
+    requestBody = `task_id=${taskId}&is_completed=${isCompleted}`;
+  }
+  
+  fetch('?route=' + route, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
     },
-    body: `task_id=${taskId}&is_completed=${isCompleted}`
+    body: requestBody
   })
   .then(response => response.json())
   .then(data => {
     if (data.success) {
-      // Si la tarea se completó, removerla del tablero
+      // Si la tarea se completó, removerla del tablero Kanban
       if (isCompleted) {
         const taskCard = document.querySelector(`[data-task-id="${taskId}"]`);
         if (taskCard) {
-          taskCard.style.opacity = '0.5';
-          taskCard.style.transform = 'scale(0.95)';
+          console.log('Removiendo tarea del tablero Kanban:', taskId);
+          taskCard.style.transition = 'all 0.5s ease-out';
+          taskCard.style.opacity = '0';
+          taskCard.style.transform = 'scale(0.8)';
+          taskCard.style.background = '#d1fae5'; // Verde suave para indicar completada
+          
           setTimeout(() => {
             taskCard.remove();
             // Actualizar contadores
             updateTaskCounts();
-          }, 300);
+            console.log('Tarea removida del tablero y contadores actualizados');
+          }, 500);
+        }
+      } else {
+        // Si se desmarca, mostrar mensaje
+        console.log('Tarea desmarcada:', taskId, '- se requiere recarga para ver en el tablero');
+        showNotification('Tarea desmarcada. Recarga la página para ver los cambios.', 'info');
+        
+        // Restaurar el estilo normal
+        const taskCard = document.querySelector(`[data-task-id="${taskId}"]`);
+        if (taskCard) {
+          taskCard.style.opacity = '1';
+          taskCard.style.transform = 'scale(1)';
         }
       }
       // Mostrar notificación
