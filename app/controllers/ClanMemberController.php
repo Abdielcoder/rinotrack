@@ -2257,14 +2257,18 @@ class ClanMemberController {
      * Método para actualizar estado de subtarea
      */
     public function simpleToggleSubtask() {
-        header('Content-Type: application/json');
+        // Limpiar cualquier salida previa y establecer headers
+        if (ob_get_level()) {
+            ob_clean();
+        }
+        header('Content-Type: application/json; charset=utf-8');
         
         error_log("=== SIMPLE TOGGLE SUBTASK (MEMBER) ===");
         error_log("POST: " . print_r($_POST, true));
         
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             echo json_encode(['success' => false, 'message' => 'Método no permitido']);
-            return;
+            exit;
         }
         
         $subtaskId = (int)($_POST['subtask_id'] ?? 0);
@@ -2272,12 +2276,12 @@ class ClanMemberController {
         
         if (!$subtaskId || $subtaskId <= 0) {
             echo json_encode(['success' => false, 'message' => 'ID de subtarea inválido: ' . $subtaskId]);
-            return;
+            exit;
         }
         
         if (!in_array($status, ['pending', 'completed', 'in_progress', 'cancelled'])) {
             echo json_encode(['success' => false, 'message' => 'Estado inválido: ' . $status]);
-            return;
+            exit;
         }
         
         try {
@@ -2288,13 +2292,13 @@ class ClanMemberController {
             
             if (!$subtask) {
                 echo json_encode(['success' => false, 'message' => 'Subtarea no encontrada']);
-                return;
+                exit;
             }
             
             // Verificar que el usuario tenga permisos (debe estar asignado a la subtarea)
             if ($subtask['assigned_to_user_id'] != $this->currentUser['user_id']) {
                 echo json_encode(['success' => false, 'message' => 'No tienes permisos para modificar esta subtarea']);
-                return;
+                exit;
             }
             
             // Calcular completion_percentage - 100% si completada, 0% si no completada

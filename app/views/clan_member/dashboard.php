@@ -1500,7 +1500,24 @@ function toggleTaskStatus(taskId, isCompleted) {
     },
     body: requestBody
   })
-  .then(response => response.json())
+  .then(response => {
+    console.log('Response status:', response.status);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
+    return response.text().then(text => {
+      console.log('Response text:', text);
+      try {
+        return JSON.parse(text);
+      } catch (e) {
+        console.error('JSON Parse Error:', e);
+        console.error('Response text that failed to parse:', text);
+        throw new Error('La respuesta del servidor no es JSON válido: ' + text.substring(0, 100));
+      }
+    });
+  })
   .then(data => {
     if (data.success) {
       // Si la tarea se completó, removerla del tablero Kanban

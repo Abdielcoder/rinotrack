@@ -81,7 +81,7 @@ class ClanLeaderController {
         // Verificar permisos mínimos
         if (!$this->hasClanLeaderAccess()) {
             Utils::redirect('dashboard');
-            return;
+            exit;
         }
 
         // Si el usuario no tiene clan asignado, mostrar dashboard vacío seguro
@@ -106,7 +106,7 @@ class ClanLeaderController {
                 'clan' => ['clan_name' => 'Sin clan asignado', 'clan_departamento' => '-', 'clan_id' => null]
             ];
             $this->loadView('clan_leader/dashboard', $data);
-            return;
+            exit;
         }
 
         $taskStats = $this->getTaskStats();
@@ -145,7 +145,7 @@ class ClanLeaderController {
         $this->requireAuth();
         if (!$this->hasClanLeaderAccess()) {
             Utils::redirect('dashboard');
-            return;
+            exit;
         }
 
         $search = $_GET['search'] ?? '';
@@ -176,7 +176,7 @@ class ClanLeaderController {
         $this->requireAuth();
         if (!$this->hasClanLeaderAccess()) {
             Utils::redirect('dashboard');
-            return;
+            exit;
         }
 
         $availabilityData = $this->getCollaboratorAvailability();
@@ -559,7 +559,7 @@ class ClanLeaderController {
         // Validar fecha límite si se proporciona
         if ($timeLimit && !strtotime($timeLimit)) {
             Utils::jsonResponse(['success' => false, 'message' => 'La fecha límite no es válida'], 400);
-            return;
+            exit;
         }
         
         // Verificar que el proyecto pertenece al clan
@@ -748,7 +748,7 @@ class ClanLeaderController {
         $this->requireAuth();
         if (!$this->hasClanLeaderAccess()) {
             Utils::redirect('dashboard');
-            return;
+            exit;
         }
         $projectId = $_GET['project_id'] ?? null;
         $action = $_GET['action'] ?? null;
@@ -2355,7 +2355,11 @@ class ClanLeaderController {
      * Método para actualizar estado de subtarea
      */
     public function simpleToggleSubtask() {
-        header('Content-Type: application/json');
+        // Limpiar cualquier salida previa y establecer headers
+        if (ob_get_level()) {
+            ob_clean();
+        }
+        header('Content-Type: application/json; charset=utf-8');
         
         // Logging detallado
         error_log("=== SIMPLE TOGGLE SUBTASK ===");
@@ -2364,7 +2368,7 @@ class ClanLeaderController {
         
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             echo json_encode(['success' => false, 'message' => 'Método no permitido']);
-            return;
+            exit;
         }
         
         // Obtener parámetros
@@ -2376,12 +2380,12 @@ class ClanLeaderController {
         
         if (!$subtaskId || $subtaskId <= 0) {
             echo json_encode(['success' => false, 'message' => 'ID de subtarea inválido: ' . $subtaskId]);
-            return;
+            exit;
         }
         
         if (!in_array($status, ['pending', 'completed', 'in_progress', 'cancelled'])) {
             echo json_encode(['success' => false, 'message' => 'Estado inválido: ' . $status]);
-            return;
+            exit;
         }
         
         try {
@@ -2410,9 +2414,6 @@ class ClanLeaderController {
             $result = $updateStmt->execute([$status, $completionPercentage, $subtaskId]);
             
             if ($result) {
-                // También actualizar el progreso de la tarea padre
-                $this->taskModel->updateTaskProgressFromSubtasks($subtask['task_id']);
-                
                 echo json_encode([
                     'success' => true,
                     'message' => 'Subtarea actualizada correctamente (status y completion_percentage)',
@@ -2433,7 +2434,11 @@ class ClanLeaderController {
      * Método simple para cambiar estado de tarea
      */
     public function simpleToggleTask() {
-        header('Content-Type: application/json');
+        // Limpiar cualquier salida previa y establecer headers
+        if (ob_get_level()) {
+            ob_clean();
+        }
+        header('Content-Type: application/json; charset=utf-8');
         
         // Logging detallado
         error_log("=== SIMPLE TOGGLE TASK ===");
@@ -2444,7 +2449,7 @@ class ClanLeaderController {
         
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             echo json_encode(['success' => false, 'message' => 'Método no permitido']);
-            return;
+            exit;
         }
         
         // Intentar obtener task_id de diferentes formas
@@ -2485,12 +2490,12 @@ class ClanLeaderController {
                 'message' => 'ID de tarea inválido. Recibido: ' . var_export($taskId, true) . '. Verifique que está enviando un número válido mayor que 0.',
                 'debug' => $debugInfo
             ]);
-            return;
+            exit;
         }
         
         if (!in_array($status, ['pending', 'completed', 'in_progress', 'cancelled'])) {
             echo json_encode(['success' => false, 'message' => 'Estado inválido: ' . $status]);
-            return;
+            exit;
         }
         
         try {
@@ -3684,12 +3689,12 @@ class ClanLeaderController {
         $this->requireAuth();
         if (!$this->hasClanLeaderAccess()) {
             Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos'], 403);
-            return;
+            exit;
         }
 
         if (!$this->userClan) {
             Utils::jsonResponse(['success' => false, 'message' => 'Sin clan asignado'], 400);
-            return;
+            exit;
         }
 
         $userId = $this->currentUser['user_id'];
@@ -3779,7 +3784,7 @@ class ClanLeaderController {
             error_log('ERROR: Usuario no tiene acceso de líder');
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
-            return;
+            exit;
         }
         error_log('Usuario tiene acceso de líder correctamente');
 
@@ -3787,7 +3792,7 @@ class ClanLeaderController {
             error_log('ERROR: Método HTTP incorrecto: ' . $_SERVER['REQUEST_METHOD']);
             http_response_code(405);
             echo json_encode(['success' => false, 'message' => 'Método no permitido']);
-            return;
+            exit;
         }
         error_log('Método HTTP correcto: POST');
 
@@ -3939,7 +3944,7 @@ class ClanLeaderController {
         if (!$this->hasClanLeaderAccess()) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
-            return;
+            exit;
         }
 
         try {
@@ -4001,7 +4006,7 @@ class ClanLeaderController {
         if (!$this->hasClanLeaderAccess()) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
-            return;
+            exit;
         }
 
         try {
@@ -4039,7 +4044,7 @@ class ClanLeaderController {
         if (!$this->hasClanLeaderAccess()) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
-            return;
+            exit;
         }
 
         try {
@@ -4117,7 +4122,7 @@ class ClanLeaderController {
         if (!$this->hasClanLeaderAccess()) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
-            return;
+            exit;
         }
 
         try {
@@ -4155,7 +4160,7 @@ class ClanLeaderController {
         if (!$this->hasClanLeaderAccess()) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
-            return;
+            exit;
         }
 
         try {
@@ -4191,7 +4196,7 @@ class ClanLeaderController {
         if (!$this->hasClanLeaderAccess()) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
-            return;
+            exit;
         }
 
         try {
@@ -4227,7 +4232,7 @@ class ClanLeaderController {
         if (!$this->hasClanLeaderAccess()) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
-            return;
+            exit;
         }
 
         try {
@@ -4519,7 +4524,7 @@ class ClanLeaderController {
         if (!$this->hasClanLeaderAccess()) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
-            return;
+            exit;
         }
 
         try {
@@ -4614,7 +4619,7 @@ class ClanLeaderController {
         if (!$this->hasClanLeaderAccess()) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
-            return;
+            exit;
         }
 
         try {

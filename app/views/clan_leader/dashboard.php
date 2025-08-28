@@ -525,7 +525,26 @@ function toggleTaskStatus(taskId, isChecked) {
         },
         body: paramName + '=' + taskId + '&status=' + (isChecked ? 'completed' : 'pending')
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers);
+        
+        // Verificar que la respuesta sea exitosa
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        return response.text().then(text => {
+            console.log('Response text:', text);
+            try {
+                return JSON.parse(text);
+            } catch (e) {
+                console.error('JSON Parse Error:', e);
+                console.error('Response text that failed to parse:', text);
+                throw new Error('La respuesta del servidor no es JSON válido: ' + text.substring(0, 100));
+            }
+        });
+    })
     .then(data => {
         if (data.success) {
             console.log('Estado de tarea actualizado exitosamente');
@@ -577,7 +596,10 @@ function toggleTaskStatus(taskId, isChecked) {
     })
     .catch(error => {
         console.error('Error en la petición:', error);
-        showNotification('Error al actualizar estado de tarea', 'error');
+        console.error('Tipo de error:', typeof error);
+        console.error('Stack trace:', error.stack);
+        
+        showNotification('Error al actualizar estado de tarea: ' + error.message, 'error');
         
         // Revertir el checkbox si hubo error
         const checkbox = document.querySelector(`[data-task-id="${taskId}"] input[type="checkbox"]`);
