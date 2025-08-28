@@ -1228,8 +1228,8 @@ class Task {
                 } else {
                     $fields[] = "completed_at = NULL";
                     $fields[] = "is_completed = 0";
-                    // No cambiar completion_percentage para estados no completados, mantener el valor actual
-                    error_log("Setting completed_at = NULL and is_completed = 0 for non-completed status");
+                    $fields[] = "completion_percentage = 0.00";
+                    error_log("Setting completed_at = NULL, is_completed = 0 and completion_percentage = 0 for non-completed status");
                 }
             }
             

@@ -84,12 +84,12 @@ try {
         // Corregir estas inconsistencias
         $updateStmt = $db->prepare("
             UPDATE Tasks 
-            SET is_completed = 0, completed_at = NULL
+            SET is_completed = 0, completed_at = NULL, completion_percentage = 0.00
             WHERE status != 'completed' AND is_completed = 1
         ");
         $result = $updateStmt->execute();
         $affectedRows = $updateStmt->rowCount();
-        echo "<p>🔧 <strong>Corregidas {$affectedRows} tareas.</strong></p>\n";
+        echo "<p>🔧 <strong>Corregidas {$affectedRows} tareas (reseteo progreso a 0%).</strong></p>\n";
     }
     
     // 3. Verificar tareas completadas sin 100% de progreso
@@ -129,7 +129,44 @@ try {
         echo "<p>🔧 <strong>Corregidas {$affectedRows} tareas completadas estableciendo progreso a 100%.</strong></p>\n";
     }
     
-    // 4. Verificar estadísticas generales
+    // 4. Verificar tareas NO completadas con progreso mayor a 0
+    $stmt = $db->prepare("
+        SELECT task_id, task_name, status, completion_percentage, is_completed
+        FROM Tasks 
+        WHERE status != 'completed' AND completion_percentage > 0.00
+    ");
+    $stmt->execute();
+    $inconsistent4 = $stmt->fetchAll();
+    
+    echo "<h3>Tareas NO completadas con progreso mayor a 0%:</h3>\n";
+    if (empty($inconsistent4)) {
+        echo "<p>✅ No se encontraron tareas no completadas con progreso mayor a 0%.</p>\n";
+    } else {
+        echo "<table border='1'>\n";
+        echo "<tr><th>Task ID</th><th>Nombre</th><th>Status</th><th>Percentage Actual</th><th>Is Completed</th></tr>\n";
+        foreach ($inconsistent4 as $task) {
+            echo "<tr>";
+            echo "<td>{$task['task_id']}</td>";
+            echo "<td>" . htmlspecialchars($task['task_name']) . "</td>";
+            echo "<td>{$task['status']}</td>";
+            echo "<td>{$task['completion_percentage']}%</td>";
+            echo "<td>{$task['is_completed']}</td>";
+            echo "</tr>\n";
+        }
+        echo "</table>\n";
+        
+        // Corregir estas inconsistencias
+        $updateStmt = $db->prepare("
+            UPDATE Tasks 
+            SET completion_percentage = 0.00
+            WHERE status != 'completed' AND completion_percentage > 0.00
+        ");
+        $result = $updateStmt->execute();
+        $affectedRows = $updateStmt->rowCount();
+        echo "<p>🔧 <strong>Corregidas {$affectedRows} tareas NO completadas reseteando progreso a 0%.</strong></p>\n";
+    }
+    
+    // 5. Verificar estadísticas generales
     $stmt = $db->prepare("
         SELECT 
             status, 

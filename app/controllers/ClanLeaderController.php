@@ -2308,7 +2308,7 @@ class ClanLeaderController {
             }
             
             // Calcular el completion_percentage basado en el estado
-            $completionPercentage = ($newStatus === 'completed') ? 100 : ($task['completion_percentage'] ?? 0);
+            $completionPercentage = ($newStatus === 'completed') ? 100 : 0;
             
             // Actualizar estado usando el método update del modelo
             $result = $this->taskModel->update(
@@ -2427,8 +2427,8 @@ class ClanLeaderController {
             
             error_log("Tarea encontrada: " . print_r($task, true));
             
-            // Calcular completion_percentage - SIEMPRE 100% si está completada
-            $completionPercentage = ($status === 'completed') ? 100 : ($task['completion_percentage'] ?? 0);
+            // Calcular completion_percentage - 100% si completada, 0% si no completada
+            $completionPercentage = ($status === 'completed') ? 100 : 0;
             
             error_log("Actualizando tarea con: status=$status, completion_percentage=$completionPercentage%");
             
