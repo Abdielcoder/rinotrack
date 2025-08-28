@@ -2322,9 +2322,10 @@ class ClanLeaderController {
                 $newStatus // nuevo parámetro para estado
             );
             
-            // Si se actualizó el estado, también actualizar el completion_percentage
-            if ($result && $newStatus === 'completed') {
+            // SIEMPRE actualizar el completion_percentage después de cambiar el estado
+            if ($result) {
                 $this->taskModel->updateTaskProgress($taskId, $completionPercentage);
+                error_log("Progreso actualizado: task_id=$taskId, completion_percentage=$completionPercentage%");
             }
             
             if ($result) {
@@ -2426,10 +2427,10 @@ class ClanLeaderController {
             
             error_log("Tarea encontrada: " . print_r($task, true));
             
-            // Calcular completion_percentage
+            // Calcular completion_percentage - SIEMPRE 100% si está completada
             $completionPercentage = ($status === 'completed') ? 100 : ($task['completion_percentage'] ?? 0);
             
-            error_log("Actualizando tarea con: status=$status, completion_percentage=$completionPercentage");
+            error_log("Actualizando tarea con: status=$status, completion_percentage=$completionPercentage%");
             
             // Usar el método update del modelo que maneja correctamente status, is_completed, completed_at, etc.
             $result = $this->taskModel->update(
@@ -2443,9 +2444,10 @@ class ClanLeaderController {
                 $status  // Este parámetro hará que se actualice status, is_completed y completed_at automáticamente
             );
             
-            // También actualizar el completion_percentage si cambió
-            if ($status === 'completed') {
+            // SIEMPRE actualizar el completion_percentage después de cambiar el estado
+            if ($result) {
                 $this->taskModel->updateTaskProgress($taskId, $completionPercentage);
+                error_log("Progreso actualizado: task_id=$taskId, completion_percentage=$completionPercentage%");
             }
             
             if ($result) {

@@ -2336,8 +2336,9 @@ function toggleTaskStatus(taskId, isChecked) {
             
             // Mostrar mensaje de éxito con información detallada
             const message = data.message || 'Estado actualizado correctamente';
+            const progressInfo = isChecked ? ' (Progreso: 100%)' : ` (Progreso: ${data.completion_percentage || 0}%)`;
             console.log('Operación exitosa:', message);
-            showToast(message, 'success');
+            showToast(message + progressInfo, 'success');
             
         } else {
             console.error('Error del servidor:', data.message);

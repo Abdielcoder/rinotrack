@@ -1219,14 +1219,16 @@ class Task {
                 $values[] = $status;
                 error_log("Adding status to update");
                 
-                // Si el estado es completed, establecer completed_at
+                // Si el estado es completed, establecer completed_at y completion_percentage
                 if ($status === 'completed') {
                     $fields[] = "completed_at = NOW()";
                     $fields[] = "is_completed = 1";
-                    error_log("Setting completed_at and is_completed for completed status");
+                    $fields[] = "completion_percentage = 100.00";
+                    error_log("Setting completed_at, is_completed=1 and completion_percentage=100 for completed status");
                 } else {
                     $fields[] = "completed_at = NULL";
                     $fields[] = "is_completed = 0";
+                    // No cambiar completion_percentage para estados no completados, mantener el valor actual
                     error_log("Setting completed_at = NULL and is_completed = 0 for non-completed status");
                 }
             }
