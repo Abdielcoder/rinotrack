@@ -2335,8 +2335,10 @@ class ClanLeaderController {
                 
                 Utils::jsonResponse([
                     'success' => true, 
-                    'message' => 'Estado de tarea actualizado',
-                    'completion_percentage' => $completionPercentage
+                    'message' => 'Estado de tarea actualizado (status, is_completed y completion_percentage)',
+                    'completion_percentage' => $completionPercentage,
+                    'status' => $newStatus,
+                    'is_completed' => ($newStatus === 'completed') ? 1 : 0
                 ]);
             } else {
                 Utils::jsonResponse(['success' => false, 'message' => 'Error al actualizar tarea'], 500);
@@ -2414,34 +2416,45 @@ class ClanLeaderController {
         }
         
         try {
-            // Buscar la tarea
-            $stmt = $this->db->prepare("SELECT * FROM Tasks WHERE task_id = ?");
-            $stmt->execute([$taskId]);
-            $task = $stmt->fetch(PDO::FETCH_ASSOC);
+            // Buscar la tarea usando el modelo
+            $task = $this->taskModel->findById($taskId);
             
             if (!$task) {
                 echo json_encode(['success' => false, 'message' => 'Tarea no encontrada']);
                 return;
             }
             
+            error_log("Tarea encontrada: " . print_r($task, true));
+            
             // Calcular completion_percentage
             $completionPercentage = ($status === 'completed') ? 100 : ($task['completion_percentage'] ?? 0);
             
-            // Actualizar la tarea
-            $updateStmt = $this->db->prepare("
-                UPDATE Tasks 
-                SET status = ?, completion_percentage = ?, updated_at = NOW() 
-                WHERE task_id = ?
-            ");
+            error_log("Actualizando tarea con: status=$status, completion_percentage=$completionPercentage");
             
-            $result = $updateStmt->execute([$status, $completionPercentage, $taskId]);
+            // Usar el método update del modelo que maneja correctamente status, is_completed, completed_at, etc.
+            $result = $this->taskModel->update(
+                $taskId,
+                $task['task_name'],
+                $task['description'],
+                $task['assigned_to_user_id'],
+                $task['priority'],
+                $task['due_date'],
+                $task['assigned_percentage'],
+                $status  // Este parámetro hará que se actualice status, is_completed y completed_at automáticamente
+            );
+            
+            // También actualizar el completion_percentage si cambió
+            if ($status === 'completed') {
+                $this->taskModel->updateTaskProgress($taskId, $completionPercentage);
+            }
             
             if ($result) {
                 echo json_encode([
                     'success' => true,
-                    'message' => 'Tarea actualizada correctamente',
+                    'message' => 'Tarea actualizada correctamente (status, is_completed y completion_percentage)',
                     'completion_percentage' => $completionPercentage,
-                    'status' => $status
+                    'status' => $status,
+                    'is_completed' => ($status === 'completed') ? 1 : 0
                 ]);
             } else {
                 echo json_encode(['success' => false, 'message' => 'Error al actualizar la tarea']);
