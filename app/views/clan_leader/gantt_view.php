@@ -89,12 +89,15 @@ ob_start();
 }
 
 .btn-minimal.active {
-    background: #3b82f6;
+    background: #192c5e; /* Azul oscuro */
     color: white;
+    box-shadow: 0 2px 8px rgba(25, 44, 94, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .btn-minimal.active:hover {
-    background: #2563eb;
+    background: #0f1e3d; /* Azul más oscuro al hover */
+    box-shadow: 0 4px 12px rgba(25, 44, 94, 0.4);
 }
 
 /* Botón calendario en gris cuando no está activo */
