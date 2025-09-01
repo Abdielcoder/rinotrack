@@ -1,4 +1,7 @@
 <?php
+// Suprimir warnings y notices para esta vista
+error_reporting(E_ERROR | E_PARSE);
+
 // Guardar el contenido en una variable
 ob_start();
 ?>

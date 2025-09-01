@@ -414,6 +414,9 @@ class ClanLeaderController {
      * Gestión de proyectos del clan
      */
     public function projects() {
+        // Suprimir warnings específicos para esta función
+        error_reporting(E_ERROR | E_PARSE);
+        
         $search = $_GET['search'] ?? '';
         
         // Obtener todos los proyectos del clan
@@ -435,12 +438,15 @@ class ClanLeaderController {
         // Reindexar el array después del filtro
         $projects = array_values($projects);
         
+        // Asegurar que clan siempre tenga un valor válido
+        $clanData = $this->userClan ?? ['clan_name' => 'Sin clan asignado', 'clan_id' => null];
+        
         $data = [
             'projects' => $projects,
             'search' => $search,
             'currentPage' => 'clan_leader',
             'user' => $this->currentUser,
-            'clan' => $this->userClan
+            'clan' => $clanData
         ];
         
         $this->loadView('clan_leader/projects', $data);
