@@ -718,13 +718,7 @@ function closeAddTaskModal() {
         formData.append('route', 'clan_leader/create-personal-task');
         formData.append('user_id', '<?php echo $user['user_id'] ?? 0; ?>');
         
-        // Debug: mostrar datos que se van a enviar
-        console.log('=== DEBUG: Datos a enviar ===');
-        for (let [key, value] of formData.entries()) {
-            console.log(key + ': ' + value);
-        }
-        console.log('User ID desde PHP: <?php echo $user['user_id'] ?? 0; ?>');
-        console.log('=== FIN DEBUG ===');
+        // Debug removido para producción
         
         // Mostrar estado de carga
         const submitBtn = form.querySelector('button[type="submit"]');

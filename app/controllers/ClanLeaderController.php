@@ -419,7 +419,7 @@ class ClanLeaderController {
         // Obtener todos los proyectos del clan
         $clanId = $this->userClan['clan_id'] ?? null;
         if (!$clanId) {
-            error_log("Error: No se encontró clan_id para el usuario");
+            // Error: No se encontró clan_id para el usuario (log deshabilitado para producción)
             $allProjects = [];
         } else {
             $allProjects = empty($search) ? 

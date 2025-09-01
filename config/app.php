@@ -6,7 +6,7 @@
 // Configuración de la aplicación
 define('APP_NAME', 'Polaris');
 define('APP_URL', 'https://rinotrack.rinorisk.com/desarrollo/rinotrack/public/');
-define('APP_DEBUG', true);
+define('APP_DEBUG', false);
 
 // Configuración de zona horaria
 date_default_timezone_set('America/Mexico_City');

@@ -99,7 +99,7 @@ class Subtask {
                     $stmtA->execute($commentIds);
                     $rows = $stmtA->fetchAll();
                     
-                    error_log("DEBUG: Adjuntos encontrados para comentarios: " . print_r($rows, true));
+                    // Debug removido para producción
                     
                     $byComment = [];
                     foreach ($rows as $r) {
@@ -109,7 +109,7 @@ class Subtask {
                     foreach ($comments as &$c) {
                         $c['attachments'] = $byComment[$c['comment_id']] ?? [];
                         $c['attachments_count'] = count($c['attachments']);
-                        error_log("DEBUG: Comentario {$c['comment_id']} tiene " . count($c['attachments']) . " adjuntos");
+                        // Debug removido para producción
                     }
                 }
                 

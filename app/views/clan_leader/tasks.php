@@ -181,16 +181,7 @@ ob_start();
                         </thead>
                         <tbody>
                             <?php 
-                            // Debug: verificar si allTasks existe
-                            error_log("DEBUG VIEW - allTasks isset: " . (isset($allTasks) ? 'YES' : 'NO'));
-                            error_log("DEBUG VIEW - allTasks type: " . gettype($allTasks ?? null));
-                            if (isset($allTasks)) {
-                                error_log("DEBUG VIEW - allTasks count: " . count($allTasks));
-                                if (!empty($allTasks)) {
-                                    error_log("DEBUG VIEW - First item type: " . gettype($allTasks[0]));
-                                    error_log("DEBUG VIEW - First item: " . print_r($allTasks[0], true));
-                                }
-                            }
+                            // Debug removido para producción
                             
                             if (!isset($allTasks) || empty($allTasks)) {
                                 echo '<tr><td colspan="9">No hay tareas disponibles</td></tr>';
@@ -198,7 +189,6 @@ ob_start();
                                 foreach ($allTasks as $index => $task) {
                                     // Verificar si $task es un array o solo un número
                                     if (!is_array($task)) {
-                                        error_log("ERROR: Task at index $index is not an array: " . print_r($task, true));
                                         continue;
                                     }
                                     
@@ -212,7 +202,7 @@ ob_start();
                                     $dueDate = $task['due_date'] ?? null;
                                     $completionPercentage = $task['completion_percentage'] ?? 0;
                                     
-                                    error_log("DEBUG HTML - Task ID: $taskId, Task name: $taskName");
+                                    // Debug removido para producción
                             ?>
                             <tr class="task-row priority-<?= $priority ?> <?= ($daysUntilDue < 0) ? 'overdue' : '' ?> <?= ($status === 'completed') ? 'completed' : '' ?>" data-task-id="<?= $taskId ?>">
                                 <td class="td-checkbox">
