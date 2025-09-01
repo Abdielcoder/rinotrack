@@ -271,6 +271,114 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
+<style>
+/* Estilos mejorados para los botones de vista */
+.view-toggle {
+    display: flex;
+    gap: 0;
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 4px;
+    border: 1px solid #e9ecef;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.view-toggle .btn-minimal {
+    border-radius: 6px;
+    padding: 8px 16px;
+    border: none;
+    background: transparent;
+    color: #6c757d;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    font-weight: 500;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 120px;
+    justify-content: center;
+}
+
+.view-toggle .btn-minimal:hover {
+    background: rgba(13, 110, 253, 0.1);
+    color: #0d6efd;
+    transform: translateY(-1px);
+}
+
+.view-toggle .btn-minimal.active {
+    background: #0d6efd;
+    color: white;
+    box-shadow: 0 2px 8px rgba(13, 110, 253, 0.3);
+    transform: translateY(-1px);
+}
+
+.view-toggle .btn-minimal.active:hover {
+    background: #0b5ed7;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(13, 110, 253, 0.4);
+}
+
+.view-toggle .btn-minimal i {
+    font-size: 16px;
+}
+
+.view-toggle .btn-minimal span {
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+/* Animación para transiciones suaves */
+.view-toggle .btn-minimal {
+    position: relative;
+    overflow: hidden;
+}
+
+.view-toggle .btn-minimal::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s;
+}
+
+.view-toggle .btn-minimal:hover::before {
+    left: 100%;
+}
+
+/* Mejorar el header general */
+.actions-minimal {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.navigation-actions {
+    display: flex;
+    gap: 10px;
+}
+
+/* Responsive para pantallas pequeñas */
+@media (max-width: 768px) {
+    .view-toggle .btn-minimal {
+        min-width: 100px;
+        padding: 6px 12px;
+        font-size: 13px;
+    }
+    
+    .view-toggle .btn-minimal span {
+        display: none;
+    }
+    
+    .view-toggle .btn-minimal i {
+        font-size: 18px;
+    }
+}
+</style>
+
 <?php
 // Guardar el contenido en una variable
 $content = ob_get_clean();
