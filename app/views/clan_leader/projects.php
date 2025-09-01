@@ -9,7 +9,7 @@ ob_start();
         <div class="header-row">
             <div class="title-minimal">
                 <h1>Gestionar Proyectos</h1>
-                <span class="subtitle"><?php echo htmlspecialchars($clan['clan_name']); ?></span>
+                <span class="subtitle"><?php echo htmlspecialchars($clan['clan_name'] ?? 'Clan no encontrado'); ?></span>
             </div>
             
             <div class="actions-minimal">

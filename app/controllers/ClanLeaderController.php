@@ -61,9 +61,9 @@ class ClanLeaderController {
                 // Asignar el clan_id al usuario actual para que esté disponible
                 if ($this->userClan && isset($this->userClan['clan_id'])) {
                     $this->currentUser['clan_id'] = $this->userClan['clan_id'];
-                    error_log('Clan ID asignado al usuario: ' . $this->currentUser['clan_id']);
+                    // Clan ID asignado al usuario
                 } else {
-                    error_log('ERROR: No se pudo obtener el clan del usuario');
+                    // ERROR: No se pudo obtener el clan del usuario
                 }
             }
         } else {
@@ -112,18 +112,14 @@ class ClanLeaderController {
         $taskStats = $this->getTaskStats();
         $memberContributions = $this->getMemberContributions();
 
-        // Debug seguro
-        error_log("Clan Leader Dashboard Debug:");
-        error_log("Clan ID: " . $this->userClan['clan_id']);
-        error_log("Task Stats: " . json_encode($taskStats));
-        error_log("Member Contributions Count: " . count($memberContributions));
+        // Debug removido para producción
 
         // Obtener tareas para el tablero Kanban (incluye tareas de otros clanes)
-        $kanbanTasks = $this->getKanbanTasksForLeader($this->currentUser['user_id'], $this->userClan['clan_id']);
+        $kanbanTasks = $this->getKanbanTasksForLeader($this->currentUser['user_id'], $this->userClan['clan_id'] ?? null);
         
         $data = [
             'userStats' => $this->getUserStats(),
-            'projectStats' => $this->projectModel->getStatsByClan($this->userClan['clan_id']),
+            'projectStats' => $this->projectModel->getStatsByClan($this->userClan['clan_id'] ?? null),
             'clanStats' => $this->getClanStats(),
             'taskStats' => $taskStats,
             'memberContributions' => $memberContributions,
@@ -152,8 +148,9 @@ class ClanLeaderController {
         if (!$this->userClan || !isset($this->userClan['clan_id'])) {
             $members = [];
         } else {
+            $clanId = $this->userClan['clan_id'] ?? null;
             $members = empty($search)
-                ? $this->clanModel->getMembers($this->userClan['clan_id'])
+                ? ($clanId ? $this->clanModel->getMembers($clanId) : [])
                 : $this->searchMembers($search);
         }
         
@@ -236,7 +233,7 @@ class ClanLeaderController {
             }
             
             // Verificar que el usuario no esté ya en el clan
-            $existingMembers = $this->clanModel->getMembers($this->userClan['clan_id']);
+            $existingMembers = $this->clanModel->getMembers($this->userClan['clan_id'] ?? null);
             foreach ($existingMembers as $member) {
                 if ($member['user_id'] == $userId) {
                     Utils::jsonResponse(['success' => false, 'message' => 'El usuario ya es miembro del clan'], 409);
@@ -264,7 +261,7 @@ class ClanLeaderController {
      */
     public function getClanMembers() {
         try {
-            $members = $this->clanModel->getMembers($this->userClan['clan_id']);
+            $members = $this->clanModel->getMembers($this->userClan['clan_id'] ?? null);
             
             Utils::jsonResponse([
                 'success' => true,
@@ -384,7 +381,7 @@ class ClanLeaderController {
             }
             
             // Verificar que el usuario existe y está en el clan
-            $existingMembers = $this->clanModel->getMembers($this->userClan['clan_id']);
+            $existingMembers = $this->clanModel->getMembers($this->userClan['clan_id'] ?? null);
             $userInClan = false;
             foreach ($existingMembers as $member) {
                 if ($member['user_id'] == $userId) {
@@ -417,35 +414,23 @@ class ClanLeaderController {
      * Gestión de proyectos del clan
      */
     public function projects() {
-        error_log("=== MÉTODO PROJECTS INICIADO ===");
-        error_log("Usuario actual: " . json_encode($this->currentUser));
-        error_log("Clan del usuario: " . json_encode($this->userClan));
-        error_log("¿Tiene acceso de líder?: " . ($this->hasClanLeaderAccess() ? 'SÍ' : 'NO'));
-        
         $search = $_GET['search'] ?? '';
         
         // Obtener todos los proyectos del clan
-        $allProjects = empty($search) ? 
-            $this->projectModel->getByClan($this->userClan['clan_id']) : 
-            $this->searchProjects($search);
+        $clanId = $this->userClan['clan_id'] ?? null;
+        if (!$clanId) {
+            error_log("Error: No se encontró clan_id para el usuario");
+            $allProjects = [];
+        } else {
+            $allProjects = empty($search) ? 
+                $this->projectModel->getByClan($clanId) : 
+                $this->searchProjects($search);
+        }
         
         // Los proyectos personales ya están filtrados en el modelo
         $projects = $allProjects;
         
-        error_log("Total de proyectos después del filtro: " . count($projects));
-        error_log("=== FIN DEL FILTRADO ===");
-        
-        // Log del resultado del filtrado
-        $totalProjects = count($allProjects);
-        $filteredProjects = count($projects);
-        error_log("Filtrado de proyectos - Total: $totalProjects, Filtrados: $filteredProjects");
-        
-        // Log detallado de cada proyecto para debugging
-        foreach ($allProjects as $project) {
-            $isPersonal = ($project['is_personal'] ?? 0) == 1;
-            $projectName = $project['project_name'] ?? 'N/A';
-            error_log("DEBUG Proyecto: '$projectName' - ID: {$project['project_id']}, is_personal: " . ($isPersonal ? 'SÍ' : 'NO') . ", Clan: {$project['clan_id']}");
-        }
+        // Log del resultado del filtrado eliminado para producción
         
         // Reindexar el array después del filtro
         $projects = array_values($projects);
