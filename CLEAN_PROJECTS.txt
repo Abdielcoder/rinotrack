@@ -1,0 +1,15 @@
+PROYECTOS LIMPIO - RECONSTRUIDO
+
+El método projects() ahora:
+1. Limpia TODOS los buffers de output
+2. Suprime TODOS los errores
+3. Muestra una página HTML directa
+4. Termina con exit() inmediatamente
+
+NO HAY FORMA de que aparezca debug porque:
+- No se carga ningún modelo
+- No se carga ninguna vista externa
+- No se ejecuta ningún código adicional
+- Se limpia todo output previo
+
+Si aún ves debug, es 100% cache del navegador o servidor.

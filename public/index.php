@@ -97,15 +97,6 @@ try {
 // Obtener ruta
 $route = $_GET['route'] ?? '';
 
-// INTERCEPTAR LA RUTA DE PROJECTS PARA LIMPIAR DEBUG
-if ($route === 'clan_leader/projects') {
-    while (ob_get_level()) {
-        ob_end_clean();
-    }
-    require __DIR__ . '/projects_clean.php';
-    exit();
-}
-
 // Normalizar APP_URL para despliegue en /desarrollo/
 if (defined('APP_URL')) {
     // Si la URL actual contiene /desarrollo/rinotrack/public/ y APP_URL no, corregir
