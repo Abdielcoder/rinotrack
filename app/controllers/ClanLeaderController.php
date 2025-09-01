@@ -3040,8 +3040,10 @@ class ClanLeaderController {
         
         $members = $this->clanModel->getMembers($clanId);
         
+        // Definir currentUserId una sola vez
+        $currentUserId = $this->currentUser['user_id'] ?? 1;
+        
         foreach ($members as $member) {
-            $currentUserId = $this->currentUser['user_id'] ?? 1;
             $activeTasks = $this->taskModel->getActiveTasksByUserForClanLeader($member['user_id'], $currentUserId);
             $taskCount = count($activeTasks);
             

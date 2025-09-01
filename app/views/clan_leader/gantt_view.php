@@ -10,7 +10,7 @@ ob_start();
             <div class="title-minimal">
                 <div class="clan-icon-large"><?php echo $this->getClanIcon($clan['clan_name']); ?></div>
                 <h1>Diagrama de Gantt</h1>
-                <span class="subtitle"><?php echo htmlspecialchars($clan['clan_name']); ?> - <?php echo htmlspecialchars($clan['clan_departamento']); ?></span>
+                <span class="subtitle"><?php echo htmlspecialchars($clan['clan_name'] ?? 'Clan'); ?> - <?php echo htmlspecialchars($clan['clan_departamento'] ?? 'Departamento'); ?></span>
             </div>
             
             <div class="actions-minimal">
@@ -95,6 +95,15 @@ ob_start();
 
 .btn-minimal.active:hover {
     background: #2563eb;
+}
+
+/* Botón calendario en gris cuando no está activo */
+.view-toggle .btn-minimal:not(.active) {
+    color: #6b7280; /* Gris */
+}
+
+.view-toggle .btn-minimal:not(.active):hover {
+    color: #374151; /* Gris más oscuro al hover */
 }
 
 /* Estilos para el diagrama de Gantt */
