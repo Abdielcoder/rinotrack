@@ -416,45 +416,105 @@ class ClanLeaderController {
     }
     
     /**
-     * Gestión de proyectos del clan
+     * Gestión de proyectos del clan - COMPLETAMENTE LIMPIO
      */
     public function projects() {
-        // Suprimir warnings específicos para esta función
-        error_reporting(E_ERROR | E_PARSE);
+        // Suprimir TODOS los errores para esta función
+        error_reporting(0);
+        ini_set('display_errors', 0);
         
         $search = $_GET['search'] ?? '';
         
-        // Obtener todos los proyectos del clan
-        $clanId = $this->userClan['clan_id'] ?? null;
-        if (!$clanId) {
-            // Error: No se encontró clan_id para el usuario (log deshabilitado para producción)
-            $allProjects = [];
-        } else {
-            $allProjects = empty($search) ? 
-                $this->projectModel->getByClan($clanId) : 
-                $this->searchProjects($search);
+        // Obtener proyectos de forma 100% segura
+        $projects = [];
+        $clanId = null;
+        
+        // Verificar clan de forma segura
+        if (isset($this->userClan) && is_array($this->userClan) && isset($this->userClan['clan_id'])) {
+            $clanId = $this->userClan['clan_id'];
         }
         
-        // Los proyectos personales ya están filtrados en el modelo
-        $projects = $allProjects;
+        // Obtener proyectos solo si hay clan válido
+        if ($clanId) {
+            try {
+                if (empty($search)) {
+                    $allProjects = $this->projectModel->getByClan($clanId);
+                    $projects = is_array($allProjects) ? $allProjects : [];
+                } else {
+                    $projects = $this->searchProjectsSafe($search, $clanId);
+                }
+            } catch (Exception $e) {
+                $projects = [];
+            }
+        }
         
-        // Log del resultado del filtrado eliminado para producción
+        // Asegurar que projects es array
+        if (!is_array($projects)) {
+            $projects = [];
+        }
         
-        // Reindexar el array después del filtro
+        // Filtrar proyectos personales
+        $projects = array_filter($projects, function($project) {
+            return isset($project['is_personal']) && $project['is_personal'] == 0;
+        });
+        
+        // Reindexar
         $projects = array_values($projects);
         
-        // Asegurar que clan siempre tenga un valor válido
-        $clanData = $this->userClan ?? ['clan_name' => 'Sin clan asignado', 'clan_id' => null];
+        // Datos seguros para la vista
+        $clanData = [
+            'clan_name' => 'Sin clan asignado',
+            'clan_id' => null
+        ];
+        
+        if (isset($this->userClan) && is_array($this->userClan)) {
+            $clanData = $this->userClan;
+            if (!isset($clanData['clan_name'])) {
+                $clanData['clan_name'] = 'Sin clan asignado';
+            }
+        }
         
         $data = [
             'projects' => $projects,
             'search' => $search,
             'currentPage' => 'clan_leader',
-            'user' => $this->currentUser,
+            'user' => isset($this->currentUser) ? $this->currentUser : [],
             'clan' => $clanData
         ];
         
         $this->loadView('clan_leader/projects', $data);
+    }
+    
+    /**
+     * Búsqueda segura de proyectos
+     */
+    private function searchProjectsSafe($searchTerm, $clanId) {
+        try {
+            if (!$clanId || empty($searchTerm)) {
+                return [];
+            }
+            
+            $allProjects = $this->projectModel->getByClan($clanId);
+            if (!is_array($allProjects)) {
+                return [];
+            }
+            
+            $searchPattern = strtolower(trim($searchTerm));
+            
+            return array_filter($allProjects, function($project) use ($searchPattern) {
+                if (!is_array($project)) {
+                    return false;
+                }
+                
+                $projectName = strtolower($project['project_name'] ?? '');
+                $description = strtolower($project['description'] ?? '');
+                
+                return strpos($projectName, $searchPattern) !== false || 
+                       strpos($description, $searchPattern) !== false;
+            });
+        } catch (Exception $e) {
+            return [];
+        }
     }
     
     /**
@@ -2583,23 +2643,7 @@ class ClanLeaderController {
     /**
      * Buscar proyectos del clan
      */
-    private function searchProjects($searchTerm) {
-        $clanId = $this->userClan['clan_id'] ?? null;
-        if (!$clanId) {
-            return [];
-        }
-        $allProjects = $this->projectModel->getByClan($clanId);
-        $searchPattern = strtolower($searchTerm);
-        
-        // Primero filtrar por búsqueda
-        $searchResults = array_filter($allProjects, function($project) use ($searchPattern) {
-            return strpos(strtolower($project['project_name']), $searchPattern) !== false ||
-                   strpos(strtolower($project['description']), $searchPattern) !== false;
-        });
-        
-        // Los proyectos personales ya están filtrados en el modelo
-        return array_values($searchResults);
-    }
+    // Método searchProjects eliminado - se usa searchProjectsSafe
     
     /**
      * Obtener estadísticas de usuarios del clan

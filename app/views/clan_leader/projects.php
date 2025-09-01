@@ -34,7 +34,7 @@ ob_start();
             <form method="GET" action="?route=clan_leader/projects">
                 <div class="search-input">
                     <i class="fas fa-search"></i>
-                    <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" 
+                    <input type="text" name="search" value="<?php echo htmlspecialchars($search ?? ''); ?>" 
                            placeholder="Buscar proyectos...">
                 </div>
                 <button type="submit" class="btn-minimal">Buscar</button>
@@ -45,25 +45,26 @@ ob_start();
         </div>
     </header>
 
-    <!-- Lista de Proyectos - DEBUG ELIMINADO -->
+    <!-- Lista de Proyectos - SIN DEBUG -->
     <div class="content-minimal">
         <section class="projects-minimal">
-            <?php if (!empty($projects)): ?>
+            <?php if (!empty($projects) && is_array($projects)): ?>
                 <div class="projects-list">
                     <?php foreach ($projects as $project): ?>
+                        <?php if (!is_array($project)) continue; ?>
                         <div class="project-item">
                             <div class="project-info">
                                 <div class="project-icon">
                                     <i class="fas fa-project-diagram"></i>
                                 </div>
                                 <div class="project-details">
-                                    <div class="project-name"><?php echo htmlspecialchars($project['project_name']); ?></div>
-                                    <div class="project-description"><?php echo htmlspecialchars($project['description']); ?></div>
+                                    <div class="project-name"><?php echo htmlspecialchars($project['project_name'] ?? 'Sin nombre'); ?></div>
+                                    <div class="project-description"><?php echo htmlspecialchars($project['description'] ?? 'Sin descripción'); ?></div>
                                     <div class="project-meta">
-                                        <span class="project-status status-<?php echo $project['status']; ?>">
-                                            <?php echo ucfirst($project['status']); ?>
+                                        <span class="project-status status-<?php echo htmlspecialchars($project['status'] ?? 'open'); ?>">
+                                            <?php echo ucfirst($project['status'] ?? 'Open'); ?>
                                         </span>
-                                        <?php if ($project['kpi_points'] > 0): ?>
+                                        <?php if (isset($project['kpi_points']) && $project['kpi_points'] > 0): ?>
                                             <span class="project-kpi">
                                                 <i class="fas fa-chart-line"></i>
                                                 <?php echo number_format($project['kpi_points']); ?> puntos KPI
@@ -71,22 +72,22 @@ ob_start();
                                         <?php endif; ?>
                                         <span class="project-date">
                                             <i class="fas fa-calendar"></i>
-                                            <?php echo date('d/m/Y', strtotime($project['created_at'])); ?>
+                                            <?php echo isset($project['created_at']) ? date('d/m/Y', strtotime($project['created_at'])) : 'N/A'; ?>
                                         </span>
                                     </div>
                                 </div>
                             </div>
                             
                             <div class="project-actions">
-                                <button class="btn-minimal" onclick="openEditProjectModal(<?php echo $project['project_id']; ?>, '<?php echo htmlspecialchars($project['project_name']); ?>', '<?php echo htmlspecialchars($project['description']); ?>', '<?php echo $project['time_limit'] ?? ''; ?>')">
+                                <button class="btn-minimal" onclick="openEditProjectModal(<?php echo intval($project['project_id'] ?? 0); ?>, '<?php echo htmlspecialchars($project['project_name'] ?? ''); ?>', '<?php echo htmlspecialchars($project['description'] ?? ''); ?>', '<?php echo htmlspecialchars($project['time_limit'] ?? ''); ?>')">
                                     <i class="fas fa-edit"></i>
                                     Editar
                                 </button>
-                                <a href="?route=clan_leader/tasks&project_id=<?php echo $project['project_id']; ?>" class="btn-minimal">
+                                <a href="?route=clan_leader/tasks&project_id=<?php echo intval($project['project_id'] ?? 0); ?>" class="btn-minimal">
                                     <i class="fas fa-tasks"></i>
                                     Tareas
                                 </a>
-                                <button class="btn-minimal danger" onclick="deleteProject(<?php echo $project['project_id']; ?>, '<?php echo htmlspecialchars($project['project_name']); ?>')">
+                                <button class="btn-minimal danger" onclick="deleteProject(<?php echo intval($project['project_id'] ?? 0); ?>, '<?php echo htmlspecialchars($project['project_name'] ?? ''); ?>')">
                                     <i class="fas fa-trash"></i>
                                     Eliminar
                                 </button>
@@ -236,9 +237,9 @@ function closeCreateProjectModal() {
 
 // Funciones para el modal de editar proyecto
 function openEditProjectModal(projectId, projectName, description, timeLimit) {
-    document.getElementById('editProjectId').value = projectId;
-    document.getElementById('editProjectName').value = projectName;
-    document.getElementById('editDescription').value = description;
+    document.getElementById('editProjectId').value = projectId || '';
+    document.getElementById('editProjectName').value = projectName || '';
+    document.getElementById('editDescription').value = description || '';
     document.getElementById('editTimeLimit').value = timeLimit || '';
     document.getElementById('editProjectModal').style.display = 'flex';
 }
@@ -250,7 +251,7 @@ function closeEditProjectModal() {
 
 // Eliminar proyecto
 function deleteProject(projectId, projectName) {
-            confirmDelete(`¿Estás seguro de que quieres eliminar el proyecto "${projectName}"?`, () => {
+    if (confirm(`¿Estás seguro de que quieres eliminar el proyecto "${projectName}"?`)) {
         const formData = new FormData();
         formData.append('projectId', projectId);
         
@@ -262,19 +263,19 @@ function deleteProject(projectId, projectName) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                showToast(data.message, 'success');
+                alert('Proyecto eliminado exitosamente');
                 setTimeout(() => {
                     window.location.reload();
                 }, 1500);
             } else {
-                showToast(data.message, 'error');
+                alert(data.message || 'Error al eliminar proyecto');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            showToast('Error de conexión', 'error');
+            alert('Error de conexión');
         });
-    });
+    }
 }
 
 // Manejar envío del formulario de crear proyecto
@@ -291,18 +292,18 @@ document.getElementById('createProjectForm').addEventListener('submit', function
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            showToast(data.message, 'success');
+            alert('Proyecto creado exitosamente');
             closeCreateProjectModal();
             setTimeout(() => {
                 window.location.reload();
             }, 1500);
         } else {
-            showToast(data.message, 'error');
+            alert(data.message || 'Error al crear proyecto');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        showToast('Error de conexión', 'error');
+        alert('Error de conexión');
     });
 });
 
@@ -320,18 +321,18 @@ document.getElementById('editProjectForm').addEventListener('submit', function(e
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            showToast(data.message, 'success');
+            alert('Proyecto actualizado exitosamente');
             closeEditProjectModal();
             setTimeout(() => {
                 window.location.reload();
             }, 1500);
         } else {
-            showToast(data.message, 'error');
+            alert(data.message || 'Error al actualizar proyecto');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        showToast('Error de conexión', 'error');
+        alert('Error de conexión');
     });
 });
 
