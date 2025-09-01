@@ -8,3 +8,7 @@ php_value error_reporting 0
 # Configuración adicional de seguridad
 ServerTokens Prod
 ServerSignature Off
+
+# Forzar limpieza de output
+php_value auto_prepend_file none
+php_value auto_append_file none

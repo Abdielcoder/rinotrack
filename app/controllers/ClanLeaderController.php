@@ -482,7 +482,10 @@ class ClanLeaderController {
             'clan' => $clanData
         ];
         
-        $this->loadView('clan_leader/projects', $data);
+        // Forzar vista limpia sin layout
+        extract($data);
+        require __DIR__ . '/../views/clan_leader/projects.php';
+        exit(); // Terminar aquí para evitar cualquier output adicional
     }
     
     /**
