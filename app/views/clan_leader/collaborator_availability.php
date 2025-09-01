@@ -301,22 +301,22 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 .view-toggle .btn-minimal:hover {
-    background: rgba(13, 110, 253, 0.1);
-    color: #0d6efd;
+    background: rgba(25, 44, 94, 0.1);
+    color: #192c5e;
     transform: translateY(-1px);
 }
 
 .view-toggle .btn-minimal.active {
-    background: #0d6efd;
+    background: #192c5e;
     color: white;
-    box-shadow: 0 2px 8px rgba(13, 110, 253, 0.3);
+    box-shadow: 0 2px 8px rgba(25, 44, 94, 0.3);
     transform: translateY(-1px);
 }
 
 .view-toggle .btn-minimal.active:hover {
-    background: #0b5ed7;
+    background: #0f1e3d;
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(13, 110, 253, 0.4);
+    box-shadow: 0 4px 12px rgba(25, 44, 94, 0.4);
 }
 
 .view-toggle .btn-minimal i {
@@ -341,8 +341,8 @@ document.addEventListener('DOMContentLoaded', function() {
     left: -100%;
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-    transition: left 0.5s;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    transition: left 0.6s ease;
 }
 
 .view-toggle .btn-minimal:hover::before {
@@ -361,6 +361,35 @@ document.addEventListener('DOMContentLoaded', function() {
     gap: 10px;
 }
 
+/* Efectos adicionales para mejor UX */
+.view-toggle .btn-minimal {
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.view-toggle .btn-minimal.active {
+    background: linear-gradient(135deg, #192c5e 0%, #0f1e3d 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.view-toggle .btn-minimal.active::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(255,255,255,0.05) 100%);
+    border-radius: inherit;
+    pointer-events: none;
+}
+
+/* Mejorar la transición del foco */
+.view-toggle .btn-minimal:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(25, 44, 94, 0.2);
+}
+
 /* Responsive para pantallas pequeñas */
 @media (max-width: 768px) {
     .view-toggle .btn-minimal {
@@ -375,6 +404,11 @@ document.addEventListener('DOMContentLoaded', function() {
     
     .view-toggle .btn-minimal i {
         font-size: 18px;
+    }
+    
+    .view-toggle {
+        gap: 2px;
+        padding: 2px;
     }
 }
 </style>
