@@ -417,10 +417,11 @@ class ClanLeaderController {
      * Gestión de proyectos del clan
      */
     public function projects() {
-        error_log("=== MÉTODO PROJECTS INICIADO ===");
-        error_log("Usuario actual: " . json_encode($this->currentUser));
-        error_log("Clan del usuario: " . json_encode($this->userClan));
-        error_log("¿Tiene acceso de líder?: " . ($this->hasClanLeaderAccess() ? 'SÍ' : 'NO'));
+        // Logs de debug comentados para producción
+        // error_log("=== MÉTODO PROJECTS INICIADO ===");
+        // error_log("Usuario actual: " . json_encode($this->currentUser));
+        // error_log("Clan del usuario: " . json_encode($this->userClan));
+        // error_log("¿Tiene acceso de líder?: " . ($this->hasClanLeaderAccess() ? 'SÍ' : 'NO'));
         
         $search = $_GET['search'] ?? '';
         
@@ -432,20 +433,21 @@ class ClanLeaderController {
         // Los proyectos personales ya están filtrados en el modelo
         $projects = $allProjects;
         
-        error_log("Total de proyectos después del filtro: " . count($projects));
-        error_log("=== FIN DEL FILTRADO ===");
+        // Logs de debug comentados para producción
+        // error_log("Total de proyectos después del filtro: " . count($projects));
+        // error_log("=== FIN DEL FILTRADO ===");
         
-        // Log del resultado del filtrado
+        // Log del resultado del filtrado - comentado para producción
         $totalProjects = count($allProjects);
         $filteredProjects = count($projects);
-        error_log("Filtrado de proyectos - Total: $totalProjects, Filtrados: $filteredProjects");
+        // error_log("Filtrado de proyectos - Total: $totalProjects, Filtrados: $filteredProjects");
         
-        // Log detallado de cada proyecto para debugging
-        foreach ($allProjects as $project) {
-            $isPersonal = ($project['is_personal'] ?? 0) == 1;
-            $projectName = $project['project_name'] ?? 'N/A';
-            error_log("DEBUG Proyecto: '$projectName' - ID: {$project['project_id']}, is_personal: " . ($isPersonal ? 'SÍ' : 'NO') . ", Clan: {$project['clan_id']}");
-        }
+        // Log detallado de cada proyecto - comentado para producción
+        // foreach ($allProjects as $project) {
+        //     $isPersonal = ($project['is_personal'] ?? 0) == 1;
+        //     $projectName = $project['project_name'] ?? 'N/A';
+        //     error_log("DEBUG Proyecto: '$projectName' - ID: {$project['project_id']}, is_personal: " . ($isPersonal ? 'SÍ' : 'NO') . ", Clan: {$project['clan_id']}");
+        // }
         
         // Reindexar el array después del filtro
         $projects = array_values($projects);
