@@ -1,0 +1,19 @@
+DEBUG PARA AVAILABILITY - <?php echo date('Y-m-d H:i:s'); ?>
+
+Se han agregado logs de debug para identificar por qué se redirige a dashboard:
+
+1. collaboratorAvailability: Usuario no autenticado
+2. collaboratorAvailability: Usuario sin clan o clan_id faltante  
+3. collaboratorAvailability: Usuario no tiene permisos (role_id: X)
+4. collaboratorAvailability: Todas las verificaciones pasaron, mostrando página
+
+Logs incluidos:
+- Usuario actual (JSON)
+- UserClan (JSON) 
+- Role ID del usuario
+
+Roles permitidos ahora:
+- role_id = 1 (Admin)
+- role_id = 2 (Clan Leader)
+
+Revisa los logs del servidor para ver cuál es la causa exacta.

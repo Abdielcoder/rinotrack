@@ -3030,21 +3030,34 @@ class ClanLeaderController {
         
         // Verificar autenticación de manera simple
         if (!$this->currentUser) {
+            error_log("collaboratorAvailability: Usuario no autenticado");
             Utils::redirect('login');
             return;
         }
         
+        // Debug: mostrar información del usuario
+        error_log("collaboratorAvailability: Usuario actual: " . json_encode($this->currentUser));
+        error_log("collaboratorAvailability: UserClan: " . json_encode($this->userClan));
+        
         // Verificar que el usuario tenga clan y rol apropiado
         if (!$this->userClan || !isset($this->userClan['clan_id'])) {
+            error_log("collaboratorAvailability: Usuario sin clan o clan_id faltante");
             Utils::redirect('dashboard');
             return;
         }
         
-        // Verificar rol de líder de clan (role_id 2 = Clan Leader)
-        if (($this->currentUser['role_id'] ?? 0) != 2) {
+        // Verificar rol de líder de clan (role_id 2 = Clan Leader o role_id 1 = Admin)
+        $userRole = $this->currentUser['role_id'] ?? 0;
+        error_log("collaboratorAvailability: Role ID del usuario: " . $userRole);
+        
+        // Permitir acceso a Clan Leader (2) y Admin (1)
+        if ($userRole != 2 && $userRole != 1) {
+            error_log("collaboratorAvailability: Usuario no tiene permisos (role_id: $userRole)");
             Utils::redirect('dashboard');
             return;
         }
+        
+        error_log("collaboratorAvailability: Todas las verificaciones pasaron, mostrando página");
         
         // Obtener datos de disponibilidad
         $availability_data = [];
