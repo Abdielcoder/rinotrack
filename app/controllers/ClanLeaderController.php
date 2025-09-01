@@ -1,5 +1,10 @@
 <?php
 
+// SUPRESIÓN TOTAL DE ERRORES Y WARNINGS PARA ESTE CONTROLADOR
+ini_set('display_errors', 0);
+ini_set('display_startup_errors', 0);
+error_reporting(0);
+
 class ClanLeaderController {
     private $auth;
     private $userModel;
@@ -2579,7 +2584,11 @@ class ClanLeaderController {
      * Buscar proyectos del clan
      */
     private function searchProjects($searchTerm) {
-        $allProjects = $this->projectModel->getByClan($this->userClan['clan_id']);
+        $clanId = $this->userClan['clan_id'] ?? null;
+        if (!$clanId) {
+            return [];
+        }
+        $allProjects = $this->projectModel->getByClan($clanId);
         $searchPattern = strtolower($searchTerm);
         
         // Primero filtrar por búsqueda

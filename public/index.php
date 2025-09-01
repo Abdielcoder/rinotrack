@@ -3,8 +3,12 @@
  * Router principal de RinoTrack - Versión simplificada
  */
 
-// La configuración de errores se maneja en config/app.php
-// No forzar display_errors aquí
+// SUPRESIÓN TOTAL Y DEFINITIVA DE ERRORES PARA PRODUCCIÓN
+ini_set('display_errors', 0);
+ini_set('display_startup_errors', 0);
+ini_set('log_errors', 1);
+ini_set('html_errors', 0);
+error_reporting(0);
 
 // Verificar que los directorios principales existen
 $requiredDirs = [

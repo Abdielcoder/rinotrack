@@ -1,6 +1,8 @@
 <?php
-// Suprimir warnings y notices para esta vista
-error_reporting(E_ERROR | E_PARSE);
+// SUPRESIÓN TOTAL DE ERRORES Y WARNINGS PARA ESTA VISTA
+ini_set('display_errors', 0);
+ini_set('display_startup_errors', 0);
+error_reporting(0);
 
 // Guardar el contenido en una variable
 ob_start();

@@ -1,0 +1,10 @@
+# SUPRESIÓN TOTAL DE ERRORES Y WARNINGS EN PRODUCCIÓN
+php_flag display_errors Off
+php_flag display_startup_errors Off
+php_flag log_errors On
+php_flag html_errors Off
+php_value error_reporting 0
+
+# Configuración adicional de seguridad
+ServerTokens Prod
+ServerSignature Off
