@@ -40,7 +40,7 @@ ob_start();
         </div>
     </header>
 
-    <!-- Lista de Proyectos -->
+    <!-- Lista de Proyectos - DEBUG ELIMINADO -->
     <div class="content-minimal">
         <section class="projects-minimal">
             <?php if (!empty($projects)): ?>
