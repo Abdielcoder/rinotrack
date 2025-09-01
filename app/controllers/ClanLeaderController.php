@@ -3111,6 +3111,9 @@ class ClanLeaderController {
             }
         }
         
+        // Obtener proyectos del clan para mostrar en la vista
+        $projects = $this->projectModel->getByClan($this->userClan['clan_id']) ?: [];
+        
         $data = [
             'availability_data' => $availability_data,
             'summary' => $summary,
