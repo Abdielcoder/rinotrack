@@ -3028,12 +3028,22 @@ class ClanLeaderController {
     public function collaboratorAvailability() {
         $view = $_GET['view'] ?? 'calendar'; // calendar o gantt
         
-        // Verificar autenticación
-        $this->requireAuth();
+        // Verificar autenticación de manera simple
+        if (!$this->currentUser) {
+            Utils::redirect('login');
+            return;
+        }
         
-        // Verificar acceso de líder de clan
-        if (!$this->hasClanLeaderAccess()) {
+        // Verificar que el usuario tenga clan y rol apropiado
+        if (!$this->userClan || !isset($this->userClan['clan_id'])) {
             Utils::redirect('dashboard');
+            return;
+        }
+        
+        // Verificar rol de líder de clan (role_id 2 = Clan Leader)
+        if (($this->currentUser['role_id'] ?? 0) != 2) {
+            Utils::redirect('dashboard');
+            return;
         }
         
         // Obtener datos de disponibilidad
@@ -3112,7 +3122,12 @@ class ClanLeaderController {
         }
         
         // Obtener proyectos del clan para mostrar en la vista
-        $projects = $this->projectModel->getByClan($this->userClan['clan_id']) ?: [];
+        try {
+            $projects = $this->projectModel->getByClan($this->userClan['clan_id']) ?: [];
+        } catch (Exception $e) {
+            error_log("Error obteniendo proyectos: " . $e->getMessage());
+            $projects = [];
+        }
         
         $data = [
             'availability_data' => $availability_data,
