@@ -110,7 +110,11 @@
         <?php endforeach; ?>
     <?php endif; ?>
 </head>
-<body>
+<body<?php 
+    $routeTmp = $_GET['route'] ?? '';
+    $isLeaderTmp = (isset($currentPage) && $currentPage === 'clan_leader') || (strpos($routeTmp, 'clan_leader') === 0);
+    echo $isLeaderTmp ? ' class="has-leader-nav"' : '';
+?>>
     <?php 
     $route = $_GET['route'] ?? '';
     $isLeaderPage = (isset($currentPage) && $currentPage === 'clan_leader') || (strpos($route, 'clan_leader') === 0);
@@ -135,7 +139,8 @@
             </nav>
         </div>
         <style>
-        .leader-nav { position: sticky; top: 0; z-index: 1000; background: #ffffff; border-bottom: 1px solid #e5e7eb; width: 100%; }
+        .leader-nav { position: fixed; top: 0; left: 0; z-index: 1100; background: #ffffff; border-bottom: 1px solid #e5e7eb; width: 100%; }
+        body.has-leader-nav { padding-top: 58px; }
         .leader-nav__inner { max-width: 1200px; margin: 0 auto; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; }
         .leader-nav__brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; }
         .leader-nav__logo { width: 28px; height: 28px; }
