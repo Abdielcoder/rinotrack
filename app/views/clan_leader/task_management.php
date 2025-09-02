@@ -22,7 +22,7 @@ function getActiveTasksCount($userId) {
     <!-- Header de Gestión de Tareas -->
     <header class="task-management-header">
         <div class="header-content">
-            <div class="header-left">
+            <div class="header-left" style="margin-top: 100px;">
                 <div class="task-icon">
                     <i class="fas fa-clipboard-check"></i>
                 </div>
@@ -32,7 +32,7 @@ function getActiveTasksCount($userId) {
                 </div>
             </div>
             
-            <div class="header-actions">
+            <div class="header-actions" style="margin-top: 100px;">
                 <button class="btn-minimal secondary" onclick="closeTaskManagement()">
                     <i class="fas fa-times"></i>
                     Cerrar
