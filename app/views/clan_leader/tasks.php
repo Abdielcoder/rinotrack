@@ -488,7 +488,7 @@ ob_start();
 
 .btn-create {
     background: #1e3a8a;
-    color: #ffffff;
+    color: #ffffff !important;
     padding: 0.6rem 1.1rem;
     border-radius: 10px;
     text-decoration: none;
@@ -504,7 +504,7 @@ ob_start();
     background: #1e40af;
     border-color: #1e40af;
     transform: translateY(-1px);
-    color: #ffffff;
+    color: #ffffff !important;
     text-decoration: none;
 }
 
