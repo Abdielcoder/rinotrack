@@ -597,7 +597,7 @@ ob_start();
 .projects-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 1.5rem;
+    gap: 1.1rem;
 }
 
 .project-card {
