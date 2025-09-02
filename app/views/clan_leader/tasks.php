@@ -321,6 +321,21 @@ ob_start();
                                         <a href="<?= APP_URL ?>?route=clan_leader/tasks&action=edit&task_id=<?= $task['task_id'] ?>" class="btn-action btn-edit" title="Editar tarea">
                                             <i class="fas fa-edit"></i>
                                         </a>
+                                        <?php 
+                                            $isPersonal = false;
+                                            if (isset($task['is_personal'])) {
+                                                $isPersonal = ((int)$task['is_personal'] === 1);
+                                            } elseif (isset($task['project_is_personal'])) {
+                                                $isPersonal = ((int)$task['project_is_personal'] === 1);
+                                            } elseif (isset($task['project_name']) && $task['project_name'] === 'Tareas Personales') {
+                                                $isPersonal = true;
+                                            }
+                                        ?>
+                                        <?php if ($isPersonal): ?>
+                                        <button type="button" onclick="deleteTask(<?= (int)$task['task_id'] ?>)" class="btn-action btn-delete" title="Eliminar tarea">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                        <?php endif; ?>
                                     </div>
                                 </td>
                             </tr>
@@ -1727,6 +1742,17 @@ ob_start();
 .btn-action.btn-edit:hover {
     background: #e5e7eb;
     color: #374151;
+    transform: translateY(-1px);
+}
+
+.btn-action.btn-delete {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.btn-action.btn-delete:hover {
+    background: #fecaca;
+    color: #b91c1c;
     transform: translateY(-1px);
 }
 
