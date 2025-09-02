@@ -55,7 +55,8 @@
 <body>
     <?php 
     $route = $_GET['route'] ?? '';
-    if (isset($currentPage) && $currentPage === 'clan_leader'): ?>
+    $isLeaderPage = (isset($currentPage) && $currentPage === 'clan_leader') || (strpos($route, 'clan_leader') === 0);
+    if ($isLeaderPage): ?>
     <header class="leader-nav">
         <div class="leader-nav__inner">
             <a href="?route=clan_leader" class="leader-nav__brand">
