@@ -1736,6 +1736,65 @@ class ClanLeaderController {
     }
     
     /**
+     * Actualizar progreso de tarea principal
+     */
+    public function updateTaskProgress() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
+        }
+        
+        $taskId = (int)($_POST['task_id'] ?? 0);
+        $completionPercentage = isset($_POST['completion_percentage']) ? (float)$_POST['completion_percentage'] : null;
+        
+        if ($taskId <= 0 || $completionPercentage === null) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Datos inválidos'], 400);
+        }
+        
+        try {
+            // Verificar que la tarea pertenece al clan
+            $stmt = $this->db->prepare("
+                SELECT t.*, p.clan_id
+                FROM Tasks t
+                JOIN Projects p ON t.project_id = p.project_id
+                WHERE t.task_id = ?
+            ");
+            $stmt->execute([$taskId]);
+            $task = $stmt->fetch();
+            
+            if (!$task) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Tarea no encontrada'], 404);
+            }
+            
+            if ($task['clan_id'] != $this->userClan['clan_id']) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+            }
+            
+            // Actualizar solo el progreso (sin cambiar el estado)
+            $result = $this->taskModel->update(
+                $taskId,
+                $task['task_name'],
+                $task['description'],
+                $task['assigned_to_user_id'],
+                $task['priority'],
+                $task['due_date'],
+                $task['assigned_percentage'],
+                null, // no cambiar estado
+                $completionPercentage
+            );
+            
+            if ($result) {
+                Utils::jsonResponse(['success' => true, 'message' => 'Progreso actualizado exitosamente']);
+            } else {
+                Utils::jsonResponse(['success' => false, 'message' => 'Error al actualizar progreso'], 500);
+            }
+            
+        } catch (Exception $e) {
+            error_log("Error en updateTaskProgress: " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor'], 500);
+        }
+    }
+    
+    /**
      * Actualizar progreso de subtarea
      */
     public function updateSubtaskProgress() {

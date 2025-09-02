@@ -291,11 +291,26 @@ ob_start();
                                     </span>
                                 </td>
                                 <td class="td-progress">
-                                    <div class="progress-container">
-                                        <div class="progress-bar">
-                                            <div class="progress-fill" style="width: <?= ($task['status'] === 'completed') ? '100' : ($task['completion_percentage'] ?? 0) ?>%;"></div>
+                                    <div class="progress-container" style="display: flex; align-items: center; gap: 10px;">
+                                        <div class="progress-bar-clickable" 
+                                             style="flex: 1; height: 20px; background: #e5e7eb; border-radius: 10px; cursor: pointer; position: relative; overflow: visible;"
+                                             onclick="updateTaskProgressFromClick(event, <?= $task['task_id'] ?>)"
+                                             data-task-id="<?= $task['task_id'] ?>">
+                                            <div class="progress-fill" 
+                                                 style="height: 100%; background: linear-gradient(90deg, #10b981, #22c55e); border-radius: 10px; width: <?= ($task['status'] === 'completed') ? '100' : ($task['completion_percentage'] ?? 0) ?>%; transition: width 0.3s ease;"></div>
+                                            <span class="progress-text" 
+                                                  style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 11px; font-weight: 600; color: #374151; text-shadow: 0 0 3px white; white-space: nowrap;">
+                                                <?= ($task['status'] === 'completed') ? '100' : intval($task['completion_percentage'] ?? 0) ?>%
+                                            </span>
                                         </div>
-                                        <span class="progress-text"><?= ($task['status'] === 'completed') ? '100' : ($task['completion_percentage'] ?? 0) ?>%</span>
+                                        <input type="range" 
+                                               class="task-progress-slider" 
+                                               data-task-id="<?= $task['task_id'] ?>"
+                                               min="0" 
+                                               max="100" 
+                                               value="<?= ($task['status'] === 'completed') ? '100' : intval($task['completion_percentage'] ?? 0) ?>" 
+                                               oninput="updateTaskProgress(<?= $task['task_id'] ?>, this.value)"
+                                               style="width: 80px; cursor: pointer;">
                                     </div>
                                 </td>
                                 <td class="td-actions">
@@ -1474,7 +1489,7 @@ ob_start();
 }
 
 .th-progress, .td-progress {
-    width: 120px;
+    width: 200px;
     text-align: center;
 }
 
@@ -1960,6 +1975,65 @@ ob_start();
     color: #dc2626;
 }
 
+/* Estilos para el slider de progreso */
+.task-progress-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 6px;
+    background: #e5e7eb;
+    border-radius: 3px;
+    outline: none;
+    transition: opacity 0.2s;
+}
+
+.task-progress-slider:hover {
+    opacity: 0.8;
+}
+
+.task-progress-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    background: #10b981;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: all 0.2s ease;
+}
+
+.task-progress-slider::-webkit-slider-thumb:hover {
+    background: #059669;
+    transform: scale(1.2);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+}
+
+.task-progress-slider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    background: #10b981;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: all 0.2s ease;
+    border: none;
+}
+
+.task-progress-slider::-moz-range-thumb:hover {
+    background: #059669;
+    transform: scale(1.2);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+}
+
+.progress-bar-clickable {
+    transition: all 0.2s ease;
+}
+
+.progress-bar-clickable:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
 /* Estilos para paginación */
 .pagination-container {
     margin-top: 2rem;
@@ -2386,6 +2460,62 @@ function toggleAllTasks(checkbox) {
             // No llamamos a toggleTaskStatus aquí para evitar múltiples llamadas al servidor
         }
     });
+}
+
+// Función para actualizar el progreso de una tarea desde el slider
+function updateTaskProgress(taskId, newProgress) {
+    console.log('Updating task progress:', taskId, newProgress);
+    
+    // Actualizar la UI inmediatamente
+    const progressBar = document.querySelector(`.progress-bar-clickable[data-task-id="${taskId}"] .progress-fill`);
+    const progressText = document.querySelector(`.progress-bar-clickable[data-task-id="${taskId}"] .progress-text`);
+    
+    if (progressBar) {
+        progressBar.style.width = newProgress + '%';
+    }
+    if (progressText) {
+        progressText.textContent = newProgress + '%';
+    }
+    
+    // Enviar al servidor
+    fetch('?route=clan_leader/update-task-progress', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `task_id=${taskId}&completion_percentage=${newProgress}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast('Progreso actualizado', 'success');
+        } else {
+            showToast('Error al actualizar progreso: ' + data.message, 'error');
+            // Revertir cambios si hay error
+            location.reload();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Error al actualizar progreso', 'error');
+    });
+}
+
+// Función para actualizar el progreso haciendo click en la barra
+function updateTaskProgressFromClick(event, taskId) {
+    const progressBar = event.currentTarget;
+    const rect = progressBar.getBoundingClientRect();
+    const clickX = event.clientX - rect.left;
+    const percentage = Math.round((clickX / rect.width) * 100);
+    
+    if (percentage >= 0 && percentage <= 100) {
+        // Actualizar el slider también
+        const slider = document.querySelector(`.task-progress-slider[data-task-id="${taskId}"]`);
+        if (slider) {
+            slider.value = percentage;
+        }
+        updateTaskProgress(taskId, percentage);
+    }
 }
 
 // Timestamp para forzar recarga: <?= time() ?>

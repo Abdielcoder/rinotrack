@@ -532,6 +532,11 @@ try {
         $controller->updateSubtaskProgress();
         break;
         
+    case 'clan_leader/update-task-progress':
+        $controller = new ClanLeaderController();
+        $controller->updateTaskProgress();
+        break;
+        
     case 'clan_leader/get-available-labels':
         $controller = new ClanLeaderController();
         $controller->getAvailableLabels();
