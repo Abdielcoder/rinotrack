@@ -135,12 +135,12 @@
             </nav>
         </div>
         <style>
-        .leader-nav { position: sticky; top: 0; z-index: 1000; background: #ffffff; border-bottom: 1px solid #e5e7eb; }
-        .leader-nav__inner { max-width: 1200px; margin: 0 auto; padding: 10px 16px; display: flex; align-items: center; gap: 12px; }
+        .leader-nav { position: sticky; top: 0; z-index: 1000; background: #ffffff; border-bottom: 1px solid #e5e7eb; width: 100%; }
+        .leader-nav__inner { max-width: 1200px; margin: 0 auto; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; }
         .leader-nav__brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; }
         .leader-nav__logo { width: 28px; height: 28px; }
         .leader-nav__title { font-weight: 700; color: #1e3a8a; }
-        .leader-nav__menu { display: flex; align-items: center; gap: 8px; margin-left: auto; flex-wrap: wrap; }
+        .leader-nav__menu { display: flex !important; align-items: center; gap: 8px; margin-left: auto; flex-wrap: nowrap; }
         .leader-nav__link { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 10px; text-decoration: none; color: #374151; font-weight: 600; transition: all .2s ease; border: 1px solid transparent; }
         .leader-nav__link i { color: #1e3a8a; }
         .leader-nav__link:hover { background: #eef2ff; border-color: #c7d2fe; color: #1e3a8a; }
@@ -149,8 +149,8 @@
         .leader-nav__toggle { display: none; margin-left: auto; background: #1e3a8a; color: #ffffff; border: 1px solid #1e3a8a; width: 36px; height: 36px; border-radius: 8px; align-items: center; justify-content: center; }
         @media (max-width: 900px) {
             .leader-nav__toggle { display: inline-flex; }
-            .leader-nav__menu { display: none; position: absolute; left: 0; right: 0; top: 54px; background: #ffffff; border-bottom: 1px solid #e5e7eb; padding: 8px 12px 12px; }
-            .leader-nav.open .leader-nav__menu { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+            .leader-nav__menu { display: none !important; position: absolute; left: 0; right: 0; top: 54px; background: #ffffff; border-bottom: 1px solid #e5e7eb; padding: 8px 12px 12px; }
+            .leader-nav.open .leader-nav__menu { display: grid !important; grid-template-columns: 1fr 1fr; gap: 8px; }
             .leader-nav__link { justify-content: center; }
         }
         @media (max-width: 520px) {
