@@ -5,12 +5,7 @@ ob_start();
 <div class="profile-container">
     <header class="profile-header">
         <div class="header-content">
-            <div class="back-link">
-                <a href="?route=clan_leader" class="back-btn">
-                    <i class="fas fa-arrow-left"></i>
-                    <span>Volver al Dashboard</span>
-                </a>
-            </div>
+            
             <div class="header-title">
                 <h1>Mi Perfil (Líder)</h1>
                 <p>Gestiona tu información personal y configuración</p>
