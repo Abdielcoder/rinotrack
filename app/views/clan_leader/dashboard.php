@@ -14,10 +14,6 @@ ob_start();
             </div>
             
             <div class="actions-minimal">
-                <a href="?route=clan_leader/kpi-dashboard" class="btn-minimal primary">
-                    <i class="fas fa-chart-line"></i>
-                    KPIs del Clan
-                </a>
                 <a href="?route=logout" class="btn-minimal danger" title="Cerrar sesión">
                     <i class="fas fa-sign-out-alt"></i>
                     Cerrar Sesión

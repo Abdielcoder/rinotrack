@@ -77,7 +77,17 @@
                 <a href="?route=clan_leader/tasks" class="leader-nav__link <?php echo (strpos($route, 'clan_leader/tasks') === 0 || $route === 'clan_leader/get-task-details') ? 'active' : ''; ?>"><i class="fas fa-tasks"></i><span>Tareas</span></a>
                 <a href="?route=clan_leader/kpi-dashboard" class="leader-nav__link <?php echo ($route === 'clan_leader/kpi-dashboard') ? 'active' : ''; ?>"><i class="fas fa-chart-line"></i><span>KPI</span></a>
                 <a href="?route=clan_leader/collaborator-availability" class="leader-nav__link <?php echo ($route === 'clan_leader/collaborator-availability') ? 'active' : ''; ?>"><i class="fas fa-calendar-alt"></i><span>Disponibilidad</span></a>
-                <a href="?route=clan_leader/profile" class="leader-nav__link <?php echo ($route === 'clan_leader/profile') ? 'active' : ''; ?>"><i class="fas fa-user-circle"></i><span>Perfil</span></a>
+                <?php $avatar = $user['avatar_path'] ?? ($user['profile_picture'] ?? ''); $initial = strtoupper(substr($user['full_name'] ?? ($user['username'] ?? 'U'), 0, 1)); ?>
+                <a href="?route=clan_leader/profile" class="leader-nav__link leader-nav__profile <?php echo ($route === 'clan_leader/profile') ? 'active' : ''; ?>" title="Perfil">
+                    <span class="leader-avatar">
+                        <?php if (!empty($avatar)): ?>
+                            <img src="<?php echo Utils::asset($avatar); ?>" alt="Avatar"/>
+                        <?php else: ?>
+                            <span class="leader-initial"><?php echo $initial; ?></span>
+                        <?php endif; ?>
+                    </span>
+                    <span>Perfil</span>
+                </a>
             </nav>
         </div>
         <style>
@@ -93,6 +103,10 @@
         .leader-nav__link:hover { background: #eef2ff; border-color: #c7d2fe; color: #1e3a8a; }
         .leader-nav__link.active { background: #1e3a8a; color: #ffffff; border-color: #1e3a8a; }
         .leader-nav__link.active i, .leader-nav__link.active span { color: #ffffff; }
+        .leader-nav__profile { padding: 6px 10px; }
+        .leader-avatar { width: 28px; height: 28px; border-radius: 50%; overflow: hidden; border: 2px solid #c7d2fe; background: #1e3a8a; display: inline-flex; align-items: center; justify-content: center; }
+        .leader-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .leader-initial { color: #fff; font-weight: 700; font-size: 0.9rem; line-height: 1; }
         .leader-nav__toggle { display: none; margin-left: auto; background: #1e3a8a; color: #ffffff; border: 1px solid #1e3a8a; width: 36px; height: 36px; border-radius: 8px; align-items: center; justify-content: center; }
         @media (max-width: 900px) {
             .leader-nav__toggle { display: inline-flex; }
