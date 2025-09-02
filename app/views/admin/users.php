@@ -307,19 +307,39 @@ document.addEventListener("DOMContentLoaded", function() {
             submitText.style.display = "none";
             submitLoader.style.display = "inline-block";
             
+            // Validación en cliente para evitar 400 por datos obvios inválidos
+            const usernameVal = (document.getElementById("username")?.value || "").trim();
+            const emailVal = (document.getElementById("email")?.value || "").trim();
+            const fullNameVal = (document.getElementById("fullName")?.value || "").trim();
+            const roleIdVal = (document.getElementById("roleId")?.value || "").trim();
+            const passwordVal = (document.getElementById("password")?.value || "").trim();
+
+            const clientErrors = [];
+            if (!usernameVal || usernameVal.length < 3) clientErrors.push("El nombre de usuario debe tener al menos 3 caracteres");
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailVal || !emailRegex.test(emailVal)) clientErrors.push("Debe proporcionar un email válido");
+            if (!fullNameVal) clientErrors.push("El nombre completo es requerido");
+            if (!roleIdVal) clientErrors.push("Debe seleccionar un rol válido");
+            if (!isEditMode) {
+                if (!passwordVal || passwordVal.length < 6) clientErrors.push("La contraseña debe tener al menos 6 caracteres");
+            }
+
+            if (clientErrors.length > 0) {
+                alert("Errores de validación:\n" + clientErrors.map(e => `- ${e}`).join("\n"));
+                submitBtn.disabled = false;
+                submitText.style.display = "inline";
+                submitLoader.style.display = "none";
+                return;
+            }
+
             const formData = new FormData(this);
             const url = isEditMode ? "?route=admin/update-user" : "?route=admin/create-user";
-            
+
             fetch(url, {
                 method: "POST",
                 body: formData
             })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                return response.json();
-            })
+            .then(response => response.json().catch(() => ({ success: false, message: "Respuesta inválida del servidor" })))
             .then(data => {
                 // Debug: Mostrar información completa en consola
                 console.log("=== RESPUESTA DEL SERVIDOR ===");
