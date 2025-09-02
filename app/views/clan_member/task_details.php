@@ -567,11 +567,32 @@ function noPermissionModal(){
 
 // Funciones para subtareas
 function updateSubtaskStatus(subtaskId, status) {
+  console.log('=== UPDATE SUBTASK STATUS (MEMBER) ===');
+  console.log('Subtask ID:', subtaskId);
+  console.log('New Status:', status);
+  
   // Determinar porcentaje automático basado en el estado
   // Obtener el porcentaje actual para no modificarlo si se selecciona 'pending'
   const subtaskItem = document.querySelector(`[data-subtask-id="${subtaskId}"]`);
-  const currentProgressText = subtaskItem.querySelector('.progress-percentage').textContent;
+  const progressFill = subtaskItem.querySelector('.progress-fill');
+  const progressPercentage = subtaskItem.querySelector('.progress-percentage');
+  const currentProgressText = progressPercentage.textContent;
   const currentProgress = parseInt(currentProgressText.replace('%', ''));
+  
+  console.log('Current progress text:', currentProgressText);
+  console.log('Current progress parsed:', currentProgress);
+  
+  // CRÍTICO: Si es pending, preservar inmediatamente el valor actual para evitar animación
+  if (status === 'pending') {
+    console.log('PENDING STATUS DETECTED - Preserving current progress immediately');
+    // Forzar que la barra mantenga su valor actual
+    if (progressFill) {
+      progressFill.style.width = currentProgress + '%';
+    }
+    if (progressPercentage) {
+      progressPercentage.textContent = currentProgress + '%';
+    }
+  }
   
   let completion_percentage = currentProgress; // Mantener el actual por defecto
   if (status === 'in_progress') {
@@ -580,6 +601,8 @@ function updateSubtaskStatus(subtaskId, status) {
     completion_percentage = 100;
   } 
   // Nota: Para 'pending' mantenemos el porcentaje actual sin cambios
+  
+  console.log('Calculated completion_percentage:', completion_percentage);
   
   // Preparar el cuerpo de la petición
   let requestBody = `subtask_id=${subtaskId}&status=${status}`;
@@ -610,14 +633,19 @@ function updateSubtaskStatus(subtaskId, status) {
         
         // Actualizar la barra de progreso solo si NO es 'pending'
         if (status !== 'pending') {
+          console.log('Updating progress bar for non-pending status');
           const progressFill = subtaskItem.querySelector('.progress-fill');
           const percentageSpan = subtaskItem.querySelector('.progress-percentage');
           if (progressFill) {
             progressFill.style.width = completion_percentage + '%';
+            console.log('Progress bar width set to:', completion_percentage + '%');
           }
           if (percentageSpan) {
             percentageSpan.textContent = completion_percentage + '%';
+            console.log('Progress text set to:', completion_percentage + '%');
           }
+        } else {
+          console.log('NOT updating progress bar for pending status - preserving current value');
         }
         
         // Actualizar el estado en los controles
