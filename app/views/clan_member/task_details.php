@@ -567,29 +567,11 @@ function noPermissionModal(){
 
 // Funciones para subtareas
 function updateSubtaskStatus(subtaskId, status) {
-  // Determinar porcentaje automático basado en el estado
-  // Obtener el porcentaje actual para no modificarlo si se selecciona 'pending'
+  // NO vincular el estado con el porcentaje - se manejan independientemente
   const subtaskItem = document.querySelector(`[data-subtask-id="${subtaskId}"]`);
-  const currentProgressText = subtaskItem.querySelector('.progress-percentage').textContent;
-  const currentProgress = parseInt(currentProgressText.replace('%', ''));
   
-  // Lógica correcta de transiciones de estado
-  let completion_percentage = currentProgress; // Mantener el actual por defecto
-  
-  if (status === 'pending') {
-    // PENDIENTE: Siempre mantiene el progreso actual (no cambia)
-    completion_percentage = currentProgress;
-  } else if (status === 'in_progress') {
-    // EN PROGRESO: Siempre va a 50%
-    completion_percentage = 50;
-  } else if (status === 'completed') {
-    // COMPLETADA: Siempre va a 100%
-    completion_percentage = 100;
-  }
-  
-  // Preparar el cuerpo de la petición
-  // Siempre enviar completion_percentage porque puede cambiar en cualquier transición
-  let requestBody = `subtask_id=${subtaskId}&status=${status}&completion_percentage=${completion_percentage}`;
+  // Preparar el cuerpo de la petición (sin enviar porcentaje)
+  let requestBody = `subtask_id=${subtaskId}&status=${status}`;
   
   fetch('?route=clan_member/update-subtask-status', {
     method: 'POST',
@@ -610,23 +592,7 @@ function updateSubtaskStatus(subtaskId, status) {
           statusSpan.textContent = `Estado: ${status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ')}`;
         }
         
-        // Actualizar la barra de progreso
-        const progressFill = subtaskItem.querySelector('.progress-fill');
-        const percentageSpan = subtaskItem.querySelector('.progress-percentage');
-        
-        // Usar el porcentaje calculado localmente (que refleja la lógica correcta)
-        let finalPercentage = completion_percentage;
-        if (data.completion_percentage !== undefined) {
-          // Si el backend envía un porcentaje específico, usarlo
-          finalPercentage = data.completion_percentage;
-        }
-        
-        if (progressFill) {
-          progressFill.style.width = finalPercentage + '%';
-        }
-        if (percentageSpan) {
-          percentageSpan.textContent = finalPercentage + '%';
-        }
+        // NO actualizar la barra de progreso (se maneja independientemente)
         
         // Actualizar el estado en los controles
         const statusDisplaySpan = subtaskItem.querySelector('.status-display');
@@ -742,44 +708,8 @@ function editSubtask(subtaskId) {
 
 // Función para habilitar/deshabilitar la barra de progreso según el estado
 function toggleProgressBar() {
-    const status = document.getElementById('edit-subtask-status').value;
-    const progressContainer = document.querySelector('.progress-control-container');
-    const progressBar = document.querySelector('.progress-bar-edit');
-    const progressSlider = document.getElementById('edit-subtask-progress');
-    
-    // Aplicar la lógica de transiciones de estado
-    let newProgress;
-    if (status === 'pending') {
-        // PENDIENTE: Mantener el progreso actual (no cambiar)
-        newProgress = parseInt(progressSlider.value);
-        // Deshabilitar controles de progreso
-        progressContainer.style.opacity = '0.5';
-        progressBar.style.cursor = 'not-allowed';
-        progressBar.onclick = null;
-        progressSlider.disabled = true;
-        progressSlider.style.cursor = 'not-allowed';
-    } else {
-        // Habilitar controles de progreso
-        progressContainer.style.opacity = '1';
-        progressBar.style.cursor = 'pointer';
-        progressBar.onclick = updateProgressFromClick;
-        progressSlider.disabled = false;
-        progressSlider.style.cursor = 'pointer';
-        
-        if (status === 'in_progress') {
-            // EN PROGRESO: Siempre va a 50%
-            newProgress = 50;
-        } else if (status === 'completed') {
-            // COMPLETADA: Siempre va a 100%
-            newProgress = 100;
-        }
-    }
-    
-    // Actualizar los controles visuales si el progreso cambió
-    if (newProgress !== undefined && newProgress !== parseInt(progressSlider.value)) {
-        updateProgressDisplay(newProgress);
-        progressSlider.value = newProgress;
-    }
+    // NO vincular el estado con el porcentaje - función simplificada
+    // Esta función ya no es necesaria pero la mantenemos por compatibilidad
 }
 
 // Función para actualizar el progreso desde el click en la barra
@@ -818,26 +748,13 @@ function saveSubtaskChanges(subtaskId) {
         return;
     }
     
-    // Aplicar la misma lógica de transiciones de estado
-    let finalProgress = progress;
-    if (status === 'pending') {
-        // PENDIENTE: Mantener el progreso actual del modal
-        finalProgress = progress;
-    } else if (status === 'in_progress') {
-        // EN PROGRESO: Siempre va a 50%
-        finalProgress = 50;
-    } else if (status === 'completed') {
-        // COMPLETADA: Siempre va a 100%
-        finalProgress = 100;
-    }
-    
-    // Preparar el objeto de datos
+    // Preparar el objeto de datos (estado y porcentaje independientes)
     const requestData = {
         subtask_id: subtaskId,
         title: title,
         description: description,
         status: status,
-        completion_percentage: finalProgress
+        completion_percentage: progress // usar el valor del slider tal cual
     };
     
     fetch('?route=clan_member/edit-subtask', {
@@ -874,19 +791,12 @@ function saveSubtaskChanges(subtaskId) {
                 statusSpan.textContent = `Estado: ${status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ')}`;
             }
             
-            // Actualizar progreso
+            // Actualizar progreso con el valor del slider
             const progressFill = subtaskElement.querySelector('.progress-fill');
             const progressPercentage = subtaskElement.querySelector('.progress-percentage');
             
-            // Usar el progreso calculado con la lógica correcta
-            let finalPercentage = finalProgress;
-            if (data.completion_percentage !== undefined) {
-                // Si el backend envía un porcentaje específico, usarlo
-                finalPercentage = data.completion_percentage;
-            }
-            
-            if (progressFill) progressFill.style.width = finalPercentage + '%';
-            if (progressPercentage) progressPercentage.textContent = finalPercentage + '%';
+            if (progressFill) progressFill.style.width = progress + '%';
+            if (progressPercentage) progressPercentage.textContent = progress + '%';
             
             // Actualizar el select de estado
             const statusSelect = subtaskElement.querySelector('.status-select');

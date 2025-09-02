@@ -1154,7 +1154,7 @@ class Task {
     /**
      * Actualizar tarea
      */
-    public function update($taskId, $taskName, $description, $assignedUserId = null, $priority = null, $dueDate = null, $assignedPercentage = null, $status = null) {
+    public function update($taskId, $taskName, $description, $assignedUserId = null, $priority = null, $dueDate = null, $assignedPercentage = null, $status = null, $completionPercentage = null) {
         try {
             error_log("=== TASK UPDATE DEBUG ===");
             error_log("Task::update called with taskId: $taskId");
@@ -1213,44 +1213,30 @@ class Task {
                 error_log("Adding assigned_percentage to update");
             }
             
-            // Manejar estado
+            // Manejar porcentaje de completación (independiente del estado)
+            if ($completionPercentage !== null) {
+                $fields[] = "completion_percentage = ?";
+                $values[] = $completionPercentage;
+                error_log("Adding completion_percentage to update: $completionPercentage");
+            }
+            
+            // Manejar estado (sin vincular con porcentaje)
             if ($status !== null) {
                 $fields[] = "status = ?";
                 $values[] = $status;
                 error_log("Adding status to update");
                 
-                // Lógica correcta de transiciones de estado para tareas
+                // Solo manejar completed_at y is_completed, NO el porcentaje
                 if ($status === 'completed') {
-                    // COMPLETADA: Siempre va a 100%
                     $fields[] = "completed_at = NOW()";
                     $fields[] = "is_completed = 1";
-                    $fields[] = "completion_percentage = 100.00";
-                    error_log("Setting completed_at, is_completed=1 and completion_percentage=100 for completed status");
-                } else if ($status === 'in_progress') {
-                    // EN PROGRESO: Va a 50% (o mantener el actual si es mayor)
-                    $fields[] = "completed_at = NULL";
-                    $fields[] = "is_completed = 0";
-                    // Obtener el porcentaje actual para no bajarlo si es mayor a 50
-                    $currentPercentage = $task['completion_percentage'] ?? 0;
-                    if ($currentPercentage < 50) {
-                        $fields[] = "completion_percentage = 50.00";
-                        error_log("Setting completion_percentage=50 for in_progress status");
-                    } else {
-                        error_log("Keeping current completion_percentage=$currentPercentage for in_progress status");
-                    }
-                } else if ($status === 'pending') {
-                    // PENDIENTE: Mantener el porcentaje actual (NO cambiar a 0)
-                    $fields[] = "completed_at = NULL";
-                    $fields[] = "is_completed = 0";
-                    // NO modificar completion_percentage - mantener el valor actual
-                    error_log("Keeping current completion_percentage for pending status - NOT changing to 0");
+                    error_log("Setting completed_at and is_completed=1 for completed status");
                 } else {
-                    // Otros estados (blocked, cancelled): mantener el porcentaje actual
                     $fields[] = "completed_at = NULL";
                     $fields[] = "is_completed = 0";
-                    // NO modificar completion_percentage
-                    error_log("Keeping current completion_percentage for status: $status");
+                    error_log("Setting completed_at=NULL and is_completed=0 for non-completed status");
                 }
+                // NO modificar completion_percentage - se maneja independientemente
             }
             
             error_log("Total fields to update: " . count($fields));

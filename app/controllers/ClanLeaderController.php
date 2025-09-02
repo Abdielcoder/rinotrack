@@ -1042,6 +1042,7 @@ class ClanLeaderController {
             
             $taskStatus = Utils::sanitizeInput($_POST['task_status'] ?? 'pending');
             $assignedToUserId = (int)($_POST['assigned_to_user_id'] ?? 0);
+            $taskProgress = isset($_POST['task_progress']) ? (float)$_POST['task_progress'] : null;
             
             // Log para debugging
             error_log("=== INICIO ACTUALIZACIÓN TAREA ===");
@@ -1110,7 +1111,8 @@ class ClanLeaderController {
                 $priority, 
                 $taskDueDate,
                 null, // assigned_percentage
-                $taskStatus // nuevo parámetro para estado
+                $taskStatus, // nuevo parámetro para estado
+                $taskProgress // porcentaje de progreso
             );
             
             error_log("Resultado de actualización: " . ($result ? 'true' : 'false'));

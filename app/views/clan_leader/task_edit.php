@@ -138,6 +138,19 @@ function getActiveTasksCount($userId) {
                             <textarea id="task_description" name="task_description" rows="3" placeholder="Descripción de la tarea..."><?= htmlspecialchars($task['description']) ?></textarea>
                         </div>
                     </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <label for="task_progress">Progreso de la Tarea: <span id="progress_value"><?= intval($task['completion_percentage'] ?? 0) ?>%</span></label>
+                            <div style="display: flex; align-items: center; gap: 15px;">
+                                <div style="flex: 1; position: relative; height: 30px; background: #f3f4f6; border-radius: 15px; cursor: pointer;" onclick="updateProgressFromClick(event)" id="progress_bar">
+                                    <div id="progress_fill" style="height: 100%; background: linear-gradient(90deg, #10b981, #22c55e); border-radius: 15px; width: <?= $task['completion_percentage'] ?? 0 ?>%; transition: width 0.3s ease;"></div>
+                                    <span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: 600; color: #374151; font-size: 14px;"><?= intval($task['completion_percentage'] ?? 0) ?>%</span>
+                                </div>
+                                <input type="range" id="task_progress" name="task_progress" min="0" max="100" value="<?= intval($task['completion_percentage'] ?? 0) ?>" oninput="updateProgressDisplay(this.value)" style="width: 200px;">
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Información de la Tarea -->
@@ -487,6 +500,26 @@ function closeTaskEdit() {
     history.back();
 }
 
+// Función para actualizar el progreso desde el slider
+function updateProgressDisplay(value) {
+    document.getElementById('progress_fill').style.width = value + '%';
+    document.getElementById('progress_value').textContent = value + '%';
+    document.querySelector('#progress_bar span').textContent = value + '%';
+}
+
+// Función para actualizar el progreso haciendo click en la barra
+function updateProgressFromClick(event) {
+    const progressBar = event.currentTarget;
+    const rect = progressBar.getBoundingClientRect();
+    const clickX = event.clientX - rect.left;
+    const percentage = Math.round((clickX / rect.width) * 100);
+    
+    if (percentage >= 0 && percentage <= 100) {
+        document.getElementById('task_progress').value = percentage;
+        updateProgressDisplay(percentage);
+    }
+}
+
 function updateTask() {
     // Obtener los valores del formulario
     const taskId = document.getElementById('task_id').value;
@@ -514,6 +547,9 @@ function updateTask() {
         return;
     }
     
+    // Obtener el progreso
+    const taskProgress = document.getElementById('task_progress').value;
+    
     // Crear objeto con los datos
     const formData = new FormData();
     formData.append('task_id', taskId);
@@ -524,6 +560,7 @@ function updateTask() {
     formData.append('priority', priority);
     formData.append('task_status', taskStatus);
     formData.append('assigned_to_user_id', assignedToUserId);
+    formData.append('task_progress', taskProgress);
     
     // Enviar solicitud
     fetch('?route=clan_leader/update-task', {
