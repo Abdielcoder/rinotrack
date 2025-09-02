@@ -581,12 +581,20 @@ function updateSubtaskStatus(subtaskId, status) {
   } 
   // Nota: Para 'pending' mantenemos el porcentaje actual sin cambios
   
+  // Preparar el cuerpo de la petición
+  let requestBody = `subtask_id=${subtaskId}&status=${status}`;
+  
+  // Solo enviar completion_percentage si NO es 'pending'
+  if (status !== 'pending') {
+    requestBody += `&completion_percentage=${completion_percentage}`;
+  }
+  
   fetch('?route=clan_member/update-subtask-status', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
     },
-    body: `subtask_id=${subtaskId}&status=${status}&completion_percentage=${completion_percentage}`
+    body: requestBody
   })
   .then(response => response.json())
   .then(data => {
@@ -600,14 +608,16 @@ function updateSubtaskStatus(subtaskId, status) {
           statusSpan.textContent = `Estado: ${status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ')}`;
         }
         
-        // Actualizar la barra de progreso
-        const progressFill = subtaskItem.querySelector('.progress-fill');
-        const percentageSpan = subtaskItem.querySelector('.progress-percentage');
-        if (progressFill) {
-          progressFill.style.width = completion_percentage + '%';
-        }
-        if (percentageSpan) {
-          percentageSpan.textContent = completion_percentage + '%';
+        // Actualizar la barra de progreso solo si NO es 'pending'
+        if (status !== 'pending') {
+          const progressFill = subtaskItem.querySelector('.progress-fill');
+          const percentageSpan = subtaskItem.querySelector('.progress-percentage');
+          if (progressFill) {
+            progressFill.style.width = completion_percentage + '%';
+          }
+          if (percentageSpan) {
+            percentageSpan.textContent = completion_percentage + '%';
+          }
         }
         
         // Actualizar el estado en los controles
@@ -782,18 +792,25 @@ function saveSubtaskChanges(subtaskId) {
         return;
     }
     
+    // Preparar el objeto de datos
+    const requestData = {
+        subtask_id: subtaskId,
+        title: title,
+        description: description,
+        status: status
+    };
+    
+    // Solo enviar completion_percentage si NO es 'pending'
+    if (status !== 'pending') {
+        requestData.completion_percentage = progress;
+    }
+    
     fetch('?route=clan_member/edit-subtask', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-            subtask_id: subtaskId,
-            title: title,
-            description: description,
-            status: status,
-            completion_percentage: progress
-        })
+        body: JSON.stringify(requestData)
     })
     .then(response => response.json())
     .then(data => {
@@ -822,11 +839,13 @@ function saveSubtaskChanges(subtaskId) {
                 statusSpan.textContent = `Estado: ${status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ')}`;
             }
             
-            // Actualizar progreso
-            const progressFill = subtaskElement.querySelector('.progress-fill');
-            const progressPercentage = subtaskElement.querySelector('.progress-percentage');
-            if (progressFill) progressFill.style.width = progress + '%';
-            if (progressPercentage) progressPercentage.textContent = progress + '%';
+            // Actualizar progreso solo si NO es 'pending'
+            if (status !== 'pending') {
+                const progressFill = subtaskElement.querySelector('.progress-fill');
+                const progressPercentage = subtaskElement.querySelector('.progress-percentage');
+                if (progressFill) progressFill.style.width = progress + '%';
+                if (progressPercentage) progressPercentage.textContent = progress + '%';
+            }
             
             // Actualizar el select de estado
             const statusSelect = subtaskElement.querySelector('.status-select');
