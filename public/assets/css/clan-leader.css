@@ -15,12 +15,12 @@
 
 /* Header Minimalista Mejorado */
 .minimal-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 20px;
-    padding: 32px;
-    margin-bottom: 32px;
-    color: white;
-    box-shadow: 0 10px 40px rgba(102, 126, 234, 0.2);
+    background: #1e3a8a;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 24px;
+    color: #ffffff;
+    box-shadow: 0 6px 18px rgba(30, 58, 138, 0.15);
     position: relative;
     overflow: hidden;
 }
@@ -46,12 +46,11 @@
 }
 
 .title-minimal h1 {
-    font-size: 2.5rem;
-    font-weight: 800;
-    margin: 0 0 8px 0;
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin: 0 0 6px 0;
     color: #ffffff;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    letter-spacing: -0.02em;
+    letter-spacing: -0.01em;
 }
 
 .subtitle {
@@ -199,7 +198,7 @@ section {
     left: 0;
     right: 0;
     height: 4px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #1e3a8a;
     transform: scaleX(0);
     transition: transform 0.3s ease;
 }
@@ -217,7 +216,7 @@ section {
 .stat-value {
     font-size: 3rem;
     font-weight: 800;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #1e3a8a;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -255,7 +254,7 @@ section {
     transform: translateX(-50%);
     width: 60px;
     height: 3px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #1e3a8a;
     border-radius: 2px;
 }
 
@@ -289,7 +288,7 @@ section {
     left: 0;
     right: 0;
     height: 4px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #1e3a8a;
     transform: scaleX(0);
     transition: transform 0.3s ease;
 }
@@ -308,7 +307,7 @@ section {
     width: 60px;
     height: 60px;
     border-radius: 16px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #1e3a8a;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -360,7 +359,7 @@ section {
     transform: translateX(-50%);
     width: 60px;
     height: 3px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #1e3a8a;
     border-radius: 2px;
 }
 
@@ -1238,7 +1237,7 @@ section {
     transform: translateX(-50%);
     width: 60px;
     height: 3px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #1e3a8a;
     border-radius: 2px;
 }
 
@@ -1281,7 +1280,7 @@ section {
 }
 
 .completion-box {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #1e3a8a;
     color: white;
     padding: 16px 24px;
     border-radius: 16px;
@@ -1521,7 +1520,7 @@ section {
 }
 
 .task-management-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #1e3a8a;
     color: white;
     padding: 24px 32px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
@@ -3319,7 +3318,7 @@ section {
 /* ===== SNAKE PATH PARA MIEMBROS DEL CLAN ===== */
 
 .snake-path-section {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #1e3a8a;
     border-radius: 20px;
     padding: 2rem;
     margin: 2rem 0;
@@ -3934,7 +3933,7 @@ section {
     left: 0;
     right: 0;
     height: 4px;
-    background: linear-gradient(90deg, #667eea, #48bb78);
+    background: #1e3a8a;
 }
 
 
@@ -4074,7 +4073,7 @@ section {
 
 .progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, #667eea, #48bb78);
+    background: #1e3a8a;
     border-radius: 4px;
     transition: width 0.3s ease;
 }
@@ -4185,7 +4184,7 @@ section {
 }
 
 #userStatsModal .modal-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #1e3a8a;
     color: white;
     padding: 24px 32px;
     border-radius: 20px 20px 0 0;
@@ -4723,7 +4722,7 @@ section {
 }
 
 .icon-gradient {
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: #1e3a8a;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
