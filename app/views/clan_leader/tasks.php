@@ -2218,21 +2218,39 @@ function editTask(taskId) {
 }
 
 function deleteTask(taskId) {
-            confirmDelete('¿Estás seguro de que quieres eliminar esta tarea?', () => {
+    confirmDelete('¿Estás seguro de que quieres eliminar esta tarea?', () => {
         fetch('?route=clan_leader/delete-task', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: 'task_id=' + taskId
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'task_id=' + encodeURIComponent(taskId)
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
+                // Remover la fila de la tabla sin recargar
+                const row = document.querySelector('tr.task-row[data-task-id="' + taskId + '"]');
+                if (row && row.parentNode) {
+                    row.parentNode.removeChild(row);
+                }
+
+                // Si no quedan filas, mostrar estado vacío en la tabla
+                const remaining = document.querySelectorAll('.tasks-table tbody tr.task-row').length;
+                if (remaining === 0) {
+                    const tbody = document.querySelector('.tasks-table tbody');
+                    if (tbody) {
+                        const emptyRow = document.createElement('tr');
+                        emptyRow.innerHTML = '<td colspan="9">No hay tareas disponibles</td>';
+                        tbody.appendChild(emptyRow);
+                    }
+                }
+
+                // Limpiar checkbox de seleccionar todo
+                const selectAll = document.getElementById('select-all');
+                if (selectAll) selectAll.checked = false;
+
                 showToast('Tarea eliminada exitosamente', 'success');
-                setTimeout(() => location.reload(), 1000);
             } else {
-                showToast('Error al eliminar la tarea: ' + data.message, 'error');
+                showToast('Error al eliminar la tarea: ' + (data.message || 'Error desconocido'), 'error');
             }
         })
         .catch(error => {
