@@ -618,7 +618,7 @@ ob_start();
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 0.6rem;
+    margin-bottom: 0.4rem;
 }
 
 .project-name {
@@ -627,12 +627,13 @@ ob_start();
     color: #1f2937;
     margin: 0;
     flex: 1;
+    line-height: 1.2;
 }
 
 .project-status {
-    padding: 0.25rem 0.75rem;
+    padding: 0.15rem 0.5rem;
     border-radius: 20px;
-    font-size: 0.75rem;
+    font-size: 0.65rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -657,14 +658,14 @@ ob_start();
 .project-stats {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 1rem;
-    margin-bottom: 1rem;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
 }
 
 .stat-item {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.5rem;
 }
 
 .stat-icon {
@@ -694,26 +695,26 @@ ob_start();
 }
 
 .stat-number {
-    font-size: 1rem;
+    font-size: 0.95rem;
     font-weight: 700;
     color: #1f2937;
     line-height: 1;
 }
 
 .stat-label {
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     color: #6b7280;
     margin-top: 0.25rem;
 }
 
 /* Barra de Progreso */
 .project-progress {
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
 }
 
 .progress-bar {
     width: 100%;
-    height: 6px;
+    height: 4px;
     background: #f3f4f6;
     border-radius: 4px;
     overflow: hidden;
@@ -737,11 +738,11 @@ ob_start();
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 8px 10px;
+    padding: 6px 8px;
     border-radius: 8px;
     text-decoration: none;
     font-weight: 600;
-    font-size: 13px;
+    font-size: 12px;
     cursor: pointer;
     transition: all 0.2s ease;
     border: 1px solid;
