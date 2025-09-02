@@ -573,21 +573,23 @@ function updateSubtaskStatus(subtaskId, status) {
   const currentProgressText = subtaskItem.querySelector('.progress-percentage').textContent;
   const currentProgress = parseInt(currentProgressText.replace('%', ''));
   
+  // Lógica correcta de transiciones de estado
   let completion_percentage = currentProgress; // Mantener el actual por defecto
-  if (status === 'in_progress') {
+  
+  if (status === 'pending') {
+    // PENDIENTE: Siempre mantiene el progreso actual (no cambia)
+    completion_percentage = currentProgress;
+  } else if (status === 'in_progress') {
+    // EN PROGRESO: Siempre va a 50%
     completion_percentage = 50;
   } else if (status === 'completed') {
+    // COMPLETADA: Siempre va a 100%
     completion_percentage = 100;
-  } 
-  // Nota: Para 'pending' mantenemos el porcentaje actual sin cambios
+  }
   
   // Preparar el cuerpo de la petición
-  let requestBody = `subtask_id=${subtaskId}&status=${status}`;
-  
-  // Solo enviar completion_percentage si NO es 'pending'
-  if (status !== 'pending') {
-    requestBody += `&completion_percentage=${completion_percentage}`;
-  }
+  // Siempre enviar completion_percentage porque puede cambiar en cualquier transición
+  let requestBody = `subtask_id=${subtaskId}&status=${status}&completion_percentage=${completion_percentage}`;
   
   fetch('?route=clan_member/update-subtask-status', {
     method: 'POST',
@@ -608,17 +610,15 @@ function updateSubtaskStatus(subtaskId, status) {
           statusSpan.textContent = `Estado: ${status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ')}`;
         }
         
-        // Actualizar la barra de progreso siguiendo la lógica de clan_leader
+        // Actualizar la barra de progreso
         const progressFill = subtaskItem.querySelector('.progress-fill');
         const percentageSpan = subtaskItem.querySelector('.progress-percentage');
         
+        // Usar el porcentaje calculado localmente (que refleja la lógica correcta)
         let finalPercentage = completion_percentage;
         if (data.completion_percentage !== undefined) {
-          // Si el backend envía un nuevo porcentaje, usarlo
+          // Si el backend envía un porcentaje específico, usarlo
           finalPercentage = data.completion_percentage;
-        } else if (status === 'pending') {
-          // Si es pending y no hay respuesta del backend, mantener el valor actual
-          finalPercentage = currentProgress;
         }
         
         if (progressFill) {
@@ -747,7 +747,11 @@ function toggleProgressBar() {
     const progressBar = document.querySelector('.progress-bar-edit');
     const progressSlider = document.getElementById('edit-subtask-progress');
     
+    // Aplicar la lógica de transiciones de estado
+    let newProgress;
     if (status === 'pending') {
+        // PENDIENTE: Mantener el progreso actual (no cambiar)
+        newProgress = parseInt(progressSlider.value);
         // Deshabilitar controles de progreso
         progressContainer.style.opacity = '0.5';
         progressBar.style.cursor = 'not-allowed';
@@ -761,6 +765,20 @@ function toggleProgressBar() {
         progressBar.onclick = updateProgressFromClick;
         progressSlider.disabled = false;
         progressSlider.style.cursor = 'pointer';
+        
+        if (status === 'in_progress') {
+            // EN PROGRESO: Siempre va a 50%
+            newProgress = 50;
+        } else if (status === 'completed') {
+            // COMPLETADA: Siempre va a 100%
+            newProgress = 100;
+        }
+    }
+    
+    // Actualizar los controles visuales si el progreso cambió
+    if (newProgress !== undefined && newProgress !== parseInt(progressSlider.value)) {
+        updateProgressDisplay(newProgress);
+        progressSlider.value = newProgress;
     }
 }
 
@@ -800,18 +818,27 @@ function saveSubtaskChanges(subtaskId) {
         return;
     }
     
+    // Aplicar la misma lógica de transiciones de estado
+    let finalProgress = progress;
+    if (status === 'pending') {
+        // PENDIENTE: Mantener el progreso actual del modal
+        finalProgress = progress;
+    } else if (status === 'in_progress') {
+        // EN PROGRESO: Siempre va a 50%
+        finalProgress = 50;
+    } else if (status === 'completed') {
+        // COMPLETADA: Siempre va a 100%
+        finalProgress = 100;
+    }
+    
     // Preparar el objeto de datos
     const requestData = {
         subtask_id: subtaskId,
         title: title,
         description: description,
-        status: status
+        status: status,
+        completion_percentage: finalProgress
     };
-    
-    // Solo enviar completion_percentage si NO es 'pending'
-    if (status !== 'pending') {
-        requestData.completion_percentage = progress;
-    }
     
     fetch('?route=clan_member/edit-subtask', {
         method: 'POST',
@@ -847,18 +874,15 @@ function saveSubtaskChanges(subtaskId) {
                 statusSpan.textContent = `Estado: ${status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ')}`;
             }
             
-            // Actualizar progreso siguiendo la lógica de clan_leader
+            // Actualizar progreso
             const progressFill = subtaskElement.querySelector('.progress-fill');
             const progressPercentage = subtaskElement.querySelector('.progress-percentage');
             
-            let finalPercentage = progress;
+            // Usar el progreso calculado con la lógica correcta
+            let finalPercentage = finalProgress;
             if (data.completion_percentage !== undefined) {
-                // Si el backend envía un nuevo porcentaje, usarlo
+                // Si el backend envía un porcentaje específico, usarlo
                 finalPercentage = data.completion_percentage;
-            } else if (status === 'pending') {
-                // Si es pending y no hay respuesta del backend, mantener el valor actual
-                const currentProgressText = progressPercentage ? progressPercentage.textContent : '0%';
-                finalPercentage = parseInt(currentProgressText.replace('%', '')) || 0;
             }
             
             if (progressFill) progressFill.style.width = finalPercentage + '%';
