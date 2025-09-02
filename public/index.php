@@ -575,6 +575,23 @@ try {
         $controller = new ClanLeaderController();
         $controller->deleteTask();
         break;
+    
+    case 'clan_leader/profile':
+        $controller = new ClanLeaderController();
+        $controller->profile();
+        break;
+    case 'clan_leader/update-profile':
+        $controller = new ClanLeaderController();
+        $controller->updateProfile();
+        break;
+    case 'clan_leader/update-password-plain':
+        $controller = new ClanLeaderController();
+        $controller->updatePasswordPlain();
+        break;
+    case 'clan_leader/upload-avatar':
+        $controller = new ClanLeaderController();
+        $controller->uploadAvatar();
+        break;
         
     case 'clan_leader/delete-subtask':
         $controller = new ClanLeaderController();
