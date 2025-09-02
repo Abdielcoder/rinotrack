@@ -13,10 +13,6 @@ ob_start();
             </div>
             
             <div class="actions-minimal">
-                <a href="?route=clan_leader/dashboard" class="btn-minimal" style="background: #6b7280; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; margin-right: 10px;">
-                    <i class="fas fa-arrow-left"></i>
-                    Volver al Dashboard
-                </a>
                 <button class="btn-minimal primary" onclick="openAddMemberModal()">
                     <i class="fas fa-plus"></i>
                     Agregar Miembro

@@ -13,10 +13,6 @@ ob_start();
             </div>
             
             <div class="actions-minimal">
-                <a href="?route=clan_leader/dashboard" class="btn-minimal primary">
-                    <i class="fas fa-arrow-left"></i>
-                    Volver al Dashboard
-                </a>
                 <a href="?route=logout" class="btn-minimal danger" title="Cerrar sesión">
                     <i class="fas fa-sign-out-alt"></i>
                     Cerrar Sesión

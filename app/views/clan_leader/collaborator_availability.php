@@ -46,10 +46,6 @@ ob_start();
                     </a>
                 </div>
                 <div class="navigation-actions">
-                    <a href="?route=clan_leader/dashboard" class="btn-minimal secondary">
-                        <i class="fas fa-arrow-left"></i>
-                        <span>Volver al Dashboard</span>
-                    </a>
                     <a href="?route=logout" class="btn-minimal danger" title="Cerrar sesión">
                         <i class="fas fa-sign-out-alt"></i>
                         <span>Cerrar Sesión</span>

@@ -14,10 +14,6 @@ ob_start();
                 <p class="page-subtitle">Administra las tareas de todos los proyectos de tu clan</p>
             </div>
             <div class="header-actions">
-                <a href="?route=clan_leader" class="btn-back">
-                    <i class="fas fa-arrow-left"></i>
-                    Volver al Dashboard
-                </a>
                 <a href="?route=clan_leader/tasks&action=create" class="btn-create">
                     <i class="fas fa-plus"></i>
                     Nueva Tarea
