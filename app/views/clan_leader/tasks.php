@@ -596,14 +596,14 @@ ob_start();
 /* Grid de Proyectos */
 .projects-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(6, 1fr);
     gap: 0.15rem;
 }
 
 .project-card {
     background: white;
     border-radius: 16px;
-    padding: 1.5rem;
+    padding: 0.9rem;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
     border: 1px solid #e5e7eb;
     transition: all 0.3s ease;
@@ -618,11 +618,11 @@ ob_start();
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 1rem;
+    margin-bottom: 0.6rem;
 }
 
 .project-name {
-    font-size: 1.2rem;
+    font-size: 1rem;
     font-weight: 600;
     color: #1f2937;
     margin: 0;
@@ -668,13 +668,13 @@ ob_start();
 }
 
 .stat-icon {
-    width: 40px;
-    height: 40px;
+    width: 28px;
+    height: 28px;
     border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.1rem;
+    font-size: 0.9rem;
     background: #f3f4f6;
     color: #6b7280;
 }
@@ -694,14 +694,14 @@ ob_start();
 }
 
 .stat-number {
-    font-size: 1.2rem;
+    font-size: 1rem;
     font-weight: 700;
     color: #1f2937;
     line-height: 1;
 }
 
 .stat-label {
-    font-size: 0.8rem;
+    font-size: 0.7rem;
     color: #6b7280;
     margin-top: 0.25rem;
 }
@@ -713,7 +713,7 @@ ob_start();
 
 .progress-bar {
     width: 100%;
-    height: 8px;
+    height: 6px;
     background: #f3f4f6;
     border-radius: 4px;
     overflow: hidden;
@@ -737,11 +737,11 @@ ob_start();
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 10px 14px;
+    padding: 8px 10px;
     border-radius: 8px;
     text-decoration: none;
     font-weight: 600;
-    font-size: 14px;
+    font-size: 13px;
     cursor: pointer;
     transition: all 0.2s ease;
     border: 1px solid;
