@@ -111,13 +111,26 @@ ob_start();
                 <?php endif; ?>
               </div>
               <div class="subtask-controls">
-                <div class="subtask-progress">
-                  <div class="progress-bar">
-                    <div class="progress-fill" style="width: <?php echo $subtask['completion_percentage']; ?>%"></div>
+                <div class="subtask-progress" style="flex: 1;">
+                  <div style="display: flex; align-items: center; gap: 10px;">
+                    <div class="progress-bar" 
+                         style="flex: 1; height: 20px; cursor: pointer; position: relative;" 
+                         onclick="updateSubtaskProgressFromClick(event, <?php echo $subtask['subtask_id']; ?>)"
+                         data-subtask-id="<?php echo $subtask['subtask_id']; ?>">
+                      <div class="progress-fill" style="width: <?php echo $subtask['completion_percentage']; ?>%; height: 100%; background: linear-gradient(90deg, #10b981, #22c55e); border-radius: 4px;"></div>
+                      <span class="progress-percentage" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 11px; font-weight: 600; color: #374151; text-shadow: 0 0 2px white;">
+                        <?php echo intval($subtask['completion_percentage']); ?>%
+                      </span>
+                    </div>
+                    <input type="range" 
+                           class="subtask-progress-slider" 
+                           data-subtask-id="<?php echo $subtask['subtask_id']; ?>"
+                           min="0" 
+                           max="100" 
+                           value="<?php echo intval($subtask['completion_percentage']); ?>" 
+                           oninput="updateSubtaskProgress(<?php echo $subtask['subtask_id']; ?>, this.value)"
+                           style="width: 100px;">
                   </div>
-                  <span class="progress-percentage">
-                    <?php echo $subtask['completion_percentage']; ?>%
-                  </span>
                 </div>
                 <?php if ($canEdit): ?>
                 <div class="subtask-status-controls">
@@ -564,6 +577,62 @@ function noPermissionModal(){
     applyQuote(null);
   })();
 })();
+
+// Función para actualizar el progreso de una subtarea
+function updateSubtaskProgress(subtaskId, newProgress) {
+  console.log('Updating subtask progress:', subtaskId, newProgress);
+  
+  // Actualizar la UI inmediatamente
+  const progressBar = document.querySelector(`.progress-bar[data-subtask-id="${subtaskId}"] .progress-fill`);
+  const progressText = document.querySelector(`.progress-bar[data-subtask-id="${subtaskId}"] .progress-percentage`);
+  
+  if (progressBar) {
+    progressBar.style.width = newProgress + '%';
+  }
+  if (progressText) {
+    progressText.textContent = newProgress + '%';
+  }
+  
+  // Enviar al servidor
+  fetch('?route=clan_member/update-subtask-progress', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: `subtask_id=${subtaskId}&completion_percentage=${newProgress}`
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      showNotification('Progreso actualizado', 'success');
+    } else {
+      showNotification('Error al actualizar progreso: ' + data.message, 'error');
+      // Revertir cambios si hay error
+      location.reload();
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    showNotification('Error al actualizar progreso', 'error');
+  });
+}
+
+// Función para actualizar el progreso haciendo click en la barra
+function updateSubtaskProgressFromClick(event, subtaskId) {
+  const progressBar = event.currentTarget;
+  const rect = progressBar.getBoundingClientRect();
+  const clickX = event.clientX - rect.left;
+  const percentage = Math.round((clickX / rect.width) * 100);
+  
+  if (percentage >= 0 && percentage <= 100) {
+    // Actualizar el slider también
+    const slider = document.querySelector(`.subtask-progress-slider[data-subtask-id="${subtaskId}"]`);
+    if (slider) {
+      slider.value = percentage;
+    }
+    updateSubtaskProgress(subtaskId, percentage);
+  }
+}
 
 // Funciones para subtareas
 function updateSubtaskStatus(subtaskId, status) {

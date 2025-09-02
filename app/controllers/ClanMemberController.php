@@ -1770,6 +1770,62 @@ class ClanMemberController {
     /**
      * Actualizar estado de subtarea (para clan members)
      */
+    /**
+     * Actualizar progreso de subtarea
+     */
+    public function updateSubtaskProgress() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
+        }
+        
+        $subtaskId = (int)($_POST['subtask_id'] ?? 0);
+        $completionPercentage = isset($_POST['completion_percentage']) ? (float)$_POST['completion_percentage'] : null;
+        
+        if ($subtaskId <= 0 || $completionPercentage === null) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Datos inválidos'], 400);
+        }
+        
+        try {
+            // Verificar que la subtarea pertenece a una tarea del clan del usuario
+            $stmt = $this->db->prepare("
+                SELECT s.*, t.project_id, p.clan_id
+                FROM Subtasks s
+                JOIN Tasks t ON s.task_id = t.task_id
+                JOIN Projects p ON t.project_id = p.project_id
+                WHERE s.subtask_id = ?
+            ");
+            $stmt->execute([$subtaskId]);
+            $subtask = $stmt->fetch();
+            
+            if (!$subtask) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Subtarea no encontrada'], 404);
+            }
+            
+            // Verificar que el usuario pertenece al clan
+            if ($subtask['clan_id'] != $this->userClan['clan_id']) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado - no perteneces a este clan'], 403);
+            }
+            
+            // Actualizar solo el progreso
+            $result = $this->taskModel->updateSubtaskStatus(
+                $subtaskId, 
+                null, // no cambiar estado
+                $completionPercentage, 
+                $this->currentUser['user_id']
+            );
+            
+            if ($result) {
+                Utils::jsonResponse(['success' => true, 'message' => 'Progreso actualizado exitosamente']);
+            } else {
+                Utils::jsonResponse(['success' => false, 'message' => 'Error al actualizar progreso'], 500);
+            }
+            
+        } catch (Exception $e) {
+            error_log("Error en updateSubtaskProgress: " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor'], 500);
+        }
+    }
+    
     public function updateSubtaskStatus() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);

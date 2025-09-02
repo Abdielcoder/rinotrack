@@ -527,6 +527,11 @@ try {
         $controller->updateSubtaskStatus();
         break;
         
+    case 'clan_leader/update-subtask-progress':
+        $controller = new ClanLeaderController();
+        $controller->updateSubtaskProgress();
+        break;
+        
     case 'clan_leader/get-available-labels':
         $controller = new ClanLeaderController();
         $controller->getAvailableLabels();
@@ -870,6 +875,11 @@ try {
         case 'clan_member/update-subtask-status':
             $controller = new ClanMemberController();
             $controller->updateSubtaskStatus();
+            break;
+            
+        case 'clan_member/update-subtask-progress':
+            $controller = new ClanMemberController();
+            $controller->updateSubtaskProgress();
             break;
             
         // Ruta para crear subtarea
