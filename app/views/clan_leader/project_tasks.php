@@ -733,9 +733,6 @@ if (!isset($project) || !isset($tasks)) {
     <div class="container">
         <!-- Botones de Navegación -->
         <div class="navigation-buttons">
-            <a href="?route=clan_leader" class="nav-btn success">
-                <i class="fas fa-home"></i> Dashboard
-            </a>
             <a href="?route=clan_leader/tasks" class="nav-btn">
                 <i class="fas fa-arrow-left"></i> Todas las Tareas
             </a>

@@ -67,7 +67,7 @@
                 <span class="leader-nav__logo leader-nav__star" aria-hidden="true"><i class="fas fa-star"></i></span>
                 <span class="leader-nav__title">Polaris Líder</span>
             </a>
-            <button class="leader-nav__toggle" aria-label="Abrir menú" onclick="document.querySelector('.leader-nav').classList.toggle('open')">
+            <button class="leader-nav__toggle" aria-label="Abrir menú" onclick="this.closest('.leader-nav').classList.toggle('open')">
                 <i class="fas fa-bars"></i>
             </button>
             <nav class="leader-nav__menu">
@@ -98,8 +98,8 @@
         .leader-nav__logo { width: 28px; height: 28px; }
         .leader-nav__star { display: inline-flex; align-items: center; justify-content: center; color: #fbbf24; font-size: 18px; }
         .leader-nav__title { font-weight: 700; color: #1e3a8a; }
-        .leader-nav__menu { display: flex !important; align-items: center; gap: 8px; margin-left: auto; flex-wrap: nowrap; }
-        .leader-nav__link { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 10px; text-decoration: none; color: #374151; font-weight: 600; transition: all .2s ease; border: 1px solid transparent; }
+        .leader-nav__menu { display: flex !important; align-items: center; gap: 4px; margin-left: auto; flex-wrap: nowrap; }
+        .leader-nav__link { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 8px; text-decoration: none; color: #374151; font-weight: 600; transition: all .2s ease; border: 1px solid transparent; }
         .leader-nav__link i { color: #1e3a8a; }
         .leader-nav__link:hover { background: #eef2ff; border-color: #c7d2fe; color: #1e3a8a; }
         .leader-nav__link.active { background: #1e3a8a; color: #ffffff; border-color: #1e3a8a; }
