@@ -20,7 +20,7 @@ function getActiveTasksCount($userId) {
 
 <div class="task-management-fullscreen">
     <!-- Header de Gestión de Tareas -->
-    <header class="task-management-header">
+    <header class="task-management-header" style="position: sticky; top: 58px;">
         <div class="header-content">
             <div class="header-left">
                 <div class="task-icon">
@@ -144,7 +144,7 @@ function getActiveTasksCount($userId) {
                             <label for="task_progress">Progreso de la Tarea: <span id="progress_value"><?= intval($task['completion_percentage'] ?? 0) ?>%</span></label>
                             <div style="display: flex; align-items: center; gap: 15px;">
                                 <div style="flex: 1; position: relative; height: 30px; background: #f3f4f6; border-radius: 15px; cursor: pointer;" onclick="updateProgressFromClick(event)" id="progress_bar">
-                                    <div id="progress_fill" style="height: 100%; background: linear-gradient(90deg, #10b981, #22c55e); border-radius: 15px; width: <?= $task['completion_percentage'] ?? 0 ?>%; transition: width 0.3s ease;"></div>
+                                    <div id="progress_fill" style="height: 100%; background: #10b981; border-radius: 15px; width: <?= $task['completion_percentage'] ?? 0 ?>%; transition: width 0.3s ease;"></div>
                                     <span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: 600; color: #374151; font-size: 14px;"><?= intval($task['completion_percentage'] ?? 0) ?>%</span>
                                 </div>
                                 <input type="range" id="task_progress" name="task_progress" min="0" max="100" value="<?= intval($task['completion_percentage'] ?? 0) ?>" oninput="updateProgressDisplay(this.value)" style="width: 200px;">
@@ -190,14 +190,11 @@ function getActiveTasksCount($userId) {
 <style>
 /* Estilos para la edición de tareas */
 .task-management-fullscreen {
-    position: fixed;
-    top: 0;
-    left: 0;
+    position: relative;
     width: 100%;
-    height: 100%;
+    min-height: 100vh;
     background: #f8fafc;
-    z-index: 1000;
-    overflow-y: auto;
+    z-index: 1;
 }
 
 .task-management-header {
