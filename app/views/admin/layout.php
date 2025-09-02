@@ -149,8 +149,9 @@
             </nav>
         </div>
         <style>
+        :root { --leader-nav-height: 58px; }
         .leader-nav { position: fixed; top: 0; left: 0; z-index: 1100; background: #ffffff; border-bottom: 1px solid #e5e7eb; width: 100%; }
-        body.has-leader-nav { padding-top: 58px; }
+        body.has-leader-nav { padding-top: var(--leader-nav-height, 58px); }
         .leader-nav__inner { max-width: 1200px; margin: 0 auto; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; }
         .leader-nav__brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; }
         .leader-nav__logo { width: 28px; height: 28px; }
@@ -169,7 +170,7 @@
         .leader-nav__toggle { display: none; margin-left: auto; background: #1e3a8a; color: #ffffff; border: 1px solid #1e3a8a; width: 36px; height: 36px; border-radius: 8px; align-items: center; justify-content: center; }
         @media (max-width: 900px) {
             .leader-nav__toggle { display: inline-flex; }
-            .leader-nav__menu { display: none !important; position: absolute; left: 0; right: 0; top: 54px; background: #ffffff; border-bottom: 1px solid #e5e7eb; padding: 8px 12px 12px; }
+            .leader-nav__menu { display: none !important; position: absolute; left: 0; right: 0; top: var(--leader-nav-height, 54px); background: #ffffff; border-bottom: 1px solid #e5e7eb; padding: 8px 12px 12px; }
             .leader-nav.open .leader-nav__menu { display: grid !important; grid-template-columns: 1fr 1fr; gap: 8px; }
             .leader-nav__link { justify-content: center; }
         }
@@ -180,5 +181,20 @@
     </header>
     <?php endif; ?>
     <?php echo $content ?? ''; ?>
+    <script>
+      (function(){
+        try{
+          const nav=document.querySelector('.leader-nav');
+          if(nav){
+            const set = ()=>{
+              const h = nav.offsetHeight || 58;
+              document.documentElement.style.setProperty('--leader-nav-height', h+"px");
+            };
+            set();
+            window.addEventListener('resize', set);
+          }
+        }catch(e){/* noop */}
+      })();
+    </script>
 </body>
 </html>
