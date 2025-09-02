@@ -144,75 +144,7 @@ function getActiveTasksCount($userId) {
                     </div>
                 </div>
 
-                <!-- Sección de Tareas del Trimestre Actual -->
-                <div class="form-section">
-                    <h3>Tareas del Trimestre Actual (Sin Completar):</h3>
-                    
-                    <?php if (!empty($currentQuarterTasks)): ?>
-                        <div class="quarter-tasks-container">
-                            <div class="quarter-tasks-grid">
-                                <?php foreach ($currentQuarterTasks as $task): ?>
-                                    <div class="quarter-task-card" data-task-id="<?php echo $task['task_id']; ?>">
-                                        <div class="task-header">
-                                            <div class="task-priority priority-<?php echo $task['priority']; ?>">
-                                                <i class="fas fa-flag"></i>
-                                                <?php echo ucfirst($task['priority']); ?>
-                                            </div>
-                                            <div class="task-status status-<?php echo $task['status']; ?>">
-                                                <?php echo ucfirst(str_replace('_', ' ', $task['status'])); ?>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="task-content">
-                                            <h4 class="task-title"><?php echo htmlspecialchars($task['task_name']); ?></h4>
-                                            <p class="task-project">Proyecto: <?php echo htmlspecialchars($task['project_name']); ?></p>
-                                            
-                                            <?php if (!empty($task['description'])): ?>
-                                                <p class="task-description"><?php echo htmlspecialchars(substr($task['description'], 0, 100)); ?><?php echo strlen($task['description']) > 100 ? '...' : ''; ?></p>
-                                            <?php endif; ?>
-                                            
-                                            <div class="task-meta">
-                                                <?php if ($task['due_date']): ?>
-                                                    <div class="meta-item">
-                                                        <i class="fas fa-calendar-alt"></i>
-                                                        <span>Vence: <?php echo Utils::formatDate($task['due_date'], 'd/m/Y', 'Sin fecha límite'); ?></span>
-                                                        <?php if ($task['days_until_due'] < 0): ?>
-                                                            <span class="overdue">¡Vencida!</span>
-                                                        <?php elseif ($task['days_until_due'] <= 3): ?>
-                                                            <span class="urgent">¡Pronto!</span>
-                                                        <?php endif; ?>
-                                                    </div>
-                                                <?php endif; ?>
-                                                
-                                                <?php if (!empty($task['all_assigned_users'])): ?>
-                                                    <div class="meta-item">
-                                                        <i class="fas fa-users"></i>
-                                                        <span><?php echo htmlspecialchars($task['all_assigned_users']); ?></span>
-                                                    </div>
-                                                <?php endif; ?>
-                                            </div>
-                                            
-                                            <div class="task-progress">
-                                                <div class="progress-bar">
-                                                    <div class="progress-fill" style="width: <?php echo $task['completion_percentage']; ?>%"></div>
-                                                </div>
-                                                <span class="progress-text"><?php echo $task['completion_percentage']; ?>% completado</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                <?php endforeach; ?>
-                            </div>
-                        </div>
-                    <?php else: ?>
-                        <div class="no-quarter-tasks">
-                            <div class="no-tasks-icon">
-                                <i class="fas fa-clipboard-check"></i>
-                            </div>
-                            <h4>No hay tareas pendientes en el trimestre actual</h4>
-                            <p>Todas las tareas del trimestre actual han sido completadas o no hay tareas asignadas.</p>
-                        </div>
-                    <?php endif; ?>
-                </div>
+                
             </div>
         </div>
     </div>
