@@ -596,8 +596,9 @@ ob_start();
 /* Grid de Proyectos */
 .projects-grid {
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 0.15rem;
+    margin: 0 auto;
 }
 
 .project-card {
