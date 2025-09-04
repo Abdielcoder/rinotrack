@@ -784,7 +784,124 @@ function renumberAddSubtasks() {
 }
 
 function saveTaskWithoutSubtasks() {
-    saveTask();
+    console.log('🚀 Creando tarea sin subtareas...');
+    
+    // Validar campos requeridos según si es recurrente o no
+    const isRecurrent = document.getElementById('is_recurrent').checked;
+    const taskTitle = document.getElementById('task_title').value;
+    const taskDueDate = document.getElementById('task_due_date').value;
+    const recurrenceStart = document.getElementById('recurrence_start_date') ? document.getElementById('recurrence_start_date').value : '';
+    const assignedMembers = document.querySelectorAll('input[name="assigned_members[]"]:checked');
+    
+    // Validación de título
+    if (!taskTitle) {
+        showToast('Por favor ingresa el título de la tarea', 'error');
+        return;
+    }
+    
+    // Validación de fecha según tipo de tarea
+    if (isRecurrent) {
+        if (!recurrenceStart) {
+            showToast('Por favor ingresa la fecha de inicio de recurrencia', 'error');
+            return;
+        }
+    } else {
+        if (!taskDueDate) {
+            showToast('Por favor ingresa la fecha límite', 'error');
+            return;
+        }
+    }
+    
+    if (assignedMembers.length === 0) {
+        showToast('Debes asignar al menos un colaborador', 'error');
+        return;
+    }
+    
+    // Recopilar datos del formulario
+    const formData = new FormData();
+    formData.append('task_title', taskTitle);
+    formData.append('task_project', document.getElementById('task_project').value);
+    formData.append('task_description', document.getElementById('task_description').value);
+    formData.append('priority', 'medium'); // Valor por defecto
+    
+    // Agregar fecha límite (puede ser vacía si es recurrente)
+    formData.append('task_due_date', taskDueDate || '');
+    
+    // Agregar campos de recurrencia si aplica
+    if (isRecurrent) {
+        formData.append('is_recurrent', '1');
+        formData.append('recurrence_type', document.getElementById('recurrence_type').value);
+        formData.append('recurrence_start_date', recurrenceStart);
+        formData.append('recurrence_end_date', document.getElementById('recurrence_end_date').value || '');
+    }
+    
+    // Agregar miembros asignados
+    assignedMembers.forEach(member => {
+        formData.append('assigned_members[]', member.value);
+    });
+    
+    // Agregar subtareas vacías
+    formData.append('subtasks', JSON.stringify([]));
+    
+    // Log para debug
+    console.log('📋 Enviando tarea sin subtareas');
+    console.log('📊 Es recurrente:', isRecurrent);
+    if (isRecurrent) {
+        console.log('📅 Fecha inicio recurrencia:', recurrenceStart);
+    } else {
+        console.log('📅 Fecha límite:', taskDueDate);
+    }
+    
+    // Deshabilitar botón mientras se envía
+    const btn = event.target || document.querySelector('button[onclick*="saveTaskWithoutSubtasks"]');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creando...';
+    }
+    
+    // Enviar datos al servidor
+    fetch('?route=clan_leader/create-task', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        console.log('📡 Response status:', response.status);
+        return response.text();
+    })
+    .then(text => {
+        console.log('📄 Response:', text);
+        try {
+            const data = JSON.parse(text);
+            if (data.success) {
+                showToast(data.message || 'Tarea creada exitosamente', 'success');
+                setTimeout(() => {
+                    window.location.href = '?route=clan_leader/tasks';
+                }, 1500);
+            } else {
+                showToast(data.message || 'Error al crear la tarea', 'error');
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-save"></i> Crear sin Subtareas';
+                }
+            }
+        } catch (e) {
+            console.error('❌ Error parseando respuesta:', e);
+            console.error('📄 Respuesta raw:', text);
+            showToast('Error del servidor', 'error');
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-save"></i> Crear sin Subtareas';
+            }
+        }
+    })
+    .catch(error => {
+        console.error('💥 Error:', error);
+        showToast('Error de conexión: ' + error.message, 'error');
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-save"></i> Crear sin Subtareas';
+        }
+    });
 }
 
 function saveTaskWithSubtasks() {
@@ -816,14 +933,30 @@ function saveTaskWithSubtasks() {
 }
 
 function createTaskWithSubtasks(subtasks) {
-    // Validar formulario
+    // Validar campos según si es recurrente o no
+    const isRecurrent = document.getElementById('is_recurrent').checked;
     const taskTitle = document.getElementById('task_title').value;
     const taskDueDate = document.getElementById('task_due_date').value;
+    const recurrenceStart = document.getElementById('recurrence_start_date') ? document.getElementById('recurrence_start_date').value : '';
     const assignedMembers = document.querySelectorAll('input[name="assigned_members[]"]:checked');
     
-    if (!taskTitle || !taskDueDate) {
-        showToast('Por favor completa todos los campos requeridos', 'error');
+    // Validación de título
+    if (!taskTitle) {
+        showToast('Por favor ingresa el título de la tarea', 'error');
         return;
+    }
+    
+    // Validación de fecha según tipo de tarea
+    if (isRecurrent) {
+        if (!recurrenceStart) {
+            showToast('Por favor ingresa la fecha de inicio de recurrencia', 'error');
+            return;
+        }
+    } else {
+        if (!taskDueDate) {
+            showToast('Por favor ingresa la fecha límite', 'error');
+            return;
+        }
     }
     
     if (assignedMembers.length === 0) {
@@ -834,9 +967,18 @@ function createTaskWithSubtasks(subtasks) {
     // Recopilar datos del formulario
     const formData = new FormData();
     formData.append('task_title', taskTitle);
-    formData.append('task_due_date', taskDueDate);
+    formData.append('task_due_date', taskDueDate || '');
     formData.append('task_project', document.getElementById('task_project').value);
     formData.append('task_description', document.getElementById('task_description').value);
+    formData.append('priority', 'medium'); // Valor por defecto
+    
+    // Agregar campos de recurrencia si aplica
+    if (isRecurrent) {
+        formData.append('is_recurrent', '1');
+        formData.append('recurrence_type', document.getElementById('recurrence_type').value);
+        formData.append('recurrence_start_date', recurrenceStart);
+        formData.append('recurrence_end_date', document.getElementById('recurrence_end_date').value || '');
+    }
     
     // Agregar miembros asignados
     assignedMembers.forEach(member => {
