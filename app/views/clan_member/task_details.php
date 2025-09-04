@@ -1113,7 +1113,10 @@ function showSubtaskComments(subtaskId) {
                 <div class="add-comment-section">
                     <h4>Agregar Comentario</h4>
                     <div class="comment-form">
-                        <textarea id="subtask-comment-text" placeholder="Escribe tu comentario..." rows="3"></textarea>
+                        <div class="rich-editor-container">
+                            <div id="subtask-comment-editor-${subtaskId}" style="margin-bottom: 10px;"></div>
+                        </div>
+                        <input type="hidden" id="subtask-comment-content-${subtaskId}" />
                         <div class="comment-actions">
                             <input type="file" id="subtask-comment-file" style="display: none;" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif">
                             <button type="button" onclick="document.getElementById('subtask-comment-file').click()" class="btn btn-secondary">
@@ -1137,6 +1140,11 @@ function showSubtaskComments(subtaskId) {
     
     document.body.appendChild(modal);
     loadSubtaskComments(subtaskId);
+    
+    // Inicializar editor de comentarios para esta subtarea
+    setTimeout(() => {
+        initializeSubtaskCommentEditor(subtaskId);
+    }, 300);
 }
 
 function showSubtaskAttachments(subtaskId) {
@@ -1260,13 +1268,37 @@ function loadSubtaskAttachments(subtaskId) {
 }
 
 function addSubtaskComment(subtaskId) {
-    const commentText = document.getElementById('subtask-comment-text').value.trim();
-    const fileInput = document.getElementById('subtask-comment-file');
+    let commentText = '';
     
-    if (!commentText) {
-        alert('Por favor escribe un comentario');
-        return;
+    // Obtener contenido del editor Quill de la subtarea
+    const subtaskEditor = window[`subtaskCommentEditor_${subtaskId}`];
+    if (subtaskEditor) {
+        const editorContent = subtaskEditor.getContents();
+        const htmlContent = subtaskEditor.root.innerHTML;
+        
+        // Validar que hay contenido
+        if (!editorContent.ops || editorContent.ops.length <= 1) {
+            alert('Por favor escribe un comentario');
+            return;
+        }
+        
+        commentText = htmlContent;
+    } else {
+        // Fallback para textarea normal (si el editor no se inicializó)
+        const textareaFallback = document.getElementById('subtask-comment-text');
+        if (textareaFallback) {
+            commentText = textareaFallback.value.trim();
+            if (!commentText) {
+                alert('Por favor escribe un comentario');
+                return;
+            }
+        } else {
+            alert('Error: No se pudo obtener el contenido del comentario');
+            return;
+        }
     }
+    
+    const fileInput = document.getElementById('subtask-comment-file');
 
     // Si hay archivo, primero subir el archivo
     if (fileInput.files.length > 0) {
@@ -1311,7 +1343,17 @@ function addSubtaskCommentWithText(subtaskId, commentText, attachmentId = null) 
     .then(response => response.json())
             .then(data => {
             if (data.success) {
-                document.getElementById('subtask-comment-text').value = '';
+                // Limpiar editor Quill o textarea fallback
+                const subtaskEditor = window[`subtaskCommentEditor_${subtaskId}`];
+                if (subtaskEditor) {
+                    subtaskEditor.setContents([]);
+                } else {
+                    const textareaFallback = document.getElementById('subtask-comment-text');
+                    if (textareaFallback) {
+                        textareaFallback.value = '';
+                    }
+                }
+                
                 document.getElementById('subtask-comment-file').value = '';
                 loadSubtaskComments(subtaskId);
                 loadSubtaskCounts(subtaskId); // Actualizar conteos
@@ -1894,6 +1936,45 @@ function initializeTaskCommentEditor() {
         
         // Agregar detector de atajo ???
         setupChecklistShortcut(taskCommentEditor);
+    }
+}
+
+// Función para inicializar editor de comentario de subtarea
+function initializeSubtaskCommentEditor(subtaskId) {
+    const editorId = `subtask-comment-editor-${subtaskId}`;
+    const editorElement = document.getElementById(editorId);
+    
+    if (editorElement && !window[`subtaskCommentEditor_${subtaskId}`]) {
+        window[`subtaskCommentEditor_${subtaskId}`] = new Quill(`#${editorId}`, {
+            theme: 'snow',
+            modules: {
+                toolbar: {
+                    container: [
+                        [{ 'header': [1, 2, 3, false] }],
+                        ['bold', 'italic', 'underline', 'strike'],
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                        ['checklist-btn'], // Botón personalizado para checklist
+                        [{ 'color': [] }, { 'background': [] }],
+                        ['link'],
+                        ['clean']
+                    ],
+                    handlers: {
+                        'checklist-btn': function() {
+                            insertChecklist(window[`subtaskCommentEditor_${subtaskId}`]);
+                        }
+                    }
+                }
+            },
+            placeholder: 'Escribe tu comentario...\n\nTip: Usa "???" + espacio para crear checklist rápido'
+        });
+        
+        // Agregar el botón personalizado al toolbar
+        addChecklistButton(window[`subtaskCommentEditor_${subtaskId}`], 'subtask');
+        
+        // Agregar detector de atajo ???
+        setupChecklistShortcut(window[`subtaskCommentEditor_${subtaskId}`]);
+        
+        console.log(`Editor de subtarea ${subtaskId} inicializado`);
     }
 }
 
