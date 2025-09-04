@@ -1646,11 +1646,14 @@ class ClanMemberController {
             }
 
             // Crear la tarea personal con campos básicos y de recurrencia
+            // Si es recurrente, usar la fecha de inicio de recurrencia como due_date
+            $taskDueDate = $isRecurrent ? $recurrenceStart : $dueDate;
+            
             $taskData = [
                 'task_name' => $taskName,
                 'description' => $description,
                 'priority' => $priority,
-                'due_date' => $dueDate,
+                'due_date' => $taskDueDate, // Usar fecha de inicio si es recurrente
                 'status' => $status,
                 'assigned_to_user_id' => $userId,
                 'is_recurrent' => $isRecurrent,

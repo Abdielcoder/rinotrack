@@ -1715,17 +1715,39 @@ function toggleRecurrenceFields() {
     const checkbox = document.getElementById('isRecurrent');
     const fields = document.getElementById('recurrenceFields');
     const dueDateHelp = document.getElementById('dueDateHelp');
+    const dueDateField = document.getElementById('taskDueDate');
+    const dueDateGroup = dueDateField ? dueDateField.closest('.form-group') : null;
     
     if (checkbox.checked) {
         fields.style.display = 'block';
-        dueDateHelp.style.display = 'block';
+        
+        // Ocultar campo de fecha límite normal cuando es recurrente
+        if (dueDateGroup) {
+            dueDateGroup.style.display = 'none';
+        }
+        dueDateField.required = false; // No requerir fecha límite si es recurrente
         
         // Hacer requeridos los campos de recurrencia
         document.getElementById('recurrenceType').required = true;
         document.getElementById('recurrenceStart').required = true;
+        
+        // Mostrar ayuda
+        if (dueDateHelp) {
+            dueDateHelp.style.display = 'block';
+            dueDateHelp.innerHTML = '<small style="color: #3B82F6;">ℹ️ Para tareas recurrentes, se usará la fecha de inicio como fecha límite de la tarea principal</small>';
+        }
     } else {
         fields.style.display = 'none';
-        dueDateHelp.style.display = 'none';
+        
+        // Mostrar campo de fecha límite normal
+        if (dueDateGroup) {
+            dueDateGroup.style.display = 'block';
+        }
+        dueDateField.required = true; // Requerir fecha límite si NO es recurrente
+        
+        if (dueDateHelp) {
+            dueDateHelp.style.display = 'none';
+        }
         
         // Quitar requerimiento
         document.getElementById('recurrenceType').required = false;

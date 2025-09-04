@@ -578,15 +578,37 @@ require_once __DIR__ . '/../admin/layout.php';
 function toggleRecurrenceFieldsClanLeader() {
     const checkbox = document.getElementById('is_recurrent');
     const fields = document.getElementById('recurrenceFieldsClanLeader');
+    const dueDateField = document.getElementById('task_due_date');
+    const dueDateGroup = dueDateField ? dueDateField.closest('.form-group') : null;
     
     if (checkbox.checked) {
         fields.style.display = 'block';
+        
+        // Ocultar campo de fecha límite normal cuando es recurrente
+        if (dueDateGroup) {
+            const label = dueDateGroup.querySelector('label');
+            if (label) {
+                label.innerHTML = 'Fecha Límite <small style="color: #3B82F6;">(Se usará fecha de inicio de recurrencia)</small>';
+            }
+            dueDateField.style.display = 'none';
+            dueDateField.required = false; // No requerir fecha límite si es recurrente
+        }
         
         // Hacer requeridos los campos de recurrencia
         document.getElementById('recurrence_type').required = true;
         document.getElementById('recurrence_start_date').required = true;
     } else {
         fields.style.display = 'none';
+        
+        // Mostrar campo de fecha límite normal
+        if (dueDateGroup) {
+            const label = dueDateGroup.querySelector('label');
+            if (label) {
+                label.innerHTML = 'Fecha Límite <span class="required">*</span>';
+            }
+            dueDateField.style.display = 'block';
+            dueDateField.required = true; // Requerir fecha límite si NO es recurrente
+        }
         
         // Quitar requerimiento
         document.getElementById('recurrence_type').required = false;

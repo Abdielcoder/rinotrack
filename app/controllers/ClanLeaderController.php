@@ -1241,7 +1241,13 @@ class ClanLeaderController {
         $recurrenceStart = $isRecurrent ? trim($_POST['recurrence_start_date'] ?? '') : null;
         $recurrenceEnd = $isRecurrent ? trim($_POST['recurrence_end_date'] ?? '') : null;
         
+        // Si es recurrente, usar la fecha de inicio de recurrencia como due_date
+        if ($isRecurrent && !empty($recurrenceStart)) {
+            $taskDueDate = $recurrenceStart;
+        }
+        
         error_log('createTask - Campos de recurrencia: is_recurrent=' . $isRecurrent . ', type=' . ($recurrenceType ?? 'NULL') . ', start=' . ($recurrenceStart ?? 'NULL') . ', end=' . ($recurrenceEnd ?? 'NULL'));
+        error_log('createTask - taskDueDate final: ' . ($taskDueDate ?? 'NULL'));
         // Manejar assigned_members que puede ser un array (desde formulario) o JSON string
         $assignedMembersRaw = $_POST['assigned_members'] ?? [];
         if (is_string($assignedMembersRaw)) {
