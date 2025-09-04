@@ -164,7 +164,7 @@ $additionalJS[] = 'https://cdn.quilljs.com/1.3.6/quill.min.js';
             <div class="rich-editor-container">
                 <div id="task-comment-editor" style="margin-bottom: 10px;"></div>
             </div>
-            <div class="form-group inline">
+            <div class="form-group inline" style="margin-top: 30px;">
               <input type="file" name="attachments[]" multiple />
               <button class="action-btn primary" type="submit"><i class="fas fa-paper-plane"></i> Enviar</button>
             </div>
