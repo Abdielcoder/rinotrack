@@ -220,6 +220,7 @@ class ClanMemberController {
         $perPage = (int)($_GET['per_page'] ?? 8);
         $search = trim($_GET['search'] ?? '');
         $status = trim($_GET['status'] ?? '');
+        $projectFilter = trim($_GET['project'] ?? '');
 
         // Tabla: Incluir tanto tareas asignadas como tareas personales creadas por el usuario
         // - Proyectos del clan: solo tareas asignadas al usuario
@@ -234,6 +235,13 @@ class ClanMemberController {
         foreach ($clanPart['tasks'] as $t) { $merged[$t['task_id']] = $t; }
         foreach ($ownLogical as $t) { $merged[$t['task_id']] = $t; }
         foreach ($personalTasks as $t) { $merged[$t['task_id']] = $t; }
+        
+        // Aplicar filtro por proyecto si está especificado
+        if (!empty($projectFilter)) {
+            $merged = array_filter($merged, function($task) use ($projectFilter) {
+                return stripos($task['project_name'] ?? '', $projectFilter) !== false;
+            });
+        }
         
         $result = $clanPart;
         $result['tasks'] = array_values($merged);
@@ -327,6 +335,7 @@ class ClanMemberController {
             'tasksData' => $result,
             'search' => $search,
             'status' => $status,
+            'projectFilter' => $projectFilter,
             'perPage' => $perPage,
             'projectsSummary' => $projectsSummary,
             'recurrentTasks' => $recurrentTasks

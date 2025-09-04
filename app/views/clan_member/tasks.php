@@ -165,10 +165,21 @@ ob_start();
                     <input type="hidden" name="route" value="clan_member/tasks" />
                     <input type="text" name="search" class="search-input" placeholder="Buscar" value="<?php echo Utils::escape($search ?? ''); ?>" />
                     <select name="status" class="filter-select">
-                        <option value="">Todos</option>
+                        <option value="">Todos los estados</option>
                         <option value="pending" <?php echo ($status === 'pending') ? 'selected' : ''; ?>>Pendiente</option>
                         <option value="in_progress" <?php echo ($status === 'in_progress') ? 'selected' : ''; ?>>En progreso</option>
                         <option value="completed" <?php echo ($status === 'completed') ? 'selected' : ''; ?>>Completado</option>
+                    </select>
+                    <select name="project" class="filter-select">
+                        <option value="">Todos los proyectos</option>
+                        <?php if (!empty($projectsSummary)): ?>
+                            <?php foreach ($projectsSummary as $project): ?>
+                                <option value="<?php echo htmlspecialchars($project['project_name']); ?>" 
+                                        <?php echo ($projectFilter === $project['project_name']) ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($project['project_name']); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
                     </select>
                     <select name="per_page" class="filter-select" title="Resultados por página">
                         <?php $pp = (int)($perPage ?? 8); foreach ([5,8,12,20,30] as $opt): ?>
@@ -176,6 +187,11 @@ ob_start();
                         <?php endforeach; ?>
                     </select>
                     <button class="btn btn-secondary" type="submit">Aplicar</button>
+                    <?php if (!empty($search) || !empty($status) || !empty($projectFilter)): ?>
+                        <a href="?route=clan_member/tasks" class="btn btn-outline" style="text-decoration: none;">
+                            <i class="fas fa-times"></i> Limpiar
+                        </a>
+                    <?php endif; ?>
                 </form>
             </div>
         </section>
@@ -430,6 +446,69 @@ ob_start();
     border-color: #1e40af !important;
     transform: translateY(-1px);
     box-shadow: 0 6px 18px rgba(30, 58, 138, 0.22);
+}
+
+/* Estilos para filtros */
+.filters {
+    gap: 12px !important;
+}
+
+.filter-select {
+    padding: 8px 12px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    background: white;
+    color: #374151;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 140px;
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: #1e3a8a;
+    box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
+}
+
+.search-input {
+    padding: 8px 12px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    background: white;
+    color: #374151;
+    font-size: 0.9rem;
+    min-width: 200px;
+    transition: all 0.3s ease;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #1e3a8a;
+    box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
+}
+
+.btn-outline {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    border: 2px solid #ef4444;
+    background: white;
+    color: #ef4444;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-outline:hover {
+    background: #ef4444;
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
 }
 
 /* Estilos para tareas recurrentes */
