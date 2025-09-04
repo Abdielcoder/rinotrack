@@ -2080,7 +2080,7 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 .ql-editor {
-    min-height: 120px;
+    min-height: 100px;
     font-size: 14px;
     line-height: 1.5;
 }
