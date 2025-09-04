@@ -91,15 +91,14 @@ ob_start();
             <div class="section-header">
                 <h2 class="section-title">
                     <i class="fas fa-project-diagram"></i>
-                    Proyectos del Clan
+                    Mis Proyectos
                 </h2>
             </div>
             <div class="projects-grid">
                 <?php foreach ($projectsSummary as $project): ?>
                 <?php 
-                    // Ocultar proyectos lógicos/especiales
-                    $hiddenProjects = ['Tareas Eventuales', 'Tareas Personales', 'Tareas Recurrentes'];
-                    if (in_array($project['project_name'], $hiddenProjects)) continue;
+                    // Mostrar TODOS los proyectos en la parte superior
+                    // No filtrar ningún proyecto
                 ?>
                 <div class="project-card">
                     <div class="project-header">
@@ -156,61 +155,6 @@ ob_start();
         </section>
         <?php endif; ?>
 
-        <!-- Tareas Recurrentes -->
-        <?php if (!empty($recurrentTasks)): ?>
-        <section class="recurrent-tasks-section animate-fade-in">
-            <div class="section-header">
-                <h2 class="section-title">
-                    <i class="fas fa-redo"></i>
-                    Tareas Recurrentes
-                </h2>
-            </div>
-            <div class="recurrent-tasks-grid">
-                <?php foreach ($recurrentTasks as $task): ?>
-                <div class="recurrent-task-card">
-                    <div class="task-header">
-                        <input type="checkbox" class="task-checkbox" 
-                               <?php echo ($task['status'] === 'completed' || ($task['is_completed'] ?? 0) == 1) ? 'checked' : ''; ?> 
-                               onchange="toggleTaskStatus(<?php echo $task['task_id']; ?>, this.checked)">
-                        <h4 class="task-title"><?php echo htmlspecialchars($task['task_name']); ?></h4>
-                        <a href="?route=clan_member/task-details&task_id=<?php echo $task['task_id']; ?>" class="btn-view" title="Ver detalles">
-                            <i class="fas fa-eye"></i>
-                        </a>
-                    </div>
-                    
-                    <?php if (!empty($task['description'])): ?>
-                    <div class="task-description">
-                        <?php echo htmlspecialchars(substr($task['description'], 0, 100)); ?>
-                        <?php echo strlen($task['description']) > 100 ? '...' : ''; ?>
-                    </div>
-                    <?php endif; ?>
-                    
-                    <div class="task-meta">
-                        <div class="task-status">
-                            <span class="status-badge status-<?php echo $task['status']; ?>">
-                                <?php 
-                                switch($task['status']) {
-                                    case 'in_progress': echo 'En Progreso'; break;
-                                    case 'completed': echo 'Completada'; break;
-                                    case 'cancelled': echo 'Cancelada'; break;
-                                    default: echo 'Pendiente'; break;
-                                }
-                                ?>
-                            </span>
-                        </div>
-                        
-                        <?php if (!empty($task['due_date'])): ?>
-                        <div class="task-due-date">
-                            <i class="fas fa-calendar"></i>
-                            <?php echo date('d/m/Y', strtotime($task['due_date'])); ?>
-                        </div>
-                        <?php endif; ?>
-                    </div>
-                </div>
-                <?php endforeach; ?>
-            </div>
-        </section>
-        <?php endif; ?>
 
         <section class="content-section animate-fade-in">
             <div class="content-card">
@@ -300,48 +244,6 @@ ob_start();
             </div>
         </section>
 
-        <section class="content-section animate-fade-in">
-            <div class="content-card">
-                <div class="card-header"><h3><i class="fas fa-diagram-project icon-gradient"></i> Proyectos del Clan</h3></div>
-                <?php if (empty($projectsSummary)): ?>
-                    <div class="empty">No hay proyectos para mostrar</div>
-                <?php else: ?>
-                <div class="cm-project-cards">
-                    <?php foreach ($projectsSummary as $p): ?>
-                        <?php 
-                            // Ocultar proyectos especiales del sistema
-                            if (in_array($p['project_name'], ['Tareas Recurrentes', 'Tareas Eventuales', 'Tareas Personales'])) {
-                                continue;
-                            }
-                            
-                            $pid = (int)($p['project_id'] ?? 0);
-                            $prog = (float)($p['progress_percentage'] ?? 0);
-                            $status = strtoupper($p['status'] ?? 'open');
-                        ?>
-                        <div class="cm-project-card">
-                            <div class="pc-top">
-                                <div class="pc-title"><?php echo Utils::escape($p['project_name'] ?? ''); ?></div>
-                                <div class="pc-status"><?php echo Utils::escape($status); ?></div>
-                            </div>
-                            <div class="pc-metrics">
-                                <div class="pc-metric"><i class="fas fa-list"></i><div><div class="num"><?php echo (int)($p['total_tasks'] ?? 0); ?></div><div class="cap">Total</div></div></div>
-                                <div class="pc-metric"><i class="fas fa-check-circle"></i><div><div class="num"><?php echo (int)($p['completed_tasks'] ?? 0); ?></div><div class="cap">Completadas</div></div></div>
-                                <div class="pc-metric"><i class="fas fa-chart-line"></i><div><div class="num"><?php echo number_format($prog, 2); ?>%</div><div class="cap">Progreso</div></div></div>
-                            </div>
-                            <div class="pc-progress"><span style="width: <?php echo $prog; ?>%"></span></div>
-                            <div class="pc-actions">
-                                <?php if ($pid > 0): ?>
-                                <a class="btn btn-secondary" href="?route=clan_member/project-tasks&project_id=<?php echo $pid; ?>">
-                                    <i class="fas fa-eye"></i> Ver Tareas
-                                </a>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-                <?php endif; ?>
-            </div>
-        </section>
     </main>
 </div>
 
