@@ -1118,8 +1118,8 @@ function showSubtaskComments(subtaskId) {
                         </div>
                         <input type="hidden" id="subtask-comment-content-${subtaskId}" />
                         <div class="comment-actions">
-                            <input type="file" id="subtask-comment-file" style="display: none;" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif">
-                            <button type="button" onclick="document.getElementById('subtask-comment-file').click()" class="btn btn-secondary">
+                            <input type="file" id="subtask-comment-file-${subtaskId}" style="display: none;" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif">
+                            <button type="button" onclick="document.getElementById('subtask-comment-file-${subtaskId}').click()" class="btn btn-secondary">
                                 <i class="fas fa-paperclip"></i> Adjuntar
                             </button>
                             <button type="button" onclick="addSubtaskComment(${subtaskId})" class="btn btn-primary">
@@ -1143,7 +1143,9 @@ function showSubtaskComments(subtaskId) {
     
     // Inicializar editor de comentarios para esta subtarea
     setTimeout(() => {
-        initializeSubtaskCommentEditor(subtaskId);
+        waitForQuill(() => {
+            initializeSubtaskCommentEditor(subtaskId);
+        });
     }, 300);
 }
 
@@ -1298,7 +1300,7 @@ function addSubtaskComment(subtaskId) {
         }
     }
     
-    const fileInput = document.getElementById('subtask-comment-file');
+    const fileInput = document.getElementById(`subtask-comment-file-${subtaskId}`);
 
     // Si hay archivo, primero subir el archivo
     if (fileInput.files.length > 0) {
@@ -1354,7 +1356,10 @@ function addSubtaskCommentWithText(subtaskId, commentText, attachmentId = null) 
                     }
                 }
                 
-                document.getElementById('subtask-comment-file').value = '';
+                const fileInputToClean = document.getElementById(`subtask-comment-file-${subtaskId}`);
+                if (fileInputToClean) {
+                    fileInputToClean.value = '';
+                }
                 loadSubtaskComments(subtaskId);
                 loadSubtaskCounts(subtaskId); // Actualizar conteos
             } else {
@@ -1943,6 +1948,9 @@ function initializeTaskCommentEditor() {
 function initializeSubtaskCommentEditor(subtaskId) {
     const editorId = `subtask-comment-editor-${subtaskId}`;
     const editorElement = document.getElementById(editorId);
+    
+    console.log(`Intentando inicializar editor para subtarea ${subtaskId}`);
+    console.log(`Elemento encontrado:`, editorElement);
     
     if (editorElement && !window[`subtaskCommentEditor_${subtaskId}`]) {
         window[`subtaskCommentEditor_${subtaskId}`] = new Quill(`#${editorId}`, {
