@@ -96,6 +96,11 @@ ob_start();
             </div>
             <div class="projects-grid">
                 <?php foreach ($projectsSummary as $project): ?>
+                <?php 
+                    // Ocultar proyectos lógicos/especiales
+                    $hiddenProjects = ['Tareas Eventuales', 'Tareas Personales', 'Tareas Recurrentes'];
+                    if (in_array($project['project_name'], $hiddenProjects)) continue;
+                ?>
                 <div class="project-card">
                     <div class="project-header">
                         <h3 class="project-name"><?= htmlspecialchars($project['project_name']) ?></h3>
@@ -305,7 +310,7 @@ ob_start();
                     <?php foreach ($projectsSummary as $p): ?>
                         <?php 
                             // Ocultar proyectos especiales del sistema
-                            if (in_array($p['project_name'], ['Tareas Recurrentes', 'Tareas Eventuales'])) {
+                            if (in_array($p['project_name'], ['Tareas Recurrentes', 'Tareas Eventuales', 'Tareas Personales'])) {
                                 continue;
                             }
                             
