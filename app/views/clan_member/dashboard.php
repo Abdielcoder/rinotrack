@@ -452,11 +452,11 @@ ob_start();
             </div>
 
             <div class="form-row">
-                <div class="form-group">
+                <div class="form-group" id="dueDateGroup">
                     <label for="taskDueDate">Fecha de Vencimiento</label>
                     <input type="date" id="taskDueDate" name="due_date" required
                            value="<?php echo isset($taskToEdit) && $taskToEdit['due_date'] ? $taskToEdit['due_date'] : ''; ?>">
-                    <small style="color: #6b7280; font-size: 0.8rem;" id="dueDateHelp">Para tareas recurrentes, esta será la fecha de la primera instancia</small>
+                    <small style="color: #6b7280; font-size: 0.8rem; display: none;" id="dueDateHelp">Para tareas recurrentes, se usará la fecha de inicio de recurrencia</small>
                 </div>
                 
                 <!-- Campo oculto para prioridad con valor fijo -->
@@ -1716,16 +1716,26 @@ function toggleRecurrenceFields() {
     const fields = document.getElementById('recurrenceFields');
     const dueDateHelp = document.getElementById('dueDateHelp');
     const dueDateField = document.getElementById('taskDueDate');
-    const dueDateGroup = dueDateField ? dueDateField.closest('.form-group') : null;
+    const dueDateGroup = document.getElementById('dueDateGroup');
+    
+    console.log('Toggle recurrence - checked:', checkbox.checked);
     
     if (checkbox.checked) {
+        // Mostrar campos de recurrencia
         fields.style.display = 'block';
         
-        // Ocultar campo de fecha límite normal cuando es recurrente
+        // Ocultar completamente el grupo de fecha límite
         if (dueDateGroup) {
             dueDateGroup.style.display = 'none';
         }
-        dueDateField.required = false; // No requerir fecha límite si es recurrente
+        
+        // IMPORTANTE: Quitar required y limpiar valor de fecha límite
+        if (dueDateField) {
+            dueDateField.required = false;
+            dueDateField.removeAttribute('required'); // Asegurar que se quite el atributo
+            dueDateField.value = ''; // Limpiar el valor para evitar validación
+            console.log('Fecha límite required:', dueDateField.required);
+        }
         
         // Hacer requeridos los campos de recurrencia
         document.getElementById('recurrenceType').required = true;
@@ -1734,26 +1744,34 @@ function toggleRecurrenceFields() {
         // Mostrar ayuda
         if (dueDateHelp) {
             dueDateHelp.style.display = 'block';
-            dueDateHelp.innerHTML = '<small style="color: #3B82F6;">ℹ️ Para tareas recurrentes, se usará la fecha de inicio como fecha límite de la tarea principal</small>';
+            dueDateHelp.innerHTML = 'ℹ️ Para tareas recurrentes, se usará la fecha de inicio como fecha límite';
         }
     } else {
+        // Ocultar campos de recurrencia
         fields.style.display = 'none';
         
         // Mostrar campo de fecha límite normal
         if (dueDateGroup) {
             dueDateGroup.style.display = 'block';
         }
-        dueDateField.required = true; // Requerir fecha límite si NO es recurrente
         
+        // IMPORTANTE: Restaurar required para fecha límite
+        if (dueDateField) {
+            dueDateField.required = true;
+            dueDateField.setAttribute('required', 'required');
+            console.log('Fecha límite required:', dueDateField.required);
+        }
+        
+        // Ocultar ayuda
         if (dueDateHelp) {
             dueDateHelp.style.display = 'none';
         }
         
-        // Quitar requerimiento
+        // Quitar requerimiento de campos de recurrencia
         document.getElementById('recurrenceType').required = false;
         document.getElementById('recurrenceStart').required = false;
         
-        // Limpiar valores
+        // Limpiar valores de recurrencia
         document.getElementById('recurrenceType').value = '';
         document.getElementById('recurrenceStart').value = '';
         document.getElementById('recurrenceEnd').value = '';

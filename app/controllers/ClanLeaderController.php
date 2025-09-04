@@ -1348,9 +1348,25 @@ class ClanLeaderController {
         error_log('  assignedMembers count: ' . count($assignedMembers));
         error_log('  subtasks count: ' . count($subtasks));
         
-        if (empty($taskTitle) || empty($taskDueDate)) {
-            error_log('createTask - Error: Título o fecha vacíos');
-            Utils::jsonResponse(['success' => false, 'message' => 'Título y fecha límite son requeridos'], 400);
+        // Validar título siempre
+        if (empty($taskTitle)) {
+            error_log('createTask - Error: Título vacío');
+            Utils::jsonResponse(['success' => false, 'message' => 'El título es requerido'], 400);
+            return;
+        }
+        
+        // Validar fecha límite SOLO si NO es recurrente
+        if (!$isRecurrent && empty($taskDueDate)) {
+            error_log('createTask - Error: Fecha vacía y no es recurrente');
+            Utils::jsonResponse(['success' => false, 'message' => 'La fecha límite es requerida para tareas no recurrentes'], 400);
+            return;
+        }
+        
+        // Si es recurrente, validar que tenga fecha de inicio
+        if ($isRecurrent && empty($recurrenceStart)) {
+            error_log('createTask - Error: Es recurrente pero sin fecha de inicio');
+            Utils::jsonResponse(['success' => false, 'message' => 'La fecha de inicio es requerida para tareas recurrentes'], 400);
+            return;
         }
         
         if (empty($assignedMembers)) {

@@ -581,40 +581,49 @@ function toggleRecurrenceFieldsClanLeader() {
     const dueDateField = document.getElementById('task_due_date');
     const dueDateGroup = dueDateField ? dueDateField.closest('.form-group') : null;
     
+    console.log('Toggle recurrence clan leader - checked:', checkbox.checked);
+    
     if (checkbox.checked) {
+        // Mostrar campos de recurrencia
         fields.style.display = 'block';
         
-        // Ocultar campo de fecha límite normal cuando es recurrente
+        // Ocultar campo de fecha límite cuando es recurrente
         if (dueDateGroup) {
-            const label = dueDateGroup.querySelector('label');
-            if (label) {
-                label.innerHTML = 'Fecha Límite <small style="color: #3B82F6;">(Se usará fecha de inicio de recurrencia)</small>';
-            }
-            dueDateField.style.display = 'none';
-            dueDateField.required = false; // No requerir fecha límite si es recurrente
+            dueDateGroup.style.display = 'none';
+        }
+        
+        // IMPORTANTE: Quitar required y limpiar valor
+        if (dueDateField) {
+            dueDateField.required = false;
+            dueDateField.removeAttribute('required');
+            dueDateField.value = ''; // Limpiar valor para evitar validación HTML5
+            console.log('Fecha límite required:', dueDateField.required);
         }
         
         // Hacer requeridos los campos de recurrencia
         document.getElementById('recurrence_type').required = true;
         document.getElementById('recurrence_start_date').required = true;
     } else {
+        // Ocultar campos de recurrencia
         fields.style.display = 'none';
         
         // Mostrar campo de fecha límite normal
         if (dueDateGroup) {
-            const label = dueDateGroup.querySelector('label');
-            if (label) {
-                label.innerHTML = 'Fecha Límite <span class="required">*</span>';
-            }
-            dueDateField.style.display = 'block';
-            dueDateField.required = true; // Requerir fecha límite si NO es recurrente
+            dueDateGroup.style.display = 'block';
         }
         
-        // Quitar requerimiento
+        // IMPORTANTE: Restaurar required
+        if (dueDateField) {
+            dueDateField.required = true;
+            dueDateField.setAttribute('required', 'required');
+            console.log('Fecha límite required:', dueDateField.required);
+        }
+        
+        // Quitar requerimiento de campos de recurrencia
         document.getElementById('recurrence_type').required = false;
         document.getElementById('recurrence_start_date').required = false;
         
-        // Limpiar valores
+        // Limpiar valores de recurrencia
         document.getElementById('recurrence_type').value = '';
         document.getElementById('recurrence_start_date').value = '';
         document.getElementById('recurrence_end_date').value = '';

@@ -1596,7 +1596,7 @@ class ClanMemberController {
             $recurrenceEnd = $isRecurrent ? trim($_POST['recurrence_end_date'] ?? '') : null;
 
             // Log de datos recibidos
-            error_log("Datos procesados: task_name=$taskName, priority=$priority, due_date=$dueDate, user_id=$userId");
+            error_log("Datos procesados: task_name=$taskName, priority=$priority, due_date=$dueDate, user_id=$userId, is_recurrent=$isRecurrent");
 
             // Validaciones básicas
             if (empty($taskName)) {
@@ -1604,7 +1604,8 @@ class ClanMemberController {
                 return;
             }
 
-            if (empty($dueDate)) {
+            // Validar fecha límite SOLO si NO es recurrente
+            if (!$isRecurrent && empty($dueDate)) {
                 echo json_encode(['success' => false, 'message' => 'La fecha de vencimiento es requerida']);
                 return;
             }
