@@ -117,7 +117,16 @@ class ClanMemberController {
         $projectId = (int)($_GET['project_id'] ?? 0);
         if ($projectId <= 0) { die('Proyecto inválido'); }
         $project = $this->projectModel->findById($projectId);
-        if (!$project || (int)$project['clan_id'] !== (int)$this->userClan['clan_id']) {
+        if (!$project) {
+            die('Proyecto no encontrado');
+        }
+        
+        // Permitir acceso a proyectos especiales (Tareas Recurrentes, Eventuales, Personales)
+        $specialProjects = ['Tareas Recurrentes', 'Tareas Eventuales', 'Tareas Personales'];
+        $isSpecialProject = in_array($project['project_name'], $specialProjects);
+        
+        // Para proyectos normales, verificar que pertenezcan al clan del usuario
+        if (!$isSpecialProject && (int)$project['clan_id'] !== (int)$this->userClan['clan_id']) {
             die('Acceso denegado al proyecto');
         }
         // Obtener solo las tareas del proyecto que están asignadas al usuario
@@ -237,14 +246,30 @@ class ClanMemberController {
             $pid = (int)$p['project_id'];
             $projectName = $p['project_name'];
             
-            // Obtener solo las tareas asignadas al usuario en este proyecto
-            $userTasksInProject = $this->taskModel->getUserTasksByProject($this->currentUser['user_id'], $pid);
-            $total = count($userTasksInProject);
-            $completed = 0;
-            foreach ($userTasksInProject as $t) {
-                if (($t['status'] ?? '') === 'completed' || ($t['is_completed'] ?? 0) == 1) { $completed++; }
+            // Para proyectos especiales, recalcular el conteo real de tareas del usuario
+            $specialProjects = ['Tareas Recurrentes', 'Tareas Eventuales', 'Tareas Personales'];
+            if (in_array($projectName, $specialProjects)) {
+                // Obtener tareas del usuario para proyectos especiales
+                $userTasksInProject = $this->taskModel->getUserTasksByProject($this->currentUser['user_id'], $pid);
+                $total = count($userTasksInProject);
+                $completed = 0;
+                foreach ($userTasksInProject as $t) {
+                    if (($t['status'] ?? '') === 'completed' || ($t['is_completed'] ?? 0) == 1) { $completed++; }
+                }
+                $progress = $total > 0 ? round(($completed / $total) * 100, 2) : 0;
+                
+                error_log("DEBUG: Proyecto especial '$projectName' - Usuario {$this->currentUser['user_id']} - Total tareas: $total, Completadas: $completed");
+            } else {
+                // Para proyectos normales, usar el conteo de la consulta
+                $userTasksInProject = $this->taskModel->getUserTasksByProject($this->currentUser['user_id'], $pid);
+                $total = count($userTasksInProject);
+                $completed = 0;
+                foreach ($userTasksInProject as $t) {
+                    if (($t['status'] ?? '') === 'completed' || ($t['is_completed'] ?? 0) == 1) { $completed++; }
+                }
+                $progress = $total > 0 ? round(($completed / $total) * 100, 2) : 0;
             }
-            $progress = $total > 0 ? round(($completed / $total) * 100, 2) : 0;
+            
             $projectsSummary[] = [
                 'project_id' => $pid,
                 'project_name' => $projectName,
