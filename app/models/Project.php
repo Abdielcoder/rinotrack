@@ -219,6 +219,7 @@ class Project {
                     p.*,
                     c.clan_name,
                     u.full_name as created_by_name,
+                    COALESCE(p.allow_delegation, 0) as allow_delegation,
                     COUNT(t.task_id) as total_tasks,
                     SUM(CASE WHEN (t.status = 'completed' OR t.is_completed = 1) THEN 1 ELSE 0 END) as completed_tasks,
                     CASE 
@@ -234,7 +235,7 @@ class Project {
                 WHERE p.clan_id = ? AND (p.is_personal IS NULL OR p.is_personal != 1)
                 GROUP BY p.project_id, p.project_name, p.description, p.clan_id, p.created_by_user_id, 
                          p.status, p.created_at, p.updated_at, p.kpi_quarter_id, p.kpi_points, 
-                         p.task_distribution_mode, c.clan_name, u.full_name
+                         p.task_distribution_mode, p.allow_delegation, c.clan_name, u.full_name
                 ORDER BY p.created_at DESC
             ");
             $stmt->execute([$clanId]);

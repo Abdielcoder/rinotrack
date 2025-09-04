@@ -74,6 +74,19 @@ ob_start();
                             </div>
                         </div>
                         
+                        <div class="project-delegation">
+                            <label class="delegation-checkbox">
+                                <input type="checkbox" 
+                                       class="delegation-toggle" 
+                                       data-project-id="<?= $project['project_id'] ?>"
+                                       <?= isset($project['allow_delegation']) && $project['allow_delegation'] ? 'checked' : '' ?>
+                                       onchange="toggleProjectDelegation(<?= $project['project_id'] ?>, this.checked)">
+                                <span class="checkbox-label">
+                                    <i class="fas fa-user-plus"></i> Delegar tareas
+                                </span>
+                            </label>
+                        </div>
+                        
                         <div class="project-actions">
                             <a href="<?= APP_URL ?>?route=clan_leader/tasks&project_id=<?= $project['project_id'] ?>" class="btn-minimal primary">
                                 <i class="fas fa-eye"></i> Ver Tareas
@@ -726,6 +739,47 @@ ob_start();
     background: linear-gradient(90deg, #10b981, #34d399);
     border-radius: 4px;
     transition: width 0.3s ease;
+}
+
+/* Delegación de Proyecto */
+.project-delegation {
+    padding: 0.75rem 0 0.5rem;
+    border-top: 1px solid #e5e7eb;
+    margin-top: 0.5rem;
+}
+
+.delegation-checkbox {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    user-select: none;
+}
+
+.delegation-checkbox input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin-right: 8px;
+    cursor: pointer;
+    accent-color: #3B82F6;
+}
+
+.delegation-checkbox .checkbox-label {
+    font-size: 0.875rem;
+    color: #4b5563;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: color 0.2s;
+}
+
+.delegation-checkbox:hover .checkbox-label {
+    color: #3B82F6;
+}
+
+.delegation-checkbox input[type="checkbox"]:checked + .checkbox-label {
+    color: #3B82F6;
+    font-weight: 500;
 }
 
 /* Acciones de Proyecto */
@@ -2175,6 +2229,124 @@ ob_start();
 </style>
 
 <script>
+// Función para cambiar el estado de delegación de un proyecto
+function toggleProjectDelegation(projectId, allowDelegation) {
+    console.log('Cambiando delegación para proyecto:', projectId, 'a:', allowDelegation);
+    
+    // Mostrar indicador de carga
+    const checkbox = document.querySelector(`input[data-project-id="${projectId}"]`);
+    const label = checkbox ? checkbox.nextElementSibling : null;
+    
+    if (label) {
+        const originalText = label.innerHTML;
+        label.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Actualizando...';
+        checkbox.disabled = true;
+    }
+    
+    // Enviar petición al servidor
+    fetch('?route=clan_leader/update-project-delegation', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `project_id=${projectId}&allow_delegation=${allowDelegation ? 1 : 0}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Mostrar notificación de éxito
+            showNotification(data.message || 'Delegación actualizada correctamente', 'success');
+            
+            // Actualizar el estado visual
+            if (label) {
+                label.innerHTML = '<i class="fas fa-user-plus"></i> Delegar tareas';
+                checkbox.disabled = false;
+            }
+        } else {
+            // Revertir el checkbox si hay error
+            if (checkbox) {
+                checkbox.checked = !allowDelegation;
+                checkbox.disabled = false;
+            }
+            if (label) {
+                label.innerHTML = '<i class="fas fa-user-plus"></i> Delegar tareas';
+            }
+            showNotification(data.message || 'Error al actualizar delegación', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        // Revertir el checkbox en caso de error
+        if (checkbox) {
+            checkbox.checked = !allowDelegation;
+            checkbox.disabled = false;
+        }
+        if (label) {
+            label.innerHTML = '<i class="fas fa-user-plus"></i> Delegar tareas';
+        }
+        showNotification('Error de conexión', 'error');
+    });
+}
+
+// Función para mostrar notificaciones
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 20px;
+        background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+        color: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        z-index: 10000;
+        animation: slideIn 0.3s ease;
+        max-width: 300px;
+    `;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    // Remover después de 3 segundos
+    setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => {
+            notification.remove();
+        }, 300);
+    }, 3000);
+}
+
+// Agregar animaciones CSS
+if (!document.getElementById('notification-styles')) {
+    const style = document.createElement('style');
+    style.id = 'notification-styles';
+    style.textContent = `
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+    `;
+    document.head.appendChild(style);
+}
+
 function filterTasks() {
     const statusFilter = document.getElementById('statusFilter').value;
     const priorityFilter = document.getElementById('priorityFilter').value;

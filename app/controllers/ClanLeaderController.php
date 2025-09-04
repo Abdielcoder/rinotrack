@@ -743,6 +743,69 @@ class ClanLeaderController {
     }
     
     /**
+     * Actualizar estado de delegación de un proyecto
+     */
+    public function updateProjectDelegation() {
+        $this->requireAuth();
+        if (!$this->hasClanLeaderAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos'], 403);
+            return;
+        }
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
+            return;
+        }
+        
+        $projectId = (int)($_POST['project_id'] ?? 0);
+        $allowDelegation = (int)($_POST['allow_delegation'] ?? 0);
+        
+        if ($projectId <= 0) {
+            Utils::jsonResponse(['success' => false, 'message' => 'ID de proyecto inválido'], 400);
+            return;
+        }
+        
+        try {
+            // Verificar que el proyecto pertenece al clan del líder
+            $stmt = $this->db->prepare("
+                SELECT project_id, project_name 
+                FROM Projects 
+                WHERE project_id = ? AND clan_id = ?
+            ");
+            $stmt->execute([$projectId, $this->userClan['clan_id']]);
+            $project = $stmt->fetch();
+            
+            if (!$project) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Proyecto no encontrado o sin permisos'], 404);
+                return;
+            }
+            
+            // Actualizar el estado de delegación
+            $updateStmt = $this->db->prepare("
+                UPDATE Projects 
+                SET allow_delegation = ? 
+                WHERE project_id = ?
+            ");
+            $updateStmt->execute([$allowDelegation, $projectId]);
+            
+            $message = $allowDelegation ? 
+                "Los colaboradores ahora pueden agregar tareas a '{$project['project_name']}'" : 
+                "Se ha desactivado la delegación para '{$project['project_name']}'";
+            
+            Utils::jsonResponse([
+                'success' => true, 
+                'message' => $message,
+                'project_id' => $projectId,
+                'allow_delegation' => $allowDelegation
+            ]);
+            
+        } catch (Exception $e) {
+            error_log("Error en updateProjectDelegation: " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error al actualizar delegación'], 500);
+        }
+    }
+    
+    /**
      * Gestión de tareas del clan
      */
     public function tasks() {
