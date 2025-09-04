@@ -452,6 +452,11 @@ try {
         $controller->updateProject();
         break;
         
+    case 'clan_leader/update-project-delegation':
+        $controller = new ClanLeaderController();
+        $controller->updateProjectDelegation();
+        break;
+        
     case 'clan_leader/delete-project':
         $controller = new ClanLeaderController();
         $controller->deleteProject();
