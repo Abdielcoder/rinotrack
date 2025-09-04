@@ -1564,6 +1564,93 @@ class ClanMemberController {
         }
     }
 
+    /**
+     * Crear tarea en proyecto (personal o delegado)
+     */
+    public function createProjectTask() {
+        $this->requireAuth();
+        if (!$this->hasMemberAccess()) {
+            echo json_encode(['success' => false, 'message' => 'Sin permisos']);
+            return;
+        }
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+            return;
+        }
+        
+        try {
+            $projectId = (int)($_POST['project_id'] ?? 0);
+            $taskName = trim($_POST['task_name'] ?? '');
+            $description = trim($_POST['description'] ?? '');
+            $priority = $_POST['priority'] ?? 'medium';
+            $dueDate = $_POST['due_date'] ?? '';
+            $userId = $this->currentUser['user_id'];
+            
+            // Validaciones básicas
+            if (empty($taskName)) {
+                echo json_encode(['success' => false, 'message' => 'El nombre de la tarea es requerido']);
+                return;
+            }
+            
+            if ($projectId <= 0) {
+                echo json_encode(['success' => false, 'message' => 'Proyecto inválido']);
+                return;
+            }
+            
+            // Verificar que el proyecto existe y tiene permisos
+            $project = $this->projectModel->findById($projectId);
+            if (!$project) {
+                echo json_encode(['success' => false, 'message' => 'Proyecto no encontrado']);
+                return;
+            }
+            
+            // Verificar permisos: debe ser personal del usuario O tener delegación activada
+            $canCreate = false;
+            if (isset($project['is_personal']) && $project['is_personal'] == 1 && $project['created_by_user_id'] == $userId) {
+                $canCreate = true; // Proyecto personal del usuario
+            } elseif (isset($project['allow_delegation']) && $project['allow_delegation'] == 1) {
+                // Proyecto con delegación: verificar que el usuario pertenece al mismo clan
+                if ($project['clan_id'] == $this->userClan['clan_id']) {
+                    $canCreate = true;
+                }
+            }
+            
+            if (!$canCreate) {
+                echo json_encode(['success' => false, 'message' => 'No tienes permisos para crear tareas en este proyecto']);
+                return;
+            }
+            
+            // Crear la tarea
+            $taskData = [
+                'task_name' => $taskName,
+                'description' => $description,
+                'priority' => $priority,
+                'due_date' => !empty($dueDate) ? $dueDate : null,
+                'status' => 'pending',
+                'project_id' => $projectId,
+                'assigned_to_user_id' => $userId,
+                'created_by_user_id' => $userId
+            ];
+            
+            $taskId = $this->taskModel->createProjectTask($taskData);
+            
+            if ($taskId) {
+                echo json_encode([
+                    'success' => true, 
+                    'message' => 'Tarea creada exitosamente',
+                    'task_id' => $taskId
+                ]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Error al crear la tarea']);
+            }
+            
+        } catch (Exception $e) {
+            error_log('Error createProjectTask: ' . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'Error interno del servidor']);
+        }
+    }
+    
     public function createPersonalTask() {
         $this->requireAuth();
         if (!$this->hasMemberAccess()) {

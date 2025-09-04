@@ -27,7 +27,8 @@ if (!isset($user)) {
                     <i class="fas fa-arrow-left"></i>
                     Volver Atrás
                 </button>
-                <?php if (isset($project['is_personal']) && $project['is_personal'] == 1): ?>
+                <?php if ((isset($project['is_personal']) && $project['is_personal'] == 1) || 
+                         (isset($project['allow_delegation']) && $project['allow_delegation'] == 1)): ?>
                 <button class="btn-create" onclick="openCreateTaskModal()">
                     <i class="fas fa-plus"></i>
                     Nueva Tarea
@@ -246,7 +247,8 @@ if (!isset($user)) {
                 <i class="fas fa-tasks"></i>
             </div>
             <h3>No hay tareas en este proyecto</h3>
-            <?php if (isset($project['is_personal']) && $project['is_personal'] == 1): ?>
+            <?php if ((isset($project['is_personal']) && $project['is_personal'] == 1) || 
+                     (isset($project['allow_delegation']) && $project['allow_delegation'] == 1)): ?>
             <p>Comienza creando tu primera tarea para este proyecto.</p>
             <button class="btn-create" onclick="openCreateTaskModal()">
                 <i class="fas fa-plus"></i>
@@ -260,8 +262,9 @@ if (!isset($user)) {
     </div>
 </div>
 
-<!-- Modal crear tarea (solo para proyectos personales) -->
-<?php if (isset($project['is_personal']) && $project['is_personal'] == 1): ?>
+<!-- Modal crear tarea (para proyectos personales o con delegación) -->
+<?php if ((isset($project['is_personal']) && $project['is_personal'] == 1) || 
+         (isset($project['allow_delegation']) && $project['allow_delegation'] == 1)): ?>
 <div class="modal create-task-modal" id="createTaskModal">
   <div class="modal-content modal-lg">
     <div class="modal-header modal-header-gradient">
@@ -1170,7 +1173,7 @@ document.getElementById('createTaskForm').addEventListener('submit', function(e)
   const submitBtn = document.getElementById('createTaskSubmitBtn');
   submitBtn.classList.add('is-loading');
   const fd = new FormData(this);
-  fetch('?route=clan_member/create-task', { method:'POST', body: fd, credentials:'same-origin' })
+  fetch('?route=clan_member/create-project-task', { method:'POST', body: fd, credentials:'same-origin' })
     .then(async r=>{ const t = await r.text(); try{ return JSON.parse(t); } catch(e){ console.error(t); return {success:false,message:'Respuesta inválida'}; } })
     .then(d=>{ if(!d.success){ errorBox.style.display='block'; errorBox.textContent=d.message||'Error al crear la tarea'; submitBtn.classList.remove('is-loading'); return; } location.reload(); })
     .catch(()=>{ errorBox.style.display='block'; errorBox.textContent='Error de red'; submitBtn.classList.remove('is-loading'); });

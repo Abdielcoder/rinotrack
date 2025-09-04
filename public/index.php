@@ -884,10 +884,15 @@ try {
             $controller->uploadAvatar();
             break;
             
-        case 'clan_member/create-personal-task':
-            $controller = new ClanMemberController();
-            $controller->createPersonalTask();
-            break;
+            case 'clan_member/create-personal-task':
+        $controller = new ClanMemberController();
+        $controller->createPersonalTask();
+        break;
+        
+    case 'clan_member/create-project-task':
+        $controller = new ClanMemberController();
+        $controller->createProjectTask();
+        break;
             
         case 'clan_member/create-personal-project':
             $controller = new ClanMemberController();

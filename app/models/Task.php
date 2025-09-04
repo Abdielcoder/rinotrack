@@ -2064,6 +2064,54 @@ class Task {
     /**
      * Crear tarea personal del usuario - versión simplificada
      */
+    /**
+     * Crear tarea en proyecto (personal o delegado)
+     */
+    public function createProjectTask($taskData) {
+        try {
+            error_log("=== INICIO createProjectTask ===");
+            error_log("Task data: " . print_r($taskData, true));
+            
+            $stmt = $this->db->prepare("
+                INSERT INTO Tasks (
+                    task_name, 
+                    description, 
+                    priority, 
+                    due_date, 
+                    status, 
+                    project_id,
+                    assigned_to_user_id, 
+                    created_by_user_id,
+                    created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
+            ");
+            
+            $result = $stmt->execute([
+                $taskData['task_name'],
+                $taskData['description'],
+                $taskData['priority'],
+                $taskData['due_date'],
+                $taskData['status'],
+                $taskData['project_id'],
+                $taskData['assigned_to_user_id'],
+                $taskData['created_by_user_id']
+            ]);
+            
+            if ($result) {
+                $taskId = $this->db->lastInsertId();
+                error_log("Tarea de proyecto creada exitosamente con ID: " . $taskId);
+                return $taskId;
+            } else {
+                error_log("Error al crear tarea de proyecto: " . print_r($stmt->errorInfo(), true));
+                return false;
+            }
+            
+        } catch (Exception $e) {
+            error_log("ERROR en createProjectTask: " . $e->getMessage());
+            return false;
+        }
+    }
+    
     public function createPersonalTaskSimple($taskData) {
         try {
             error_log("=== INICIO createPersonalTaskSimple ===");
