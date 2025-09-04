@@ -1552,7 +1552,7 @@ class ClanMemberController {
             $userId = (int)($_POST['user_id'] ?? 0);
 
             // Log de datos recibidos
-            error_log("Datos procesados: task_name=$taskName, due_date=$dueDate, user_id=$userId");
+            error_log("Datos procesados: task_name=$taskName, priority=$priority, due_date=$dueDate, user_id=$userId");
 
             // Validaciones
             if (empty($taskName)) {

@@ -2069,18 +2069,21 @@ class Task {
             error_log("=== INICIO createPersonalTaskSimple ===");
             error_log("Datos recibidos: " . print_r($taskData, true));
             
-            // Validar prioridad
+            // Validar prioridad - CRÍTICO: asegurar que se mantenga el valor
             $validPriorities = ['low', 'medium', 'high', 'critical'];
-            if (!in_array($taskData['priority'], $validPriorities)) {
-                error_log("ERROR: Prioridad inválida: " . $taskData['priority'] . ". Debe ser: " . implode(', ', $validPriorities));
-                return false;
+            $priority = $taskData['priority'] ?? 'medium';
+            if (!in_array($priority, $validPriorities)) {
+                error_log("ERROR: Prioridad inválida: " . $priority . ". Debe ser: " . implode(', ', $validPriorities));
+                $priority = 'medium'; // fallback seguro
             }
+            error_log("PRIORIDAD FINAL A USAR: " . $priority);
             
             // Validar status
             $validStatuses = ['pending', 'in_progress', 'completed', 'cancelled'];
-            if (!in_array($taskData['status'], $validStatuses)) {
-                error_log("ERROR: Status inválido: " . $taskData['status'] . ". Debe ser: " . implode(', ', $validStatuses));
-                return false;
+            $status = $taskData['status'] ?? 'pending';
+            if (!in_array($status, $validStatuses)) {
+                error_log("ERROR: Status inválido: " . $status . ". Debe ser: " . implode(', ', $validStatuses));
+                $status = 'pending';
             }
             
             // Primero, crear o obtener el proyecto personal del usuario
@@ -2092,7 +2095,7 @@ class Task {
             
             error_log("Proyecto personal ID: " . $personalProjectId);
             
-            // Crear tarea personal con todos los campos NOT NULL
+            // Crear tarea personal con todos los campos NOT NULL - ASEGURAR QUE PRIORITY SE MANTENGA
             $sql = "INSERT INTO Tasks (
                 task_name, 
                 description, 
@@ -2108,17 +2111,19 @@ class Task {
                 is_personal
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0.00, 0.00, 0, 1)";
             
-            error_log("SQL completo: " . $sql);
-            error_log("Parámetros a ejecutar: " . print_r([
+            $params = [
                 $taskData['task_name'],
                 $taskData['description'],
-                $taskData['priority'],
+                $priority, // usar la variable validada
                 $taskData['due_date'],
-                $taskData['status'],
+                $status, // usar la variable validada
                 $taskData['assigned_to_user_id'],
                 $taskData['assigned_to_user_id'], // created_by_user_id = assigned_to_user_id
                 $personalProjectId
-            ], true));
+            ];
+            
+            error_log("SQL completo: " . $sql);
+            error_log("Parámetros a ejecutar: " . print_r($params, true));
             
             $stmt = $this->db->prepare($sql);
             if (!$stmt) {
@@ -2126,20 +2131,22 @@ class Task {
                 return false;
             }
             
-            $result = $stmt->execute([
-                $taskData['task_name'],
-                $taskData['description'],
-                $taskData['priority'],
-                $taskData['due_date'],
-                $taskData['status'],
-                $taskData['assigned_to_user_id'],
-                $taskData['assigned_to_user_id'], // created_by_user_id = assigned_to_user_id
-                $personalProjectId
-            ]);
+            $result = $stmt->execute($params);
             
             if ($result) {
                 $taskId = $this->db->lastInsertId();
                 error_log("Tarea personal creada exitosamente con ID: " . $taskId);
+                
+                // VERIFICACIÓN INMEDIATA: comprobar que la prioridad se guardó correctamente
+                $verifyStmt = $this->db->prepare("SELECT priority FROM Tasks WHERE task_id = ?");
+                $verifyStmt->execute([$taskId]);
+                $savedPriority = $verifyStmt->fetchColumn();
+                error_log("VERIFICACIÓN: Prioridad guardada en BD: " . $savedPriority . " (esperada: " . $priority . ")");
+                
+                if ($savedPriority !== $priority) {
+                    error_log("ALERTA: La prioridad guardada ($savedPriority) no coincide con la enviada ($priority)");
+                }
+                
                 return $taskId;
             } else {
                 error_log("Error en execute: " . print_r($stmt->errorInfo(), true));

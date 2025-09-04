@@ -166,7 +166,7 @@ ob_start();
                             // Debug: Log de la tarea para verificar el project_name
                             error_log("DEBUG TAREA VENCIDA - ID: {$task['task_id']}, Nombre: {$task['task_name']}, Proyecto: {$task['project_name']}");
                             ?>
-                            <div class="task-card overdue <?php echo ($task['item_type'] ?? 'task') === 'subtask' ? 'subtask-card' : ''; ?>" data-task-id="<?php echo $task['task_id']; ?>">
+                            <div class="task-card overdue <?php echo ($task['item_type'] ?? 'task') === 'subtask' ? 'subtask-card' : ''; ?>" data-task-id="<?php echo $task['task_id']; ?>" data-priority="<?php echo $task['priority']; ?>">
                                 <div class="task-header">
                                     <?php if (($task['item_type'] ?? 'task') === 'subtask'): ?>
                                         <div class="subtask-indicator">
@@ -175,17 +175,6 @@ ob_start();
                                         </div>
                                     <?php endif; ?>
                                     <input type="checkbox" class="task-checkbox" <?php echo ($task['status'] === 'completed' || ($task['is_completed'] ?? 0) == 1) ? 'checked' : ''; ?> onchange="toggleTaskStatus(<?php echo $task['task_id']; ?>, this.checked)">
-                                    <div class="task-priority-badge <?php echo $task['priority']; ?>">
-                                        <?php
-                                        $priorityLabels = [
-                                            'low' => 'BAJA',
-                                            'medium' => 'MEDIA', 
-                                            'high' => 'ALTA',
-                                            'critical' => 'CRÍTICA'
-                                        ];
-                                        echo $priorityLabels[$task['priority']] ?? 'MEDIA';
-                                        ?>
-                                    </div>
                                     <a href="?route=clan_member/task-details&task_id=<?php echo $task['task_id']; ?>" class="btn-edit" title="Ver detalles">
                                         <i class="fas fa-eye"></i>
                                     </a>
@@ -230,10 +219,10 @@ ob_start();
                     <div class="column-content">
                         <?php foreach ($kanbanTasks['hoy'] ?? [] as $task): ?>
                             <?php 
-                            // Debug: Log de la tarea para verificar el project_name
-                            error_log("DEBUG TAREA HOY - ID: {$task['task_id']}, Nombre: {$task['task_name']}, Proyecto: {$task['project_name']}");
+                            // Debug: Log de la tarea para verificar el project_name y priority
+                            error_log("DEBUG TAREA HOY - ID: {$task['task_id']}, Nombre: {$task['task_name']}, Proyecto: {$task['project_name']}, Prioridad: {$task['priority']}");
                             ?>
-                            <div class="task-card today <?php echo ($task['item_type'] ?? 'task') === 'subtask' ? 'subtask-card' : ''; ?>" data-task-id="<?php echo $task['task_id']; ?>">
+                            <div class="task-card today <?php echo ($task['item_type'] ?? 'task') === 'subtask' ? 'subtask-card' : ''; ?>" data-task-id="<?php echo $task['task_id']; ?>" data-priority="<?php echo $task['priority']; ?>">
                                 <div class="task-header">
                                     <?php if (($task['item_type'] ?? 'task') === 'subtask'): ?>
                                         <div class="subtask-indicator">
@@ -242,17 +231,6 @@ ob_start();
                                         </div>
                                     <?php endif; ?>
                                     <input type="checkbox" class="task-checkbox" <?php echo ($task['status'] === 'completed' || ($task['is_completed'] ?? 0) == 1) ? 'checked' : ''; ?> onchange="toggleTaskStatus(<?php echo $task['task_id']; ?>, this.checked)">
-                                    <div class="task-priority-badge <?php echo $task['priority']; ?>">
-                                        <?php
-                                        $priorityLabels = [
-                                            'low' => 'BAJA',
-                                            'medium' => 'MEDIA', 
-                                            'high' => 'ALTA',
-                                            'critical' => 'CRÍTICA'
-                                        ];
-                                        echo $priorityLabels[$task['priority']] ?? 'MEDIA';
-                                        ?>
-                                    </div>
                                     <a href="?route=clan_member/task-details&task_id=<?php echo $task['task_id']; ?>" class="btn-edit" title="Ver detalles">
                                         <i class="fas fa-eye"></i>
                                     </a>
@@ -296,7 +274,7 @@ ob_start();
                     </div>
                     <div class="column-content">
                         <?php foreach ($kanbanTasks['1_semana'] ?? [] as $task): ?>
-                            <div class="task-card week1 <?php echo ($task['item_type'] ?? 'task') === 'subtask' ? 'subtask-card' : ''; ?>" data-task-id="<?php echo $task['task_id']; ?>">
+                            <div class="task-card week1 <?php echo ($task['item_type'] ?? 'task') === 'subtask' ? 'subtask-card' : ''; ?>" data-task-id="<?php echo $task['task_id']; ?>" data-priority="<?php echo $task['priority']; ?>">
                                 <div class="task-header">
                                     <?php if (($task['item_type'] ?? 'task') === 'subtask'): ?>
                                         <div class="subtask-indicator">
@@ -305,17 +283,6 @@ ob_start();
                                         </div>
                                     <?php endif; ?>
                                     <input type="checkbox" class="task-checkbox" <?php echo ($task['status'] === 'completed' || ($task['is_completed'] ?? 0) == 1) ? 'checked' : ''; ?> onchange="toggleTaskStatus(<?php echo $task['task_id']; ?>, this.checked)">
-                                    <div class="task-priority-badge <?php echo $task['priority']; ?>">
-                                        <?php
-                                        $priorityLabels = [
-                                            'low' => 'BAJA',
-                                            'medium' => 'MEDIA', 
-                                            'high' => 'ALTA',
-                                            'critical' => 'CRÍTICA'
-                                        ];
-                                        echo $priorityLabels[$task['priority']] ?? 'MEDIA';
-                                        ?>
-                                    </div>
                                     <a href="?route=clan_member/task-details&task_id=<?php echo $task['task_id']; ?>" class="btn-edit" title="Ver detalles">
                                         <i class="fas fa-eye"></i>
                                     </a>
@@ -359,7 +326,7 @@ ob_start();
                     </div>
                     <div class="column-content">
                         <?php foreach ($kanbanTasks['2_semanas'] as $task): ?>
-                            <div class="task-card week2 <?php echo ($task['item_type'] ?? 'task') === 'subtask' ? 'subtask-card' : ''; ?>" data-task-id="<?php echo $task['task_id']; ?>">
+                            <div class="task-card week2 <?php echo ($task['item_type'] ?? 'task') === 'subtask' ? 'subtask-card' : ''; ?>" data-task-id="<?php echo $task['task_id']; ?>" data-priority="<?php echo $task['priority']; ?>">
                                 <div class="task-header">
                                     <?php if (($task['item_type'] ?? 'task') === 'subtask'): ?>
                                         <div class="subtask-indicator">
@@ -368,17 +335,6 @@ ob_start();
                                         </div>
                                     <?php endif; ?>
                                     <input type="checkbox" class="task-checkbox" <?php echo ($task['status'] === 'completed' || ($task['is_completed'] ?? 0) == 1) ? 'checked' : ''; ?> onchange="toggleTaskStatus(<?php echo $task['task_id']; ?>, this.checked)">
-                                    <div class="task-priority-badge <?php echo $task['priority']; ?>">
-                                        <?php
-                                        $priorityLabels = [
-                                            'low' => 'BAJA',
-                                            'medium' => 'MEDIA', 
-                                            'high' => 'ALTA',
-                                            'critical' => 'CRÍTICA'
-                                        ];
-                                        echo $priorityLabels[$task['priority']] ?? 'MEDIA';
-                                        ?>
-                                    </div>
                                     <a href="?route=clan_member/task-details&task_id=<?php echo $task['task_id']; ?>" class="btn-edit" title="Ver detalles">
                                         <i class="fas fa-eye"></i>
                                     </a>
@@ -465,20 +421,13 @@ ob_start();
             
             <div class="form-row">
                 <div class="form-group">
-                    <label for="priority">Prioridad:</label>
-                    <select name="priority" id="priority" required>
-                        <option value="low" <?php echo (isset($taskToEdit) && $taskToEdit['priority'] === 'low') ? 'selected' : ''; ?>>Baja</option>
-                        <option value="medium" <?php echo (!isset($taskToEdit) || $taskToEdit['priority'] === 'medium') ? 'selected' : ''; ?>>Media</option>
-                        <option value="high" <?php echo (isset($taskToEdit) && $taskToEdit['priority'] === 'high') ? 'selected' : ''; ?>>Alta</option>
-                        <option value="critical" <?php echo (isset($taskToEdit) && $taskToEdit['priority'] === 'critical') ? 'selected' : ''; ?>>Crítica</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
                     <label for="taskDueDate">Fecha de Vencimiento</label>
                     <input type="date" id="taskDueDate" name="due_date" required
                            value="<?php echo isset($taskToEdit) && $taskToEdit['due_date'] ? $taskToEdit['due_date'] : ''; ?>">
                 </div>
+                
+                <!-- Campo oculto para prioridad con valor fijo -->
+                <input type="hidden" name="priority" value="medium">
             </div>
             
             <div class="form-group">
@@ -1800,6 +1749,16 @@ function createPersonalTask() {
         status: formData.get('status'),
         user_id: formData.get('user_id')
     };
+    
+    // Log del valor original de priority
+    console.log('Priority value from form:', debugData.priority);
+    console.log('Priority type:', typeof debugData.priority);
+    
+    // La prioridad ahora es fija en 'medium', no requiere validación
+    if (!debugData.priority) {
+        debugData.priority = 'medium';
+        formData.set('priority', 'medium');
+    }
     
     addDebugLog('Iniciando creación de tarea personal...', 'info');
     addDebugLog(`Datos a enviar: ${JSON.stringify(debugData)}`, 'info');
