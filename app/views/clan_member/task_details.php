@@ -156,7 +156,10 @@ ob_start();
           <?php if ($canEdit): ?>
           <form id="tdCommentForm" class="comment-composer" enctype="multipart/form-data">
             <input type="hidden" name="task_id" value="<?php echo (int)$task['task_id']; ?>" />
-            <textarea name="comment_text" placeholder="Escribe un comentario..."></textarea>
+            <input type="hidden" name="comment_text" id="task-comment-content" />
+            <div class="rich-editor-container">
+                <div id="task-comment-editor" style="margin-bottom: 10px;"></div>
+            </div>
             <div class="form-group inline">
               <input type="file" name="attachments[]" multiple />
               <button class="action-btn primary" type="submit"><i class="fas fa-paper-plane"></i> Enviar</button>
@@ -268,10 +271,36 @@ ob_start();
 <script>
 document.getElementById('tdCommentForm')?.addEventListener('submit', function(e){
   e.preventDefault();
+  
+  // Obtener contenido del editor Quill
+  if (taskCommentEditor) {
+    const editorContent = taskCommentEditor.getContents();
+    const htmlContent = taskCommentEditor.root.innerHTML;
+    
+    // Validar que hay contenido
+    if (!editorContent.ops || editorContent.ops.length <= 1) {
+      alert('Por favor escribe un comentario');
+      return;
+    }
+    
+    // Establecer el contenido en el campo oculto
+    document.getElementById('task-comment-content').value = htmlContent;
+  }
+  
   const fd = new FormData(this);
   fetch('?route=clan_member/add-task-comment', { method:'POST', body: fd, credentials:'same-origin' })
     .then(async r=>{ const t = await r.text(); try{ return JSON.parse(t); } catch(e){ console.error(t); return {success:false,message:'Respuesta inválida'}; } })
-    .then(d=>{ if(!d.success){ alert(d.message||'Error'); return; } location.reload(); });
+    .then(d=>{ 
+      if(!d.success){ 
+        alert(d.message||'Error'); 
+        return; 
+      } 
+      // Limpiar editor después del éxito
+      if (taskCommentEditor) {
+        taskCommentEditor.setContents([]);
+      }
+      location.reload(); 
+    });
 });
 
 function noPermissionModal(){
@@ -1815,7 +1844,173 @@ function closeExistingModals() {
     const existingModals = document.querySelectorAll('.modal-overlay');
     existingModals.forEach(modal => modal.remove());
 }
+
+// Variables globales para editores
+let taskCommentEditor = null;
+
+// Función para inicializar editor de comentario de tarea principal
+function initializeTaskCommentEditor() {
+    if (document.getElementById('task-comment-editor')) {
+        taskCommentEditor = new Quill('#task-comment-editor', {
+            theme: 'snow',
+            modules: {
+                toolbar: {
+                    container: [
+                        [{ 'header': [1, 2, 3, false] }],
+                        ['bold', 'italic', 'underline', 'strike'],
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                        ['checklist-btn'], // Botón personalizado para checklist
+                        [{ 'color': [] }, { 'background': [] }],
+                        ['link'],
+                        ['clean']
+                    ],
+                    handlers: {
+                        'checklist-btn': function() {
+                            insertChecklist(taskCommentEditor);
+                        }
+                    }
+                }
+            },
+            placeholder: 'Escribe tu comentario...\n\nTip: Usa "???" + espacio para crear checklist rápido'
+        });
+        
+        // Agregar el botón personalizado al toolbar
+        addChecklistButton(taskCommentEditor, 'task');
+        
+        // Agregar detector de atajo ???
+        setupChecklistShortcut(taskCommentEditor);
+    }
+}
+
+// Función para agregar botón de checklist personalizado
+function addChecklistButton(editor, type) {
+    const toolbar = editor.getModule('toolbar');
+    const toolbarElement = toolbar.container;
+    
+    // Buscar el botón checklist-btn y reemplazarlo
+    const checklistBtn = toolbarElement.querySelector('.ql-checklist-btn');
+    if (checklistBtn) {
+        checklistBtn.innerHTML = '<i class="fas fa-tasks"></i>';
+        checklistBtn.title = 'Insertar Lista de Tareas';
+        checklistBtn.style.cssText = `
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            padding: 4px 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        `;
+        
+        checklistBtn.addEventListener('mouseenter', () => {
+            checklistBtn.style.background = '#e5e7eb';
+        });
+        
+        checklistBtn.addEventListener('mouseleave', () => {
+            checklistBtn.style.background = '#f3f4f6';
+        });
+    }
+}
+
+// Función para configurar atajo de teclado ???
+function setupChecklistShortcut(editor) {
+    editor.keyboard.addBinding({
+        key: ' ',
+        prefix: /^\?\?\?$/
+    }, function(range, context) {
+        // Eliminar el ??? y agregar checklist
+        editor.deleteText(range.index - 3, 3);
+        insertChecklist(editor);
+    });
+}
+
+// Función para insertar checklist
+function insertChecklist(editor) {
+    const range = editor.getSelection(true);
+    const checklistHTML = `
+        <p>☐ Tarea 1</p>
+        <p>☐ Tarea 2</p>
+        <p>☐ Tarea 3</p>
+    `;
+    
+    editor.clipboard.dangerouslyPasteHTML(range.index, checklistHTML);
+    editor.setSelection(range.index + 2);
+}
+
+// Inicializar editor cuando se carga la página
+document.addEventListener('DOMContentLoaded', function() {
+    initializeTaskCommentEditor();
+});
 </script>
+
+<!-- Dependencias para editor de texto rico -->
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+
+<style>
+/* Estilos para el editor de texto enriquecido */
+.rich-editor-container {
+    margin-bottom: 10px;
+}
+
+.ql-editor {
+    min-height: 120px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.ql-toolbar {
+    border: 1px solid #d1d5db;
+    border-bottom: none;
+    border-radius: 8px 8px 0 0;
+    background: #f9fafb;
+}
+
+.ql-container {
+    border: 1px solid #d1d5db;
+    border-radius: 0 0 8px 8px;
+    font-family: inherit;
+}
+
+.ql-editor.ql-blank::before {
+    color: #9ca3af;
+    font-style: italic;
+}
+
+/* Estilos para checklist personalizado */
+.ql-editor p {
+    margin: 0.5em 0;
+}
+
+.ql-editor p:contains("☐"),
+.ql-editor p:contains("☑") {
+    cursor: pointer;
+    padding: 4px 0;
+    transition: background-color 0.2s ease;
+}
+
+.ql-editor p:contains("☐"):hover,
+.ql-editor p:contains("☑"):hover {
+    background-color: #f3f4f6;
+    border-radius: 4px;
+    padding-left: 8px;
+}
+
+/* Botón personalizado de checklist */
+.ql-checklist-btn {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Mejorar apariencia general del editor */
+.ql-snow .ql-tooltip {
+    z-index: 1000;
+}
+
+.ql-snow .ql-picker-options {
+    z-index: 1000;
+}
+</style>
 
 <?php
 $content = ob_get_clean();
