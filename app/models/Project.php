@@ -235,7 +235,9 @@ class Project {
                 WHERE p.clan_id = ? AND (p.is_personal IS NULL OR p.is_personal != 1)
                 GROUP BY p.project_id, p.project_name, p.description, p.clan_id, p.created_by_user_id, 
                          p.status, p.created_at, p.updated_at, p.kpi_quarter_id, p.kpi_points, 
-                         p.task_distribution_mode, p.allow_delegation, c.clan_name, u.full_name
+                         p.task_distribution_mode, p.allow_delegation, p.project_type, p.is_personal, 
+                         p.time_limit, p.total_tasks, p.completed_tasks, p.progress_percentage,
+                         c.clan_name, u.full_name
                 ORDER BY p.created_at DESC
             ");
             $stmt->execute([$clanId]);
