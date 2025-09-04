@@ -96,6 +96,53 @@ function getActiveTasksCount($userId) {
                             <textarea id="task_description" name="task_description" rows="3" placeholder="Descripción de la tarea..."></textarea>
                         </div>
                     </div>
+                    
+                    <!-- Configuración de recurrencia -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <div class="checkbox-container">
+                                <input type="checkbox" id="is_recurrent" name="is_recurrent" value="1" onchange="toggleRecurrenceFieldsClanLeader()">
+                                <label for="is_recurrent" class="checkbox-label">
+                                    <i class="fas fa-redo"></i>
+                                    Tarea Recurrente
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="recurrenceFieldsClanLeader" class="recurrence-fields" style="display: none;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="recurrence_type">Tipo de Recurrencia *</label>
+                                <div class="select-wrapper">
+                                    <select id="recurrence_type" name="recurrence_type">
+                                        <option value="">Seleccionar...</option>
+                                        <option value="daily">Diaria</option>
+                                        <option value="weekly">Semanal</option>
+                                        <option value="monthly">Mensual</option>
+                                    </select>
+                                    <i class="fas fa-chevron-down"></i>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="recurrence_start_date">Fecha de Inicio *</label>
+                                <div class="date-input-wrapper">
+                                    <input type="date" id="recurrence_start_date" name="recurrence_start_date">
+                                    <i class="fas fa-calendar-alt"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="recurrence_end_date">Fecha de Vigencia (Opcional)</label>
+                                <div class="date-input-wrapper">
+                                    <input type="date" id="recurrence_end_date" name="recurrence_end_date">
+                                    <i class="fas fa-calendar-alt"></i>
+                                </div>
+                                <small class="field-help">Si no se especifica, la recurrencia será indefinida</small>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
 
@@ -470,10 +517,88 @@ require_once __DIR__ . '/../admin/layout.php';
 .btn-loader i {
     margin-right: 4px;
 }
+
+/* Estilos para campos de recurrencia */
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    background: #f8fafc;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.checkbox-container:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+}
+
+.checkbox-container input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    color: #374151;
+    cursor: pointer;
+    margin: 0;
+}
+
+.checkbox-label i {
+    color: #1e3a8a;
+}
+
+.recurrence-fields {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-top: 1rem;
+}
+
+.field-help {
+    display: block;
+    color: #6b7280;
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+    font-style: italic;
+}
 </style>
 
 <!-- JavaScript inline para asegurar que funcione -->
 <script>
+// Función para mostrar/ocultar campos de recurrencia en clan leader
+function toggleRecurrenceFieldsClanLeader() {
+    const checkbox = document.getElementById('is_recurrent');
+    const fields = document.getElementById('recurrenceFieldsClanLeader');
+    
+    if (checkbox.checked) {
+        fields.style.display = 'block';
+        
+        // Hacer requeridos los campos de recurrencia
+        document.getElementById('recurrence_type').required = true;
+        document.getElementById('recurrence_start_date').required = true;
+    } else {
+        fields.style.display = 'none';
+        
+        // Quitar requerimiento
+        document.getElementById('recurrence_type').required = false;
+        document.getElementById('recurrence_start_date').required = false;
+        
+        // Limpiar valores
+        document.getElementById('recurrence_type').value = '';
+        document.getElementById('recurrence_start_date').value = '';
+        document.getElementById('recurrence_end_date').value = '';
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 DOM cargado desde script inline...');
     

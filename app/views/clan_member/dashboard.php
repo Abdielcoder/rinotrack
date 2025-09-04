@@ -419,11 +419,44 @@ ob_start();
                           placeholder="Describe la tarea (opcional)"><?php echo isset($taskToEdit) ? htmlspecialchars($taskToEdit['description']) : ''; ?></textarea>
             </div>
             
+            <!-- Configuración de recurrencia -->
+            <div class="form-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="isRecurrent" name="is_recurrent" value="1" onchange="toggleRecurrenceFields()">
+                    <span class="checkmark"></span>
+                    Tarea Recurrente
+                </label>
+            </div>
+            
+            <div id="recurrenceFields" style="display: none;">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="recurrenceType">Tipo de Recurrencia</label>
+                        <select name="recurrence_type" id="recurrenceType">
+                            <option value="">Seleccionar...</option>
+                            <option value="daily">Diaria</option>
+                            <option value="weekly">Semanal</option>
+                            <option value="monthly">Mensual</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="recurrenceStart">Fecha de Inicio</label>
+                        <input type="date" id="recurrenceStart" name="recurrence_start_date">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="recurrenceEnd">Fecha de Vigencia (Opcional)</label>
+                    <input type="date" id="recurrenceEnd" name="recurrence_end_date">
+                    <small style="color: #6b7280; font-size: 0.8rem;">Si no se especifica, la recurrencia será indefinida</small>
+                </div>
+            </div>
+
             <div class="form-row">
                 <div class="form-group">
                     <label for="taskDueDate">Fecha de Vencimiento</label>
                     <input type="date" id="taskDueDate" name="due_date" required
                            value="<?php echo isset($taskToEdit) && $taskToEdit['due_date'] ? $taskToEdit['due_date'] : ''; ?>">
+                    <small style="color: #6b7280; font-size: 0.8rem;" id="dueDateHelp">Para tareas recurrentes, esta será la fecha de la primera instancia</small>
                 </div>
                 
                 <!-- Campo oculto para prioridad con valor fijo -->
@@ -1675,6 +1708,34 @@ function openAddTaskModal() {
 function closeAddTaskModal() {
     const modal = document.getElementById('addTaskModal');
     modal.style.display = 'none';
+}
+
+// Función para mostrar/ocultar campos de recurrencia
+function toggleRecurrenceFields() {
+    const checkbox = document.getElementById('isRecurrent');
+    const fields = document.getElementById('recurrenceFields');
+    const dueDateHelp = document.getElementById('dueDateHelp');
+    
+    if (checkbox.checked) {
+        fields.style.display = 'block';
+        dueDateHelp.style.display = 'block';
+        
+        // Hacer requeridos los campos de recurrencia
+        document.getElementById('recurrenceType').required = true;
+        document.getElementById('recurrenceStart').required = true;
+    } else {
+        fields.style.display = 'none';
+        dueDateHelp.style.display = 'none';
+        
+        // Quitar requerimiento
+        document.getElementById('recurrenceType').required = false;
+        document.getElementById('recurrenceStart').required = false;
+        
+        // Limpiar valores
+        document.getElementById('recurrenceType').value = '';
+        document.getElementById('recurrenceStart').value = '';
+        document.getElementById('recurrenceEnd').value = '';
+    }
 }
 
 // Cerrar modal al hacer click fuera de él

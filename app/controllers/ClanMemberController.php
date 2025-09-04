@@ -1588,11 +1588,17 @@ class ClanMemberController {
             $dueDate = $_POST['due_date'] ?? '';
             $status = $_POST['status'] ?? 'pending';
             $userId = (int)($_POST['user_id'] ?? 0);
+            
+            // Campos de recurrencia
+            $isRecurrent = isset($_POST['is_recurrent']) ? 1 : 0;
+            $recurrenceType = $isRecurrent ? trim($_POST['recurrence_type'] ?? '') : null;
+            $recurrenceStart = $isRecurrent ? trim($_POST['recurrence_start_date'] ?? '') : null;
+            $recurrenceEnd = $isRecurrent ? trim($_POST['recurrence_end_date'] ?? '') : null;
 
             // Log de datos recibidos
             error_log("Datos procesados: task_name=$taskName, priority=$priority, due_date=$dueDate, user_id=$userId");
 
-            // Validaciones
+            // Validaciones básicas
             if (empty($taskName)) {
                 echo json_encode(['success' => false, 'message' => 'El nombre de la tarea es requerido']);
                 return;
@@ -1607,15 +1613,50 @@ class ClanMemberController {
                 echo json_encode(['success' => false, 'message' => 'Usuario no válido']);
                 return;
             }
+            
+            // Validaciones de recurrencia
+            if ($isRecurrent) {
+                if (empty($recurrenceType)) {
+                    echo json_encode(['success' => false, 'message' => 'El tipo de recurrencia es requerido']);
+                    return;
+                }
+                
+                if (empty($recurrenceStart)) {
+                    echo json_encode(['success' => false, 'message' => 'La fecha de inicio de recurrencia es requerida']);
+                    return;
+                }
+                
+                $validRecurrenceTypes = ['daily', 'weekly', 'monthly'];
+                if (!in_array($recurrenceType, $validRecurrenceTypes)) {
+                    echo json_encode(['success' => false, 'message' => 'Tipo de recurrencia inválido']);
+                    return;
+                }
+                
+                // Validar que la fecha de inicio no sea anterior a hoy
+                if (strtotime($recurrenceStart) < strtotime(date('Y-m-d'))) {
+                    echo json_encode(['success' => false, 'message' => 'La fecha de inicio no puede ser anterior a hoy']);
+                    return;
+                }
+                
+                // Si hay fecha de fin, validar que sea posterior a la de inicio
+                if (!empty($recurrenceEnd) && strtotime($recurrenceEnd) <= strtotime($recurrenceStart)) {
+                    echo json_encode(['success' => false, 'message' => 'La fecha de vigencia debe ser posterior a la fecha de inicio']);
+                    return;
+                }
+            }
 
-            // Crear la tarea personal con solo campos básicos
+            // Crear la tarea personal con campos básicos y de recurrencia
             $taskData = [
                 'task_name' => $taskName,
                 'description' => $description,
                 'priority' => $priority,
                 'due_date' => $dueDate,
                 'status' => $status,
-                'assigned_to_user_id' => $userId
+                'assigned_to_user_id' => $userId,
+                'is_recurrent' => $isRecurrent,
+                'recurrence_type' => $recurrenceType,
+                'recurrence_start_date' => $recurrenceStart,
+                'recurrence_end_date' => $recurrenceEnd
             ];
 
             error_log('Task data a crear: ' . print_r($taskData, true));

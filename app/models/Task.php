@@ -2108,8 +2108,12 @@ class Task {
                 automatic_points,
                 assigned_percentage,
                 is_completed,
-                is_personal
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0.00, 0.00, 0, 1)";
+                is_personal,
+                is_recurrent,
+                recurrence_type,
+                recurrence_start_date,
+                recurrence_end_date
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0.00, 0.00, 0, 1, ?, ?, ?, ?)";
             
             $params = [
                 $taskData['task_name'],
@@ -2119,7 +2123,11 @@ class Task {
                 $status, // usar la variable validada
                 $taskData['assigned_to_user_id'],
                 $taskData['assigned_to_user_id'], // created_by_user_id = assigned_to_user_id
-                $personalProjectId
+                $personalProjectId,
+                $taskData['is_recurrent'] ?? 0,
+                $taskData['recurrence_type'] ?? null,
+                $taskData['recurrence_start_date'] ?? null,
+                $taskData['recurrence_end_date'] ?? null
             ];
             
             error_log("SQL completo: " . $sql);
