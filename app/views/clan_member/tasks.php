@@ -236,16 +236,14 @@ ob_start();
                 <div class="table-wrapper">
                     <table class="data-table">
                         <thead>
-                            <tr><th>Prioridad</th><th>Tarea</th><th>Proyecto</th><th>Asignado(s)</th><th>Vence</th><th>Estado</th><th>Progreso</th><th>Acciones</th></tr>
+                            <tr><th>Tarea</th><th>Proyecto</th><th>Asignado(s)</th><th>Vence</th><th>Estado</th><th>Progreso</th><th>Acciones</th></tr>
                         </thead>
                         <tbody>
                             <?php if (empty($tasksData['tasks'])): ?>
-                                <tr><td colspan="8" class="empty">No hay tareas</td></tr>
+                                <tr><td colspan="7" class="empty">No hay tareas</td></tr>
                             <?php else: foreach ($tasksData['tasks'] as $t): ?>
                                 <?php
                                     $statusClass = ($t['status'] ?? '') === 'completed' ? 'completed' : (($t['status'] ?? '') === 'in_progress' ? 'in_progress' : 'pending');
-                                    $priorityClass = strtolower((string)($t['priority'] ?? 'medium'));
-                                    $priorityLabel = ucfirst(str_replace(['_'], ' ', (string)($t['priority'] ?? 'medium')));
                                     $days = isset($t['days_until_due']) ? (int)$t['days_until_due'] : null;
                                     $dueLabel = '';
                                     $dueCls = '';
@@ -259,7 +257,6 @@ ob_start();
                                     }
                                 ?>
                                 <tr>
-                                    <td><span class="badge badge-priority <?php echo $priorityClass; ?>" title="Prioridad"><i class="fas fa-flag"></i> <?php echo $priorityLabel; ?></span></td>
                                     <td><a href="?route=clan_member/task-details&task_id=<?php echo (int)$t['task_id']; ?>" title="Ver detalles"><?php echo Utils::escape($t['task_name']); ?></a></td>
                                     <td><?php echo Utils::escape($t['project_name']); ?></td>
                                     <td>
@@ -655,9 +652,6 @@ ob_start();
 .data-table th{background:var(--bg-tertiary);padding:var(--spacing-lg);text-align:left;font-weight:600;color:var(--text-primary);border-bottom:1px solid var(--bg-accent)}
 .data-table td{padding:var(--spacing-lg);border-bottom:1px solid var(--bg-accent);color:var(--text-secondary)}
 .badge,.chip{padding:4px 8px;border-radius:6px;font-size:.8rem}
-.badge-priority.high{background:#fee2e2;color:#991b1b}
-.badge-priority.medium{background:#ffedd5;color:#9a3412}
-.badge-priority.low{background:#dcfce7;color:#166534}
 .badge-due.overdue{background:#fee2e2;color:#991b1b}
 .badge-due.due-soon{background:#fef3c7;color:#92400e}
 .chip-status.completed{background:#dcfce7;color:#166534}
