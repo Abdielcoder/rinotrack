@@ -2246,7 +2246,94 @@ class Task {
     }
 
     /**
-     * Generar instancias de tareas recurrentes
+     * Generar instancias para una tarea recurrente específica
+     */
+    public function generateInstancesForTask($taskId) {
+        try {
+            error_log("=== INICIO generateInstancesForTask para tarea ID: $taskId ===");
+            
+            // Obtener datos de la tarea recurrente
+            $stmt = $this->db->prepare("
+                SELECT * FROM Tasks 
+                WHERE task_id = ? AND is_recurrent = 1
+            ");
+            $stmt->execute([$taskId]);
+            $task = $stmt->fetch();
+            
+            if (!$task) {
+                error_log("ERROR: Tarea $taskId no encontrada o no es recurrente");
+                return 0;
+            }
+            
+            $recurrenceType = $task['recurrence_type'];
+            $startDate = $task['recurrence_start_date'];
+            $endDate = $task['recurrence_end_date'];
+            
+            error_log("Generando instancias para: Tipo=$recurrenceType, Inicio=$startDate, Fin=" . ($endDate ?? 'indefinido'));
+            
+            // Calcular fechas a generar (hasta 1 año o hasta fecha de fin)
+            $maxDaysAhead = $endDate ? 
+                (strtotime($endDate) - strtotime($startDate)) / (60*60*24) : 
+                365; // 1 año máximo si no hay fecha de fin
+            
+            $nextDates = $this->calculateNextRecurrenceDates($recurrenceType, $startDate, $endDate, min($maxDaysAhead, 365));
+            
+            $generatedCount = 0;
+            
+            foreach ($nextDates as $nextDate) {
+                // Verificar si ya existe una instancia para esta fecha
+                $existsStmt = $this->db->prepare("
+                    SELECT task_id FROM Tasks 
+                    WHERE parent_recurrent_task_id = ? 
+                      AND due_date = ?
+                    LIMIT 1
+                ");
+                $existsStmt->execute([$taskId, $nextDate]);
+                
+                if ($existsStmt->fetch()) {
+                    continue; // Ya existe instancia para esta fecha
+                }
+                
+                // Crear nueva instancia
+                $instanceData = [
+                    'task_name' => $task['task_name'] . ' (' . date('d/m/Y', strtotime($nextDate)) . ')',
+                    'description' => $task['description'],
+                    'priority' => $task['priority'],
+                    'due_date' => $nextDate,
+                    'status' => 'pending',
+                    'assigned_to_user_id' => $task['assigned_to_user_id'],
+                    'created_by_user_id' => $task['created_by_user_id'],
+                    'project_id' => $task['project_id'],
+                    'is_personal' => $task['is_personal'],
+                    'parent_recurrent_task_id' => $taskId
+                ];
+                
+                $instanceId = $this->createRecurrentInstance($instanceData);
+                if ($instanceId) {
+                    $generatedCount++;
+                    error_log("Instancia creada: $instanceId para fecha $nextDate");
+                }
+            }
+            
+            // Actualizar last_generated_date de la tarea padre
+            $updateStmt = $this->db->prepare("
+                UPDATE Tasks 
+                SET last_generated_date = ? 
+                WHERE task_id = ?
+            ");
+            $updateStmt->execute([date('Y-m-d'), $taskId]);
+            
+            error_log("=== FIN generateInstancesForTask - Generadas: $generatedCount ===");
+            return $generatedCount;
+            
+        } catch (Exception $e) {
+            error_log("ERROR en generateInstancesForTask: " . $e->getMessage());
+            return 0;
+        }
+    }
+
+    /**
+     * Generar instancias de tareas recurrentes (método para cron)
      */
     public function generateRecurrentInstances() {
         try {
@@ -2336,12 +2423,31 @@ class Task {
     /**
      * Calcular próximas fechas de recurrencia
      */
-    private function calculateNextRecurrenceDates($type, $lastGenerated, $endDate, $daysAhead = 30) {
+    private function calculateNextRecurrenceDates($type, $startDate, $endDate, $maxDaysAhead = 365) {
         $dates = [];
-        $current = new DateTime($lastGenerated);
-        $end = $endDate ? new DateTime($endDate) : new DateTime(date('Y-m-d', strtotime("+$daysAhead days")));
+        $current = new DateTime($startDate);
+        $today = new DateTime(date('Y-m-d'));
         
+        // Determinar fecha límite
+        if ($endDate) {
+            $end = new DateTime($endDate);
+        } else {
+            $end = new DateTime(date('Y-m-d', strtotime("+$maxDaysAhead days")));
+        }
+        
+        error_log("Calculando fechas desde $startDate hasta " . $end->format('Y-m-d') . " con tipo $type");
+        
+        // Generar todas las fechas desde el inicio
         while ($current <= $end) {
+            $dateStr = $current->format('Y-m-d');
+            
+            // Solo agregar fechas futuras o de hoy
+            if ($current >= $today) {
+                $dates[] = $dateStr;
+                error_log("Fecha calculada: $dateStr");
+            }
+            
+            // Avanzar según el tipo de recurrencia
             switch ($type) {
                 case 'daily':
                     $current->add(new DateInterval('P1D'));
@@ -2352,13 +2458,19 @@ class Task {
                 case 'monthly':
                     $current->add(new DateInterval('P1M'));
                     break;
+                default:
+                    error_log("ERROR: Tipo de recurrencia desconocido: $type");
+                    return [];
             }
             
-            if ($current <= $end) {
-                $dates[] = $current->format('Y-m-d');
+            // Límite de seguridad para evitar bucles infinitos
+            if (count($dates) > 1000) {
+                error_log("ADVERTENCIA: Se alcanzó el límite de 1000 instancias");
+                break;
             }
         }
         
+        error_log("Total de fechas calculadas: " . count($dates));
         return $dates;
     }
 

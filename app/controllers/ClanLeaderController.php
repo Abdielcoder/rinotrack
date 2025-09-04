@@ -1234,6 +1234,14 @@ class ClanLeaderController {
         
         $taskProject = (int)($_POST['task_project'] ?? 0);
         $taskDescription = Utils::sanitizeInput($_POST['task_description'] ?? '');
+        
+        // Campos de recurrencia
+        $isRecurrent = isset($_POST['is_recurrent']) ? 1 : 0;
+        $recurrenceType = $isRecurrent ? trim($_POST['recurrence_type'] ?? '') : null;
+        $recurrenceStart = $isRecurrent ? trim($_POST['recurrence_start_date'] ?? '') : null;
+        $recurrenceEnd = $isRecurrent ? trim($_POST['recurrence_end_date'] ?? '') : null;
+        
+        error_log('createTask - Campos de recurrencia: is_recurrent=' . $isRecurrent . ', type=' . ($recurrenceType ?? 'NULL') . ', start=' . ($recurrenceStart ?? 'NULL') . ', end=' . ($recurrenceEnd ?? 'NULL'));
         // Manejar assigned_members que puede ser un array (desde formulario) o JSON string
         $assignedMembersRaw = $_POST['assigned_members'] ?? [];
         if (is_string($assignedMembersRaw)) {
@@ -1461,9 +1469,41 @@ class ClanLeaderController {
             }
             
             error_log("createTask - ÉXITO: Tarea creada con ID " . $taskId);
+            
+            $message = 'Tarea creada exitosamente';
+            $generatedInstances = 0;
+            
+            // Si es tarea recurrente, generar instancias inmediatamente
+            if ($isRecurrent) {
+                // Primero actualizar la tarea creada con los campos de recurrencia
+                $updateStmt = $this->db->prepare("
+                    UPDATE Tasks 
+                    SET is_recurrent = ?, recurrence_type = ?, recurrence_start_date = ?, 
+                        recurrence_end_date = ?, last_generated_date = ?
+                    WHERE task_id = ?
+                ");
+                $updateStmt->execute([
+                    1, $recurrenceType, $recurrenceStart, $recurrenceEnd, 
+                    $recurrenceStart, $taskId
+                ]);
+                
+                // Generar instancias
+                $generatedInstances = $this->taskModel->generateInstancesForTask($taskId);
+                if ($generatedInstances > 0) {
+                    $message .= ". Se generaron $generatedInstances instancias recurrentes";
+                }
+                
+                error_log("createTask - Instancias recurrentes generadas: $generatedInstances");
+            }
+            
             // Notificación de asignación si está activa
             try { (new NotificationService())->notifyTaskAssigned((int)$taskId, $assignedMembers); } catch (Exception $e) { error_log('Notif error (clan_leader task_assigned): ' . $e->getMessage()); }
-            Utils::jsonResponse(['success' => true, 'message' => 'Tarea creada exitosamente', 'task_id' => $taskId]);
+            Utils::jsonResponse([
+                'success' => true, 
+                'message' => $message, 
+                'task_id' => $taskId,
+                'generated_instances' => $generatedInstances
+            ]);
             
         } catch (Exception $e) {
             error_log("createTask - EXCEPCIÓN en try interno: " . $e->getMessage());

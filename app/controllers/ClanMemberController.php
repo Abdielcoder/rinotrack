@@ -1665,10 +1665,22 @@ class ClanMemberController {
             $taskId = $this->taskModel->createPersonalTaskSimple($taskData);
 
             if ($taskId) {
+                $message = 'Tarea personal creada exitosamente';
+                $generatedInstances = 0;
+                
+                // Si es tarea recurrente, generar instancias inmediatamente
+                if ($isRecurrent) {
+                    $generatedInstances = $this->taskModel->generateInstancesForTask($taskId);
+                    if ($generatedInstances > 0) {
+                        $message .= ". Se generaron $generatedInstances instancias recurrentes";
+                    }
+                }
+                
                 echo json_encode([
                     'success' => true, 
-                    'message' => 'Tarea personal creada exitosamente',
-                    'task_id' => $taskId
+                    'message' => $message,
+                    'task_id' => $taskId,
+                    'generated_instances' => $generatedInstances
                 ]);
             } else {
                 echo json_encode(['success' => false, 'message' => 'Error al crear la tarea - revisar logs del servidor']);
