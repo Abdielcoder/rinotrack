@@ -297,20 +297,21 @@ ob_start();
 }
 
 .project-name {
-    font-size: 1.2rem;
+    font-size: 1rem;
     font-weight: 600;
     color: #1f2937;
     margin: 0;
     flex: 1;
+    line-height: 1.3;
 }
 
 .project-status {
-    padding: 0.25rem 0.75rem;
-    border-radius: 20px;
-    font-size: 0.75rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 16px;
+    font-size: 0.65rem;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.3px;
 }
 
 .status-active, .status-open {
@@ -342,13 +343,13 @@ ob_start();
 }
 
 .stat-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.1rem;
+    font-size: 0.9rem;
     background: #f3f4f6;
     color: #6b7280;
 }
@@ -368,16 +369,16 @@ ob_start();
 }
 
 .stat-number {
-    font-size: 1.2rem;
+    font-size: 1rem;
     font-weight: 700;
     color: #1f2937;
     line-height: 1;
 }
 
 .stat-label {
-    font-size: 0.8rem;
+    font-size: 0.7rem;
     color: #6b7280;
-    margin-top: 0.25rem;
+    margin-top: 0.2rem;
 }
 
 .project-progress {
@@ -407,12 +408,12 @@ ob_start();
 .btn-minimal {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 10px 14px;
-    border-radius: 8px;
+    gap: 6px;
+    padding: 8px 12px;
+    border-radius: 6px;
     text-decoration: none;
     font-weight: 600;
-    font-size: 14px;
+    font-size: 12px;
     cursor: pointer;
     transition: all 0.2s ease;
     border: 1px solid;
