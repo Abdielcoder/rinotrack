@@ -2112,8 +2112,9 @@ class Task {
                 is_recurrent,
                 recurrence_type,
                 recurrence_start_date,
-                recurrence_end_date
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0.00, 0.00, 0, 1, ?, ?, ?, ?)";
+                recurrence_end_date,
+                last_generated_date
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0.00, 0.00, 0, 1, ?, ?, ?, ?, ?)";
             
             $params = [
                 $taskData['task_name'],
@@ -2127,7 +2128,8 @@ class Task {
                 $taskData['is_recurrent'] ?? 0,
                 $taskData['recurrence_type'] ?? null,
                 $taskData['recurrence_start_date'] ?? null,
-                $taskData['recurrence_end_date'] ?? null
+                $taskData['recurrence_end_date'] ?? null,
+                $taskData['is_recurrent'] ? $taskData['recurrence_start_date'] : null // last_generated_date = start_date para tareas recurrentes
             ];
             
             error_log("SQL completo: " . $sql);
@@ -2239,6 +2241,167 @@ class Task {
             
         } catch (Exception $e) {
             error_log("ERROR en getOrCreatePersonalProject: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Generar instancias de tareas recurrentes
+     */
+    public function generateRecurrentInstances() {
+        try {
+            error_log("=== INICIO generateRecurrentInstances ===");
+            
+            // Obtener todas las tareas recurrentes activas
+            $stmt = $this->db->prepare("
+                SELECT * FROM Tasks 
+                WHERE is_recurrent = 1 
+                  AND status != 'cancelled'
+                  AND (recurrence_end_date IS NULL OR recurrence_end_date >= CURDATE())
+                ORDER BY task_id
+            ");
+            $stmt->execute();
+            $recurrentTasks = $stmt->fetchAll();
+            
+            $today = date('Y-m-d');
+            $generatedCount = 0;
+            
+            foreach ($recurrentTasks as $task) {
+                $taskId = $task['task_id'];
+                $recurrenceType = $task['recurrence_type'];
+                $startDate = $task['recurrence_start_date'];
+                $endDate = $task['recurrence_end_date'];
+                $lastGenerated = $task['last_generated_date'] ?? $startDate;
+                
+                error_log("Procesando tarea recurrente ID: $taskId, Tipo: $recurrenceType, Último generado: $lastGenerated");
+                
+                // Calcular próximas fechas a generar
+                $nextDates = $this->calculateNextRecurrenceDates($recurrenceType, $lastGenerated, $endDate, 30); // Generar hasta 30 días adelante
+                
+                foreach ($nextDates as $nextDate) {
+                    if ($nextDate <= $today) continue; // No generar fechas pasadas
+                    
+                    // Verificar si ya existe una instancia para esta fecha
+                    $existsStmt = $this->db->prepare("
+                        SELECT task_id FROM Tasks 
+                        WHERE parent_recurrent_task_id = ? 
+                          AND due_date = ?
+                        LIMIT 1
+                    ");
+                    $existsStmt->execute([$taskId, $nextDate]);
+                    
+                    if ($existsStmt->fetch()) {
+                        continue; // Ya existe instancia para esta fecha
+                    }
+                    
+                    // Crear nueva instancia
+                    $instanceData = [
+                        'task_name' => $task['task_name'] . ' (' . date('d/m/Y', strtotime($nextDate)) . ')',
+                        'description' => $task['description'],
+                        'priority' => $task['priority'],
+                        'due_date' => $nextDate,
+                        'status' => 'pending',
+                        'assigned_to_user_id' => $task['assigned_to_user_id'],
+                        'created_by_user_id' => $task['created_by_user_id'],
+                        'project_id' => $task['project_id'],
+                        'is_personal' => $task['is_personal'],
+                        'parent_recurrent_task_id' => $taskId
+                    ];
+                    
+                    $instanceId = $this->createRecurrentInstance($instanceData);
+                    if ($instanceId) {
+                        $generatedCount++;
+                        error_log("Instancia creada: $instanceId para fecha $nextDate");
+                    }
+                }
+                
+                // Actualizar last_generated_date
+                $updateStmt = $this->db->prepare("
+                    UPDATE Tasks 
+                    SET last_generated_date = ? 
+                    WHERE task_id = ?
+                ");
+                $updateStmt->execute([$today, $taskId]);
+            }
+            
+            error_log("=== FIN generateRecurrentInstances - Generadas: $generatedCount ===");
+            return $generatedCount;
+            
+        } catch (Exception $e) {
+            error_log("ERROR en generateRecurrentInstances: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Calcular próximas fechas de recurrencia
+     */
+    private function calculateNextRecurrenceDates($type, $lastGenerated, $endDate, $daysAhead = 30) {
+        $dates = [];
+        $current = new DateTime($lastGenerated);
+        $end = $endDate ? new DateTime($endDate) : new DateTime(date('Y-m-d', strtotime("+$daysAhead days")));
+        
+        while ($current <= $end) {
+            switch ($type) {
+                case 'daily':
+                    $current->add(new DateInterval('P1D'));
+                    break;
+                case 'weekly':
+                    $current->add(new DateInterval('P7D'));
+                    break;
+                case 'monthly':
+                    $current->add(new DateInterval('P1M'));
+                    break;
+            }
+            
+            if ($current <= $end) {
+                $dates[] = $current->format('Y-m-d');
+            }
+        }
+        
+        return $dates;
+    }
+
+    /**
+     * Crear instancia de tarea recurrente
+     */
+    private function createRecurrentInstance($instanceData) {
+        try {
+            $sql = "INSERT INTO Tasks (
+                task_name, 
+                description, 
+                priority, 
+                due_date, 
+                status, 
+                assigned_to_user_id, 
+                created_by_user_id,
+                project_id,
+                automatic_points,
+                assigned_percentage,
+                is_completed,
+                is_personal,
+                is_recurrent,
+                parent_recurrent_task_id
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0.00, 0.00, 0, ?, 0, ?)";
+            
+            $stmt = $this->db->prepare($sql);
+            $result = $stmt->execute([
+                $instanceData['task_name'],
+                $instanceData['description'],
+                $instanceData['priority'],
+                $instanceData['due_date'],
+                $instanceData['status'],
+                $instanceData['assigned_to_user_id'],
+                $instanceData['created_by_user_id'],
+                $instanceData['project_id'],
+                $instanceData['is_personal'],
+                $instanceData['parent_recurrent_task_id']
+            ]);
+            
+            return $result ? $this->db->lastInsertId() : false;
+            
+        } catch (Exception $e) {
+            error_log("ERROR en createRecurrentInstance: " . $e->getMessage());
             return false;
         }
     }

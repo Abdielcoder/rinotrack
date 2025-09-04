@@ -26,7 +26,7 @@ header('Content-Type: text/html; charset=utf-8');
         $columns = $stmt->fetchAll();
         
         $existingColumns = array_column($columns, 'Field');
-        $recurrenceFields = ['is_recurrent', 'recurrence_type', 'recurrence_start_date', 'recurrence_end_date', 'last_generated_date'];
+        $recurrenceFields = ['is_recurrent', 'recurrence_type', 'recurrence_start_date', 'recurrence_end_date', 'last_generated_date', 'parent_recurrent_task_id'];
         
         echo "<p class='info'>Columnas existentes: " . implode(', ', $existingColumns) . "</p>";
         
@@ -40,13 +40,14 @@ header('Content-Type: text/html; charset=utf-8');
         
         echo "<h2>2. Agregando campos de recurrencia:</h2>";
         
-        // Agregar campos uno por uno
+        // Agregar campos uno por uno - compatibles con rinotrack.sql
         $alterQueries = [
-            "ALTER TABLE Tasks ADD COLUMN is_recurrent TINYINT(1) DEFAULT 0 COMMENT 'Indica si la tarea es recurrente'",
-            "ALTER TABLE Tasks ADD COLUMN recurrence_type ENUM('daily', 'weekly', 'monthly') DEFAULT NULL COMMENT 'Tipo de recurrencia: diaria, semanal, mensual'",
-            "ALTER TABLE Tasks ADD COLUMN recurrence_start_date DATE DEFAULT NULL COMMENT 'Fecha de inicio de la recurrencia'",
-            "ALTER TABLE Tasks ADD COLUMN recurrence_end_date DATE DEFAULT NULL COMMENT 'Fecha de fin de la recurrencia'",
-            "ALTER TABLE Tasks ADD COLUMN last_generated_date DATE DEFAULT NULL COMMENT 'Última fecha en que se generó una instancia'"
+            "ALTER TABLE Tasks ADD COLUMN is_recurrent TINYINT(1) DEFAULT 0 COMMENT 'Indica si la tarea es recurrente' AFTER is_personal",
+            "ALTER TABLE Tasks ADD COLUMN recurrence_type ENUM('daily', 'weekly', 'monthly') DEFAULT NULL COMMENT 'Tipo de recurrencia: diaria, semanal, mensual' AFTER is_recurrent",
+            "ALTER TABLE Tasks ADD COLUMN recurrence_start_date DATE DEFAULT NULL COMMENT 'Fecha de inicio de la recurrencia' AFTER recurrence_type",
+            "ALTER TABLE Tasks ADD COLUMN recurrence_end_date DATE DEFAULT NULL COMMENT 'Fecha de fin de la recurrencia' AFTER recurrence_start_date",
+            "ALTER TABLE Tasks ADD COLUMN last_generated_date DATE DEFAULT NULL COMMENT 'Última fecha en que se generó una instancia' AFTER recurrence_end_date",
+            "ALTER TABLE Tasks ADD COLUMN parent_recurrent_task_id INT(11) DEFAULT NULL COMMENT 'ID de la tarea recurrente padre (para instancias generadas)' AFTER last_generated_date"
         ];
         
         foreach ($alterQueries as $index => $query) {
