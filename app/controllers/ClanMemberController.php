@@ -292,6 +292,9 @@ class ClanMemberController {
             }
         }
 
+        // Obtener tareas recurrentes del usuario
+        $recurrentTasks = $this->taskModel->getUserTasksByProjectNames($this->currentUser['user_id'], ['Tareas Recurrentes']);
+        
         $data = [
             'currentPage' => 'clan_member',
             'user' => $this->currentUser,
@@ -300,7 +303,8 @@ class ClanMemberController {
             'search' => $search,
             'status' => $status,
             'perPage' => $perPage,
-            'projectsSummary' => $projectsSummary
+            'projectsSummary' => $projectsSummary,
+            'recurrentTasks' => $recurrentTasks
         ];
         $this->loadView('clan_member/tasks', $data);
     }

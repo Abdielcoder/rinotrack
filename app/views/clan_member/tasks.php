@@ -85,6 +85,128 @@ ob_start();
             </div>
         </header>
 
+        <!-- Proyectos del Clan -->
+        <?php if (!empty($projectsSummary)): ?>
+        <section class="projects-section animate-fade-in">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i class="fas fa-project-diagram"></i>
+                    Proyectos del Clan
+                </h2>
+            </div>
+            <div class="projects-grid">
+                <?php foreach ($projectsSummary as $project): ?>
+                <div class="project-card">
+                    <div class="project-header">
+                        <h3 class="project-name"><?= htmlspecialchars($project['project_name']) ?></h3>
+                        <div class="project-status status-<?= $project['status'] ?>">
+                            <?= ucfirst($project['status']) ?>
+                        </div>
+                    </div>
+                    
+                    <div class="project-stats">
+                        <div class="stat-item">
+                            <div class="stat-icon">
+                                <i class="fas fa-tasks"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-number"><?= $project['total_tasks'] ?></div>
+                                <div class="stat-label">Total</div>
+                            </div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-icon completed">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-number"><?= $project['completed_tasks'] ?></div>
+                                <div class="stat-label">Completadas</div>
+                            </div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-icon progress">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-number"><?= $project['progress_percentage'] ?>%</div>
+                                <div class="stat-label">Progreso</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="project-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: <?= $project['progress_percentage'] ?>%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="project-actions">
+                        <a href="<?= APP_URL ?>?route=clan_member/project-tasks&project_id=<?= $project['project_id'] ?>" class="btn-minimal primary">
+                            <i class="fas fa-eye"></i> Ver Tareas
+                        </a>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            </div>
+        </section>
+        <?php endif; ?>
+
+        <!-- Tareas Recurrentes -->
+        <?php if (!empty($recurrentTasks)): ?>
+        <section class="recurrent-tasks-section animate-fade-in">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i class="fas fa-redo"></i>
+                    Tareas Recurrentes
+                </h2>
+            </div>
+            <div class="recurrent-tasks-grid">
+                <?php foreach ($recurrentTasks as $task): ?>
+                <div class="recurrent-task-card">
+                    <div class="task-header">
+                        <input type="checkbox" class="task-checkbox" 
+                               <?php echo ($task['status'] === 'completed' || ($task['is_completed'] ?? 0) == 1) ? 'checked' : ''; ?> 
+                               onchange="toggleTaskStatus(<?php echo $task['task_id']; ?>, this.checked)">
+                        <h4 class="task-title"><?php echo htmlspecialchars($task['task_name']); ?></h4>
+                        <a href="?route=clan_member/task-details&task_id=<?php echo $task['task_id']; ?>" class="btn-view" title="Ver detalles">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                    </div>
+                    
+                    <?php if (!empty($task['description'])): ?>
+                    <div class="task-description">
+                        <?php echo htmlspecialchars(substr($task['description'], 0, 100)); ?>
+                        <?php echo strlen($task['description']) > 100 ? '...' : ''; ?>
+                    </div>
+                    <?php endif; ?>
+                    
+                    <div class="task-meta">
+                        <div class="task-status">
+                            <span class="status-badge status-<?php echo $task['status']; ?>">
+                                <?php 
+                                switch($task['status']) {
+                                    case 'in_progress': echo 'En Progreso'; break;
+                                    case 'completed': echo 'Completada'; break;
+                                    case 'cancelled': echo 'Cancelada'; break;
+                                    default: echo 'Pendiente'; break;
+                                }
+                                ?>
+                            </span>
+                        </div>
+                        
+                        <?php if (!empty($task['due_date'])): ?>
+                        <div class="task-due-date">
+                            <i class="fas fa-calendar"></i>
+                            <?php echo date('d/m/Y', strtotime($task['due_date'])); ?>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            </div>
+        </section>
+        <?php endif; ?>
+
         <section class="content-section animate-fade-in">
             <div class="content-card">
                 <div class="card-header">
@@ -223,6 +345,300 @@ ob_start();
 
 <style>
 .modern-dashboard{min-height:100vh;background:var(--bg-secondary)}
+
+/* Estilos para la sección de proyectos */
+.projects-section {
+    margin-bottom: 2rem;
+}
+
+.section-header {
+    margin-bottom: 1.5rem;
+}
+
+.section-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #374151;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.projects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.project-card {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e5e7eb;
+    transition: all 0.3s ease;
+}
+
+.project-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+}
+
+.project-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.project-name {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0;
+    flex: 1;
+}
+
+.project-status {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-active, .status-open {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.status-pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-completed {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.project-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.stat-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+.stat-icon.completed {
+    background: rgba(34, 197, 94, 0.1);
+    color: #10b981;
+}
+
+.stat-icon.progress {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+}
+
+.stat-content {
+    flex: 1;
+}
+
+.stat-number {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #1f2937;
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    color: #6b7280;
+    margin-top: 0.25rem;
+}
+
+.project-progress {
+    margin-bottom: 1rem;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: #f3f4f6;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #10b981, #34d399);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.project-actions {
+    display: flex;
+    justify-content: center;
+}
+
+.btn-minimal {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid;
+}
+
+.btn-minimal.primary {
+    background: #1e3a8a !important;
+    color: #ffffff !important;
+    border-color: #1e3a8a !important;
+}
+
+.btn-minimal.primary:hover {
+    background: #1e40af !important;
+    border-color: #1e40af !important;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(30, 58, 138, 0.22);
+}
+
+/* Estilos para tareas recurrentes */
+.recurrent-tasks-section {
+    margin-bottom: 2rem;
+}
+
+.recurrent-tasks-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+}
+
+.recurrent-task-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.25rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e5e7eb;
+    border-left: 4px solid #f59e0b;
+    transition: all 0.3s ease;
+}
+
+.recurrent-task-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+}
+
+.recurrent-task-card .task-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.recurrent-task-card .task-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0;
+    flex: 1;
+    line-height: 1.3;
+}
+
+.recurrent-task-card .task-checkbox {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.recurrent-task-card .btn-view {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    background: #3b82f6;
+    color: white;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    font-size: 0.8rem;
+}
+
+.recurrent-task-card .btn-view:hover {
+    background: #2563eb;
+    transform: scale(1.1);
+}
+
+.recurrent-task-card .task-description {
+    color: #6b7280;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    margin-bottom: 0.75rem;
+}
+
+.recurrent-task-card .task-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.recurrent-task-card .status-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.recurrent-task-card .status-badge.status-pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.recurrent-task-card .status-badge.status-in_progress {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.recurrent-task-card .status-badge.status-completed {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.recurrent-task-card .task-due-date {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: #6b7280;
+    font-size: 0.8rem;
+}
 .modern-nav{background:var(--bg-glass);backdrop-filter:var(--glass-backdrop);border-bottom:1px solid var(--glass-border);padding:var(--spacing-md) 0;position:sticky;top:0;z-index:100}
 .nav-container{max-width:1400px;margin:0 auto;padding:0 var(--spacing-lg);display:flex;align-items:center;justify-content:space-between;gap:var(--spacing-xl)}
 .nav-menu{display:flex;list-style:none;gap:var(--spacing-sm)}
