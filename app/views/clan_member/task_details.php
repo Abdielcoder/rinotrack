@@ -1,5 +1,9 @@
 <?php
 ob_start();
+
+// Agregar dependencias de Quill.js al layout
+$additionalCSS[] = 'https://cdn.quilljs.com/1.3.6/quill.snow.css';
+$additionalJS[] = 'https://cdn.quilljs.com/1.3.6/quill.min.js';
 ?>
 
 <div class="cm-task-details minimal">
@@ -272,7 +276,7 @@ ob_start();
 document.getElementById('tdCommentForm')?.addEventListener('submit', function(e){
   e.preventDefault();
   
-  // Obtener contenido del editor Quill
+  // Obtener contenido del editor Quill o textarea fallback
   if (taskCommentEditor) {
     const editorContent = taskCommentEditor.getContents();
     const htmlContent = taskCommentEditor.root.innerHTML;
@@ -285,6 +289,17 @@ document.getElementById('tdCommentForm')?.addEventListener('submit', function(e)
     
     // Establecer el contenido en el campo oculto
     document.getElementById('task-comment-content').value = htmlContent;
+  } else {
+    // Fallback para textarea normal
+    const textarea = this.querySelector('textarea[name="comment_text"]');
+    if (textarea) {
+      const content = textarea.value.trim();
+      if (!content) {
+        alert('Por favor escribe un comentario');
+        return;
+      }
+      document.getElementById('task-comment-content').value = content;
+    }
   }
   
   const fd = new FormData(this);
@@ -1936,15 +1951,38 @@ function insertChecklist(editor) {
     editor.setSelection(range.index + 2);
 }
 
+// Función para esperar a que Quill esté disponible
+function waitForQuill(callback, maxAttempts = 20) {
+    let attempts = 0;
+    
+    function check() {
+        attempts++;
+        if (typeof Quill !== 'undefined') {
+            callback();
+        } else if (attempts < maxAttempts) {
+            setTimeout(check, 100);
+        } else {
+            console.error('Quill no se pudo cargar después de', maxAttempts, 'intentos');
+            // Fallback: mostrar textarea normal
+            const editorContainer = document.getElementById('task-comment-editor');
+            if (editorContainer) {
+                editorContainer.innerHTML = '<textarea name="comment_text" placeholder="Escribe un comentario..." style="width: 100%; height: 120px; border: 1px solid #d1d5db; border-radius: 8px; padding: 12px; font-size: 14px; resize: vertical;"></textarea>';
+            }
+        }
+    }
+    
+    check();
+}
+
 // Inicializar editor cuando se carga la página
 document.addEventListener('DOMContentLoaded', function() {
-    initializeTaskCommentEditor();
+    waitForQuill(function() {
+        initializeTaskCommentEditor();
+        console.log('Editor Quill inicializado correctamente');
+    });
 });
 </script>
 
-<!-- Dependencias para editor de texto rico -->
-<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-<script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
 
 <style>
 /* Estilos para el editor de texto enriquecido */
@@ -2014,7 +2052,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <?php
 $content = ob_get_clean();
-$additionalCSS = [APP_URL . 'assets/css/clan-member.css'];
+$additionalCSS = [
+    APP_URL . 'assets/css/clan-member.css',
+    'https://cdn.quilljs.com/1.3.6/quill.snow.css'
+];
+$additionalJS = [
+    'https://cdn.quilljs.com/1.3.6/quill.min.js'
+];
 require_once __DIR__ . '/../layout.php';
 ?>
 
