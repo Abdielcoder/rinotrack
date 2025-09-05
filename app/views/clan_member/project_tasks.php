@@ -296,10 +296,44 @@ if (!isset($user)) {
           </select>
           <small class="field-help">Afecta la visibilidad en las listas</small>
         </div>
-        <div class="form-group">
+        <div class="form-group" id="dueDateGroupMember">
           <label>Fecha límite</label>
-          <input type="date" name="due_date" />
+          <input type="date" name="due_date" id="taskDueDateMember" />
           <small class="field-help">Opcional</small>
+        </div>
+        
+        <!-- Campos de Recurrencia -->
+        <div class="form-group form-span-2">
+          <label class="checkbox-label">
+            <input type="checkbox" id="isRecurrentMember" name="is_recurrent" onchange="toggleRecurrenceFieldsMember()">
+            <span class="checkbox-text">Tarea Recurrente</span>
+          </label>
+          <small class="field-help">Marca si esta tarea debe repetirse automáticamente</small>
+        </div>
+        
+        <div id="recurrenceFieldsMember" class="recurrence-fields" style="display: none;">
+          <div class="form-group">
+            <label>Tipo de Recurrencia</label>
+            <select id="recurrenceTypeMember" name="recurrence_type">
+              <option value="">Seleccionar...</option>
+              <option value="daily">Diaria</option>
+              <option value="weekly">Semanal</option>
+              <option value="monthly">Mensual</option>
+            </select>
+            <small class="field-help">Cada cuánto se debe repetir la tarea</small>
+          </div>
+          
+          <div class="form-group">
+            <label>Fecha de Inicio</label>
+            <input type="date" id="recurrenceStartMember" name="recurrence_start_date">
+            <small class="field-help">Primera fecha en que se ejecutará la tarea</small>
+          </div>
+          
+          <div class="form-group">
+            <label>Fecha de Vigencia</label>
+            <input type="date" id="recurrenceEndMember" name="recurrence_end_date">
+            <small class="field-help">Hasta cuándo se generarán las repeticiones (opcional)</small>
+          </div>
         </div>
       </div>
       <div class="form-actions">
@@ -996,6 +1030,38 @@ if (!isset($user)) {
     grid-column: span 2;
 }
 
+/* Campos de Recurrencia */
+.recurrence-fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #3B82F6;
+    cursor: pointer;
+}
+
+.checkbox-text {
+    color: #374151;
+    font-size: 14px;
+}
+
 .form-group label {
     font-weight: 600;
     color: #374151;
@@ -1158,6 +1224,63 @@ function openCreateTaskModal() {
 function closeCreateTaskModal() { 
     document.getElementById('createTaskModal').classList.remove('open'); 
     document.getElementById('createTaskForm').reset(); 
+    // Resetear campos de recurrencia
+    document.getElementById('recurrenceFieldsMember').style.display = 'none';
+    document.getElementById('dueDateGroupMember').style.display = 'block';
+}
+
+// Función para mostrar/ocultar campos de recurrencia
+function toggleRecurrenceFieldsMember() {
+    const checkbox = document.getElementById('isRecurrentMember');
+    const fields = document.getElementById('recurrenceFieldsMember');
+    const dueDateField = document.getElementById('taskDueDateMember');
+    const dueDateGroup = document.getElementById('dueDateGroupMember');
+    
+    console.log('Toggle recurrence member - checked:', checkbox.checked);
+    
+    if (checkbox.checked) {
+        // Mostrar campos de recurrencia
+        fields.style.display = 'block';
+        
+        // Ocultar campo de fecha límite normal
+        if (dueDateGroup) {
+            dueDateGroup.style.display = 'none';
+        }
+        
+        // Quitar required de fecha límite
+        if (dueDateField) {
+            dueDateField.required = false;
+            dueDateField.removeAttribute('required');
+            dueDateField.value = '';
+        }
+        
+        // Hacer requeridos los campos de recurrencia
+        document.getElementById('recurrenceTypeMember').required = true;
+        document.getElementById('recurrenceStartMember').required = true;
+        
+    } else {
+        // Ocultar campos de recurrencia
+        fields.style.display = 'none';
+        
+        // Mostrar campo de fecha límite normal
+        if (dueDateGroup) {
+            dueDateGroup.style.display = 'block';
+        }
+        
+        // Restaurar fecha límite (opcional)
+        if (dueDateField) {
+            dueDateField.required = false; // Mantener como opcional
+        }
+        
+        // Quitar requerimiento de campos de recurrencia
+        document.getElementById('recurrenceTypeMember').required = false;
+        document.getElementById('recurrenceStartMember').required = false;
+        
+        // Limpiar valores de recurrencia
+        document.getElementById('recurrenceTypeMember').value = '';
+        document.getElementById('recurrenceStartMember').value = '';
+        document.getElementById('recurrenceEndMember').value = '';
+    }
 }
 
 document.getElementById('createTaskForm').addEventListener('submit', function(e){

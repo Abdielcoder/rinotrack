@@ -2065,6 +2065,64 @@ class Task {
      * Crear tarea personal del usuario - versión simplificada
      */
     /**
+     * Crear tarea en proyecto con soporte para recurrencia
+     */
+    public function createProjectTaskWithRecurrence($taskData) {
+        try {
+            error_log("=== INICIO createProjectTaskWithRecurrence ===");
+            error_log("Task data: " . print_r($taskData, true));
+            
+            $stmt = $this->db->prepare("
+                INSERT INTO Tasks (
+                    task_name, 
+                    description, 
+                    priority, 
+                    due_date, 
+                    status, 
+                    project_id,
+                    assigned_to_user_id, 
+                    created_by_user_id,
+                    is_recurrent,
+                    recurrence_type,
+                    recurrence_start_date,
+                    recurrence_end_date,
+                    last_generated_date,
+                    created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+            ");
+            
+            $result = $stmt->execute([
+                $taskData['task_name'],
+                $taskData['description'],
+                $taskData['priority'],
+                $taskData['due_date'],
+                $taskData['status'],
+                $taskData['project_id'],
+                $taskData['assigned_to_user_id'],
+                $taskData['created_by_user_id'],
+                $taskData['is_recurrent'] ?? 0,
+                $taskData['recurrence_type'] ?? null,
+                $taskData['recurrence_start_date'] ?? null,
+                $taskData['recurrence_end_date'] ?? null,
+                $taskData['recurrence_start_date'] ?? null // last_generated_date = start_date inicialmente
+            ]);
+            
+            if ($result) {
+                $taskId = $this->db->lastInsertId();
+                error_log("Tarea de proyecto con recurrencia creada exitosamente con ID: " . $taskId);
+                return $taskId;
+            } else {
+                error_log("Error al crear tarea de proyecto: " . print_r($stmt->errorInfo(), true));
+                return false;
+            }
+            
+        } catch (Exception $e) {
+            error_log("ERROR en createProjectTaskWithRecurrence: " . $e->getMessage());
+            return false;
+        }
+    }
+    
+    /**
      * Crear tarea en proyecto (personal o delegado)
      */
     public function createProjectTask($taskData) {

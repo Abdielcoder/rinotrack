@@ -1587,6 +1587,14 @@ class ClanMemberController {
             $dueDate = $_POST['due_date'] ?? '';
             $userId = $this->currentUser['user_id'];
             
+            // Campos de recurrencia
+            $isRecurrent = isset($_POST['is_recurrent']) ? 1 : 0;
+            $recurrenceType = $isRecurrent ? trim($_POST['recurrence_type'] ?? '') : null;
+            $recurrenceStart = $isRecurrent ? trim($_POST['recurrence_start_date'] ?? '') : null;
+            $recurrenceEnd = $isRecurrent ? trim($_POST['recurrence_end_date'] ?? '') : null;
+            
+            error_log('createProjectTask - Recurrencia: is_recurrent=' . $isRecurrent . ', type=' . ($recurrenceType ?? 'NULL') . ', start=' . ($recurrenceStart ?? 'NULL') . ', end=' . ($recurrenceEnd ?? 'NULL'));
+            
             // Validaciones básicas
             if (empty($taskName)) {
                 echo json_encode(['success' => false, 'message' => 'El nombre de la tarea es requerido']);
@@ -1621,25 +1629,75 @@ class ClanMemberController {
                 return;
             }
             
+            // Validaciones de recurrencia
+            if ($isRecurrent) {
+                if (empty($recurrenceType)) {
+                    echo json_encode(['success' => false, 'message' => 'El tipo de recurrencia es requerido']);
+                    return;
+                }
+                
+                if (empty($recurrenceStart)) {
+                    echo json_encode(['success' => false, 'message' => 'La fecha de inicio de recurrencia es requerida']);
+                    return;
+                }
+                
+                $validRecurrenceTypes = ['daily', 'weekly', 'monthly'];
+                if (!in_array($recurrenceType, $validRecurrenceTypes)) {
+                    echo json_encode(['success' => false, 'message' => 'Tipo de recurrencia inválido']);
+                    return;
+                }
+                
+                // Validar que la fecha de inicio no sea anterior a hoy
+                if (strtotime($recurrenceStart) < strtotime(date('Y-m-d'))) {
+                    echo json_encode(['success' => false, 'message' => 'La fecha de inicio no puede ser anterior a hoy']);
+                    return;
+                }
+                
+                // Si hay fecha de fin, validar que sea posterior a la de inicio
+                if (!empty($recurrenceEnd) && strtotime($recurrenceEnd) <= strtotime($recurrenceStart)) {
+                    echo json_encode(['success' => false, 'message' => 'La fecha de vigencia debe ser posterior a la fecha de inicio']);
+                    return;
+                }
+            }
+            
+            // Si es recurrente, usar la fecha de inicio de recurrencia como due_date
+            $taskDueDate = $isRecurrent ? $recurrenceStart : (!empty($dueDate) ? $dueDate : null);
+            
             // Crear la tarea
             $taskData = [
                 'task_name' => $taskName,
                 'description' => $description,
                 'priority' => $priority,
-                'due_date' => !empty($dueDate) ? $dueDate : null,
+                'due_date' => $taskDueDate,
                 'status' => 'pending',
                 'project_id' => $projectId,
                 'assigned_to_user_id' => $userId,
-                'created_by_user_id' => $userId
+                'created_by_user_id' => $userId,
+                'is_recurrent' => $isRecurrent,
+                'recurrence_type' => $recurrenceType,
+                'recurrence_start_date' => $recurrenceStart,
+                'recurrence_end_date' => $recurrenceEnd
             ];
             
-            $taskId = $this->taskModel->createProjectTask($taskData);
+            $taskId = $this->taskModel->createProjectTaskWithRecurrence($taskData);
             
             if ($taskId) {
+                $message = 'Tarea creada exitosamente';
+                $generatedInstances = 0;
+                
+                // Si es tarea recurrente, generar instancias inmediatamente
+                if ($isRecurrent) {
+                    $generatedInstances = $this->taskModel->generateInstancesForTask($taskId);
+                    if ($generatedInstances > 0) {
+                        $message .= ". Se generaron $generatedInstances instancias recurrentes";
+                    }
+                }
+                
                 echo json_encode([
                     'success' => true, 
-                    'message' => 'Tarea creada exitosamente',
-                    'task_id' => $taskId
+                    'message' => $message,
+                    'task_id' => $taskId,
+                    'generated_instances' => $generatedInstances
                 ]);
             } else {
                 echo json_encode(['success' => false, 'message' => 'Error al crear la tarea']);
