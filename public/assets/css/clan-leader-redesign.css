@@ -1,0 +1,771 @@
+/* ===============================
+   REDISEÑO COMPLETO DE TABLAS - UX MODERNA
+   =============================== */
+
+/* Resetear estilos anteriores de tabla */
+.tasks-table-container {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    margin: 20px 0;
+}
+
+/* Tabla base - diseño limpio y moderno */
+.tasks-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* ===============================
+   CABECERAS - Sticky y elegantes
+   =============================== */
+.tasks-table thead {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.tasks-table thead th {
+    padding: 14px 12px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #ffffff;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+    white-space: nowrap;
+}
+
+/* Alineación específica de columnas */
+.tasks-table .th-checkbox,
+.tasks-table .th-priority,
+.tasks-table .th-status,
+.tasks-table .th-progress,
+.tasks-table .th-actions {
+    text-align: center;
+}
+
+/* ===============================
+   FILAS - Zebra, hover y estados
+   =============================== */
+.tasks-table tbody tr {
+    border-bottom: 1px solid #f3f4f6;
+    transition: all 0.2s ease;
+}
+
+.tasks-table tbody tr:nth-child(even) {
+    background-color: #fafbfc;
+}
+
+.tasks-table tbody tr:hover {
+    background-color: #f0f4ff;
+    transform: translateX(2px);
+    box-shadow: inset 3px 0 0 #667eea;
+}
+
+.tasks-table tbody tr.completed {
+    opacity: 0.7;
+    background-color: #f0fdf4;
+}
+
+.tasks-table tbody tr.overdue {
+    background-color: #fef2f2;
+}
+
+/* ===============================
+   CELDAS - Padding y tipografía
+   =============================== */
+.tasks-table tbody td {
+    padding: 12px 10px;
+    font-size: 0.875rem;
+    color: #374151;
+    vertical-align: middle;
+}
+
+/* ===============================
+   COLUMNAS ESPECÍFICAS - Anchos optimizados
+   =============================== */
+
+/* Checkbox */
+.tasks-table .th-checkbox,
+.tasks-table .td-checkbox {
+    width: 40px;
+    min-width: 40px;
+    text-align: center;
+}
+
+.tasks-table .td-checkbox input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: #667eea;
+}
+
+/* Prioridad */
+.tasks-table .th-priority,
+.tasks-table .td-priority {
+    width: 80px;
+    min-width: 80px;
+    text-align: center;
+}
+
+.tasks-table .priority-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 8px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    min-width: 60px;
+}
+
+.tasks-table .priority-badge.priority-critical {
+    background: linear-gradient(135deg, #ff6b6b, #ff5252);
+    color: white;
+}
+
+.tasks-table .priority-badge.priority-high {
+    background: linear-gradient(135deg, #ffa726, #ff9800);
+    color: white;
+}
+
+.tasks-table .priority-badge.priority-medium {
+    background: linear-gradient(135deg, #66bb6a, #4caf50);
+    color: white;
+}
+
+.tasks-table .priority-badge.priority-low {
+    background: linear-gradient(135deg, #42a5f5, #2196f3);
+    color: white;
+}
+
+/* Tarea */
+.tasks-table .th-task,
+.tasks-table .td-task {
+    width: auto;
+    min-width: 200px;
+    max-width: 300px;
+}
+
+.tasks-table .task-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.tasks-table .task-info .task-title,
+.tasks-table .task-info .task-name {
+    font-weight: 600;
+    color: #1f2937;
+    font-size: 0.875rem;
+    line-height: 1.4;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tasks-table .task-info .task-description {
+    font-size: 0.75rem;
+    color: #6b7280;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Proyecto */
+.tasks-table .th-project,
+.tasks-table .td-project {
+    width: 140px;
+    min-width: 140px;
+}
+
+.tasks-table .project-name {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 8px;
+    background: #f3f4f6;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    color: #4b5563;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+}
+
+/* Asignado (solo en tabla de equipo) */
+.tasks-table .th-assigned,
+.tasks-table .td-assigned {
+    width: 120px;
+    min-width: 120px;
+}
+
+.tasks-table .assigned-users {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.8rem;
+    color: #4b5563;
+}
+
+.tasks-table .assigned-users::before {
+    content: "👤";
+    font-size: 0.9rem;
+}
+
+/* Fecha límite */
+.tasks-table .th-due-date,
+.tasks-table .td-due-date {
+    width: 100px;
+    min-width: 100px;
+    text-align: center;
+}
+
+.tasks-table .due-date {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    background: #fef3c7;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    color: #92400e;
+    font-weight: 500;
+}
+
+.tasks-table .no-date {
+    color: #9ca3af;
+    font-size: 0.75rem;
+}
+
+/* Estado */
+.tasks-table .th-status,
+.tasks-table .td-status {
+    width: 100px;
+    min-width: 100px;
+    text-align: center;
+}
+
+.tasks-table .status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    min-width: 80px;
+}
+
+.tasks-table .status-badge.status-pending {
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    color: white;
+}
+
+.tasks-table .status-badge.status-in_progress {
+    background: linear-gradient(135deg, #60a5fa, #3b82f6);
+    color: white;
+}
+
+.tasks-table .status-badge.status-completed {
+    background: linear-gradient(135deg, #34d399, #10b981);
+    color: white;
+}
+
+/* Progreso */
+.tasks-table .th-progress,
+.tasks-table .td-progress {
+    width: 120px;
+    min-width: 120px;
+    text-align: center;
+}
+
+.tasks-table .progress-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: center;
+}
+
+.tasks-table .progress-bar {
+    flex: 1;
+    height: 6px;
+    background: #e5e7eb;
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+    max-width: 60px;
+}
+
+.tasks-table .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #10b981, #059669);
+    border-radius: 10px;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+.tasks-table .progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+.tasks-table .progress-text {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #374151;
+    min-width: 35px;
+}
+
+/* Slider de progreso */
+.tasks-table .task-progress-slider {
+    width: 60px;
+    height: 4px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: #e5e7eb;
+    border-radius: 10px;
+    outline: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+    cursor: pointer;
+}
+
+.tasks-table .progress-container:hover .task-progress-slider {
+    opacity: 1;
+}
+
+.tasks-table .task-progress-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    background: #10b981;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.tasks-table .task-progress-slider::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    background: #10b981;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Acciones */
+.tasks-table .th-actions,
+.tasks-table .td-actions {
+    width: 120px;
+    min-width: 120px;
+    text-align: center;
+    position: sticky;
+    right: 0;
+    background: inherit;
+    z-index: 10;
+}
+
+.tasks-table tbody tr:nth-child(even) .td-actions {
+    background-color: #fafbfc;
+}
+
+.tasks-table tbody tr:hover .td-actions {
+    background-color: #f0f4ff;
+}
+
+.tasks-table .action-buttons {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+}
+
+.tasks-table .btn-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: white;
+    border: 1px solid #e5e7eb;
+    color: #6b7280;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.tasks-table .btn-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.tasks-table .btn-action.btn-view:hover {
+    background: #3b82f6;
+    color: white;
+    border-color: #3b82f6;
+}
+
+.tasks-table .btn-action.btn-edit:hover {
+    background: #f59e0b;
+    color: white;
+    border-color: #f59e0b;
+}
+
+.tasks-table .btn-action.btn-clone:hover {
+    background: #8b5cf6;
+    color: white;
+    border-color: #8b5cf6;
+}
+
+.tasks-table .btn-action.btn-delete:hover {
+    background: #ef4444;
+    color: white;
+    border-color: #ef4444;
+}
+
+.tasks-table .btn-action i {
+    font-size: 14px;
+}
+
+/* ===============================
+   RESPONSIVE - Mantener funcionalidad
+   =============================== */
+
+/* Tablets */
+@media (max-width: 1024px) {
+    .tasks-table {
+        min-width: 900px;
+    }
+    
+    .tasks-table thead th,
+    .tasks-table tbody td {
+        padding: 10px 8px;
+        font-size: 0.8rem;
+    }
+    
+    .tasks-table .th-project,
+    .tasks-table .td-project {
+        display: none;
+    }
+}
+
+/* Móviles */
+@media (max-width: 768px) {
+    .tasks-table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .tasks-table {
+        min-width: 700px;
+    }
+    
+    .tasks-table thead th,
+    .tasks-table tbody td {
+        padding: 8px 6px;
+        font-size: 0.75rem;
+    }
+    
+    .tasks-table .th-assigned,
+    .tasks-table .td-assigned {
+        display: none;
+    }
+    
+    .tasks-table .priority-badge,
+    .tasks-table .status-badge {
+        font-size: 0.65rem;
+        padding: 3px 6px;
+    }
+    
+    .tasks-table .btn-action {
+        width: 28px;
+        height: 28px;
+    }
+    
+    .tasks-table .btn-action i {
+        font-size: 12px;
+    }
+}
+
+/* Móviles pequeños */
+@media (max-width: 640px) {
+    .tasks-table {
+        min-width: 600px;
+    }
+    
+    .tasks-table .th-due-date,
+    .tasks-table .td-due-date {
+        display: none;
+    }
+    
+    .tasks-table .progress-bar {
+        max-width: 40px;
+    }
+    
+    .tasks-table .progress-text {
+        font-size: 0.65rem;
+    }
+}
+
+/* ===============================
+   ANIMACIONES Y TRANSICIONES
+   =============================== */
+.task-row {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Loading state */
+.tasks-table tbody tr.loading td {
+    text-align: center;
+    padding: 40px;
+    color: #6b7280;
+    font-style: italic;
+}
+
+/* Empty state */
+.tasks-table tbody tr.empty td {
+    text-align: center;
+    padding: 60px;
+    color: #9ca3af;
+}
+
+/* ===============================
+   FILTROS Y CONTROLES - Diseño uniforme
+   =============================== */
+.filters-container {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.filters-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+}
+
+.filter-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    flex: 1;
+}
+
+.filter-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.filter-item label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #4b5563;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.filter-item select,
+.search-input {
+    padding: 8px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    background: white;
+    color: #374151;
+    transition: all 0.2s ease;
+}
+
+.filter-item select:focus,
+.search-input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.search-container {
+    flex: 1;
+    min-width: 200px;
+}
+
+.search-input-wrapper {
+    position: relative;
+}
+
+.search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+}
+
+.search-input {
+    padding-left: 36px;
+    width: 100%;
+}
+
+.filter-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-apply-filters,
+.btn-reset-filters {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    text-decoration: none;
+    border: none;
+}
+
+.btn-apply-filters {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+}
+
+.btn-apply-filters:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.btn-reset-filters {
+    background: white;
+    color: #6b7280;
+    border: 1px solid #e5e7eb;
+}
+
+.btn-reset-filters:hover {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+/* ===============================
+   TABS - Diseño moderno
+   =============================== */
+.tasks-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.tab-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    background: white;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.tab-button:hover {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.tab-button.active {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border-color: transparent;
+}
+
+.tab-button i {
+    font-size: 1rem;
+}
+
+.tab-content {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* ===============================
+   SECCIÓN HEADER
+   =============================== */
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.section-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1f2937;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.section-actions {
+    display: flex;
+    gap: 12px;
+}
+
+/* ===============================
+   UTILIDADES
+   =============================== */
+.text-center {
+    text-align: center;
+}
+
+.text-danger {
+    color: #ef4444;
+}

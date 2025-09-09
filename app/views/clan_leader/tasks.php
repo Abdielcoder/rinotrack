@@ -3,6 +3,9 @@
 ob_start();
 ?>
 
+<!-- Cargar CSS de rediseño -->
+<link rel="stylesheet" href="<?= APP_URL ?>/assets/css/clan-leader-redesign.css">
+
 <div class="clan-leader-tasks-container">
     <!-- Header Mejorado -->
     <div class="page-header">
