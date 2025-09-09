@@ -3834,9 +3834,9 @@ class ClanLeaderController {
                 SELECT 
                     s.subtask_id as task_id,
                     s.title as task_name,
-                    'pending' as status,
+                    s.status,
                     s.due_date,
-                    s.progress_percentage as completion_percentage,
+                    s.completion_percentage,
                     p.project_name,
                     u.full_name as assigned_to_name,
                     CASE 
@@ -3844,14 +3844,14 @@ class ClanLeaderController {
                         ELSE DATEDIFF(s.due_date, CURDATE())
                     END as days_until_due,
                     'subtask' as item_type,
-                    s.is_completed
+                    0 as is_completed
                 FROM Subtasks s
                 LEFT JOIN Tasks t ON s.task_id = t.task_id
                 LEFT JOIN Projects p ON t.project_id = p.project_id
                 LEFT JOIN Users u ON s.assigned_to_user_id = u.user_id
                 WHERE s.assigned_to_user_id = ? 
                   AND s.status != 'completed' 
-                  AND s.is_completed != 1
+                  AND s.completion_percentage < 100
                 ORDER BY s.due_date ASC
             ");
             
@@ -4217,7 +4217,7 @@ class ClanLeaderController {
                  LEFT JOIN Clans c ON p.clan_id = c.clan_id
                  LEFT JOIN Users u_assigned ON s.assigned_to_user_id = u_assigned.user_id
                  LEFT JOIN Clan_Members cm ON s.assigned_to_user_id = cm.user_id
-                 WHERE s.status != 'completed' AND s.is_completed != 1
+                 WHERE s.status != 'completed' AND s.completion_percentage < 100
                    AND (
                        -- Subtareas del clan principal
                        (p.clan_id = ? AND cm.clan_id = ?)
