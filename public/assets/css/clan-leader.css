@@ -5702,7 +5702,7 @@ input[type="checkbox"] {
     width: 100%; 
     border-collapse: separate; 
     border-spacing: 0; 
-    min-width: 640px; /* Ajustado para acomodar columna de acciones más ancha */
+    min-width: 610px; /* Reducido por columnas de estado/progreso más compactas */
 }
 
 /* Encabezados de la tabla */
@@ -5780,13 +5780,15 @@ input[type="checkbox"] {
 }
 .tasks-table .th-status,
 .tasks-table .td-status { 
-    width: 70px; 
-    min-width: 70px;
+    width: 55px; /* Más compacto */
+    min-width: 55px;
+    padding: 6px 4px; /* Padding reducido */
 }
 .tasks-table .th-progress,
 .tasks-table .td-progress { 
-    width: 85px; 
-    min-width: 85px;
+    width: 70px; /* Más compacto */
+    min-width: 70px;
+    padding: 6px 4px; /* Padding reducido */
 }
 .tasks-table .th-checkbox,
 .tasks-table .td-checkbox { 
@@ -5818,7 +5820,7 @@ input[type="checkbox"] {
 /* Responsive para tablets */
 @media (max-width: 1024px) {
     .tasks-table { 
-        min-width: 580px; /* Ajustado para columna de acciones más ancha */
+        min-width: 550px; /* Reducido por columnas de estado/progreso más compactas */
     }
     .tasks-table .th-project,
     .tasks-table .td-project { min-width: 80px; max-width: 100px; }
@@ -5836,7 +5838,7 @@ input[type="checkbox"] {
     }
     
     .tasks-table { 
-        min-width: 450px; /* Ajustado para columna de acciones más ancha */
+        min-width: 420px; /* Reducido por columnas de estado/progreso más compactas */
     }
     
     .tasks-table .th-project,
@@ -5877,7 +5879,7 @@ input[type="checkbox"] {
 
 @media (max-width: 640px) {
     .tasks-table { 
-        min-width: 410px; /* Ajustado para columna de acciones más ancha */
+        min-width: 380px; /* Reducido por columnas de estado/progreso más compactas */
     }
     
     .tasks-table .th-due-date,
@@ -5887,8 +5889,29 @@ input[type="checkbox"] {
     
     .tasks-table .th-progress,
     .tasks-table .td-progress { 
-        width: 60px;
-        min-width: 60px;
+        width: 50px; /* Aún más compacto en móvil */
+        min-width: 50px;
+    }
+    
+    /* Barra de progreso aún más pequeña en móvil */
+    .tasks-table .progress-bar {
+        height: 6px; /* Más delgada en móvil */
+        min-width: 25px;
+    }
+    
+    .tasks-table .progress-text {
+        font-size: 0.55rem; /* Texto más pequeño en móvil */
+        min-width: 18px;
+    }
+    
+    .tasks-table .task-progress-slider {
+        width: 40px; /* Slider más pequeño en móvil */
+        height: 5px;
+    }
+    
+    .tasks-table .task-progress-slider::-webkit-slider-thumb {
+        width: 10px;
+        height: 10px;
     }
     
     .tasks-table .th-actions,
@@ -6031,48 +6054,92 @@ input[type="checkbox"] {
     display: none; /* Ocultar descripción para ahorrar espacio */
 }
 
-/* Hacer los badges ultra compactos */
+/* Hacer los badges ultra compactos para equipo */
 .tasks-table .priority-badge,
 .tasks-table .status-badge {
-    padding: 2px 4px;
-    font-size: 0.65rem;
+    padding: 1px 3px; /* Aún más compacto */
+    font-size: 0.6rem; /* Texto más pequeño */
     font-weight: 600;
-    border-radius: 3px;
+    border-radius: 2px; /* Bordes más pequeños */
     line-height: 1;
     display: inline-block;
     text-align: center;
-    min-width: 40px;
+    min-width: 32px; /* Ancho mínimo reducido */
+    max-width: 45px; /* Ancho máximo para evitar desborde */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-/* Barra de progreso compacta */
+/* Barra de progreso muy compacta para equipo */
 .tasks-table .progress-container {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 2px; /* Gap más pequeño */
 }
 
 .tasks-table .progress-bar {
     flex: 1;
-    height: 12px; /* Más compacta */
+    height: 8px; /* Más pequeña */
     background: #e5e7eb;
-    border-radius: 6px;
+    border-radius: 4px;
     overflow: hidden;
-    min-width: 40px;
+    min-width: 30px; /* Más pequeño */
+    position: relative;
 }
 
 .tasks-table .progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, #10b981, #22c55e);
-    border-radius: 6px;
+    background: linear-gradient(90deg, #10b981, #16a34a); /* Verde más vibrante */
+    border-radius: 4px;
     transition: width 0.3s ease;
 }
 
 .tasks-table .progress-text {
-    font-size: 0.65rem;
+    font-size: 0.6rem; /* Texto más pequeño */
     font-weight: 600;
     color: #374151;
-    min-width: 25px;
+    min-width: 22px; /* Más compacto */
     text-align: center;
+}
+
+/* Slider de progreso compacto para equipo */
+.tasks-table .task-progress-slider {
+    width: 50px; /* Más pequeño */
+    height: 6px; /* Más delgado */
+    -webkit-appearance: none;
+    appearance: none;
+    background: #e5e7eb;
+    border-radius: 3px;
+    outline: none;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+}
+
+.tasks-table .task-progress-slider:hover {
+    opacity: 1;
+}
+
+.tasks-table .task-progress-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 12px; /* Más pequeño */
+    height: 12px; /* Más pequeño */
+    background: #10b981; /* Verde */
+    border-radius: 50%;
+    cursor: pointer;
+    border: 1px solid #ffffff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.tasks-table .task-progress-slider::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    background: #10b981; /* Verde */
+    border-radius: 50%;
+    cursor: pointer;
+    border: 1px solid #ffffff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 /* Responsive para botones de filtros */
