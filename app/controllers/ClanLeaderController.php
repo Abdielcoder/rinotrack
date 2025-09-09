@@ -3823,6 +3823,15 @@ class ClanLeaderController {
 
             // Consulta directa para obtener TODAS las tareas del equipo (clan)
             $db = Database::getInstance();
+            
+            // Primero verificar que el clan tiene proyectos y tareas
+            $checkQuery = "SELECT COUNT(*) as total FROM Projects WHERE clan_id = ?";
+            $checkStmt = $db->prepare($checkQuery);
+            $checkStmt->execute([$clanId]);
+            $projectCount = $checkStmt->fetch(PDO::FETCH_ASSOC)['total'];
+            error_log("getTeamTasks - Total proyectos del clan $clanId: " . $projectCount);
+            
+            // Consulta para obtener TODAS las tareas del clan (excluyendo personales y subtareas)
             $query = "
                 SELECT DISTINCT
                     t.task_id,
@@ -3833,21 +3842,22 @@ class ClanLeaderController {
                     t.due_date,
                     t.completion_percentage,
                     t.created_by_user_id,
+                    t.is_subtask,
                     p.project_id,
                     p.project_name,
                     p.is_personal,
                     u.user_id as assigned_user_id,
                     u.full_name as assigned_user_name,
                     DATEDIFF(t.due_date, CURDATE()) as days_until_due,
-                    GROUP_CONCAT(DISTINCT ta_users.full_name SEPARATOR ', ') as all_assigned_users
+                    GROUP_CONCAT(DISTINCT COALESCE(ta_users.full_name, u.full_name, 'Sin asignar') SEPARATOR ', ') as all_assigned_users
                 FROM Tasks t
-                JOIN Projects p ON t.project_id = p.project_id
+                INNER JOIN Projects p ON t.project_id = p.project_id
                 LEFT JOIN Users u ON t.assigned_to_user_id = u.user_id
                 LEFT JOIN Task_Assignments ta ON t.task_id = ta.task_id
                 LEFT JOIN Users ta_users ON ta.user_id = ta_users.user_id
                 WHERE p.clan_id = ?
-                    AND t.is_subtask = 0
-                    AND (p.is_personal IS NULL OR p.is_personal != 1)
+                    AND (p.is_personal = 0 OR p.is_personal IS NULL)
+                    AND (t.is_subtask = 0 OR t.is_subtask IS NULL)
                 GROUP BY t.task_id
                 ORDER BY 
                     CASE 
@@ -3858,7 +3868,7 @@ class ClanLeaderController {
                     END,
                     t.due_date ASC,
                     t.priority DESC
-                LIMIT 200
+                LIMIT 500
             ";
 
             $stmt = $db->prepare($query);
@@ -3868,11 +3878,30 @@ class ClanLeaderController {
             // Log para debugging
             error_log("getTeamTasks - Clan ID: " . $clanId);
             error_log("getTeamTasks - Total tareas encontradas: " . count($tasks));
+            
+            // Si no hay tareas, verificar si hay tareas en general para este clan
+            if (count($tasks) == 0) {
+                $checkTasksQuery = "
+                    SELECT COUNT(*) as total 
+                    FROM Tasks t 
+                    INNER JOIN Projects p ON t.project_id = p.project_id 
+                    WHERE p.clan_id = ?
+                ";
+                $checkTasksStmt = $db->prepare($checkTasksQuery);
+                $checkTasksStmt->execute([$clanId]);
+                $totalTasksInClan = $checkTasksStmt->fetch(PDO::FETCH_ASSOC)['total'];
+                error_log("getTeamTasks - Total tareas en el clan (incluyendo personales y subtareas): " . $totalTasksInClan);
+            }
 
             Utils::jsonResponse([
                 'success' => true,
                 'tasks' => $tasks,
-                'total' => count($tasks)
+                'total' => count($tasks),
+                'clan_id' => $clanId,
+                'debug' => [
+                    'project_count' => $projectCount,
+                    'query_executed' => true
+                ]
             ]);
 
         } catch (Exception $e) {
