@@ -426,73 +426,9 @@ ob_start();
                                     </div>
                                 </td>
                             </tr>
-                            <?php 
-                                } // end foreach
-                            } // end if/else
-                            ?>
                         </tbody>
                     </table>
                 </div>
-                
-                <!-- Paginación -->
-                <?php if (isset($pagination) && $pagination['total_pages'] > 1): ?>
-                <div class="pagination-container">
-                    <div class="pagination-info">
-                        <span class="pagination-text">
-                            Mostrando <?= (($pagination['current_page'] - 1) * $pagination['per_page']) + 1 ?> 
-                            a <?= min($pagination['current_page'] * $pagination['per_page'], $pagination['total_records']) ?> 
-                            de <?= $pagination['total_records'] ?> tareas
-                        </span>
-                    </div>
-                    
-                    <div class="pagination-controls">
-                        <?php if ($pagination['current_page'] > 1): ?>
-                        <a href="?route=clan_leader/tasks&page=<?= $pagination['current_page'] - 1 ?><?= !empty($search) ? '&search=' . urlencode($search) : '' ?><?= !empty($_GET['status_filter']) ? '&status_filter=' . urlencode($_GET['status_filter']) : '' ?><?= isset($_GET['per_page']) ? '&per_page=' . urlencode($_GET['per_page']) : '' ?>" 
-                           class="pagination-btn pagination-prev">
-                            <i class="fas fa-chevron-left"></i>
-                            Anterior
-                        </a>
-                        <?php endif; ?>
-                        
-                        <div class="pagination-pages">
-                            <?php
-                            $startPage = max(1, $pagination['current_page'] - 2);
-                            $endPage = min($pagination['total_pages'], $pagination['current_page'] + 2);
-                            
-                            if ($startPage > 1): ?>
-                            <a href="?route=clan_leader/tasks&page=1<?= !empty($search) ? '&search=' . urlencode($search) : '' ?><?= !empty($_GET['status_filter']) ? '&status_filter=' . urlencode($_GET['status_filter']) : '' ?><?= isset($_GET['per_page']) ? '&per_page=' . urlencode($_GET['per_page']) : '' ?>" 
-                               class="pagination-btn">1</a>
-                            <?php if ($startPage > 2): ?>
-                            <span class="pagination-ellipsis">...</span>
-                            <?php endif; ?>
-                            <?php endif; ?>
-                            
-                            <?php for ($i = $startPage; $i <= $endPage; $i++): ?>
-                            <a href="?route=clan_leader/tasks&page=<?= $i ?><?= !empty($search) ? '&search=' . urlencode($search) : '' ?><?= !empty($_GET['status_filter']) ? '&status_filter=' . urlencode($_GET['status_filter']) : '' ?><?= isset($_GET['per_page']) ? '&per_page=' . urlencode($_GET['per_page']) : '' ?>" 
-                               class="pagination-btn <?= $i == $pagination['current_page'] ? 'active' : '' ?>">
-                                <?= $i ?>
-                            </a>
-                            <?php endfor; ?>
-                            
-                            <?php if ($endPage < $pagination['total_pages']): ?>
-                            <?php if ($endPage < $pagination['total_pages'] - 1): ?>
-                            <span class="pagination-ellipsis">...</span>
-                            <?php endif; ?>
-                            <a href="?route=clan_leader/tasks&page=<?= $pagination['total_pages'] ?><?= !empty($search) ? '&search=' . urlencode($search) : '' ?><?= !empty($_GET['status_filter']) ? '&status_filter=' . urlencode($_GET['status_filter']) : '' ?><?= isset($_GET['per_page']) ? '&per_page=' . urlencode($_GET['per_page']) : '' ?>" 
-                               class="pagination-btn"><?= $pagination['total_pages'] ?></a>
-                            <?php endif; ?>
-                        </div>
-                        
-                        <?php if ($pagination['current_page'] < $pagination['total_pages']): ?>
-                        <a href="?route=clan_leader/tasks&page=<?= $pagination['current_page'] + 1 ?><?= !empty($search) ? '&search=' . urlencode($search) : '' ?><?= !empty($_GET['status_filter']) ? '&status_filter=' . urlencode($_GET['status_filter']) : '' ?><?= isset($_GET['per_page']) ? '&per_page=' . urlencode($_GET['per_page']) : '' ?>" 
-                           class="pagination-btn pagination-next">
-                            Siguiente
-                            <i class="fas fa-chevron-right"></i>
-                        </a>
-                        <?php endif; ?>
-                    </div>
-                </div>
-                <?php endif; ?>
             </div>
         </div>
 
