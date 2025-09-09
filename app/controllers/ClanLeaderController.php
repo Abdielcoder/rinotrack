@@ -3820,11 +3820,48 @@ class ClanLeaderController {
                 throw new Exception("Usuario no válido");
             }
             
-            // Usar el método existente getUserTasks que ya sabemos que funciona
+            // Usar el método existente getUserTasks que ya sabemos que funciona, pero filtrar completadas
             $userTasksData = $this->taskModel->getUserTasks($userId, 1, 100, '', '');
             $allTasks = $userTasksData['tasks'] ?? [];
             
-            error_log("DEBUG getMyKanbanTasks - Total tareas encontradas: " . count($allTasks));
+            // Filtrar tareas completadas (tanto por status como por completion_percentage)
+            $allTasks = array_filter($allTasks, function($task) {
+                return $task['status'] !== 'completed' && ($task['completion_percentage'] ?? 0) < 100;
+            });
+            
+            // También obtener subtareas asignadas al usuario que no estén completadas
+            $subtaskStmt = $this->db->prepare("
+                SELECT 
+                    s.subtask_id as task_id,
+                    s.title as task_name,
+                    'pending' as status,
+                    s.due_date,
+                    s.progress_percentage as completion_percentage,
+                    p.project_name,
+                    u.full_name as assigned_to_name,
+                    CASE 
+                        WHEN s.due_date IS NULL THEN 999
+                        ELSE DATEDIFF(s.due_date, CURDATE())
+                    END as days_until_due,
+                    'subtask' as item_type,
+                    s.is_completed
+                FROM Subtasks s
+                LEFT JOIN Tasks t ON s.task_id = t.task_id
+                LEFT JOIN Projects p ON t.project_id = p.project_id
+                LEFT JOIN Users u ON s.assigned_to_user_id = u.user_id
+                WHERE s.assigned_to_user_id = ? 
+                  AND s.status != 'completed' 
+                  AND s.is_completed != 1
+                ORDER BY s.due_date ASC
+            ");
+            
+            $subtaskStmt->execute([$userId]);
+            $subtasks = $subtaskStmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Combinar tareas y subtareas
+            $allTasks = array_merge($allTasks, $subtasks);
+            
+            error_log("DEBUG getMyKanbanTasks - Total tareas encontradas: " . count($allTasks) . " (incluyendo " . count($subtasks) . " subtareas)");
             
             // Procesar las tareas para agregar days_until_due si no existe
             foreach ($allTasks as &$task) {
@@ -4113,6 +4150,7 @@ class ClanLeaderController {
                        )
                    AND t.is_subtask = 0
                    AND t.status != 'completed'
+                   AND t.status != 'cancelled'
                  GROUP BY t.task_id
                  ORDER BY is_primary_clan DESC, t.due_date ASC, t.task_id ASC"
             );
@@ -4179,7 +4217,7 @@ class ClanLeaderController {
                  LEFT JOIN Clans c ON p.clan_id = c.clan_id
                  LEFT JOIN Users u_assigned ON s.assigned_to_user_id = u_assigned.user_id
                  LEFT JOIN Clan_Members cm ON s.assigned_to_user_id = cm.user_id
-                 WHERE s.status != 'completed'
+                 WHERE s.status != 'completed' AND s.is_completed != 1
                    AND (
                        -- Subtareas del clan principal
                        (p.clan_id = ? AND cm.clan_id = ?)
