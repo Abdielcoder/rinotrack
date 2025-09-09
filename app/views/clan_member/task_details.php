@@ -218,7 +218,11 @@ $additionalJS[] = 'https://cdn.quilljs.com/1.3.6/quill.min.js';
         <div class="summary-card">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
             <h3 style="margin: 0;">Historial</h3>
-            <?php if (!empty($history)): ?>
+            <?php 
+              // Mostrar botón si hay historial Y el usuario es creador de la tarea O tiene permisos de edición
+              $canDownloadHistory = !empty($history) && ($canEditTask || ($canEdit ?? false));
+            ?>
+            <?php if ($canDownloadHistory): ?>
               <button onclick="downloadTaskHistory(<?php echo (int)$task['task_id']; ?>)" 
                       style="background: #059669; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s ease;"
                       onmouseover="this.style.background='#047857'"
@@ -1650,7 +1654,7 @@ function downloadTaskHistory(taskId) {
         const a = document.createElement('a');
         a.style.display = 'none';
         a.href = url;
-        a.download = `historial_tarea_${taskId}_${new Date().toISOString().split('T')[0]}.xlsx`;
+        a.download = `historial_tarea_${taskId}_${new Date().toISOString().split('T')[0]}.xls`;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
