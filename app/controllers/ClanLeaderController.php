@@ -1,5 +1,8 @@
 <?php
 
+use PDO;
+use Exception;
+
 class ClanLeaderController {
     private $auth;
     private $userModel;
@@ -3772,6 +3775,9 @@ class ClanLeaderController {
      * Obtener MIS tareas (personales + asignadas a mí)
      */
     public function getMyTasks() {
+        // Asegurar que la respuesta sea JSON
+        header('Content-Type: application/json');
+        
         $this->requireAuth();
         
         if (!$this->hasClanLeaderAccess()) {
@@ -3783,76 +3789,64 @@ class ClanLeaderController {
             $userId = $this->currentUser['user_id'];
             $clanId = $this->currentUser['clan_id'];
             
-            $db = Database::getInstance();
+            if (!$userId || !$clanId) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Usuario o clan no válido'], 400);
+                return;
+            }
             
-            // CONSULTA PARA MIS TAREAS:
-            // 1. Tareas de proyectos personales del usuario (is_personal = 1 y created_by_user_id = userId)
-            // 2. Tareas donde el usuario está asignado (assigned_to_user_id = userId)
-            // 3. Tareas donde el usuario está en Task_Assignments
-            // Todo esto solo del clan del usuario
-            $query = "
-                SELECT DISTINCT
-                    t.task_id,
-                    t.task_name,
-                    t.description,
-                    t.status,
-                    t.priority,
-                    t.due_date,
-                    t.completion_percentage,
-                    t.created_by_user_id,
-                    p.project_id,
-                    p.project_name,
-                    p.is_personal,
-                    u.user_id as assigned_user_id,
-                    u.full_name as assigned_user_name,
-                    DATEDIFF(t.due_date, CURDATE()) as days_until_due,
-                    COALESCE(
-                        GROUP_CONCAT(DISTINCT ta_users.full_name SEPARATOR ', '),
-                        u.full_name,
-                        'Sin asignar'
-                    ) as all_assigned_users
-                FROM Tasks t
-                INNER JOIN Projects p ON t.project_id = p.project_id
-                LEFT JOIN Users u ON t.assigned_to_user_id = u.user_id
-                LEFT JOIN Task_Assignments ta ON t.task_id = ta.task_id
-                LEFT JOIN Users ta_users ON ta.user_id = ta_users.user_id
-                WHERE 
-                    p.clan_id = ?
-                    AND (t.is_subtask = 0 OR t.is_subtask IS NULL)
-                    AND (
-                        -- Mis tareas personales
-                        (p.is_personal = 1 AND p.created_by_user_id = ?)
-                        OR
-                        -- Tareas donde estoy asignado directamente
-                        (t.assigned_to_user_id = ?)
-                        OR
-                        -- Tareas donde estoy en Task_Assignments
-                        EXISTS (
-                            SELECT 1 FROM Task_Assignments ta2 
-                            WHERE ta2.task_id = t.task_id 
-                            AND ta2.user_id = ?
+            // Usar consulta directa para tener control total
+            $tasks = null;
+            
+            // Usar consulta directa simplificada
+            if (true) {
+                $db = Database::getInstance();
+                
+                $query = "
+                    SELECT DISTINCT
+                        t.task_id,
+                        t.task_name,
+                        t.description,
+                        t.status,
+                        t.priority,
+                        t.due_date,
+                        t.completion_percentage,
+                        t.created_by_user_id,
+                        p.project_id,
+                        p.project_name,
+                        p.is_personal,
+                        u.full_name as assigned_user_name,
+                        DATEDIFF(t.due_date, CURDATE()) as days_until_due
+                    FROM Tasks t
+                    INNER JOIN Projects p ON t.project_id = p.project_id
+                    LEFT JOIN Users u ON t.assigned_to_user_id = u.user_id
+                    WHERE 
+                        p.clan_id = :clan_id
+                        AND (t.is_subtask = 0 OR t.is_subtask IS NULL)
+                        AND (
+                            (p.is_personal = 1 AND p.created_by_user_id = :user_id1)
+                            OR
+                            (t.assigned_to_user_id = :user_id2)
                         )
-                    )
-                GROUP BY t.task_id
-                ORDER BY 
-                    CASE 
-                        WHEN t.status = 'pending' THEN 1
-                        WHEN t.status = 'in_progress' THEN 2
-                        WHEN t.status = 'completed' THEN 3
-                        ELSE 4
-                    END,
-                    t.due_date ASC,
-                    t.priority DESC
-                LIMIT 500
-            ";
+                    ORDER BY t.due_date ASC
+                    LIMIT 200
+                ";
 
-            $stmt = $db->prepare($query);
-            $stmt->execute([$clanId, $userId, $userId, $userId]);
-            $tasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-            error_log("getMyTasks - User ID: " . $userId);
-            error_log("getMyTasks - Clan ID: " . $clanId);
-            error_log("getMyTasks - Total mis tareas: " . count($tasks));
+                $stmt = $db->prepare($query);
+                $stmt->bindParam(':clan_id', $clanId, PDO::PARAM_INT);
+                $stmt->bindParam(':user_id1', $userId, PDO::PARAM_INT);
+                $stmt->bindParam(':user_id2', $userId, PDO::PARAM_INT);
+                
+                if (!$stmt->execute()) {
+                    throw new Exception("Error ejecutando consulta de tareas");
+                }
+                
+                $tasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            }
+            
+            // Asegurar que tasks es un array
+            if (!is_array($tasks)) {
+                $tasks = [];
+            }
 
             Utils::jsonResponse([
                 'success' => true,
@@ -3862,7 +3856,7 @@ class ClanLeaderController {
 
         } catch (Exception $e) {
             error_log("Error en getMyTasks: " . $e->getMessage());
-            Utils::jsonResponse(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
+            Utils::jsonResponse(['success' => false, 'message' => 'Error al obtener tareas'], 500);
         }
     }
     
@@ -3870,6 +3864,9 @@ class ClanLeaderController {
      * Obtener tareas del equipo/clan (TODAS las tareas del clan excepto personales)
      */
     public function getTeamTasks() {
+        // Asegurar que la respuesta sea JSON
+        header('Content-Type: application/json');
+        
         $this->requireAuth();
         
         if (!$this->hasClanLeaderAccess()) {
@@ -3888,10 +3885,7 @@ class ClanLeaderController {
 
             $db = Database::getInstance();
             
-            // CONSULTA PARA EQUIPO: Todas las tareas del clan EXCEPTO:
-            // - Tareas personales (is_personal = 1)
-            // - Subtareas (is_subtask = 1)
-            // - NO excluir las tareas del líder (deben aparecer en ambos tabs si corresponde)
+            // Consulta simplificada para tareas del equipo
             $query = "
                 SELECT DISTINCT
                     t.task_id,
@@ -3904,43 +3898,32 @@ class ClanLeaderController {
                     t.created_by_user_id,
                     p.project_id,
                     p.project_name,
-                    u.user_id as assigned_user_id,
                     u.full_name as assigned_user_name,
-                    DATEDIFF(t.due_date, CURDATE()) as days_until_due,
-                    COALESCE(
-                        GROUP_CONCAT(DISTINCT ta_users.full_name SEPARATOR ', '),
-                        u.full_name,
-                        'Sin asignar'
-                    ) as all_assigned_users
+                    DATEDIFF(t.due_date, CURDATE()) as days_until_due
                 FROM Tasks t
                 INNER JOIN Projects p ON t.project_id = p.project_id
                 LEFT JOIN Users u ON t.assigned_to_user_id = u.user_id
-                LEFT JOIN Task_Assignments ta ON t.task_id = ta.task_id
-                LEFT JOIN Users ta_users ON ta.user_id = ta_users.user_id
                 WHERE 
-                    p.clan_id = ?
+                    p.clan_id = :clan_id
                     AND (p.is_personal = 0 OR p.is_personal IS NULL)
                     AND (t.is_subtask = 0 OR t.is_subtask IS NULL)
-                GROUP BY t.task_id
-                ORDER BY 
-                    CASE 
-                        WHEN t.status = 'pending' THEN 1
-                        WHEN t.status = 'in_progress' THEN 2
-                        WHEN t.status = 'completed' THEN 3
-                        ELSE 4
-                    END,
-                    t.due_date ASC,
-                    t.priority DESC
-                LIMIT 500
+                ORDER BY t.due_date ASC
+                LIMIT 200
             ";
 
             $stmt = $db->prepare($query);
-            $stmt->execute([$clanId]);
+            $stmt->bindParam(':clan_id', $clanId, PDO::PARAM_INT);
+            
+            if (!$stmt->execute()) {
+                throw new Exception("Error ejecutando consulta de tareas del equipo");
+            }
+            
             $tasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-            error_log("getTeamTasks - Clan ID: " . $clanId);
-            error_log("getTeamTasks - User ID: " . $userId);
-            error_log("getTeamTasks - Total tareas del equipo: " . count($tasks));
+            
+            // Asegurar que tasks es un array
+            if (!is_array($tasks)) {
+                $tasks = [];
+            }
 
             Utils::jsonResponse([
                 'success' => true,
