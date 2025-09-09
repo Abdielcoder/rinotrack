@@ -276,20 +276,31 @@ $additionalJS[] = 'https://cdn.quilljs.com/1.3.6/quill.min.js';
 document.getElementById('tdCommentForm')?.addEventListener('submit', function(e){
   e.preventDefault();
   
+  console.log('=== DEBUG: Envío de comentario de tarea principal ===');
+  console.log('Editor disponible:', !!taskCommentEditor);
+  
+  let commentText = '';
+  
   // Obtener contenido del editor Quill o textarea fallback
   if (taskCommentEditor) {
     const editorContent = taskCommentEditor.getContents();
     const htmlContent = taskCommentEditor.root.innerHTML;
     
-    // Validar que hay contenido
-    if (!editorContent.ops || editorContent.ops.length <= 1) {
+    console.log('Editor content:', editorContent);
+    console.log('HTML content:', htmlContent);
+    
+    // Validar que hay contenido (más flexible)
+    const textContent = taskCommentEditor.getText().trim();
+    if (!textContent || textContent.length === 0) {
       alert('Por favor escribe un comentario');
       return;
     }
     
     // Establecer el contenido en el campo oculto
     document.getElementById('task-comment-content').value = htmlContent;
+    commentText = htmlContent;
   } else {
+    console.log('Editor no disponible, usando fallback');
     // Fallback para textarea normal
     const textarea = this.querySelector('textarea[name="comment_text"]');
     if (textarea) {
@@ -299,22 +310,52 @@ document.getElementById('tdCommentForm')?.addEventListener('submit', function(e)
         return;
       }
       document.getElementById('task-comment-content').value = content;
+      commentText = content;
+    } else {
+      alert('Error: No se pudo obtener el contenido del comentario');
+      return;
     }
   }
   
+  console.log('Comentario a enviar:', commentText);
+  
   const fd = new FormData(this);
+  console.log('FormData creado, enviando petición...');
+  
   fetch('?route=clan_member/add-task-comment', { method:'POST', body: fd, credentials:'same-origin' })
-    .then(async r=>{ const t = await r.text(); try{ return JSON.parse(t); } catch(e){ console.error(t); return {success:false,message:'Respuesta inválida'}; } })
-    .then(d=>{ 
+    .then(async r => { 
+      console.log('Response status:', r.status);
+      const t = await r.text(); 
+      console.log('Response text:', t);
+      try{ 
+        return JSON.parse(t); 
+      } catch(e){ 
+        console.error('Error parsing JSON:', e);
+        console.error('Raw response:', t); 
+        return {success:false,message:'Respuesta inválida del servidor'}; 
+      } 
+    })
+    .then(d => { 
+      console.log('Parsed response:', d);
       if(!d.success){ 
-        alert(d.message||'Error'); 
+        console.error('Error del servidor:', d.message);
+        alert(d.message||'Error al enviar comentario'); 
         return; 
       } 
+      
+      console.log('Comentario enviado exitosamente');
+      
       // Limpiar editor después del éxito
       if (taskCommentEditor) {
         taskCommentEditor.setContents([]);
       }
+      
+      alert('Comentario agregado exitosamente');
       location.reload(); 
+    })
+    .catch(error => {
+      console.error('Fetch error:', error);
+      alert('Error de conexión: ' + error.message);
     });
 });
 
@@ -1954,7 +1995,29 @@ let taskCommentEditor = null;
 
 // Función para inicializar editor de comentario de tarea principal
 function initializeTaskCommentEditor() {
-    if (document.getElementById('task-comment-editor')) {
+    const editorElement = document.getElementById('task-comment-editor');
+    
+    console.log('=== DEBUG: Inicializando editor de tarea principal ===');
+    console.log('Elemento encontrado:', !!editorElement);
+    console.log('Quill disponible:', typeof Quill !== 'undefined');
+    
+    if (!editorElement) {
+        console.error('Elemento task-comment-editor no encontrado');
+        return;
+    }
+    
+    if (taskCommentEditor) {
+        console.log('Editor de tarea ya existe');
+        return;
+    }
+    
+    if (typeof Quill === 'undefined') {
+        console.error('Quill no está disponible, creando textarea fallback');
+        editorElement.innerHTML = '<textarea name="comment_text" rows="4" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;" placeholder="Escribe tu comentario..."></textarea>';
+        return;
+    }
+    
+    try {
         taskCommentEditor = new Quill('#task-comment-editor', {
             theme: 'snow',
             modules: {
@@ -1983,6 +2046,22 @@ function initializeTaskCommentEditor() {
         
         // Agregar detector de atajo ???
         setupChecklistShortcut(taskCommentEditor);
+        
+        console.log('✅ Editor de tarea principal inicializado exitosamente');
+        
+        // Verificar que el editor funciona
+        setTimeout(() => {
+            if (taskCommentEditor && taskCommentEditor.root) {
+                console.log('✅ Editor de tarea principal verificado');
+            } else {
+                console.error('❌ Editor de tarea principal no funciona');
+            }
+        }, 100);
+        
+    } catch (error) {
+        console.error('Error inicializando editor de tarea principal:', error);
+        // Fallback a textarea
+        editorElement.innerHTML = '<textarea name="comment_text" rows="4" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;" placeholder="Escribe tu comentario..."></textarea>';
     }
 }
 
