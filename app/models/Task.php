@@ -2242,7 +2242,7 @@ class Task {
                 $taskData['recurrence_type'] ?? null,
                 $taskData['recurrence_start_date'] ?? null,
                 $taskData['recurrence_end_date'] ?? null,
-                $taskData['is_recurrent'] ? $taskData['recurrence_start_date'] : null // last_generated_date = start_date para tareas recurrentes
+                ($taskData['is_recurrent'] ?? 0) ? ($taskData['recurrence_start_date'] ?? null) : null // last_generated_date = start_date para tareas recurrentes
             ];
             
             error_log("SQL completo: " . $sql);
