@@ -5682,3 +5682,190 @@ input[type="checkbox"] {
 .subtask-card-compact .project-name-compact {
     font-style: italic;
 }
+
+/* ===============================
+   ESTILOS DE TABLA DE TAREAS
+   =============================== */
+
+/* Contenedor principal de la tabla */
+.tasks-table-container { 
+    background: #fff; 
+    border: 1px solid #e2e8f0; 
+    border-radius: 12px; 
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); 
+    overflow: hidden;
+    overflow-x: auto; /* Permite scroll horizontal si es necesario */
+}
+
+/* Tabla principal */
+.tasks-table { 
+    width: 100%; 
+    border-collapse: separate; 
+    border-spacing: 0; 
+    min-width: 900px; /* Ancho mínimo para evitar que se comprima demasiado */
+}
+
+/* Encabezados de la tabla */
+.tasks-table thead th { 
+    position: sticky; 
+    top: 0; 
+    background: #f8fafc; 
+    z-index: 10; 
+    text-align: left; 
+    padding: 14px 16px; 
+    font-size: 0.875rem; 
+    color: #64748b; 
+    border-bottom: 2px solid #e2e8f0; 
+    white-space: nowrap; 
+    font-weight: 600;
+}
+
+/* Celdas de la tabla */
+.tasks-table tbody td { 
+    padding: 14px 16px; 
+    border-bottom: 1px solid #f1f5f9; 
+    vertical-align: middle; 
+    background: #fff;
+}
+
+/* Filas alternas */
+.tasks-table tbody tr:nth-child(even) { 
+    background: #fcfcfd; 
+}
+
+/* Hover en filas */
+.tasks-table tbody tr:hover { 
+    background: #f8fafc; 
+    transform: translateY(-1px);
+    transition: all 0.2s ease;
+}
+
+/* Anchos específicos de columnas */
+.tasks-table .th-actions,
+.tasks-table .td-actions { width: 120px; }
+.tasks-table .th-priority,
+.tasks-table .td-priority { width: 120px; }
+.tasks-table .th-task,
+.tasks-table .td-task { min-width: 280px; }
+.tasks-table .th-project,
+.tasks-table .td-project { min-width: 200px; }
+.tasks-table .th-assigned,
+.tasks-table .td-assigned { min-width: 180px; }
+.tasks-table .th-due-date,
+.tasks-table .td-due-date { width: 160px; }
+.tasks-table .th-status,
+.tasks-table .td-status { width: 140px; }
+.tasks-table .th-progress,
+.tasks-table .td-progress { width: 150px; }
+.tasks-table .th-checkbox,
+.tasks-table .td-checkbox { width: 50px; }
+
+/* Estilos de celdas específicas */
+.tasks-table .cell-title { 
+    display: flex; 
+    align-items: center; 
+    gap: 8px; 
+    font-weight: 600; 
+    color: #1f2937; 
+}
+
+.tasks-table .cell-actions { 
+    display: flex; 
+    gap: 8px; 
+    justify-content: center;
+}
+
+.tasks-table .cell-project, 
+.tasks-table .cell-assignees { 
+    color: #4b5563; 
+    font-weight: 500; 
+}
+
+/* Responsive para tablets */
+@media (max-width: 1024px) {
+    .tasks-table .th-project,
+    .tasks-table .td-project { min-width: 160px; }
+    .tasks-table .th-assigned,
+    .tasks-table .td-assigned { min-width: 140px; }
+    .tasks-table .th-task,
+    .tasks-table .td-task { min-width: 240px; }
+}
+
+/* Responsive para móviles */
+@media (max-width: 768px) {
+    .tasks-table-container { 
+        overflow-x: auto; 
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .tasks-table { 
+        min-width: 700px; 
+    }
+    
+    .tasks-table .th-project,
+    .tasks-table .td-project,
+    .tasks-table .th-assigned,
+    .tasks-table .td-assigned { 
+        display: none; 
+    }
+    
+    .tasks-table .th-actions,
+    .tasks-table .td-actions { 
+        width: 80px; 
+    }
+}
+
+@media (max-width: 640px) {
+    .tasks-table { 
+        min-width: 600px; 
+    }
+    
+    .tasks-table .th-due-date,
+    .tasks-table .td-due-date { 
+        display: none; 
+    }
+    
+    .tasks-table .th-task,
+    .tasks-table .td-task { 
+        min-width: 200px; 
+    }
+}
+
+/* Estilos adicionales para mejorar la visualización */
+.tasks-table .priority-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.tasks-table .status-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.tasks-table .action-buttons .btn-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    color: #64748b;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.tasks-table .action-buttons .btn-action:hover {
+    background: #f1f5f9;
+    color: #1f2937;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
