@@ -617,7 +617,8 @@ function toggleTaskStatus(taskId, isChecked) {
             }
             
             // Mostrar notificación de éxito
-            showNotification('Estado de tarea actualizado', 'success');
+            const message = isChecked ? 'Tarea completada y removida del tablero' : 'Tarea marcada como pendiente';
+            showNotification(message, 'success');
         } else {
             console.error('Error al actualizar estado de tarea:', data.message);
             showNotification('Error al actualizar estado de tarea: ' + data.message, 'error');
@@ -652,18 +653,19 @@ function toggleTaskStatus(taskId, isChecked) {
 
 // Función para actualizar contadores de tareas por columna
 function updateColumnCounts() {
-    const columns = ['urgent', 'this-week', 'next-week', 'later'];
+    // Actualizar contadores para ambos tableros (Equipo y Mis Tareas)
+    const allColumns = document.querySelectorAll('.kanban-column-compact');
     
-    columns.forEach(columnId => {
-        const column = document.getElementById(`kanban-${columnId}`);
-        if (column) {
-            const taskCount = column.querySelectorAll('.task-card').length;
-            const countElement = column.querySelector('.column-header .task-count');
-            if (countElement) {
-                countElement.textContent = `(${taskCount})`;
-            }
+    allColumns.forEach(column => {
+        const taskCards = column.querySelectorAll('.task-card-compact');
+        const countElement = column.querySelector('.column-header .task-count');
+        
+        if (countElement) {
+            countElement.textContent = taskCards.length;
         }
     });
+    
+    console.log('Contadores de columnas actualizados');
 }
 
 // Función para mostrar notificaciones
