@@ -175,7 +175,10 @@ ob_start();
                                         </div>
                                     <?php endif; ?>
                                     <input type="checkbox" class="task-checkbox" <?php echo ($task['status'] === 'completed' || ($task['is_completed'] ?? 0) == 1) ? 'checked' : ''; ?> onchange="toggleTaskStatus(<?php echo $task['task_id']; ?>, this.checked)">
-                                    <a href="?route=clan_member/task-details&task_id=<?php echo $task['task_id']; ?>" class="btn-edit" title="Ver detalles">
+                                    <?php 
+                                    $linkTaskId = ($task['item_type'] ?? 'task') === 'subtask' ? $task['parent_task_id'] : $task['task_id'];
+                                    ?>
+                                    <a href="?route=clan_member/task-details&task_id=<?php echo $linkTaskId; ?>" class="btn-edit" title="Ver detalles">
                                         <i class="fas fa-eye"></i>
                                     </a>
                                 </div>
@@ -231,7 +234,10 @@ ob_start();
                                         </div>
                                     <?php endif; ?>
                                     <input type="checkbox" class="task-checkbox" <?php echo ($task['status'] === 'completed' || ($task['is_completed'] ?? 0) == 1) ? 'checked' : ''; ?> onchange="toggleTaskStatus(<?php echo $task['task_id']; ?>, this.checked)">
-                                    <a href="?route=clan_member/task-details&task_id=<?php echo $task['task_id']; ?>" class="btn-edit" title="Ver detalles">
+                                    <?php 
+                                    $linkTaskId = ($task['item_type'] ?? 'task') === 'subtask' ? $task['parent_task_id'] : $task['task_id'];
+                                    ?>
+                                    <a href="?route=clan_member/task-details&task_id=<?php echo $linkTaskId; ?>" class="btn-edit" title="Ver detalles">
                                         <i class="fas fa-eye"></i>
                                     </a>
                                 </div>
@@ -283,7 +289,10 @@ ob_start();
                                         </div>
                                     <?php endif; ?>
                                     <input type="checkbox" class="task-checkbox" <?php echo ($task['status'] === 'completed' || ($task['is_completed'] ?? 0) == 1) ? 'checked' : ''; ?> onchange="toggleTaskStatus(<?php echo $task['task_id']; ?>, this.checked)">
-                                    <a href="?route=clan_member/task-details&task_id=<?php echo $task['task_id']; ?>" class="btn-edit" title="Ver detalles">
+                                    <?php 
+                                    $linkTaskId = ($task['item_type'] ?? 'task') === 'subtask' ? $task['parent_task_id'] : $task['task_id'];
+                                    ?>
+                                    <a href="?route=clan_member/task-details&task_id=<?php echo $linkTaskId; ?>" class="btn-edit" title="Ver detalles">
                                         <i class="fas fa-eye"></i>
                                     </a>
                                 </div>
@@ -335,7 +344,10 @@ ob_start();
                                         </div>
                                     <?php endif; ?>
                                     <input type="checkbox" class="task-checkbox" <?php echo ($task['status'] === 'completed' || ($task['is_completed'] ?? 0) == 1) ? 'checked' : ''; ?> onchange="toggleTaskStatus(<?php echo $task['task_id']; ?>, this.checked)">
-                                    <a href="?route=clan_member/task-details&task_id=<?php echo $task['task_id']; ?>" class="btn-edit" title="Ver detalles">
+                                    <?php 
+                                    $linkTaskId = ($task['item_type'] ?? 'task') === 'subtask' ? $task['parent_task_id'] : $task['task_id'];
+                                    ?>
+                                    <a href="?route=clan_member/task-details&task_id=<?php echo $linkTaskId; ?>" class="btn-edit" title="Ver detalles">
                                         <i class="fas fa-eye"></i>
                                     </a>
                                 </div>

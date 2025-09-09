@@ -56,7 +56,10 @@ ob_start();
                                         <?php endif; ?>
                                         <?php echo htmlspecialchars($task['task_name']); ?>
                                     </div>
-                                    <a href="?route=clan_leader/get-task-details&task_id=<?php echo $task['task_id']; ?>" class="btn-compact-action" title="Ver proyecto">
+                                    <?php 
+                                    $linkTaskId = ($task['item_type'] ?? 'task') === 'subtask' ? $task['parent_task_id'] : $task['task_id'];
+                                    ?>
+                                    <a href="?route=clan_leader/get-task-details&task_id=<?php echo $linkTaskId; ?>" class="btn-compact-action" title="Ver proyecto">
                                         <i class="fas fa-eye"></i>
                                     </a>
                                 </div>
@@ -101,7 +104,10 @@ ob_start();
                                         <?php endif; ?>
                                         <?php echo htmlspecialchars($task['task_name']); ?>
                                     </div>
-                                    <a href="?route=clan_leader/get-task-details&task_id=<?php echo $task['task_id']; ?>" class="btn-compact-action" title="Ver proyecto">
+                                    <?php 
+                                    $linkTaskId = ($task['item_type'] ?? 'task') === 'subtask' ? $task['parent_task_id'] : $task['task_id'];
+                                    ?>
+                                    <a href="?route=clan_leader/get-task-details&task_id=<?php echo $linkTaskId; ?>" class="btn-compact-action" title="Ver proyecto">
                                         <i class="fas fa-eye"></i>
                                     </a>
                                 </div>
@@ -146,7 +152,10 @@ ob_start();
                                         <?php endif; ?>
                                         <?php echo htmlspecialchars($task['task_name']); ?>
                                     </div>
-                                    <a href="?route=clan_leader/get-task-details&task_id=<?php echo $task['task_id']; ?>" class="btn-compact-action" title="Ver proyecto">
+                                    <?php 
+                                    $linkTaskId = ($task['item_type'] ?? 'task') === 'subtask' ? $task['parent_task_id'] : $task['task_id'];
+                                    ?>
+                                    <a href="?route=clan_leader/get-task-details&task_id=<?php echo $linkTaskId; ?>" class="btn-compact-action" title="Ver proyecto">
                                         <i class="fas fa-eye"></i>
                                     </a>
                                 </div>
@@ -191,7 +200,10 @@ ob_start();
                                         <?php endif; ?>
                                         <?php echo htmlspecialchars($task['task_name']); ?>
                                     </div>
-                                    <a href="?route=clan_leader/get-task-details&task_id=<?php echo $task['task_id']; ?>" class="btn-compact-action" title="Ver proyecto">
+                                    <?php 
+                                    $linkTaskId = ($task['item_type'] ?? 'task') === 'subtask' ? $task['parent_task_id'] : $task['task_id'];
+                                    ?>
+                                    <a href="?route=clan_leader/get-task-details&task_id=<?php echo $linkTaskId; ?>" class="btn-compact-action" title="Ver proyecto">
                                         <i class="fas fa-eye"></i>
                                     </a>
                                 </div>
