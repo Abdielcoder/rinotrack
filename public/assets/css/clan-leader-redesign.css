@@ -605,58 +605,66 @@
 }
 
 /* ===============================
-   FILTROS Y CONTROLES - Diseño uniforme
+   FILTROS Y CONTROLES - UNA SOLA LÍNEA FORZADA
    =============================== */
 .filters-container {
     background: white;
     border-radius: 12px;
-    padding: 20px;
+    padding: 15px 20px;
     margin-bottom: 20px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    overflow-x: auto;
 }
 
 .filters-form {
-    display: flex;
-    flex-wrap: nowrap; /* Evitar que se envuelvan */
-    gap: 12px;
-    align-items: center;
-    overflow-x: auto; /* Scroll horizontal si es necesario */
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: 15px !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    min-width: max-content !important;
 }
 
 .filter-group {
-    display: flex;
-    flex-wrap: nowrap; /* Una sola fila */
-    gap: 12px;
-    align-items: center;
-    flex: 1;
-    min-width: 0; /* Permitir que se comprima */
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    gap: 15px !important;
+    align-items: center !important;
+    flex: none !important;
+    min-width: max-content !important;
 }
 
 .filter-item {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    min-width: 120px; /* Ancho mínimo para mantener legibilidad */
-    flex-shrink: 0; /* No se comprima demasiado */
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 3px !important;
+    min-width: 110px !important;
+    max-width: 150px !important;
+    flex-shrink: 0 !important;
+    align-items: flex-start !important;
 }
 
 .filter-item label {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: #4b5563;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    font-size: 0.7rem !important;
+    font-weight: 600 !important;
+    color: #4b5563 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.3px !important;
+    white-space: nowrap !important;
+    margin-bottom: 2px !important;
 }
 
 .filter-item select,
 .search-input {
-    padding: 8px 12px;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    font-size: 0.875rem;
-    background: white;
-    color: #374151;
-    transition: all 0.2s ease;
+    padding: 6px 10px !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 6px !important;
+    font-size: 0.8rem !important;
+    background: white !important;
+    color: #374151 !important;
+    transition: all 0.2s ease !important;
+    width: 100% !important;
 }
 
 .filter-item select:focus,
@@ -667,48 +675,56 @@
 }
 
 .search-container {
-    flex: 1;
-    min-width: 200px;
-    max-width: 300px; /* Limitar el ancho máximo */
+    flex: none !important;
+    min-width: 180px !important;
+    max-width: 220px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 3px !important;
 }
 
 .search-input-wrapper {
-    position: relative;
+    position: relative !important;
+    width: 100% !important;
 }
 
 .search-icon {
-    position: absolute;
-    left: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #9ca3af;
+    position: absolute !important;
+    left: 10px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    color: #9ca3af !important;
+    font-size: 0.8rem !important;
 }
 
 .search-input {
-    padding-left: 36px;
-    width: 100%;
+    padding-left: 32px !important;
+    width: 100% !important;
 }
 
 .filter-actions {
-    display: flex;
-    gap: 8px;
-    flex-shrink: 0; /* Los botones no se comprimen */
-    align-items: center;
+    display: flex !important;
+    gap: 8px !important;
+    flex-shrink: 0 !important;
+    align-items: center !important;
+    flex-direction: row !important;
 }
 
 .btn-apply-filters,
 .btn-reset-filters {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 16px;
-    border-radius: 8px;
-    font-size: 0.875rem;
-    font-weight: 600;
-    transition: all 0.2s ease;
-    cursor: pointer;
-    text-decoration: none;
-    border: none;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    padding: 6px 12px !important;
+    border-radius: 6px !important;
+    font-size: 0.75rem !important;
+    font-weight: 600 !important;
+    transition: all 0.2s ease !important;
+    cursor: pointer !important;
+    text-decoration: none !important;
+    border: none !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
 }
 
 .btn-apply-filters {
@@ -802,6 +818,43 @@
 .section-actions {
     display: flex;
     gap: 12px;
+}
+
+/* ===============================
+   SOBRESCRIBIR ESTILOS CONFLICTIVOS
+   =============================== */
+   
+/* Forzar que los filtros estén en una línea horizontal */
+.filters-container .filters-form,
+.filters-header .filters-form {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    gap: 15px !important;
+}
+
+.filters-container .filter-group,
+.filters-header .filter-group {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    gap: 15px !important;
+    flex: none !important;
+}
+
+/* Sobrescribir cualquier estilo de columna */
+.filters-container .filter-group,
+.filters-header .filter-group {
+    flex-direction: row !important;
+}
+
+.filters-container .filter-item,
+.filters-header .filter-item {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
 }
 
 /* ===============================
