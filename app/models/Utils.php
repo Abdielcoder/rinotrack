@@ -168,4 +168,30 @@ class Utils {
     public static function formatDateTime($datetime, $format = 'd/m/Y H:i', $emptyText = 'Sin fecha') {
         return self::formatDate($datetime, $format, $emptyText);
     }
+    
+    /**
+     * Sanitizar HTML permitiendo solo etiquetas seguras
+     */
+    public static function sanitizeHtml($html) {
+        if (empty($html)) {
+            return '';
+        }
+        
+        // Lista de etiquetas HTML permitidas para comentarios ricos
+        $allowedTags = '<p><br><strong><b><em><i><u><ul><ol><li><a><h1><h2><h3><h4><h5><h6><blockquote><span><div>';
+        
+        // Limpiar HTML manteniendo solo etiquetas permitidas
+        $cleaned = strip_tags($html, $allowedTags);
+        
+        // Limpiar atributos peligrosos pero mantener algunos seguros
+        $cleaned = preg_replace('/(<[^>]*)\s+(on\w+|javascript:|vbscript:|data:)[^>]*>/i', '$1>', $cleaned);
+        
+        // Permitir algunos atributos seguros en enlaces
+        $cleaned = preg_replace('/(<a[^>]*)\s+href=(["\'])([^"\']*)\2([^>]*>)/i', '$1 href=$2$3$2 target="_blank" rel="noopener"$4', $cleaned);
+        
+        // Limpiar style attributes peligrosos pero permitir colores básicos
+        $cleaned = preg_replace('/style\s*=\s*["\'][^"\']*["\']/', '', $cleaned);
+        
+        return $cleaned;
+    }
 }

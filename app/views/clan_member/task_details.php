@@ -176,7 +176,7 @@ $additionalJS[] = 'https://cdn.quilljs.com/1.3.6/quill.min.js';
             <?php else: foreach ($comments as $c): ?>
               <div class="comment-item">
                 <div class="comment-meta"><span class="author"><?php echo htmlspecialchars($c['full_name'] ?? $c['username'] ?? ''); ?></span><span class="date"><?php echo htmlspecialchars($c['created_at'] ?? ''); ?></span></div>
-                <div class="comment-text"><?php echo nl2br(htmlspecialchars($c['comment_text'] ?? '')); ?></div>
+                <div class="comment-text"><?php echo Utils::sanitizeHtml($c['comment_text'] ?? ''); ?></div>
                 <?php if (!empty($c['attachments'])): ?>
                 <div class="comment-atts">
                   <?php foreach (($c['attachments'] ?? []) as $a): $url = Utils::asset($a['file_path'] ?? ''); $name = htmlspecialchars($a['file_name'] ?? 'archivo'); $type = strtolower($a['file_type'] ?? ''); ?>

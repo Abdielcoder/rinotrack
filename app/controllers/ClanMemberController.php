@@ -2207,6 +2207,14 @@ class ClanMemberController {
             }
 
             $comments = $this->subtaskModel->getComments($subtaskId);
+            
+            // Procesar HTML de comentarios para visualización segura
+            foreach ($comments as &$comment) {
+                if (!empty($comment['comment_text'])) {
+                    $comment['comment_text'] = Utils::sanitizeHtml($comment['comment_text']);
+                }
+            }
+            
             echo json_encode(['success' => true, 'comments' => $comments]);
 
         } catch (Exception $e) {
