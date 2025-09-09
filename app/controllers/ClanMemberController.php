@@ -2810,13 +2810,19 @@ class ClanMemberController {
         }
         
         $rawInput = file_get_contents('php://input');
+        error_log("=== CHECKBOX BACKEND DEBUG ===");
+        error_log("Raw input: " . $rawInput);
+        
         $input = json_decode($rawInput, true);
+        error_log("Parsed input: " . print_r($input, true));
         
         $commentId = (int)($input['comment_id'] ?? 0);
         $commentType = $input['comment_type'] ?? ''; // 'task' o 'subtask'
         $checkboxIndex = (int)($input['checkbox_index'] ?? 0);
         $checkboxText = trim($input['checkbox_text'] ?? '');
         $isChecked = (bool)($input['is_checked'] ?? false);
+        
+        error_log("Processed data: commentId=$commentId, commentType=$commentType, checkboxIndex=$checkboxIndex, isChecked=" . ($isChecked ? 'true' : 'false'));
         
         if ($commentId <= 0 || !in_array($commentType, ['task', 'subtask']) || empty($checkboxText)) {
             Utils::jsonResponse(['success' => false, 'message' => 'Datos inválidos'], 400);

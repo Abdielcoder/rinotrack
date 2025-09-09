@@ -1341,6 +1341,7 @@ document.getElementById('editTaskForm')?.addEventListener('submit', function(e){
 function showSubtaskComments(subtaskId) {
     const modal = document.createElement('div');
     modal.className = 'modal-overlay';
+    modal.id = 'subtaskCommentsModal'; // Agregar ID para detección de checkboxes
     modal.innerHTML = `
         <div class="modal-content" style="max-width: 800px; max-height: 90vh; display: flex; flex-direction: column;">
             <div class="modal-header" style="flex-shrink: 0;">
@@ -1470,8 +1471,15 @@ function loadSubtaskComments(subtaskId) {
                     
                     // Procesar checkboxes en los comentarios de subtarea cargados
                     setTimeout(() => {
+                        console.log('=== PROCESANDO CHECKBOXES EN SUBTAREAS ===');
                         const subtaskComments = container.querySelectorAll('.comment-item .comment-content');
-                        subtaskComments.forEach(element => {
+                        console.log('Comentarios encontrados:', subtaskComments.length);
+                        
+                        subtaskComments.forEach((element, index) => {
+                            console.log(`Procesando comentario ${index + 1}:`, element);
+                            const commentItem = element.closest('.comment-item');
+                            console.log('Comment item:', commentItem);
+                            console.log('Comment ID:', commentItem?.dataset.commentId);
                             makeChecklistInteractive(element);
                         });
                         
@@ -1482,7 +1490,7 @@ function loadSubtaskComments(subtaskId) {
                         if (data.comments.length > 3) {
                             container.scrollTop = container.scrollHeight;
                         }
-                    }, 100);
+                    }, 200); // Aumentar timeout para asegurar que el DOM esté listo
                 }
             } else {
                 container.innerHTML = '<p class="error">Error al cargar comentarios: ' + data.message + '</p>';
@@ -2517,12 +2525,15 @@ function processExistingComments() {
 
 // Función para convertir contenido a checklist interactivo con checkboxes HTML
 function makeChecklistInteractive(element) {
-    console.log('Procesando elemento para checklists:', element);
+    console.log('=== PROCESANDO CHECKLISTS ===');
+    console.log('Elemento:', element);
     
     // Obtener información del comentario
     const commentContent = element.closest('.comment-item');
     let commentId = 'unknown';
     let commentType = 'task'; // Por defecto task
+    
+    console.log('Elemento padre .comment-item:', commentContent);
     
     if (commentContent) {
         // Intentar extraer ID del comentario del elemento padre
@@ -2531,6 +2542,7 @@ function makeChecklistInteractive(element) {
     }
     
     console.log('CommentID detectado:', commentId, 'Tipo:', commentType);
+    console.log('¿Está en modal de subtarea?', !!element.closest('#subtaskCommentsModal'));
     
     // Obtener todo el HTML del elemento
     let html = element.innerHTML;
@@ -2615,11 +2627,13 @@ function saveCheckboxState(checkbox) {
     
     console.log('=== CHECKBOX STATE DEBUG ===');
     console.log('Checkbox element:', checkbox);
+    console.log('Dataset completo:', checkbox.dataset);
     console.log('commentId:', commentId, 'tipo:', typeof commentId);
     console.log('commentType:', commentType, 'tipo:', typeof commentType);
     console.log('checkboxIndex:', checkboxIndex, 'tipo:', typeof checkboxIndex);
     console.log('checkboxText:', checkboxText, 'tipo:', typeof checkboxText);
     console.log('isChecked:', isChecked, 'tipo:', typeof isChecked);
+    console.log('Elemento padre más cercano con data-comment-id:', checkbox.closest('[data-comment-id]'));
     
     if (!commentId || !commentType || commentId === 'null' || commentId === 'undefined' || commentId === 'unknown') {
         console.error('❌ No se puede guardar: faltan datos del comentario');
@@ -2673,12 +2687,22 @@ function saveCheckboxState(checkbox) {
 
 // Función para cargar estados guardados de checkboxes
 function loadCheckboxStates(commentId, commentType) {
-    fetch(`?route=clan_member/get-checkbox-states&comment_ids=${commentId}&comment_type=${commentType}`)
-    .then(response => response.json())
+    console.log('=== CARGANDO ESTADOS DE CHECKBOX ===');
+    console.log('CommentID:', commentId, 'Tipo:', commentType);
+    
+    const url = `?route=clan_member/get-checkbox-states&comment_ids=${commentId}&comment_type=${commentType}`;
+    console.log('URL:', url);
+    
+    fetch(url)
+    .then(response => {
+        console.log('Response status:', response.status);
+        return response.json();
+    })
     .then(data => {
+        console.log('Response data:', data);
         if (data.success && data.states[commentId]) {
             const states = data.states[commentId];
-            console.log('Estados cargados:', states);
+            console.log('Estados cargados para comentario', commentId, ':', states);
             
             // Aplicar estados a los checkboxes
             Object.keys(states).forEach(index => {
