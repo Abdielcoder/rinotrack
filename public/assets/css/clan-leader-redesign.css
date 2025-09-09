@@ -521,6 +521,31 @@
     .tasks-table .progress-text {
         font-size: 0.65rem;
     }
+    
+    /* Filtros más compactos en móvil */
+    .filters-container {
+        padding: 15px;
+    }
+    
+    .filter-item {
+        min-width: 100px;
+    }
+    
+    .filter-item label {
+        font-size: 0.7rem;
+    }
+    
+    .filter-item select,
+    .search-input {
+        padding: 6px 10px;
+        font-size: 0.8rem;
+    }
+    
+    .btn-apply-filters,
+    .btn-reset-filters {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+    }
 }
 
 /* ===============================
@@ -592,22 +617,27 @@
 
 .filters-form {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap; /* Evitar que se envuelvan */
     gap: 12px;
     align-items: center;
+    overflow-x: auto; /* Scroll horizontal si es necesario */
 }
 
 .filter-group {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap; /* Una sola fila */
     gap: 12px;
+    align-items: center;
     flex: 1;
+    min-width: 0; /* Permitir que se comprima */
 }
 
 .filter-item {
     display: flex;
     flex-direction: column;
     gap: 4px;
+    min-width: 120px; /* Ancho mínimo para mantener legibilidad */
+    flex-shrink: 0; /* No se comprima demasiado */
 }
 
 .filter-item label {
@@ -639,6 +669,7 @@
 .search-container {
     flex: 1;
     min-width: 200px;
+    max-width: 300px; /* Limitar el ancho máximo */
 }
 
 .search-input-wrapper {
@@ -661,6 +692,8 @@
 .filter-actions {
     display: flex;
     gap: 8px;
+    flex-shrink: 0; /* Los botones no se comprimen */
+    align-items: center;
 }
 
 .btn-apply-filters,
