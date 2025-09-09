@@ -246,6 +246,13 @@ ob_start();
                                     </td>
                                     <td class="cell-actions">
                                         <a class="action-btn" href="?route=clan_member/task-details&task_id=<?php echo (int)$t['task_id']; ?>&action=edit" title="Editar tarea"><i class="fas fa-edit"></i></a>
+                                        <?php 
+                                        // Verificar si el usuario es dueño de la tarea para mostrar botón de clonar
+                                        $isOwner = ((int)($t['created_by_user_id'] ?? 0) === (int)$user['user_id']);
+                                        ?>
+                                        <?php if ($isOwner): ?>
+                                        <button class="action-btn" onclick="openCloneTaskModal(<?php echo (int)$t['task_id']; ?>)" title="Clonar tarea"><i class="fas fa-copy"></i></button>
+                                        <?php endif; ?>
                                     </td>
                                 </tr>
                             <?php endforeach; endif; ?>
@@ -1071,7 +1078,198 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+// Función para abrir el modal de clonación
+function openCloneTaskModal(taskId) {
+    fetch('?route=clan_member/get-task-data&task_id=' + taskId)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showCloneTaskModal(data.task, data.projects);
+            } else {
+                alert('Error al cargar los datos de la tarea: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error de conexión al cargar los datos de la tarea');
+        });
+}
+
+// Función para mostrar el modal de clonación
+function showCloneTaskModal(task, projects) {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal-content clone-task-modal">
+            <div class="modal-header">
+                <h3><i class="fas fa-copy"></i> Clonar Tarea</h3>
+                <button class="modal-close" onclick="closeCloneTaskModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="cloneTaskForm">
+                    <input type="hidden" id="originalTaskId" value="${task.task_id}">
+                    
+                    <div class="form-group">
+                        <label for="cloneTaskName">Nombre de la tarea</label>
+                        <input type="text" id="cloneTaskName" name="task_name" value="${task.task_name}" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="cloneTaskDescription">Descripción</label>
+                        <textarea id="cloneTaskDescription" name="description" rows="4">${task.description || ''}</textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="cloneTaskProject">Proyecto destino</label>
+                        <select id="cloneTaskProject" name="project_id" required>
+                            <option value="">Seleccionar proyecto...</option>
+                            ${projects.map(project => 
+                                `<option value="${project.project_id}" ${project.project_id == task.project_id ? 'selected' : ''}>
+                                    ${project.project_name} (${project.clan_name})
+                                </option>`
+                            ).join('')}
+                        </select>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="cloneTaskPriority">Prioridad</label>
+                            <select id="cloneTaskPriority" name="priority">
+                                <option value="low" ${task.priority === 'low' ? 'selected' : ''}>Baja</option>
+                                <option value="medium" ${task.priority === 'medium' ? 'selected' : ''}>Media</option>
+                                <option value="high" ${task.priority === 'high' ? 'selected' : ''}>Alta</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="cloneTaskDueDate">Fecha límite</label>
+                            <input type="date" id="cloneTaskDueDate" name="due_date" value="${task.due_date || ''}">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="cloneSubtasks" name="clone_subtasks" checked>
+                            Clonar también las subtareas
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="closeCloneTaskModal()">Cancelar</button>
+                <button type="button" class="btn-primary" onclick="cloneTask()">
+                    <i class="fas fa-copy"></i> Clonar Tarea
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    modal.style.display = 'flex';
+}
+
+// Función para cerrar el modal de clonación
+function closeCloneTaskModal() {
+    const modal = document.querySelector('.modal-overlay');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+// Función para ejecutar la clonación
+function cloneTask() {
+    const form = document.getElementById('cloneTaskForm');
+    const formData = new FormData(form);
+    
+    // Agregar campos adicionales
+    formData.append('originalTaskId', document.getElementById('originalTaskId').value);
+    formData.append('clone_subtasks', document.getElementById('cloneSubtasks').checked ? '1' : '0');
+    
+    fetch('?route=clan_member/clone-task', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            closeCloneTaskModal();
+            alert('Tarea clonada exitosamente');
+            location.reload(); // Recargar para mostrar los cambios
+        } else {
+            alert('Error al clonar la tarea: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error de conexión al clonar la tarea');
+    });
+}
+});
 </script>
+
+<!-- Estilos para el modal de clonación -->
+<style>
+.clone-task-modal {
+    max-width: 600px;
+    width: 90%;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #374151;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.btn-clone {
+    background-color: #8b5cf6;
+    color: white;
+}
+
+.btn-clone:hover {
+    background-color: #7c3aed;
+}
+
+@media (max-width: 768px) {
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .clone-task-modal {
+        width: 95%;
+        margin: 1rem;
+    }
+}
+</style>
 
 <?php
 $content = ob_get_clean();

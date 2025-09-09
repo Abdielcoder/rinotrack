@@ -1213,6 +1213,168 @@ class ClanMemberController {
     }
 
     /**
+     * Obtener datos de una tarea para clonación
+     */
+    public function getTaskData() {
+        $this->requireAuth();
+        
+        if (!$this->hasMemberAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+            return;
+        }
+
+        $taskId = (int)($_GET['task_id'] ?? 0);
+        
+        if ($taskId <= 0) {
+            Utils::jsonResponse(['success' => false, 'message' => 'ID de tarea inválido'], 400);
+            return;
+        }
+
+        try {
+            // Obtener datos de la tarea
+            $task = $this->taskModel->findById($taskId);
+            
+            if (!$task) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Tarea no encontrada'], 404);
+                return;
+            }
+
+            // Verificar que el usuario es dueño de la tarea
+            if ((int)($task['created_by_user_id'] ?? 0) !== (int)$this->currentUser['user_id']) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Solo puedes clonar tus propias tareas'], 403);
+                return;
+            }
+
+            // Obtener proyectos disponibles para el usuario
+            $projects = $this->projectModel->getProjectsForUser($this->currentUser['user_id'], null);
+
+            Utils::jsonResponse([
+                'success' => true,
+                'task' => $task,
+                'projects' => $projects
+            ]);
+
+        } catch (Exception $e) {
+            error_log("Error en getTaskData: " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor'], 500);
+        }
+    }
+
+    /**
+     * Clonar una tarea
+     */
+    public function cloneTask() {
+        $this->requireAuth();
+        
+        if (!$this->hasMemberAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+            return;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
+            return;
+        }
+
+        try {
+            $originalTaskId = (int)($_POST['originalTaskId'] ?? 0);
+            $taskName = trim($_POST['task_name'] ?? '');
+            $description = trim($_POST['description'] ?? '');
+            $projectId = (int)($_POST['project_id'] ?? 0);
+            $priority = $_POST['priority'] ?? 'medium';
+            $dueDate = $_POST['due_date'] ?? null;
+            $cloneSubtasks = ($_POST['clone_subtasks'] ?? '0') === '1';
+
+            // Validaciones
+            if ($originalTaskId <= 0) {
+                Utils::jsonResponse(['success' => false, 'message' => 'ID de tarea original inválido'], 400);
+                return;
+            }
+
+            if (empty($taskName)) {
+                Utils::jsonResponse(['success' => false, 'message' => 'El nombre de la tarea es requerido'], 400);
+                return;
+            }
+
+            if ($projectId <= 0) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Debe seleccionar un proyecto'], 400);
+                return;
+            }
+
+            // Verificar que la tarea original existe y pertenece al usuario
+            $originalTask = $this->taskModel->findById($originalTaskId);
+            
+            if (!$originalTask) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Tarea original no encontrada'], 404);
+                return;
+            }
+
+            if ((int)($originalTask['created_by_user_id'] ?? 0) !== (int)$this->currentUser['user_id']) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Solo puedes clonar tus propias tareas'], 403);
+                return;
+            }
+
+            // Verificar que el proyecto destino existe y el usuario tiene acceso
+            $targetProject = $this->projectModel->findById($projectId);
+            
+            if (!$targetProject) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Proyecto destino no encontrado'], 404);
+                return;
+            }
+
+            // Validar fecha límite si se proporciona
+            if (!empty($dueDate) && !strtotime($dueDate)) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Fecha límite inválida'], 400);
+                return;
+            }
+
+            // Crear la nueva tarea
+            $newTaskId = $this->taskModel->create(
+                $projectId,
+                $taskName,
+                $description,
+                $this->currentUser['user_id'], // creador
+                $priority,
+                $dueDate,
+                $this->currentUser['user_id'] // asignado inicialmente al creador
+            );
+
+            if (!$newTaskId) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Error al crear la tarea clonada'], 500);
+                return;
+            }
+
+            // Clonar subtareas si se solicitó
+            if ($cloneSubtasks) {
+                $subtasks = $this->taskModel->getSubtasks($originalTaskId);
+                
+                foreach ($subtasks as $subtask) {
+                    $this->taskModel->createSubtaskAdvanced(
+                        $newTaskId,
+                        $subtask['title'],
+                        $this->currentUser['user_id'], // creador
+                        $subtask['description'] ?? '',
+                        0, // percentage inicial
+                        $subtask['due_date'] ?? null,
+                        $subtask['priority'] ?? 'medium',
+                        $this->currentUser['user_id'] // asignado inicialmente al creador
+                    );
+                }
+            }
+
+            Utils::jsonResponse([
+                'success' => true,
+                'message' => 'Tarea clonada exitosamente',
+                'new_task_id' => $newTaskId
+            ]);
+
+        } catch (Exception $e) {
+            error_log("Error en cloneTask: " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor'], 500);
+        }
+    }
+
+    /**
      * Obtener tareas Kanban para el usuario incluyendo de otros clanes
      */
     private function getKanbanTasksForUser($userId, $primaryClanId = null) {

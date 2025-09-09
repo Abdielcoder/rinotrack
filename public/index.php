@@ -719,10 +719,20 @@ try {
         $controller->getUserDetailedStats();
         break;
         
-            case 'clan_leader/collaborator-availability':
-            $controller = new ClanLeaderController();
-            $controller->collaboratorAvailability();
-            break;
+    case 'clan_leader/collaborator-availability':
+        $controller = new ClanLeaderController();
+        $controller->collaboratorAvailability();
+        break;
+
+    case 'clan_leader/get-task-data':
+        $controller = new ClanLeaderController();
+        $controller->getTaskData();
+        break;
+
+    case 'clan_leader/clone-task':
+        $controller = new ClanLeaderController();
+        $controller->cloneTask();
+        break;
         
         // Rutas de Gamificación
         case 'gamification':
@@ -964,6 +974,16 @@ try {
     case 'clan_member/get-checkbox-states':
         $controller = new ClanMemberController();
         $controller->getCheckboxStates();
+        break;
+
+    case 'clan_member/get-task-data':
+        $controller = new ClanMemberController();
+        $controller->getTaskData();
+        break;
+
+    case 'clan_member/clone-task':
+        $controller = new ClanMemberController();
+        $controller->cloneTask();
         break;
             
         case 'clan_member/get-subtask-counts':
