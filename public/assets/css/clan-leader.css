@@ -5702,7 +5702,7 @@ input[type="checkbox"] {
     width: 100%; 
     border-collapse: separate; 
     border-spacing: 0; 
-    min-width: 900px; /* Ancho mínimo para evitar que se comprima demasiado */
+    min-width: 750px; /* Reducido para hacer la tabla más angosta */
 }
 
 /* Encabezados de la tabla */
@@ -5712,8 +5712,8 @@ input[type="checkbox"] {
     background: #f8fafc; 
     z-index: 10; 
     text-align: left; 
-    padding: 14px 16px; 
-    font-size: 0.875rem; 
+    padding: 10px 8px; /* Reducido para hacer la tabla más compacta */
+    font-size: 0.8rem; /* Ligeramente más pequeño */
     color: #64748b; 
     border-bottom: 2px solid #e2e8f0; 
     white-space: nowrap; 
@@ -5722,10 +5722,11 @@ input[type="checkbox"] {
 
 /* Celdas de la tabla */
 .tasks-table tbody td { 
-    padding: 14px 16px; 
+    padding: 10px 8px; /* Reducido para hacer la tabla más compacta */
     border-bottom: 1px solid #f1f5f9; 
     vertical-align: middle; 
     background: #fff;
+    font-size: 0.85rem; /* Ligeramente más pequeño */
 }
 
 /* Filas alternas */
@@ -5740,25 +5741,55 @@ input[type="checkbox"] {
     transition: all 0.2s ease;
 }
 
-/* Anchos específicos de columnas */
+/* Anchos específicos de columnas - Optimizados para tabla más angosta */
 .tasks-table .th-actions,
-.tasks-table .td-actions { width: 120px; }
+.tasks-table .td-actions { 
+    width: 100px; 
+    min-width: 100px;
+    max-width: 100px;
+    white-space: nowrap;
+}
 .tasks-table .th-priority,
-.tasks-table .td-priority { width: 120px; }
+.tasks-table .td-priority { 
+    width: 80px; 
+    min-width: 80px;
+}
 .tasks-table .th-task,
-.tasks-table .td-task { min-width: 280px; }
+.tasks-table .td-task { 
+    min-width: 180px; 
+    max-width: 220px;
+}
 .tasks-table .th-project,
-.tasks-table .td-project { min-width: 200px; }
+.tasks-table .td-project { 
+    min-width: 120px; 
+    max-width: 150px;
+}
 .tasks-table .th-assigned,
-.tasks-table .td-assigned { min-width: 180px; }
+.tasks-table .td-assigned { 
+    min-width: 120px; 
+    max-width: 140px;
+}
 .tasks-table .th-due-date,
-.tasks-table .td-due-date { width: 160px; }
+.tasks-table .td-due-date { 
+    width: 100px; 
+    min-width: 100px;
+    font-size: 0.85rem;
+}
 .tasks-table .th-status,
-.tasks-table .td-status { width: 140px; }
+.tasks-table .td-status { 
+    width: 90px; 
+    min-width: 90px;
+}
 .tasks-table .th-progress,
-.tasks-table .td-progress { width: 150px; }
+.tasks-table .td-progress { 
+    width: 110px; 
+    min-width: 110px;
+}
 .tasks-table .th-checkbox,
-.tasks-table .td-checkbox { width: 50px; }
+.tasks-table .td-checkbox { 
+    width: 40px; 
+    min-width: 40px;
+}
 
 /* Estilos de celdas específicas */
 .tasks-table .cell-title { 
@@ -5783,12 +5814,15 @@ input[type="checkbox"] {
 
 /* Responsive para tablets */
 @media (max-width: 1024px) {
+    .tasks-table { 
+        min-width: 700px; 
+    }
     .tasks-table .th-project,
-    .tasks-table .td-project { min-width: 160px; }
+    .tasks-table .td-project { min-width: 100px; max-width: 120px; }
     .tasks-table .th-assigned,
-    .tasks-table .td-assigned { min-width: 140px; }
+    .tasks-table .td-assigned { min-width: 100px; max-width: 120px; }
     .tasks-table .th-task,
-    .tasks-table .td-task { min-width: 240px; }
+    .tasks-table .td-task { min-width: 150px; max-width: 180px; }
 }
 
 /* Responsive para móviles */
@@ -5799,7 +5833,7 @@ input[type="checkbox"] {
     }
     
     .tasks-table { 
-        min-width: 700px; 
+        min-width: 550px; /* Más compacta */
     }
     
     .tasks-table .th-project,
@@ -5811,14 +5845,21 @@ input[type="checkbox"] {
     
     .tasks-table .th-actions,
     .tasks-table .td-actions { 
-        width: 100px; 
-        display: table-cell !important; /* Asegurar que siempre se muestre */
+        width: 90px;
+        min-width: 90px;
+        display: table-cell !important; /* Siempre visible */
+    }
+    
+    .tasks-table .th-task,
+    .tasks-table .td-task { 
+        min-width: 140px; 
+        max-width: 160px;
     }
 }
 
 @media (max-width: 640px) {
     .tasks-table { 
-        min-width: 600px; 
+        min-width: 450px; /* Aún más compacta */
     }
     
     .tasks-table .th-due-date,
@@ -5826,9 +5867,17 @@ input[type="checkbox"] {
         display: none; 
     }
     
-    .tasks-table .th-task,
-    .tasks-table .td-task { 
-        min-width: 200px; 
+    .tasks-table .th-progress,
+    .tasks-table .td-progress { 
+        width: 80px;
+        min-width: 80px;
+    }
+    
+    .tasks-table .th-actions,
+    .tasks-table .td-actions { 
+        width: 80px;
+        min-width: 80px;
+        display: table-cell !important; /* Siempre visible */
     }
 }
 
@@ -5854,14 +5903,19 @@ input[type="checkbox"] {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
-    border-radius: 6px;
+    width: 28px; /* Más compacto */
+    height: 28px; /* Más compacto */
+    border-radius: 4px;
     border: 1px solid #e2e8f0;
     background: #fff;
     color: #64748b;
     transition: all 0.2s ease;
     text-decoration: none;
+    margin: 0 2px; /* Espaciado mínimo entre botones */
+}
+
+.tasks-table .action-buttons .btn-action i {
+    font-size: 12px; /* Iconos más pequeños */
 }
 
 .tasks-table .action-buttons .btn-action:hover {
@@ -5929,6 +5983,28 @@ input[type="checkbox"] {
 .btn-apply-filters i,
 .btn-reset-filters i {
     font-size: 12px;
+}
+
+/* Estilos adicionales para texto truncado */
+.tasks-table .td-task .task-info .task-title,
+.tasks-table .td-project .project-name,
+.tasks-table .td-assigned .assigned-users {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+}
+
+.tasks-table .td-task .task-info .task-description {
+    display: none; /* Ocultar descripción para ahorrar espacio */
+}
+
+/* Hacer los badges más compactos */
+.tasks-table .priority-badge,
+.tasks-table .status-badge {
+    padding: 3px 6px;
+    font-size: 0.7rem;
+    font-weight: 600;
 }
 
 /* Responsive para botones de filtros */
