@@ -131,16 +131,78 @@ ob_start();
             </div>
         </div>
 
-        <!-- Contenido de los Tabs -->
+        <!-- Tab: Mis Tareas -->
         <div id="my-tasks-content" class="tab-content active">
             <div class="all-tasks-section">
                 <div class="section-header">
                     <h2 class="section-title">Mis Tareas Asignadas</h2>
                 </div>
+                
+                <!-- Filtros y búsqueda para Mis Tareas -->
+                <div class="filters-container">
+                    <div class="filters-header">
+                        <form method="GET" action="?route=clan_leader/tasks" class="filters-form">
+                            <input type="hidden" name="route" value="clan_leader/tasks">
+                            <input type="hidden" name="tab" value="my-tasks">
+                            
+                            <!-- Filtros -->
+                            <div class="filter-group">
+                                <div class="filter-item">
+                                    <label for="statusFilter">Estado:</label>
+                                    <select name="status_filter" id="statusFilter">
+                                        <option value="">Todos</option>
+                                        <option value="pending" <?= (($_GET['status_filter'] ?? '') === 'pending') ? 'selected' : '' ?>>Pendiente</option>
+                                        <option value="in_progress" <?= (($_GET['status_filter'] ?? '') === 'in_progress') ? 'selected' : '' ?>>En Progreso</option>
+                                        <option value="completed" <?= (($_GET['status_filter'] ?? '') === 'completed') ? 'selected' : '' ?>>Completado</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="filter-item">
+                                    <label for="perPage">Mostrar:</label>
+                                    <select name="per_page" id="perPage">
+                                        <option value="5" <?= (($_GET['per_page'] ?? '5') === '5') ? 'selected' : '' ?>>5 por página</option>
+                                        <option value="10" <?= (($_GET['per_page'] ?? '5') === '10') ? 'selected' : '' ?>>10 por página</option>
+                                        <option value="25" <?= (($_GET['per_page'] ?? '5') === '25') ? 'selected' : '' ?>>25 por página</option>
+                                        <option value="50" <?= (($_GET['per_page'] ?? '5') === '50') ? 'selected' : '' ?>>50 por página</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="search-container">
+                                    <div class="search-input-wrapper">
+                                        <i class="fas fa-search search-icon"></i>
+                                        <input type="text" 
+                                               name="search" 
+                                               value="<?= htmlspecialchars($search ?? '') ?>"
+                                               placeholder="Buscar tareas..."
+                                               class="search-input"
+                                               id="searchInputMyTasks">
+                                    </div>
+                                </div>
+                                
+                                <!-- Botones de acción -->
+                                <div class="filter-actions">
+                                    <button type="submit" class="btn-apply-filters">
+                                        <i class="fas fa-filter"></i>
+                                        Aplicar Filtros
+                                    </button>
+                                    <a href="?route=clan_leader/tasks&tab=my-tasks" class="btn-reset-filters">
+                                        <i class="fas fa-undo"></i>
+                                        Resetear Filtros
+                                    </a>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Tabla de Mis Tareas (cargada por JavaScript) -->
                 <div class="tasks-table-container">
                     <table class="tasks-table">
                         <thead>
                             <tr>
+                                <th class="th-checkbox" style="width: 40px;">
+                                    <input type="checkbox" id="select-all-my" onchange="toggleAllTasks(this, 'my')">
+                                </th>
                                 <th class="th-priority">Prioridad</th>
                                 <th class="th-task">Tarea</th>
                                 <th class="th-project">Proyecto</th>
@@ -151,115 +213,16 @@ ob_start();
                             </tr>
                         </thead>
                         <tbody id="my-tasks-table-body">
-                            <tr><td colspan="7" class="text-center">Cargando mis tareas...</td></tr>
+                            <!-- Las tareas del líder se cargarán por JavaScript -->
+                            <tr><td colspan="8" class="text-center">Cargando mis tareas...</td></tr>
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
 
+        <!-- Tab: Equipo -->
         <div id="team-tasks-content" class="tab-content">
-            <?php if (isset($allTasks)): ?>
-            <!-- Tab: Mis Tareas -->
-            <div id="my-tasks-content" class="tab-content active">
-                <div class="all-tasks-section">
-                    <div class="section-header">
-                        <h2 class="section-title">
-                            Mis Tareas Asignadas
-                            <?php if (!empty($search) || !empty($_GET['status_filter']) || (isset($_GET['per_page']) && $_GET['per_page'] != '5')): ?>
-                            <span class="filters-indicator">
-                                <i class="fas fa-filter"></i>
-                                Filtros activos
-                            </span>
-                            <?php endif; ?>
-                        </h2>
-                    </div>
-                    
-                    <!-- Filtros y búsqueda para Mis Tareas -->
-                    <div class="filters-container">
-                        <div class="filters-header">
-                            <form method="GET" action="?route=clan_leader/tasks" class="filters-form">
-                                <input type="hidden" name="route" value="clan_leader/tasks">
-                                <input type="hidden" name="tab" value="my-tasks">
-                                
-                                <!-- Filtros -->
-                                <div class="filter-group">
-                                    <div class="filter-item">
-                                        <label for="statusFilter">Estado:</label>
-                                        <select name="status_filter" id="statusFilter">
-                                            <option value="">Todos</option>
-                                            <option value="pending" <?= (($_GET['status_filter'] ?? '') === 'pending') ? 'selected' : '' ?>>Pendiente</option>
-                                            <option value="in_progress" <?= (($_GET['status_filter'] ?? '') === 'in_progress') ? 'selected' : '' ?>>En Progreso</option>
-                                            <option value="completed" <?= (($_GET['status_filter'] ?? '') === 'completed') ? 'selected' : '' ?>>Completado</option>
-                                        </select>
-                                    </div>
-                                    
-                                    <div class="filter-item">
-                                        <label for="perPage">Mostrar:</label>
-                                        <select name="per_page" id="perPage">
-                                            <option value="5" <?= (($_GET['per_page'] ?? '5') === '5') ? 'selected' : '' ?>>5 por página</option>
-                                            <option value="10" <?= (($_GET['per_page'] ?? '5') === '10') ? 'selected' : '' ?>>10 por página</option>
-                                            <option value="25" <?= (($_GET['per_page'] ?? '5') === '25') ? 'selected' : '' ?>>25 por página</option>
-                                            <option value="50" <?= (($_GET['per_page'] ?? '5') === '50') ? 'selected' : '' ?>>50 por página</option>
-                                        </select>
-                                    </div>
-                                    
-                                    <div class="search-container">
-                                        <div class="search-input-wrapper">
-                                            <i class="fas fa-search search-icon"></i>
-                                            <input type="text" 
-                                                   name="search" 
-                                                   value="<?= htmlspecialchars($search) ?>"
-                                                   placeholder="Buscar tareas..."
-                                                   class="search-input"
-                                                   id="searchInputMyTasks">
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- Botones de acción -->
-                                    <div class="filter-actions">
-                                        <button type="submit" class="btn-apply-filters">
-                                            <i class="fas fa-filter"></i>
-                                            Aplicar Filtros
-                                        </button>
-                                        <a href="?route=clan_leader/tasks&tab=my-tasks" class="btn-reset-filters">
-                                            <i class="fas fa-undo"></i>
-                                            Resetear Filtros
-                                        </a>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                    
-                    <!-- Tabla de Mis Tareas -->
-                    <div class="tasks-table-container">
-                        <table class="tasks-table">
-                            <thead>
-                                <tr>
-                                    <th class="th-checkbox" style="width: 40px;">
-                                        <input type="checkbox" id="select-all-my" onchange="toggleAllTasks(this, 'my')">
-                                    </th>
-                                    <th class="th-priority">Prioridad</th>
-                                    <th class="th-task">Tarea</th>
-                                    <th class="th-project">Proyecto</th>
-                                    <th class="th-due-date">Fecha Límite</th>
-                                    <th class="th-status">Estado</th>
-                                    <th class="th-progress">Progreso</th>
-                                    <th class="th-actions">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="my-tasks-table-body">
-                                <!-- Las tareas del líder se cargarán aquí -->
-                                <tr><td colspan="8" class="text-center">Cargando mis tareas...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Tab: Equipo -->
-            <div id="team-tasks-content" class="tab-content">
                 <div class="all-tasks-section">
                     <div class="section-header">
                         <h2 class="section-title">
