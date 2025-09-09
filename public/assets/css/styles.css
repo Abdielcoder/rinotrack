@@ -164,6 +164,7 @@ a:hover { text-decoration: none; }
     font-size: 1rem;
     transition: all 0.3s ease;
     background: #f8f9fa;
+    color: #333 !important;
 }
 
 .input-container input:focus {

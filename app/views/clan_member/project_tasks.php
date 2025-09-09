@@ -364,6 +364,7 @@ if (!isset($user)) {
     color: white;
     padding: 2rem 0;
     margin-bottom: 2rem;
+    margin-top: 1.5rem;
 }
 
 .header-content {
@@ -423,7 +424,7 @@ if (!isset($user)) {
 }
 
 .btn-back {
-    background: rgba(255, 255, 255, 0.1);
+    background: #6b7280;
     color: white;
     padding: 0.75rem 1.5rem;
     border-radius: 12px;
@@ -432,15 +433,14 @@ if (!isset($user)) {
     align-items: center;
     gap: 0.5rem;
     font-weight: 600;
-    border: 2px solid rgba(255, 255, 255, 0.2);
+    border: 2px solid #6b7280;
     transition: all 0.3s ease;
-    backdrop-filter: blur(10px);
     cursor: pointer;
 }
 
 .btn-back:hover {
-    background: rgba(255, 255, 255, 0.2);
-    border-color: rgba(255, 255, 255, 0.4);
+    background: #4b5563;
+    border-color: #4b5563;
     transform: translateY(-2px);
     color: white;
     text-decoration: none;

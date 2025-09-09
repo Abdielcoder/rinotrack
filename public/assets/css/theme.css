@@ -390,7 +390,7 @@ html, body {
     align-items: center;
     gap: 1rem;
     padding: 1rem 1.5rem;
-    color: var(--text-primary);
+    color: #374151 !important;
     text-decoration: none;
     font-weight: 500;
     font-size: 0.95rem;
@@ -408,8 +408,8 @@ html, body {
 }
 
 .dropdown-link:hover {
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-    color: white;
+    background: linear-gradient(135deg, #1e3a8a, #3b82f6) !important;
+    color: white !important;
     transform: translateX(3px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
@@ -435,11 +435,12 @@ html, body {
 }
 
 [data-theme="dark"] .dropdown-link {
-    color: var(--text-primary);
+    color: #374151 !important;
 }
 
 [data-theme="dark"] .dropdown-link:hover {
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    background: linear-gradient(135deg, #1e3a8a, #3b82f6) !important;
+    color: white !important;
 }
 
 [data-theme="dark"] .dropdown-menu li:not(:last-child)::after {
