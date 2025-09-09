@@ -2633,6 +2633,151 @@ class ClanMemberController {
             echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
         }
     }
+
+    /**
+     * Exportar historial de tarea a Excel
+     */
+    public function exportTaskHistory() {
+        $this->requireAuth();
+        if (!$this->hasMemberAccess()) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
+            return;
+        }
+
+        try {
+            $taskId = (int)($_GET['task_id'] ?? 0);
+            
+            if (!$taskId) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'ID de tarea requerido']);
+                return;
+            }
+
+            // Verificar que la tarea existe y el usuario tiene acceso
+            $task = $this->taskModel->findById($taskId);
+            if (!$task) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'message' => 'Tarea no encontrada']);
+                return;
+            }
+
+            // Obtener historial de la tarea
+            $history = $this->taskModel->getHistory($taskId);
+            
+            // Crear contenido CSV (que Excel puede abrir)
+            $csvContent = $this->generateHistoryCSV($task, $history);
+            
+            // Configurar headers para descarga
+            $filename = "historial_tarea_{$taskId}_" . date('Y-m-d') . ".csv";
+            
+            header('Content-Type: application/vnd.ms-excel; charset=UTF-8');
+            header('Content-Disposition: attachment; filename="' . $filename . '"');
+            header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+            header('Pragma: public');
+            
+            // Agregar BOM para UTF-8 en Excel
+            echo "\xEF\xBB\xBF";
+            echo $csvContent;
+            exit;
+
+        } catch (Exception $e) {
+            error_log("Error en exportTaskHistory (member): " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error interno del servidor']);
+        }
+    }
+
+    /**
+     * Generar contenido CSV del historial
+     */
+    private function generateHistoryCSV($task, $history) {
+        $csv = [];
+        
+        // Encabezado del archivo
+        $csv[] = "HISTORIAL DE TAREA";
+        $csv[] = "";
+        $csv[] = "Tarea: " . $this->escapeCsvValue($task['task_name']);
+        $csv[] = "Proyecto: " . $this->escapeCsvValue($task['project_name'] ?? 'N/A');
+        $csv[] = "Estado: " . $this->escapeCsvValue($task['status']);
+        $csv[] = "Creado: " . $this->escapeCsvValue($task['created_at']);
+        $csv[] = "Generado: " . date('Y-m-d H:i:s');
+        $csv[] = "";
+        
+        // Encabezados de columnas
+        $csv[] = "Fecha,Usuario,Acción,Campo,Valor Anterior,Valor Nuevo,Notas";
+        
+        // Datos del historial
+        if (!empty($history)) {
+            foreach ($history as $h) {
+                $row = [
+                    $this->escapeCsvValue($h['created_at'] ?? ''),
+                    $this->escapeCsvValue($h['full_name'] ?? $h['username'] ?? ''),
+                    $this->escapeCsvValue($this->translateActionType($h['action_type'] ?? '')),
+                    $this->escapeCsvValue($this->translateFieldName($h['field_name'] ?? '')),
+                    $this->escapeCsvValue($h['old_value'] ?? ''),
+                    $this->escapeCsvValue($h['new_value'] ?? ''),
+                    $this->escapeCsvValue($h['notes'] ?? '')
+                ];
+                $csv[] = implode(',', $row);
+            }
+        } else {
+            $csv[] = "Sin historial disponible,,,,,";
+        }
+        
+        return implode("\n", $csv);
+    }
+
+    /**
+     * Escapar valores para CSV
+     */
+    private function escapeCsvValue($value) {
+        // Convertir a string y limpiar
+        $value = (string)$value;
+        $value = str_replace(["\r\n", "\r", "\n"], ' ', $value);
+        
+        // Si contiene comas, comillas o espacios, envolver en comillas
+        if (strpos($value, ',') !== false || strpos($value, '"') !== false || strpos($value, ' ') !== false) {
+            $value = '"' . str_replace('"', '""', $value) . '"';
+        }
+        
+        return $value;
+    }
+
+    /**
+     * Traducir tipos de acción
+     */
+    private function translateActionType($actionType) {
+        $translations = [
+            'created' => 'Creado',
+            'updated' => 'Actualizado',
+            'status_changed' => 'Estado Cambiado',
+            'assigned' => 'Asignado',
+            'commented' => 'Comentario Agregado',
+            'completed' => 'Completado',
+            'deleted' => 'Eliminado',
+            'attached' => 'Archivo Adjuntado'
+        ];
+        
+        return $translations[$actionType] ?? ucfirst($actionType);
+    }
+
+    /**
+     * Traducir nombres de campos
+     */
+    private function translateFieldName($fieldName) {
+        $translations = [
+            'status' => 'Estado',
+            'assigned_to_user_id' => 'Usuario Asignado',
+            'completion_percentage' => 'Porcentaje Completado',
+            'due_date' => 'Fecha Límite',
+            'description' => 'Descripción',
+            'task_name' => 'Nombre de Tarea',
+            'priority' => 'Prioridad'
+        ];
+        
+        return $translations[$fieldName] ?? ucfirst($fieldName);
+    }
 }
 
 ?>

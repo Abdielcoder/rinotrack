@@ -951,6 +951,11 @@ try {
             $controller->deleteSubtaskAttachment();
             break;
             
+        case 'clan_member/export-task-history':
+            $controller = new ClanMemberController();
+            $controller->exportTaskHistory();
+            break;
+            
         case 'clan_member/get-subtask-counts':
             $controller = new ClanMemberController();
             $controller->getSubtaskCounts();

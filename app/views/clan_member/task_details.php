@@ -216,7 +216,20 @@ $additionalJS[] = 'https://cdn.quilljs.com/1.3.6/quill.min.js';
         </div>
 
         <div class="summary-card">
-          <h3>Historial</h3>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h3 style="margin: 0;">Historial</h3>
+            <?php if (!empty($history)): ?>
+              <button onclick="downloadTaskHistory(<?php echo (int)$task['task_id']; ?>)" 
+                      style="background: #059669; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s ease;"
+                      onmouseover="this.style.background='#047857'"
+                      onmouseout="this.style.background='#059669'"
+                      title="Descargar historial en Excel">
+                <i class="fas fa-download"></i>
+                <i class="fas fa-file-excel"></i>
+                Excel
+              </button>
+            <?php endif; ?>
+          </div>
           <div class="history-list">
             <?php if (empty($history)): ?>
               <div class="empty-minimal">Sin historial</div>
@@ -1605,6 +1618,54 @@ function updateTaskProgressValue(percentage) {
         
         console.error('Error:', error);
         showNotification('Error de conexión al actualizar progreso', 'error');
+    });
+}
+
+// Función para descargar historial de tarea en Excel
+function downloadTaskHistory(taskId) {
+    console.log('Descargando historial de tarea:', taskId);
+    
+    // Mostrar indicador de carga
+    const button = event.target.closest('button');
+    const originalContent = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando...';
+    button.disabled = true;
+    
+    // Crear enlace de descarga
+    const downloadUrl = `?route=clan_member/export-task-history&task_id=${taskId}`;
+    
+    fetch(downloadUrl, {
+        method: 'GET',
+        credentials: 'same-origin'
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Error en la respuesta del servidor');
+        }
+        return response.blob();
+    })
+    .then(blob => {
+        // Crear URL del blob y descargar
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = `historial_tarea_${taskId}_${new Date().toISOString().split('T')[0]}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        
+        showNotification('Historial descargado exitosamente', 'success');
+    })
+    .catch(error => {
+        console.error('Error descargando historial:', error);
+        showNotification('Error al descargar historial: ' + error.message, 'error');
+    })
+    .finally(() => {
+        // Restaurar botón
+        button.innerHTML = originalContent;
+        button.disabled = false;
     });
 }
 </script>
