@@ -749,6 +749,11 @@ try {
         $controller->getMyTasks();
         break;
         
+    case 'clan_leader/get-my-kanban-tasks':
+        $controller = new ClanLeaderController();
+        $controller->getMyKanbanTasks();
+        break;
+        
         // Rutas de Gamificación
         case 'gamification':
             $controller = new GamificationController();

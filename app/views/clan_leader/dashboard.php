@@ -36,7 +36,33 @@ ob_start();
                     </button>
                 </div>
             </div>
-            <div class="kanban-board-compact">
+            
+            <!-- Tabs para separar Mis Tareas y Equipo -->
+            <div class="kanban-tabs">
+                <button class="kanban-tab-button active" onclick="switchKanbanTab('my-tasks')" id="my-tasks-kanban-tab">
+                    <i class="fas fa-user"></i>
+                    Mis Tareas
+                </button>
+                <button class="kanban-tab-button" onclick="switchKanbanTab('team-tasks')" id="team-tasks-kanban-tab">
+                    <i class="fas fa-users"></i>
+                    Equipo
+                </button>
+            </div>
+            
+            <!-- Tab Content: Mis Tareas -->
+            <div id="my-tasks-kanban-content" class="kanban-tab-content active">
+                <div class="kanban-board-compact" id="my-tasks-kanban-board">
+                    <!-- Se cargará dinámicamente via JavaScript -->
+                    <div class="loading-message">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        Cargando mis tareas...
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tab Content: Equipo (tablero actual) -->
+            <div id="team-tasks-kanban-content" class="kanban-tab-content">
+                <div class="kanban-board-compact">
                 <!-- Columna: Vencidas -->
                 <div class="kanban-column-compact">
                     <div class="column-header overdue">
@@ -228,7 +254,8 @@ ob_start();
                         <?php endforeach; ?>
                     </div>
                 </div>
-            </div>
+                </div> <!-- Cierre del kanban-board-compact -->
+            </div> <!-- Cierre del team-tasks-kanban-content -->
         </section>
 
         <!-- Progreso General del Equipo -->
@@ -993,4 +1020,201 @@ $additionalJS = [
 
 // Incluir el layout
 require_once __DIR__ . '/../admin/layout.php';
-?> 
+?>
+
+<style>
+/* Estilos para Tabs del Kanban */
+.kanban-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid #e5e7eb;
+    padding-bottom: 0;
+}
+
+.kanban-tab-button {
+    background: none;
+    border: none;
+    padding: 0.8rem 1.2rem;
+    color: #6b7280;
+    font-weight: 600;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    border-radius: 8px 8px 0 0;
+}
+
+.kanban-tab-button:hover {
+    color: #374151;
+    background: #f9fafb;
+}
+
+.kanban-tab-button.active {
+    color: #1e3a8a;
+    border-bottom-color: #1e3a8a;
+    background: #f0f4ff;
+}
+
+.kanban-tab-content {
+    display: none;
+}
+
+.kanban-tab-content.active {
+    display: block;
+}
+
+.loading-message {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 2rem;
+    color: #6b7280;
+    font-size: 1rem;
+}
+
+/* Responsive para tabs del Kanban */
+@media (max-width: 768px) {
+    .kanban-tabs {
+        flex-direction: column;
+        gap: 0;
+        border-bottom: none;
+    }
+    
+    .kanban-tab-button {
+        border-bottom: none;
+        border-left: 3px solid transparent;
+        justify-content: flex-start;
+        border-radius: 0;
+    }
+    
+    .kanban-tab-button.active {
+        border-left-color: #1e3a8a;
+        border-bottom-color: transparent;
+    }
+}
+</style>
+
+<script>
+// Función para cambiar entre tabs del Kanban
+function switchKanbanTab(tabName) {
+    // Ocultar todos los tab contents
+    document.querySelectorAll('.kanban-tab-content').forEach(content => {
+        content.classList.remove('active');
+    });
+    
+    // Remover active de todos los tab buttons
+    document.querySelectorAll('.kanban-tab-button').forEach(button => {
+        button.classList.remove('active');
+    });
+    
+    // Mostrar el tab content seleccionado
+    document.getElementById(tabName + '-kanban-content').classList.add('active');
+    
+    // Activar el tab button seleccionado
+    document.getElementById(tabName + '-kanban-tab').classList.add('active');
+    
+    // Cargar datos según el tab
+    if (tabName === 'my-tasks') {
+        loadMyKanbanTasks();
+    }
+}
+
+// Función para cargar mis tareas en el Kanban
+function loadMyKanbanTasks() {
+    const kanbanBoard = document.getElementById('my-tasks-kanban-board');
+    if (!kanbanBoard) return;
+    
+    kanbanBoard.innerHTML = '<div class="loading-message"><i class="fas fa-spinner fa-spin"></i> Cargando mis tareas...</div>';
+    
+    fetch('?route=clan_leader/get-my-kanban-tasks')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                renderMyKanbanBoard(data.kanbanTasks);
+            } else {
+                kanbanBoard.innerHTML = '<div class="loading-message text-danger">Error al cargar tareas: ' + data.message + '</div>';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            kanbanBoard.innerHTML = '<div class="loading-message text-danger">Error de conexión</div>';
+        });
+}
+
+// Función para renderizar el tablero Kanban de mis tareas
+function renderMyKanbanBoard(kanbanTasks) {
+    const kanbanBoard = document.getElementById('my-tasks-kanban-board');
+    if (!kanbanBoard) return;
+    
+    const columns = ['vencidas', 'hoy', 'semana1', 'semana2'];
+    const columnTitles = {
+        'vencidas': 'Vencidas',
+        'hoy': 'Hoy', 
+        'semana1': '1 Semana',
+        'semana2': '2+ Semanas'
+    };
+    
+    let html = '';
+    
+    columns.forEach(column => {
+        const tasks = kanbanTasks[column] || [];
+        const columnClass = column === 'vencidas' ? 'overdue' : column === 'hoy' ? 'today' : column === 'semana1' ? 'week1' : 'week2';
+        
+        html += `
+            <div class="kanban-column-compact">
+                <div class="column-header ${columnClass}">
+                    <h4>${columnTitles[column]}</h4>
+                    <span class="task-count">${tasks.length}</span>
+                </div>
+                <div class="column-content-compact">
+        `;
+        
+        tasks.forEach(task => {
+            const isSubtask = (task.item_type || 'task') === 'subtask';
+            const isCompleted = task.status === 'completed' || (task.is_completed || 0) == 1;
+            
+            html += `
+                <div class="task-card-compact ${columnClass} ${isSubtask ? 'subtask-card-compact' : ''}" data-task-id="${task.task_id}">
+                    <div class="task-compact-row">
+                        <input type="checkbox" class="task-checkbox-compact" ${isCompleted ? 'checked' : ''} onchange="toggleTaskStatus(${task.task_id}, this.checked)">
+                        <div class="task-name-compact">${task.task_name || 'Sin nombre'}</div>
+                    </div>
+                    <div class="task-actions-compact">
+                        <a href="?route=clan_leader/get-task-details&task_id=${task.task_id}" class="btn-compact-action" title="Ver detalles">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                    </div>
+                    <div class="task-info-compact">
+                        <span class="project-name-compact">${task.project_name || 'Sin proyecto'}</span>
+                        ${task.assigned_to_name ? `<span class="assignee-info-compact" title="Asignado a: ${task.assigned_to_name}"><i class="fas fa-user"></i> ${task.assigned_to_name}</span>` : ''}
+                    </div>
+                    <div class="task-due-compact ${columnClass}">
+                        ${column === 'vencidas' ? '<i class="fas fa-exclamation-triangle"></i> Vencida' : 
+                          column === 'hoy' ? '<i class="fas fa-clock"></i> Vence hoy' :
+                          column === 'semana1' ? '<i class="fas fa-calendar"></i> Esta semana' :
+                          '<i class="fas fa-calendar"></i> En ' + (task.days_until_due || '0') + ' días'}
+                    </div>
+                </div>
+            `;
+        });
+        
+        html += `
+                </div>
+            </div>
+        `;
+    });
+    
+    kanbanBoard.innerHTML = html;
+}
+
+// Inicializar tabs al cargar la página
+document.addEventListener('DOMContentLoaded', function() {
+    // Por defecto mostrar "Mis Tareas"
+    switchKanbanTab('my-tasks');
+});
+</script> 

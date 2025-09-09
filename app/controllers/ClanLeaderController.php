@@ -3802,6 +3802,99 @@ class ClanLeaderController {
     }
     
     /**
+     * Obtener mis tareas organizadas para Kanban (solo las tareas donde el líder es asignado)
+     */
+    public function getMyKanbanTasks() {
+        $this->requireAuth();
+        
+        if (!$this->hasClanLeaderAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+            return;
+        }
+
+        try {
+            $userId = $this->currentUser['user_id'];
+            
+            // Obtener tareas y subtareas asignadas al líder organizadas por fecha de vencimiento
+            $stmt = $this->db->prepare("
+                SELECT 
+                    t.task_id,
+                    t.task_name,
+                    t.status,
+                    t.due_date,
+                    t.completion_percentage,
+                    p.project_name,
+                    u.full_name as assigned_to_name,
+                    DATEDIFF(t.due_date, CURDATE()) as days_until_due,
+                    'task' as item_type,
+                    0 as is_completed
+                FROM Tasks t
+                LEFT JOIN Projects p ON t.project_id = p.project_id
+                LEFT JOIN Users u ON t.assigned_to_user_id = u.user_id
+                WHERE t.is_subtask = 0 
+                  AND (t.assigned_to_user_id = ? OR t.task_id IN (SELECT ta.task_id FROM Task_Assignments ta WHERE ta.user_id = ?))
+                  AND t.status != 'cancelled'
+                
+                UNION ALL
+                
+                SELECT 
+                    s.subtask_id as task_id,
+                    s.title as task_name,
+                    CASE WHEN s.is_completed = 1 THEN 'completed' ELSE 'pending' END as status,
+                    s.due_date,
+                    s.progress_percentage as completion_percentage,
+                    p.project_name,
+                    u.full_name as assigned_to_name,
+                    DATEDIFF(s.due_date, CURDATE()) as days_until_due,
+                    'subtask' as item_type,
+                    s.is_completed
+                FROM Subtasks s
+                LEFT JOIN Tasks t ON s.task_id = t.task_id
+                LEFT JOIN Projects p ON t.project_id = p.project_id
+                LEFT JOIN Users u ON s.assigned_to_user_id = u.user_id
+                WHERE s.assigned_to_user_id = ?
+                
+                ORDER BY due_date ASC
+            ");
+            
+            $stmt->execute([$userId, $userId, $userId]);
+            $allTasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Organizar tareas en columnas Kanban
+            $kanbanTasks = [
+                'vencidas' => [],
+                'hoy' => [],
+                'semana1' => [],
+                'semana2' => []
+            ];
+            
+            foreach ($allTasks as $task) {
+                $daysUntilDue = (int)$task['days_until_due'];
+                
+                if ($daysUntilDue < 0) {
+                    $kanbanTasks['vencidas'][] = $task;
+                } elseif ($daysUntilDue == 0) {
+                    $kanbanTasks['hoy'][] = $task;
+                } elseif ($daysUntilDue <= 7) {
+                    $kanbanTasks['semana1'][] = $task;
+                } else {
+                    $kanbanTasks['semana2'][] = $task;
+                }
+            }
+
+            Utils::jsonResponse([
+                'success' => true,
+                'kanbanTasks' => $kanbanTasks,
+                'total' => count($allTasks)
+            ]);
+
+        } catch (Exception $e) {
+            error_log("Error en getMyKanbanTasks (ClanLeader): " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor'], 500);
+        }
+    }
+    
+    /**
      * Cargar vista
      */
     private function loadView($viewPath, $data = []) {
