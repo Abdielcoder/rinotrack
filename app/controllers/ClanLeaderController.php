@@ -118,8 +118,8 @@ class ClanLeaderController {
         error_log("Task Stats: " . json_encode($taskStats));
         error_log("Member Contributions Count: " . count($memberContributions));
 
-        // Obtener tareas para el tablero Kanban (incluye tareas de otros clanes)
-        $kanbanTasks = $this->getKanbanTasksForLeader($this->currentUser['user_id'], $this->userClan['clan_id']);
+        // Obtener tareas para el tablero Kanban (incluye tareas de otros clanes, EXCLUYENDO tareas personales del líder)
+        $kanbanTasks = $this->getKanbanTasksForLeader($this->currentUser['user_id'], $this->userClan['clan_id'], true);
         
         $data = [
             'userStats' => $this->getUserStats(),
@@ -3814,6 +3814,7 @@ class ClanLeaderController {
 
         try {
             $userId = $this->currentUser['user_id'];
+            error_log("DEBUG getMyKanbanTasks - userId: $userId");
             
             // Obtener tareas y subtareas asignadas al líder organizadas por fecha de vencimiento
             $stmt = $this->db->prepare("
@@ -3859,6 +3860,8 @@ class ClanLeaderController {
             
             $stmt->execute([$userId, $userId, $userId]);
             $allTasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            error_log("DEBUG getMyKanbanTasks - Total tareas encontradas: " . count($allTasks));
             
             // Organizar tareas en columnas Kanban
             $kanbanTasks = [
@@ -4073,7 +4076,7 @@ class ClanLeaderController {
     /**
      * Obtener tareas para el tablero Kanban del líder (incluye tareas de otros clanes donde hay miembros asignados)
      */
-    private function getKanbanTasksForLeader($userId, $primaryClanId) {
+    private function getKanbanTasksForLeader($userId, $primaryClanId, $excludePersonalTasks = false) {
         try {
             
             // Obtener TODAS las tareas donde miembros del clan estén asignados + tareas del clan
@@ -4111,13 +4114,14 @@ class ClanLeaderController {
                  WHERE (
                         -- Tareas del clan principal (todas)
                         (p.clan_id = ? AND (p.is_personal IS NULL OR p.is_personal != 1))
+                        " . ($excludePersonalTasks ? "" : "
                         -- Tareas personales del clan principal asignadas a miembros del clan
                         OR (p.clan_id = ? AND p.is_personal = 1 AND p.created_by_user_id = ? AND (
                             t.assigned_to_user_id IN (SELECT user_id FROM Clan_Members WHERE clan_id = ?) 
                             OR ta.user_id IN (SELECT user_id FROM Clan_Members WHERE clan_id = ?)
                             OR t.assigned_to_user_id = ?
                             OR t.created_by_user_id = ?
-                        ))
+                        ))") . "
                         -- Tareas especiales del clan principal asignadas a miembros del clan
                         OR (p.clan_id = ? AND p.project_name IN ('Tareas Recurrentes', 'Tareas Eventuales') AND (
                             t.assigned_to_user_id IN (SELECT user_id FROM Clan_Members WHERE clan_id = ?)
@@ -4134,19 +4138,31 @@ class ClanLeaderController {
                  ORDER BY is_primary_clan DESC, t.due_date ASC, t.task_id ASC"
             );
             
-            $params = [
-                $primaryClanId, // is_primary_clan CASE
-                $primaryClanId, // tareas del clan principal
-                $primaryClanId, // tareas personales del clan principal
-                $userId, // creador de tareas personales
-                $primaryClanId, $primaryClanId, // miembros asignados a tareas personales
-                $userId, $userId, // líder asignado a tareas personales
-                $primaryClanId, // tareas especiales del clan principal  
-                $primaryClanId, $primaryClanId, // miembros asignados a tareas especiales
-                $userId, $userId, // líder asignado a tareas especiales
-                $primaryClanId, // para excluir clan principal de otros clanes
-                $primaryClanId // clan de los miembros asignados en otros clanes
-            ];
+            if ($excludePersonalTasks) {
+                $params = [
+                    $primaryClanId, // is_primary_clan CASE
+                    $primaryClanId, // tareas del clan principal
+                    $primaryClanId, // tareas especiales del clan principal  
+                    $primaryClanId, $primaryClanId, // miembros asignados a tareas especiales
+                    $userId, $userId, // líder asignado a tareas especiales
+                    $primaryClanId, // para excluir clan principal de otros clanes
+                    $primaryClanId // clan de los miembros asignados en otros clanes
+                ];
+            } else {
+                $params = [
+                    $primaryClanId, // is_primary_clan CASE
+                    $primaryClanId, // tareas del clan principal
+                    $primaryClanId, // tareas personales del clan principal
+                    $userId, // creador de tareas personales
+                    $primaryClanId, $primaryClanId, // miembros asignados a tareas personales
+                    $userId, $userId, // líder asignado a tareas personales
+                    $primaryClanId, // tareas especiales del clan principal  
+                    $primaryClanId, $primaryClanId, // miembros asignados a tareas especiales
+                    $userId, $userId, // líder asignado a tareas especiales
+                    $primaryClanId, // para excluir clan principal de otros clanes
+                    $primaryClanId // clan de los miembros asignados en otros clanes
+                ];
+            }
             
             $stmt->execute($params);
             $allTasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
