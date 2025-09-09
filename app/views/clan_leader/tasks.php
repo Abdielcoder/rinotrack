@@ -622,29 +622,7 @@ ob_start();
                 </div>
                 <?php endif; ?>
             </div>
-            <?php else: ?>
-            <!-- Estado vacío - No hay tareas o no hay resultados de búsqueda -->
-            <div class="no-results">
-                <div class="no-results-icon">
-                    <i class="fas fa-search"></i>
-                </div>
-                <?php if (!empty($search)): ?>
-                <h3>No se encontraron resultados</h3>
-                <p>No hay tareas que coincidan con tu búsqueda: "<strong><?= htmlspecialchars($search) ?></strong>"</p>
-                <a href="?route=clan_leader/tasks" class="btn-create">
-                    <i class="fas fa-times"></i>
-                    Limpiar búsqueda
-                </a>
-                <?php else: ?>
-                <h3>No hay tareas en el clan</h3>
-                <p>No se han creado tareas en este clan todavía. ¡Comienza creando tu primera tarea!</p>
-                <a href="?route=clan_leader/tasks&action=create" class="btn-create">
-                    <i class="fas fa-plus"></i>
-                    Crear Primera Tarea
-                </a>
-                <?php endif; ?>
-            </div>
-            <?php endif; ?>
+        </div>
 
         <?php if (isset($projects) && empty($projects)): ?>
             <!-- Estado Vacío - No hay proyectos -->
