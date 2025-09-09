@@ -2065,10 +2065,9 @@ function waitForQuill(callback, maxAttempts = 20) {
 
 // Inicializar editor cuando se carga la página
 document.addEventListener('DOMContentLoaded', function() {
-    waitForQuill(function() {
-        initializeTaskCommentEditor();
-        console.log('Editor Quill inicializado correctamente');
-    });
+    // Inicializar editor de comentario de tarea principal directamente
+    initializeTaskCommentEditor();
+    console.log('Editor Quill inicializado correctamente');
 });
 </script>
 
