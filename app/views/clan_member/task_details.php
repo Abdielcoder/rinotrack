@@ -1143,10 +1143,9 @@ function showSubtaskComments(subtaskId) {
     
     // Inicializar editor de comentarios para esta subtarea
     setTimeout(() => {
-        waitForQuill(() => {
-            initializeSubtaskCommentEditor(subtaskId);
-        });
-    }, 300);
+        console.log('Intentando inicializar editor después de crear modal');
+        initializeSubtaskCommentEditor(subtaskId);
+    }, 500);
 }
 
 function showSubtaskAttachments(subtaskId) {
@@ -1270,16 +1269,25 @@ function loadSubtaskAttachments(subtaskId) {
 }
 
 function addSubtaskComment(subtaskId) {
+    console.log('=== DEBUG: addSubtaskComment llamada ===');
+    console.log('Subtask ID:', subtaskId);
+    
     let commentText = '';
     
     // Obtener contenido del editor Quill de la subtarea
     const subtaskEditor = window[`subtaskCommentEditor_${subtaskId}`];
+    console.log('Editor encontrado:', !!subtaskEditor);
+    
     if (subtaskEditor) {
         const editorContent = subtaskEditor.getContents();
         const htmlContent = subtaskEditor.root.innerHTML;
         
-        // Validar que hay contenido
-        if (!editorContent.ops || editorContent.ops.length <= 1) {
+        console.log('Editor content:', editorContent);
+        console.log('HTML content:', htmlContent);
+        
+        // Validar que hay contenido (más flexible)
+        const textContent = subtaskEditor.getText().trim();
+        if (!textContent || textContent.length === 0) {
             alert('Por favor escribe un comentario');
             return;
         }
@@ -1287,6 +1295,7 @@ function addSubtaskComment(subtaskId) {
         commentText = htmlContent;
     } else {
         // Fallback para textarea normal (si el editor no se inicializó)
+        console.log('Editor no encontrado, buscando textarea fallback...');
         const textareaFallback = document.getElementById('subtask-comment-text');
         if (textareaFallback) {
             commentText = textareaFallback.value.trim();
@@ -1295,10 +1304,13 @@ function addSubtaskComment(subtaskId) {
                 return;
             }
         } else {
-            alert('Error: No se pudo obtener el contenido del comentario');
+            alert('Error: No se pudo obtener el contenido del comentario. Editor no inicializado.');
+            console.error('Ni editor Quill ni textarea encontrados');
             return;
         }
     }
+    
+    console.log('Texto del comentario obtenido:', commentText);
     
     const fileInput = document.getElementById(`subtask-comment-file-${subtaskId}`);
 
@@ -1331,20 +1343,40 @@ function addSubtaskComment(subtaskId) {
 }
 
 function addSubtaskCommentWithText(subtaskId, commentText, attachmentId = null) {
+    console.log('=== DEBUG: addSubtaskCommentWithText ===');
+    console.log('Subtask ID:', subtaskId);
+    console.log('Comment Text:', commentText);
+    console.log('Attachment ID:', attachmentId);
+    
+    const requestData = {
+        subtask_id: subtaskId,
+        comment_text: commentText,
+        attachment_id: attachmentId
+    };
+    
+    console.log('Request data:', requestData);
+    
     fetch('?route=clan_member/add-subtask-comment', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-            subtask_id: subtaskId,
-            comment_text: commentText,
-            attachment_id: attachmentId
-        })
+        body: JSON.stringify(requestData)
     })
-    .then(response => response.json())
-            .then(data => {
+    .then(response => {
+        console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers);
+        return response.text(); // Primero obtener como texto
+    })
+    .then(text => {
+        console.log('Response text:', text);
+        try {
+            const data = JSON.parse(text);
+            console.log('Parsed response:', data);
+            
             if (data.success) {
+                console.log('Comentario agregado exitosamente');
+                
                 // Limpiar editor Quill o textarea fallback
                 const subtaskEditor = window[`subtaskCommentEditor_${subtaskId}`];
                 if (subtaskEditor) {
@@ -1360,14 +1392,24 @@ function addSubtaskCommentWithText(subtaskId, commentText, attachmentId = null) 
                 if (fileInputToClean) {
                     fileInputToClean.value = '';
                 }
+                
                 loadSubtaskComments(subtaskId);
                 loadSubtaskCounts(subtaskId); // Actualizar conteos
+                
+                alert('Comentario agregado exitosamente');
             } else {
+                console.error('Error del servidor:', data.message);
                 alert('Error al agregar comentario: ' + data.message);
             }
-        })
+        } catch (e) {
+            console.error('Error parsing JSON:', e);
+            console.error('Raw response:', text);
+            alert('Error: Respuesta inválida del servidor');
+        }
+    })
     .catch(error => {
-        alert('Error de conexión');
+        console.error('Fetch error:', error);
+        alert('Error de conexión: ' + error.message);
     });
 }
 
@@ -1949,10 +1991,27 @@ function initializeSubtaskCommentEditor(subtaskId) {
     const editorId = `subtask-comment-editor-${subtaskId}`;
     const editorElement = document.getElementById(editorId);
     
-    console.log(`Intentando inicializar editor para subtarea ${subtaskId}`);
+    console.log(`=== DEBUG: Inicializando editor para subtarea ${subtaskId} ===`);
     console.log(`Elemento encontrado:`, editorElement);
+    console.log(`Quill disponible:`, typeof Quill !== 'undefined');
     
-    if (editorElement && !window[`subtaskCommentEditor_${subtaskId}`]) {
+    if (!editorElement) {
+        console.error(`Elemento ${editorId} no encontrado`);
+        return;
+    }
+    
+    if (window[`subtaskCommentEditor_${subtaskId}`]) {
+        console.log(`Editor ya existe para subtarea ${subtaskId}`);
+        return;
+    }
+    
+    if (typeof Quill === 'undefined') {
+        console.error('Quill no está disponible, creando textarea fallback');
+        editorElement.innerHTML = `<textarea id="subtask-comment-text" rows="4" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;" placeholder="Escribe tu comentario..."></textarea>`;
+        return;
+    }
+    
+    try {
         window[`subtaskCommentEditor_${subtaskId}`] = new Quill(`#${editorId}`, {
             theme: 'snow',
             modules: {
@@ -1982,7 +2041,22 @@ function initializeSubtaskCommentEditor(subtaskId) {
         // Agregar detector de atajo ???
         setupChecklistShortcut(window[`subtaskCommentEditor_${subtaskId}`]);
         
-        console.log(`Editor de subtarea ${subtaskId} inicializado`);
+        console.log(`✅ Editor de subtarea ${subtaskId} inicializado exitosamente`);
+        
+        // Verificar que el editor funciona
+        setTimeout(() => {
+            const editor = window[`subtaskCommentEditor_${subtaskId}`];
+            if (editor && editor.root) {
+                console.log(`✅ Editor verificado para subtarea ${subtaskId}`);
+            } else {
+                console.error(`❌ Editor no funciona para subtarea ${subtaskId}`);
+            }
+        }, 100);
+        
+    } catch (error) {
+        console.error(`Error inicializando editor para subtarea ${subtaskId}:`, error);
+        // Fallback a textarea
+        editorElement.innerHTML = `<textarea id="subtask-comment-text" rows="4" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;" placeholder="Escribe tu comentario..."></textarea>`;
     }
 }
 
