@@ -109,10 +109,195 @@ ob_start();
             </div>
         <?php endif; ?>
 
+        <!-- Sistema de Tabs para Tareas -->
+        <div class="tasks-tabs-container">
+            <div class="tasks-tabs">
+                <button class="tab-button active" onclick="switchTab('my-tasks')" id="my-tasks-tab">
+                    <i class="fas fa-user"></i>
+                    Mis Tareas
+                </button>
+                <button class="tab-button" onclick="switchTab('team-tasks')" id="team-tasks-tab">
+                    <i class="fas fa-users"></i>
+                    Equipo
+                </button>
+            </div>
+        </div>
+
         <?php if (isset($allTasks)): ?>
-            <?php if (!empty($allTasks)): ?>
-            <!-- Todas las Tareas del Clan -->
-            <div class="all-tasks-section">
+            <!-- Tab: Mis Tareas -->
+            <div id="my-tasks-content" class="tab-content active">
+                <div class="all-tasks-section">
+                    <div class="section-header">
+                        <h2 class="section-title">
+                            Mis Tareas Asignadas
+                            <?php if (!empty($search) || !empty($_GET['status_filter']) || (isset($_GET['per_page']) && $_GET['per_page'] != '5')): ?>
+                            <span class="filters-indicator">
+                                <i class="fas fa-filter"></i>
+                                Filtros activos
+                            </span>
+                            <?php endif; ?>
+                        </h2>
+                    </div>
+                    
+                    <!-- Filtros y búsqueda para Mis Tareas -->
+                    <div class="filters-container">
+                        <div class="filters-header">
+                            <form method="GET" action="?route=clan_leader/tasks" class="filters-form">
+                                <input type="hidden" name="route" value="clan_leader/tasks">
+                                <input type="hidden" name="tab" value="my-tasks">
+                                
+                                <!-- Filtros -->
+                                <div class="filter-group">
+                                    <div class="filter-item">
+                                        <label for="statusFilter">Estado:</label>
+                                        <select name="status_filter" id="statusFilter" onchange="this.form.submit()">
+                                            <option value="">Todos</option>
+                                            <option value="pending" <?= (($_GET['status_filter'] ?? '') === 'pending') ? 'selected' : '' ?>>Pendiente</option>
+                                            <option value="in_progress" <?= (($_GET['status_filter'] ?? '') === 'in_progress') ? 'selected' : '' ?>>En Progreso</option>
+                                            <option value="completed" <?= (($_GET['status_filter'] ?? '') === 'completed') ? 'selected' : '' ?>>Completado</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="filter-item">
+                                        <label for="perPage">Mostrar:</label>
+                                        <select name="per_page" id="perPage" onchange="this.form.submit()">
+                                            <option value="5" <?= (($_GET['per_page'] ?? '5') === '5') ? 'selected' : '' ?>>5 por página</option>
+                                            <option value="10" <?= (($_GET['per_page'] ?? '5') === '10') ? 'selected' : '' ?>>10 por página</option>
+                                            <option value="25" <?= (($_GET['per_page'] ?? '5') === '25') ? 'selected' : '' ?>>25 por página</option>
+                                            <option value="50" <?= (($_GET['per_page'] ?? '5') === '50') ? 'selected' : '' ?>>50 por página</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="search-container">
+                                        <div class="search-input-wrapper">
+                                            <i class="fas fa-search search-icon"></i>
+                                            <input type="text" 
+                                                   name="search" 
+                                                   value="<?= htmlspecialchars($search) ?>"
+                                                   placeholder="Buscar tareas..."
+                                                   class="search-input"
+                                                   id="searchInputMyTasks"
+                                                   oninput="debounceSearch(this)">
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Botones de acción -->
+                                    <div class="filter-actions">
+                                        <?php if (!empty($search) || !empty($_GET['status_filter']) || (isset($_GET['per_page']) && $_GET['per_page'] != '5')): ?>
+                                        <a href="?route=clan_leader/tasks&tab=my-tasks" class="clear-filters">
+                                            <i class="fas fa-undo"></i>
+                                            Resetear Filtros
+                                        </a>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <!-- Tabla de Mis Tareas -->
+                    <div class="tasks-table-container">
+                        <table class="tasks-table">
+                            <thead>
+                                <tr>
+                                    <th class="th-checkbox" style="width: 40px;">
+                                        <input type="checkbox" id="select-all-my" onchange="toggleAllTasks(this, 'my')">
+                                    </th>
+                                    <th class="th-priority">Prioridad</th>
+                                    <th class="th-task">Tarea</th>
+                                    <th class="th-project">Proyecto</th>
+                                    <th class="th-due-date">Fecha Límite</th>
+                                    <th class="th-status">Estado</th>
+                                    <th class="th-progress">Progreso</th>
+                                    <th class="th-actions">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="my-tasks-table-body">
+                                <!-- Las tareas del líder se cargarán aquí -->
+                                <tr><td colspan="8" class="text-center">Cargando mis tareas...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Equipo -->
+            <div id="team-tasks-content" class="tab-content">
+                <div class="all-tasks-section">
+                    <div class="section-header">
+                        <h2 class="section-title">
+                            Tareas del Equipo
+                            <?php if (!empty($search) || !empty($_GET['status_filter']) || (isset($_GET['per_page']) && $_GET['per_page'] != '5')): ?>
+                            <span class="filters-indicator">
+                                <i class="fas fa-filter"></i>
+                                Filtros activos
+                            </span>
+                            <?php endif; ?>
+                        </h2>
+                    </div>
+                    
+                    <!-- Filtros y búsqueda para Equipo -->
+                    <div class="filters-container">
+                        <div class="filters-header">
+                            <form method="GET" action="?route=clan_leader/tasks" class="filters-form">
+                                <input type="hidden" name="route" value="clan_leader/tasks">
+                                <input type="hidden" name="tab" value="team-tasks">
+                                
+                                <!-- Filtros -->
+                                <div class="filter-group">
+                                    <div class="filter-item">
+                                        <label for="statusFilterTeam">Estado:</label>
+                                        <select name="status_filter" id="statusFilterTeam" onchange="this.form.submit()">
+                                            <option value="">Todos</option>
+                                            <option value="pending" <?= (($_GET['status_filter'] ?? '') === 'pending') ? 'selected' : '' ?>>Pendiente</option>
+                                            <option value="in_progress" <?= (($_GET['status_filter'] ?? '') === 'in_progress') ? 'selected' : '' ?>>En Progreso</option>
+                                            <option value="completed" <?= (($_GET['status_filter'] ?? '') === 'completed') ? 'selected' : '' ?>>Completado</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="filter-item">
+                                        <label for="perPageTeam">Mostrar:</label>
+                                        <select name="per_page" id="perPageTeam" onchange="this.form.submit()">
+                                            <option value="5" <?= (($_GET['per_page'] ?? '5') === '5') ? 'selected' : '' ?>>5 por página</option>
+                                            <option value="10" <?= (($_GET['per_page'] ?? '5') === '10') ? 'selected' : '' ?>>10 por página</option>
+                                            <option value="25" <?= (($_GET['per_page'] ?? '5') === '25') ? 'selected' : '' ?>>25 por página</option>
+                                            <option value="50" <?= (($_GET['per_page'] ?? '5') === '50') ? 'selected' : '' ?>>50 por página</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="search-container">
+                                        <div class="search-input-wrapper">
+                                            <i class="fas fa-search search-icon"></i>
+                                            <input type="text" 
+                                                   name="search" 
+                                                   value="<?= htmlspecialchars($search) ?>"
+                                                   placeholder="Buscar tareas del equipo..."
+                                                   class="search-input"
+                                                   id="searchInputTeam"
+                                                   oninput="debounceSearch(this)">
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Botones de acción -->
+                                    <div class="filter-actions">
+                                        <?php if (!empty($search) || !empty($_GET['status_filter']) || (isset($_GET['per_page']) && $_GET['per_page'] != '5')): ?>
+                                        <a href="?route=clan_leader/tasks&tab=team-tasks" class="clear-filters">
+                                            <i class="fas fa-undo"></i>
+                                            Resetear Filtros
+                                        </a>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <!-- Tabla de Tareas del Equipo -->
+                    <div class="tasks-table-container">
+
+            <!-- Tab: Equipo -->
+            <div id="team-tasks-content" class="tab-content">
+                <div class="all-tasks-section">
                 <div class="section-header">
                     <h2 class="section-title">
                         Todas las Tareas del Clan
@@ -2318,6 +2503,72 @@ ob_start();
     font-size: 1rem;
     margin-bottom: 1.5rem;
 }
+
+/* Estilos para Tabs */
+.tasks-tabs-container {
+    margin-bottom: 2rem;
+}
+
+.tasks-tabs {
+    display: flex;
+    gap: 0.5rem;
+    border-bottom: 2px solid #e5e7eb;
+    margin-bottom: 2rem;
+}
+
+.tab-button {
+    background: none;
+    border: none;
+    padding: 1rem 1.5rem;
+    color: #6b7280;
+    font-weight: 600;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.95rem;
+}
+
+.tab-button:hover {
+    color: #374151;
+    background: #f9fafb;
+}
+
+.tab-button.active {
+    color: #1e3a8a;
+    border-bottom-color: #1e3a8a;
+    background: #f0f4ff;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* Responsive para tabs */
+@media (max-width: 768px) {
+    .tasks-tabs {
+        flex-direction: column;
+        gap: 0;
+        border-bottom: none;
+    }
+    
+    .tab-button {
+        border-bottom: none;
+        border-left: 3px solid transparent;
+        justify-content: flex-start;
+    }
+    
+    .tab-button.active {
+        border-left-color: #1e3a8a;
+        border-bottom-color: transparent;
+    }
+}
 </style>
 
 </div> <!-- Cierre de clan-leader-tasks-container -->
@@ -3089,6 +3340,141 @@ function cloneProject() {
         alert('Error de conexión al clonar el proyecto');
     });
 }
+
+// Función para cambiar entre tabs
+function switchTab(tabName) {
+    // Ocultar todos los tab contents
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+    });
+    
+    // Remover active de todos los tab buttons
+    document.querySelectorAll('.tab-button').forEach(button => {
+        button.classList.remove('active');
+    });
+    
+    // Mostrar el tab content seleccionado
+    document.getElementById(tabName + '-content').classList.add('active');
+    
+    // Activar el tab button seleccionado
+    document.getElementById(tabName + '-tab').classList.add('active');
+    
+    // Cargar datos según el tab
+    if (tabName === 'my-tasks') {
+        loadMyTasks();
+    } else if (tabName === 'team-tasks') {
+        loadTeamTasks();
+    }
+}
+
+// Función para cargar mis tareas
+function loadMyTasks() {
+    const tbody = document.getElementById('my-tasks-table-body');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '<tr><td colspan="8" class="text-center">Cargando mis tareas...</td></tr>';
+    
+    fetch('?route=clan_leader/get-my-tasks')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                renderTasksTable(data.tasks, 'my-tasks-table-body');
+            } else {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Error al cargar tareas: ' + data.message + '</td></tr>';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Error de conexión</td></tr>';
+        });
+}
+
+// Función para cargar tareas del equipo
+function loadTeamTasks() {
+    // Por ahora mantener la tabla actual del equipo
+    console.log('Cargando tareas del equipo...');
+}
+
+// Función para renderizar tabla de tareas
+function renderTasksTable(tasks, tbodyId) {
+    const tbody = document.getElementById(tbodyId);
+    if (!tbody) return;
+    
+    if (tasks.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center">No hay tareas disponibles</td></tr>';
+        return;
+    }
+    
+    let html = '';
+    tasks.forEach(task => {
+        const priority = task.priority || 'medium';
+        const status = task.status || 'pending';
+        const progress = task.completion_percentage || 0;
+        const daysUntilDue = task.days_until_due || 0;
+        
+        html += `
+            <tr class="task-row priority-${priority} ${daysUntilDue < 0 ? 'overdue' : ''} ${status === 'completed' ? 'completed' : ''}" data-task-id="${task.task_id}">
+                <td class="td-checkbox">
+                    <input type="checkbox" 
+                           id="task-${task.task_id}" 
+                           data-task-id="${task.task_id}"
+                           ${status === 'completed' ? 'checked' : ''}
+                           onchange="toggleTaskStatus('${task.task_id}', this.checked)">
+                </td>
+                <td class="td-priority">
+                    <span class="priority-badge priority-${priority}">
+                        ${priority === 'critical' ? 'Urgente' : priority === 'high' ? 'Alta' : priority === 'low' ? 'Baja' : 'Media'}
+                    </span>
+                </td>
+                <td class="td-task">
+                    <div class="task-info">
+                        <div class="task-name">${task.task_name || 'Sin nombre'}</div>
+                        ${task.description ? '<div class="task-description">' + task.description.substring(0, 100) + (task.description.length > 100 ? '...' : '') + '</div>' : ''}
+                    </div>
+                </td>
+                <td class="td-project">
+                    <span class="project-name">${task.project_name || 'Sin proyecto'}</span>
+                </td>
+                <td class="td-due-date">
+                    ${task.due_date ? '<span class="due-date">' + task.due_date + '</span>' : '<span class="no-date">Sin fecha</span>'}
+                </td>
+                <td class="td-status">
+                    <span class="status-badge status-${status}">
+                        ${status === 'completed' ? 'Completado' : status === 'in_progress' ? 'En Progreso' : 'Pendiente'}
+                    </span>
+                </td>
+                <td class="td-progress">
+                    <div class="progress-container">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${progress}%"></div>
+                        </div>
+                        <span class="progress-text">${progress}%</span>
+                    </div>
+                </td>
+                <td class="td-actions">
+                    <a href="?route=clan_leader/get-task-details&task_id=${task.task_id}" class="btn-action btn-view" title="Ver detalles">
+                        <i class="fas fa-eye"></i>
+                    </a>
+                    <a href="?route=clan_leader/tasks&action=edit&task_id=${task.task_id}" class="btn-action btn-edit" title="Editar tarea">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    ${task.created_by_user_id == <?= $user['user_id'] ?? 0 ?> ? '<button class="btn-action btn-clone" onclick="openCloneTaskModal(' + task.task_id + ')" title="Clonar tarea"><i class="fas fa-copy"></i></button>' : ''}
+                </td>
+            </tr>
+        `;
+    });
+    
+    tbody.innerHTML = html;
+}
+
+// Inicializar tabs al cargar la página
+document.addEventListener('DOMContentLoaded', function() {
+    // Verificar qué tab está activo por URL o por defecto
+    const urlParams = new URLSearchParams(window.location.search);
+    const activeTab = urlParams.get('tab') || 'my-tasks';
+    
+    switchTab(activeTab);
+});
 
 // Timestamp para forzar recarga: <?= time() ?>
 // Cache-bust version: v3.1.<?= date('His') ?>

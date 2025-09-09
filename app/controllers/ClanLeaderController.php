@@ -3769,6 +3769,39 @@ class ClanLeaderController {
     }
     
     /**
+     * Obtener mis tareas asignadas (solo las tareas donde el líder es asignado)
+     */
+    public function getMyTasks() {
+        $this->requireAuth();
+        
+        if (!$this->hasClanLeaderAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+            return;
+        }
+
+        try {
+            // Obtener solo las tareas asignadas directamente al líder
+            $myTasks = $this->taskModel->getUserTasks(
+                $this->currentUser['user_id'], 
+                1, // página
+                100, // límite alto para obtener todas las tareas
+                '', // sin búsqueda
+                '' // sin filtro de estado
+            );
+
+            Utils::jsonResponse([
+                'success' => true,
+                'tasks' => $myTasks['tasks'] ?? [],
+                'total' => count($myTasks['tasks'] ?? [])
+            ]);
+
+        } catch (Exception $e) {
+            error_log("Error en getMyTasks (ClanLeader): " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor'], 500);
+        }
+    }
+    
+    /**
      * Cargar vista
      */
     private function loadView($viewPath, $data = []) {
