@@ -5702,7 +5702,7 @@ input[type="checkbox"] {
     width: 100%; 
     border-collapse: separate; 
     border-spacing: 0; 
-    min-width: 600px; /* Ultra compacta */
+    min-width: 640px; /* Ajustado para acomodar columna de acciones más ancha */
 }
 
 /* Encabezados de la tabla */
@@ -5746,10 +5746,11 @@ input[type="checkbox"] {
 /* Anchos específicos de columnas - Ultra compactas */
 .tasks-table .th-actions,
 .tasks-table .td-actions { 
-    width: 85px; 
-    min-width: 85px;
-    max-width: 85px;
+    width: 120px; 
+    min-width: 120px;
+    max-width: 120px;
     white-space: nowrap;
+    padding: 8px 12px; /* Más padding para expandir la columna */
 }
 .tasks-table .th-priority,
 .tasks-table .td-priority { 
@@ -5817,7 +5818,7 @@ input[type="checkbox"] {
 /* Responsive para tablets */
 @media (max-width: 1024px) {
     .tasks-table { 
-        min-width: 550px; /* Ultra compacta */
+        min-width: 580px; /* Ajustado para columna de acciones más ancha */
     }
     .tasks-table .th-project,
     .tasks-table .td-project { min-width: 80px; max-width: 100px; }
@@ -5835,7 +5836,7 @@ input[type="checkbox"] {
     }
     
     .tasks-table { 
-        min-width: 420px; /* Súper compacta */
+        min-width: 450px; /* Ajustado para columna de acciones más ancha */
     }
     
     .tasks-table .th-project,
@@ -5847,8 +5848,9 @@ input[type="checkbox"] {
     
     .tasks-table .th-actions,
     .tasks-table .td-actions { 
-        width: 75px;
-        min-width: 75px;
+        width: 100px; /* Más ancho en móvil */
+        min-width: 100px;
+        padding: 6px 8px; /* Padding reducido pero cómodo */
         display: table-cell !important; /* SIEMPRE VISIBLE */
     }
     
@@ -5859,19 +5861,23 @@ input[type="checkbox"] {
     }
     
     .tasks-table .action-buttons .btn-action {
-        width: 20px;
-        height: 20px;
-        margin: 0;
+        width: 24px; /* Un poco más grande en móvil */
+        height: 24px;
+        margin: 0 1px;
     }
     
     .tasks-table .action-buttons .btn-action i {
-        font-size: 9px;
+        font-size: 10px;
+    }
+    
+    .tasks-table .action-buttons {
+        gap: 4px; /* Separación cómoda en móvil */
     }
 }
 
 @media (max-width: 640px) {
     .tasks-table { 
-        min-width: 380px; /* Ultra reducida */
+        min-width: 410px; /* Ajustado para columna de acciones más ancha */
     }
     
     .tasks-table .th-due-date,
@@ -5887,8 +5893,9 @@ input[type="checkbox"] {
     
     .tasks-table .th-actions,
     .tasks-table .td-actions { 
-        width: 70px;
-        min-width: 70px;
+        width: 90px; /* Más ancho incluso en pantallas muy pequeñas */
+        min-width: 90px;
+        padding: 4px 6px; /* Padding mínimo pero cómodo */
         display: table-cell !important; /* SIEMPRE VISIBLE */
     }
     
@@ -5921,26 +5928,26 @@ input[type="checkbox"] {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 24px; /* Ultra compacto */
-    height: 24px; /* Ultra compacto */
-    border-radius: 3px;
+    width: 28px; /* Más grande para aprovechar el espacio */
+    height: 28px; /* Más grande para aprovechar el espacio */
+    border-radius: 4px;
     border: 1px solid #e2e8f0;
     background: #fff;
     color: #64748b;
     transition: all 0.2s ease;
     text-decoration: none;
-    margin: 0 1px; /* Espaciado mínimo entre botones */
+    margin: 0 2px; /* Más espaciado entre botones */
 }
 
 .tasks-table .action-buttons .btn-action i {
-    font-size: 10px; /* Iconos ultra pequeños */
+    font-size: 12px; /* Iconos un poco más grandes */
 }
 
 .tasks-table .action-buttons {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 2px;
+    gap: 6px; /* Más separación entre botones */
 }
 
 .tasks-table .action-buttons .btn-action:hover {
