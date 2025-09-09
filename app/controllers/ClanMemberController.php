@@ -2788,6 +2788,150 @@ class ClanMemberController {
         
         return $translations[$fieldName] ?? ucfirst($fieldName);
     }
+
+    /**
+     * Guardar estado de checkbox en comentario
+     */
+    public function saveCheckboxState() {
+        $this->requireAuth();
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
+        }
+        
+        $rawInput = file_get_contents('php://input');
+        $input = json_decode($rawInput, true);
+        
+        $commentId = (int)($input['comment_id'] ?? 0);
+        $commentType = $input['comment_type'] ?? ''; // 'task' o 'subtask'
+        $checkboxIndex = (int)($input['checkbox_index'] ?? 0);
+        $checkboxText = trim($input['checkbox_text'] ?? '');
+        $isChecked = (bool)($input['is_checked'] ?? false);
+        
+        if ($commentId <= 0 || !in_array($commentType, ['task', 'subtask']) || empty($checkboxText)) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Datos inválidos'], 400);
+        }
+        
+        try {
+            // Verificar permisos según el tipo de comentario
+            if ($commentType === 'task') {
+                // Verificar que el comentario pertenece a una tarea accesible
+                $stmt = $this->db->prepare("
+                    SELECT tc.*, t.project_id, t.created_by_user_id, t.assigned_to_user_id
+                    FROM Task_Comments tc
+                    JOIN Tasks t ON tc.task_id = t.task_id
+                    WHERE tc.comment_id = ?
+                ");
+                $stmt->execute([$commentId]);
+                $comment = $stmt->fetch();
+                
+                if (!$comment) {
+                    Utils::jsonResponse(['success' => false, 'message' => 'Comentario no encontrado'], 404);
+                }
+                
+                // Verificar que el usuario tiene acceso a la tarea
+                $isCreator = (int)$comment['created_by_user_id'] === (int)$this->currentUser['user_id'];
+                $isAssigned = (int)$comment['assigned_to_user_id'] === (int)$this->currentUser['user_id'];
+                
+                if (!$isCreator && !$isAssigned) {
+                    Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos para modificar este comentario'], 403);
+                }
+                
+            } else { // subtask
+                // Verificar que el comentario pertenece a una subtarea accesible
+                $stmt = $this->db->prepare("
+                    SELECT sc.*, s.task_id, t.created_by_user_id, t.assigned_to_user_id
+                    FROM Subtask_Comments sc
+                    JOIN Subtasks s ON sc.subtask_id = s.subtask_id
+                    JOIN Tasks t ON s.task_id = t.task_id
+                    WHERE sc.comment_id = ?
+                ");
+                $stmt->execute([$commentId]);
+                $comment = $stmt->fetch();
+                
+                if (!$comment) {
+                    Utils::jsonResponse(['success' => false, 'message' => 'Comentario no encontrado'], 404);
+                }
+                
+                // Verificar que el usuario tiene acceso a la tarea
+                $isCreator = (int)$comment['created_by_user_id'] === (int)$this->currentUser['user_id'];
+                $isAssigned = (int)$comment['assigned_to_user_id'] === (int)$this->currentUser['user_id'];
+                
+                if (!$isCreator && !$isAssigned) {
+                    Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos para modificar este comentario'], 403);
+                }
+            }
+            
+            // Cargar el modelo CheckboxState
+            if (!class_exists('CheckboxState')) {
+                require_once __DIR__ . '/../models/CheckboxState.php';
+            }
+            
+            // Guardar estado del checkbox
+            $checkboxModel = new CheckboxState();
+            $checkboxModel->createTableIfNotExists();
+            
+            $result = $checkboxModel->saveCheckboxState(
+                $commentId,
+                $commentType,
+                $checkboxIndex,
+                $checkboxText,
+                $isChecked,
+                $this->currentUser['user_id']
+            );
+            
+            if ($result) {
+                Utils::jsonResponse(['success' => true, 'message' => 'Estado guardado correctamente']);
+            } else {
+                Utils::jsonResponse(['success' => false, 'message' => 'Error al guardar estado'], 500);
+            }
+            
+        } catch (Exception $e) {
+            error_log("Error al guardar estado de checkbox (member): " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor'], 500);
+        }
+    }
+    
+    /**
+     * Obtener estados de checkboxes para comentarios
+     */
+    public function getCheckboxStates() {
+        $this->requireAuth();
+        
+        $commentIds = $_GET['comment_ids'] ?? '';
+        $commentType = $_GET['comment_type'] ?? '';
+        
+        if (empty($commentIds) || !in_array($commentType, ['task', 'subtask'])) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Parámetros inválidos'], 400);
+        }
+        
+        try {
+            // Cargar el modelo CheckboxState
+            if (!class_exists('CheckboxState')) {
+                require_once __DIR__ . '/../models/CheckboxState.php';
+            }
+            
+            $commentIdsArray = explode(',', $commentIds);
+            $checkboxModel = new CheckboxState();
+            $allStates = [];
+            
+            foreach ($commentIdsArray as $commentId) {
+                $commentId = (int)trim($commentId);
+                if ($commentId > 0) {
+                    $states = $checkboxModel->getCheckboxStates($commentId, $commentType);
+                    if (!empty($states)) {
+                        $allStates[$commentId] = $states;
+                    }
+                }
+            }
+            
+            Utils::jsonResponse(['success' => true, 'states' => $allStates]);
+            
+        } catch (Exception $e) {
+            error_log("Error al obtener estados de checkbox (member): " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor'], 500);
+        }
+    }
 }
 
 ?>

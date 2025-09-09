@@ -174,9 +174,9 @@ $additionalJS[] = 'https://cdn.quilljs.com/1.3.6/quill.min.js';
             <?php if (empty($comments)): ?>
               <div class="empty-minimal">Sin comentarios</div>
             <?php else: foreach ($comments as $c): ?>
-              <div class="comment-item">
+              <div class="comment-item" data-comment-id="<?php echo (int)($c['comment_id'] ?? 0); ?>">
                 <div class="comment-meta"><span class="author"><?php echo htmlspecialchars($c['full_name'] ?? $c['username'] ?? ''); ?></span><span class="date"><?php echo htmlspecialchars($c['created_at'] ?? ''); ?></span></div>
-                <div class="comment-text"><?php echo Utils::sanitizeHtml($c['comment_text'] ?? ''); ?></div>
+                <div class="comment-content comment-text"><?php echo Utils::sanitizeHtml($c['comment_text'] ?? ''); ?></div>
                 <?php if (!empty($c['attachments'])): ?>
                 <div class="comment-atts">
                   <?php foreach (($c['attachments'] ?? []) as $a): $url = Utils::asset($a['file_path'] ?? ''); $name = htmlspecialchars($a['file_name'] ?? 'archivo'); $type = strtolower($a['file_type'] ?? ''); ?>
@@ -391,6 +391,39 @@ function noPermissionModal(){
 .motivation-icon{width:42px; height:42px; border-radius:10px; display:flex; align-items:center; justify-content:center; background:var(--primary-gradient); color:#fff}
 .mot-quote{font-weight:600; color:var(--text-primary)}
 .mot-author{font-size:.9rem; color:var(--text-secondary); margin-top:2px}
+
+/* Estilos para checkboxes HTML en comentarios */
+.checkbox-container {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    margin: 4px 0 !important;
+    line-height: 1.5 !important;
+}
+
+.checkbox-container input[type="checkbox"] {
+    width: 16px !important;
+    height: 16px !important;
+    cursor: pointer !important;
+    accent-color: #10b981 !important;
+    margin: 0 !important;
+    flex-shrink: 0 !important;
+}
+
+.checkbox-container span {
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    font-size: 14px !important;
+    line-height: 1.4 !important;
+}
+
+/* Hover effect para mejor UX */
+.checkbox-container:hover {
+    background-color: rgba(16, 185, 129, 0.05);
+    border-radius: 4px;
+    padding: 2px 4px;
+    margin: 2px -4px;
+}
 
 /* Estilos específicos para los botones */
 .action-btn.primary {
@@ -1255,7 +1288,7 @@ function loadSubtaskComments(subtaskId) {
                     container.innerHTML = '<p class="no-data">No hay comentarios aún. ¡Sé el primero en comentar!</p>';
                 } else {
                     container.innerHTML = data.comments.map(comment => `
-                        <div class="comment-item">
+                        <div class="comment-item" data-comment-id="${comment.comment_id}">
                             ${comment.is_attachment_only ? `
                                 <div class="comment-header">
                                     <strong><i class="fas fa-paperclip"></i> ${comment.full_name}</strong>
@@ -1265,7 +1298,7 @@ function loadSubtaskComments(subtaskId) {
                                     <strong>${comment.full_name}</strong>
                                     <span class="comment-date">${new Date(comment.created_at).toLocaleString()}</span>
                                 </div>
-                                <div class="comment-text">${comment.comment_text}</div>
+                                <div class="comment-content comment-text">${comment.comment_text}</div>
                             `}
                             ${comment.attachments && comment.attachments.length > 0 ? `
                                 <div class="comment-attachments">
@@ -1282,6 +1315,14 @@ function loadSubtaskComments(subtaskId) {
                             ` : ''}
                         </div>
                     `).join('');
+                    
+                    // Procesar checkboxes en los comentarios de subtarea cargados
+                    setTimeout(() => {
+                        const subtaskComments = container.querySelectorAll('.comment-item .comment-content');
+                        subtaskComments.forEach(element => {
+                            makeChecklistInteractive(element);
+                        });
+                    }, 100);
                 }
             } else {
                 container.innerHTML = '<p class="error">Error al cargar comentarios: ' + data.message + '</p>';
@@ -2286,7 +2327,261 @@ document.addEventListener('DOMContentLoaded', function() {
     // Inicializar editor de comentario de tarea principal directamente
     initializeTaskCommentEditor();
     console.log('Editor Quill inicializado correctamente');
+    
+    // Procesar checkboxes existentes en comentarios
+    processExistingComments();
 });
+
+// Función para procesar comentarios existentes y convertir checkboxes
+function processExistingComments() {
+    console.log('Procesando comentarios existentes para checkboxes...');
+    
+    // Procesar comentarios de tarea principal
+    const taskComments = document.querySelectorAll('.comments-list .comment-item .comment-content');
+    taskComments.forEach(element => {
+        makeChecklistInteractive(element);
+    });
+}
+
+// Función para convertir contenido a checklist interactivo con checkboxes HTML
+function makeChecklistInteractive(element) {
+    console.log('Procesando elemento para checklists:', element);
+    
+    // Obtener información del comentario
+    const commentContent = element.closest('.comment-item');
+    let commentId = 'unknown';
+    let commentType = 'task'; // Por defecto task
+    
+    if (commentContent) {
+        // Intentar extraer ID del comentario del elemento padre
+        commentId = extractCommentId(commentContent);
+        commentType = detectCommentType(commentContent);
+    }
+    
+    console.log('CommentID detectado:', commentId, 'Tipo:', commentType);
+    
+    // Obtener todo el HTML del elemento
+    let html = element.innerHTML;
+    console.log('HTML original:', html);
+    
+    // Buscar y reemplazar patrones de checkbox en el HTML
+    const checkboxPattern = /(☐|☑)\s*([^<\n]*)/g;
+    let checkboxIndex = 0;
+    
+    html = html.replace(checkboxPattern, function(match, checkbox, text) {
+        const isChecked = checkbox === '☑';
+        const taskText = text.trim();
+        
+        console.log('Encontrado checkbox:', checkbox, 'texto:', taskText, 'marcado:', isChecked);
+        
+        // Crear ID único para cada checkbox
+        const checkboxId = 'checkbox_' + Math.random().toString(36).substr(2, 9);
+        const currentIndex = checkboxIndex++;
+        
+        return `<span class="checkbox-container" style="display: inline-flex; align-items: center; gap: 8px; margin: 4px 0; user-select: none;">
+            <input type="checkbox" id="${checkboxId}" ${isChecked ? 'checked' : ''} 
+                   data-comment-id="${commentId}" 
+                   data-comment-type="${commentType}" 
+                   data-checkbox-index="${currentIndex}"
+                   data-checkbox-text="${taskText}"
+                   style="width: 16px; height: 16px; cursor: pointer; accent-color: #10b981; margin: 0; flex-shrink: 0;" 
+                   onchange="saveCheckboxState(this)" />
+            <span onclick="toggleCheckbox('${checkboxId}')" 
+                  style="cursor: pointer; transition: all 0.2s ease; font-size: 14px; line-height: 1.4; ${isChecked ? 'text-decoration: line-through; color: #9ca3af;' : ''}">${taskText}</span>
+        </span>`;
+    });
+    
+    // Actualizar el HTML del elemento
+    element.innerHTML = html;
+    console.log('HTML procesado:', html);
+    
+    // Cargar estados guardados si tenemos commentId
+    if (commentId && commentType !== 'unknown' && commentId !== 'unknown') {
+        loadCheckboxStates(commentId, commentType);
+    }
+}
+
+// Función para toggle del checkbox desde el texto
+function toggleCheckbox(checkboxId) {
+    const checkbox = document.getElementById(checkboxId);
+    if (checkbox) {
+        checkbox.checked = !checkbox.checked;
+        toggleTaskText(checkbox);
+        saveCheckboxState(checkbox);
+    }
+}
+
+// Función para aplicar/quitar tachado del texto
+function toggleTaskText(checkbox) {
+    const label = checkbox.nextElementSibling;
+    if (label) {
+        if (checkbox.checked) {
+            label.style.textDecoration = 'line-through';
+            label.style.color = '#9ca3af';
+            console.log('Marcando tarea como completada');
+        } else {
+            label.style.textDecoration = 'none';
+            label.style.color = 'inherit';
+            console.log('Desmarcando tarea');
+        }
+        
+        // Animación sutil
+        label.style.transform = 'scale(1.05)';
+        setTimeout(() => {
+            label.style.transform = 'scale(1)';
+        }, 100);
+    }
+}
+
+// Función para guardar el estado del checkbox en la base de datos
+function saveCheckboxState(checkbox) {
+    const commentId = checkbox.dataset.commentId;
+    const commentType = checkbox.dataset.commentType;
+    const checkboxIndex = checkbox.dataset.checkboxIndex;
+    const checkboxText = checkbox.dataset.checkboxText;
+    const isChecked = checkbox.checked;
+    
+    console.log('=== CHECKBOX STATE DEBUG ===');
+    console.log('Checkbox element:', checkbox);
+    console.log('commentId:', commentId, 'tipo:', typeof commentId);
+    console.log('commentType:', commentType, 'tipo:', typeof commentType);
+    console.log('checkboxIndex:', checkboxIndex, 'tipo:', typeof checkboxIndex);
+    console.log('checkboxText:', checkboxText, 'tipo:', typeof checkboxText);
+    console.log('isChecked:', isChecked, 'tipo:', typeof isChecked);
+    
+    if (!commentId || !commentType || commentId === 'null' || commentId === 'undefined' || commentId === 'unknown') {
+        console.error('❌ No se puede guardar: faltan datos del comentario');
+        return;
+    }
+    
+    // Preparar datos para enviar
+    const payload = {
+        comment_id: parseInt(commentId),
+        comment_type: commentType,
+        checkbox_index: parseInt(checkboxIndex),
+        checkbox_text: checkboxText,
+        is_checked: isChecked
+    };
+    
+    console.log('📤 Enviando datos:', payload);
+    console.log('📤 URL:', '?route=clan_member/save-checkbox-state');
+    
+    // Guardar en la base de datos
+    fetch('?route=clan_member/save-checkbox-state', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(response => {
+        console.log('📥 Response status:', response.status);
+        console.log('📥 Response headers:', response.headers);
+        
+        if (!response.ok) {
+            throw new Error('Network response was not ok: ' + response.status);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('📥 Response completa:', data);
+        console.log('📥 Datos de respuesta:', data);
+        if (data.success) {
+            console.log('✅ Estado guardado correctamente');
+        } else {
+            console.error('❌ Error al guardar estado:', data.message);
+            showNotification('Error al guardar estado del checkbox: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('❌ Error de fetch:', error);
+        showNotification('Error de conexión al guardar estado', 'error');
+    });
+}
+
+// Función para cargar estados guardados de checkboxes
+function loadCheckboxStates(commentId, commentType) {
+    fetch(`?route=clan_member/get-checkbox-states&comment_ids=${commentId}&comment_type=${commentType}`)
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.states[commentId]) {
+            const states = data.states[commentId];
+            console.log('Estados cargados:', states);
+            
+            // Aplicar estados a los checkboxes
+            Object.keys(states).forEach(index => {
+                const state = states[index];
+                const checkbox = document.querySelector(`[data-comment-id="${commentId}"][data-checkbox-index="${index}"]`);
+                
+                if (checkbox) {
+                    checkbox.checked = state.is_checked;
+                    const label = checkbox.nextElementSibling;
+                    if (label) {
+                        if (state.is_checked) {
+                            label.style.textDecoration = 'line-through';
+                            label.style.color = '#9ca3af';
+                        } else {
+                            label.style.textDecoration = 'none';
+                            label.style.color = 'inherit';
+                        }
+                    }
+                }
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error al cargar estados de checkbox:', error);
+    });
+}
+
+// Función para extraer ID del comentario del DOM
+function extractCommentId(commentElement) {
+    // Buscar en clases, IDs o atributos data
+    if (commentElement.dataset.commentId) {
+        return commentElement.dataset.commentId;
+    }
+    
+    // Buscar en el elemento padre si no se encuentra
+    let parent = commentElement.closest('[data-comment-id]');
+    if (parent && parent.dataset.commentId) {
+        return parent.dataset.commentId;
+    }
+    
+    // Buscar en el HTML interno por patrones
+    const htmlContent = commentElement.innerHTML;
+    const match = htmlContent.match(/comment[_-]?id["\s]*[:=]\s*["']?(\d+)/i);
+    if (match) {
+        return match[1];
+    }
+    
+    console.warn('No se pudo extraer comment ID del elemento:', commentElement);
+    return 'unknown';
+}
+
+// Función para detectar tipo de comentario
+function detectCommentType(commentElement) {
+    // Si está dentro de un modal de subtarea, es subtask
+    if (commentElement.closest('#subtaskCommentsModal')) {
+        return 'subtask';
+    }
+    
+    // Si está en la sección principal, es task
+    if (commentElement.closest('.comments-section')) {
+        return 'task';
+    }
+    
+    return 'task'; // Por defecto
+}
+
+// Función para mostrar notificaciones (si no existe)
+function showNotification(message, type) {
+    if (typeof window.showNotification === 'function') {
+        window.showNotification(message, type);
+    } else {
+        console.log(`${type.toUpperCase()}: ${message}`);
+        alert(message); // Fallback simple
+    }
+}
 </script>
 
 

@@ -951,10 +951,20 @@ try {
             $controller->deleteSubtaskAttachment();
             break;
             
-        case 'clan_member/export-task-history':
-            $controller = new ClanMemberController();
-            $controller->exportTaskHistory();
-            break;
+    case 'clan_member/export-task-history':
+        $controller = new ClanMemberController();
+        $controller->exportTaskHistory();
+        break;
+        
+    case 'clan_member/save-checkbox-state':
+        $controller = new ClanMemberController();
+        $controller->saveCheckboxState();
+        break;
+        
+    case 'clan_member/get-checkbox-states':
+        $controller = new ClanMemberController();
+        $controller->getCheckboxStates();
+        break;
             
         case 'clan_member/get-subtask-counts':
             $controller = new ClanMemberController();
