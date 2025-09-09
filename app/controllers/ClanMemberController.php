@@ -36,12 +36,18 @@ class ClanMemberController {
         }
 
         if (!$this->userClan || !isset($this->userClan['clan_id'])) {
+            // Usuario sin clan pero puede tener tareas asignadas de otros clanes
+            $userTaskStats = $this->getUserTaskStatsForAllClans($this->currentUser['user_id'], null);
+            $ownContribution = $this->getOwnContribution($this->currentUser, $userTaskStats);
+            
             $data = [
                 'currentPage' => 'clan_member',
                 'user' => $this->currentUser,
-                'clan' => ['clan_name' => 'Sin clan asignado', 'clan_departamento' => '-', 'clan_id' => null],
-                'userTaskStats' => ['total_tasks' => 0, 'completed_tasks' => 0, 'completion_percentage' => 0],
-                'ownContribution' => []
+                'clan' => ['clan_name' => 'Tareas Asignadas', 'clan_departamento' => 'Múltiples clanes', 'clan_id' => null],
+                'userTaskStats' => $userTaskStats,
+                'ownContribution' => $ownContribution,
+                'clanMembers' => [], // Sin miembros del clan ya que no tiene clan
+                'kanbanTasks' => $this->getKanbanTasksForUser($this->currentUser['user_id'], null)
             ];
             $this->loadView('clan_member/dashboard', $data);
             return;
@@ -97,7 +103,8 @@ class ClanMemberController {
             return;
         }
         // Obtener proyectos donde el usuario tiene tareas asignadas (incluyendo de otros clanes)
-        $projects = $this->projectModel->getProjectsForUser($this->currentUser['user_id'], $this->userClan['clan_id'] ?? null);
+        // Pasar null como clan_id para obtener proyectos de todos los clanes donde tenga tareas
+        $projects = $this->projectModel->getProjectsForUser($this->currentUser['user_id'], null);
         
         $data = [
             'currentPage' => 'clan_member',
@@ -125,8 +132,11 @@ class ClanMemberController {
         $specialProjects = ['Tareas Recurrentes', 'Tareas Eventuales', 'Tareas Personales'];
         $isSpecialProject = in_array($project['project_name'], $specialProjects);
         
-        // Para proyectos normales, verificar que pertenezcan al clan del usuario
-        if (!$isSpecialProject && (int)$project['clan_id'] !== (int)$this->userClan['clan_id']) {
+        // Verificar si el usuario tiene tareas asignadas en este proyecto
+        $hasAssignedTasksInProject = $this->userHasAssignedTasksInProject($this->currentUser['user_id'], $projectId);
+        
+        // Para proyectos normales, verificar que pertenezcan al clan del usuario O que tenga tareas asignadas
+        if (!$isSpecialProject && !$hasAssignedTasksInProject && (!$this->userClan || (int)$project['clan_id'] !== (int)$this->userClan['clan_id'])) {
             die('Acceso denegado al proyecto');
         }
         // Obtener solo las tareas del proyecto que están asignadas al usuario
@@ -226,7 +236,8 @@ class ClanMemberController {
         // - Proyectos del clan: solo tareas asignadas al usuario
         // - Proyectos lógicos: solo sus propias tareas  
         // - Tareas personales: tareas creadas por el usuario
-        $clanPart = $this->userClan ? $this->taskModel->getUserTasks($this->currentUser['user_id'], $page, $perPage, $search, $status) : ['tasks' => [], 'total' => 0, 'page' => 1, 'per_page' => $perPage, 'total_pages' => 0];
+        // - Si no tiene clan pero tiene tareas asignadas, mostrar todas las tareas asignadas
+        $clanPart = $this->taskModel->getUserTasks($this->currentUser['user_id'], $page, $perPage, $search, $status);
         $ownLogical = $this->taskModel->getUserTasksByProjectNames($this->currentUser['user_id'], ['Tareas Recurrentes','Tareas Eventuales']);
         $personalTasks = $this->taskModel->getUserCreatedTasks($this->currentUser['user_id'], $search, $status);
 
@@ -1134,8 +1145,65 @@ class ClanMemberController {
 
     private function hasMemberAccess() {
         if (!$this->currentUser) { return false; }
-        // Mínimo rol: usuario normal
-        return $this->roleModel->userHasMinimumRole($this->currentUser['user_id'], Role::USUARIO_NORMAL);
+        
+        // Verificar rol mínimo
+        if (!$this->roleModel->userHasMinimumRole($this->currentUser['user_id'], Role::USUARIO_NORMAL)) {
+            return false;
+        }
+        
+        // Permitir acceso si el usuario tiene tareas asignadas (de cualquier clan)
+        if ($this->userHasAssignedTasks($this->currentUser['user_id'])) {
+            return true;
+        }
+        
+        // Permitir acceso si es miembro de algún clan
+        if ($this->userClan && isset($this->userClan['clan_id'])) {
+            return true;
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Verificar si el usuario tiene tareas asignadas (de cualquier clan)
+     */
+    private function userHasAssignedTasks($userId) {
+        try {
+            $stmt = $this->db->prepare("
+                SELECT COUNT(*) as task_count
+                FROM Tasks t
+                LEFT JOIN Task_Assignments ta ON ta.task_id = t.task_id
+                WHERE t.assigned_to_user_id = ? OR ta.user_id = ?
+                LIMIT 1
+            ");
+            $stmt->execute([$userId, $userId]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            return (int)($result['task_count'] ?? 0) > 0;
+        } catch (Exception $e) {
+            error_log("Error checking user assigned tasks: " . $e->getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * Verificar si el usuario tiene tareas asignadas en un proyecto específico
+     */
+    private function userHasAssignedTasksInProject($userId, $projectId) {
+        try {
+            $stmt = $this->db->prepare("
+                SELECT COUNT(*) as task_count
+                FROM Tasks t
+                LEFT JOIN Task_Assignments ta ON ta.task_id = t.task_id
+                WHERE (t.assigned_to_user_id = ? OR ta.user_id = ?) AND t.project_id = ?
+                LIMIT 1
+            ");
+            $stmt->execute([$userId, $userId, $projectId]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            return (int)($result['task_count'] ?? 0) > 0;
+        } catch (Exception $e) {
+            error_log("Error checking user assigned tasks in project: " . $e->getMessage());
+            return false;
+        }
     }
 
     private function requireAuth() {
