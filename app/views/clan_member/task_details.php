@@ -165,8 +165,8 @@ $additionalJS[] = 'https://cdn.quilljs.com/1.3.6/quill.min.js';
                   <?php if (!$canComplete && $subtask['status'] !== 'completed'): ?>
                   <div style="font-size: 11px; color: #6b7280; margin-top: 2px;">
                     <i class="fas fa-info-circle"></i> Solo el creador/asignado o tareas recurrentes/eventuales pueden completarse
-                  </div>
-                  <?php endif; ?>
+                </div>
+                <?php endif; ?>
                 </div>
               </div>
             </div>
@@ -1064,9 +1064,9 @@ function editSubtask(subtaskId) {
             // Mostrar mensaje informativo si no tiene permisos
             messageDiv.style.display = 'block';
         }
-        
-        // Configurar estado inicial de la barra de progreso
-        toggleProgressBar();
+    
+    // Configurar estado inicial de la barra de progreso
+    toggleProgressBar();
     }, 100);
     
     document.getElementById('edit-subtask-title').focus();
@@ -1398,7 +1398,7 @@ function showSubtaskComments(subtaskId) {
     // Inicializar editor de comentarios para esta subtarea
     setTimeout(() => {
         console.log('Intentando inicializar editor después de crear modal');
-        initializeSubtaskCommentEditor(subtaskId);
+            initializeSubtaskCommentEditor(subtaskId);
     }, 500);
 }
 
@@ -1694,8 +1694,8 @@ function addSubtaskCommentWithText(subtaskId, commentText, attachmentId = null) 
             console.error('Error parsing JSON:', e);
             console.error('Raw response:', text);
             alert('Error: Respuesta inválida del servidor');
-        }
-    })
+            }
+        })
     .catch(error => {
         console.error('Fetch error:', error);
         alert('Error de conexión: ' + error.message);
@@ -2515,8 +2515,8 @@ function waitForQuill(callback, maxAttempts = 20) {
 // Inicializar editor cuando se carga la página
 document.addEventListener('DOMContentLoaded', function() {
     // Inicializar editor de comentario de tarea principal directamente
-    initializeTaskCommentEditor();
-    console.log('Editor Quill inicializado correctamente');
+        initializeTaskCommentEditor();
+        console.log('Editor Quill inicializado correctamente');
     
     // Procesar checkboxes existentes en comentarios
     processExistingComments();

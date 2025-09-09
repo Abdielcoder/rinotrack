@@ -3624,7 +3624,11 @@ class ClanLeaderController {
      * Obtener datos de proyecto para clonación
      */
     public function getProjectData() {
-        $this->requireAuth();
+        // Para rutas AJAX, verificar autenticación sin redirigir
+        if (!$this->auth->isLoggedIn()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'No autenticado'], 401);
+            return;
+        }
         
         if (!$this->hasClanLeaderAccess()) {
             Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
