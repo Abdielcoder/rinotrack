@@ -1205,7 +1205,6 @@ function cloneTask() {
         alert('Error de conexión al clonar la tarea');
     });
 }
-});
 </script>
 
 <!-- Estilos para el modal de clonación -->
