@@ -3769,7 +3769,7 @@ class ClanLeaderController {
     }
     
     /**
-     * Obtener mis tareas asignadas (solo las tareas donde el líder es asignado)
+     * Obtener MIS tareas (personales + asignadas a mí)
      */
     public function getMyTasks() {
         $this->requireAuth();
@@ -3780,58 +3780,16 @@ class ClanLeaderController {
         }
 
         try {
-            // Obtener solo las tareas asignadas directamente al líder
-            $myTasks = $this->taskModel->getUserTasks(
-                $this->currentUser['user_id'], 
-                1, // página
-                100, // límite alto para obtener todas las tareas
-                '', // sin búsqueda
-                '' // sin filtro de estado
-            );
-
-            Utils::jsonResponse([
-                'success' => true,
-                'tasks' => $myTasks['tasks'] ?? [],
-                'total' => count($myTasks['tasks'] ?? [])
-            ]);
-
-        } catch (Exception $e) {
-            error_log("Error en getMyTasks (ClanLeader): " . $e->getMessage());
-            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor'], 500);
-        }
-    }
-    
-    /**
-     * Obtener tareas del equipo/clan (todas las tareas del clan)
-     */
-    public function getTeamTasks() {
-        $this->requireAuth();
-        
-        if (!$this->hasClanLeaderAccess()) {
-            Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
-            return;
-        }
-
-        try {
-            // Obtener todas las tareas del clan
+            $userId = $this->currentUser['user_id'];
             $clanId = $this->currentUser['clan_id'];
             
-            if (!$clanId) {
-                Utils::jsonResponse(['success' => false, 'message' => 'Usuario sin clan asignado'], 400);
-                return;
-            }
-
-            // Consulta directa para obtener TODAS las tareas del equipo (clan)
             $db = Database::getInstance();
             
-            // Primero verificar que el clan tiene proyectos y tareas
-            $checkQuery = "SELECT COUNT(*) as total FROM Projects WHERE clan_id = ?";
-            $checkStmt = $db->prepare($checkQuery);
-            $checkStmt->execute([$clanId]);
-            $projectCount = $checkStmt->fetch(PDO::FETCH_ASSOC)['total'];
-            error_log("getTeamTasks - Total proyectos del clan $clanId: " . $projectCount);
-            
-            // Consulta para obtener TODAS las tareas del clan (excluyendo personales y subtareas)
+            // CONSULTA PARA MIS TAREAS:
+            // 1. Tareas de proyectos personales del usuario (is_personal = 1 y created_by_user_id = userId)
+            // 2. Tareas donde el usuario está asignado (assigned_to_user_id = userId)
+            // 3. Tareas donde el usuario está en Task_Assignments
+            // Todo esto solo del clan del usuario
             $query = "
                 SELECT DISTINCT
                     t.task_id,
@@ -3842,20 +3800,125 @@ class ClanLeaderController {
                     t.due_date,
                     t.completion_percentage,
                     t.created_by_user_id,
-                    t.is_subtask,
                     p.project_id,
                     p.project_name,
                     p.is_personal,
                     u.user_id as assigned_user_id,
                     u.full_name as assigned_user_name,
                     DATEDIFF(t.due_date, CURDATE()) as days_until_due,
-                    GROUP_CONCAT(DISTINCT COALESCE(ta_users.full_name, u.full_name, 'Sin asignar') SEPARATOR ', ') as all_assigned_users
+                    COALESCE(
+                        GROUP_CONCAT(DISTINCT ta_users.full_name SEPARATOR ', '),
+                        u.full_name,
+                        'Sin asignar'
+                    ) as all_assigned_users
                 FROM Tasks t
                 INNER JOIN Projects p ON t.project_id = p.project_id
                 LEFT JOIN Users u ON t.assigned_to_user_id = u.user_id
                 LEFT JOIN Task_Assignments ta ON t.task_id = ta.task_id
                 LEFT JOIN Users ta_users ON ta.user_id = ta_users.user_id
-                WHERE p.clan_id = ?
+                WHERE 
+                    p.clan_id = ?
+                    AND (t.is_subtask = 0 OR t.is_subtask IS NULL)
+                    AND (
+                        -- Mis tareas personales
+                        (p.is_personal = 1 AND p.created_by_user_id = ?)
+                        OR
+                        -- Tareas donde estoy asignado directamente
+                        (t.assigned_to_user_id = ?)
+                        OR
+                        -- Tareas donde estoy en Task_Assignments
+                        EXISTS (
+                            SELECT 1 FROM Task_Assignments ta2 
+                            WHERE ta2.task_id = t.task_id 
+                            AND ta2.user_id = ?
+                        )
+                    )
+                GROUP BY t.task_id
+                ORDER BY 
+                    CASE 
+                        WHEN t.status = 'pending' THEN 1
+                        WHEN t.status = 'in_progress' THEN 2
+                        WHEN t.status = 'completed' THEN 3
+                        ELSE 4
+                    END,
+                    t.due_date ASC,
+                    t.priority DESC
+                LIMIT 500
+            ";
+
+            $stmt = $db->prepare($query);
+            $stmt->execute([$clanId, $userId, $userId, $userId]);
+            $tasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            error_log("getMyTasks - User ID: " . $userId);
+            error_log("getMyTasks - Clan ID: " . $clanId);
+            error_log("getMyTasks - Total mis tareas: " . count($tasks));
+
+            Utils::jsonResponse([
+                'success' => true,
+                'tasks' => $tasks,
+                'total' => count($tasks)
+            ]);
+
+        } catch (Exception $e) {
+            error_log("Error en getMyTasks: " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
+        }
+    }
+    
+    /**
+     * Obtener tareas del equipo/clan (TODAS las tareas del clan excepto personales)
+     */
+    public function getTeamTasks() {
+        $this->requireAuth();
+        
+        if (!$this->hasClanLeaderAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+            return;
+        }
+
+        try {
+            $clanId = $this->currentUser['clan_id'];
+            $userId = $this->currentUser['user_id'];
+            
+            if (!$clanId) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Usuario sin clan asignado'], 400);
+                return;
+            }
+
+            $db = Database::getInstance();
+            
+            // CONSULTA PARA EQUIPO: Todas las tareas del clan EXCEPTO:
+            // - Tareas personales (is_personal = 1)
+            // - Subtareas (is_subtask = 1)
+            // - NO excluir las tareas del líder (deben aparecer en ambos tabs si corresponde)
+            $query = "
+                SELECT DISTINCT
+                    t.task_id,
+                    t.task_name,
+                    t.description,
+                    t.status,
+                    t.priority,
+                    t.due_date,
+                    t.completion_percentage,
+                    t.created_by_user_id,
+                    p.project_id,
+                    p.project_name,
+                    u.user_id as assigned_user_id,
+                    u.full_name as assigned_user_name,
+                    DATEDIFF(t.due_date, CURDATE()) as days_until_due,
+                    COALESCE(
+                        GROUP_CONCAT(DISTINCT ta_users.full_name SEPARATOR ', '),
+                        u.full_name,
+                        'Sin asignar'
+                    ) as all_assigned_users
+                FROM Tasks t
+                INNER JOIN Projects p ON t.project_id = p.project_id
+                LEFT JOIN Users u ON t.assigned_to_user_id = u.user_id
+                LEFT JOIN Task_Assignments ta ON t.task_id = ta.task_id
+                LEFT JOIN Users ta_users ON ta.user_id = ta_users.user_id
+                WHERE 
+                    p.clan_id = ?
                     AND (p.is_personal = 0 OR p.is_personal IS NULL)
                     AND (t.is_subtask = 0 OR t.is_subtask IS NULL)
                 GROUP BY t.task_id
@@ -3875,38 +3938,19 @@ class ClanLeaderController {
             $stmt->execute([$clanId]);
             $tasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            // Log para debugging
             error_log("getTeamTasks - Clan ID: " . $clanId);
-            error_log("getTeamTasks - Total tareas encontradas: " . count($tasks));
-            
-            // Si no hay tareas, verificar si hay tareas en general para este clan
-            if (count($tasks) == 0) {
-                $checkTasksQuery = "
-                    SELECT COUNT(*) as total 
-                    FROM Tasks t 
-                    INNER JOIN Projects p ON t.project_id = p.project_id 
-                    WHERE p.clan_id = ?
-                ";
-                $checkTasksStmt = $db->prepare($checkTasksQuery);
-                $checkTasksStmt->execute([$clanId]);
-                $totalTasksInClan = $checkTasksStmt->fetch(PDO::FETCH_ASSOC)['total'];
-                error_log("getTeamTasks - Total tareas en el clan (incluyendo personales y subtareas): " . $totalTasksInClan);
-            }
+            error_log("getTeamTasks - User ID: " . $userId);
+            error_log("getTeamTasks - Total tareas del equipo: " . count($tasks));
 
             Utils::jsonResponse([
                 'success' => true,
                 'tasks' => $tasks,
-                'total' => count($tasks),
-                'clan_id' => $clanId,
-                'debug' => [
-                    'project_count' => $projectCount,
-                    'query_executed' => true
-                ]
+                'total' => count($tasks)
             ]);
 
         } catch (Exception $e) {
-            error_log("Error en getTeamTasks (ClanLeader): " . $e->getMessage());
-            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor: ' . $e->getMessage()], 500);
+            error_log("Error en getTeamTasks: " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
         }
     }
     
