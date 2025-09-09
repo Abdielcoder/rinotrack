@@ -3816,52 +3816,28 @@ class ClanLeaderController {
             $userId = $this->currentUser['user_id'];
             error_log("DEBUG getMyKanbanTasks - userId: $userId");
             
-            // Obtener tareas y subtareas asignadas al líder organizadas por fecha de vencimiento
-            $stmt = $this->db->prepare("
-                SELECT 
-                    t.task_id,
-                    t.task_name,
-                    t.status,
-                    t.due_date,
-                    t.completion_percentage,
-                    p.project_name,
-                    u.full_name as assigned_to_name,
-                    DATEDIFF(t.due_date, CURDATE()) as days_until_due,
-                    'task' as item_type,
-                    0 as is_completed
-                FROM Tasks t
-                LEFT JOIN Projects p ON t.project_id = p.project_id
-                LEFT JOIN Users u ON t.assigned_to_user_id = u.user_id
-                WHERE t.is_subtask = 0 
-                  AND (t.assigned_to_user_id = ? OR t.task_id IN (SELECT ta.task_id FROM Task_Assignments ta WHERE ta.user_id = ?))
-                  AND t.status != 'cancelled'
-                
-                UNION ALL
-                
-                SELECT 
-                    s.subtask_id as task_id,
-                    s.title as task_name,
-                    CASE WHEN s.is_completed = 1 THEN 'completed' ELSE 'pending' END as status,
-                    s.due_date,
-                    s.progress_percentage as completion_percentage,
-                    p.project_name,
-                    u.full_name as assigned_to_name,
-                    DATEDIFF(s.due_date, CURDATE()) as days_until_due,
-                    'subtask' as item_type,
-                    s.is_completed
-                FROM Subtasks s
-                LEFT JOIN Tasks t ON s.task_id = t.task_id
-                LEFT JOIN Projects p ON t.project_id = p.project_id
-                LEFT JOIN Users u ON s.assigned_to_user_id = u.user_id
-                WHERE s.assigned_to_user_id = ?
-                
-                ORDER BY due_date ASC
-            ");
+            if (!$userId) {
+                throw new Exception("Usuario no válido");
+            }
             
-            $stmt->execute([$userId, $userId, $userId]);
-            $allTasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            // Usar el método existente getUserTasks que ya sabemos que funciona
+            $userTasksData = $this->taskModel->getUserTasks($userId, 1, 100, '', '');
+            $allTasks = $userTasksData['tasks'] ?? [];
             
             error_log("DEBUG getMyKanbanTasks - Total tareas encontradas: " . count($allTasks));
+            
+            // Procesar las tareas para agregar days_until_due si no existe
+            foreach ($allTasks as &$task) {
+                if (!isset($task['days_until_due'])) {
+                    if ($task['due_date']) {
+                        $task['days_until_due'] = (new DateTime($task['due_date']))->diff(new DateTime())->format('%r%a');
+                    } else {
+                        $task['days_until_due'] = 999;
+                    }
+                }
+                $task['item_type'] = 'task';
+                $task['is_completed'] = 0;
+            }
             
             // Organizar tareas en columnas Kanban
             $kanbanTasks = [
@@ -3872,7 +3848,7 @@ class ClanLeaderController {
             ];
             
             foreach ($allTasks as $task) {
-                $daysUntilDue = (int)$task['days_until_due'];
+                $daysUntilDue = (int)($task['days_until_due'] ?? 999);
                 
                 if ($daysUntilDue < 0) {
                     $kanbanTasks['vencidas'][] = $task;
@@ -3884,6 +3860,8 @@ class ClanLeaderController {
                     $kanbanTasks['semana2'][] = $task;
                 }
             }
+            
+            error_log("DEBUG getMyKanbanTasks - Kanban distribution: vencidas=" . count($kanbanTasks['vencidas']) . ", hoy=" . count($kanbanTasks['hoy']) . ", semana1=" . count($kanbanTasks['semana1']) . ", semana2=" . count($kanbanTasks['semana2']));
 
             Utils::jsonResponse([
                 'success' => true,
@@ -3893,7 +3871,8 @@ class ClanLeaderController {
 
         } catch (Exception $e) {
             error_log("Error en getMyKanbanTasks (ClanLeader): " . $e->getMessage());
-            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor'], 500);
+            error_log("Stack trace: " . $e->getTraceAsString());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor: ' . $e->getMessage()], 500);
         }
     }
     
