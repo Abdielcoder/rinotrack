@@ -425,6 +425,95 @@ function noPermissionModal(){
     margin: 2px -4px;
 }
 
+/* Estilos para el scroll del modal de comentarios */
+#subtask-comments-list {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e0 #f7fafc;
+}
+
+#subtask-comments-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+#subtask-comments-list::-webkit-scrollbar-track {
+    background: #f7fafc;
+    border-radius: 4px;
+}
+
+#subtask-comments-list::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+
+#subtask-comments-list::-webkit-scrollbar-thumb:hover {
+    background: #a0aec0;
+}
+
+/* Mejorar espaciado de comentarios en el modal */
+#subtask-comments-list .comment-item {
+    margin-bottom: 15px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 15px;
+    background: #ffffff;
+    transition: box-shadow 0.2s ease;
+}
+
+#subtask-comments-list .comment-item:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+#subtask-comments-list .comment-item:last-child {
+    margin-bottom: 0;
+}
+
+/* Indicadores visuales para scroll */
+#subtask-comments-list::before {
+    content: '';
+    position: sticky;
+    top: 0;
+    height: 2px;
+    background: linear-gradient(to right, transparent, #3b82f6, transparent);
+    margin-bottom: 10px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 1;
+}
+
+#subtask-comments-list::after {
+    content: '';
+    position: sticky;
+    bottom: 0;
+    height: 2px;
+    background: linear-gradient(to right, transparent, #3b82f6, transparent);
+    margin-top: 10px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 1;
+}
+
+#subtask-comments-list.has-scroll::before {
+    opacity: var(--scroll-top-opacity, 0.2);
+}
+
+#subtask-comments-list.has-scroll::after {
+    opacity: var(--scroll-bottom-opacity, 0.6);
+}
+
+/* Scroll suave */
+#subtask-comments-list {
+    scroll-behavior: smooth;
+}
+
+/* Efecto de fade en los bordes cuando hay scroll */
+#subtask-comments-list.has-scroll {
+    mask: 
+        linear-gradient(to bottom, transparent 0%, black 8px, black calc(100% - 8px), transparent 100%);
+    -webkit-mask: 
+        linear-gradient(to bottom, transparent 0%, black 8px, black calc(100% - 8px), transparent 100%);
+}
+
 /* Estilos específicos para los botones */
 .action-btn.primary {
   background: #1e3a8a !important;
@@ -1190,18 +1279,18 @@ function showSubtaskComments(subtaskId) {
     const modal = document.createElement('div');
     modal.className = 'modal-overlay';
     modal.innerHTML = `
-        <div class="modal-content" style="max-width: 800px;">
-            <div class="modal-header">
+        <div class="modal-content" style="max-width: 800px; max-height: 90vh; display: flex; flex-direction: column;">
+            <div class="modal-header" style="flex-shrink: 0;">
                 <h3><i class="fas fa-comments"></i> Comentarios de Subtarea</h3>
                 <button class="btn-close" onclick="this.closest('.modal-overlay').remove()">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            <div class="modal-body">
-                <div id="subtask-comments-list">
+            <div class="modal-body" style="flex: 1; display: flex; flex-direction: column; min-height: 0;">
+                <div id="subtask-comments-list" style="flex: 1; overflow-y: auto; max-height: 400px; margin-bottom: 20px; padding-right: 8px;">
                     <div class="loading">Cargando comentarios...</div>
                 </div>
-                <div class="add-comment-section">
+                <div class="add-comment-section" style="flex-shrink: 0; border-top: 1px solid #e5e7eb; padding-top: 20px;">
                     <h4>Agregar Comentario</h4>
                     <div class="comment-form">
                         <div class="rich-editor-container">
@@ -1322,6 +1411,14 @@ function loadSubtaskComments(subtaskId) {
                         subtaskComments.forEach(element => {
                             makeChecklistInteractive(element);
                         });
+                        
+                        // Configurar scroll mejorado
+                        setupScrollEnhancements(container, data.comments.length);
+                        
+                        // Auto-scroll al final si hay muchos comentarios
+                        if (data.comments.length > 3) {
+                            container.scrollTop = container.scrollHeight;
+                        }
                     }, 100);
                 }
             } else {
@@ -1492,8 +1589,20 @@ function addSubtaskCommentWithText(subtaskId, commentText, attachmentId = null) 
                     fileInputToClean.value = '';
                 }
                 
+                // Recargar comentarios y hacer scroll al final
                 loadSubtaskComments(subtaskId);
                 loadSubtaskCounts(subtaskId); // Actualizar conteos
+                
+                // Hacer scroll al final después de recargar comentarios
+                setTimeout(() => {
+                    const container = document.getElementById('subtask-comments-list');
+                    if (container) {
+                        container.scrollTop = container.scrollHeight;
+                        
+                        // Reconfigurar mejoras de scroll después de agregar comentario
+                        setupScrollEnhancements(container, container.querySelectorAll('.comment-item').length);
+                    }
+                }, 200);
                 
                 alert('Comentario agregado exitosamente');
             } else {
@@ -2580,6 +2689,66 @@ function showNotification(message, type) {
     } else {
         console.log(`${type.toUpperCase()}: ${message}`);
         alert(message); // Fallback simple
+    }
+}
+
+// Función para configurar mejoras de scroll en el modal de comentarios
+function setupScrollEnhancements(container, commentsCount) {
+    // Detectar si hay scroll disponible
+    if (container.scrollHeight > container.clientHeight) {
+        container.classList.add('has-scroll');
+        
+        // Agregar indicador de cantidad de comentarios si hay muchos
+        if (commentsCount > 5) {
+            const indicator = document.createElement('div');
+            indicator.className = 'comments-count-indicator';
+            indicator.innerHTML = `<i class="fas fa-comments"></i> ${commentsCount} comentarios`;
+            indicator.style.cssText = `
+                position: sticky;
+                top: 5px;
+                background: rgba(59, 130, 246, 0.1);
+                color: #3b82f6;
+                padding: 4px 8px;
+                border-radius: 12px;
+                font-size: 12px;
+                text-align: center;
+                margin-bottom: 10px;
+                z-index: 2;
+                backdrop-filter: blur(4px);
+                border: 1px solid rgba(59, 130, 246, 0.2);
+            `;
+            container.insertBefore(indicator, container.firstChild);
+        }
+        
+        // Agregar listener para scroll suave y efectos
+        container.addEventListener('scroll', function() {
+            const scrollTop = this.scrollTop;
+            const scrollHeight = this.scrollHeight;
+            const clientHeight = this.clientHeight;
+            const scrollPercent = scrollTop / (scrollHeight - clientHeight);
+            
+            // Actualizar opacidad de indicadores basado en posición de scroll
+            const beforeElement = container.querySelector('::before');
+            const afterElement = container.querySelector('::after');
+            
+            // Mostrar indicador superior solo si no estamos al principio
+            if (scrollTop > 10) {
+                container.style.setProperty('--scroll-top-opacity', '0.8');
+            } else {
+                container.style.setProperty('--scroll-top-opacity', '0.2');
+            }
+            
+            // Mostrar indicador inferior solo si no estamos al final
+            if (scrollTop < scrollHeight - clientHeight - 10) {
+                container.style.setProperty('--scroll-bottom-opacity', '0.8');
+            } else {
+                container.style.setProperty('--scroll-bottom-opacity', '0.2');
+            }
+        });
+        
+        // Inicializar variables CSS
+        container.style.setProperty('--scroll-top-opacity', '0.2');
+        container.style.setProperty('--scroll-bottom-opacity', '0.8');
     }
 }
 </script>
