@@ -109,21 +109,20 @@ ob_start();
             </div>
         <?php endif; ?>
 
-        <!-- Sistema de Tabs para Tareas -->
-        <div class="tasks-tabs-container">
-            <div class="tasks-tabs">
-                <button class="tab-button active" onclick="switchTab('my-tasks')" id="my-tasks-tab">
-                    <i class="fas fa-user"></i>
-                    Mis Tareas
-                </button>
-                <button class="tab-button" onclick="switchTab('team-tasks')" id="team-tasks-tab">
-                    <i class="fas fa-users"></i>
-                    Equipo
-                </button>
-            </div>
-        </div>
-
         <?php if (isset($allTasks)): ?>
+            <!-- Sistema de Tabs para Tareas -->
+            <div class="tasks-tabs-container">
+                <div class="tasks-tabs">
+                    <button class="tab-button active" onclick="switchTab('my-tasks')" id="my-tasks-tab">
+                        <i class="fas fa-user"></i>
+                        Mis Tareas
+                    </button>
+                    <button class="tab-button" onclick="switchTab('team-tasks')" id="team-tasks-tab">
+                        <i class="fas fa-users"></i>
+                        Equipo
+                    </button>
+                </div>
+            </div>
             <!-- Tab: Mis Tareas -->
             <div id="my-tasks-content" class="tab-content active">
                 <div class="all-tasks-section">
