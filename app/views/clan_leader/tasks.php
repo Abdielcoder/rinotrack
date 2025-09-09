@@ -31,8 +31,21 @@ ob_start();
                     <div class="project-card">
                         <div class="project-header">
                             <h3 class="project-name"><?= htmlspecialchars($project['project_name']) ?></h3>
-                            <div class="project-status status-<?= $project['status'] ?>">
-                                <?= ucfirst($project['status']) ?>
+                            <div class="project-header-actions">
+                                <div class="project-status status-<?= $project['status'] ?>">
+                                    <?= ucfirst($project['status']) ?>
+                                </div>
+                                <div class="project-menu-container">
+                                    <button class="project-menu-btn" onclick="toggleProjectMenu(<?= $project['project_id'] ?>)">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                    <div class="project-menu" id="projectMenu<?= $project['project_id'] ?>">
+                                        <button class="menu-item" onclick="openCloneProjectModal(<?= $project['project_id'] ?>)">
+                                            <i class="fas fa-copy"></i>
+                                            Clonar Proyecto
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         
@@ -641,6 +654,12 @@ ob_start();
     margin-bottom: 0.4rem;
 }
 
+.project-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
 .project-name {
     font-size: 1rem;
     font-weight: 600;
@@ -672,6 +691,73 @@ ob_start();
 .status-completed {
     background: #dbeafe;
     color: #1e40af;
+}
+
+/* Menú de proyecto */
+.project-menu-container {
+    position: relative;
+}
+
+.project-menu-btn {
+    background: none;
+    border: none;
+    padding: 0.4rem;
+    border-radius: 6px;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.project-menu-btn:hover {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.project-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    min-width: 160px;
+    z-index: 1000;
+    display: none;
+}
+
+.project-menu.show {
+    display: block;
+}
+
+.project-menu .menu-item {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: none;
+    border: none;
+    text-align: left;
+    color: #374151;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.project-menu .menu-item:hover {
+    background: #f3f4f6;
+}
+
+.project-menu .menu-item:first-child {
+    border-radius: 8px 8px 0 0;
+}
+
+.project-menu .menu-item:last-child {
+    border-radius: 0 0 8px 8px;
 }
 
 /* Stats de Proyecto */
@@ -2868,6 +2954,142 @@ function cloneTask() {
     });
 }
 
+// Función para mostrar/ocultar menú de proyecto
+function toggleProjectMenu(projectId) {
+    const menu = document.getElementById('projectMenu' + projectId);
+    const allMenus = document.querySelectorAll('.project-menu');
+    
+    // Cerrar todos los otros menús
+    allMenus.forEach(m => {
+        if (m.id !== 'projectMenu' + projectId) {
+            m.classList.remove('show');
+        }
+    });
+    
+    // Toggle del menú actual
+    menu.classList.toggle('show');
+}
+
+// Cerrar menús al hacer click fuera
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.project-menu-container')) {
+        document.querySelectorAll('.project-menu').forEach(menu => {
+            menu.classList.remove('show');
+        });
+    }
+});
+
+// Función para abrir el modal de clonación de proyectos
+function openCloneProjectModal(projectId) {
+    fetch('?route=clan_leader/get-project-data&project_id=' + projectId)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showCloneProjectModal(data.project);
+            } else {
+                alert('Error al cargar los datos del proyecto: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error de conexión al cargar los datos del proyecto');
+        });
+}
+
+// Función para mostrar el modal de clonación de proyectos
+function showCloneProjectModal(project) {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal-content clone-project-modal">
+            <div class="modal-header">
+                <h3><i class="fas fa-copy"></i> Clonar Proyecto</h3>
+                <button class="modal-close" onclick="closeCloneProjectModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="cloneProjectForm">
+                    <input type="hidden" id="originalProjectId" value="${project.project_id}">
+                    
+                    <div class="form-group">
+                        <label for="cloneProjectName">Nombre del proyecto</label>
+                        <input type="text" id="cloneProjectName" name="project_name" value="${project.project_name}" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="cloneProjectDescription">Descripción</label>
+                        <textarea id="cloneProjectDescription" name="description" rows="4">${project.description || ''}</textarea>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="cloneProjectStartDate">Fecha de inicio</label>
+                            <input type="date" id="cloneProjectStartDate" name="start_date" value="${project.start_date || ''}">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="cloneProjectEndDate">Fecha de fin</label>
+                            <input type="date" id="cloneProjectEndDate" name="end_date" value="${project.end_date || ''}">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="cloneTasks" name="clone_tasks" checked>
+                            Clonar también las tareas del proyecto
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="closeCloneProjectModal()">Cancelar</button>
+                <button type="button" class="btn-primary" onclick="cloneProject()">
+                    <i class="fas fa-copy"></i> Clonar Proyecto
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    modal.style.display = 'flex';
+}
+
+// Función para cerrar el modal de clonación de proyectos
+function closeCloneProjectModal() {
+    const modal = document.querySelector('.modal-overlay');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+// Función para ejecutar la clonación de proyectos
+function cloneProject() {
+    const form = document.getElementById('cloneProjectForm');
+    const formData = new FormData(form);
+    
+    // Agregar campos adicionales
+    formData.append('originalProjectId', document.getElementById('originalProjectId').value);
+    formData.append('clone_tasks', document.getElementById('cloneTasks').checked ? '1' : '0');
+    
+    fetch('?route=clan_leader/clone-project', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            closeCloneProjectModal();
+            alert('Proyecto clonado exitosamente');
+            location.reload(); // Recargar para mostrar los cambios
+        } else {
+            alert('Error al clonar el proyecto: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error de conexión al clonar el proyecto');
+    });
+}
+
 // Timestamp para forzar recarga: <?= time() ?>
 // Cache-bust version: v3.1.<?= date('His') ?>
 </script>
@@ -2929,6 +3151,19 @@ function cloneTask() {
     }
     
     .clone-task-modal {
+        width: 95%;
+        margin: 1rem;
+    }
+}
+
+/* Estilos para el modal de clonación de proyectos */
+.clone-project-modal {
+    max-width: 600px;
+    width: 90%;
+}
+
+@media (max-width: 768px) {
+    .clone-project-modal {
         width: 95%;
         margin: 1rem;
     }

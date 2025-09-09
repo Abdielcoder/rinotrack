@@ -3621,6 +3621,154 @@ class ClanLeaderController {
     }
     
     /**
+     * Obtener datos de proyecto para clonación
+     */
+    public function getProjectData() {
+        $this->requireAuth();
+        
+        if (!$this->hasClanLeaderAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+            return;
+        }
+
+        $projectId = (int)($_GET['project_id'] ?? 0);
+        
+        if ($projectId <= 0) {
+            Utils::jsonResponse(['success' => false, 'message' => 'ID de proyecto inválido'], 400);
+            return;
+        }
+
+        try {
+            // Obtener datos del proyecto
+            $project = $this->projectModel->findById($projectId);
+            
+            if (!$project) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Proyecto no encontrado'], 404);
+                return;
+            }
+
+            // Verificar que el proyecto pertenezca al clan del líder
+            if ($this->userClan && $project['clan_id'] != $this->userClan['clan_id']) {
+                Utils::jsonResponse(['success' => false, 'message' => 'No tienes permisos para clonar este proyecto'], 403);
+                return;
+            }
+
+            Utils::jsonResponse([
+                'success' => true,
+                'project' => $project
+            ]);
+
+        } catch (Exception $e) {
+            error_log("Error en getProjectData (ClanLeader): " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor'], 500);
+        }
+    }
+    
+    /**
+     * Clonar proyecto
+     */
+    public function cloneProject() {
+        $this->requireAuth();
+        
+        if (!$this->hasClanLeaderAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+            return;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
+            return;
+        }
+
+        $originalProjectId = (int)($_POST['originalProjectId'] ?? 0);
+        $projectName = trim($_POST['project_name'] ?? '');
+        $description = trim($_POST['description'] ?? '');
+        $startDate = $_POST['start_date'] ?? null;
+        $endDate = $_POST['end_date'] ?? null;
+        $cloneTasks = ($_POST['clone_tasks'] ?? '0') === '1';
+
+        if ($originalProjectId <= 0 || empty($projectName)) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Datos inválidos'], 400);
+            return;
+        }
+
+        try {
+            // Obtener proyecto original
+            $originalProject = $this->projectModel->findById($originalProjectId);
+            
+            if (!$originalProject) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Proyecto original no encontrado'], 404);
+                return;
+            }
+
+            // Verificar permisos
+            if ($this->userClan && $originalProject['clan_id'] != $this->userClan['clan_id']) {
+                Utils::jsonResponse(['success' => false, 'message' => 'No tienes permisos para clonar este proyecto'], 403);
+                return;
+            }
+
+            // Crear el nuevo proyecto
+            $newProjectId = $this->projectModel->create(
+                $projectName,
+                $description,
+                $originalProject['clan_id'],
+                $this->currentUser['user_id']
+            );
+
+            if (!$newProjectId) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Error al crear el proyecto'], 500);
+                return;
+            }
+
+            // Clonar tareas si se solicita
+            if ($cloneTasks) {
+                $originalTasks = $this->taskModel->getByProject($originalProjectId);
+                
+                foreach ($originalTasks as $task) {
+                    if ($task['is_subtask'] == 0) { // Solo tareas principales
+                        $newTaskId = $this->taskModel->create(
+                            $newProjectId,
+                            $task['task_name'],
+                            $task['description'] ?? '',
+                            $this->currentUser['user_id'],
+                            $task['priority'] ?? 'medium',
+                            $task['due_date'] ?? null,
+                            $this->currentUser['user_id']
+                        );
+
+                        // Clonar subtareas si existen
+                        if ($newTaskId) {
+                            $subtasks = $this->taskModel->getSubtasks($task['task_id']);
+                            foreach ($subtasks as $subtask) {
+                                $this->taskModel->createSubtaskAdvanced(
+                                    $newTaskId,
+                                    $subtask['title'],
+                                    $this->currentUser['user_id'],
+                                    $subtask['description'] ?? '',
+                                    0,
+                                    $subtask['due_date'] ?? null,
+                                    $subtask['priority'] ?? 'medium',
+                                    $this->currentUser['user_id']
+                                );
+                            }
+                        }
+                    }
+                }
+            }
+
+            Utils::jsonResponse([
+                'success' => true,
+                'message' => 'Proyecto clonado exitosamente',
+                'new_project_id' => $newProjectId
+            ]);
+
+        } catch (Exception $e) {
+            error_log("Error en cloneProject (ClanLeader): " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor'], 500);
+        }
+    }
+    
+    /**
      * Cargar vista
      */
     private function loadView($viewPath, $data = []) {

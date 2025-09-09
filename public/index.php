@@ -734,6 +734,16 @@ try {
         $controller->cloneTask();
         break;
         
+    case 'clan_leader/get-project-data':
+        $controller = new ClanLeaderController();
+        $controller->getProjectData();
+        break;
+
+    case 'clan_leader/clone-project':
+        $controller = new ClanLeaderController();
+        $controller->cloneProject();
+        break;
+        
         // Rutas de Gamificación
         case 'gamification':
             $controller = new GamificationController();
