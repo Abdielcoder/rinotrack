@@ -3371,18 +3371,18 @@ function renderTeamTasksTable(tasks, tbodyId) {
                 </td>
                 <td class="td-task">
                     <div class="task-info">
-                        <div class="task-title">${task.task_name || 'Sin nombre'}</div>
-                        ${task.description ? '<div class="task-description" style="display:none;">' + task.description.substring(0, 100) + (task.description.length > 100 ? '...' : '') + '</div>' : ''}
+                        <div class="task-title" title="${task.task_name || ''}">${task.task_name || 'Sin nombre'}</div>
+                        ${task.description ? '<div class="task-description" style="display:none;" title="' + task.description.replace(/"/g, '&quot;') + '\">' + task.description.substring(0, 100) + (task.description.length > 100 ? '...' : '') + '</div>' : ''}
                     </div>
                 </td>
                 <td class="td-project">
-                    <span class="project-name">${task.project_name || 'Sin proyecto'}</span>
+                    <span class="project-name" title="${task.project_name || ''}">${task.project_name || 'Sin proyecto'}</span>
                 </td>
                 <td class="td-assigned">
                     <span class="assigned-users">${task.assigned_user_name || task.all_assigned_users || 'Sin asignar'}</span>
                 </td>
                 <td class="td-due-date">
-                    ${task.due_date ? '<span class="due-date">' + task.due_date + '</span>' : '<span class="no-date">Sin fecha</span>'}
+                    ${task.due_date ? '<span class="due-date" title="' + task.due_date + '\">' + task.due_date + '</span>' : '<span class="no-date">Sin fecha</span>'}
                 </td>
                 <td class="td-status">
                     <span class="status-badge status-${status}">
@@ -3458,15 +3458,15 @@ function renderTasksTable(tasks, tbodyId) {
                 </td>
                 <td class="td-task">
                     <div class="task-info">
-                        <div class="task-name">${task.task_name || 'Sin nombre'}</div>
-                        ${task.description ? '<div class="task-description">' + task.description.substring(0, 100) + (task.description.length > 100 ? '...' : '') + '</div>' : ''}
+                        <div class="task-name" title="${task.task_name || ''}">${task.task_name || 'Sin nombre'}</div>
+                        ${task.description ? '<div class="task-description" title="' + task.description.replace(/"/g, '&quot;') + '\">' + task.description.substring(0, 100) + (task.description.length > 100 ? '...' : '') + '</div>' : ''}
                     </div>
                 </td>
                 <td class="td-project">
-                    <span class="project-name">${task.project_name || 'Sin proyecto'}</span>
+                    <span class="project-name" title="${task.project_name || ''}">${task.project_name || 'Sin proyecto'}</span>
                 </td>
                 <td class="td-due-date">
-                    ${task.due_date ? '<span class="due-date">' + task.due_date + '</span>' : '<span class="no-date">Sin fecha</span>'}
+                    ${task.due_date ? '<span class="due-date" title="' + task.due_date + '\">' + task.due_date + '</span>' : '<span class="no-date">Sin fecha</span>'}
                 </td>
                 <td class="td-status">
                     <span class="status-badge status-${status}">
