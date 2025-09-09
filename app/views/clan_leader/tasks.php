@@ -3374,15 +3374,15 @@ function renderTeamTasksTable(tasks, tbodyId) {
                 </td>
                 <td class="td-task">
                     <div class="task-info">
-                        <div class="task-title" title="${task.task_name || ''}">${task.task_name || 'Sin nombre'}</div>
-                        ${task.description ? '<div class="task-description" style="display:none;" title="' + task.description.replace(/"/g, '&quot;') + '\">' + task.description.substring(0, 100) + (task.description.length > 100 ? '...' : '') + '</div>' : ''}
+                        <div class="task-name" title="${task.task_name || ''}">${task.task_name || 'Sin nombre'}</div>
+                        ${task.description ? '<div class="task-description" title="' + task.description.replace(/"/g, '&quot;') + '\">' + task.description.substring(0, 100) + (task.description.length > 100 ? '...' : '') + '</div>' : ''}
                     </div>
                 </td>
                 <td class="td-project">
                     <span class="project-name" title="${task.project_name || ''}">${task.project_name || 'Sin proyecto'}</span>
                 </td>
                 <td class="td-assigned">
-                    <span class="assigned-users">${task.assigned_user_name || task.all_assigned_users || 'Sin asignar'}</span>
+                    <span class="assigned-users" title="${task.assigned_user_name || task.all_assigned_users || ''}">${task.assigned_user_name || task.all_assigned_users || 'Sin asignar'}</span>
                 </td>
                 <td class="td-due-date">
                     ${task.due_date ? '<span class="due-date" title="' + task.due_date + '\">' + task.due_date + '</span>' : '<span class="no-date">Sin fecha</span>'}
@@ -3485,13 +3485,15 @@ function renderTasksTable(tasks, tbodyId) {
                     </div>
                 </td>
                 <td class="td-actions">
-                    <a href="?route=clan_leader/get-task-details&task_id=${task.task_id}" class="btn-action btn-view" title="Ver detalles">
-                        <i class="fas fa-eye"></i>
-                    </a>
-                    <a href="?route=clan_leader/tasks&action=edit&task_id=${task.task_id}" class="btn-action btn-edit" title="Editar tarea">
-                        <i class="fas fa-edit"></i>
-                    </a>
-                    ${task.created_by_user_id == <?= $user['user_id'] ?? 0 ?> ? '<button class="btn-action btn-clone" onclick="openCloneTaskModal(' + task.task_id + ')" title="Clonar tarea"><i class="fas fa-copy"></i></button>' : ''}
+                    <div class="action-buttons">
+                        <a href="?route=clan_leader/get-task-details&task_id=${task.task_id}" class="btn-action btn-view" title="Ver detalles">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        <a href="?route=clan_leader/tasks&action=edit&task_id=${task.task_id}" class="btn-action btn-edit" title="Editar tarea">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        ${task.created_by_user_id == <?= $user['user_id'] ?? 0 ?> ? '<button class="btn-action btn-clone" onclick="openCloneTaskModal(' + task.task_id + ')" title="Clonar tarea"><i class="fas fa-copy"></i></button>' : ''}
+                    </div>
                 </td>
             </tr>
         `;
