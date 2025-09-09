@@ -227,10 +227,10 @@ $additionalJS[] = 'https://cdn.quilljs.com/1.3.6/quill.min.js';
                       style="background: #059669; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s ease;"
                       onmouseover="this.style.background='#047857'"
                       onmouseout="this.style.background='#059669'"
-                      title="Descargar historial en Excel">
+                      title="Descargar historial en CSV (Excel)">
                 <i class="fas fa-download"></i>
-                <i class="fas fa-file-excel"></i>
-                Excel
+                <i class="fas fa-file-csv"></i>
+                CSV
               </button>
             <?php endif; ?>
           </div>
@@ -1654,7 +1654,7 @@ function downloadTaskHistory(taskId) {
         const a = document.createElement('a');
         a.style.display = 'none';
         a.href = url;
-        a.download = `historial_tarea_${taskId}_${new Date().toISOString().split('T')[0]}.xls`;
+        a.download = `historial_tarea_${taskId}_${new Date().toISOString().split('T')[0]}.csv`;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);

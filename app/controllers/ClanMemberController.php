@@ -2675,18 +2675,20 @@ class ClanMemberController {
             // Obtener historial de la tarea
             $history = $this->taskModel->getHistory($taskId);
             
-            // Crear contenido Excel HTML (compatible con Excel)
-            $excelContent = $this->generateHistoryExcel($task, $history);
+            // Crear contenido CSV (compatible con Excel)
+            $csvContent = $this->generateHistoryExcel($task, $history);
             
-            // Configurar headers para descarga
-            $filename = "historial_tarea_{$taskId}_" . date('Y-m-d') . ".xls";
+            // Configurar headers para descarga CSV
+            $filename = "historial_tarea_{$taskId}_" . date('Y-m-d') . ".csv";
             
-            header('Content-Type: application/vnd.ms-excel');
+            header('Content-Type: text/csv; charset=UTF-8');
             header('Content-Disposition: attachment; filename="' . $filename . '"');
             header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
             header('Pragma: public');
             
-            echo $excelContent;
+            // Agregar BOM UTF-8 para Excel
+            echo "\xEF\xBB\xBF";
+            echo $csvContent;
             exit;
 
         } catch (Exception $e) {
@@ -2697,67 +2699,43 @@ class ClanMemberController {
     }
 
     /**
-     * Generar contenido Excel HTML del historial
+     * Generar contenido CSV del historial (compatible con Excel)
      */
     private function generateHistoryExcel($task, $history) {
-        $html = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
-        $html .= '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">' . "\n";
-        $html .= '<head>' . "\n";
-        $html .= '<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">' . "\n";
-        $html .= '<style>
-            .header { font-weight: bold; font-size: 14px; background-color: #1e3a8a; color: white; }
-            .info { font-weight: bold; background-color: #f0f8ff; }
-            .data { border: 1px solid #ccc; }
-            table { border-collapse: collapse; width: 100%; }
-            td, th { border: 1px solid #ccc; padding: 8px; text-align: left; }
-        </style>' . "\n";
-        $html .= '</head>' . "\n";
-        $html .= '<body>' . "\n";
+        $csv = [];
         
-        // Información de la tarea
-        $html .= '<table>' . "\n";
-        $html .= '<tr><td class="header" colspan="7">HISTORIAL DE TAREA</td></tr>' . "\n";
-        $html .= '<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>' . "\n";
-        $html .= '<tr><td class="info">Tarea:</td><td colspan="6">' . htmlspecialchars($task['task_name']) . '</td></tr>' . "\n";
-        $html .= '<tr><td class="info">Proyecto:</td><td colspan="6">' . htmlspecialchars($task['project_name'] ?? 'N/A') . '</td></tr>' . "\n";
-        $html .= '<tr><td class="info">Estado:</td><td colspan="6">' . htmlspecialchars($task['status']) . '</td></tr>' . "\n";
-        $html .= '<tr><td class="info">Creado:</td><td colspan="6">' . htmlspecialchars($task['created_at']) . '</td></tr>' . "\n";
-        $html .= '<tr><td class="info">Generado:</td><td colspan="6">' . date('Y-m-d H:i:s') . '</td></tr>' . "\n";
-        $html .= '<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>' . "\n";
+        // Encabezado del archivo
+        $csv[] = "HISTORIAL DE TAREA";
+        $csv[] = "";
+        $csv[] = "Tarea," . $this->escapeCsvValue($task['task_name']);
+        $csv[] = "Proyecto," . $this->escapeCsvValue($task['project_name'] ?? 'N/A');
+        $csv[] = "Estado," . $this->escapeCsvValue($task['status']);
+        $csv[] = "Creado," . $this->escapeCsvValue($task['created_at']);
+        $csv[] = "Generado," . date('Y-m-d H:i:s');
+        $csv[] = "";
         
         // Encabezados de columnas
-        $html .= '<tr>' . "\n";
-        $html .= '<th class="header">Fecha</th>' . "\n";
-        $html .= '<th class="header">Usuario</th>' . "\n";
-        $html .= '<th class="header">Acción</th>' . "\n";
-        $html .= '<th class="header">Campo</th>' . "\n";
-        $html .= '<th class="header">Valor Anterior</th>' . "\n";
-        $html .= '<th class="header">Valor Nuevo</th>' . "\n";
-        $html .= '<th class="header">Notas</th>' . "\n";
-        $html .= '</tr>' . "\n";
+        $csv[] = "Fecha,Usuario,Acción,Campo,Valor Anterior,Valor Nuevo,Notas";
         
         // Datos del historial
         if (!empty($history)) {
             foreach ($history as $h) {
-                $html .= '<tr>' . "\n";
-                $html .= '<td class="data">' . htmlspecialchars($h['created_at'] ?? '') . '</td>' . "\n";
-                $html .= '<td class="data">' . htmlspecialchars($h['full_name'] ?? $h['username'] ?? '') . '</td>' . "\n";
-                $html .= '<td class="data">' . htmlspecialchars($this->translateActionType($h['action_type'] ?? '')) . '</td>' . "\n";
-                $html .= '<td class="data">' . htmlspecialchars($this->translateFieldName($h['field_name'] ?? '')) . '</td>' . "\n";
-                $html .= '<td class="data">' . htmlspecialchars($h['old_value'] ?? '') . '</td>' . "\n";
-                $html .= '<td class="data">' . htmlspecialchars($h['new_value'] ?? '') . '</td>' . "\n";
-                $html .= '<td class="data">' . htmlspecialchars($h['notes'] ?? '') . '</td>' . "\n";
-                $html .= '</tr>' . "\n";
+                $row = [
+                    $this->escapeCsvValue($h['created_at'] ?? ''),
+                    $this->escapeCsvValue($h['full_name'] ?? $h['username'] ?? ''),
+                    $this->escapeCsvValue($this->translateActionType($h['action_type'] ?? '')),
+                    $this->escapeCsvValue($this->translateFieldName($h['field_name'] ?? '')),
+                    $this->escapeCsvValue($h['old_value'] ?? ''),
+                    $this->escapeCsvValue($h['new_value'] ?? ''),
+                    $this->escapeCsvValue($h['notes'] ?? '')
+                ];
+                $csv[] = implode(',', $row);
             }
         } else {
-            $html .= '<tr><td class="data" colspan="7">Sin historial disponible</td></tr>' . "\n";
+            $csv[] = "Sin historial disponible,,,,,";
         }
         
-        $html .= '</table>' . "\n";
-        $html .= '</body>' . "\n";
-        $html .= '</html>' . "\n";
-        
-        return $html;
+        return implode("\r\n", $csv);
     }
 
     /**
