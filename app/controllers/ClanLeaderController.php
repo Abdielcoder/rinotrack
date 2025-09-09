@@ -3821,24 +3821,63 @@ class ClanLeaderController {
                 return;
             }
 
-            // Usar la versión strict para evitar duplicados
-            $teamTasks = $this->taskModel->getAllTasksByClanStrict(
-                $clanId,
-                1, // página
-                100, // límite alto para obtener todas las tareas
-                '', // sin búsqueda
-                '' // sin filtro de estado
-            );
+            // Consulta directa para obtener TODAS las tareas del equipo (clan)
+            $db = Database::getInstance();
+            $query = "
+                SELECT DISTINCT
+                    t.task_id,
+                    t.task_name,
+                    t.description,
+                    t.status,
+                    t.priority,
+                    t.due_date,
+                    t.completion_percentage,
+                    t.created_by_user_id,
+                    p.project_id,
+                    p.project_name,
+                    p.is_personal,
+                    u.user_id as assigned_user_id,
+                    u.full_name as assigned_user_name,
+                    DATEDIFF(t.due_date, CURDATE()) as days_until_due,
+                    GROUP_CONCAT(DISTINCT ta_users.full_name SEPARATOR ', ') as all_assigned_users
+                FROM Tasks t
+                JOIN Projects p ON t.project_id = p.project_id
+                LEFT JOIN Users u ON t.assigned_to_user_id = u.user_id
+                LEFT JOIN Task_Assignments ta ON t.task_id = ta.task_id
+                LEFT JOIN Users ta_users ON ta.user_id = ta_users.user_id
+                WHERE p.clan_id = ?
+                    AND t.is_subtask = 0
+                    AND (p.is_personal IS NULL OR p.is_personal != 1)
+                GROUP BY t.task_id
+                ORDER BY 
+                    CASE 
+                        WHEN t.status = 'pending' THEN 1
+                        WHEN t.status = 'in_progress' THEN 2
+                        WHEN t.status = 'completed' THEN 3
+                        ELSE 4
+                    END,
+                    t.due_date ASC,
+                    t.priority DESC
+                LIMIT 200
+            ";
+
+            $stmt = $db->prepare($query);
+            $stmt->execute([$clanId]);
+            $tasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Log para debugging
+            error_log("getTeamTasks - Clan ID: " . $clanId);
+            error_log("getTeamTasks - Total tareas encontradas: " . count($tasks));
 
             Utils::jsonResponse([
                 'success' => true,
-                'tasks' => $teamTasks['tasks'] ?? [],
-                'total' => count($teamTasks['tasks'] ?? [])
+                'tasks' => $tasks,
+                'total' => count($tasks)
             ]);
 
         } catch (Exception $e) {
             error_log("Error en getTeamTasks (ClanLeader): " . $e->getMessage());
-            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor'], 500);
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor: ' . $e->getMessage()], 500);
         }
     }
     
