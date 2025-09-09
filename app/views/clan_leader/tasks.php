@@ -3,8 +3,6 @@
 ob_start();
 ?>
 
-<?php include __DIR__ . '/../layout.php'; ?>
-
 <div class="clan-leader-tasks-container">
     <!-- Header Mejorado -->
     <div class="page-header">
@@ -2235,6 +2233,8 @@ ob_start();
     margin-bottom: 1.5rem;
 }
 </style>
+
+</div> <!-- Cierre de clan-leader-tasks-container -->
 
 <script>
 // Función para cambiar el estado de delegación de un proyecto
