@@ -300,12 +300,13 @@
 
 .tasks-table .progress-bar {
     flex: 1;
-    height: 6px;
+    height: 10px; /* Aumentado para mejor visibilidad */
     background: #e5e7eb;
     border-radius: 10px;
     overflow: hidden;
     position: relative;
-    max-width: 60px;
+    max-width: 70px; /* Un poco más ancho */
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1); /* Sombra interna para profundidad */
 }
 
 .tasks-table .progress-fill {
@@ -333,28 +334,16 @@
 }
 
 .tasks-table .progress-text {
-    font-size: 0.75rem;
+    font-size: 0.8rem; /* Un poco más grande */
     font-weight: 700;
-    color: #374151;
+    color: #1f2937; /* Color más oscuro para mejor contraste */
     min-width: 35px;
+    text-align: center;
 }
 
-/* Slider de progreso */
+/* Slider de progreso - DESHABILITADO */
 .tasks-table .task-progress-slider {
-    width: 60px;
-    height: 4px;
-    -webkit-appearance: none;
-    appearance: none;
-    background: #e5e7eb;
-    border-radius: 10px;
-    outline: none;
-    opacity: 0;
-    transition: opacity 0.2s;
-    cursor: pointer;
-}
-
-.tasks-table .progress-container:hover .task-progress-slider {
-    opacity: 1;
+    display: none !important; /* Completamente oculto */
 }
 
 .tasks-table .task-progress-slider::-webkit-slider-thumb {
