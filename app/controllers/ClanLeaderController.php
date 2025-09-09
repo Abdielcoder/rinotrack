@@ -425,10 +425,15 @@ class ClanLeaderController {
         
         $search = $_GET['search'] ?? '';
         
-        // Obtener todos los proyectos del clan
-        $allProjects = empty($search) ? 
-            $this->projectModel->getByClan($this->userClan['clan_id']) : 
-            $this->searchProjects($search);
+        // Verificar que el usuario tiene clan asignado
+        if (!$this->userClan || !isset($this->userClan['clan_id'])) {
+            $allProjects = [];
+        } else {
+            // Obtener todos los proyectos del clan
+            $allProjects = empty($search) ? 
+                $this->projectModel->getByClan($this->userClan['clan_id']) : 
+                $this->searchProjects($search);
+        }
         
         // Los proyectos personales ya están filtrados en el modelo
         $projects = $allProjects;
@@ -467,21 +472,31 @@ class ClanLeaderController {
      * Crear nuevo proyecto
      */
     public function createProject() {
+        error_log("=== CREATE PROJECT DEBUG ===");
+        error_log("REQUEST_METHOD: " . $_SERVER['REQUEST_METHOD']);
+        error_log("POST data: " . print_r($_POST, true));
+        error_log("User logged in: " . ($this->auth->isLoggedIn() ? 'YES' : 'NO'));
+        error_log("Has clan leader access: " . ($this->hasClanLeaderAccess() ? 'YES' : 'NO'));
+        error_log("User clan: " . print_r($this->userClan, true));
+        
         try {
             // Verificar autenticación
             if (!$this->auth->isLoggedIn()) {
+                error_log("ERROR: User not authenticated");
                 Utils::jsonResponse(['success' => false, 'message' => 'No autenticado'], 401);
                 return;
             }
             
             // Verificar permisos de líder de clan
             if (!$this->hasClanLeaderAccess()) {
+                error_log("ERROR: User doesn't have clan leader access");
                 Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos de líder de clan'], 403);
                 return;
             }
             
             // Verificar que el usuario tiene clan asignado
             if (!$this->userClan) {
+                error_log("ERROR: User has no clan assigned");
                 Utils::jsonResponse(['success' => false, 'message' => 'No tienes un clan asignado'], 403);
                 return;
             }
@@ -498,22 +513,29 @@ class ClanLeaderController {
             $timeLimit = !empty($_POST['timeLimit']) ? $_POST['timeLimit'] : null;
             $isEditable = isset($_POST['isEditable']) ? 1 : 0;
             
+            error_log("Parsed data: projectName='$projectName', description='$description', timeLimit='$timeLimit', isEditable=$isEditable");
+            
             // Validaciones
             if (empty($projectName) || strlen($projectName) < 3) {
+                error_log("ERROR: Project name validation failed - empty or less than 3 chars");
                 Utils::jsonResponse(['success' => false, 'message' => 'El nombre del proyecto debe tener al menos 3 caracteres'], 400);
                 return;
             }
             
             if (empty($description)) {
+                error_log("ERROR: Description validation failed - empty");
                 Utils::jsonResponse(['success' => false, 'message' => 'La descripción es requerida'], 400);
                 return;
             }
             
             // Validar fecha límite si se proporciona
             if ($timeLimit && !strtotime($timeLimit)) {
+                error_log("ERROR: Time limit validation failed - invalid date format");
                 Utils::jsonResponse(['success' => false, 'message' => 'La fecha límite no es válida'], 400);
                 return;
             }
+            
+            error_log("All validations passed, creating project...");
             
             // Crear proyecto con fecha límite (usando método existente)
             $result = $this->projectModel->create(
@@ -529,15 +551,21 @@ class ClanLeaderController {
             
             // TODO: Implementar funcionalidad de is_editable cuando se defina la estructura
             
+            error_log("Project creation result: " . ($result ? 'SUCCESS' : 'FAILED'));
+            
             if ($result) {
+                error_log("SUCCESS: Project created successfully");
                 Utils::jsonResponse(['success' => true, 'message' => 'Proyecto creado exitosamente']);
             } else {
+                error_log("ERROR: Failed to create project in database");
                 Utils::jsonResponse(['success' => false, 'message' => 'Error al crear proyecto'], 500);
             }
             
         } catch (Exception $e) {
+            error_log("=== EXCEPTION IN CREATE PROJECT ===");
             error_log("Error en ClanLeaderController::createProject: " . $e->getMessage());
-            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor'], 500);
+            error_log("Stack trace: " . $e->getTraceAsString());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor: ' . $e->getMessage()], 500);
         }
     }
     
