@@ -186,7 +186,7 @@ ob_start();
                                 <div class="filter-group">
                                     <div class="filter-item">
                                         <label for="statusFilter">Estado:</label>
-                                        <select name="status_filter" id="statusFilter" onchange="this.form.submit()">
+                                        <select name="status_filter" id="statusFilter">
                                             <option value="">Todos</option>
                                             <option value="pending" <?= (($_GET['status_filter'] ?? '') === 'pending') ? 'selected' : '' ?>>Pendiente</option>
                                             <option value="in_progress" <?= (($_GET['status_filter'] ?? '') === 'in_progress') ? 'selected' : '' ?>>En Progreso</option>
@@ -196,7 +196,7 @@ ob_start();
                                     
                                     <div class="filter-item">
                                         <label for="perPage">Mostrar:</label>
-                                        <select name="per_page" id="perPage" onchange="this.form.submit()">
+                                        <select name="per_page" id="perPage">
                                             <option value="5" <?= (($_GET['per_page'] ?? '5') === '5') ? 'selected' : '' ?>>5 por página</option>
                                             <option value="10" <?= (($_GET['per_page'] ?? '5') === '10') ? 'selected' : '' ?>>10 por página</option>
                                             <option value="25" <?= (($_GET['per_page'] ?? '5') === '25') ? 'selected' : '' ?>>25 por página</option>
@@ -212,19 +212,20 @@ ob_start();
                                                    value="<?= htmlspecialchars($search) ?>"
                                                    placeholder="Buscar tareas..."
                                                    class="search-input"
-                                                   id="searchInputMyTasks"
-                                                   oninput="debounceSearch(this)">
+                                                   id="searchInputMyTasks">
                                         </div>
                                     </div>
                                     
                                     <!-- Botones de acción -->
                                     <div class="filter-actions">
-                                        <?php if (!empty($search) || !empty($_GET['status_filter']) || (isset($_GET['per_page']) && $_GET['per_page'] != '5')): ?>
-                                        <a href="?route=clan_leader/tasks&tab=my-tasks" class="clear-filters">
+                                        <button type="submit" class="btn-apply-filters">
+                                            <i class="fas fa-filter"></i>
+                                            Aplicar Filtros
+                                        </button>
+                                        <a href="?route=clan_leader/tasks&tab=my-tasks" class="btn-reset-filters">
                                             <i class="fas fa-undo"></i>
                                             Resetear Filtros
                                         </a>
-                                        <?php endif; ?>
                                     </div>
                                 </div>
                             </form>
@@ -283,7 +284,7 @@ ob_start();
                                 <div class="filter-group">
                                     <div class="filter-item">
                                         <label for="statusFilterTeam">Estado:</label>
-                                        <select name="status_filter" id="statusFilterTeam" onchange="this.form.submit()">
+                                        <select name="status_filter" id="statusFilterTeam">
                                             <option value="">Todos</option>
                                             <option value="pending" <?= (($_GET['status_filter'] ?? '') === 'pending') ? 'selected' : '' ?>>Pendiente</option>
                                             <option value="in_progress" <?= (($_GET['status_filter'] ?? '') === 'in_progress') ? 'selected' : '' ?>>En Progreso</option>
@@ -293,7 +294,7 @@ ob_start();
                                     
                                     <div class="filter-item">
                                         <label for="perPageTeam">Mostrar:</label>
-                                        <select name="per_page" id="perPageTeam" onchange="this.form.submit()">
+                                        <select name="per_page" id="perPageTeam">
                                             <option value="5" <?= (($_GET['per_page'] ?? '5') === '5') ? 'selected' : '' ?>>5 por página</option>
                                             <option value="10" <?= (($_GET['per_page'] ?? '5') === '10') ? 'selected' : '' ?>>10 por página</option>
                                             <option value="25" <?= (($_GET['per_page'] ?? '5') === '25') ? 'selected' : '' ?>>25 por página</option>
@@ -309,19 +310,20 @@ ob_start();
                                                    value="<?= htmlspecialchars($search) ?>"
                                                    placeholder="Buscar tareas del equipo..."
                                                    class="search-input"
-                                                   id="searchInputTeam"
-                                                   oninput="debounceSearch(this)">
+                                                   id="searchInputTeam">
                                         </div>
                                     </div>
                                     
                                     <!-- Botones de acción -->
                                     <div class="filter-actions">
-                                        <?php if (!empty($search) || !empty($_GET['status_filter']) || (isset($_GET['per_page']) && $_GET['per_page'] != '5')): ?>
-                                        <a href="?route=clan_leader/tasks&tab=team-tasks" class="clear-filters">
+                                        <button type="submit" class="btn-apply-filters">
+                                            <i class="fas fa-filter"></i>
+                                            Aplicar Filtros
+                                        </button>
+                                        <a href="?route=clan_leader/tasks&tab=team-tasks" class="btn-reset-filters">
                                             <i class="fas fa-undo"></i>
                                             Resetear Filtros
                                         </a>
-                                        <?php endif; ?>
                                     </div>
                                 </div>
                             </form>
@@ -353,7 +355,7 @@ ob_start();
                                 <!-- Filtro por estado -->
                                 <div class="filter-group">
                                     <label for="status_filter" class="filter-label">Estado:</label>
-                                    <select name="status_filter" id="status_filter" class="filter-select" onchange="this.form.submit()">
+                                    <select name="status_filter" id="status_filter" class="filter-select">
                                         <option value="">Todos los estados</option>
                                         <option value="pending" <?= (isset($_GET['status_filter']) && $_GET['status_filter'] === 'pending') ? 'selected' : '' ?>>Pendientes</option>
                                         <option value="in_progress" <?= (isset($_GET['status_filter']) && $_GET['status_filter'] === 'in_progress') ? 'selected' : '' ?>>En Progreso</option>
@@ -365,7 +367,7 @@ ob_start();
                                 <!-- Filtro por registros por página -->
                                 <div class="filter-group">
                                     <label for="per_page" class="filter-label">Mostrar:</label>
-                                    <select name="per_page" id="per_page" class="filter-select" onchange="this.form.submit()">
+                                    <select name="per_page" id="per_page" class="filter-select">
                                         <option value="5" <?= (isset($_GET['per_page']) && $_GET['per_page'] == '5') ? 'selected' : '' ?>>5 por página</option>
                                         <option value="10" <?= (isset($_GET['per_page']) && $_GET['per_page'] == '10') ? 'selected' : '' ?>>10 por página</option>
                                         <option value="20" <?= (isset($_GET['per_page']) && $_GET['per_page'] == '20') ? 'selected' : '' ?>>20 por página</option>
@@ -383,19 +385,20 @@ ob_start();
                                                value="<?= htmlspecialchars($search ?? '') ?>" 
                                                placeholder="Buscar tareas, proyectos o usuarios..."
                                                class="search-input"
-                                               id="searchInput"
-                                               oninput="debounceSearch(this)">
+                                               id="searchInput">
                                     </div>
                                 </div>
                                 
                                 <!-- Botones de acción -->
                                 <div class="filter-actions">
-                                    <?php if (!empty($search) || !empty($_GET['status_filter']) || (isset($_GET['per_page']) && $_GET['per_page'] != '5')): ?>
-                                    <a href="?route=clan_leader/tasks" class="clear-filters">
+                                    <button type="submit" class="btn-apply-filters">
+                                        <i class="fas fa-filter"></i>
+                                        Aplicar Filtros
+                                    </button>
+                                    <a href="?route=clan_leader/tasks" class="btn-reset-filters">
                                         <i class="fas fa-undo"></i>
                                         Resetear Filtros
                                     </a>
-                                    <?php endif; ?>
                                 </div>
                             </form>
                         </div>
@@ -2894,14 +2897,8 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// Función para búsqueda con debounce
-let searchTimeout;
-function debounceSearch(input) {
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(() => {
-        input.form.submit();
-    }, 500); // 500ms de delay
-}
+// Las funciones de búsqueda automática fueron removidas
+// Ahora se usan los botones "Aplicar Filtros" para mejor control
 // Función para cambiar el estado de una tarea - VERSIÓN CORREGIDA
 function toggleTaskStatus(taskId, isChecked) {
     console.log('=== toggleTaskStatus Debug V3.0 ===');

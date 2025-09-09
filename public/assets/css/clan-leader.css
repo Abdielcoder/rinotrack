@@ -5811,7 +5811,8 @@ input[type="checkbox"] {
     
     .tasks-table .th-actions,
     .tasks-table .td-actions { 
-        width: 80px; 
+        width: 100px; 
+        display: table-cell !important; /* Asegurar que siempre se muestre */
     }
 }
 
@@ -5868,4 +5869,81 @@ input[type="checkbox"] {
     color: #1f2937;
     transform: translateY(-1px);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* ===============================
+   ESTILOS PARA BOTONES DE FILTROS
+   =============================== */
+
+.filter-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-left: 15px;
+}
+
+.btn-apply-filters {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: #1e3a8a;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.btn-apply-filters:hover {
+    background: #1e40af;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(30, 58, 138, 0.3);
+}
+
+.btn-reset-filters {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: #6b7280;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.btn-reset-filters:hover {
+    background: #4b5563;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(107, 114, 128, 0.3);
+}
+
+.btn-apply-filters i,
+.btn-reset-filters i {
+    font-size: 12px;
+}
+
+/* Responsive para botones de filtros */
+@media (max-width: 768px) {
+    .filter-actions {
+        flex-direction: column;
+        gap: 8px;
+        margin-left: 0;
+        margin-top: 10px;
+    }
+    
+    .btn-apply-filters,
+    .btn-reset-filters {
+        width: 100%;
+        justify-content: center;
+        padding: 10px 16px;
+    }
 }
