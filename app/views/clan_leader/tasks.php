@@ -3292,7 +3292,7 @@ function loadMyTasks() {
     const tbody = document.getElementById('my-tasks-table-body');
     if (!tbody) return;
     
-    tbody.innerHTML = '<tr><td colspan="8" class="text-center">Cargando mis tareas...</td></tr>';
+    tbody.innerHTML = '<tr class="loading"><td colspan="8" class="text-center"><i class="fas fa-spinner fa-spin"></i> Cargando mis tareas...</td></tr>';
     
     fetch('?route=clan_leader/get-my-tasks')
         .then(response => response.json())
@@ -3305,7 +3305,7 @@ function loadMyTasks() {
         })
         .catch(error => {
             console.error('Error:', error);
-            tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Error de conexión</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No se pudieron cargar las tareas</td></tr>';
         });
 }
 
@@ -3314,7 +3314,7 @@ function loadTeamTasks() {
     const tbody = document.getElementById('team-tasks-table-body');
     if (!tbody) return;
     
-    tbody.innerHTML = '<tr><td colspan="9" class="text-center">Cargando tareas del equipo...</td></tr>';
+    tbody.innerHTML = '<tr class="loading"><td colspan="9" class="text-center"><i class="fas fa-spinner fa-spin"></i> Cargando tareas del equipo...</td></tr>';
     
     fetch('?route=clan_leader/get-team-tasks')
         .then(response => response.json())
@@ -3327,7 +3327,7 @@ function loadTeamTasks() {
         })
         .catch(error => {
             console.error('Error:', error);
-            tbody.innerHTML = '<tr><td colspan="9" class="text-center text-danger">Error de conexión</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted">No se pudieron cargar las tareas del equipo</td></tr>';
         });
 }
 
@@ -3337,7 +3337,7 @@ function renderTeamTasksTable(tasks, tbodyId) {
     if (!tbody) return;
     
     if (tasks.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="9" class="text-center">No hay tareas del equipo disponibles</td></tr>';
+        tbody.innerHTML = '<tr class="empty"><td colspan="9" class="text-center"><i class="fas fa-users-slash"></i><br>No hay tareas del equipo disponibles</td></tr>';
         return;
     }
     
@@ -3424,7 +3424,7 @@ function renderTasksTable(tasks, tbodyId) {
     if (!tbody) return;
     
     if (tasks.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" class="text-center">No hay tareas disponibles</td></tr>';
+        tbody.innerHTML = '<tr class="empty"><td colspan="8" class="text-center"><i class="fas fa-inbox"></i><br>No hay tareas disponibles</td></tr>';
         return;
     }
     

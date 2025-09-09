@@ -544,16 +544,39 @@
 /* Loading state */
 .tasks-table tbody tr.loading td {
     text-align: center;
-    padding: 40px;
+    padding: 40px 20px;
     color: #6b7280;
-    font-style: italic;
+    font-size: 0.9rem;
+    background: #fafbfc;
+}
+
+.tasks-table tbody tr.loading td i.fa-spinner {
+    color: #667eea;
+    margin-right: 8px;
 }
 
 /* Empty state */
 .tasks-table tbody tr.empty td {
     text-align: center;
-    padding: 60px;
+    padding: 50px 20px;
     color: #9ca3af;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    background: #fafbfc;
+}
+
+.tasks-table tbody tr.empty td i {
+    font-size: 2rem;
+    color: #d1d5db;
+    margin-bottom: 8px;
+    display: block;
+}
+
+/* Error state mejorado */
+.tasks-table tbody tr td.text-muted {
+    color: #9ca3af !important;
+    font-style: italic;
+    background: #fafbfc;
 }
 
 /* ===============================
