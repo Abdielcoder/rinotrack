@@ -2087,7 +2087,7 @@ class ClanMemberController {
         try {
             // Verificar que la subtarea pertenece a una tarea del clan del usuario
             $stmt = $this->db->prepare("
-                SELECT s.*, t.project_id, p.clan_id
+                SELECT s.*, t.project_id, t.created_by_user_id, t.assigned_to_user_id, p.clan_id
                 FROM Subtasks s
                 JOIN Tasks t ON s.task_id = t.task_id
                 JOIN Projects p ON t.project_id = p.project_id
@@ -2103,6 +2103,16 @@ class ClanMemberController {
             // Verificar que el usuario pertenece al clan
             if ($subtask['clan_id'] != $this->userClan['clan_id']) {
                 Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado - no perteneces a este clan'], 403);
+            }
+            
+            // Verificar permisos especiales para cambiar estado a "completed"
+            if (!empty($status) && $status === 'completed') {
+                $isTaskCreator = (int)$subtask['created_by_user_id'] === (int)$this->currentUser['user_id'];
+                $isTaskAssigned = (int)$subtask['assigned_to_user_id'] === (int)$this->currentUser['user_id'];
+                
+                if (!$isTaskCreator && !$isTaskAssigned) {
+                    Utils::jsonResponse(['success' => false, 'message' => 'Solo el creador o asignado de la tarea puede marcar subtareas como completadas'], 403);
+                }
             }
             
             // Actualizar estado
@@ -2840,10 +2850,11 @@ class ClanMemberController {
             } else { // subtask
                 // Verificar que el comentario pertenece a una subtarea accesible
                 $stmt = $this->db->prepare("
-                    SELECT sc.*, s.task_id, t.created_by_user_id, t.assigned_to_user_id
+                    SELECT sc.*, s.task_id, t.created_by_user_id, t.assigned_to_user_id, p.clan_id
                     FROM Subtask_Comments sc
                     JOIN Subtasks s ON sc.subtask_id = s.subtask_id
                     JOIN Tasks t ON s.task_id = t.task_id
+                    JOIN Projects p ON t.project_id = p.project_id
                     WHERE sc.comment_id = ?
                 ");
                 $stmt->execute([$commentId]);
@@ -2853,11 +2864,13 @@ class ClanMemberController {
                     Utils::jsonResponse(['success' => false, 'message' => 'Comentario no encontrado'], 404);
                 }
                 
-                // Verificar que el usuario tiene acceso a la tarea
+                // Para subtareas: permitir a cualquier miembro del clan marcar checkboxes
+                // Solo verificar que el usuario tenga acceso general a la tarea (creador, asignado, o miembro del clan)
                 $isCreator = (int)$comment['created_by_user_id'] === (int)$this->currentUser['user_id'];
                 $isAssigned = (int)$comment['assigned_to_user_id'] === (int)$this->currentUser['user_id'];
+                $isClanMember = $this->hasMemberAccess(); // Verificar si es miembro del clan
                 
-                if (!$isCreator && !$isAssigned) {
+                if (!$isCreator && !$isAssigned && !$isClanMember) {
                     Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos para modificar este comentario'], 403);
                 }
             }

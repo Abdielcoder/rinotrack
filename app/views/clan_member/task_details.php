@@ -92,7 +92,11 @@ $additionalJS[] = 'https://cdn.quilljs.com/1.3.6/quill.min.js';
                       <i class="fas fa-paperclip"></i>
                       <span class="badge" id="attachments-badge-<?php echo $subtask['subtask_id']; ?>" style="display: none;">0</span>
                     </button>
-                    <?php if ($canEdit): ?>
+                    <?php 
+                      // Permitir editar subtareas a cualquier miembro del clan (se controlará en backend)
+                      $canEditSubtask = true; // Los permisos específicos se verifican en el backend
+                    ?>
+                    <?php if ($canEditSubtask): ?>
                     <button class="btn-icon-small" onclick="editSubtask(<?php echo $subtask['subtask_id']; ?>)" title="Editar">
                       <i class="fas fa-edit"></i>
                     </button>
@@ -136,18 +140,31 @@ $additionalJS[] = 'https://cdn.quilljs.com/1.3.6/quill.min.js';
                            style="width: 100px;">
                   </div>
                 </div>
-                <?php if ($canEdit): ?>
                 <div class="subtask-status-controls">
                   <select class="status-select" onchange="updateSubtaskStatus(<?php echo $subtask['subtask_id']; ?>, this.value)">
                     <option value="pending" <?php echo $subtask['status'] === 'pending' ? 'selected' : ''; ?>>Pendiente</option>
                     <option value="in_progress" <?php echo $subtask['status'] === 'in_progress' ? 'selected' : ''; ?>>En Progreso</option>
+                    <?php 
+                      // Solo mostrar opción "completada" si es creador o asignado de la tarea
+                      $canComplete = $canEdit || ((int)($task['created_by_user_id'] ?? 0) === (int)$user['user_id']);
+                    ?>
+                    <?php if ($canComplete): ?>
                     <option value="completed" <?php echo $subtask['status'] === 'completed' ? 'selected' : ''; ?>>Completada</option>
+                    <?php else: ?>
+                    <?php if ($subtask['status'] === 'completed'): ?>
+                    <option value="completed" selected disabled>Completada (Solo lectura)</option>
+                    <?php endif; ?>
+                    <?php endif; ?>
                   </select>
                   <span class="status-display">
                     Estado: <?php echo ucfirst(str_replace('_', ' ', $subtask['status'])); ?>
                   </span>
+                  <?php if (!$canComplete && $subtask['status'] !== 'completed'): ?>
+                  <div style="font-size: 11px; color: #6b7280; margin-top: 2px;">
+                    <i class="fas fa-info-circle"></i> Solo el creador puede marcar como completada
+                  </div>
+                  <?php endif; ?>
                 </div>
-                <?php endif; ?>
               </div>
             </div>
             <?php endforeach; ?>
@@ -860,6 +877,26 @@ function updateSubtaskProgressFromClick(event, subtaskId) {
 
 // Funciones para subtareas
 function updateSubtaskStatus(subtaskId, status) {
+  // Verificar si el usuario está intentando cambiar a completado sin permisos
+  if (status === 'completed') {
+    const canComplete = <?php echo json_encode($canEdit || ((int)($task['created_by_user_id'] ?? 0) === (int)$user['user_id'])); ?>;
+    if (!canComplete) {
+      alert('Solo el creador o asignado de la tarea puede marcar subtareas como completadas');
+      // Revertir el select al estado anterior
+      const statusSelect = document.querySelector(`[data-subtask-id="${subtaskId}"] .status-select`);
+      if (statusSelect) {
+        // Buscar el estado anterior en las opciones
+        for (let i = 0; i < statusSelect.options.length; i++) {
+          if (statusSelect.options[i].value !== 'completed') {
+            statusSelect.selectedIndex = i;
+            break;
+          }
+        }
+      }
+      return;
+    }
+  }
+  
   // NO vincular el estado con el porcentaje - se manejan independientemente
   const subtaskItem = document.querySelector(`[data-subtask-id="${subtaskId}"]`);
   
@@ -958,8 +995,10 @@ function editSubtask(subtaskId) {
                         <select id="edit-subtask-status" onchange="toggleProgressBar()" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px; margin-bottom: 15px;">
                             <option value="pending" ${currentStatus === 'pending' ? 'selected' : ''}>Pendiente</option>
                             <option value="in_progress" ${currentStatus === 'in_progress' ? 'selected' : ''}>En Progreso</option>
-                            <option value="completed" ${currentStatus === 'completed' ? 'selected' : ''}>Completado</option>
                         </select>
+                        <div id="completion-restriction-message" style="font-size: 12px; color: #6b7280; margin-top: 5px; display: none;">
+                            <i class="fas fa-info-circle"></i> Solo el creador o asignado de la tarea puede marcar como completada
+                        </div>
                     </div>
                     <div class="form-group">
                         <label for="edit-subtask-progress">Progreso:</label>
@@ -994,8 +1033,32 @@ function editSubtask(subtaskId) {
     console.log('Progress container:', !!document.querySelector('.progress-control-container'));
     console.log('Progress bar:', !!document.querySelector('.progress-bar-edit'));
     
-    // Configurar estado inicial de la barra de progreso
-    toggleProgressBar();
+    // Verificar permisos para agregar opción de completado dinámicamente
+    setTimeout(() => {
+        const statusSelect = document.getElementById('edit-subtask-status');
+        const messageDiv = document.getElementById('completion-restriction-message');
+        
+        // Obtener información de permisos del usuario (desde PHP)
+        const canComplete = <?php echo json_encode($canEdit || ((int)($task['created_by_user_id'] ?? 0) === (int)$user['user_id'])); ?>;
+        
+        if (canComplete) {
+            // Agregar opción de completado si tiene permisos
+            const completedOption = document.createElement('option');
+            completedOption.value = 'completed';
+            completedOption.textContent = 'Completado';
+            if (currentStatus === 'completed') {
+                completedOption.selected = true;
+            }
+            statusSelect.appendChild(completedOption);
+        } else {
+            // Mostrar mensaje informativo si no tiene permisos
+            messageDiv.style.display = 'block';
+        }
+        
+        // Configurar estado inicial de la barra de progreso
+        toggleProgressBar();
+    }, 100);
+    
     document.getElementById('edit-subtask-title').focus();
 }
 
