@@ -3339,10 +3339,20 @@ function renderTeamTasksTable(tasks, tbodyId) {
     }
     
     let html = '';
+    const renderedTaskIds = new Set(); // Prevenir duplicados
+    
     tasks.forEach(task => {
+        // Verificar duplicados
+        if (renderedTaskIds.has(task.task_id)) {
+            console.warn('Tarea duplicada detectada y omitida:', task.task_id);
+            return;
+        }
+        renderedTaskIds.add(task.task_id);
+        
         const priority = task.priority || 'medium';
         const status = task.status || 'pending';
-        const progress = task.completion_percentage || 0;
+        // CORREGIDO: Si está completado, progreso debe ser 100%
+        const progress = status === 'completed' ? 100 : (task.completion_percentage || 0);
         const daysUntilDue = task.days_until_due || 0;
         
         html += `
@@ -3416,10 +3426,20 @@ function renderTasksTable(tasks, tbodyId) {
     }
     
     let html = '';
+    const renderedTaskIds = new Set(); // Prevenir duplicados
+    
     tasks.forEach(task => {
+        // Verificar duplicados
+        if (renderedTaskIds.has(task.task_id)) {
+            console.warn('Tarea duplicada detectada y omitida:', task.task_id);
+            return;
+        }
+        renderedTaskIds.add(task.task_id);
+        
         const priority = task.priority || 'medium';
         const status = task.status || 'pending';
-        const progress = task.completion_percentage || 0;
+        // CORREGIDO: Si está completado, progreso debe ser 100%
+        const progress = status === 'completed' ? 100 : (task.completion_percentage || 0);
         const daysUntilDue = task.days_until_due || 0;
         
         html += `

@@ -3821,7 +3821,8 @@ class ClanLeaderController {
                 return;
             }
 
-            $teamTasks = $this->taskModel->getAllTasksByClan(
+            // Usar la versión strict para evitar duplicados
+            $teamTasks = $this->taskModel->getAllTasksByClanStrict(
                 $clanId,
                 1, // página
                 100, // límite alto para obtener todas las tareas
