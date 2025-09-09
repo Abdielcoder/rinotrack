@@ -145,8 +145,11 @@ $additionalJS[] = 'https://cdn.quilljs.com/1.3.6/quill.min.js';
                     <option value="pending" <?php echo $subtask['status'] === 'pending' ? 'selected' : ''; ?>>Pendiente</option>
                     <option value="in_progress" <?php echo $subtask['status'] === 'in_progress' ? 'selected' : ''; ?>>En Progreso</option>
                     <?php 
-                      // Solo mostrar opción "completada" si es creador o asignado de la tarea
-                      $canComplete = $canEdit || ((int)($task['created_by_user_id'] ?? 0) === (int)$user['user_id']);
+                      // Solo mostrar opción "completada" si es creador, asignado, o es tarea recurrente/eventual
+                      $isTaskCreator = ((int)($task['created_by_user_id'] ?? 0) === (int)$user['user_id']);
+                      $isRecurrentTask = (bool)($task['is_recurrent'] ?? false);
+                      $isRecurrentProject = in_array($project['project_type'] ?? '', ['recurrent', 'eventual']);
+                      $canComplete = $canEdit || $isTaskCreator || $isRecurrentTask || $isRecurrentProject;
                     ?>
                     <?php if ($canComplete): ?>
                     <option value="completed" <?php echo $subtask['status'] === 'completed' ? 'selected' : ''; ?>>Completada</option>
@@ -161,7 +164,7 @@ $additionalJS[] = 'https://cdn.quilljs.com/1.3.6/quill.min.js';
                   </span>
                   <?php if (!$canComplete && $subtask['status'] !== 'completed'): ?>
                   <div style="font-size: 11px; color: #6b7280; margin-top: 2px;">
-                    <i class="fas fa-info-circle"></i> Solo el creador puede marcar como completada
+                    <i class="fas fa-info-circle"></i> Solo el creador/asignado o tareas recurrentes/eventuales pueden completarse
                   </div>
                   <?php endif; ?>
                 </div>
@@ -879,9 +882,13 @@ function updateSubtaskProgressFromClick(event, subtaskId) {
 function updateSubtaskStatus(subtaskId, status) {
   // Verificar si el usuario está intentando cambiar a completado sin permisos
   if (status === 'completed') {
-    const canComplete = <?php echo json_encode($canEdit || ((int)($task['created_by_user_id'] ?? 0) === (int)$user['user_id'])); ?>;
+    const isTaskCreator = <?php echo json_encode((int)($task['created_by_user_id'] ?? 0) === (int)$user['user_id']); ?>;
+    const isRecurrentTask = <?php echo json_encode((bool)($task['is_recurrent'] ?? false)); ?>;
+    const isRecurrentProject = <?php echo json_encode(in_array($project['project_type'] ?? '', ['recurrent', 'eventual'])); ?>;
+    const canComplete = <?php echo json_encode($canEdit); ?> || isTaskCreator || isRecurrentTask || isRecurrentProject;
+    
     if (!canComplete) {
-      alert('Solo el creador o asignado de la tarea puede marcar subtareas como completadas');
+      alert('Solo el creador/asignado de la tarea o miembros en tareas recurrentes/eventuales pueden marcar subtareas como completadas');
       // Revertir el select al estado anterior
       const statusSelect = document.querySelector(`[data-subtask-id="${subtaskId}"] .status-select`);
       if (statusSelect) {
@@ -997,7 +1004,7 @@ function editSubtask(subtaskId) {
                             <option value="in_progress" ${currentStatus === 'in_progress' ? 'selected' : ''}>En Progreso</option>
                         </select>
                         <div id="completion-restriction-message" style="font-size: 12px; color: #6b7280; margin-top: 5px; display: none;">
-                            <i class="fas fa-info-circle"></i> Solo el creador o asignado de la tarea puede marcar como completada
+                            <i class="fas fa-info-circle"></i> Solo el creador/asignado o tareas recurrentes/eventuales pueden completarse
                         </div>
                     </div>
                     <div class="form-group">
@@ -1039,7 +1046,10 @@ function editSubtask(subtaskId) {
         const messageDiv = document.getElementById('completion-restriction-message');
         
         // Obtener información de permisos del usuario (desde PHP)
-        const canComplete = <?php echo json_encode($canEdit || ((int)($task['created_by_user_id'] ?? 0) === (int)$user['user_id'])); ?>;
+        const isTaskCreator = <?php echo json_encode((int)($task['created_by_user_id'] ?? 0) === (int)$user['user_id']); ?>;
+        const isRecurrentTask = <?php echo json_encode((bool)($task['is_recurrent'] ?? false)); ?>;
+        const isRecurrentProject = <?php echo json_encode(in_array($project['project_type'] ?? '', ['recurrent', 'eventual'])); ?>;
+        const canComplete = <?php echo json_encode($canEdit); ?> || isTaskCreator || isRecurrentTask || isRecurrentProject;
         
         if (canComplete) {
             // Agregar opción de completado si tiene permisos

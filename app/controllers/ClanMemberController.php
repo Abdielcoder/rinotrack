@@ -2087,7 +2087,8 @@ class ClanMemberController {
         try {
             // Verificar que la subtarea pertenece a una tarea del clan del usuario
             $stmt = $this->db->prepare("
-                SELECT s.*, t.project_id, t.created_by_user_id, t.assigned_to_user_id, p.clan_id
+                SELECT s.*, t.project_id, t.created_by_user_id, t.assigned_to_user_id, t.is_recurrent, 
+                       p.clan_id, p.project_type
                 FROM Subtasks s
                 JOIN Tasks t ON s.task_id = t.task_id
                 JOIN Projects p ON t.project_id = p.project_id
@@ -2109,9 +2110,16 @@ class ClanMemberController {
             if (!empty($status) && $status === 'completed') {
                 $isTaskCreator = (int)$subtask['created_by_user_id'] === (int)$this->currentUser['user_id'];
                 $isTaskAssigned = (int)$subtask['assigned_to_user_id'] === (int)$this->currentUser['user_id'];
+                $isRecurrentTask = (bool)$subtask['is_recurrent'];
+                $isRecurrentProject = in_array($subtask['project_type'], ['recurrent', 'eventual']);
                 
-                if (!$isTaskCreator && !$isTaskAssigned) {
-                    Utils::jsonResponse(['success' => false, 'message' => 'Solo el creador o asignado de la tarea puede marcar subtareas como completadas'], 403);
+                // Permitir completar si:
+                // 1. Es creador o asignado de la tarea (regla original)
+                // 2. Es tarea recurrente o proyecto recurrente/eventual (nueva regla)
+                $canComplete = $isTaskCreator || $isTaskAssigned || $isRecurrentTask || $isRecurrentProject;
+                
+                if (!$canComplete) {
+                    Utils::jsonResponse(['success' => false, 'message' => 'Solo el creador, asignado de la tarea, o miembros en tareas recurrentes/eventuales pueden marcar subtareas como completadas'], 403);
                 }
             }
             
