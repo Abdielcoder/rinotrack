@@ -223,132 +223,49 @@ ob_start();
 
         <!-- Tab: Equipo -->
         <div id="team-tasks-content" class="tab-content">
-                <div class="all-tasks-section">
-                    <div class="section-header">
-                        <h2 class="section-title">
-                            Tareas del Equipo
-                            <?php if (!empty($search) || !empty($_GET['status_filter']) || (isset($_GET['per_page']) && $_GET['per_page'] != '5')): ?>
-                            <span class="filters-indicator">
-                                <i class="fas fa-filter"></i>
-                                Filtros activos
-                            </span>
-                            <?php endif; ?>
-                        </h2>
-                    </div>
-                    
-                    <!-- Filtros y búsqueda para Equipo -->
-                    <div class="filters-container">
-                        <div class="filters-header">
-                            <form method="GET" action="?route=clan_leader/tasks" class="filters-form">
-                                <input type="hidden" name="route" value="clan_leader/tasks">
-                                <input type="hidden" name="tab" value="team-tasks">
-                                
-                                <!-- Filtros -->
-                                <div class="filter-group">
-                                    <div class="filter-item">
-                                        <label for="statusFilterTeam">Estado:</label>
-                                        <select name="status_filter" id="statusFilterTeam">
-                                            <option value="">Todos</option>
-                                            <option value="pending" <?= (($_GET['status_filter'] ?? '') === 'pending') ? 'selected' : '' ?>>Pendiente</option>
-                                            <option value="in_progress" <?= (($_GET['status_filter'] ?? '') === 'in_progress') ? 'selected' : '' ?>>En Progreso</option>
-                                            <option value="completed" <?= (($_GET['status_filter'] ?? '') === 'completed') ? 'selected' : '' ?>>Completado</option>
-                                        </select>
-                                    </div>
-                                    
-                                    <div class="filter-item">
-                                        <label for="perPageTeam">Mostrar:</label>
-                                        <select name="per_page" id="perPageTeam">
-                                            <option value="5" <?= (($_GET['per_page'] ?? '5') === '5') ? 'selected' : '' ?>>5 por página</option>
-                                            <option value="10" <?= (($_GET['per_page'] ?? '5') === '10') ? 'selected' : '' ?>>10 por página</option>
-                                            <option value="25" <?= (($_GET['per_page'] ?? '5') === '25') ? 'selected' : '' ?>>25 por página</option>
-                                            <option value="50" <?= (($_GET['per_page'] ?? '5') === '50') ? 'selected' : '' ?>>50 por página</option>
-                                        </select>
-                                    </div>
-                                    
-                                    <div class="search-container">
-                                        <div class="search-input-wrapper">
-                                            <i class="fas fa-search search-icon"></i>
-                                            <input type="text" 
-                                                   name="search" 
-                                                   value="<?= htmlspecialchars($search) ?>"
-                                                   placeholder="Buscar tareas del equipo..."
-                                                   class="search-input"
-                                                   id="searchInputTeam">
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- Botones de acción -->
-                                    <div class="filter-actions">
-                                        <button type="submit" class="btn-apply-filters">
-                                            <i class="fas fa-filter"></i>
-                                            Aplicar Filtros
-                                        </button>
-                                        <a href="?route=clan_leader/tasks&tab=team-tasks" class="btn-reset-filters">
-                                            <i class="fas fa-undo"></i>
-                                            Resetear Filtros
-                                        </a>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                    
-                    <!-- Tabla de Tareas del Equipo -->
-                    <div class="tasks-table-container">
-
-            <!-- Tab: Equipo -->
-            <div id="team-tasks-content" class="tab-content">
-                <div class="all-tasks-section">
+            <div class="all-tasks-section">
                 <div class="section-header">
-                    <h2 class="section-title">
-                        Todas las Tareas del Clan
-                        <?php if (!empty($search) || !empty($_GET['status_filter']) || (isset($_GET['per_page']) && $_GET['per_page'] != '5')): ?>
-                        <span class="filters-indicator">
-                            <i class="fas fa-filter"></i>
-                            Filtros activos
-                        </span>
-                        <?php endif; ?>
-                    </h2>
-                    <div class="section-actions">
-                        <!-- Solo Filtros -->
-                        <div class="filters-container">
-                            <form method="GET" action="?route=clan_leader/tasks" class="filters-form">
-                                <input type="hidden" name="route" value="clan_leader/tasks">
-                                
-                                <!-- Filtro por estado -->
-                                <div class="filter-group">
-                                    <label for="status_filter" class="filter-label">Estado:</label>
-                                    <select name="status_filter" id="status_filter" class="filter-select">
-                                        <option value="">Todos los estados</option>
-                                        <option value="pending" <?= (isset($_GET['status_filter']) && $_GET['status_filter'] === 'pending') ? 'selected' : '' ?>>Pendientes</option>
-                                        <option value="in_progress" <?= (isset($_GET['status_filter']) && $_GET['status_filter'] === 'in_progress') ? 'selected' : '' ?>>En Progreso</option>
-                                        <option value="completed" <?= (isset($_GET['status_filter']) && $_GET['status_filter'] === 'completed') ? 'selected' : '' ?>>Completadas</option>
-                                        <option value="cancelled" <?= (isset($_GET['status_filter']) && $_GET['status_filter'] === 'cancelled') ? 'selected' : '' ?>>Canceladas</option>
+                    <h2 class="section-title">Tareas del Equipo</h2>
+                </div>
+                
+                <!-- Filtros y búsqueda para Equipo -->
+                <div class="filters-container">
+                    <div class="filters-header">
+                        <form method="GET" action="?route=clan_leader/tasks" class="filters-form">
+                            <input type="hidden" name="route" value="clan_leader/tasks">
+                            <input type="hidden" name="tab" value="team-tasks">
+                            
+                            <!-- Filtros -->
+                            <div class="filter-group">
+                                <div class="filter-item">
+                                    <label for="statusFilterTeam">Estado:</label>
+                                    <select name="status_filter" id="statusFilterTeam">
+                                        <option value="">Todos</option>
+                                        <option value="pending" <?= (($_GET['status_filter'] ?? '') === 'pending') ? 'selected' : '' ?>>Pendiente</option>
+                                        <option value="in_progress" <?= (($_GET['status_filter'] ?? '') === 'in_progress') ? 'selected' : '' ?>>En Progreso</option>
+                                        <option value="completed" <?= (($_GET['status_filter'] ?? '') === 'completed') ? 'selected' : '' ?>>Completado</option>
                                     </select>
                                 </div>
                                 
-                                <!-- Filtro por registros por página -->
-                                <div class="filter-group">
-                                    <label for="per_page" class="filter-label">Mostrar:</label>
-                                    <select name="per_page" id="per_page" class="filter-select">
-                                        <option value="5" <?= (isset($_GET['per_page']) && $_GET['per_page'] == '5') ? 'selected' : '' ?>>5 por página</option>
-                                        <option value="10" <?= (isset($_GET['per_page']) && $_GET['per_page'] == '10') ? 'selected' : '' ?>>10 por página</option>
-                                        <option value="20" <?= (isset($_GET['per_page']) && $_GET['per_page'] == '20') ? 'selected' : '' ?>>20 por página</option>
-                                        <option value="50" <?= (isset($_GET['per_page']) && $_GET['per_page'] == '50') ? 'selected' : '' ?>>50 por página</option>
-                                        <option value="100" <?= (isset($_GET['per_page']) && $_GET['per_page'] == '100') ? 'selected' : '' ?>>100 por página</option>
+                                <div class="filter-item">
+                                    <label for="perPageTeam">Mostrar:</label>
+                                    <select name="per_page" id="perPageTeam">
+                                        <option value="5" <?= (($_GET['per_page'] ?? '5') === '5') ? 'selected' : '' ?>>5 por página</option>
+                                        <option value="10" <?= (($_GET['per_page'] ?? '5') === '10') ? 'selected' : '' ?>>10 por página</option>
+                                        <option value="25" <?= (($_GET['per_page'] ?? '5') === '25') ? 'selected' : '' ?>>25 por página</option>
+                                        <option value="50" <?= (($_GET['per_page'] ?? '5') === '50') ? 'selected' : '' ?>>50 por página</option>
                                     </select>
                                 </div>
                                 
-                                <!-- Barra de búsqueda -->
                                 <div class="search-container">
-                                    <div class="search-input-group">
+                                    <div class="search-input-wrapper">
                                         <i class="fas fa-search search-icon"></i>
                                         <input type="text" 
                                                name="search" 
-                                               value="<?= htmlspecialchars($search ?? '') ?>" 
-                                               placeholder="Buscar tareas, proyectos o usuarios..."
+                                               value="<?= htmlspecialchars($search ?? '') ?>"
+                                               placeholder="Buscar tareas del equipo..."
                                                class="search-input"
-                                               id="searchInput">
+                                               id="searchInputTeam">
                                     </div>
                                 </div>
                                 
@@ -358,16 +275,43 @@ ob_start();
                                         <i class="fas fa-filter"></i>
                                         Aplicar Filtros
                                     </button>
-                                    <a href="?route=clan_leader/tasks" class="btn-reset-filters">
+                                    <a href="?route=clan_leader/tasks&tab=team-tasks" class="btn-reset-filters">
                                         <i class="fas fa-undo"></i>
                                         Resetear Filtros
                                     </a>
                                 </div>
-                            </form>
-                        </div>
-                     
+                            </div>
+                        </form>
                     </div>
                 </div>
+                
+                <!-- Tabla de Tareas del Equipo (cargada por JavaScript) -->
+                <div class="tasks-table-container">
+                    <table class="tasks-table">
+                        <thead>
+                            <tr>
+                                <th class="th-checkbox" style="width: 40px;">
+                                    <input type="checkbox" id="select-all-team" onchange="toggleAllTasks(this, 'team')">
+                                </th>
+                                <th class="th-priority">Prioridad</th>
+                                <th class="th-task">Tarea</th>
+                                <th class="th-project">Proyecto</th>
+                                <th class="th-assigned">Asignado</th>
+                                <th class="th-due-date">Fecha Límite</th>
+                                <th class="th-status">Estado</th>
+                                <th class="th-progress">Progreso</th>
+                                <th class="th-actions">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="team-tasks-table-body">
+                            <!-- Las tareas del equipo se cargarán por JavaScript -->
+                            <tr><td colspan="9" class="text-center">Cargando tareas del equipo...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
                 
                 <div class="tasks-table-container">
                     <table class="tasks-table">
@@ -3364,11 +3308,104 @@ function loadMyTasks() {
 
 // Función para cargar tareas del equipo
 function loadTeamTasks() {
-    // Por ahora mantener la tabla actual del equipo
-    console.log('Cargando tareas del equipo...');
+    const tbody = document.getElementById('team-tasks-table-body');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '<tr><td colspan="9" class="text-center">Cargando tareas del equipo...</td></tr>';
+    
+    fetch('?route=clan_leader/get-team-tasks')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                renderTeamTasksTable(data.tasks, 'team-tasks-table-body');
+            } else {
+                tbody.innerHTML = '<tr><td colspan="9" class="text-center text-danger">Error al cargar tareas del equipo: ' + data.message + '</td></tr>';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            tbody.innerHTML = '<tr><td colspan="9" class="text-center text-danger">Error de conexión</td></tr>';
+        });
 }
 
-// Función para renderizar tabla de tareas
+// Función para renderizar tabla de tareas del equipo
+function renderTeamTasksTable(tasks, tbodyId) {
+    const tbody = document.getElementById(tbodyId);
+    if (!tbody) return;
+    
+    if (tasks.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center">No hay tareas del equipo disponibles</td></tr>';
+        return;
+    }
+    
+    let html = '';
+    tasks.forEach(task => {
+        const priority = task.priority || 'medium';
+        const status = task.status || 'pending';
+        const progress = task.completion_percentage || 0;
+        const daysUntilDue = task.days_until_due || 0;
+        
+        html += `
+            <tr class="task-row priority-${priority} ${daysUntilDue < 0 ? 'overdue' : ''} ${status === 'completed' ? 'completed' : ''}" data-task-id="${task.task_id}">
+                <td class="td-checkbox">
+                    <input type="checkbox" 
+                           id="team-task-${task.task_id}" 
+                           data-task-id="${task.task_id}"
+                           ${status === 'completed' ? 'checked' : ''}
+                           onchange="toggleTaskStatus('${task.task_id}', this.checked)">
+                </td>
+                <td class="td-priority">
+                    <span class="priority-badge priority-${priority}">
+                        ${priority === 'critical' ? 'Urgente' : priority === 'high' ? 'Alta' : priority === 'low' ? 'Baja' : 'Media'}
+                    </span>
+                </td>
+                <td class="td-task">
+                    <div class="task-info">
+                        <div class="task-title">${task.task_name || 'Sin nombre'}</div>
+                        ${task.description ? '<div class="task-description" style="display:none;">' + task.description.substring(0, 100) + (task.description.length > 100 ? '...' : '') + '</div>' : ''}
+                    </div>
+                </td>
+                <td class="td-project">
+                    <span class="project-name">${task.project_name || 'Sin proyecto'}</span>
+                </td>
+                <td class="td-assigned">
+                    <span class="assigned-users">${task.assigned_user_name || task.all_assigned_users || 'Sin asignar'}</span>
+                </td>
+                <td class="td-due-date">
+                    ${task.due_date ? '<span class="due-date">' + task.due_date + '</span>' : '<span class="no-date">Sin fecha</span>'}
+                </td>
+                <td class="td-status">
+                    <span class="status-badge status-${status}">
+                        ${status === 'completed' ? 'Completado' : status === 'in_progress' ? 'En Progreso' : 'Pendiente'}
+                    </span>
+                </td>
+                <td class="td-progress">
+                    <div class="progress-container">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${progress}%"></div>
+                        </div>
+                        <span class="progress-text">${progress}%</span>
+                    </div>
+                </td>
+                <td class="td-actions">
+                    <div class="action-buttons">
+                        <a href="?route=clan_leader/get-task-details&task_id=${task.task_id}" class="btn-action btn-view" title="Ver detalles">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        <a href="?route=clan_leader/tasks&action=edit&task_id=${task.task_id}" class="btn-action btn-edit" title="Editar tarea">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        ${task.created_by_user_id == <?= $user['user_id'] ?? 0 ?> ? '<button class="btn-action btn-clone" onclick="openCloneTaskModal(' + task.task_id + ')" title="Clonar tarea"><i class="fas fa-copy"></i></button>' : ''}
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
+    
+    tbody.innerHTML = html;
+}
+
+// Función para renderizar tabla de tareas (mis tareas)
 function renderTasksTable(tasks, tbodyId) {
     const tbody = document.getElementById(tbodyId);
     if (!tbody) return;

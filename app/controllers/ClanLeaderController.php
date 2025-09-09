@@ -3802,6 +3802,46 @@ class ClanLeaderController {
     }
     
     /**
+     * Obtener tareas del equipo/clan (todas las tareas del clan)
+     */
+    public function getTeamTasks() {
+        $this->requireAuth();
+        
+        if (!$this->hasClanLeaderAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+            return;
+        }
+
+        try {
+            // Obtener todas las tareas del clan
+            $clanId = $this->currentUser['clan_id'];
+            
+            if (!$clanId) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Usuario sin clan asignado'], 400);
+                return;
+            }
+
+            $teamTasks = $this->taskModel->getAllTasksByClan(
+                $clanId,
+                1, // página
+                100, // límite alto para obtener todas las tareas
+                '', // sin búsqueda
+                '' // sin filtro de estado
+            );
+
+            Utils::jsonResponse([
+                'success' => true,
+                'tasks' => $teamTasks['tasks'] ?? [],
+                'total' => count($teamTasks['tasks'] ?? [])
+            ]);
+
+        } catch (Exception $e) {
+            error_log("Error en getTeamTasks (ClanLeader): " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor'], 500);
+        }
+    }
+    
+    /**
      * Obtener mis tareas organizadas para Kanban (solo las tareas donde el líder es asignado)
      */
     public function getMyKanbanTasks() {
