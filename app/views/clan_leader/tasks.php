@@ -679,7 +679,6 @@ ob_start();
                 <?php endif; ?>
             </div>
             <?php endif; ?>
-        <?php endif; ?>
 
         <?php if (isset($projects) && empty($projects)): ?>
             <!-- Estado Vacío - No hay proyectos -->
