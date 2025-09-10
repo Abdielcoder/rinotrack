@@ -151,10 +151,10 @@ ob_start();
                         
                         <!-- Acciones del Proyecto -->
                         <div class="project-actions-minimal">
-                            <button class="btn-minimal primary" onclick="showProjectTasks(<?= $project['project_id'] ?>)">
+                            <a href="?route=clan_leader/tasks&project_id=<?= $project['project_id'] ?>" class="btn-minimal primary">
                                 <i class="fas fa-eye"></i>
                                 Ver Tareas
-                            </button>
+                            </a>
                             <button class="btn-minimal secondary" onclick="openCreateTaskModal(<?= $project['project_id'] ?>)">
                                 <i class="fas fa-plus"></i>
                                 Nueva Tarea
@@ -165,24 +165,7 @@ ob_start();
                             </a>
                         </div>
                         
-                        <!-- Sección de tareas del proyecto (colapsable) -->
-                        <div class="project-tasks-section" id="projectTasks<?= $project['project_id'] ?>" style="display: none;">
-                            <div class="tasks-header">
-                                <h4>Tareas del Proyecto</h4>
-                                <div class="tasks-actions">
-                                    <button class="btn-mini" onclick="refreshProjectTasks(<?= $project['project_id'] ?>)">
-                                        <i class="fas fa-sync"></i>
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="tasks-container" id="tasksContainer<?= $project['project_id'] ?>">
-                                <!-- Las tareas se cargan dinámicamente -->
-                                <div class="loading-tasks">
-                                    <i class="fas fa-spinner fa-spin"></i>
-                                    Cargando tareas...
-                                </div>
-                            </div>
-                        </div>
+                        <!-- Nota: La sección colapsable se ha removido - ahora se usa navegación directa -->
                     </div>
                     <?php endforeach; ?>
                 </div>
@@ -449,171 +432,18 @@ document.getElementById('editProjectModal').addEventListener('click', function(e
 
 // ========== NUEVAS FUNCIONALIDADES MEJORADAS ==========
 
-// Mostrar/ocultar tareas del proyecto
-function showProjectTasks(projectId) {
-    const tasksSection = document.getElementById(`projectTasks${projectId}`);
-    const isVisible = tasksSection.style.display !== 'none';
-    
-    if (isVisible) {
-        tasksSection.style.display = 'none';
-    } else {
-        tasksSection.style.display = 'block';
-        loadProjectTasks(projectId);
-    }
-}
+// Función removida - El botón "Ver Tareas" ahora redirige directamente al listado
+// function showProjectTasks(projectId) { ... }
 
-// Cargar tareas del proyecto dinámicamente
-function loadProjectTasks(projectId) {
-    const container = document.getElementById(`tasksContainer${projectId}`);
-    
-    container.innerHTML = `
-        <div class="loading-tasks">
-            <i class="fas fa-spinner fa-spin"></i>
-            Cargando tareas...
-        </div>
-    `;
-    
-    fetch(`?route=clan_leader/get-project-tasks&project_id=${projectId}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success && data.tasks) {
-                renderProjectTasks(container, data.tasks, projectId);
-            } else {
-                container.innerHTML = `
-                    <div class="no-tasks">
-                        <i class="fas fa-inbox"></i>
-                        <p>No hay tareas en este proyecto</p>
-                        <button class="btn-mini primary" onclick="openCreateTaskModal(${projectId})">
-                            <i class="fas fa-plus"></i> Crear Primera Tarea
-                        </button>
-                    </div>
-                `;
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            container.innerHTML = `
-                <div class="error-tasks">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <p>Error al cargar las tareas</p>
-                    <button class="btn-mini" onclick="loadProjectTasks(${projectId})">
-                        <i class="fas fa-sync"></i> Reintentar
-                    </button>
-                </div>
-            `;
-        });
-}
-
-// Renderizar tareas del proyecto
-function renderProjectTasks(container, tasks, projectId) {
-    if (!tasks || tasks.length === 0) {
-        container.innerHTML = `
-            <div class="no-tasks">
-                <i class="fas fa-inbox"></i>
-                <p>No hay tareas en este proyecto</p>
-                <button class="btn-mini primary" onclick="openCreateTaskModal(${projectId})">
-                    <i class="fas fa-plus"></i> Crear Primera Tarea
-                </button>
-            </div>
-        `;
-        return;
-    }
-    
-    let html = '<div class="tasks-list">';
-    
-    tasks.forEach(task => {
-        const statusClass = task.status === 'completed' ? 'completed' : 
-                          task.status === 'in_progress' ? 'in-progress' : 'pending';
-        
-        const priorityClass = task.priority === 'high' ? 'high' : 
-                            task.priority === 'medium' ? 'medium' : 'low';
-        
-        html += `
-            <div class="task-item-mini ${statusClass}">
-                <div class="task-info">
-                    <div class="task-header-inline">
-                        <h5 class="task-title">${task.task_name}</h5>
-                        <div class="task-badges">
-                            <span class="task-status status-${statusClass}">${task.status}</span>
-                            <span class="task-priority priority-${priorityClass}">${task.priority}</span>
-                        </div>
-                    </div>
-                    ${task.description ? `<p class="task-description">${task.description}</p>` : ''}
-                    <div class="task-meta">
-                        ${task.assigned_user_name ? `<span class="task-assigned"><i class="fas fa-user"></i> ${task.assigned_user_name}</span>` : ''}
-                        ${task.due_date ? `<span class="task-due"><i class="fas fa-calendar"></i> ${formatDate(task.due_date)}</span>` : ''}
-                        ${task.completion_percentage ? `<span class="task-progress"><i class="fas fa-chart-line"></i> ${task.completion_percentage}%</span>` : ''}
-                    </div>
-                </div>
-                <div class="task-actions-mini">
-                    <button class="btn-task-action edit" onclick="openEditTaskModal(${task.task_id})" title="Editar Tarea">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="btn-task-action delete" onclick="deleteTask(${task.task_id}, '${task.task_name}', ${projectId})" title="Eliminar Tarea">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                    <a href="?route=clan_leader/task_details&task_id=${task.task_id}" class="btn-task-action view" title="Ver Detalles">
-                        <i class="fas fa-eye"></i>
-                    </a>
-                </div>
-            </div>
-        `;
-    });
-    
-    html += '</div>';
-    container.innerHTML = html;
-}
-
-// Refrescar tareas del proyecto
-function refreshProjectTasks(projectId) {
-    loadProjectTasks(projectId);
-}
+// Funciones removidas - Se usa navegación directa a las vistas existentes
+// function loadProjectTasks(projectId) { ... }
+// function renderProjectTasks(container, tasks, projectId) { ... }
+// function refreshProjectTasks(projectId) { ... }
 
 // Abrir modal para crear tarea
 function openCreateTaskModal(projectId) {
-    // Implementar modal de creación de tarea
+    // Redirigir a la página de creación de tareas con el proyecto preseleccionado
     window.location.href = `?route=clan_leader/tasks&action=create&project_id=${projectId}`;
-}
-
-// Abrir modal para editar tarea
-function openEditTaskModal(taskId) {
-    // Implementar modal de edición de tarea
-    window.location.href = `?route=clan_leader/tasks&action=edit&task_id=${taskId}`;
-}
-
-// Eliminar tarea
-function deleteTask(taskId, taskName, projectId) {
-    if (confirm(`¿Estás seguro de que quieres eliminar la tarea "${taskName}"?`)) {
-        const formData = new FormData();
-        formData.append('task_id', taskId);
-        
-        fetch('?route=clan_leader/delete-task', {
-            method: 'POST',
-            credentials: 'same-origin',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showToast(data.message || 'Tarea eliminada exitosamente', 'success');
-                // Refrescar las tareas del proyecto
-                loadProjectTasks(projectId);
-            } else {
-                showToast(data.message || 'Error al eliminar la tarea', 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showToast('Error de conexión', 'error');
-        });
-    }
-}
-
-// Función para formatear fechas
-function formatDate(dateString) {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES');
 }
 
 // Función para mostrar mensajes toast
