@@ -3017,13 +3017,13 @@ function switchTab(tabName) {
         targetButton.classList.add('active');
     }
     
-    // Cargar datos según el tab (usando funciones existentes)
+    // Cargar datos según el tab (usando misma lógica del kanban)
     if (tabName === 'my-tasks') {
-        console.log('🔵 Cargando MIS tareas...');
-        loadMyTasks();
+        console.log('🔵 Cargando MIS tareas con lógica del kanban...');
+        loadMyTasksTable();
     } else if (tabName === 'team-tasks') {
-        console.log('🟡 Cargando tareas del EQUIPO...');
-        loadTeamTasks();
+        console.log('🟡 Cargando tareas del EQUIPO con lógica del kanban...');
+        loadTeamTasksTable();
     }
 }
 
@@ -3766,6 +3766,284 @@ console.log('🚀 Tasks.php cargado - Versión 6.0 - Debug activo');
     font-size: 14px;
 }
 
+/* ========== ESTILOS PARA TABLA CON LÓGICA KANBAN ========== */
+
+/* Filas de subtareas */
+.subtask-row {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
+}
+
+/* Iconos en celdas de tarea */
+.subtask-icon-table {
+    font-size: 12px;
+    color: #6c757d;
+    margin-right: 6px;
+}
+
+.personal-icon {
+    color: #e74c3c;
+    margin-right: 6px;
+}
+
+.team-icon {
+    color: #3498db;
+    margin-right: 6px;
+}
+
+.parent-task-indicator {
+    font-size: 12px;
+    color: #6c757d;
+    margin-left: 6px;
+    cursor: help;
+}
+
+/* Badges de proyecto */
+.project-badge.personal {
+    background: rgba(231, 76, 60, 0.1);
+    color: #e74c3c;
+    border: 1px solid rgba(231, 76, 60, 0.2);
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.project-badge.clan {
+    background: rgba(52, 152, 219, 0.1);
+    color: #3498db;
+    border: 1px solid rgba(52, 152, 219, 0.2);
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+/* Badges de fecha límite con urgencia */
+.due-date-badge.overdue {
+    background: rgba(231, 76, 60, 0.2);
+    color: #e74c3c;
+    border: 1px solid rgba(231, 76, 60, 0.4);
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    animation: pulse-red 2s infinite;
+}
+
+.due-date-badge.today {
+    background: rgba(243, 156, 18, 0.2);
+    color: #f39c12;
+    border: 1px solid rgba(243, 156, 18, 0.4);
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    animation: pulse-orange 2s infinite;
+}
+
+.due-date-badge.week1 {
+    background: rgba(52, 152, 219, 0.15);
+    color: #3498db;
+    border: 1px solid rgba(52, 152, 219, 0.3);
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.due-date-badge.week2 {
+    background: rgba(39, 174, 96, 0.15);
+    color: #27ae60;
+    border: 1px solid rgba(39, 174, 96, 0.3);
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.no-due-date {
+    color: #6c757d;
+    font-style: italic;
+    font-size: 11px;
+}
+
+/* Badges de prioridad */
+.priority-badge.priority-high {
+    background: rgba(231, 76, 60, 0.1);
+    color: #e74c3c;
+    border: 1px solid rgba(231, 76, 60, 0.2);
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.priority-badge.priority-medium {
+    background: rgba(243, 156, 18, 0.1);
+    color: #f39c12;
+    border: 1px solid rgba(243, 156, 18, 0.2);
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.priority-badge.priority-low {
+    background: rgba(52, 152, 219, 0.1);
+    color: #3498db;
+    border: 1px solid rgba(52, 152, 219, 0.2);
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+/* Badges de estado */
+.status-badge.status-completed {
+    background: rgba(39, 174, 96, 0.1);
+    color: #27ae60;
+    border: 1px solid rgba(39, 174, 96, 0.2);
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.status-badge.status-in_progress {
+    background: rgba(52, 152, 219, 0.1);
+    color: #3498db;
+    border: 1px solid rgba(52, 152, 219, 0.2);
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.status-badge.status-pending {
+    background: rgba(243, 156, 18, 0.1);
+    color: #f39c12;
+    border: 1px solid rgba(243, 156, 18, 0.2);
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+/* Progreso en tabla */
+.progress-container-table {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.progress-bar-table {
+    flex: 1;
+    height: 6px;
+    background: #ecf0f1;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.progress-fill-table {
+    height: 100%;
+    background: linear-gradient(90deg, #27ae60 0%, #2ecc71 100%);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+.progress-text-table {
+    font-size: 11px;
+    font-weight: 600;
+    color: #2c3e50;
+    min-width: 35px;
+}
+
+/* Acciones en tabla */
+.actions-group {
+    display: flex;
+    gap: 4px;
+}
+
+.btn-action-table {
+    padding: 6px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 11px;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+}
+
+.btn-action-table.view {
+    background: rgba(52, 152, 219, 0.1);
+    color: #3498db;
+}
+
+.btn-action-table.view:hover {
+    background: rgba(52, 152, 219, 0.2);
+    transform: scale(1.05);
+}
+
+.btn-action-table.edit {
+    background: rgba(243, 156, 18, 0.1);
+    color: #f39c12;
+}
+
+.btn-action-table.edit:hover {
+    background: rgba(243, 156, 18, 0.2);
+    transform: scale(1.05);
+}
+
+.btn-action-table.delete {
+    background: rgba(231, 76, 60, 0.1);
+    color: #e74c3c;
+}
+
+.btn-action-table.delete:hover {
+    background: rgba(231, 76, 60, 0.2);
+    transform: scale(1.05);
+}
+
+/* Descripción de tarea en tabla */
+.task-description-table {
+    font-size: 12px;
+    color: #666;
+    margin-top: 4px;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Animaciones de urgencia */
+@keyframes pulse-red {
+    0%, 100% { 
+        background: rgba(231, 76, 60, 0.2);
+        transform: scale(1); 
+    }
+    50% { 
+        background: rgba(231, 76, 60, 0.35);
+        transform: scale(1.05); 
+    }
+}
+
+@keyframes pulse-orange {
+    0%, 100% { 
+        background: rgba(243, 156, 18, 0.2);
+        transform: scale(1); 
+    }
+    50% { 
+        background: rgba(243, 156, 18, 0.35);
+        transform: scale(1.05); 
+    }
+}
+
 /* Toast para tareas */
 .task-toast {
     position: fixed;
@@ -3796,7 +4074,233 @@ console.log('🚀 Tasks.php JavaScript cargado - Tabs implementados');
 
 // Función switchTasksTab removida - se usa switchTab existente
 
-// Funciones de filtrado removidas - se usan las funciones existentes de carga de datos
+// ========== FUNCIONES CON LÓGICA DEL KANBAN ==========
+
+// Función para cargar mis tareas usando endpoint del kanban
+function loadMyTasksTable() {
+    console.log('🔵 loadMyTasksTable() iniciado - usando lógica del kanban');
+    const tbody = document.getElementById('my-tasks-table-body');
+    if (!tbody) {
+        console.error('🔴 No se encontró tbody: my-tasks-table-body');
+        return;
+    }
+    
+    tbody.innerHTML = '<tr class="loading"><td colspan="8" class="text-center"><i class="fas fa-spinner fa-spin"></i> Cargando mis tareas...</td></tr>';
+    
+    // Usar el MISMO endpoint del kanban
+    fetch('?route=clan_leader/get-my-kanban-tasks')
+        .then(response => response.json())
+        .then(data => {
+            console.log('🔵 === RESPUESTA KANBAN PARA TABLA ===');
+            console.log('🔵 Success:', data.success);
+            console.log('🔵 Kanban Tasks:', data.kanbanTasks);
+            
+            if (data.success) {
+                // Convertir datos del kanban a formato tabla
+                const allTasks = [];
+                Object.keys(data.kanbanTasks).forEach(column => {
+                    data.kanbanTasks[column].forEach(task => {
+                        allTasks.push(task);
+                    });
+                });
+                
+                renderTasksTableFromKanban(allTasks, 'my-tasks-table-body');
+            } else {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Error: ' + (data.message || 'Error desconocido') + '</td></tr>';
+            }
+        })
+        .catch(error => {
+            console.error('🔴 Error:', error);
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Error de conexión</td></tr>';
+        });
+}
+
+// Función para cargar tareas del equipo usando endpoint del kanban
+function loadTeamTasksTable() {
+    console.log('🟡 loadTeamTasksTable() iniciado - usando lógica del kanban');
+    const tbody = document.getElementById('team-tasks-table-body');
+    if (!tbody) {
+        console.error('🔴 No se encontró tbody: team-tasks-table-body');
+        return;
+    }
+    
+    tbody.innerHTML = '<tr class="loading"><td colspan="8" class="text-center"><i class="fas fa-spinner fa-spin"></i> Cargando tareas del equipo...</td></tr>';
+    
+    // Usar el MISMO endpoint del kanban
+    fetch('?route=clan_leader/get-team-kanban-tasks')
+        .then(response => response.json())
+        .then(data => {
+            console.log('🟡 === RESPUESTA TEAM KANBAN PARA TABLA ===');
+            console.log('🟡 Success:', data.success);
+            console.log('🟡 Kanban Tasks:', data.kanbanTasks);
+            
+            if (data.success && data.kanbanTasks) {
+                // Convertir datos del kanban a formato tabla
+                const allTasks = [];
+                Object.keys(data.kanbanTasks).forEach(column => {
+                    data.kanbanTasks[column].forEach(task => {
+                        allTasks.push(task);
+                    });
+                });
+                
+                renderTasksTableFromKanban(allTasks, 'team-tasks-table-body');
+            } else {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Error: ' + (data.message || 'Error desconocido') + '</td></tr>';
+            }
+        })
+        .catch(error => {
+            console.error('🔴 Error:', error);
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Error de conexión</td></tr>';
+        });
+}
+
+// Función para renderizar tareas del kanban en formato tabla
+function renderTasksTableFromKanban(tasks, tbodyId) {
+    const tbody = document.getElementById(tbodyId);
+    if (!tbody) return;
+    
+    if (!tasks || tasks.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No hay tareas disponibles</td></tr>';
+        return;
+    }
+    
+    let html = '';
+    
+    tasks.forEach(task => {
+        const isPersonal = (task.is_personal == 1);
+        const isSubtask = (task.item_type === 'subtask');
+        
+        // Calcular días hasta vencimiento para mostrar urgencia
+        let urgencyClass = '';
+        let urgencyText = '';
+        if (task.due_date) {
+            const dueDate = new Date(task.due_date);
+            const today = new Date();
+            const diffTime = dueDate - today;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays < 0) {
+                urgencyClass = 'overdue';
+                urgencyText = 'Vencida';
+            } else if (diffDays === 0) {
+                urgencyClass = 'today';
+                urgencyText = 'Hoy';
+            } else if (diffDays <= 7) {
+                urgencyClass = 'week1';
+                urgencyText = 'Esta semana';
+            } else {
+                urgencyClass = 'week2';
+                urgencyText = diffDays + ' días';
+            }
+        }
+        
+        html += `
+            <tr class="task-row ${isSubtask ? 'subtask-row' : ''}" data-task-id="${task.task_id}">
+                <td class="checkbox-cell">
+                    <input type="checkbox" class="task-checkbox" ${task.status === 'completed' ? 'checked' : ''}>
+                </td>
+                <td class="priority-cell">
+                    <span class="priority-badge priority-${task.priority || 'medium'}">${task.priority || 'medium'}</span>
+                </td>
+                <td class="task-cell">
+                    <div class="task-name-table">
+                        ${isSubtask ? '<i class="fas fa-arrow-right subtask-icon-table"></i>' : ''}
+                        ${isPersonal ? '<i class="fas fa-user-circle personal-icon" title="Tarea Personal"></i>' : '<i class="fas fa-users team-icon" title="Tarea de Clan"></i>'}
+                        ${task.task_name || 'Sin nombre'}
+                        ${isSubtask && task.parent_task_name ? `<span class="parent-task-indicator" title="Tarea padre: ${task.parent_task_name}">↑</span>` : ''}
+                    </div>
+                    ${task.description ? `<div class="task-description-table">${task.description}</div>` : ''}
+                </td>
+                <td class="project-cell">
+                    <span class="project-badge ${isPersonal ? 'personal' : 'clan'}">${task.project_name || 'Sin proyecto'}</span>
+                </td>
+                <td class="due-date-cell">
+                    ${task.due_date ? `<span class="due-date-badge ${urgencyClass}">${urgencyText}</span>` : '<span class="no-due-date">Sin fecha</span>'}
+                </td>
+                <td class="status-cell">
+                    <span class="status-badge status-${task.status}">${task.status}</span>
+                </td>
+                <td class="progress-cell">
+                    <div class="progress-container-table">
+                        <div class="progress-bar-table">
+                            <div class="progress-fill-table" style="width: ${task.completion_percentage || 0}%"></div>
+                        </div>
+                        <span class="progress-text-table">${task.completion_percentage || 0}%</span>
+                    </div>
+                </td>
+                <td class="actions-cell">
+                    <div class="actions-group">
+                        <a href="?route=clan_leader/task_details&task_id=${task.task_id}" class="btn-action-table view" title="Ver Detalles">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        <a href="?route=clan_leader/tasks&action=edit&task_id=${task.task_id}" class="btn-action-table edit" title="Editar">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <button class="btn-action-table delete" onclick="deleteTaskTable(${task.task_id}, '${task.task_name}')" title="Eliminar">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
+    
+    tbody.innerHTML = html;
+}
+
+// Función para eliminar tarea desde la tabla
+function deleteTaskTable(taskId, taskName) {
+    if (confirm(`¿Estás seguro de que quieres eliminar la tarea "${taskName}"?`)) {
+        const formData = new FormData();
+        formData.append('task_id', taskId);
+        
+        fetch('?route=clan_leader/delete-task', {
+            method: 'POST',
+            credentials: 'same-origin',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showTaskToast(data.message || 'Tarea eliminada exitosamente', 'success');
+                // Recargar el tab actual
+                const activeTab = document.querySelector('.tasks-tab-button.active');
+                if (activeTab) {
+                    const tabId = activeTab.id.replace('-tab', '');
+                    if (tabId === 'my-tasks') {
+                        loadMyTasksTable();
+                    } else {
+                        loadTeamTasksTable();
+                    }
+                }
+            } else {
+                showTaskToast(data.message || 'Error al eliminar la tarea', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showTaskToast('Error de conexión', 'error');
+        });
+    }
+}
+
+// Función para mostrar mensajes toast
+function showTaskToast(message, type = 'info') {
+    let toast = document.getElementById('taskToast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'taskToast';
+        toast.className = 'task-toast';
+        document.body.appendChild(toast);
+    }
+    
+    toast.textContent = message;
+    toast.className = `task-toast task-toast-${type} show`;
+    
+    setTimeout(() => {
+        toast.classList.remove('show');
+    }, 3000);
+}
 
 // Inicializar cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', function() {
