@@ -3796,7 +3796,7 @@ class ClanLeaderController {
             $db = Database::getInstance();
             
             $query = "
-                SELECT DISTINCT
+                SELECT 
                     t.task_id,
                     t.task_name,
                     t.description,
@@ -3826,6 +3826,7 @@ class ClanLeaderController {
                         -- Tareas donde el líder está en Task_Assignments
                         EXISTS (SELECT 1 FROM Task_Assignments ta WHERE ta.task_id = t.task_id AND ta.user_id = :user_id3)
                     )
+                GROUP BY t.task_id
                 ORDER BY t.due_date ASC
                 LIMIT 200
             ";
@@ -3962,7 +3963,7 @@ class ClanLeaderController {
             
             // Consulta específica para MIS tareas del líder (no del equipo)
             $tasksStmt = $this->db->prepare("
-                SELECT DISTINCT
+                SELECT 
                     t.task_id,
                     t.task_name,
                     t.description,
@@ -3999,6 +4000,7 @@ class ClanLeaderController {
                         -- Tareas donde el líder está en Task_Assignments
                         EXISTS (SELECT 1 FROM Task_Assignments ta WHERE ta.task_id = t.task_id AND ta.user_id = :user_id3)
                     )
+                GROUP BY t.task_id
                 ORDER BY t.due_date ASC
             ");
             
