@@ -4503,6 +4503,91 @@ class ClanLeaderController {
     }
     
     /**
+     * Actualizar estado de tarea o subtarea
+     */
+    public function updateTaskStatus() {
+        header('Content-Type: application/json');
+        
+        $this->requireAuth();
+        
+        if (!$this->hasClanLeaderAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+            return;
+        }
+
+        try {
+            $taskId = (int)($_POST['task_id'] ?? 0);
+            $status = $_POST['status'] ?? '';
+            $itemType = $_POST['item_type'] ?? 'task';
+            
+            if ($taskId <= 0) {
+                throw new Exception("ID de tarea inválido");
+            }
+            
+            if (!in_array($status, ['pending', 'in_progress', 'completed'])) {
+                throw new Exception("Estado inválido");
+            }
+            
+            if ($itemType === 'subtask') {
+                // Actualizar subtarea
+                $stmt = $this->db->prepare("
+                    UPDATE Subtasks 
+                    SET status = ?, 
+                        completion_percentage = ?,
+                        updated_at = CURRENT_TIMESTAMP 
+                    WHERE subtask_id = ?
+                ");
+                
+                $completionPercentage = ($status === 'completed') ? 100 : 0;
+                $stmt->execute([$status, $completionPercentage, $taskId]);
+                
+                if ($stmt->rowCount() > 0) {
+                    error_log("Subtarea actualizada: ID=$taskId, Status=$status");
+                    Utils::jsonResponse([
+                        'success' => true, 
+                        'message' => 'Subtarea actualizada correctamente',
+                        'new_status' => $status,
+                        'completion_percentage' => $completionPercentage
+                    ]);
+                } else {
+                    throw new Exception("No se pudo actualizar la subtarea");
+                }
+                
+            } else {
+                // Actualizar tarea principal
+                $stmt = $this->db->prepare("
+                    UPDATE Tasks 
+                    SET status = ?, 
+                        completion_percentage = ?,
+                        completed_at = ?,
+                        updated_at = CURRENT_TIMESTAMP 
+                    WHERE task_id = ?
+                ");
+                
+                $completionPercentage = ($status === 'completed') ? 100 : 0;
+                $completedAt = ($status === 'completed') ? date('Y-m-d H:i:s') : null;
+                $stmt->execute([$status, $completionPercentage, $completedAt, $taskId]);
+                
+                if ($stmt->rowCount() > 0) {
+                    error_log("Tarea actualizada: ID=$taskId, Status=$status");
+                    Utils::jsonResponse([
+                        'success' => true, 
+                        'message' => 'Tarea actualizada correctamente',
+                        'new_status' => $status,
+                        'completion_percentage' => $completionPercentage
+                    ]);
+                } else {
+                    throw new Exception("No se pudo actualizar la tarea");
+                }
+            }
+
+        } catch (Exception $e) {
+            error_log("Error en updateTaskStatus: " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
+        }
+    }
+    
+    /**
      * Cargar vista
      */
     private function loadView($viewPath, $data = []) {

@@ -235,7 +235,8 @@ function renderMyKanbanBoard(kanbanTasks) {
             
             html += `<div class="${cardClass} ${columnClass}" data-task-id="${task.task_id}" data-item-type="${task.item_type}">
                 <div class="task-header-mini">
-                    <input type="checkbox" class="task-checkbox-mini" ${task.status === 'completed' ? 'checked' : ''}>
+                    <input type="checkbox" class="task-checkbox-mini" ${task.status === 'completed' ? 'checked' : ''} 
+                           onchange="toggleTaskStatusKanban(${task.task_id}, this.checked, '${isSubtask ? 'subtask' : 'task'}')"
                     <div class="task-name-mini">
                         ${isSubtask ? '<i class="fas fa-arrow-right subtask-icon"></i>' : ''}
                         ${task.task_name || 'Sin nombre'}
@@ -300,7 +301,8 @@ function renderTeamKanbanBoard(kanbanTasks) {
             
             html += `<div class="${cardClass} ${columnClass}" data-task-id="${task.task_id}" data-item-type="${task.item_type}">
                 <div class="task-header-mini">
-                    <input type="checkbox" class="task-checkbox-mini" ${task.status === 'completed' ? 'checked' : ''}>
+                    <input type="checkbox" class="task-checkbox-mini" ${task.status === 'completed' ? 'checked' : ''} 
+                           onchange="toggleTaskStatusKanban(${task.task_id}, this.checked, '${isSubtask ? 'subtask' : 'task'}')"
                     <div class="task-name-mini">
                         ${isSubtask ? '<i class="fas fa-arrow-right subtask-icon"></i>' : ''}
                         ${task.task_name || 'Sin nombre'}
@@ -370,9 +372,65 @@ function organizeTasksInKanban(tasks) {
     return kanbanTasks;
 }
 
-// Funciones auxiliares
-function toggleTaskStatus(taskId, isChecked) {
-    console.log('🔧 toggleTaskStatus:', taskId, isChecked);
+// Función para cambiar estado de tarea en kanban
+function toggleTaskStatusKanban(taskId, isChecked, itemType) {
+    console.log('🔧 toggleTaskStatusKanban:', taskId, isChecked, itemType);
+    
+    const newStatus = isChecked ? 'completed' : 'pending';
+    const formData = new FormData();
+    formData.append('task_id', taskId);
+    formData.append('status', newStatus);
+    formData.append('item_type', itemType);
+    
+    fetch('?route=clan_leader/update-task-status', {
+        method: 'POST',
+        credentials: 'same-origin',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            console.log('✅ Estado actualizado correctamente');
+            
+            // Actualizar visualmente el card
+            const taskCard = document.querySelector(`[data-task-id="${taskId}"]`);
+            if (taskCard) {
+                if (isChecked) {
+                    taskCard.classList.add('completed');
+                    taskCard.style.opacity = '0.7';
+                } else {
+                    taskCard.classList.remove('completed');
+                    taskCard.style.opacity = '1';
+                }
+            }
+            
+            // Recargar el kanban después de un breve delay para mostrar el cambio
+            setTimeout(() => {
+                const activeTab = document.querySelector('.kanban-tab-button.active');
+                if (activeTab && activeTab.id === 'my-tasks-kanban-tab') {
+                    loadMyKanbanTasks();
+                } else if (activeTab && activeTab.id === 'team-tasks-kanban-tab') {
+                    loadTeamKanbanTasks();
+                }
+            }, 1000);
+            
+        } else {
+            console.error('Error al actualizar estado:', data.message);
+            // Revertir checkbox si hay error
+            const checkbox = document.querySelector(`[data-task-id="${taskId}"] .task-checkbox-mini`);
+            if (checkbox) {
+                checkbox.checked = !isChecked;
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        // Revertir checkbox si hay error
+        const checkbox = document.querySelector(`[data-task-id="${taskId}"] .task-checkbox-mini`);
+        if (checkbox) {
+            checkbox.checked = !isChecked;
+        }
+    });
 }
 
 function openAddTaskModal() {

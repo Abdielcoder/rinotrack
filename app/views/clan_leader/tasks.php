@@ -4197,7 +4197,8 @@ function renderTasksTableFromKanban(tasks, tbodyId) {
         html += `
             <tr class="task-row ${isSubtask ? 'subtask-row' : ''}" data-task-id="${task.task_id}">
                 <td class="checkbox-cell">
-                    <input type="checkbox" class="task-checkbox" ${task.status === 'completed' ? 'checked' : ''}>
+                    <input type="checkbox" class="task-checkbox" ${task.status === 'completed' ? 'checked' : ''} 
+                           onchange="toggleTaskStatus(${task.task_id}, this.checked, '${isSubtask ? 'subtask' : 'task'}')">
                 </td>
                 <td class="priority-cell">
                     <span class="priority-badge priority-${task.priority || 'medium'}">${task.priority || 'medium'}</span>
@@ -4282,6 +4283,74 @@ function deleteTaskTable(taskId, taskName) {
             showTaskToast('Error de conexión', 'error');
         });
     }
+}
+
+// Función para cambiar estado de tarea
+function toggleTaskStatus(taskId, isChecked, itemType) {
+    console.log('🔧 toggleTaskStatus:', taskId, isChecked, itemType);
+    
+    const newStatus = isChecked ? 'completed' : 'pending';
+    const formData = new FormData();
+    formData.append('task_id', taskId);
+    formData.append('status', newStatus);
+    formData.append('item_type', itemType);
+    
+    fetch('?route=clan_leader/update-task-status', {
+        method: 'POST',
+        credentials: 'same-origin',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showTaskToast(data.message || `Tarea ${isChecked ? 'completada' : 'marcada como pendiente'}`, 'success');
+            
+            // Actualizar visualmente la fila
+            const taskRow = document.querySelector(`tr[data-task-id="${taskId}"]`);
+            if (taskRow) {
+                if (isChecked) {
+                    taskRow.classList.add('completed');
+                    taskRow.style.opacity = '0.7';
+                } else {
+                    taskRow.classList.remove('completed');
+                    taskRow.style.opacity = '1';
+                }
+                
+                // Actualizar badge de estado
+                const statusBadge = taskRow.querySelector('.status-badge');
+                if (statusBadge) {
+                    statusBadge.className = `status-badge status-${newStatus}`;
+                    statusBadge.textContent = newStatus;
+                }
+                
+                // Actualizar barra de progreso si es completada
+                if (isChecked) {
+                    const progressFill = taskRow.querySelector('.progress-fill-table');
+                    const progressText = taskRow.querySelector('.progress-text-table');
+                    if (progressFill && progressText) {
+                        progressFill.style.width = '100%';
+                        progressText.textContent = '100%';
+                    }
+                }
+            }
+        } else {
+            showTaskToast(data.message || 'Error al actualizar la tarea', 'error');
+            // Revertir checkbox si hay error
+            const checkbox = document.querySelector(`tr[data-task-id="${taskId}"] .task-checkbox`);
+            if (checkbox) {
+                checkbox.checked = !isChecked;
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showTaskToast('Error de conexión', 'error');
+        // Revertir checkbox si hay error
+        const checkbox = document.querySelector(`tr[data-task-id="${taskId}"] .task-checkbox`);
+        if (checkbox) {
+            checkbox.checked = !isChecked;
+        }
+    });
 }
 
 // Función para mostrar mensajes toast
