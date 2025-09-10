@@ -839,8 +839,12 @@ function toggleProjectDelegation(projectId, isAllowed) {
     align-items: center;
     justify-content: center;
     font-size: 20px;
-    color: white;
+    color: white !important;
     box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.project-icon-minimal i {
+    color: white !important;
 }
 
 .project-details-minimal {
