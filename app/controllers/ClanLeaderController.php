@@ -4137,6 +4137,110 @@ class ClanLeaderController {
     }
     
     /**
+     * Obtener MIS tareas para vista de lista
+     */
+    public function getMyTasksList() {
+        header('Content-Type: application/json');
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        
+        $this->requireAuth();
+        
+        if (!$this->hasClanLeaderAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+            return;
+        }
+
+        try {
+            $userId = $this->currentUser['user_id'];
+            $clanId = $this->userClan['clan_id'] ?? null;
+            
+            if (!$userId || !$clanId) {
+                throw new Exception("Usuario o clan no válido");
+            }
+            
+            // CONSULTA PARA MIS TAREAS Y SUBTAREAS (incluye completadas)
+            $stmt = $this->db->prepare("
+                (SELECT 
+                    t.task_id,
+                    t.task_name,
+                    t.description,
+                    t.status,
+                    t.priority,
+                    t.due_date,
+                    t.completion_percentage,
+                    p.project_id,
+                    p.project_name,
+                    p.is_personal,
+                    u.full_name as assigned_user_name,
+                    'task' as item_type,
+                    NULL as parent_task_id,
+                    NULL as parent_task_name,
+                    t.created_at
+                FROM Tasks t
+                JOIN Projects p ON t.project_id = p.project_id
+                LEFT JOIN Users u ON t.assigned_to_user_id = u.user_id
+                WHERE t.assigned_to_user_id = :user_id
+                    AND p.clan_id = :clan_id
+                    AND t.is_subtask = 0)
+                UNION ALL
+                (SELECT 
+                    s.subtask_id as task_id,
+                    s.title as task_name,
+                    s.description,
+                    s.status,
+                    s.priority,
+                    s.due_date,
+                    s.completion_percentage,
+                    p.project_id,
+                    p.project_name,
+                    p.is_personal,
+                    u.full_name as assigned_user_name,
+                    'subtask' as item_type,
+                    t.task_id as parent_task_id,
+                    t.task_name as parent_task_name,
+                    s.created_at
+                FROM Subtasks s
+                JOIN Tasks t ON s.task_id = t.task_id
+                JOIN Projects p ON t.project_id = p.project_id
+                LEFT JOIN Users u ON s.assigned_to_user_id = u.user_id
+                WHERE (s.assigned_to_user_id = :user_id2 
+                    OR s.subtask_id IN (SELECT sa.subtask_id FROM Subtask_Assignments sa WHERE sa.user_id = :user_id3))
+                    AND p.clan_id = :clan_id2)
+                ORDER BY created_at DESC
+            ");
+            
+            $stmt->execute([
+                ':user_id' => $userId,
+                ':clan_id' => $clanId,
+                ':user_id2' => $userId,
+                ':user_id3' => $userId,
+                ':clan_id2' => $clanId
+            ]);
+            
+            $allTasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            error_log("=== getMyTasksList ===");
+            error_log("User: $userId, Clan: $clanId");
+            error_log("Total tareas encontradas: " . count($allTasks));
+
+            Utils::jsonResponse([
+                'success' => true,
+                'tasks' => $allTasks,
+                'total' => count($allTasks),
+                'debug' => [
+                    'userId' => $userId,
+                    'clanId' => $clanId,
+                    'query' => 'MY_TASKS_LIST'
+                ]
+            ]);
+
+        } catch (Exception $e) {
+            error_log("Error en getMyTasksList: " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
+        }
+    }
+    
+    /**
      * Obtener tareas del EQUIPO para Kanban - REESTRUCTURADO COMPLETAMENTE  
      */
     public function getTeamKanbanTasks() {
@@ -4287,6 +4391,113 @@ class ClanLeaderController {
 
         } catch (Exception $e) {
             error_log("Error en getTeamKanbanTasks: " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
+        }
+    }
+    
+    /**
+     * Obtener tareas del EQUIPO para vista de lista
+     */
+    public function getTeamTasksList() {
+        header('Content-Type: application/json');
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        
+        $this->requireAuth();
+        
+        if (!$this->hasClanLeaderAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+            return;
+        }
+
+        try {
+            $userId = $this->currentUser['user_id'];
+            $clanId = $this->userClan['clan_id'] ?? null;
+            
+            if (!$userId || !$clanId) {
+                throw new Exception("Usuario o clan no válido");
+            }
+            
+            // CONSULTA PARA TAREAS DEL EQUIPO Y SUBTAREAS (incluye completadas)
+            $stmt = $this->db->prepare("
+                (SELECT 
+                    t.task_id,
+                    t.task_name,
+                    t.description,
+                    t.status,
+                    t.priority,
+                    t.due_date,
+                    t.completion_percentage,
+                    p.project_id,
+                    p.project_name,
+                    p.is_personal,
+                    u.full_name as assigned_user_name,
+                    'task' as item_type,
+                    NULL as parent_task_id,
+                    NULL as parent_task_name,
+                    t.created_at
+                FROM Tasks t
+                JOIN Projects p ON t.project_id = p.project_id
+                JOIN Users u ON t.assigned_to_user_id = u.user_id
+                JOIN Clan_Members cm ON u.user_id = cm.user_id
+                WHERE cm.clan_id = :clan_id
+                    AND t.assigned_to_user_id != :user_id
+                    AND t.assigned_to_user_id IS NOT NULL
+                    AND t.is_subtask = 0
+                    AND (p.is_personal = 0 OR p.is_personal IS NULL))
+                UNION ALL
+                (SELECT 
+                    s.subtask_id as task_id,
+                    s.title as task_name,
+                    s.description,
+                    s.status,
+                    s.priority,
+                    s.due_date,
+                    s.completion_percentage,
+                    p.project_id,
+                    p.project_name,
+                    p.is_personal,
+                    u.full_name as assigned_user_name,
+                    'subtask' as item_type,
+                    t.task_id as parent_task_id,
+                    t.task_name as parent_task_name,
+                    s.created_at
+                FROM Subtasks s
+                JOIN Tasks t ON s.task_id = t.task_id
+                JOIN Projects p ON t.project_id = p.project_id
+                LEFT JOIN Users u ON s.assigned_to_user_id = u.user_id
+                LEFT JOIN Clan_Members cm ON u.user_id = cm.user_id
+                WHERE cm.clan_id = :clan_id2
+                    AND (s.assigned_to_user_id != :user_id2 OR s.assigned_to_user_id IS NULL)
+                    AND (p.is_personal = 0 OR p.is_personal IS NULL))
+                ORDER BY created_at DESC
+            ");
+            
+            $stmt->execute([
+                ':clan_id' => $clanId,
+                ':user_id' => $userId,
+                ':clan_id2' => $clanId,
+                ':user_id2' => $userId
+            ]);
+            
+            $allTasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            error_log("=== getTeamTasksList ===");
+            error_log("Leader: $userId, Clan: $clanId");
+            error_log("Total tareas del equipo: " . count($allTasks));
+
+            Utils::jsonResponse([
+                'success' => true,
+                'tasks' => $allTasks,
+                'total' => count($allTasks),
+                'debug' => [
+                    'userId' => $userId,
+                    'clanId' => $clanId,
+                    'query' => 'TEAM_TASKS_LIST'
+                ]
+            ]);
+
+        } catch (Exception $e) {
+            error_log("Error en getTeamTasksList: " . $e->getMessage());
             Utils::jsonResponse(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
         }
     }
