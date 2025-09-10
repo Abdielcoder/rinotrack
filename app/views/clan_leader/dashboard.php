@@ -196,14 +196,17 @@ function loadTeamKanbanTasks() {
     
     kanbanBoard.innerHTML = '<div class="loading-message"><i class="fas fa-spinner fa-spin"></i> Cargando tareas del equipo...</div>';
     
-    fetch('?route=clan_leader/get-team-kanban-tasks')
+    fetch('?route=clan_leader/get-team-tasks')
         .then(response => response.json())
         .then(data => {
             console.log('🟡 === RESPUESTA TEAM KANBAN ===');
             console.log('🟡 Success:', data.success);
+            console.log('🟡 Tasks received:', data.tasks ? data.tasks.length : 0);
             
-            if (data.success) {
-                renderTeamKanbanBoard(data.kanbanTasks);
+            if (data.success && data.tasks) {
+                // Organizar las tareas en columnas Kanban
+                const kanbanTasks = organizeTasksInKanban(data.tasks);
+                renderTeamKanbanBoard(kanbanTasks);
             } else {
                 kanbanBoard.innerHTML = '<div class="loading-message text-danger">Error: ' + (data.message || 'Error desconocido') + '</div>';
             }
@@ -300,6 +303,48 @@ function renderTeamKanbanBoard(kanbanTasks) {
     });
     
     kanbanBoard.innerHTML = html;
+}
+
+// Función para organizar tareas en columnas Kanban
+function organizeTasksInKanban(tasks) {
+    const kanbanTasks = {
+        'vencidas': [],
+        'hoy': [],
+        'semana1': [],
+        'semana2': []
+    };
+    
+    tasks.forEach(task => {
+        // Calcular días hasta vencimiento
+        let daysUntilDue = 999;
+        if (task.due_date) {
+            const dueDate = new Date(task.due_date);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            dueDate.setHours(0, 0, 0, 0);
+            daysUntilDue = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
+        }
+        
+        // Asignar a la columna correspondiente
+        if (daysUntilDue < 0) {
+            kanbanTasks['vencidas'].push(task);
+        } else if (daysUntilDue === 0) {
+            kanbanTasks['hoy'].push(task);
+        } else if (daysUntilDue <= 7) {
+            kanbanTasks['semana1'].push(task);
+        } else {
+            kanbanTasks['semana2'].push(task);
+        }
+    });
+    
+    console.log('🟡 Tareas organizadas en Kanban:', {
+        vencidas: kanbanTasks.vencidas.length,
+        hoy: kanbanTasks.hoy.length,
+        semana1: kanbanTasks.semana1.length,
+        semana2: kanbanTasks.semana2.length
+    });
+    
+    return kanbanTasks;
 }
 
 // Funciones auxiliares

@@ -759,6 +759,16 @@ try {
         $controller->getMyKanbanTasks();
         break;
         
+    case 'clan_leader/get-team-kanban-tasks':
+        $controller = new ClanLeaderController();
+        $controller->getTeamKanbanTasks();
+        break;
+        
+    case 'clan_leader/test-team-kanban':
+        header('Content-Type: application/json');
+        echo json_encode(['success' => true, 'message' => 'Ruta funciona', 'timestamp' => time()]);
+        break;
+        
         // Rutas de Gamificación
         case 'gamification':
             $controller = new GamificationController();
