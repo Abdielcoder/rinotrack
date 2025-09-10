@@ -50,7 +50,7 @@ ob_start();
             </div>
             
             <!-- Tab Content: Mis Tareas -->
-            <div id="my-tasks-kanban-content" class="kanban-tab-content active">
+            <div id="my-tasks-kanban-content" class="kanban-tab-content active" style="display: block;">
                 <div id="my-tasks-kanban-board" class="kanban-board-compact">
                     <!-- El contenido se carga dinámicamente -->
                     <div class="loading-message">
@@ -61,7 +61,7 @@ ob_start();
             </div>
             
             <!-- Tab Content: Equipo (tablero dinámico) -->
-            <div id="team-tasks-kanban-content" class="kanban-tab-content">
+            <div id="team-tasks-kanban-content" class="kanban-tab-content" style="display: none;">
                 <div id="team-tasks-kanban-board" class="kanban-board-compact">
                     <!-- El contenido se carga dinámicamente mediante JavaScript -->
                 </div>
@@ -96,26 +96,28 @@ console.log('🚀 Dashboard.php JavaScript cargado - Debug activo v4.0');
 function switchKanbanTab(tabName) {
     console.log('🔄 switchKanbanTab llamado con:', tabName);
     
-    // Ocultar todos los tab contents
+    // Ocultar TODOS los tab contents
     document.querySelectorAll('.kanban-tab-content').forEach(content => {
         content.classList.remove('active');
+        content.style.display = 'none';
     });
     
-    // Remover active de todos los tab buttons
+    // Remover active de TODOS los tab buttons
     document.querySelectorAll('.kanban-tab-button').forEach(button => {
         button.classList.remove('active');
     });
     
-    // Mostrar el tab content seleccionado
+    // Mostrar SOLO el tab seleccionado
     const targetContent = document.getElementById(tabName + '-kanban-content');
     if (targetContent) {
         targetContent.classList.add('active');
+        targetContent.style.display = 'block';
         console.log('✅ Tab content activado:', tabName + '-kanban-content');
     } else {
         console.error('🔴 No se encontró tab content:', tabName + '-kanban-content');
     }
     
-    // Activar el tab button seleccionado
+    // Activar SOLO el tab button seleccionado
     const targetButton = document.getElementById(tabName + '-kanban-tab');
     if (targetButton) {
         targetButton.classList.add('active');
@@ -124,10 +126,12 @@ function switchKanbanTab(tabName) {
         console.error('🔴 No se encontró tab button:', tabName + '-kanban-tab');
     }
     
-    // Cargar datos según el tab
+    // Cargar datos SOLO del tab activo
     if (tabName === 'my-tasks') {
+        console.log('🔵 Cargando MIS tareas...');
         loadMyKanbanTasks();
     } else if (tabName === 'team-tasks') {
+        console.log('🟡 Cargando tareas del EQUIPO...');
         loadTeamKanbanTasks();
     }
 }
