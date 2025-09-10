@@ -6,72 +6,86 @@ ob_start();
 <!-- Cargar CSS de rediseño -->
 <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/clan-leader-redesign.css">
 
-<div class="clan-leader-projects-redesign">
-    <!-- Header Mejorado -->
-    <div class="page-header">
-        <div class="header-content">
-            <div class="header-left">
-                <h1 class="page-title">Gestión de Proyectos</h1>
-                <p class="page-subtitle">Administra proyectos y tareas de <?php echo htmlspecialchars($clan['clan_name'] ?? 'tu clan'); ?></p>
+<div class="clan-leader-projects minimal">
+    <!-- Header Minimalista Consistente -->
+    <header class="minimal-header">
+        <div class="header-row">
+            <div class="title-minimal">
+                <div class="clan-icon-large"><?php echo $clanIcon ?? '🏢'; ?></div>
+                <h1>Gestión de Proyectos</h1>
+                <span class="subtitle">Administra proyectos y tareas de <?php echo htmlspecialchars($clan['clan_name'] ?? 'tu clan'); ?></span>
             </div>
-            <div class="header-actions">
-                <button class="btn-create" onclick="openCreateProjectModal()">
+            
+            <div class="actions-minimal">
+                <button class="btn-minimal primary" onclick="openCreateProjectModal()">
                     <i class="fas fa-plus"></i>
                     Nuevo Proyecto
                 </button>
             </div>
         </div>
         
-        <!-- Búsqueda mejorada -->
-        <div class="search-section">
+        <!-- Búsqueda consistente -->
+        <div class="search-minimal">
             <form method="GET" action="?route=clan_leader/projects" class="search-form">
-                <div class="search-input-group">
+                <div class="search-input">
                     <i class="fas fa-search"></i>
                     <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" 
-                           placeholder="Buscar proyectos por nombre o descripción...">
-                    <button type="submit" class="btn-search">Buscar</button>
-                    <?php if (!empty($search)): ?>
-                        <a href="?route=clan_leader/projects" class="btn-clear">
-                            <i class="fas fa-times"></i>
-                        </a>
-                    <?php endif; ?>
+                           placeholder="Buscar proyectos...">
                 </div>
+                <button type="submit" class="btn-minimal">Buscar</button>
+                <?php if (!empty($search)): ?>
+                    <a href="?route=clan_leader/projects" class="btn-minimal secondary">Limpiar</a>
+                <?php endif; ?>
             </form>
         </div>
-    </div>
+    </header>
 
     <!-- Contenido Principal -->
-    <div class="main-content">
+    <div class="content-minimal">
         <?php if (!empty($projects)): ?>
-            <!-- Proyectos del Clan con Cards Mejorados -->
-            <div class="projects-section">
-                <h2 class="section-title">Proyectos del Clan</h2>
-                <div class="projects-grid">
+            <!-- Sección de Proyectos con Diseño Consistente -->
+            <section class="projects-minimal animate-fade-in">
+                <div class="projects-grid-minimal">
                     <?php foreach ($projects as $project): ?>
-                    <div class="project-card-enhanced">
-                        <div class="project-header">
-                            <div class="project-title-section">
-                                <h3 class="project-name"><?= htmlspecialchars($project['project_name']) ?></h3>
-                                <div class="project-status status-<?= $project['status'] ?>">
-                                    <?= ucfirst($project['status']) ?>
+                    <div class="project-item-enhanced">
+                        <!-- Header del Proyecto -->
+                        <div class="project-info-header">
+                            <div class="project-icon-minimal">
+                                <i class="fas fa-project-diagram icon-gradient"></i>
+                            </div>
+                            <div class="project-details-minimal">
+                                <div class="project-name-minimal"><?= htmlspecialchars($project['project_name']) ?></div>
+                                <?php if (!empty($project['description'])): ?>
+                                <div class="project-description-minimal"><?= htmlspecialchars($project['description']) ?></div>
+                                <?php endif; ?>
+                                <div class="project-meta-minimal">
+                                    <span class="project-status-minimal status-<?= $project['status'] ?>">
+                                        <?= ucfirst($project['status']) ?>
+                                    </span>
+                                    <?php if (isset($project['kpi_points']) && $project['kpi_points'] > 0): ?>
+                                    <span class="project-kpi-minimal">
+                                        <i class="fas fa-star"></i>
+                                        <?= number_format($project['kpi_points']) ?> KPI
+                                    </span>
+                                    <?php endif; ?>
                                 </div>
                             </div>
-                            <div class="project-menu-container">
-                                <button class="project-menu-btn" onclick="toggleProjectMenu(<?= $project['project_id'] ?>)">
+                            <div class="project-menu-minimal">
+                                <button class="btn-menu-minimal" onclick="toggleProjectMenu(<?= $project['project_id'] ?>)">
                                     <i class="fas fa-ellipsis-v"></i>
                                 </button>
-                                <div class="project-menu" id="projectMenu<?= $project['project_id'] ?>">
-                                    <button class="menu-item" onclick="openEditProjectModal(<?= $project['project_id'] ?>, '<?= htmlspecialchars($project['project_name']) ?>', '<?= htmlspecialchars($project['description']) ?>', '<?= $project['time_limit'] ?? '' ?>')">
+                                <div class="dropdown-menu-minimal" id="projectMenu<?= $project['project_id'] ?>">
+                                    <button class="menu-item-minimal" onclick="openEditProjectModal(<?= $project['project_id'] ?>, '<?= htmlspecialchars($project['project_name']) ?>', '<?= htmlspecialchars($project['description']) ?>', '<?= $project['time_limit'] ?? '' ?>')">
                                         <i class="fas fa-edit"></i>
-                                        Editar Proyecto
+                                        Editar
                                     </button>
-                                    <button class="menu-item" onclick="openCloneProjectModal(<?= $project['project_id'] ?>)">
+                                    <button class="menu-item-minimal" onclick="openCloneProjectModal(<?= $project['project_id'] ?>)">
                                         <i class="fas fa-copy"></i>
-                                        Clonar Proyecto
+                                        Clonar
                                     </button>
-                                    <button class="menu-item danger" onclick="deleteProject(<?= $project['project_id'] ?>, '<?= htmlspecialchars($project['project_name']) ?>')">
+                                    <button class="menu-item-minimal danger" onclick="deleteProject(<?= $project['project_id'] ?>, '<?= htmlspecialchars($project['project_name']) ?>')">
                                         <i class="fas fa-trash"></i>
-                                        Eliminar Proyecto
+                                        Eliminar
                                     </button>
                                 </div>
                             </div>
@@ -83,76 +97,69 @@ ob_start();
                         </div>
                         <?php endif; ?>
                         
-                        <div class="project-stats">
-                            <div class="stat-item">
-                                <div class="stat-icon">
+                        <!-- Estadísticas del Proyecto -->
+                        <div class="project-stats-minimal">
+                            <div class="stat-item-minimal">
+                                <div class="stat-icon-minimal">
                                     <i class="fas fa-tasks"></i>
                                 </div>
-                                <div class="stat-content">
-                                    <div class="stat-number"><?= $project['total_tasks'] ?? 0 ?></div>
-                                    <div class="stat-label">Total</div>
+                                <div class="stat-content-minimal">
+                                    <div class="stat-number-minimal"><?= $project['total_tasks'] ?? 0 ?></div>
+                                    <div class="stat-label-minimal">Total</div>
                                 </div>
                             </div>
-                            <div class="stat-item">
-                                <div class="stat-icon completed">
+                            <div class="stat-item-minimal completed">
+                                <div class="stat-icon-minimal">
                                     <i class="fas fa-check-circle"></i>
                                 </div>
-                                <div class="stat-content">
-                                    <div class="stat-number"><?= $project['completed_tasks'] ?? 0 ?></div>
-                                    <div class="stat-label">Completadas</div>
+                                <div class="stat-content-minimal">
+                                    <div class="stat-number-minimal"><?= $project['completed_tasks'] ?? 0 ?></div>
+                                    <div class="stat-label-minimal">Completadas</div>
                                 </div>
                             </div>
-                            <div class="stat-item">
-                                <div class="stat-icon progress">
+                            <div class="stat-item-minimal progress">
+                                <div class="stat-icon-minimal">
                                     <i class="fas fa-chart-line"></i>
                                 </div>
-                                <div class="stat-content">
-                                    <div class="stat-number"><?= $project['progress_percentage'] ?? 0 ?>%</div>
-                                    <div class="stat-label">Progreso</div>
+                                <div class="stat-content-minimal">
+                                    <div class="stat-number-minimal"><?= $project['progress_percentage'] ?? 0 ?>%</div>
+                                    <div class="stat-label-minimal">Progreso</div>
                                 </div>
-                            </div>
-                            <?php if (isset($project['kpi_points']) && $project['kpi_points'] > 0): ?>
-                            <div class="stat-item">
-                                <div class="stat-icon kpi">
-                                    <i class="fas fa-star"></i>
-                                </div>
-                                <div class="stat-content">
-                                    <div class="stat-number"><?= number_format($project['kpi_points']) ?></div>
-                                    <div class="stat-label">KPI</div>
-                                </div>
-                            </div>
-                            <?php endif; ?>
-                        </div>
-                        
-                        <div class="project-progress">
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: <?= $project['progress_percentage'] ?? 0 ?>%"></div>
                             </div>
                         </div>
                         
-                        <div class="project-delegation">
-                            <label class="delegation-checkbox">
+                        <!-- Barra de Progreso -->
+                        <div class="progress-bar-minimal">
+                            <div class="progress-fill-minimal" style="width: <?= $project['progress_percentage'] ?? 0 ?>%"></div>
+                        </div>
+                        
+                        <!-- Delegación -->
+                        <div class="delegation-section-minimal">
+                            <label class="checkbox-label-minimal">
                                 <input type="checkbox" 
                                        class="delegation-toggle" 
                                        data-project-id="<?= $project['project_id'] ?>"
                                        <?= isset($project['allow_delegation']) && $project['allow_delegation'] ? 'checked' : '' ?>
                                        onchange="toggleProjectDelegation(<?= $project['project_id'] ?>, this.checked)">
-                                <span class="checkbox-label">
-                                    <i class="fas fa-user-plus"></i> Permitir delegación de tareas
+                                <span class="checkmark"></span>
+                                <span class="checkbox-text">
+                                    <i class="fas fa-user-plus"></i>
+                                    Permitir delegación de tareas
                                 </span>
                             </label>
                         </div>
                         
-                        <div class="project-actions-enhanced">
-                            <button class="btn-action primary" onclick="showProjectTasks(<?= $project['project_id'] ?>)">
+                        <!-- Acciones del Proyecto -->
+                        <div class="project-actions-minimal">
+                            <button class="btn-minimal primary" onclick="showProjectTasks(<?= $project['project_id'] ?>)">
                                 <i class="fas fa-eye"></i>
                                 Ver Tareas
                             </button>
-                            <button class="btn-action secondary" onclick="openCreateTaskModal(<?= $project['project_id'] ?>)">
+                            <button class="btn-minimal secondary" onclick="openCreateTaskModal(<?= $project['project_id'] ?>)">
                                 <i class="fas fa-plus"></i>
                                 Nueva Tarea
                             </button>
-                            <a href="?route=clan_leader/project_tasks&project_id=<?= $project['project_id'] ?>" class="btn-action info">
+                            <a href="?route=clan_leader/project_tasks&project_id=<?= $project['project_id'] ?>" class="btn-minimal info">
                                 <i class="fas fa-list"></i>
                                 Gestionar
                             </a>
@@ -181,15 +188,15 @@ ob_start();
                 </div>
             </div>
         <?php else: ?>
-            <div class="empty-state">
-                <div class="empty-icon">
-                    <i class="fas fa-project-diagram"></i>
+            <div class="empty-minimal">
+                <div class="empty-icon-minimal">
+                    📋
                 </div>
                 <h3>No hay proyectos en el clan</h3>
                 <p>Crea tu primer proyecto para comenzar a organizar las tareas del equipo.</p>
-                <button class="btn-create" onclick="openCreateProjectModal()">
+                <button class="btn-minimal primary" onclick="openCreateProjectModal()">
                     <i class="fas fa-plus"></i>
-                    Crear Primer Proyecto
+                    Crear primer proyecto
                 </button>
             </div>
         <?php endif; ?>
@@ -662,7 +669,7 @@ function openCloneProjectModal(projectId) {
 // Toggle del menú del proyecto
 function toggleProjectMenu(projectId) {
     const menu = document.getElementById(`projectMenu${projectId}`);
-    const allMenus = document.querySelectorAll('.project-menu');
+    const allMenus = document.querySelectorAll('.dropdown-menu-minimal');
     
     // Cerrar todos los otros menús
     allMenus.forEach(m => {
@@ -677,8 +684,8 @@ function toggleProjectMenu(projectId) {
 
 // Cerrar menús al hacer clic fuera
 document.addEventListener('click', function(e) {
-    if (!e.target.closest('.project-menu-container')) {
-        document.querySelectorAll('.project-menu').forEach(menu => {
+    if (!e.target.closest('.project-menu-minimal')) {
+        document.querySelectorAll('.dropdown-menu-minimal').forEach(menu => {
             menu.classList.remove('show');
         });
     }
@@ -774,29 +781,420 @@ function toggleProjectDelegation(projectId, isAllowed) {
     color: #3b82f6;
 }
 
-/* ========== ESTILOS MEJORADOS PARA PROYECTOS ========== */
+/* ========== ESTILOS CONSISTENTES PARA PROYECTOS ========== */
 
-/* Cards de proyecto mejorados */
-.project-card-enhanced {
+/* Grid de proyectos minimalista */
+.projects-grid-minimal {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    gap: 20px;
+    padding: 20px 0;
+}
+
+/* Cards de proyecto consistentes */
+.project-item-enhanced {
     background: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
     padding: 20px;
-    margin-bottom: 20px;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     border: 1px solid rgba(0, 0, 0, 0.05);
     position: relative;
     overflow: hidden;
 }
 
-.project-card-enhanced:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+.project-item-enhanced::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(102, 126, 234, 0.03) 0%, rgba(118, 75, 162, 0.01) 100%);
+    pointer-events: none;
 }
 
-/* Menú del proyecto */
-.project-menu-container {
+.project-item-enhanced:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+}
+
+/* Header del proyecto minimalista */
+.project-info-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    margin-bottom: 20px;
     position: relative;
+    z-index: 1;
+}
+
+.project-icon-minimal {
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: white;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.project-details-minimal {
+    flex: 1;
+    min-width: 0;
+}
+
+.project-name-minimal {
+    font-size: 18px;
+    font-weight: 700;
+    color: #2c3e50;
+    margin: 0 0 8px 0;
+    line-height: 1.3;
+}
+
+.project-description-minimal {
+    font-size: 14px;
+    color: #7f8c8d;
+    line-height: 1.4;
+    margin-bottom: 12px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.project-meta-minimal {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.project-status-minimal {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.project-status-minimal.status-active { 
+    background: rgba(39, 174, 96, 0.1); 
+    color: #27ae60; 
+    border: 1px solid rgba(39, 174, 96, 0.2);
+}
+
+.project-status-minimal.status-completed { 
+    background: rgba(52, 152, 219, 0.1); 
+    color: #3498db; 
+    border: 1px solid rgba(52, 152, 219, 0.2);
+}
+
+.project-status-minimal.status-pending { 
+    background: rgba(243, 156, 18, 0.1); 
+    color: #f39c12; 
+    border: 1px solid rgba(243, 156, 18, 0.2);
+}
+
+.project-kpi-minimal {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: #f39c12;
+    font-weight: 600;
+}
+
+/* Menú minimalista */
+.project-menu-minimal {
+    position: relative;
+}
+
+.btn-menu-minimal {
+    background: rgba(116, 75, 162, 0.1);
+    border: none;
+    padding: 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    color: #764ba2;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-menu-minimal:hover {
+    background: rgba(116, 75, 162, 0.2);
+    transform: scale(1.05);
+}
+
+.dropdown-menu-minimal {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    padding: 8px 0;
+    min-width: 160px;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.dropdown-menu-minimal.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.menu-item-minimal {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: none;
+    border: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    font-size: 14px;
+    color: #2c3e50;
+    transition: all 0.2s ease;
+    font-weight: 500;
+}
+
+.menu-item-minimal:hover {
+    background: linear-gradient(90deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+}
+
+.menu-item-minimal.danger {
+    color: #e74c3c;
+}
+
+.menu-item-minimal.danger:hover {
+    background: rgba(231, 76, 60, 0.05);
+}
+
+/* Estadísticas minimalistas */
+.project-stats-minimal {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+    justify-content: space-between;
+}
+
+.stat-item-minimal {
+    text-align: center;
+    padding: 12px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 12px;
+    flex: 1;
+    transition: all 0.2s ease;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.stat-item-minimal:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.stat-item-minimal.completed {
+    background: linear-gradient(135deg, rgba(39, 174, 96, 0.1) 0%, rgba(39, 174, 96, 0.05) 100%);
+    border-color: rgba(39, 174, 96, 0.2);
+}
+
+.stat-item-minimal.progress {
+    background: linear-gradient(135deg, rgba(52, 152, 219, 0.1) 0%, rgba(52, 152, 219, 0.05) 100%);
+    border-color: rgba(52, 152, 219, 0.2);
+}
+
+.stat-icon-minimal {
+    font-size: 18px;
+    margin-bottom: 6px;
+    color: #7f8c8d;
+    transition: all 0.2s ease;
+}
+
+.stat-item-minimal.completed .stat-icon-minimal {
+    color: #27ae60;
+}
+
+.stat-item-minimal.progress .stat-icon-minimal {
+    color: #3498db;
+}
+
+.stat-number-minimal {
+    font-size: 20px;
+    font-weight: 700;
+    color: #2c3e50;
+    line-height: 1;
+    margin-bottom: 4px;
+}
+
+.stat-label-minimal {
+    font-size: 11px;
+    color: #7f8c8d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
+/* Barra de progreso minimalista */
+.progress-bar-minimal {
+    height: 8px;
+    background: rgba(236, 240, 241, 0.8);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 16px;
+    position: relative;
+}
+
+.progress-fill-minimal {
+    height: 100%;
+    background: linear-gradient(90deg, #27ae60 0%, #2ecc71 100%);
+    border-radius: 4px;
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+.progress-fill-minimal::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+/* Sección de delegación minimalista */
+.delegation-section-minimal {
+    margin-bottom: 16px;
+}
+
+.checkbox-label-minimal {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    padding: 8px 0;
+    transition: all 0.2s ease;
+}
+
+.checkbox-label-minimal:hover {
+    opacity: 0.8;
+}
+
+.checkbox-text {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #5a6c7d;
+    font-weight: 500;
+}
+
+.checkbox-text i {
+    color: #764ba2;
+    font-size: 16px;
+}
+
+/* Acciones minimalistas */
+.project-actions-minimal {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.project-actions-minimal .btn-minimal {
+    flex: 1;
+    min-width: 0;
+    justify-content: center;
+    padding: 10px 12px;
+    font-size: 13px;
+}
+
+.project-actions-minimal .btn-minimal.info {
+    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+    color: white;
+    border: none;
+}
+
+.project-actions-minimal .btn-minimal.info:hover {
+    background: linear-gradient(135deg, #138496 0%, #0f6674 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(23, 162, 184, 0.3);
+}
+
+/* Estado vacío minimalista */
+.empty-minimal {
+    text-align: center;
+    padding: 80px 20px;
+    color: #7f8c8d;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 20px;
+    margin: 40px 0;
+    border: 2px dashed rgba(127, 140, 141, 0.2);
+}
+
+.empty-icon-minimal {
+    font-size: 64px;
+    margin-bottom: 20px;
+    opacity: 0.6;
+}
+
+.empty-minimal h3 {
+    margin: 0 0 10px 0;
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+.empty-minimal p {
+    margin: 0 0 30px 0;
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .projects-grid-minimal {
+        grid-template-columns: 1fr;
+        gap: 16px;
+        padding: 16px 0;
+    }
+    
+    .project-stats-minimal {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .stat-item-minimal {
+        padding: 8px;
+    }
+    
+    .project-actions-minimal {
+        flex-direction: column;
+    }
+    
+    .project-actions-minimal .btn-minimal {
+        flex: none;
+    }
 }
 
 .project-menu-btn {
