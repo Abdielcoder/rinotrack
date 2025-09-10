@@ -547,21 +547,23 @@ document.addEventListener('DOMContentLoaded', function() {
 
 /* Mejorar el tablero Kanban */
 .kanban-section .kanban-board-compact {
-    padding: 24px !important;
+    padding: 20px 16px !important;
     background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%) !important;
     min-height: 500px !important;
     display: flex !important;
-    gap: 20px !important;
+    gap: 12px !important;
+    overflow-x: auto !important;
+    justify-content: space-between !important;
 }
 
-/* Columnas del Kanban más anchas */
+/* Columnas del Kanban más compactas para que quepan todas */
 .kanban-section .kanban-column-compact {
     background: white !important;
     border-radius: 16px !important;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08) !important;
     flex: 1 !important;
-    min-width: 320px !important;
-    max-width: 380px !important;
+    min-width: 240px !important;
+    max-width: 280px !important;
     overflow: hidden;
     transition: transform 0.3s ease, box-shadow 0.3s ease !important;
     border: 1px solid rgba(0, 0, 0, 0.05) !important;
@@ -573,12 +575,12 @@ document.addEventListener('DOMContentLoaded', function() {
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
 }
 
-/* Headers de columnas más atractivos */
-.column-header {
-    padding: 20px 24px;
-    font-weight: 700;
-    color: white;
-    text-align: center;
+/* Headers de columnas más compactos */
+.kanban-section .column-header {
+    padding: 16px 12px !important;
+    font-weight: 700 !important;
+    color: white !important;
+    text-align: center !important;
     position: relative;
     overflow: hidden;
 }
@@ -593,24 +595,27 @@ document.addEventListener('DOMContentLoaded', function() {
     background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
 }
 
-.column-header h4 {
-    margin: 0;
-    font-size: 16px;
-    letter-spacing: 0.5px;
+.kanban-section .column-header h4 {
+    margin: 0 !important;
+    font-size: 14px !important;
+    letter-spacing: 0.4px !important;
     position: relative;
     z-index: 1;
 }
 
-.task-count {
-    background: rgba(255, 255, 255, 0.25);
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 13px;
-    font-weight: 600;
-    margin-left: 10px;
+.kanban-section .task-count {
+    background: rgba(255, 255, 255, 0.3) !important;
+    padding: 4px 8px !important;
+    border-radius: 16px !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    margin-left: 8px !important;
     position: relative;
     z-index: 1;
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px) !important;
+    display: inline-block !important;
+    min-width: 24px !important;
+    text-align: center !important;
 }
 
 /* Colores específicos por columna */
@@ -630,19 +635,19 @@ document.addEventListener('DOMContentLoaded', function() {
     background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
 }
 
-/* Tarjetas de tareas más anchas y alargadas */
+/* Tarjetas de tareas optimizadas para columnas compactas */
 .kanban-section .task-card-compact {
-    margin: 12px 16px !important;
-    padding: 20px !important;
+    margin: 10px 12px !important;
+    padding: 16px !important;
     background: white !important;
     border-radius: 12px !important;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
     transition: all 0.3s ease !important;
-    border-left: 5px solid #3498db !important;
+    border-left: 4px solid #3498db !important;
     position: relative;
     overflow: hidden;
-    min-height: 140px !important;
-    width: calc(100% - 32px) !important;
+    min-height: 130px !important;
+    width: calc(100% - 24px) !important;
     display: flex !important;
     flex-direction: column !important;
     justify-content: space-between !important;
@@ -779,23 +784,46 @@ document.addEventListener('DOMContentLoaded', function() {
     border: 1px solid rgba(39, 174, 96, 0.3) !important;
 }
 
-/* Responsive design */
+/* Responsive design mejorado */
+@media (max-width: 1200px) {
+    .kanban-section .kanban-column-compact {
+        min-width: 220px !important;
+        max-width: 250px !important;
+    }
+}
+
+@media (max-width: 992px) {
+    .kanban-section .kanban-board-compact {
+        gap: 8px !important;
+        padding: 16px 12px !important;
+    }
+    
+    .kanban-section .kanban-column-compact {
+        min-width: 200px !important;
+        max-width: 230px !important;
+    }
+}
+
 @media (max-width: 768px) {
-    .kanban-tabs {
-        flex-direction: column;
-        gap: 8px;
+    .kanban-section .kanban-tabs {
+        flex-direction: column !important;
+        gap: 8px !important;
     }
     
-    .kanban-tab-button {
-        margin: 0;
+    .kanban-section .kanban-tab-button {
+        margin: 0 !important;
     }
     
-    .kanban-board-compact {
-        padding: 16px;
+    .kanban-section .kanban-board-compact {
+        padding: 12px 8px !important;
+        flex-direction: column !important;
+        gap: 16px !important;
     }
     
-    .kanban-column-compact {
-        margin: 0 8px;
+    .kanban-section .kanban-column-compact {
+        min-width: auto !important;
+        max-width: none !important;
+        width: 100% !important;
     }
 }
 
