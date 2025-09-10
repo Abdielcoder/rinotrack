@@ -226,26 +226,31 @@ function renderMyKanbanBoard(kanbanTasks) {
         
         tasks.forEach(task => {
             const isPersonal = (task.is_personal == 1);
+            const isSubtask = (task.item_type === 'subtask');
             
             // Log detallado de cada tarea que se renderiza
-            console.log(`🟢 Renderizando: ID=${task.task_id}, Name="${task.task_name}", Personal=${isPersonal}, Project="${task.project_name}"`);
+            console.log(`🟢 Renderizando: ID=${task.task_id}, Name="${task.task_name}", Type=${task.item_type}, Personal=${isPersonal}, Project="${task.project_name}"`);
             
-            html += `<div class="task-card-mini ${columnClass}" data-task-id="${task.task_id}">
+            const cardClass = isSubtask ? 'subtask-card-micro' : 'task-card-mini';
+            
+            html += `<div class="${cardClass} ${columnClass}" data-task-id="${task.task_id}" data-item-type="${task.item_type}">
                 <div class="task-header-mini">
                     <input type="checkbox" class="task-checkbox-mini" ${task.status === 'completed' ? 'checked' : ''}>
                     <div class="task-name-mini">
+                        ${isSubtask ? '<i class="fas fa-arrow-right subtask-icon"></i>' : ''}
                         ${task.task_name || 'Sin nombre'}
+                        ${isSubtask && task.parent_task_name ? `<span class="parent-task-hint" title="Tarea padre: ${task.parent_task_name}">↑</span>` : ''}
                     </div>
                 </div>
                 <div class="task-tags-mini">
-                    <span class="task-tag project-tag ${isPersonal ? 'personal' : 'clan'}">
+                    <span class="task-tag project-tag ${isPersonal ? 'personal' : 'clan'} ${isSubtask ? 'subtask-tag' : ''}">
                         ${isPersonal ? 
                             '<i class="fas fa-user"></i>' : 
                             '<i class="fas fa-users"></i>'
                         }
                     </span>
-                    ${task.assigned_user_name ? `<span class="task-tag assignee-tag" title="${task.assigned_user_name}"><i class="fas fa-user-tag"></i></span>` : ''}
-                    <span class="task-tag due-tag ${columnClass}">
+                    ${task.assigned_user_name ? `<span class="task-tag assignee-tag ${isSubtask ? 'subtask-tag' : ''}" title="${task.assigned_user_name}"><i class="fas fa-user-tag"></i></span>` : ''}
+                    <span class="task-tag due-tag ${columnClass} ${isSubtask ? 'subtask-tag' : ''}">
                         ${column === 'vencidas' ? '<i class="fas fa-exclamation-triangle"></i>' : 
                           column === 'hoy' ? '<i class="fas fa-clock"></i>' :
                           column === 'semana1' ? '<i class="fas fa-calendar"></i>' :
@@ -287,19 +292,27 @@ function renderTeamKanbanBoard(kanbanTasks) {
             <div class="column-content-compact">`;
         
         tasks.forEach(task => {
-            html += `<div class="task-card-mini ${columnClass}" data-task-id="${task.task_id}">
+            const isSubtask = (task.item_type === 'subtask');
+            
+            console.log(`🟡 Renderizando Team: ID=${task.task_id}, Name="${task.task_name}", Type=${task.item_type}, Assigned="${task.assigned_user_name}"`);
+            
+            const cardClass = isSubtask ? 'subtask-card-micro' : 'task-card-mini';
+            
+            html += `<div class="${cardClass} ${columnClass}" data-task-id="${task.task_id}" data-item-type="${task.item_type}">
                 <div class="task-header-mini">
                     <input type="checkbox" class="task-checkbox-mini" ${task.status === 'completed' ? 'checked' : ''}>
                     <div class="task-name-mini">
+                        ${isSubtask ? '<i class="fas fa-arrow-right subtask-icon"></i>' : ''}
                         ${task.task_name || 'Sin nombre'}
+                        ${isSubtask && task.parent_task_name ? `<span class="parent-task-hint" title="Tarea padre: ${task.parent_task_name}">↑</span>` : ''}
                     </div>
                 </div>
                 <div class="task-tags-mini">
-                    <span class="task-tag project-tag team" title="${task.project_name || 'Sin proyecto'}">
+                    <span class="task-tag project-tag team ${isSubtask ? 'subtask-tag' : ''}" title="${task.project_name || 'Sin proyecto'}">
                         <i class="fas fa-users"></i>
                     </span>
-                    ${task.assigned_user_name ? `<span class="task-tag assignee-tag" title="${task.assigned_user_name}"><i class="fas fa-user-tag"></i></span>` : ''}
-                    <span class="task-tag due-tag ${columnClass}">
+                    ${task.assigned_user_name ? `<span class="task-tag assignee-tag ${isSubtask ? 'subtask-tag' : ''}" title="${task.assigned_user_name}"><i class="fas fa-user-tag"></i></span>` : ''}
+                    <span class="task-tag due-tag ${columnClass} ${isSubtask ? 'subtask-tag' : ''}">
                         ${column === 'vencidas' ? '<i class="fas fa-exclamation-triangle"></i>' : 
                           column === 'hoy' ? '<i class="fas fa-clock"></i>' :
                           column === 'semana1' ? '<i class="fas fa-calendar"></i>' :
@@ -820,6 +833,142 @@ document.addEventListener('DOMContentLoaded', function() {
     transform: scale(1.1) !important;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12) !important;
     z-index: 10 !important;
+}
+
+/* ========== ESTILOS PARA SUBTAREAS ========== */
+
+/* Cards de subtareas ultra micro */
+.kanban-section .subtask-card-micro {
+    margin: 2px 4px !important;
+    padding: 3px 5px !important;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
+    border-radius: 4px !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+    transition: all 0.2s ease !important;
+    border-left: 2px solid #6c757d !important;
+    position: relative;
+    overflow: hidden;
+    min-height: 28px !important;
+    width: calc(100% - 8px) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2px !important;
+    opacity: 0.9 !important;
+    border: 1px solid rgba(108, 117, 125, 0.2) !important;
+}
+
+.subtask-card-micro:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    opacity: 1 !important;
+}
+
+/* Colores específicos para subtareas por columna */
+.subtask-card-micro.overdue {
+    border-left-color: #dc3545;
+    background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%) !important;
+}
+
+.subtask-card-micro.today {
+    border-left-color: #fd7e14;
+    background: linear-gradient(135deg, #fff8f0 0%, #ffeaa7 100%) !important;
+}
+
+.subtask-card-micro.week1 {
+    border-left-color: #0d6efd;
+    background: linear-gradient(135deg, #f0f7ff 0%, #cce7ff 100%) !important;
+}
+
+.subtask-card-micro.week2 {
+    border-left-color: #198754;
+    background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%) !important;
+}
+
+/* Icono de subtarea */
+.subtask-icon {
+    font-size: 7px !important;
+    color: #6c757d !important;
+    margin-right: 3px !important;
+    opacity: 0.7 !important;
+}
+
+/* Indicador de tarea padre */
+.parent-task-hint {
+    font-size: 8px !important;
+    color: #6c757d !important;
+    margin-left: 4px !important;
+    opacity: 0.6 !important;
+    cursor: help !important;
+}
+
+/* Etiquetas de subtareas más pequeñas */
+.kanban-section .subtask-tag {
+    font-size: 6px !important;
+    padding: 1px 2px !important;
+    border-radius: 4px !important;
+    max-width: 40px !important;
+    opacity: 0.8 !important;
+}
+
+.kanban-section .subtask-tag i {
+    font-size: 5px !important;
+}
+
+/* Ajustes específicos para subtareas en el header */
+.subtask-card-micro .task-header-mini {
+    min-height: 14px !important;
+    gap: 3px !important;
+}
+
+.subtask-card-micro .task-name-mini {
+    font-size: 9px !important;
+    line-height: 1.2 !important;
+    color: #495057 !important;
+    font-weight: 500 !important;
+}
+
+.subtask-card-micro .task-checkbox-mini {
+    transform: scale(0.7) !important;
+}
+
+/* Contenedor de etiquetas para subtareas */
+.subtask-card-micro .task-tags-mini {
+    max-height: 12px !important;
+    gap: 1px !important;
+}
+
+/* Animación sutil para subtareas */
+.subtask-card-micro {
+    animation: subtaskFadeIn 0.3s ease-out;
+}
+
+@keyframes subtaskFadeIn {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+    to {
+        opacity: 0.9;
+        transform: translateX(0);
+    }
+}
+
+/* Responsive para subtareas */
+@media (max-width: 768px) {
+    .subtask-card-micro {
+        margin: 1px 2px !important;
+        padding: 2px 3px !important;
+        min-height: 24px !important;
+    }
+    
+    .subtask-card-micro .task-name-mini {
+        font-size: 8px !important;
+    }
+    
+    .kanban-section .subtask-tag {
+        font-size: 5px !important;
+        max-width: 30px !important;
+    }
 }
 
 /* Responsive design mejorado */

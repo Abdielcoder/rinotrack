@@ -4005,9 +4005,9 @@ class ClanLeaderController {
                 throw new Exception("Usuario o clan no válido");
             }
             
-            // CONSULTA SIMPLE Y DIRECTA - MIS TAREAS
+            // CONSULTA MEJORADA - MIS TAREAS Y SUBTAREAS
             $stmt = $this->db->prepare("
-                SELECT 
+                (SELECT 
                     t.task_id,
                     t.task_name,
                     t.description,
@@ -4019,6 +4019,9 @@ class ClanLeaderController {
                     p.project_name,
                     p.is_personal,
                     u.full_name as assigned_user_name,
+                    'task' as item_type,
+                    NULL as parent_task_id,
+                    NULL as parent_task_name,
                     CASE 
                         WHEN t.due_date IS NULL THEN 999
                         WHEN t.due_date < CURDATE() THEN -1
@@ -4033,13 +4036,48 @@ class ClanLeaderController {
                     AND p.clan_id = :clan_id
                     AND t.is_subtask = 0
                     AND t.status != 'completed'
-                    AND t.completion_percentage < 100
-                ORDER BY t.task_id
+                    AND t.completion_percentage < 100)
+                UNION ALL
+                (SELECT 
+                    s.subtask_id as task_id,
+                    s.title as task_name,
+                    s.description,
+                    s.status,
+                    s.priority,
+                    s.due_date,
+                    s.completion_percentage,
+                    p.project_id,
+                    p.project_name,
+                    p.is_personal,
+                    u.full_name as assigned_user_name,
+                    'subtask' as item_type,
+                    t.task_id as parent_task_id,
+                    t.task_name as parent_task_name,
+                    CASE 
+                        WHEN s.due_date IS NULL THEN 999
+                        WHEN s.due_date < CURDATE() THEN -1
+                        WHEN s.due_date = CURDATE() THEN 0
+                        WHEN s.due_date <= DATE_ADD(CURDATE(), INTERVAL 7 DAY) THEN DATEDIFF(s.due_date, CURDATE())
+                        ELSE 999
+                    END as days_until_due
+                FROM Subtasks s
+                JOIN Tasks t ON s.task_id = t.task_id
+                JOIN Projects p ON t.project_id = p.project_id
+                LEFT JOIN Users u ON s.assigned_to_user_id = u.user_id
+                WHERE (s.assigned_to_user_id = :user_id2 
+                    OR s.subtask_id IN (SELECT sa.subtask_id FROM Subtask_Assignments sa WHERE sa.user_id = :user_id3))
+                    AND p.clan_id = :clan_id2
+                    AND s.status != 'completed'
+                    AND s.completion_percentage < 100)
+                ORDER BY item_type, task_id
             ");
             
             $stmt->execute([
                 ':user_id' => $userId,
-                ':clan_id' => $clanId
+                ':clan_id' => $clanId,
+                ':user_id2' => $userId,
+                ':user_id3' => $userId,
+                ':clan_id2' => $clanId
             ]);
             
             $allTasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -4120,9 +4158,9 @@ class ClanLeaderController {
                 throw new Exception("Usuario o clan no válido");
             }
             
-            // CONSULTA SIMPLE - TAREAS DEL EQUIPO (NO MÍAS)
+            // CONSULTA MEJORADA - TAREAS DEL EQUIPO Y SUBTAREAS (NO MÍAS)
             $stmt = $this->db->prepare("
-                SELECT 
+                (SELECT 
                     t.task_id,
                     t.task_name,
                     t.description,
@@ -4134,6 +4172,9 @@ class ClanLeaderController {
                     p.project_name,
                     p.is_personal,
                     u.full_name as assigned_user_name,
+                    'task' as item_type,
+                    NULL as parent_task_id,
+                    NULL as parent_task_name,
                     CASE 
                         WHEN t.due_date IS NULL THEN 999
                         WHEN t.due_date < CURDATE() THEN -1
@@ -4151,13 +4192,48 @@ class ClanLeaderController {
                     AND t.is_subtask = 0
                     AND t.status != 'completed'
                     AND t.completion_percentage < 100
-                    AND (p.is_personal = 0 OR p.is_personal IS NULL)
-                ORDER BY t.task_id
+                    AND (p.is_personal = 0 OR p.is_personal IS NULL))
+                UNION ALL
+                (SELECT 
+                    s.subtask_id as task_id,
+                    s.title as task_name,
+                    s.description,
+                    s.status,
+                    s.priority,
+                    s.due_date,
+                    s.completion_percentage,
+                    p.project_id,
+                    p.project_name,
+                    p.is_personal,
+                    u.full_name as assigned_user_name,
+                    'subtask' as item_type,
+                    t.task_id as parent_task_id,
+                    t.task_name as parent_task_name,
+                    CASE 
+                        WHEN s.due_date IS NULL THEN 999
+                        WHEN s.due_date < CURDATE() THEN -1
+                        WHEN s.due_date = CURDATE() THEN 0
+                        WHEN s.due_date <= DATE_ADD(CURDATE(), INTERVAL 7 DAY) THEN DATEDIFF(s.due_date, CURDATE())
+                        ELSE 999
+                    END as days_until_due
+                FROM Subtasks s
+                JOIN Tasks t ON s.task_id = t.task_id
+                JOIN Projects p ON t.project_id = p.project_id
+                LEFT JOIN Users u ON s.assigned_to_user_id = u.user_id
+                LEFT JOIN Clan_Members cm ON u.user_id = cm.user_id
+                WHERE cm.clan_id = :clan_id2
+                    AND (s.assigned_to_user_id != :user_id2 OR s.assigned_to_user_id IS NULL)
+                    AND s.status != 'completed'
+                    AND s.completion_percentage < 100
+                    AND (p.is_personal = 0 OR p.is_personal IS NULL))
+                ORDER BY item_type, task_id
             ");
             
             $stmt->execute([
                 ':clan_id' => $clanId,
-                ':user_id' => $userId
+                ':user_id' => $userId,
+                ':clan_id2' => $clanId,
+                ':user_id2' => $userId
             ]);
             
             $allTasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
