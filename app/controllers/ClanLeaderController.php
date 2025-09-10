@@ -4009,7 +4009,7 @@ class ClanLeaderController {
             
             // Consulta específica para MIS tareas del líder (no del equipo)
             $tasksStmt = $this->db->prepare("
-                SELECT 
+                SELECT DISTINCT
                     t.task_id,
                     t.task_name,
                     t.description,
@@ -4040,14 +4040,14 @@ class ClanLeaderController {
                         -- Tareas personales creadas por el líder
                         (p.is_personal = 1 AND p.created_by_user_id = :user_id1)
                         OR
-                        -- Tareas asignadas directamente al líder
-                        (t.assigned_to_user_id = :user_id2)
+                        -- Tareas asignadas directamente al líder (no personales)
+                        (t.assigned_to_user_id = :user_id2 AND (p.is_personal = 0 OR p.is_personal IS NULL))
                         OR
-                        -- Tareas donde el líder está en Task_Assignments
-                        EXISTS (SELECT 1 FROM Task_Assignments ta WHERE ta.task_id = t.task_id AND ta.user_id = :user_id3)
+                        -- Tareas donde el líder está en Task_Assignments (no personales)
+                        (EXISTS (SELECT 1 FROM Task_Assignments ta WHERE ta.task_id = t.task_id AND ta.user_id = :user_id3) 
+                         AND (p.is_personal = 0 OR p.is_personal IS NULL))
                     )
-                GROUP BY t.task_id
-                ORDER BY t.due_date ASC
+                ORDER BY t.task_id, t.due_date ASC
             ");
             
             $tasksStmt->execute([
@@ -4107,6 +4107,12 @@ class ClanLeaderController {
             
             error_log("DEBUG getMyKanbanTasks - Total tareas encontradas: " . count($allTasks) . " (incluyendo " . count($subtasks) . " subtareas)");
             
+            // Log detallado de cada tarea encontrada
+            foreach ($allTasks as $task) {
+                $taskType = ($task['is_personal'] == 1) ? 'PERSONAL' : 'CLAN';
+                error_log("DEBUG Task Found: ID={$task['task_id']}, Name='{$task['task_name']}', Type=$taskType, Project='{$task['project_name']}', Assigned_to='{$task['assigned_user_name']}'");
+            }
+            
             // Procesar las tareas para agregar days_until_due si no existe
             foreach ($allTasks as &$task) {
                 if (!isset($task['days_until_due'])) {
@@ -4121,9 +4127,6 @@ class ClanLeaderController {
                     $task['item_type'] = 'task';
                 }
                 $task['is_completed'] = 0;
-                
-                // Debug logging para identificar duplicados
-                error_log("DEBUG Task: ID={$task['task_id']}, Name={$task['task_name']}, Type={$task['item_type']}, Project={$task['project_name']}, Days={$task['days_until_due']}");
             }
             
             // Organizar tareas en columnas Kanban
@@ -4136,16 +4139,23 @@ class ClanLeaderController {
             
             foreach ($allTasks as $task) {
                 $daysUntilDue = (int)($task['days_until_due'] ?? 999);
+                $taskType = ($task['is_personal'] == 1) ? 'PERSONAL' : 'CLAN';
                 
                 if ($daysUntilDue < 0) {
                     $kanbanTasks['vencidas'][] = $task;
+                    $column = 'vencidas';
                 } elseif ($daysUntilDue == 0) {
                     $kanbanTasks['hoy'][] = $task;
+                    $column = 'hoy';
                 } elseif ($daysUntilDue <= 7) {
                     $kanbanTasks['semana1'][] = $task;
+                    $column = 'semana1';
                 } else {
                     $kanbanTasks['semana2'][] = $task;
+                    $column = 'semana2';
                 }
+                
+                error_log("DEBUG Kanban: Task ID={$task['task_id']} ($taskType) → $column (days: $daysUntilDue)");
             }
             
             error_log("DEBUG getMyKanbanTasks - Kanban distribution: vencidas=" . count($kanbanTasks['vencidas']) . ", hoy=" . count($kanbanTasks['hoy']) . ", semana1=" . count($kanbanTasks['semana1']) . ", semana2=" . count($kanbanTasks['semana2']));
