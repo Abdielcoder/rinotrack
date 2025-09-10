@@ -102,26 +102,30 @@ ob_start();
         }
         ?>
 
-        <!-- Mostrar tabs siempre, independientemente de allTasks -->
-        <div class="tasks-tabs-container">
-            <div class="tasks-tabs">
-                <button class="tab-button active" onclick="switchTab('my-tasks')" id="my-tasks-tab">
+        <!-- Tabs Consistentes con Dashboard -->
+        <div class="tasks-section-minimal">
+            <div class="tasks-tabs-minimal">
+                <button class="tasks-tab-button active" onclick="switchTasksTab('my-tasks')" id="my-tasks-tab">
                     <i class="fas fa-user"></i>
                     Mis Tareas
                 </button>
-                <button class="tab-button" onclick="switchTab('team-tasks')" id="team-tasks-tab">
+                <button class="tasks-tab-button" onclick="switchTasksTab('team-tasks')" id="team-tasks-tab">
                     <i class="fas fa-users"></i>
                     Equipo
                 </button>
             </div>
         </div>
 
-        <!-- Tab: Mis Tareas -->
-        <div id="my-tasks-content" class="tab-content active">
-            <div class="all-tasks-section">
-                <div class="section-header">
-                    <h2 class="section-title">Mis Tareas Asignadas</h2>
+        <!-- Tab Content: Mis Tareas -->
+        <div id="my-tasks-content" class="tasks-tab-content active" style="display: block;">
+            <div class="tasks-content-minimal">
+                <!-- Contenido de mis tareas se carga dinámicamente -->
+                <div class="loading-message">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    Cargando mis tareas...
                 </div>
+            </div>
+        </div>
                 
                 <!-- Filtros y búsqueda para Mis Tareas -->
                 <div class="filters-container">
@@ -206,12 +210,16 @@ ob_start();
             </div>
         </div>
 
-        <!-- Tab: Equipo -->
-        <div id="team-tasks-content" class="tab-content">
-            <div class="all-tasks-section">
-                <div class="section-header">
-                    <h2 class="section-title">Tareas del Equipo</h2>
+        <!-- Tab Content: Equipo -->
+        <div id="team-tasks-content" class="tasks-tab-content" style="display: none;">
+            <div class="tasks-content-minimal">
+                <!-- Contenido de tareas del equipo se carga dinámicamente -->
+                <div class="loading-message">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    Cargando tareas del equipo...
                 </div>
+            </div>
+        </div>
                 
                 <!-- Filtros y búsqueda para Equipo -->
                 <div class="filters-container">
@@ -3377,7 +3385,639 @@ console.log('🚀 Tasks.php cargado - Versión 6.0 - Debug activo');
         margin: 1rem;
     }
 }
+
+/* ========== ESTILOS PARA TABS CONSISTENTES ========== */
+
+/* Contenedor de tabs - FORZADO */
+.tasks-section-minimal .tasks-tabs-minimal {
+    display: flex !important;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    border-radius: 15px 15px 0 0 !important;
+    padding: 12px !important;
+    margin-bottom: 0 !important;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15) !important;
+    position: relative;
+    overflow: hidden;
+    border: none !important;
+}
+
+.tasks-tabs-minimal::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+    pointer-events: none;
+}
+
+/* Botones de los tabs - FORZADO */
+.tasks-section-minimal .tasks-tab-button {
+    flex: 1 !important;
+    padding: 18px 28px !important;
+    border: none !important;
+    background: rgba(255, 255, 255, 0.15) !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+    cursor: pointer !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    border-radius: 12px !important;
+    margin: 0 6px !important;
+    font-weight: 700 !important;
+    font-size: 16px !important;
+    letter-spacing: 0.8px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 12px !important;
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(15px) !important;
+    border: 2px solid rgba(255, 255, 255, 0.2) !important;
+    text-transform: uppercase;
+}
+
+.tasks-tab-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s;
+}
+
+.tasks-tab-button:hover::before {
+    left: 100%;
+}
+
+.tasks-tab-button:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* Tab activo - FORZADO */
+.tasks-section-minimal .tasks-tab-button.active {
+    background: linear-gradient(135deg, #ffffff 0%, #f1f3f4 100%) !important;
+    color: #2c3e50 !important;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25) !important;
+    transform: translateY(-4px) !important;
+    border: 2px solid rgba(255, 255, 255, 0.8) !important;
+    font-weight: 800 !important;
+}
+
+.tasks-section-minimal .tasks-tab-button.active i {
+    color: #3498db !important;
+    transform: scale(1.2) !important;
+    text-shadow: 0 2px 4px rgba(52, 152, 219, 0.3) !important;
+}
+
+/* Iconos de los tabs - FORZADO */
+.tasks-section-minimal .tasks-tab-button i {
+    font-size: 20px !important;
+    transition: all 0.3s ease !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.tasks-section-minimal .tasks-tab-button:hover i {
+    transform: scale(1.1) !important;
+    color: white !important;
+}
+
+/* Contenido de los tabs - FORZADO */
+.tasks-section-minimal .tasks-tab-content {
+    background: white !important;
+    border-radius: 0 0 15px 15px !important;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15) !important;
+    overflow: hidden;
+    transition: all 0.4s ease !important;
+    border: 1px solid rgba(0, 0, 0, 0.05) !important;
+    margin-top: 0 !important;
+    min-height: 400px !important;
+    padding: 20px !important;
+}
+
+.tasks-tab-content.active {
+    animation: fadeInUp 0.4s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Contenido de tareas */
+.tasks-content-minimal {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    border-radius: 12px;
+    padding: 20px;
+    min-height: 350px;
+}
+
+/* Mensaje de carga */
+.loading-message {
+    text-align: center;
+    padding: 80px 30px;
+    color: #5a6c7d;
+    font-size: 18px;
+    font-weight: 500;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 16px;
+    margin: 30px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.loading-message i {
+    font-size: 48px;
+    margin-bottom: 20px;
+    color: #3498db;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.1); opacity: 0.7; }
+}
+
+/* ========== ESTILOS PARA LISTA DE TAREAS ========== */
+
+/* Lista de tareas minimalista */
+.tasks-list-minimal {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Item de tarea en lista */
+.task-item-list {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+    transition: all 0.3s ease;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-left: 4px solid #dee2e6;
+}
+
+.task-item-list:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.task-item-list.completed {
+    border-left-color: #27ae60;
+    opacity: 0.8;
+}
+
+.task-item-list.in_progress {
+    border-left-color: #3498db;
+}
+
+.task-item-list.pending {
+    border-left-color: #f39c12;
+}
+
+.task-item-list.subtask {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    margin-left: 20px;
+    border-left-width: 3px;
+}
+
+/* Información de la tarea */
+.task-info-list {
+    flex: 1;
+    min-width: 0;
+}
+
+.task-header-list {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+
+.task-name-list {
+    font-size: 16px;
+    font-weight: 600;
+    color: #2c3e50;
+    margin: 0;
+    line-height: 1.3;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.subtask-indicator {
+    font-size: 12px;
+    color: #6c757d;
+    opacity: 0.7;
+}
+
+.parent-hint {
+    font-size: 12px;
+    color: #6c757d;
+    margin-left: 6px;
+    cursor: help;
+}
+
+.task-badges-list {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.status-badge, .priority-badge {
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.status-badge.status-completed { background: #d4edda; color: #155724; }
+.status-badge.status-in_progress { background: #cce7ff; color: #004085; }
+.status-badge.status-pending { background: #fff3cd; color: #856404; }
+
+.priority-badge.priority-high { background: #f8d7da; color: #721c24; }
+.priority-badge.priority-medium { background: #fff3cd; color: #856404; }
+.priority-badge.priority-low { background: #d1ecf1; color: #0c5460; }
+
+.task-description-list {
+    font-size: 13px;
+    color: #666;
+    margin: 0 0 10px 0;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.task-meta-list {
+    display: flex;
+    gap: 16px;
+    font-size: 12px;
+    color: #666;
+    flex-wrap: wrap;
+}
+
+.task-meta-list span {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.task-project {
+    color: #764ba2;
+    font-weight: 600;
+}
+
+/* Acciones de tarea en lista */
+.task-actions-list {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.btn-task-list {
+    padding: 8px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+}
+
+.btn-task-list.view {
+    background: rgba(52, 152, 219, 0.1);
+    color: #3498db;
+}
+
+.btn-task-list.view:hover {
+    background: rgba(52, 152, 219, 0.2);
+    transform: scale(1.05);
+}
+
+.btn-task-list.edit {
+    background: rgba(243, 156, 18, 0.1);
+    color: #f39c12;
+}
+
+.btn-task-list.edit:hover {
+    background: rgba(243, 156, 18, 0.2);
+    transform: scale(1.05);
+}
+
+.btn-task-list.delete {
+    background: rgba(231, 76, 60, 0.1);
+    color: #e74c3c;
+}
+
+.btn-task-list.delete:hover {
+    background: rgba(231, 76, 60, 0.2);
+    transform: scale(1.05);
+}
+
+/* Estado sin tareas */
+.no-tasks-message {
+    text-align: center;
+    padding: 60px 20px;
+    color: #7f8c8d;
+}
+
+.no-tasks-message i {
+    font-size: 48px;
+    margin-bottom: 20px;
+    opacity: 0.5;
+}
+
+.no-tasks-message h3 {
+    margin: 0 0 10px 0;
+    color: #2c3e50;
+}
+
+.no-tasks-message p {
+    margin: 0;
+    font-size: 14px;
+}
+
+/* Toast para tareas */
+.task-toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 12px 20px;
+    border-radius: 6px;
+    color: white;
+    font-weight: 600;
+    z-index: 10000;
+    opacity: 0;
+    transform: translateX(100%);
+    transition: all 0.3s ease;
+}
+
+.task-toast.show {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.task-toast-success { background: #27ae60; }
+.task-toast-error { background: #e74c3c; }
+.task-toast-info { background: #3498db; }
 </style>
+
+<script>
+console.log('🚀 Tasks.php JavaScript cargado - Tabs implementados');
+
+// Función para cambiar entre tabs de tareas
+function switchTasksTab(tabName) {
+    console.log('🔄 switchTasksTab llamado con:', tabName);
+    
+    // Ocultar TODOS los tab contents
+    document.querySelectorAll('.tasks-tab-content').forEach(content => {
+        content.classList.remove('active');
+        content.style.display = 'none';
+    });
+    
+    // Remover active de TODOS los tab buttons
+    document.querySelectorAll('.tasks-tab-button').forEach(button => {
+        button.classList.remove('active');
+    });
+    
+    // Mostrar SOLO el tab seleccionado
+    const targetContent = document.getElementById(tabName + '-content');
+    if (targetContent) {
+        targetContent.classList.add('active');
+        targetContent.style.display = 'block';
+        console.log('✅ Tab content activado:', tabName + '-content');
+    } else {
+        console.error('🔴 No se encontró tab content:', tabName + '-content');
+    }
+    
+    // Activar SOLO el tab button seleccionado
+    const targetButton = document.getElementById(tabName + '-tab');
+    if (targetButton) {
+        targetButton.classList.add('active');
+        console.log('✅ Tab button activado:', tabName + '-tab');
+    } else {
+        console.error('🔴 No se encontró tab button:', tabName + '-tab');
+    }
+    
+    // Cargar datos SOLO del tab activo
+    if (tabName === 'my-tasks') {
+        console.log('🔵 Cargando MIS tareas...');
+        loadMyTasks();
+    } else if (tabName === 'team-tasks') {
+        console.log('🟡 Cargando tareas del EQUIPO...');
+        loadTeamTasks();
+    }
+}
+
+// Función para cargar mis tareas
+function loadMyTasks() {
+    console.log('🔵 loadMyTasks() iniciado');
+    const container = document.querySelector('#my-tasks-content .tasks-content-minimal');
+    if (!container) {
+        console.error('🔴 No se encontró contenedor de mis tareas');
+        return;
+    }
+    
+    container.innerHTML = '<div class="loading-message"><i class="fas fa-spinner fa-spin"></i> Cargando mis tareas...</div>';
+    
+    fetch('?route=clan_leader/get-my-tasks-list')
+        .then(response => response.json())
+        .then(data => {
+            console.log('🔵 === RESPUESTA MIS TAREAS ===');
+            console.log('🔵 Success:', data.success);
+            console.log('🔵 Tasks:', data.tasks);
+            
+            if (data.success) {
+                renderTasksList(container, data.tasks, 'my');
+            } else {
+                container.innerHTML = '<div class="loading-message text-danger">Error: ' + (data.message || 'Error desconocido') + '</div>';
+            }
+        })
+        .catch(error => {
+            console.error('🔴 Error:', error);
+            container.innerHTML = '<div class="loading-message text-danger">Error de conexión</div>';
+        });
+}
+
+// Función para cargar tareas del equipo
+function loadTeamTasks() {
+    console.log('🟡 loadTeamTasks() iniciado');
+    const container = document.querySelector('#team-tasks-content .tasks-content-minimal');
+    if (!container) {
+        console.error('🔴 No se encontró contenedor de tareas del equipo');
+        return;
+    }
+    
+    container.innerHTML = '<div class="loading-message"><i class="fas fa-spinner fa-spin"></i> Cargando tareas del equipo...</div>';
+    
+    fetch('?route=clan_leader/get-team-tasks-list')
+        .then(response => response.json())
+        .then(data => {
+            console.log('🟡 === RESPUESTA TAREAS EQUIPO ===');
+            console.log('🟡 Success:', data.success);
+            console.log('🟡 Tasks:', data.tasks);
+            
+            if (data.success) {
+                renderTasksList(container, data.tasks, 'team');
+            } else {
+                container.innerHTML = '<div class="loading-message text-danger">Error: ' + (data.message || 'Error desconocido') + '</div>';
+            }
+        })
+        .catch(error => {
+            console.error('🔴 Error:', error);
+            container.innerHTML = '<div class="loading-message text-danger">Error de conexión</div>';
+        });
+}
+
+// Función para renderizar lista de tareas
+function renderTasksList(container, tasks, type) {
+    if (!tasks || tasks.length === 0) {
+        container.innerHTML = `
+            <div class="no-tasks-message">
+                <i class="fas fa-inbox"></i>
+                <h3>No hay tareas ${type === 'my' ? 'asignadas a ti' : 'del equipo'}</h3>
+                <p>Las tareas aparecerán aquí cuando sean ${type === 'my' ? 'asignadas' : 'creadas para el equipo'}.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '<div class="tasks-list-minimal">';
+    
+    tasks.forEach(task => {
+        const isSubtask = (task.item_type === 'subtask');
+        const statusClass = task.status || 'pending';
+        const priorityClass = task.priority || 'medium';
+        
+        html += `
+            <div class="task-item-list ${statusClass} ${isSubtask ? 'subtask' : 'task'}">
+                <div class="task-info-list">
+                    <div class="task-header-list">
+                        <h4 class="task-name-list">
+                            ${isSubtask ? '<i class="fas fa-arrow-right subtask-indicator"></i>' : ''}
+                            ${task.task_name}
+                            ${isSubtask && task.parent_task_name ? `<span class="parent-hint" title="Tarea padre: ${task.parent_task_name}">↑</span>` : ''}
+                        </h4>
+                        <div class="task-badges-list">
+                            <span class="status-badge status-${statusClass}">${statusClass}</span>
+                            <span class="priority-badge priority-${priorityClass}">${priorityClass}</span>
+                        </div>
+                    </div>
+                    ${task.description ? `<p class="task-description-list">${task.description}</p>` : ''}
+                    <div class="task-meta-list">
+                        <span class="task-project"><i class="fas fa-folder"></i> ${task.project_name}</span>
+                        ${task.assigned_user_name ? `<span class="task-assigned"><i class="fas fa-user"></i> ${task.assigned_user_name}</span>` : ''}
+                        ${task.due_date ? `<span class="task-due"><i class="fas fa-calendar"></i> ${formatTaskDate(task.due_date)}</span>` : ''}
+                        ${task.completion_percentage ? `<span class="task-progress"><i class="fas fa-chart-line"></i> ${task.completion_percentage}%</span>` : ''}
+                    </div>
+                </div>
+                <div class="task-actions-list">
+                    <a href="?route=clan_leader/task_details&task_id=${task.task_id}" class="btn-task-list view" title="Ver Detalles">
+                        <i class="fas fa-eye"></i>
+                    </a>
+                    <a href="?route=clan_leader/tasks&action=edit&task_id=${task.task_id}" class="btn-task-list edit" title="Editar">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <button class="btn-task-list delete" onclick="deleteTaskFromList(${task.task_id}, '${task.task_name}', '${type}')" title="Eliminar">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+// Función para formatear fechas
+function formatTaskDate(dateString) {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES');
+}
+
+// Función para eliminar tarea desde la lista
+function deleteTaskFromList(taskId, taskName, type) {
+    if (confirm(`¿Estás seguro de que quieres eliminar la tarea "${taskName}"?`)) {
+        const formData = new FormData();
+        formData.append('task_id', taskId);
+        
+        fetch('?route=clan_leader/delete-task', {
+            method: 'POST',
+            credentials: 'same-origin',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showTaskToast(data.message || 'Tarea eliminada exitosamente', 'success');
+                // Recargar las tareas del tab actual
+                if (type === 'my') {
+                    loadMyTasks();
+                } else {
+                    loadTeamTasks();
+                }
+            } else {
+                showTaskToast(data.message || 'Error al eliminar la tarea', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showTaskToast('Error de conexión', 'error');
+        });
+    }
+}
+
+// Función para mostrar mensajes toast
+function showTaskToast(message, type = 'info') {
+    let toast = document.getElementById('taskToast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'taskToast';
+        toast.className = 'task-toast';
+        document.body.appendChild(toast);
+    }
+    
+    toast.textContent = message;
+    toast.className = `task-toast task-toast-${type} show`;
+    
+    setTimeout(() => {
+        toast.classList.remove('show');
+    }, 3000);
+}
+
+// Inicializar cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 DOM listo - Iniciando tasks page');
+    switchTasksTab('my-tasks');
+});
+</script>
 
 <?php
 $content = ob_get_clean();
