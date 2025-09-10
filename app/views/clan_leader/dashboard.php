@@ -236,7 +236,7 @@ function renderMyKanbanBoard(kanbanTasks) {
             html += `<div class="${cardClass} ${columnClass}" data-task-id="${task.task_id}" data-item-type="${task.item_type}">
                 <div class="task-header-mini">
                     <input type="checkbox" class="task-checkbox-mini" ${task.status === 'completed' ? 'checked' : ''} 
-                           onchange="toggleTaskStatusKanban(${task.task_id}, this.checked, '${isSubtask ? 'subtask' : 'task'}')"
+                           onchange="toggleTaskStatusKanban(${task.task_id}, this.checked, '${isSubtask ? 'subtask' : 'task'}')">
                     <div class="task-name-mini">
                         ${isSubtask ? '<i class="fas fa-arrow-right subtask-icon"></i>' : ''}
                         ${task.task_name || 'Sin nombre'}
@@ -302,7 +302,7 @@ function renderTeamKanbanBoard(kanbanTasks) {
             html += `<div class="${cardClass} ${columnClass}" data-task-id="${task.task_id}" data-item-type="${task.item_type}">
                 <div class="task-header-mini">
                     <input type="checkbox" class="task-checkbox-mini" ${task.status === 'completed' ? 'checked' : ''} 
-                           onchange="toggleTaskStatusKanban(${task.task_id}, this.checked, '${isSubtask ? 'subtask' : 'task'}')"
+                           onchange="toggleTaskStatusKanban(${task.task_id}, this.checked, '${isSubtask ? 'subtask' : 'task'}')">
                     <div class="task-name-mini">
                         ${isSubtask ? '<i class="fas fa-arrow-right subtask-icon"></i>' : ''}
                         ${task.task_name || 'Sin nombre'}
