@@ -996,10 +996,12 @@ const additionalStyleElement = document.createElement('style');
 additionalStyleElement.textContent = additionalStyles;
 document.head.appendChild(additionalStyleElement);
 
+console.log('🚀 Dashboard.php JavaScript cargado - Debug activo v3.0');
+
 // Funciones específicas para el dashboard del clan leader
 document.addEventListener('DOMContentLoaded', function() {
     // Inicialización del dashboard compacto
-    console.log('Dashboard compacto cargado');
+    console.log('🚀 Dashboard compacto cargado - DOM listo');
 });
 
 // Cache-bust timestamp: <?= time() ?> - v3.1.<?= date('His') ?>
@@ -1128,14 +1130,36 @@ function switchKanbanTab(tabName) {
 
 // Función para cargar mis tareas en el Kanban
 function loadMyKanbanTasks() {
+    console.log('🔵 loadMyKanbanTasks() iniciado');
     const kanbanBoard = document.getElementById('my-tasks-kanban-board');
-    if (!kanbanBoard) return;
+    if (!kanbanBoard) {
+        console.error('🔴 No se encontró my-tasks-kanban-board');
+        return;
+    }
     
     kanbanBoard.innerHTML = '<div class="loading-message"><i class="fas fa-spinner fa-spin"></i> Cargando mis tareas...</div>';
     
     fetch('?route=clan_leader/get-my-kanban-tasks')
         .then(response => response.json())
         .then(data => {
+            console.log('🔵 === RESPUESTA KANBAN ===');
+            console.log('🔵 Success:', data.success);
+            console.log('🔵 Debug info:', data.debug);
+            console.log('🔵 Kanban Tasks:', data.kanbanTasks);
+            
+            if (data.kanbanTasks) {
+                console.log('🔵 Vencidas:', data.kanbanTasks.vencidas ? data.kanbanTasks.vencidas.length : 0);
+                console.log('🔵 Hoy:', data.kanbanTasks.hoy ? data.kanbanTasks.hoy.length : 0);
+                if (data.kanbanTasks.hoy && data.kanbanTasks.hoy.length > 0) {
+                    console.log('🔵 Tareas en HOY:');
+                    data.kanbanTasks.hoy.forEach((task, index) => {
+                        console.log(`  [${index}] ID=${task.task_id}, Name="${task.task_name}", Project="${task.project_name}"`);
+                    });
+                }
+                console.log('🔵 Semana1:', data.kanbanTasks.semana1 ? data.kanbanTasks.semana1.length : 0);
+                console.log('🔵 Semana2:', data.kanbanTasks.semana2 ? data.kanbanTasks.semana2.length : 0);
+            }
+            
             if (data.success) {
                 renderMyKanbanBoard(data.kanbanTasks);
             } else {
@@ -1143,15 +1167,19 @@ function loadMyKanbanTasks() {
             }
         })
         .catch(error => {
-            console.error('Error:', error);
+            console.error('🔴 Error:', error);
             kanbanBoard.innerHTML = '<div class="loading-message text-danger">Error de conexión</div>';
         });
 }
 
 // Función para renderizar el tablero Kanban de mis tareas
 function renderMyKanbanBoard(kanbanTasks) {
+    console.log('🟢 renderMyKanbanBoard() iniciado');
     const kanbanBoard = document.getElementById('my-tasks-kanban-board');
-    if (!kanbanBoard) return;
+    if (!kanbanBoard) {
+        console.error('🔴 No se encontró kanbanBoard');
+        return;
+    }
     
     const columns = ['vencidas', 'hoy', 'semana1', 'semana2'];
     const columnTitles = {
@@ -1165,6 +1193,13 @@ function renderMyKanbanBoard(kanbanTasks) {
     
     columns.forEach(column => {
         const tasks = kanbanTasks[column] || [];
+        console.log(`🟢 Renderizando columna ${column} con ${tasks.length} tareas`);
+        if (column === 'hoy' && tasks.length > 0) {
+            console.log('🟢 Tareas que se van a renderizar en HOY:');
+            tasks.forEach((task, index) => {
+                console.log(`  [${index}] ID=${task.task_id}, Name="${task.task_name}"`);
+            });
+        }
         const columnClass = column === 'vencidas' ? 'overdue' : column === 'hoy' ? 'today' : column === 'semana1' ? 'week1' : 'week2';
         
         html += `
