@@ -837,22 +837,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
 /* ========== ESTILOS PARA SUBTAREAS ========== */
 
-/* Cards de subtareas del mismo tamaño que tareas principales */
+/* Cards de subtareas más grandes para mejor legibilidad */
 .kanban-section .subtask-card-micro {
-    margin: 3px 6px !important;
-    padding: 6px 8px !important;
+    margin: 4px 7px !important;
+    padding: 8px 10px !important;
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
-    border-radius: 6px !important;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05) !important;
+    border-radius: 8px !important;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.06) !important;
     transition: all 0.2s ease !important;
-    border-left: 3px solid #6c757d !important;
+    border-left: 4px solid #6c757d !important;
     position: relative;
     overflow: hidden;
-    min-height: 42px !important;
-    width: calc(100% - 12px) !important;
+    min-height: 52px !important;
+    width: calc(100% - 14px) !important;
     display: flex !important;
     flex-direction: column !important;
-    gap: 3px !important;
+    gap: 4px !important;
     opacity: 0.95 !important;
     border: 1px solid rgba(108, 117, 125, 0.2) !important;
 }
@@ -886,43 +886,43 @@ document.addEventListener('DOMContentLoaded', function() {
 
 /* Icono de subtarea */
 .subtask-icon {
-    font-size: 8px !important;
+    font-size: 9px !important;
     color: #6c757d !important;
-    margin-right: 4px !important;
+    margin-right: 5px !important;
     opacity: 0.8 !important;
 }
 
 /* Indicador de tarea padre */
 .parent-task-hint {
-    font-size: 9px !important;
+    font-size: 10px !important;
     color: #6c757d !important;
-    margin-left: 5px !important;
+    margin-left: 6px !important;
     opacity: 0.7 !important;
     cursor: help !important;
 }
 
-/* Etiquetas de subtareas del mismo tamaño que las principales */
+/* Etiquetas de subtareas más grandes */
 .kanban-section .subtask-tag {
-    font-size: 8px !important;
-    padding: 2px 4px !important;
-    border-radius: 6px !important;
-    max-width: 65px !important;
+    font-size: 9px !important;
+    padding: 3px 5px !important;
+    border-radius: 8px !important;
+    max-width: 75px !important;
     opacity: 0.9 !important;
 }
 
 .kanban-section .subtask-tag i {
-    font-size: 7px !important;
+    font-size: 8px !important;
 }
 
 /* Ajustes específicos para subtareas en el header */
 .subtask-card-micro .task-header-mini {
-    min-height: 20px !important;
-    gap: 6px !important;
+    min-height: 24px !important;
+    gap: 8px !important;
 }
 
 .subtask-card-micro .task-name-mini {
-    font-size: 11px !important;
-    line-height: 1.3 !important;
+    font-size: 12px !important;
+    line-height: 1.4 !important;
     color: #495057 !important;
     font-weight: 600 !important;
 }
@@ -933,8 +933,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 /* Contenedor de etiquetas para subtareas */
 .subtask-card-micro .task-tags-mini {
-    max-height: 18px !important;
-    gap: 2px !important;
+    max-height: 22px !important;
+    gap: 3px !important;
 }
 
 /* Animación sutil para subtareas */
@@ -956,18 +956,18 @@ document.addEventListener('DOMContentLoaded', function() {
 /* Responsive para subtareas */
 @media (max-width: 768px) {
     .subtask-card-micro {
-        margin: 2px 4px !important;
-        padding: 4px 6px !important;
-        min-height: 36px !important;
+        margin: 3px 5px !important;
+        padding: 6px 8px !important;
+        min-height: 44px !important;
     }
     
     .subtask-card-micro .task-name-mini {
-        font-size: 10px !important;
+        font-size: 11px !important;
     }
     
     .kanban-section .subtask-tag {
-        font-size: 7px !important;
-        max-width: 50px !important;
+        font-size: 8px !important;
+        max-width: 60px !important;
     }
 }
 
