@@ -173,22 +173,17 @@ function loadTeamKanbanTasks() {
     
     kanbanBoard.innerHTML = '<div class="loading-message"><i class="fas fa-spinner fa-spin"></i> Cargando tareas del equipo...</div>';
     
-    fetch('?route=clan_leader/get-my-kanban-tasks')
+    fetch('?route=clan_leader/get-team-kanban-tasks')
         .then(response => response.json())
         .then(data => {
             console.log('🟡 === RESPUESTA TEAM KANBAN ===');
             console.log('🟡 Success:', data.success);
-            console.log('🟡 Data received:', data);
+            console.log('🟡 Debug:', data.debug);
+            console.log('🟡 Kanban Tasks:', data.kanbanTasks);
             
-            if (data.success) {
-                // Para el tab de equipo, mostrar mensaje informativo por ahora
-                const emptyKanbanTasks = {
-                    'vencidas': [],
-                    'hoy': [],
-                    'semana1': [],
-                    'semana2': []
-                };
-                renderTeamKanbanBoard(emptyKanbanTasks, true);
+            if (data.success && data.kanbanTasks) {
+                console.log('🟡 Total tareas del equipo:', data.total);
+                renderTeamKanbanBoard(data.kanbanTasks);
             } else {
                 kanbanBoard.innerHTML = '<div class="loading-message text-danger">Error: ' + (data.message || 'Error desconocido') + '</div>';
             }
@@ -255,22 +250,10 @@ function renderMyKanbanBoard(kanbanTasks) {
     kanbanBoard.innerHTML = html;
 }
 
-function renderTeamKanbanBoard(kanbanTasks, showInfoMessage = false) {
+function renderTeamKanbanBoard(kanbanTasks) {
     console.log('🟠 renderTeamKanbanBoard() iniciado');
     const kanbanBoard = document.getElementById('team-tasks-kanban-board');
     if (!kanbanBoard) return;
-    
-    if (showInfoMessage) {
-        kanbanBoard.innerHTML = `
-            <div class="loading-message" style="color: #666; font-size: 16px; padding: 40px; text-align: center;">
-                <i class="fas fa-info-circle" style="font-size: 48px; color: #3498db; margin-bottom: 20px;"></i>
-                <h3 style="margin-bottom: 10px;">Tareas del Equipo</h3>
-                <p>Esta sección mostrará las tareas asignadas a los miembros de tu equipo.</p>
-                <p style="color: #888; font-size: 14px;">Funcionalidad en desarrollo</p>
-            </div>
-        `;
-        return;
-    }
     
     const columns = ['vencidas', 'hoy', 'semana1', 'semana2'];
     const columnTitles = {
