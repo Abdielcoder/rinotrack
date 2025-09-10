@@ -230,26 +230,27 @@ function renderMyKanbanBoard(kanbanTasks) {
             // Log detallado de cada tarea que se renderiza
             console.log(`🟢 Renderizando: ID=${task.task_id}, Name="${task.task_name}", Personal=${isPersonal}, Project="${task.project_name}"`);
             
-            html += `<div class="task-card-compact ${columnClass}" data-task-id="${task.task_id}">
-                <div class="task-compact-row">
-                    <input type="checkbox" class="task-checkbox-compact" ${task.status === 'completed' ? 'checked' : ''}>
-                    <div class="task-name-compact">
-                        ${isPersonal ? 
-                            '<i class="fas fa-user-circle" style="color: #e74c3c;" title="Tarea Personal"></i>' : 
-                            '<i class="fas fa-users" style="color: #3498db;" title="Tarea de Clan"></i>'
-                        }
-                        <span>${task.task_name || 'Sin nombre'}</span>
+            html += `<div class="task-card-mini ${columnClass}" data-task-id="${task.task_id}">
+                <div class="task-header-mini">
+                    <input type="checkbox" class="task-checkbox-mini" ${task.status === 'completed' ? 'checked' : ''}>
+                    <div class="task-name-mini">
+                        ${task.task_name || 'Sin nombre'}
                     </div>
                 </div>
-                <div class="task-info-compact">
-                    <div class="project-name-compact" style="${isPersonal ? 'background: rgba(231, 76, 60, 0.1); color: #e74c3c; border-color: rgba(231, 76, 60, 0.3);' : ''}">${task.project_name || 'Sin proyecto'}</div>
-                    ${task.assigned_user_name ? `<div class="assignee-info-compact"><i class="fas fa-user"></i> ${task.assigned_user_name}</div>` : ''}
-                    <div class="task-due-compact ${columnClass}">
+                <div class="task-tags-mini">
+                    <span class="task-tag project-tag ${isPersonal ? 'personal' : 'clan'}">
+                        ${isPersonal ? 
+                            '<i class="fas fa-user"></i> Personal' : 
+                            '<i class="fas fa-users"></i> ' + (task.project_name || 'Sin proyecto')
+                        }
+                    </span>
+                    ${task.assigned_user_name ? `<span class="task-tag assignee-tag"><i class="fas fa-user-tag"></i> ${task.assigned_user_name}</span>` : ''}
+                    <span class="task-tag due-tag ${columnClass}">
                         ${column === 'vencidas' ? '<i class="fas fa-exclamation-triangle"></i> Vencida' : 
-                          column === 'hoy' ? '<i class="fas fa-clock"></i> Vence hoy' :
-                          column === 'semana1' ? '<i class="fas fa-calendar"></i> Esta semana' :
-                          '<i class="fas fa-calendar"></i> En ' + (task.days_until_due || '0') + ' días'}
-                    </div>
+                          column === 'hoy' ? '<i class="fas fa-clock"></i> Hoy' :
+                          column === 'semana1' ? '<i class="fas fa-calendar"></i> 1 sem' :
+                          '<i class="fas fa-calendar-plus"></i> ' + (task.days_until_due || '0') + 'd'}
+                    </span>
                 </div>
             </div>`;
         });
@@ -286,23 +287,24 @@ function renderTeamKanbanBoard(kanbanTasks) {
             <div class="column-content-compact">`;
         
         tasks.forEach(task => {
-            html += `<div class="task-card-compact ${columnClass}" data-task-id="${task.task_id}">
-                <div class="task-compact-row">
-                    <input type="checkbox" class="task-checkbox-compact" ${task.status === 'completed' ? 'checked' : ''}>
-                    <div class="task-name-compact">
-                        <i class="fas fa-users" style="color: #f39c12;" title="Tarea del Equipo"></i>
-                        <span>${task.task_name || 'Sin nombre'}</span>
+            html += `<div class="task-card-mini ${columnClass}" data-task-id="${task.task_id}">
+                <div class="task-header-mini">
+                    <input type="checkbox" class="task-checkbox-mini" ${task.status === 'completed' ? 'checked' : ''}>
+                    <div class="task-name-mini">
+                        ${task.task_name || 'Sin nombre'}
                     </div>
                 </div>
-                <div class="task-info-compact">
-                    <div class="project-name-compact" style="background: rgba(243, 156, 18, 0.1); color: #f39c12; border-color: rgba(243, 156, 18, 0.3);">${task.project_name || 'Sin proyecto'}</div>
-                    ${task.assigned_user_name ? `<div class="assignee-info-compact" style="background: rgba(243, 156, 18, 0.1); color: #f39c12;"><i class="fas fa-user"></i> ${task.assigned_user_name}</div>` : ''}
-                    <div class="task-due-compact ${columnClass}">
+                <div class="task-tags-mini">
+                    <span class="task-tag project-tag team">
+                        <i class="fas fa-users"></i> ${task.project_name || 'Sin proyecto'}
+                    </span>
+                    ${task.assigned_user_name ? `<span class="task-tag assignee-tag"><i class="fas fa-user-tag"></i> ${task.assigned_user_name}</span>` : ''}
+                    <span class="task-tag due-tag ${columnClass}">
                         ${column === 'vencidas' ? '<i class="fas fa-exclamation-triangle"></i> Vencida' : 
-                          column === 'hoy' ? '<i class="fas fa-clock"></i> Vence hoy' :
-                          column === 'semana1' ? '<i class="fas fa-calendar"></i> Esta semana' :
-                          '<i class="fas fa-calendar"></i> En ' + (task.days_until_due || '0') + ' días'}
-                    </div>
+                          column === 'hoy' ? '<i class="fas fa-clock"></i> Hoy' :
+                          column === 'semana1' ? '<i class="fas fa-calendar"></i> 1 sem' :
+                          '<i class="fas fa-calendar-plus"></i> ' + (task.days_until_due || '0') + 'd'}
+                    </span>
                 </div>
             </div>`;
         });
@@ -556,14 +558,14 @@ document.addEventListener('DOMContentLoaded', function() {
     justify-content: space-between !important;
 }
 
-/* Columnas del Kanban más compactas para que quepan todas */
+/* Columnas del Kanban ultra compactas para máxima eficiencia */
 .kanban-section .kanban-column-compact {
     background: white !important;
-    border-radius: 16px !important;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06) !important;
     flex: 1 !important;
-    min-width: 240px !important;
-    max-width: 280px !important;
+    min-width: 200px !important;
+    max-width: 220px !important;
     overflow: hidden;
     transition: transform 0.3s ease, box-shadow 0.3s ease !important;
     border: 1px solid rgba(0, 0, 0, 0.05) !important;
@@ -575,9 +577,9 @@ document.addEventListener('DOMContentLoaded', function() {
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
 }
 
-/* Headers de columnas más compactos */
+/* Headers de columnas ultra compactos */
 .kanban-section .column-header {
-    padding: 16px 12px !important;
+    padding: 12px 10px !important;
     font-weight: 700 !important;
     color: white !important;
     text-align: center !important;
@@ -635,153 +637,178 @@ document.addEventListener('DOMContentLoaded', function() {
     background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
 }
 
-/* Tarjetas de tareas optimizadas para columnas compactas */
-.kanban-section .task-card-compact {
-    margin: 10px 12px !important;
-    padding: 16px !important;
+/* Tarjetas de tareas mini con diseño compacto */
+.kanban-section .task-card-mini {
+    margin: 6px 8px !important;
+    padding: 10px !important;
     background: white !important;
-    border-radius: 12px !important;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
-    transition: all 0.3s ease !important;
-    border-left: 4px solid #3498db !important;
+    border-radius: 8px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+    transition: all 0.2s ease !important;
+    border-left: 3px solid #3498db !important;
     position: relative;
     overflow: hidden;
-    min-height: 130px !important;
-    width: calc(100% - 24px) !important;
+    min-height: 80px !important;
+    width: calc(100% - 16px) !important;
     display: flex !important;
     flex-direction: column !important;
-    justify-content: space-between !important;
+    gap: 8px !important;
 }
 
-.task-card-compact::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(45deg, rgba(52, 152, 219, 0.03) 0%, rgba(52, 152, 219, 0.01) 100%);
-    pointer-events: none;
+.task-card-mini:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
 }
 
-.task-card-compact:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
-}
-
-.task-card-compact.overdue {
+.task-card-mini.overdue {
     border-left-color: #e74c3c;
 }
 
-.task-card-compact.today {
+.task-card-mini.today {
     border-left-color: #f39c12;
 }
 
-.task-card-compact.week1 {
+.task-card-mini.week1 {
     border-left-color: #3498db;
 }
 
-.task-card-compact.week2 {
+.task-card-mini.week2 {
     border-left-color: #27ae60;
 }
 
-/* Fila superior de la tarea */
-.kanban-section .task-compact-row {
-    display: flex !important;
-    align-items: flex-start !important;
-    gap: 12px !important;
-    margin-bottom: 12px !important;
-    flex: 1 !important;
-}
-
-.kanban-section .task-checkbox-compact {
-    margin-top: 4px !important;
-    transform: scale(1.2) !important;
-}
-
-/* Nombres de tareas más compactos */
-.kanban-section .task-name-compact {
-    font-weight: 600 !important;
-    color: #2c3e50 !important;
-    font-size: 13px !important;
-    line-height: 1.3 !important;
-    margin: 0 !important;
+/* Header de la tarea mini */
+.kanban-section .task-header-mini {
     display: flex !important;
     align-items: flex-start !important;
     gap: 8px !important;
+}
+
+.kanban-section .task-checkbox-mini {
+    margin-top: 2px !important;
+    transform: scale(1.1) !important;
+    cursor: pointer !important;
+}
+
+/* Nombre de la tarea mini */
+.kanban-section .task-name-mini {
+    font-weight: 600 !important;
+    color: #2c3e50 !important;
+    font-size: 12px !important;
+    line-height: 1.3 !important;
     flex: 1 !important;
     word-wrap: break-word !important;
     overflow-wrap: break-word !important;
+    margin: 0 !important;
 }
 
-/* Información del proyecto y asignado */
-.kanban-section .task-info-compact {
+/* Contenedor de etiquetas */
+.kanban-section .task-tags-mini {
     display: flex !important;
-    flex-direction: column !important;
-    gap: 8px !important;
-    margin-top: auto !important;
-    padding-top: 12px !important;
-    border-top: 1px solid #ecf0f1 !important;
+    flex-wrap: wrap !important;
+    gap: 4px !important;
+    align-items: center !important;
 }
 
-.kanban-section .project-name-compact {
-    font-size: 11px !important;
+/* Etiquetas base */
+.kanban-section .task-tag {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    font-size: 9px !important;
     font-weight: 600 !important;
-    padding: 6px 10px !important;
-    border-radius: 8px !important;
-    background: rgba(52, 152, 219, 0.1) !important;
-    color: #3498db !important;
-    border: 1px solid rgba(52, 152, 219, 0.2) !important;
-    text-align: center !important;
-    letter-spacing: 0.3px !important;
-}
-
-/* Información del asignado */
-.kanban-section .assignee-info-compact {
-    font-size: 10px !important;
-    color: #7f8c8d !important;
-    padding: 4px 8px !important;
-    background: rgba(127, 140, 141, 0.1) !important;
-    border-radius: 6px !important;
-    text-align: center !important;
-    font-weight: 500 !important;
-    letter-spacing: 0.2px !important;
-}
-
-/* Información de vencimiento */
-.kanban-section .task-due-compact {
-    font-size: 10px !important;
-    font-weight: 600 !important;
-    padding: 6px 10px !important;
-    border-radius: 6px !important;
-    text-align: center !important;
-    margin-top: 8px !important;
-    letter-spacing: 0.3px !important;
+    padding: 3px 6px !important;
+    border-radius: 12px !important;
     text-transform: uppercase !important;
+    letter-spacing: 0.3px !important;
+    white-space: nowrap !important;
+    border: 1px solid transparent !important;
+    transition: all 0.2s ease !important;
 }
 
-.kanban-section .task-due-compact.overdue {
-    background: rgba(231, 76, 60, 0.1) !important;
+.task-tag i {
+    font-size: 8px !important;
+}
+
+/* Etiqueta de proyecto */
+.kanban-section .project-tag.personal {
+    background: rgba(231, 76, 60, 0.15) !important;
+    color: #c0392b !important;
+    border-color: rgba(231, 76, 60, 0.3) !important;
+}
+
+.kanban-section .project-tag.clan {
+    background: rgba(52, 152, 219, 0.15) !important;
+    color: #2980b9 !important;
+    border-color: rgba(52, 152, 219, 0.3) !important;
+}
+
+.kanban-section .project-tag.team {
+    background: rgba(243, 156, 18, 0.15) !important;
+    color: #d68910 !important;
+    border-color: rgba(243, 156, 18, 0.3) !important;
+}
+
+/* Etiqueta de asignado */
+.kanban-section .assignee-tag {
+    background: rgba(155, 89, 182, 0.15) !important;
+    color: #8e44ad !important;
+    border-color: rgba(155, 89, 182, 0.3) !important;
+}
+
+/* Etiquetas de vencimiento */
+.kanban-section .due-tag.overdue {
+    background: rgba(231, 76, 60, 0.2) !important;
     color: #e74c3c !important;
-    border: 1px solid rgba(231, 76, 60, 0.3) !important;
+    border-color: rgba(231, 76, 60, 0.4) !important;
+    animation: pulse-red 2s infinite !important;
 }
 
-.kanban-section .task-due-compact.today {
-    background: rgba(243, 156, 18, 0.1) !important;
+.kanban-section .due-tag.today {
+    background: rgba(243, 156, 18, 0.2) !important;
     color: #f39c12 !important;
-    border: 1px solid rgba(243, 156, 18, 0.3) !important;
+    border-color: rgba(243, 156, 18, 0.4) !important;
+    animation: pulse-orange 2s infinite !important;
 }
 
-.kanban-section .task-due-compact.week1 {
-    background: rgba(52, 152, 219, 0.1) !important;
+.kanban-section .due-tag.week1 {
+    background: rgba(52, 152, 219, 0.15) !important;
     color: #3498db !important;
-    border: 1px solid rgba(52, 152, 219, 0.3) !important;
+    border-color: rgba(52, 152, 219, 0.3) !important;
 }
 
-.kanban-section .task-due-compact.week2 {
-    background: rgba(39, 174, 96, 0.1) !important;
+.kanban-section .due-tag.week2 {
+    background: rgba(39, 174, 96, 0.15) !important;
     color: #27ae60 !important;
-    border: 1px solid rgba(39, 174, 96, 0.3) !important;
+    border-color: rgba(39, 174, 96, 0.3) !important;
+}
+
+/* Animaciones de pulsación para urgencia */
+@keyframes pulse-red {
+    0%, 100% { 
+        background: rgba(231, 76, 60, 0.2);
+        transform: scale(1); 
+    }
+    50% { 
+        background: rgba(231, 76, 60, 0.35);
+        transform: scale(1.05); 
+    }
+}
+
+@keyframes pulse-orange {
+    0%, 100% { 
+        background: rgba(243, 156, 18, 0.2);
+        transform: scale(1); 
+    }
+    50% { 
+        background: rgba(243, 156, 18, 0.35);
+        transform: scale(1.05); 
+    }
+}
+
+/* Efectos hover para las etiquetas */
+.kanban-section .task-tag:hover {
+    transform: scale(1.05) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
 }
 
 /* Responsive design mejorado */
