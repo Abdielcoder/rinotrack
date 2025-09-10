@@ -365,6 +365,322 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
+<!-- Estilos para los tabs del Kanban -->
+<style>
+/* Contenedor principal de tabs */
+.kanban-tabs {
+    display: flex;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 15px 15px 0 0;
+    padding: 8px;
+    margin-bottom: 0;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.kanban-tabs::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+    pointer-events: none;
+}
+
+/* Botones de los tabs */
+.kanban-tab-button {
+    flex: 1;
+    padding: 16px 24px;
+    border: none;
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.8);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 12px;
+    margin: 0 4px;
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.kanban-tab-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s;
+}
+
+.kanban-tab-button:hover::before {
+    left: 100%;
+}
+
+.kanban-tab-button:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* Tab activo */
+.kanban-tab-button.active {
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    color: #2c3e50;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    transform: translateY(-3px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.kanban-tab-button.active i {
+    color: #3498db;
+    transform: scale(1.1);
+}
+
+/* Iconos de los tabs */
+.kanban-tab-button i {
+    font-size: 18px;
+    transition: all 0.3s ease;
+}
+
+.kanban-tab-button:hover i {
+    transform: scale(1.05);
+}
+
+/* Contenido de los tabs */
+.kanban-tab-content {
+    background: white;
+    border-radius: 0 0 15px 15px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.kanban-tab-content.active {
+    animation: fadeInUp 0.4s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Mejorar el tablero Kanban */
+.kanban-board-compact {
+    padding: 24px;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    min-height: 400px;
+}
+
+/* Columnas del Kanban más atractivas */
+.kanban-column-compact {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+    margin: 0 12px;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.kanban-column-compact:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+}
+
+/* Headers de columnas más atractivos */
+.column-header {
+    padding: 20px 24px;
+    font-weight: 700;
+    color: white;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.column-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+}
+
+.column-header h4 {
+    margin: 0;
+    font-size: 16px;
+    letter-spacing: 0.5px;
+    position: relative;
+    z-index: 1;
+}
+
+.task-count {
+    background: rgba(255, 255, 255, 0.25);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-left: 10px;
+    position: relative;
+    z-index: 1;
+    backdrop-filter: blur(10px);
+}
+
+/* Colores específicos por columna */
+.column-header.overdue {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+}
+
+.column-header.today {
+    background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+}
+
+.column-header.week1 {
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+}
+
+.column-header.week2 {
+    background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+}
+
+/* Tarjetas de tareas más atractivas */
+.task-card-compact {
+    margin: 16px;
+    padding: 18px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    border-left: 4px solid #3498db;
+    position: relative;
+    overflow: hidden;
+}
+
+.task-card-compact::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(52, 152, 219, 0.03) 0%, rgba(52, 152, 219, 0.01) 100%);
+    pointer-events: none;
+}
+
+.task-card-compact:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+}
+
+.task-card-compact.overdue {
+    border-left-color: #e74c3c;
+}
+
+.task-card-compact.today {
+    border-left-color: #f39c12;
+}
+
+.task-card-compact.week1 {
+    border-left-color: #3498db;
+}
+
+.task-card-compact.week2 {
+    border-left-color: #27ae60;
+}
+
+/* Nombres de tareas más legibles */
+.task-name-compact {
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 15px;
+    line-height: 1.4;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Información del proyecto más clara */
+.project-name-compact {
+    font-size: 13px;
+    font-weight: 500;
+    padding: 4px 8px;
+    border-radius: 6px;
+    background: rgba(52, 152, 219, 0.1);
+    color: #3498db;
+    border: 1px solid rgba(52, 152, 219, 0.2);
+}
+
+/* Información del asignado */
+.assignee-info-compact {
+    font-size: 12px;
+    color: #7f8c8d;
+    margin-left: 8px;
+    padding: 2px 6px;
+    background: rgba(127, 140, 141, 0.1);
+    border-radius: 4px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .kanban-tabs {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .kanban-tab-button {
+        margin: 0;
+    }
+    
+    .kanban-board-compact {
+        padding: 16px;
+    }
+    
+    .kanban-column-compact {
+        margin: 0 8px;
+    }
+}
+
+/* Animación de carga mejorada */
+.loading-message {
+    text-align: center;
+    padding: 60px 20px;
+    color: #7f8c8d;
+    font-size: 16px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 12px;
+    margin: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.loading-message i {
+    font-size: 32px;
+    margin-bottom: 16px;
+    color: #3498db;
+}
+</style>
+
 <?php
 // Guardar el contenido generado
 $content = ob_get_clean();
