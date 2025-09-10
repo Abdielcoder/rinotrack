@@ -17,6 +17,18 @@ ob_start();
             </div>
             
             <div class="actions-minimal">
+                <!-- Toggle de vista -->
+                <div class="view-toggle-minimal">
+                    <button class="view-btn active" onclick="switchView('cards')" id="cardsViewBtn">
+                        <i class="fas fa-th-large"></i>
+                        Cards
+                    </button>
+                    <button class="view-btn" onclick="switchView('list')" id="listViewBtn">
+                        <i class="fas fa-list"></i>
+                        Lista
+                    </button>
+                </div>
+                
                 <button class="btn-minimal primary" onclick="openCreateProjectModal()">
                     <i class="fas fa-plus"></i>
                     Nuevo Proyecto
@@ -43,8 +55,8 @@ ob_start();
     <!-- Contenido Principal -->
     <div class="content-minimal">
         <?php if (!empty($projects)): ?>
-            <!-- Sección de Proyectos con Diseño Consistente -->
-            <section class="projects-minimal animate-fade-in">
+            <!-- Vista de Cards (por defecto) -->
+            <section class="projects-minimal animate-fade-in" id="cardsView">
                 <div class="projects-grid-minimal">
                     <?php foreach ($projects as $project): ?>
                     <div class="project-item-enhanced">
@@ -165,7 +177,94 @@ ob_start();
                     </div>
                     <?php endforeach; ?>
                 </div>
-            </div>
+            </section>
+            
+            <!-- Vista de Lista (oculta por defecto) -->
+            <section class="projects-list-view animate-fade-in" id="listView" style="display: none;">
+                <div class="projects-table-minimal">
+                    <div class="table-header-minimal">
+                        <div class="header-cell">Proyecto</div>
+                        <div class="header-cell">Estado</div>
+                        <div class="header-cell">Progreso</div>
+                        <div class="header-cell">Tareas</div>
+                        <div class="header-cell">Acciones</div>
+                    </div>
+                    
+                    <?php foreach ($projects as $project): ?>
+                    <div class="table-row-minimal">
+                        <div class="cell-project">
+                            <div class="project-icon-list">
+                                <i class="fas fa-project-diagram"></i>
+                            </div>
+                            <div class="project-info-list">
+                                <div class="project-name-list"><?= htmlspecialchars($project['project_name']) ?></div>
+                                <?php if (!empty($project['description'])): ?>
+                                <div class="project-description-list"><?= htmlspecialchars($project['description']) ?></div>
+                                <?php endif; ?>
+                                <?php if (isset($project['kpi_points']) && $project['kpi_points'] > 0): ?>
+                                <div class="project-kpi-list">
+                                    <i class="fas fa-star"></i>
+                                    <?= number_format($project['kpi_points']) ?> KPI
+                                </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        
+                        <div class="cell-status">
+                            <span class="status-badge-list status-<?= $project['status'] ?>">
+                                <?= ucfirst($project['status']) ?>
+                            </span>
+                        </div>
+                        
+                        <div class="cell-progress">
+                            <div class="progress-container-list">
+                                <div class="progress-bar-list">
+                                    <div class="progress-fill-list" style="width: <?= $project['progress_percentage'] ?? 0 ?>%"></div>
+                                </div>
+                                <span class="progress-text-list"><?= $project['progress_percentage'] ?? 0 ?>%</span>
+                            </div>
+                        </div>
+                        
+                        <div class="cell-tasks">
+                            <div class="tasks-summary-list">
+                                <span class="tasks-total"><?= $project['total_tasks'] ?? 0 ?></span>
+                                <span class="tasks-separator">/</span>
+                                <span class="tasks-completed"><?= $project['completed_tasks'] ?? 0 ?></span>
+                            </div>
+                        </div>
+                        
+                        <div class="cell-actions">
+                            <div class="actions-list">
+                                <a href="?route=clan_leader/tasks&project_id=<?= $project['project_id'] ?>" class="btn-list-action primary" title="Ver Tareas">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <button class="btn-list-action secondary" onclick="openCreateTaskModal(<?= $project['project_id'] ?>)" title="Nueva Tarea">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                                <button class="btn-list-action menu" onclick="toggleProjectMenu(<?= $project['project_id'] ?>)" title="Más opciones">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                                <!-- Menú contextual -->
+                                <div class="dropdown-menu-list" id="projectMenu<?= $project['project_id'] ?>">
+                                    <button class="menu-item-list" onclick="openEditProjectModal(<?= $project['project_id'] ?>, '<?= htmlspecialchars($project['project_name']) ?>', '<?= htmlspecialchars($project['description']) ?>', '<?= $project['time_limit'] ?? '' ?>')">
+                                        <i class="fas fa-edit"></i>
+                                        Editar
+                                    </button>
+                                    <button class="menu-item-list" onclick="openCloneProjectModal(<?= $project['project_id'] ?>)">
+                                        <i class="fas fa-copy"></i>
+                                        Clonar
+                                    </button>
+                                    <button class="menu-item-list danger" onclick="deleteProject(<?= $project['project_id'] ?>, '<?= htmlspecialchars($project['project_name']) ?>')">
+                                        <i class="fas fa-trash"></i>
+                                        Eliminar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+            </section>
         <?php else: ?>
             <div class="empty-minimal">
                 <div class="empty-icon-minimal">
@@ -428,13 +527,39 @@ document.getElementById('editProjectModal').addEventListener('click', function(e
 
 // ========== NUEVAS FUNCIONALIDADES MEJORADAS ==========
 
-// Función removida - El botón "Ver Tareas" ahora redirige directamente al listado
-// function showProjectTasks(projectId) { ... }
+// Función para intercambiar entre vista de cards y lista
+function switchView(viewType) {
+    const cardsView = document.getElementById('cardsView');
+    const listView = document.getElementById('listView');
+    const cardsBtn = document.getElementById('cardsViewBtn');
+    const listBtn = document.getElementById('listViewBtn');
+    
+    // Remover clases activas
+    cardsBtn.classList.remove('active');
+    listBtn.classList.remove('active');
+    
+    if (viewType === 'cards') {
+        cardsView.style.display = 'block';
+        listView.style.display = 'none';
+        cardsBtn.classList.add('active');
+        
+        // Guardar preferencia en localStorage
+        localStorage.setItem('projectsViewType', 'cards');
+    } else {
+        cardsView.style.display = 'none';
+        listView.style.display = 'block';
+        listBtn.classList.add('active');
+        
+        // Guardar preferencia en localStorage
+        localStorage.setItem('projectsViewType', 'list');
+    }
+}
 
-// Funciones removidas - Se usa navegación directa a las vistas existentes
-// function loadProjectTasks(projectId) { ... }
-// function renderProjectTasks(container, tasks, projectId) { ... }
-// function refreshProjectTasks(projectId) { ... }
+// Cargar preferencia de vista al inicializar
+document.addEventListener('DOMContentLoaded', function() {
+    const savedView = localStorage.getItem('projectsViewType') || 'cards';
+    switchView(savedView);
+});
 
 // Abrir modal para crear tarea
 function openCreateTaskModal(projectId) {
@@ -495,7 +620,7 @@ function openCloneProjectModal(projectId) {
 // Toggle del menú del proyecto
 function toggleProjectMenu(projectId) {
     const menu = document.getElementById(`projectMenu${projectId}`);
-    const allMenus = document.querySelectorAll('.dropdown-menu-minimal');
+    const allMenus = document.querySelectorAll('.dropdown-menu-minimal, .dropdown-menu-list');
     
     // Cerrar todos los otros menús
     allMenus.forEach(m => {
@@ -510,8 +635,8 @@ function toggleProjectMenu(projectId) {
 
 // Cerrar menús al hacer clic fuera
 document.addEventListener('click', function(e) {
-    if (!e.target.closest('.project-menu-minimal')) {
-        document.querySelectorAll('.dropdown-menu-minimal').forEach(menu => {
+    if (!e.target.closest('.project-menu-minimal') && !e.target.closest('.actions-list')) {
+        document.querySelectorAll('.dropdown-menu-minimal, .dropdown-menu-list').forEach(menu => {
             menu.classList.remove('show');
         });
     }
@@ -608,6 +733,47 @@ function toggleProjectDelegation(projectId, isAllowed) {
 }
 
 /* ========== ESTILOS CONSISTENTES PARA PROYECTOS ========== */
+
+/* Toggle de vista */
+.view-toggle-minimal {
+    display: flex;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 12px;
+    padding: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    margin-right: 16px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.view-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border: none;
+    background: transparent;
+    color: #7f8c8d;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.view-btn:hover {
+    color: #2c3e50;
+    background: rgba(116, 75, 162, 0.1);
+}
+
+.view-btn.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.view-btn.active i {
+    color: white;
+}
 
 /* Grid de proyectos minimalista */
 .projects-grid-minimal {
@@ -990,6 +1156,309 @@ function toggleProjectDelegation(projectId, isAllowed) {
     line-height: 1.5;
 }
 
+/* ========== ESTILOS PARA VISTA DE LISTA ========== */
+
+/* Tabla minimalista */
+.projects-table-minimal {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.table-header-minimal {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 1.2fr;
+    gap: 16px;
+    padding: 16px 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-weight: 600;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.header-cell {
+    display: flex;
+    align-items: center;
+}
+
+.table-row-minimal {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 1.2fr;
+    gap: 16px;
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
+    align-items: center;
+}
+
+.table-row-minimal:hover {
+    background: linear-gradient(90deg, rgba(102, 126, 234, 0.02) 0%, rgba(118, 75, 162, 0.02) 100%);
+}
+
+.table-row-minimal:last-child {
+    border-bottom: none;
+}
+
+/* Celda de proyecto */
+.cell-project {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.project-icon-list {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.project-info-list {
+    flex: 1;
+    min-width: 0;
+}
+
+.project-name-list {
+    font-size: 15px;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 4px;
+    line-height: 1.3;
+}
+
+.project-description-list {
+    font-size: 12px;
+    color: #7f8c8d;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-bottom: 4px;
+}
+
+.project-kpi-list {
+    font-size: 11px;
+    color: #f39c12;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Celda de estado */
+.cell-status {
+    display: flex;
+    justify-content: center;
+}
+
+.status-badge-list {
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.status-badge-list.status-active { 
+    background: rgba(39, 174, 96, 0.1); 
+    color: #27ae60; 
+    border: 1px solid rgba(39, 174, 96, 0.2);
+}
+
+.status-badge-list.status-completed { 
+    background: rgba(52, 152, 219, 0.1); 
+    color: #3498db; 
+    border: 1px solid rgba(52, 152, 219, 0.2);
+}
+
+.status-badge-list.status-pending { 
+    background: rgba(243, 156, 18, 0.1); 
+    color: #f39c12; 
+    border: 1px solid rgba(243, 156, 18, 0.2);
+}
+
+/* Celda de progreso */
+.cell-progress {
+    display: flex;
+    justify-content: center;
+}
+
+.progress-container-list {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
+
+.progress-bar-list {
+    flex: 1;
+    height: 6px;
+    background: #ecf0f1;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.progress-fill-list {
+    height: 100%;
+    background: linear-gradient(90deg, #27ae60 0%, #2ecc71 100%);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+.progress-text-list {
+    font-size: 12px;
+    font-weight: 600;
+    color: #2c3e50;
+    min-width: 35px;
+}
+
+/* Celda de tareas */
+.cell-tasks {
+    display: flex;
+    justify-content: center;
+}
+
+.tasks-summary-list {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.tasks-total {
+    color: #2c3e50;
+}
+
+.tasks-separator {
+    color: #bdc3c7;
+}
+
+.tasks-completed {
+    color: #27ae60;
+}
+
+/* Celda de acciones */
+.cell-actions {
+    display: flex;
+    justify-content: center;
+}
+
+.actions-list {
+    display: flex;
+    gap: 6px;
+    position: relative;
+}
+
+.btn-list-action {
+    padding: 8px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+}
+
+.btn-list-action.primary {
+    background: rgba(52, 152, 219, 0.1);
+    color: #3498db;
+}
+
+.btn-list-action.primary:hover {
+    background: rgba(52, 152, 219, 0.2);
+    transform: scale(1.05);
+}
+
+.btn-list-action.secondary {
+    background: rgba(108, 117, 125, 0.1);
+    color: #6c757d;
+}
+
+.btn-list-action.secondary:hover {
+    background: rgba(108, 117, 125, 0.2);
+    transform: scale(1.05);
+}
+
+.btn-list-action.menu {
+    background: rgba(116, 75, 162, 0.1);
+    color: #764ba2;
+}
+
+.btn-list-action.menu:hover {
+    background: rgba(116, 75, 162, 0.2);
+    transform: scale(1.05);
+}
+
+/* Menú contextual para lista */
+.dropdown-menu-list {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    padding: 6px 0;
+    min-width: 140px;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.dropdown-menu-list.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.menu-item-list {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: none;
+    border: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    font-size: 12px;
+    color: #2c3e50;
+    transition: background 0.2s ease;
+    font-weight: 500;
+}
+
+.menu-item-list:hover {
+    background: rgba(102, 126, 234, 0.05);
+}
+
+.menu-item-list.danger {
+    color: #e74c3c;
+}
+
+.menu-item-list.danger:hover {
+    background: rgba(231, 76, 60, 0.05);
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
     .projects-grid-minimal {
@@ -1013,6 +1482,39 @@ function toggleProjectDelegation(projectId, isAllowed) {
     
     .project-actions-minimal .btn-minimal {
         flex: none;
+    }
+    
+    /* Vista de lista responsive */
+    .table-header-minimal,
+    .table-row-minimal {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+    
+    .table-header-minimal {
+        display: none; /* Ocultar header en móvil */
+    }
+    
+    .table-row-minimal {
+        padding: 16px;
+        border-radius: 12px;
+        margin-bottom: 12px;
+        background: white;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    
+    .cell-project,
+    .cell-status,
+    .cell-progress,
+    .cell-tasks,
+    .cell-actions {
+        justify-content: flex-start;
+    }
+    
+    .view-toggle-minimal {
+        margin-bottom: 12px;
+        margin-right: 0;
     }
 }
 
