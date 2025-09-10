@@ -4007,8 +4007,10 @@ class ClanLeaderController {
                 throw new Exception("Usuario o clan no válido");
             }
             
-            // Consulta específica para MIS tareas del líder (no del equipo)
-            $tasksStmt = $this->db->prepare("
+            // Usar tres consultas separadas para evitar duplicaciones
+            
+            // 1. Tareas personales creadas por el líder
+            $personalStmt = $this->db->prepare("
                 SELECT DISTINCT
                     t.task_id,
                     t.task_name,
@@ -4022,41 +4024,59 @@ class ClanLeaderController {
                     p.project_name,
                     p.is_personal,
                     u.full_name as assigned_user_name,
-                    CASE 
-                        WHEN t.due_date IS NULL THEN 999
-                        ELSE DATEDIFF(t.due_date, CURDATE())
-                    END as days_until_due,
+                    DATEDIFF(COALESCE(t.due_date, '2099-12-31'), CURDATE()) as days_until_due,
                     'task' as item_type,
                     0 as is_completed
                 FROM Tasks t
                 INNER JOIN Projects p ON t.project_id = p.project_id
                 LEFT JOIN Users u ON t.assigned_to_user_id = u.user_id
-                WHERE 
-                    p.clan_id = :clan_id
+                WHERE p.clan_id = :clan_id
                     AND (t.is_subtask = 0 OR t.is_subtask IS NULL)
                     AND t.status <> 'completed'
                     AND COALESCE(t.completion_percentage, 0) < 100
-                    AND (
-                        -- Tareas personales creadas por el líder
-                        (p.is_personal = 1 AND p.created_by_user_id = :user_id1)
-                        OR
-                        -- Tareas asignadas directamente al líder (no personales)
-                        (t.assigned_to_user_id = :user_id2 AND (p.is_personal = 0 OR p.is_personal IS NULL))
-                        OR
-                        -- Tareas donde el líder está en Task_Assignments (no personales)
-                        (EXISTS (SELECT 1 FROM Task_Assignments ta WHERE ta.task_id = t.task_id AND ta.user_id = :user_id3) 
-                         AND (p.is_personal = 0 OR p.is_personal IS NULL))
-                    )
-                ORDER BY t.task_id, t.due_date ASC
+                    AND p.is_personal = 1 
+                    AND p.created_by_user_id = :user_id
             ");
             
-            $tasksStmt->execute([
-                ':clan_id' => $clanId,
-                ':user_id1' => $userId,
-                ':user_id2' => $userId,
-                ':user_id3' => $userId
-            ]);
-            $allTasks = $tasksStmt->fetchAll(PDO::FETCH_ASSOC);
+            $personalStmt->execute([':clan_id' => $clanId, ':user_id' => $userId]);
+            $personalTasks = $personalStmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // 2. Tareas de clan asignadas directamente al líder
+            $assignedStmt = $this->db->prepare("
+                SELECT DISTINCT
+                    t.task_id,
+                    t.task_name,
+                    t.description,
+                    t.status,
+                    t.priority,
+                    t.due_date,
+                    t.completion_percentage,
+                    t.created_by_user_id,
+                    p.project_id,
+                    p.project_name,
+                    p.is_personal,
+                    u.full_name as assigned_user_name,
+                    DATEDIFF(COALESCE(t.due_date, '2099-12-31'), CURDATE()) as days_until_due,
+                    'task' as item_type,
+                    0 as is_completed
+                FROM Tasks t
+                INNER JOIN Projects p ON t.project_id = p.project_id
+                LEFT JOIN Users u ON t.assigned_to_user_id = u.user_id
+                WHERE p.clan_id = :clan_id
+                    AND (t.is_subtask = 0 OR t.is_subtask IS NULL)
+                    AND t.status <> 'completed'
+                    AND COALESCE(t.completion_percentage, 0) < 100
+                    AND (p.is_personal = 0 OR p.is_personal IS NULL)
+                    AND t.assigned_to_user_id = :user_id
+            ");
+            
+            $assignedStmt->execute([':clan_id' => $clanId, ':user_id' => $userId]);
+            $assignedTasks = $assignedStmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Combinar tareas sin duplicados
+            $allTasks = array_merge($personalTasks, $assignedTasks);
+            
+            error_log("DEBUG getMyKanbanTasks - Personal tasks: " . count($personalTasks) . ", Assigned tasks: " . count($assignedTasks));
             
             // Obtener subtareas asignadas específicamente al líder
             $subtaskStmt = $this->db->prepare("
