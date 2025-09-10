@@ -637,27 +637,27 @@ document.addEventListener('DOMContentLoaded', function() {
     background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
 }
 
-/* Tarjetas de tareas ultra mini con altura reducida 3x */
+/* Tarjetas de tareas mini optimizadas (aumentadas 0.5x) */
 .kanban-section .task-card-mini {
-    margin: 2px 4px !important;
-    padding: 4px 6px !important;
+    margin: 3px 6px !important;
+    padding: 6px 8px !important;
     background: white !important;
-    border-radius: 4px !important;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04) !important;
+    border-radius: 6px !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05) !important;
     transition: all 0.2s ease !important;
-    border-left: 2px solid #3498db !important;
+    border-left: 3px solid #3498db !important;
     position: relative;
     overflow: hidden;
-    min-height: 26px !important;
-    width: calc(100% - 8px) !important;
+    min-height: 39px !important;
+    width: calc(100% - 12px) !important;
     display: flex !important;
     flex-direction: column !important;
-    gap: 2px !important;
+    gap: 3px !important;
 }
 
 .task-card-mini:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.10);
 }
 
 .task-card-mini.overdue {
@@ -676,27 +676,27 @@ document.addEventListener('DOMContentLoaded', function() {
     border-left-color: #27ae60;
 }
 
-/* Header de la tarea ultra mini */
+/* Header de la tarea mini optimizado */
 .kanban-section .task-header-mini {
     display: flex !important;
     align-items: center !important;
-    gap: 4px !important;
-    min-height: 14px !important;
+    gap: 6px !important;
+    min-height: 18px !important;
 }
 
 .kanban-section .task-checkbox-mini {
     margin: 0 !important;
-    transform: scale(0.8) !important;
+    transform: scale(0.9) !important;
     cursor: pointer !important;
     flex-shrink: 0 !important;
 }
 
-/* Nombre de la tarea ultra mini */
+/* Nombre de la tarea mini optimizado */
 .kanban-section .task-name-mini {
     font-weight: 600 !important;
     color: #2c3e50 !important;
-    font-size: 10px !important;
-    line-height: 1.2 !important;
+    font-size: 11px !important;
+    line-height: 1.3 !important;
     flex: 1 !important;
     word-wrap: break-word !important;
     overflow-wrap: break-word !important;
@@ -706,37 +706,37 @@ document.addEventListener('DOMContentLoaded', function() {
     text-overflow: ellipsis !important;
 }
 
-/* Contenedor de etiquetas ultra compacto */
+/* Contenedor de etiquetas optimizado */
 .kanban-section .task-tags-mini {
     display: flex !important;
     flex-wrap: wrap !important;
-    gap: 1px !important;
+    gap: 2px !important;
     align-items: center !important;
-    max-height: 12px !important;
+    max-height: 16px !important;
     overflow: hidden !important;
 }
 
-/* Etiquetas ultra mini */
+/* Etiquetas mini optimizadas */
 .kanban-section .task-tag {
     display: inline-flex !important;
     align-items: center !important;
-    gap: 2px !important;
-    font-size: 7px !important;
+    gap: 3px !important;
+    font-size: 8px !important;
     font-weight: 600 !important;
-    padding: 1px 3px !important;
-    border-radius: 6px !important;
+    padding: 2px 4px !important;
+    border-radius: 8px !important;
     text-transform: uppercase !important;
-    letter-spacing: 0.1px !important;
+    letter-spacing: 0.2px !important;
     white-space: nowrap !important;
     border: 1px solid transparent !important;
     transition: all 0.2s ease !important;
-    max-width: 60px !important;
+    max-width: 70px !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
 }
 
 .task-tag i {
-    font-size: 6px !important;
+    font-size: 7px !important;
 }
 
 /* Etiqueta de proyecto */
