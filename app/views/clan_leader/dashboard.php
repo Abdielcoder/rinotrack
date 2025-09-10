@@ -226,13 +226,25 @@ function renderMyKanbanBoard(kanbanTasks) {
             <div class="column-content-compact">`;
         
         tasks.forEach(task => {
+            const isPersonal = (task.is_personal == 1);
+            
+            // Log detallado de cada tarea que se renderiza
+            console.log(`🟢 Renderizando: ID=${task.task_id}, Name="${task.task_name}", Personal=${isPersonal}, Project="${task.project_name}"`);
+            
             html += `<div class="task-card-compact ${columnClass}" data-task-id="${task.task_id}">
                 <div class="task-compact-row">
                     <input type="checkbox" class="task-checkbox-compact" ${task.status === 'completed' ? 'checked' : ''}>
-                    <div class="task-name-compact">${task.task_name || 'Sin nombre'}</div>
+                    <div class="task-name-compact">
+                        ${isPersonal ? 
+                            '<i class="fas fa-user-circle" style="color: #e74c3c; margin-right: 5px;" title="Tarea Personal"></i>' : 
+                            '<i class="fas fa-users" style="color: #3498db; margin-right: 5px;" title="Tarea de Clan"></i>'
+                        }
+                        ${task.task_name || 'Sin nombre'}
+                    </div>
                 </div>
                 <div class="task-info-compact">
-                    <span class="project-name-compact">${task.project_name || 'Sin proyecto'}</span>
+                    <span class="project-name-compact" style="${isPersonal ? 'color: #e74c3c; font-weight: bold;' : 'color: #3498db; font-weight: bold;'}">${task.project_name || 'Sin proyecto'}</span>
+                    ${task.assigned_user_name ? `<span class="assignee-info-compact"><i class="fas fa-user"></i> ${task.assigned_user_name}</span>` : ''}
                 </div>
             </div>`;
         });
