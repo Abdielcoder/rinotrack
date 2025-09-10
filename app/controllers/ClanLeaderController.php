@@ -4034,7 +4034,9 @@ class ClanLeaderController {
                 LEFT JOIN Users u ON t.assigned_to_user_id = u.user_id
                 WHERE t.assigned_to_user_id = :user_id
                     AND p.clan_id = :clan_id
-                    AND t.is_subtask = 0)
+                    AND t.is_subtask = 0
+                    AND t.status != 'completed'
+                    AND t.completion_percentage < 100)
                 UNION ALL
                 (SELECT 
                     s.subtask_id as task_id,
@@ -4064,7 +4066,9 @@ class ClanLeaderController {
                 LEFT JOIN Users u ON s.assigned_to_user_id = u.user_id
                 WHERE (s.assigned_to_user_id = :user_id2 
                     OR s.subtask_id IN (SELECT sa.subtask_id FROM Subtask_Assignments sa WHERE sa.user_id = :user_id3))
-                    AND p.clan_id = :clan_id2)
+                    AND p.clan_id = :clan_id2
+                    AND s.status != 'completed'
+                    AND s.completion_percentage < 100)
                 ORDER BY item_type, task_id
             ");
             
@@ -4290,6 +4294,8 @@ class ClanLeaderController {
                     AND t.assigned_to_user_id != :user_id
                     AND t.assigned_to_user_id IS NOT NULL
                     AND t.is_subtask = 0
+                    AND t.status != 'completed'
+                    AND t.completion_percentage < 100
                     AND (p.is_personal = 0 OR p.is_personal IS NULL))
                 UNION ALL
                 (SELECT 
@@ -4321,6 +4327,8 @@ class ClanLeaderController {
                 LEFT JOIN Clan_Members cm ON u.user_id = cm.user_id
                 WHERE cm.clan_id = :clan_id2
                     AND (s.assigned_to_user_id != :user_id2 OR s.assigned_to_user_id IS NULL)
+                    AND s.status != 'completed'
+                    AND s.completion_percentage < 100
                     AND (p.is_personal = 0 OR p.is_personal IS NULL))
                 ORDER BY item_type, task_id
             ");
