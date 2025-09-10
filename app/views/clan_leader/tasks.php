@@ -166,14 +166,14 @@ ob_start();
                                 
                                 <!-- Botones de acción -->
                                 <div class="filter-actions">
-                                    <button type="submit" class="btn-apply-filters">
+                                    <button type="button" class="btn-apply-filters" onclick="applyFilters()">
                                         <i class="fas fa-filter"></i>
                                         Aplicar Filtros
                                     </button>
-                                    <a href="?route=clan_leader/tasks&tab=my-tasks" class="btn-reset-filters">
+                                    <button type="button" class="btn-reset-filters" onclick="resetFilters('my-tasks')">
                                         <i class="fas fa-undo"></i>
                                         Resetear Filtros
-                                    </a>
+                                    </button>
                                 </div>
                             </div>
                         </form>
@@ -256,14 +256,14 @@ ob_start();
                                 
                                 <!-- Botones de acción -->
                                 <div class="filter-actions">
-                                    <button type="submit" class="btn-apply-filters">
+                                    <button type="button" class="btn-apply-filters" onclick="applyFilters()">
                                         <i class="fas fa-filter"></i>
                                         Aplicar Filtros
                                     </button>
-                                    <a href="?route=clan_leader/tasks&tab=team-tasks" class="btn-reset-filters">
+                                    <button type="button" class="btn-reset-filters" onclick="resetFilters('team-tasks')">
                                         <i class="fas fa-undo"></i>
                                         Resetear Filtros
-                                    </a>
+                                    </button>
                                 </div>
                             </div>
                         </form>
@@ -4164,9 +4164,17 @@ function renderTasksTableFromKanban(tasks, tbodyId) {
         return;
     }
     
+    // Aplicar filtros antes de renderizar
+    const filteredTasks = applyCurrentFilters(tasks);
+    
+    if (filteredTasks.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No hay tareas que coincidan con los filtros</td></tr>';
+        return;
+    }
+    
     let html = '';
     
-    tasks.forEach(task => {
+    filteredTasks.forEach(task => {
         const isPersonal = (task.is_personal == 1);
         const isSubtask = (task.item_type === 'subtask');
         
@@ -4247,6 +4255,87 @@ function renderTasksTableFromKanban(tasks, tbodyId) {
     });
     
     tbody.innerHTML = html;
+}
+
+// Función para aplicar filtros actuales
+function applyCurrentFilters(tasks) {
+    const activeTab = document.querySelector('.tasks-tab-button.active');
+    const tabType = activeTab ? activeTab.id.replace('-tab', '') : 'my-tasks';
+    
+    // Obtener valores de filtros del formulario correspondiente
+    let statusFilter = '';
+    let searchFilter = '';
+    
+    if (tabType === 'my-tasks') {
+        const statusSelect = document.getElementById('statusFilter');
+        const searchInput = document.getElementById('searchInputMyTasks');
+        statusFilter = statusSelect ? statusSelect.value : '';
+        searchFilter = searchInput ? searchInput.value.toLowerCase() : '';
+    } else {
+        const statusSelect = document.getElementById('statusFilterTeam');
+        const searchInput = document.getElementById('searchInputTeam');
+        statusFilter = statusSelect ? statusSelect.value : '';
+        searchFilter = searchInput ? searchInput.value.toLowerCase() : '';
+    }
+    
+    console.log('🔍 Aplicando filtros:', { statusFilter, searchFilter });
+    
+    return tasks.filter(task => {
+        // Filtro por estado
+        if (statusFilter && task.status !== statusFilter) {
+            return false;
+        }
+        
+        // Filtro por búsqueda
+        if (searchFilter) {
+            const searchText = (
+                (task.task_name || '') + ' ' +
+                (task.description || '') + ' ' +
+                (task.project_name || '') + ' ' +
+                (task.assigned_user_name || '')
+            ).toLowerCase();
+            
+            if (!searchText.includes(searchFilter)) {
+                return false;
+            }
+        }
+        
+        return true;
+    });
+}
+
+// Función para recargar con filtros
+function applyFilters() {
+    console.log('🔍 Aplicando filtros...');
+    const activeTab = document.querySelector('.tasks-tab-button.active');
+    if (activeTab) {
+        const tabId = activeTab.id.replace('-tab', '');
+        if (tabId === 'my-tasks') {
+            loadMyTasksTable();
+        } else {
+            loadTeamTasksTable();
+        }
+    }
+}
+
+// Función para resetear filtros
+function resetFilters(tabType) {
+    console.log('🔄 Reseteando filtros para:', tabType);
+    
+    if (tabType === 'my-tasks') {
+        const statusSelect = document.getElementById('statusFilter');
+        const searchInput = document.getElementById('searchInputMyTasks');
+        if (statusSelect) statusSelect.value = '';
+        if (searchInput) searchInput.value = '';
+    } else {
+        const statusSelect = document.getElementById('statusFilterTeam');
+        const searchInput = document.getElementById('searchInputTeam');
+        if (statusSelect) statusSelect.value = '';
+        if (searchInput) searchInput.value = '';
+    }
+    
+    // Recargar datos sin filtros
+    applyFilters();
 }
 
 // Función para eliminar tarea desde la tabla
@@ -4375,9 +4464,41 @@ function showTaskToast(message, type = 'info') {
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 DOM listo - Iniciando tasks page');
     
-    // Inicializar con "Mis Tareas" usando función existente
+    // Agregar eventos a los filtros para aplicar automáticamente
+    const statusFilter = document.getElementById('statusFilter');
+    const statusFilterTeam = document.getElementById('statusFilterTeam');
+    const searchInputMyTasks = document.getElementById('searchInputMyTasks');
+    const searchInputTeam = document.getElementById('searchInputTeam');
+    
+    if (statusFilter) {
+        statusFilter.addEventListener('change', applyFilters);
+    }
+    if (statusFilterTeam) {
+        statusFilterTeam.addEventListener('change', applyFilters);
+    }
+    if (searchInputMyTasks) {
+        searchInputMyTasks.addEventListener('input', debounce(applyFilters, 500));
+    }
+    if (searchInputTeam) {
+        searchInputTeam.addEventListener('input', debounce(applyFilters, 500));
+    }
+    
+    // Inicializar con "Mis Tareas"
     switchTab('my-tasks');
 });
+
+// Función debounce para búsqueda
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
 </script>
 
 <?php
