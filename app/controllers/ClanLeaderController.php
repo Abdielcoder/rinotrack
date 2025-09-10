@@ -1,8 +1,5 @@
 <?php
 
-use PDO;
-use Exception;
-
 class ClanLeaderController {
     private $auth;
     private $userModel;
