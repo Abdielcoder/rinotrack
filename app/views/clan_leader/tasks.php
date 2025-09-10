@@ -105,27 +105,23 @@ ob_start();
         <!-- Tabs Consistentes con Dashboard -->
         <div class="tasks-section-minimal">
             <div class="tasks-tabs-minimal">
-                <button class="tasks-tab-button active" onclick="switchTasksTab('my-tasks')" id="my-tasks-tab">
+                <button class="tasks-tab-button active" onclick="switchTab('my-tasks')" id="my-tasks-tab">
                     <i class="fas fa-user"></i>
                     Mis Tareas
                 </button>
-                <button class="tasks-tab-button" onclick="switchTasksTab('team-tasks')" id="team-tasks-tab">
+                <button class="tasks-tab-button" onclick="switchTab('team-tasks')" id="team-tasks-tab">
                     <i class="fas fa-users"></i>
                     Equipo
                 </button>
             </div>
         </div>
 
-        <!-- Tab Content: Mis Tareas -->
-        <div id="my-tasks-content" class="tasks-tab-content active" style="display: block;">
-            <div class="tasks-content-minimal">
-                <!-- Contenido de mis tareas se carga dinámicamente -->
-                <div class="loading-message">
-                    <i class="fas fa-spinner fa-spin"></i>
-                    Cargando mis tareas...
+        <!-- Tab: Mis Tareas -->
+        <div id="my-tasks-content" class="tab-content active">
+            <div class="all-tasks-section">
+                <div class="section-header">
+                    <h2 class="section-title">Mis Tareas Asignadas</h2>
                 </div>
-            </div>
-        </div>
                 
                 <!-- Filtros y búsqueda para Mis Tareas -->
                 <div class="filters-container">
@@ -210,16 +206,12 @@ ob_start();
             </div>
         </div>
 
-        <!-- Tab Content: Equipo -->
-        <div id="team-tasks-content" class="tasks-tab-content" style="display: none;">
-            <div class="tasks-content-minimal">
-                <!-- Contenido de tareas del equipo se carga dinámicamente -->
-                <div class="loading-message">
-                    <i class="fas fa-spinner fa-spin"></i>
-                    Cargando tareas del equipo...
+        <!-- Tab: Equipo -->
+        <div id="team-tasks-content" class="tab-content">
+            <div class="all-tasks-section">
+                <div class="section-header">
+                    <h2 class="section-title">Tareas del Equipo</h2>
                 </div>
-            </div>
-        </div>
                 
                 <!-- Filtros y búsqueda para Equipo -->
                 <div class="filters-container">
@@ -2999,27 +2991,39 @@ function cloneProject() {
 
 // Función para cambiar entre tabs
 function switchTab(tabName) {
+    console.log('🔄 switchTab llamado con:', tabName);
+    
     // Ocultar todos los tab contents
     document.querySelectorAll('.tab-content').forEach(content => {
         content.classList.remove('active');
+        content.style.display = 'none';
     });
     
     // Remover active de todos los tab buttons
-    document.querySelectorAll('.tab-button').forEach(button => {
+    document.querySelectorAll('.tasks-tab-button, .tab-button').forEach(button => {
         button.classList.remove('active');
     });
     
     // Mostrar el tab content seleccionado
-    document.getElementById(tabName + '-content').classList.add('active');
+    const targetContent = document.getElementById(tabName + '-content');
+    if (targetContent) {
+        targetContent.classList.add('active');
+        targetContent.style.display = 'block';
+    }
     
     // Activar el tab button seleccionado
-    document.getElementById(tabName + '-tab').classList.add('active');
+    const targetButton = document.getElementById(tabName + '-tab');
+    if (targetButton) {
+        targetButton.classList.add('active');
+    }
     
-    // Cargar datos según el tab
+    // Filtrar las tablas existentes según el tab
     if (tabName === 'my-tasks') {
-        loadMyTasks();
+        console.log('🔵 Mostrando MIS tareas en tabla existente...');
+        filterTasksTable('my');
     } else if (tabName === 'team-tasks') {
-        loadTeamTasks();
+        console.log('🟡 Mostrando tareas del EQUIPO en tabla existente...');
+        filterTasksTable('team');
     }
 }
 
@@ -3790,233 +3794,90 @@ console.log('🚀 Tasks.php cargado - Versión 6.0 - Debug activo');
 <script>
 console.log('🚀 Tasks.php JavaScript cargado - Tabs implementados');
 
-// Función para cambiar entre tabs de tareas
-function switchTasksTab(tabName) {
-    console.log('🔄 switchTasksTab llamado con:', tabName);
-    
-    // Ocultar TODOS los tab contents
-    document.querySelectorAll('.tasks-tab-content').forEach(content => {
-        content.classList.remove('active');
-        content.style.display = 'none';
-    });
-    
-    // Remover active de TODOS los tab buttons
-    document.querySelectorAll('.tasks-tab-button').forEach(button => {
-        button.classList.remove('active');
-    });
-    
-    // Mostrar SOLO el tab seleccionado
-    const targetContent = document.getElementById(tabName + '-content');
-    if (targetContent) {
-        targetContent.classList.add('active');
-        targetContent.style.display = 'block';
-        console.log('✅ Tab content activado:', tabName + '-content');
-    } else {
-        console.error('🔴 No se encontró tab content:', tabName + '-content');
-    }
-    
-    // Activar SOLO el tab button seleccionado
-    const targetButton = document.getElementById(tabName + '-tab');
-    if (targetButton) {
-        targetButton.classList.add('active');
-        console.log('✅ Tab button activado:', tabName + '-tab');
-    } else {
-        console.error('🔴 No se encontró tab button:', tabName + '-tab');
-    }
-    
-    // Cargar datos SOLO del tab activo
-    if (tabName === 'my-tasks') {
-        console.log('🔵 Cargando MIS tareas...');
-        loadMyTasks();
-    } else if (tabName === 'team-tasks') {
-        console.log('🟡 Cargando tareas del EQUIPO...');
-        loadTeamTasks();
-    }
-}
+// Función switchTasksTab removida - se usa switchTab existente
 
-// Función para cargar mis tareas
-function loadMyTasks() {
-    console.log('🔵 loadMyTasks() iniciado');
-    const container = document.querySelector('#my-tasks-content .tasks-content-minimal');
-    if (!container) {
-        console.error('🔴 No se encontró contenedor de mis tareas');
+// Función para filtrar las tablas existentes según el tab
+function filterTasksTable(type) {
+    console.log('🔄 filterTasksTable llamado con:', type);
+    
+    // Obtener todas las filas de tareas de las tablas existentes
+    const allTaskRows = document.querySelectorAll('tbody tr[data-task-row]');
+    
+    if (allTaskRows.length === 0) {
+        console.log('⚠️ No se encontraron filas de tareas para filtrar');
         return;
     }
     
-    container.innerHTML = '<div class="loading-message"><i class="fas fa-spinner fa-spin"></i> Cargando mis tareas...</div>';
+    // Obtener ID del usuario actual desde PHP (si está disponible)
+    const currentUserId = <?= $this->currentUser['user_id'] ?? 'null' ?>;
     
-    fetch('?route=clan_leader/get-my-tasks-list')
-        .then(response => response.json())
-        .then(data => {
-            console.log('🔵 === RESPUESTA MIS TAREAS ===');
-            console.log('🔵 Success:', data.success);
-            console.log('🔵 Tasks:', data.tasks);
-            
-            if (data.success) {
-                renderTasksList(container, data.tasks, 'my');
-            } else {
-                container.innerHTML = '<div class="loading-message text-danger">Error: ' + (data.message || 'Error desconocido') + '</div>';
-            }
-        })
-        .catch(error => {
-            console.error('🔴 Error:', error);
-            container.innerHTML = '<div class="loading-message text-danger">Error de conexión</div>';
-        });
-}
-
-// Función para cargar tareas del equipo
-function loadTeamTasks() {
-    console.log('🟡 loadTeamTasks() iniciado');
-    const container = document.querySelector('#team-tasks-content .tasks-content-minimal');
-    if (!container) {
-        console.error('🔴 No se encontró contenedor de tareas del equipo');
-        return;
-    }
-    
-    container.innerHTML = '<div class="loading-message"><i class="fas fa-spinner fa-spin"></i> Cargando tareas del equipo...</div>';
-    
-    fetch('?route=clan_leader/get-team-tasks-list')
-        .then(response => response.json())
-        .then(data => {
-            console.log('🟡 === RESPUESTA TAREAS EQUIPO ===');
-            console.log('🟡 Success:', data.success);
-            console.log('🟡 Tasks:', data.tasks);
-            
-            if (data.success) {
-                renderTasksList(container, data.tasks, 'team');
-            } else {
-                container.innerHTML = '<div class="loading-message text-danger">Error: ' + (data.message || 'Error desconocido') + '</div>';
-            }
-        })
-        .catch(error => {
-            console.error('🔴 Error:', error);
-            container.innerHTML = '<div class="loading-message text-danger">Error de conexión</div>';
-        });
-}
-
-// Función para renderizar lista de tareas
-function renderTasksList(container, tasks, type) {
-    if (!tasks || tasks.length === 0) {
-        container.innerHTML = `
-            <div class="no-tasks-message">
-                <i class="fas fa-inbox"></i>
-                <h3>No hay tareas ${type === 'my' ? 'asignadas a ti' : 'del equipo'}</h3>
-                <p>Las tareas aparecerán aquí cuando sean ${type === 'my' ? 'asignadas' : 'creadas para el equipo'}.</p>
-            </div>
-        `;
-        return;
-    }
-    
-    let html = '<div class="tasks-list-minimal">';
-    
-    tasks.forEach(task => {
-        const isSubtask = (task.item_type === 'subtask');
-        const statusClass = task.status || 'pending';
-        const priorityClass = task.priority || 'medium';
+    allTaskRows.forEach(row => {
+        const assignedUserId = row.getAttribute('data-assigned-user-id');
+        const isPersonal = row.getAttribute('data-is-personal') === '1';
+        const shouldShow = (type === 'my') ? 
+            (assignedUserId == currentUserId) : 
+            (assignedUserId != currentUserId && assignedUserId != null && !isPersonal);
         
-        html += `
-            <div class="task-item-list ${statusClass} ${isSubtask ? 'subtask' : 'task'}">
-                <div class="task-info-list">
-                    <div class="task-header-list">
-                        <h4 class="task-name-list">
-                            ${isSubtask ? '<i class="fas fa-arrow-right subtask-indicator"></i>' : ''}
-                            ${task.task_name}
-                            ${isSubtask && task.parent_task_name ? `<span class="parent-hint" title="Tarea padre: ${task.parent_task_name}">↑</span>` : ''}
-                        </h4>
-                        <div class="task-badges-list">
-                            <span class="status-badge status-${statusClass}">${statusClass}</span>
-                            <span class="priority-badge priority-${priorityClass}">${priorityClass}</span>
-                        </div>
-                    </div>
-                    ${task.description ? `<p class="task-description-list">${task.description}</p>` : ''}
-                    <div class="task-meta-list">
-                        <span class="task-project"><i class="fas fa-folder"></i> ${task.project_name}</span>
-                        ${task.assigned_user_name ? `<span class="task-assigned"><i class="fas fa-user"></i> ${task.assigned_user_name}</span>` : ''}
-                        ${task.due_date ? `<span class="task-due"><i class="fas fa-calendar"></i> ${formatTaskDate(task.due_date)}</span>` : ''}
-                        ${task.completion_percentage ? `<span class="task-progress"><i class="fas fa-chart-line"></i> ${task.completion_percentage}%</span>` : ''}
-                    </div>
-                </div>
-                <div class="task-actions-list">
-                    <a href="?route=clan_leader/task_details&task_id=${task.task_id}" class="btn-task-list view" title="Ver Detalles">
-                        <i class="fas fa-eye"></i>
-                    </a>
-                    <a href="?route=clan_leader/tasks&action=edit&task_id=${task.task_id}" class="btn-task-list edit" title="Editar">
-                        <i class="fas fa-edit"></i>
-                    </a>
-                    <button class="btn-task-list delete" onclick="deleteTaskFromList(${task.task_id}, '${task.task_name}', '${type}')" title="Eliminar">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            </div>
-        `;
+        if (shouldShow) {
+            row.style.display = '';
+            row.classList.add('visible');
+        } else {
+            row.style.display = 'none';
+            row.classList.remove('visible');
+        }
     });
     
-    html += '</div>';
-    container.innerHTML = html;
+    // Actualizar contadores si existen
+    updateTaskCounters(type);
 }
 
-// Función para formatear fechas
-function formatTaskDate(dateString) {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES');
-}
-
-// Función para eliminar tarea desde la lista
-function deleteTaskFromList(taskId, taskName, type) {
-    if (confirm(`¿Estás seguro de que quieres eliminar la tarea "${taskName}"?`)) {
-        const formData = new FormData();
-        formData.append('task_id', taskId);
-        
-        fetch('?route=clan_leader/delete-task', {
-            method: 'POST',
-            credentials: 'same-origin',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showTaskToast(data.message || 'Tarea eliminada exitosamente', 'success');
-                // Recargar las tareas del tab actual
-                if (type === 'my') {
-                    loadMyTasks();
-                } else {
-                    loadTeamTasks();
-                }
-            } else {
-                showTaskToast(data.message || 'Error al eliminar la tarea', 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showTaskToast('Error de conexión', 'error');
-        });
-    }
-}
-
-// Función para mostrar mensajes toast
-function showTaskToast(message, type = 'info') {
-    let toast = document.getElementById('taskToast');
-    if (!toast) {
-        toast = document.createElement('div');
-        toast.id = 'taskToast';
-        toast.className = 'task-toast';
-        document.body.appendChild(toast);
-    }
+// Función para actualizar contadores
+function updateTaskCounters(type) {
+    const visibleRows = document.querySelectorAll('tbody tr[data-task-row].visible');
+    const totalElement = document.querySelector('.tasks-total-count');
     
-    toast.textContent = message;
-    toast.className = `task-toast task-toast-${type} show`;
-    
-    setTimeout(() => {
-        toast.classList.remove('show');
-    }, 3000);
+    if (totalElement) {
+        totalElement.textContent = `${visibleRows.length} tareas ${type === 'my' ? 'asignadas a ti' : 'del equipo'}`;
+    }
 }
 
 // Inicializar cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 DOM listo - Iniciando tasks page');
-    switchTasksTab('my-tasks');
+    console.log('🚀 DOM listo - Iniciando tasks page con filtrado');
+    
+    // Agregar atributos data a las filas existentes si no los tienen
+    addDataAttributesToTaskRows();
+    
+    // Inicializar con "Mis Tareas"
+    switchTab('my-tasks');
 });
+
+// Función para agregar atributos data a las filas existentes
+function addDataAttributesToTaskRows() {
+    const taskRows = document.querySelectorAll('tbody tr');
+    
+    taskRows.forEach((row, index) => {
+        if (!row.getAttribute('data-task-row')) {
+            row.setAttribute('data-task-row', 'true');
+            
+            // Intentar extraer información de la fila
+            const assignedCell = row.querySelector('td:nth-child(4)'); // Columna de asignado
+            const projectCell = row.querySelector('td:nth-child(2)'); // Columna de proyecto
+            
+            if (assignedCell) {
+                // Extraer ID del usuario asignado (esto puede requerir ajuste según la estructura)
+                const assignedText = assignedCell.textContent.trim();
+                row.setAttribute('data-assigned-user-name', assignedText);
+                
+                // Por ahora, marcar como personal si contiene "Personal" o similar
+                const isPersonal = projectCell && projectCell.textContent.includes('Personal');
+                row.setAttribute('data-is-personal', isPersonal ? '1' : '0');
+            }
+        }
+    });
+    
+    console.log('✅ Atributos data agregados a', taskRows.length, 'filas de tareas');
+}
 </script>
 
 <?php
