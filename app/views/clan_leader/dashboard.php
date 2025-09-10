@@ -392,27 +392,32 @@ function toggleTaskStatusKanban(taskId, isChecked, itemType) {
         if (data.success) {
             console.log('✅ Estado actualizado correctamente');
             
-            // Actualizar visualmente el card
+            // Si se marca como completada, hacer que el card desaparezca
             const taskCard = document.querySelector(`[data-task-id="${taskId}"]`);
-            if (taskCard) {
-                if (isChecked) {
-                    taskCard.classList.add('completed');
-                    taskCard.style.opacity = '0.7';
-                } else {
-                    taskCard.classList.remove('completed');
-                    taskCard.style.opacity = '1';
-                }
+            if (taskCard && isChecked) {
+                // Animación de desaparición
+                taskCard.style.transition = 'all 0.5s ease';
+                taskCard.style.transform = 'translateX(-100%)';
+                taskCard.style.opacity = '0';
+                
+                // Remover el card después de la animación
+                setTimeout(() => {
+                    taskCard.remove();
+                    
+                    // Actualizar el contador de la columna
+                    updateColumnCount(taskCard.closest('.kanban-column-compact'));
+                }, 500);
+            } else if (taskCard && !isChecked) {
+                // Si se desmarca, recargar para que aparezca en la columna correcta
+                setTimeout(() => {
+                    const activeTab = document.querySelector('.kanban-tab-button.active');
+                    if (activeTab && activeTab.id === 'my-tasks-kanban-tab') {
+                        loadMyKanbanTasks();
+                    } else if (activeTab && activeTab.id === 'team-tasks-kanban-tab') {
+                        loadTeamKanbanTasks();
+                    }
+                }, 300);
             }
-            
-            // Recargar el kanban después de un breve delay para mostrar el cambio
-            setTimeout(() => {
-                const activeTab = document.querySelector('.kanban-tab-button.active');
-                if (activeTab && activeTab.id === 'my-tasks-kanban-tab') {
-                    loadMyKanbanTasks();
-                } else if (activeTab && activeTab.id === 'team-tasks-kanban-tab') {
-                    loadTeamKanbanTasks();
-                }
-            }, 1000);
             
         } else {
             console.error('Error al actualizar estado:', data.message);
@@ -431,6 +436,18 @@ function toggleTaskStatusKanban(taskId, isChecked, itemType) {
             checkbox.checked = !isChecked;
         }
     });
+}
+
+// Función para actualizar contador de columna
+function updateColumnCount(column) {
+    if (!column) return;
+    
+    const taskCountElement = column.querySelector('.task-count');
+    const remainingCards = column.querySelectorAll('.task-card-mini, .subtask-card-micro').length;
+    
+    if (taskCountElement) {
+        taskCountElement.textContent = remainingCards;
+    }
 }
 
 function openAddTaskModal() {
