@@ -769,6 +769,11 @@ try {
         echo json_encode(['success' => true, 'message' => 'Ruta funciona', 'timestamp' => time()]);
         break;
         
+    case 'clan_leader/update-task-status':
+        $controller = new ClanLeaderController();
+        $controller->updateTaskStatus();
+        break;
+        
         // Rutas de Gamificación
         case 'gamification':
             $controller = new GamificationController();
