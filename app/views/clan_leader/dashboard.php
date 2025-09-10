@@ -235,15 +235,21 @@ function renderMyKanbanBoard(kanbanTasks) {
                     <input type="checkbox" class="task-checkbox-compact" ${task.status === 'completed' ? 'checked' : ''}>
                     <div class="task-name-compact">
                         ${isPersonal ? 
-                            '<i class="fas fa-user-circle" style="color: #e74c3c; margin-right: 5px;" title="Tarea Personal"></i>' : 
-                            '<i class="fas fa-users" style="color: #3498db; margin-right: 5px;" title="Tarea de Clan"></i>'
+                            '<i class="fas fa-user-circle" style="color: #e74c3c;" title="Tarea Personal"></i>' : 
+                            '<i class="fas fa-users" style="color: #3498db;" title="Tarea de Clan"></i>'
                         }
-                        ${task.task_name || 'Sin nombre'}
+                        <span>${task.task_name || 'Sin nombre'}</span>
                     </div>
                 </div>
                 <div class="task-info-compact">
-                    <span class="project-name-compact" style="${isPersonal ? 'color: #e74c3c; font-weight: bold;' : 'color: #3498db; font-weight: bold;'}">${task.project_name || 'Sin proyecto'}</span>
-                    ${task.assigned_user_name ? `<span class="assignee-info-compact"><i class="fas fa-user"></i> ${task.assigned_user_name}</span>` : ''}
+                    <div class="project-name-compact" style="${isPersonal ? 'background: rgba(231, 76, 60, 0.1); color: #e74c3c; border-color: rgba(231, 76, 60, 0.3);' : ''}">${task.project_name || 'Sin proyecto'}</div>
+                    ${task.assigned_user_name ? `<div class="assignee-info-compact"><i class="fas fa-user"></i> ${task.assigned_user_name}</div>` : ''}
+                    <div class="task-due-compact ${columnClass}">
+                        ${column === 'vencidas' ? '<i class="fas fa-exclamation-triangle"></i> Vencida' : 
+                          column === 'hoy' ? '<i class="fas fa-clock"></i> Vence hoy' :
+                          column === 'semana1' ? '<i class="fas fa-calendar"></i> Esta semana' :
+                          '<i class="fas fa-calendar"></i> En ' + (task.days_until_due || '0') + ' días'}
+                    </div>
                 </div>
             </div>`;
         });
@@ -283,11 +289,20 @@ function renderTeamKanbanBoard(kanbanTasks) {
             html += `<div class="task-card-compact ${columnClass}" data-task-id="${task.task_id}">
                 <div class="task-compact-row">
                     <input type="checkbox" class="task-checkbox-compact" ${task.status === 'completed' ? 'checked' : ''}>
-                    <div class="task-name-compact">${task.task_name || 'Sin nombre'}</div>
+                    <div class="task-name-compact">
+                        <i class="fas fa-users" style="color: #f39c12;" title="Tarea del Equipo"></i>
+                        <span>${task.task_name || 'Sin nombre'}</span>
+                    </div>
                 </div>
                 <div class="task-info-compact">
-                    <span class="project-name-compact">${task.project_name || 'Sin proyecto'}</span>
-                    ${task.assigned_user_name ? `<span class="assignee-info-compact"><i class="fas fa-user"></i> ${task.assigned_user_name}</span>` : ''}
+                    <div class="project-name-compact" style="background: rgba(243, 156, 18, 0.1); color: #f39c12; border-color: rgba(243, 156, 18, 0.3);">${task.project_name || 'Sin proyecto'}</div>
+                    ${task.assigned_user_name ? `<div class="assignee-info-compact" style="background: rgba(243, 156, 18, 0.1); color: #f39c12;"><i class="fas fa-user"></i> ${task.assigned_user_name}</div>` : ''}
+                    <div class="task-due-compact ${columnClass}">
+                        ${column === 'vencidas' ? '<i class="fas fa-exclamation-triangle"></i> Vencida' : 
+                          column === 'hoy' ? '<i class="fas fa-clock"></i> Vence hoy' :
+                          column === 'semana1' ? '<i class="fas fa-calendar"></i> Esta semana' :
+                          '<i class="fas fa-calendar"></i> En ' + (task.days_until_due || '0') + ' días'}
+                    </div>
                 </div>
             </div>`;
         });
@@ -531,21 +546,26 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 /* Mejorar el tablero Kanban */
-.kanban-board-compact {
-    padding: 24px;
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-    min-height: 400px;
+.kanban-section .kanban-board-compact {
+    padding: 24px !important;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%) !important;
+    min-height: 500px !important;
+    display: flex !important;
+    gap: 20px !important;
 }
 
-/* Columnas del Kanban más atractivas */
-.kanban-column-compact {
-    background: white;
-    border-radius: 16px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
-    margin: 0 12px;
+/* Columnas del Kanban más anchas */
+.kanban-section .kanban-column-compact {
+    background: white !important;
+    border-radius: 16px !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08) !important;
+    flex: 1 !important;
+    min-width: 320px !important;
+    max-width: 380px !important;
     overflow: hidden;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    border: 1px solid rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease !important;
+    border: 1px solid rgba(0, 0, 0, 0.05) !important;
+    margin: 0 !important;
 }
 
 .kanban-column-compact:hover {
@@ -610,17 +630,22 @@ document.addEventListener('DOMContentLoaded', function() {
     background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
 }
 
-/* Tarjetas de tareas más atractivas */
-.task-card-compact {
-    margin: 16px;
-    padding: 18px;
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-    transition: all 0.3s ease;
-    border-left: 4px solid #3498db;
+/* Tarjetas de tareas más anchas y alargadas */
+.kanban-section .task-card-compact {
+    margin: 12px 16px !important;
+    padding: 20px !important;
+    background: white !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+    transition: all 0.3s ease !important;
+    border-left: 5px solid #3498db !important;
     position: relative;
     overflow: hidden;
+    min-height: 140px !important;
+    width: calc(100% - 32px) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
 }
 
 .task-card-compact::before {
@@ -655,37 +680,103 @@ document.addEventListener('DOMContentLoaded', function() {
     border-left-color: #27ae60;
 }
 
-/* Nombres de tareas más legibles */
-.task-name-compact {
-    font-weight: 600;
-    color: #2c3e50;
-    font-size: 15px;
-    line-height: 1.4;
-    margin-bottom: 8px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+/* Fila superior de la tarea */
+.kanban-section .task-compact-row {
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+    margin-bottom: 12px !important;
+    flex: 1 !important;
 }
 
-/* Información del proyecto más clara */
-.project-name-compact {
-    font-size: 13px;
-    font-weight: 500;
-    padding: 4px 8px;
-    border-radius: 6px;
-    background: rgba(52, 152, 219, 0.1);
-    color: #3498db;
-    border: 1px solid rgba(52, 152, 219, 0.2);
+.kanban-section .task-checkbox-compact {
+    margin-top: 4px !important;
+    transform: scale(1.2) !important;
+}
+
+/* Nombres de tareas más compactos */
+.kanban-section .task-name-compact {
+    font-weight: 600 !important;
+    color: #2c3e50 !important;
+    font-size: 13px !important;
+    line-height: 1.3 !important;
+    margin: 0 !important;
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+    flex: 1 !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+}
+
+/* Información del proyecto y asignado */
+.kanban-section .task-info-compact {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    margin-top: auto !important;
+    padding-top: 12px !important;
+    border-top: 1px solid #ecf0f1 !important;
+}
+
+.kanban-section .project-name-compact {
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    padding: 6px 10px !important;
+    border-radius: 8px !important;
+    background: rgba(52, 152, 219, 0.1) !important;
+    color: #3498db !important;
+    border: 1px solid rgba(52, 152, 219, 0.2) !important;
+    text-align: center !important;
+    letter-spacing: 0.3px !important;
 }
 
 /* Información del asignado */
-.assignee-info-compact {
-    font-size: 12px;
-    color: #7f8c8d;
-    margin-left: 8px;
-    padding: 2px 6px;
-    background: rgba(127, 140, 141, 0.1);
-    border-radius: 4px;
+.kanban-section .assignee-info-compact {
+    font-size: 10px !important;
+    color: #7f8c8d !important;
+    padding: 4px 8px !important;
+    background: rgba(127, 140, 141, 0.1) !important;
+    border-radius: 6px !important;
+    text-align: center !important;
+    font-weight: 500 !important;
+    letter-spacing: 0.2px !important;
+}
+
+/* Información de vencimiento */
+.kanban-section .task-due-compact {
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    padding: 6px 10px !important;
+    border-radius: 6px !important;
+    text-align: center !important;
+    margin-top: 8px !important;
+    letter-spacing: 0.3px !important;
+    text-transform: uppercase !important;
+}
+
+.kanban-section .task-due-compact.overdue {
+    background: rgba(231, 76, 60, 0.1) !important;
+    color: #e74c3c !important;
+    border: 1px solid rgba(231, 76, 60, 0.3) !important;
+}
+
+.kanban-section .task-due-compact.today {
+    background: rgba(243, 156, 18, 0.1) !important;
+    color: #f39c12 !important;
+    border: 1px solid rgba(243, 156, 18, 0.3) !important;
+}
+
+.kanban-section .task-due-compact.week1 {
+    background: rgba(52, 152, 219, 0.1) !important;
+    color: #3498db !important;
+    border: 1px solid rgba(52, 152, 219, 0.3) !important;
+}
+
+.kanban-section .task-due-compact.week2 {
+    background: rgba(39, 174, 96, 0.1) !important;
+    color: #27ae60 !important;
+    border: 1px solid rgba(39, 174, 96, 0.3) !important;
 }
 
 /* Responsive design */
