@@ -4394,7 +4394,7 @@ function toggleTaskStatus(taskId, isChecked, itemType) {
         if (data.success) {
             showTaskToast(data.message || `Tarea ${isChecked ? 'completada' : 'marcada como pendiente'}`, 'success');
             
-            // Actualizar visualmente la fila
+            // Actualizar visualmente la fila (SIN desaparecer - solo cambios visuales)
             const taskRow = document.querySelector(`tr[data-task-id="${taskId}"]`);
             if (taskRow) {
                 if (isChecked) {
@@ -4412,13 +4412,16 @@ function toggleTaskStatus(taskId, isChecked, itemType) {
                     statusBadge.textContent = newStatus;
                 }
                 
-                // Actualizar barra de progreso si es completada
-                if (isChecked) {
-                    const progressFill = taskRow.querySelector('.progress-fill-table');
-                    const progressText = taskRow.querySelector('.progress-text-table');
-                    if (progressFill && progressText) {
+                // Actualizar barra de progreso
+                const progressFill = taskRow.querySelector('.progress-fill-table');
+                const progressText = taskRow.querySelector('.progress-text-table');
+                if (progressFill && progressText) {
+                    if (isChecked) {
                         progressFill.style.width = '100%';
                         progressText.textContent = '100%';
+                    } else {
+                        progressFill.style.width = '0%';
+                        progressText.textContent = '0%';
                     }
                 }
             }
