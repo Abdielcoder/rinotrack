@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1:3306
--- Tiempo de generación: 10-09-2025 a las 17:42:36
+-- Tiempo de generación: 10-09-2025 a las 19:06:32
 -- Versión del servidor: 11.8.2-MariaDB
 -- Versión de PHP: 8.3.23
 
@@ -992,7 +992,12 @@ INSERT INTO `Notification_Log` (`id`, `event_type`, `entity_id`, `user_id`, `sen
 (474, 'project_assigned_to_clan', 203, 12, 'desarrollo.fullstack.2@rinorisk.com', NULL, '2025-09-10 15:44:12'),
 (475, 'project_assigned_to_clan', 203, 38, 'sistemas@rinorisk.com', NULL, '2025-09-10 15:44:13'),
 (476, 'project_assigned_to_clan', 203, 84, 'auxiliar.sistemas@rinorisk.com', NULL, '2025-09-10 15:44:14'),
-(477, 'task_assigned', 561, 2, 'redskullcoder@gmail.com', NULL, '2025-09-10 17:41:44');
+(477, 'task_assigned', 561, 2, 'redskullcoder@gmail.com', NULL, '2025-09-10 17:41:44'),
+(478, 'task_assigned', 562, 49, 'coordinador.inmuebles@rinorisk.com', NULL, '2025-09-10 18:02:52'),
+(479, 'task_assigned', 563, 49, 'coordinador.inmuebles@rinorisk.com', NULL, '2025-09-10 18:51:17'),
+(480, 'task_assigned', 564, 2, 'redskullcoder@gmail.com', NULL, '2025-09-10 18:56:13'),
+(481, 'task_assigned', 565, 49, 'coordinador.inmuebles@rinorisk.com', NULL, '2025-09-10 18:56:41'),
+(482, 'task_assigned', 566, 49, 'coordinador.inmuebles@rinorisk.com', NULL, '2025-09-10 19:05:34');
 
 -- --------------------------------------------------------
 
@@ -1070,7 +1075,7 @@ INSERT INTO `Projects` (`project_id`, `project_name`, `description`, `clan_id`, 
 (63, 'Metas consultoria Etapa1', 'Actualización del modulo de promotoría para que sea posible poner metas e indicadores en base a prima pagada y nuevos negocios.', 5, 2, 'open', 3, 2, 0.00, '2025-09-02 17:17:52', '2025-09-10 16:01:55', NULL, 0, 'automatic', '2025-10-31', 0, 0, 'normal'),
 (64, 'Biblioteca Digital.', 'Proyecto para tener una nube empresarial organizada accesible que se integre a diferentes sistemas.', 5, 2, 'open', 4, 4, 0.00, '2025-09-02 17:19:13', '2025-09-09 21:04:48', NULL, 0, 'automatic', '2025-09-27', 0, 0, 'normal'),
 (65, 'Sistemas', 'Tareas eventuales o recurrentes para el departamento de sistemas', 5, 2, 'open', 2, 2, 0.00, '2025-09-02 19:11:47', '2025-09-09 21:38:30', NULL, 0, 'automatic', '2025-12-31', 0, 0, 'normal'),
-(66, 'Polaris', 'Sistema de seguimiento y gestión de tareas.', 5, 2, 'open', 5, 5, 0.00, '2025-09-03 15:06:15', '2025-09-10 16:02:00', NULL, 0, 'automatic', '2025-10-31', 0, 1, 'normal'),
+(66, 'Polaris', 'Sistema de seguimiento y gestión de tareas.', 5, 2, 'open', 1, 1, 0.00, '2025-09-03 15:06:15', '2025-09-10 18:20:51', NULL, 0, 'automatic', '2025-10-31', 0, 1, 'normal'),
 (67, 'Tareas Personales', 'Proyecto personal para tareas individuales del usuario', 12, 27, 'active', 9, 8, 0.00, '2025-09-04 20:41:44', '2025-09-09 18:39:45', NULL, 0, 'automatic', NULL, 1, 0, 'normal'),
 (69, 'Mis Tareas Recurrentes', 'Proyecto especial para gestionar tareas recurrentes personales', 5, 2, 'active', 0, 0, 0.00, '2025-09-04 23:46:47', '2025-09-04 23:46:47', NULL, 0, 'automatic', NULL, 1, 1, 'recurrent'),
 (70, 'Mis Tareas Recurrentes', 'Proyecto especial para gestionar tareas recurrentes personales', 5, 4, 'active', 0, 0, 0.00, '2025-09-04 23:46:47', '2025-09-04 23:46:47', NULL, 0, 'automatic', NULL, 1, 1, 'recurrent'),
@@ -1145,7 +1150,8 @@ INSERT INTO `Projects` (`project_id`, `project_name`, `description`, `clan_id`, 
 (198, 'Reportes AXA', 'Adjuntos de los reportes AXA en formato espesifico', 5, 38, 'open', 0, 0, 0.00, '2025-09-05 18:10:03', '2025-09-05 18:10:03', NULL, 0, 'automatic', '2026-01-05', 0, 0, 'normal'),
 (199, 'Tareas Personales', 'Proyecto personal para tareas individuales del usuario', 12, 23, 'active', 2, 2, 0.00, '2025-09-05 22:36:26', '2025-09-05 22:36:54', NULL, 0, 'automatic', NULL, 1, 0, 'normal'),
 (200, 'Tareas Personales', 'Proyecto personal para tareas individuales del usuario', 13, 16, 'active', 19, 3, 0.00, '2025-09-08 20:45:53', '2025-09-09 22:56:43', NULL, 0, 'automatic', NULL, 1, 0, 'normal'),
-(202, 'Tareas de Seguimiento2', 'Tareas que ya se hicieron2', 5, 2, 'open', 7, 7, 0.00, '2025-09-09 18:42:48', '2025-09-09 21:38:57', NULL, 0, 'automatic', NULL, 0, 0, 'normal');
+(202, 'Tareas de Seguimiento2', 'Tareas que ya se hicieron2', 5, 2, 'open', 7, 7, 0.00, '2025-09-09 18:42:48', '2025-09-09 21:38:57', NULL, 0, 'automatic', NULL, 0, 0, 'normal'),
+(204, 'TECATE QUINTA CHICA PIEDROTA', 'Acondicionamiento al 100% para su comercializacion', 12, 22, 'open', 0, 0, 0.00, '2025-09-10 17:47:34', '2025-09-10 18:05:08', NULL, 0, 'automatic', '2026-03-31', 0, 1, 'normal');
 
 -- --------------------------------------------------------
 
@@ -1349,7 +1355,17 @@ INSERT INTO `Subtasks` (`subtask_id`, `task_id`, `title`, `description`, `comple
 (201, 513, 'Acceso a depa Playa del Carmen', 'Checar con Diana la llave', 100.00, NULL, NULL, 'completed', 'medium', '2025-09-10', 16, 16, 1, '2025-09-08 20:49:12', '2025-09-09 21:11:19'),
 (209, 543, 'Rino monedas SEPTIEMBRE', 'Esta es la sub-tarea para el mes de noviembre', 0.00, NULL, NULL, 'pending', 'medium', '2025-09-30', NULL, 2, 1, '2025-09-09 17:51:06', '2025-09-09 17:51:06'),
 (210, 547, 'Revision de foramtos', 'asdasda', 100.00, NULL, NULL, 'completed', 'medium', '2025-09-09', 4, 4, 1, '2025-09-09 18:31:18', '2025-09-09 20:59:31'),
-(219, 543, 'Rino Monedas Septiembre', 'Compensación de 10 rino monedas por agente al ingresar a circulares', 0.00, NULL, NULL, 'in_progress', 'medium', '2025-09-09', 39, 39, 2, '2025-09-09 20:50:35', '2025-09-09 20:50:35');
+(219, 543, 'Rino Monedas Septiembre', 'Compensación de 10 rino monedas por agente al ingresar a circulares', 0.00, NULL, NULL, 'in_progress', 'medium', '2025-09-09', 39, 39, 2, '2025-09-09 20:50:35', '2025-09-09 20:50:35'),
+(220, 562, 'Llantas estabilizadoras para reja principal', 'Compra de 4 llantas', 0.00, NULL, NULL, 'pending', 'medium', '2025-09-14', 49, 22, 1, '2025-09-10 18:02:51', '2025-09-10 18:34:44'),
+(221, 562, 'Desnivel de area comun', 'Desvio del agua que se esta estancando', 0.00, NULL, NULL, 'pending', 'medium', '2025-09-21', 49, 22, 2, '2025-09-10 18:36:09', '2025-09-10 18:44:26'),
+(222, 562, 'Tapas metalicas para Biodigestores', 'Instalacion', 0.00, NULL, NULL, 'in_progress', 'medium', '2025-09-14', 49, 22, 3, '2025-09-10 18:37:19', '2025-09-10 18:44:35'),
+(223, 562, 'Reja de almacen de materiales', 'Garantia de la instalcion de rejas', 0.00, NULL, NULL, 'pending', 'medium', '2025-09-13', 49, 22, 4, '2025-09-10 18:44:16', '2025-09-10 18:44:50'),
+(224, 563, 'Postes de cancha e tenis', '', 0.00, NULL, NULL, 'pending', 'medium', '2025-09-19', 49, 22, 1, '2025-09-10 18:51:16', '2025-09-10 18:54:09'),
+(225, 565, 'Propuesta por parte de equipo de sistemas', 'Pendiente la propuesta final de la ubicacion de camaras', 0.00, NULL, NULL, 'in_progress', 'medium', '2025-09-10', 49, 22, 1, '2025-09-10 18:56:40', '2025-09-10 18:57:44'),
+(226, 565, 'Cotizacion de Camaras', '', 0.00, NULL, NULL, 'pending', 'medium', '2025-09-12', 49, 22, 2, '2025-09-10 18:58:06', '2025-09-10 19:03:08'),
+(227, 565, 'Cotizacion de instalcion de Camaras', '', 0.00, NULL, NULL, 'pending', 'medium', '2025-09-12', 49, 22, 3, '2025-09-10 18:58:27', '2025-09-10 19:03:22'),
+(228, 565, 'Realizar la instalacion', '', 0.00, NULL, NULL, 'pending', 'medium', '2025-09-19', 49, 22, 4, '2025-09-10 18:58:51', '2025-09-10 19:03:29'),
+(229, 566, 'Opcion 1 - LUKE GUTIERREZ', '', 0.00, NULL, NULL, 'in_progress', 'medium', NULL, 49, 22, 1, '2025-09-10 19:05:33', '2025-09-10 19:06:11');
 
 --
 -- Disparadores `Subtasks`
@@ -1465,7 +1481,17 @@ INSERT INTO `Subtask_Assignments` (`assignment_id`, `subtask_id`, `user_id`, `as
 (63, 192, 2, 100.00, 2, '2025-09-05 17:35:39', '2025-09-05 17:35:39'),
 (64, 196, 2, 100.00, 2, '2025-09-05 22:55:06', '2025-09-05 22:55:06'),
 (65, 199, 2, 100.00, 2, '2025-09-08 20:26:44', '2025-09-08 20:26:44'),
-(66, 200, 2, 100.00, 2, '2025-09-08 20:46:54', '2025-09-08 20:46:54');
+(66, 200, 2, 100.00, 2, '2025-09-08 20:46:54', '2025-09-08 20:46:54'),
+(67, 220, 49, 100.00, 22, '2025-09-10 18:03:18', '2025-09-10 18:03:18'),
+(68, 221, 49, 100.00, 22, '2025-09-10 18:44:26', '2025-09-10 18:44:26'),
+(69, 222, 49, 100.00, 22, '2025-09-10 18:44:35', '2025-09-10 18:44:35'),
+(70, 223, 49, 100.00, 22, '2025-09-10 18:44:50', '2025-09-10 18:44:50'),
+(71, 224, 49, 100.00, 22, '2025-09-10 18:52:44', '2025-09-10 18:52:44'),
+(72, 225, 49, 100.00, 22, '2025-09-10 18:57:44', '2025-09-10 18:57:44'),
+(73, 226, 49, 100.00, 22, '2025-09-10 19:03:08', '2025-09-10 19:03:08'),
+(74, 227, 49, 100.00, 22, '2025-09-10 19:03:22', '2025-09-10 19:03:22'),
+(75, 228, 49, 100.00, 22, '2025-09-10 19:03:29', '2025-09-10 19:03:29'),
+(76, 229, 49, 100.00, 22, '2025-09-10 19:06:07', '2025-09-10 19:06:07');
 
 -- --------------------------------------------------------
 
@@ -1555,7 +1581,10 @@ INSERT INTO `Subtask_Comments` (`comment_id`, `subtask_id`, `user_id`, `comment_
 (51, 82, 13, '<p>Resultado Esperado:</p><p>☐ Excel de Gastos y Lista de asistentes con el formato de Finanzas.</p>', 'comment', NULL, NULL, NULL, 0, '2025-08-27 20:50:35'),
 (54, 90, 13, '<p>Pendiente</p><p>Solicitar a Valeria datos del concurso - Premios $$$</p>', 'comment', NULL, NULL, NULL, 0, '2025-08-28 16:17:57'),
 (57, 149, 2, '<ol><li><strong>Propietario (Owner)</strong></li></ol><ul><li class=\"ql-indent-1\">Control total del archivo/carpeta.</li><li class=\"ql-indent-1\">Puede ver, comentar, editar, eliminar y transferir la propiedad.</li><li class=\"ql-indent-1\">Decide quién tiene acceso y con qué nivel de permisos.</li></ul><ol><li><strong>Editor (Editor)</strong></li></ol><ul><li class=\"ql-indent-1\">Puede ver y <strong>modificar</strong> el archivo.</li><li class=\"ql-indent-1\">Puede añadir, cambiar o borrar contenido.</li><li class=\"ql-indent-1\">En carpetas: puede agregar/eliminar archivos.</li><li class=\"ql-indent-1\">No puede cambiar la propiedad ni quitar al propietario.</li></ul><ol><li><strong>Comentarista (Commenter)</strong></li></ol><ul><li class=\"ql-indent-1\">Puede ver el archivo.</li><li class=\"ql-indent-1\">Puede <strong>agregar comentarios y sugerencias</strong>, pero no modificar directamente el contenido.</li><li class=\"ql-indent-1\">Útil para revisiones o feedback.</li></ul><ol><li><strong>Lector/Visualizador (Viewer)</strong></li></ol><ul><li class=\"ql-indent-1\">Solo puede <strong>ver</strong> el archivo o carpeta.</li><li class=\"ql-indent-1\">No puede comentar ni editar.</li><li class=\"ql-indent-1\">Es el nivel de acceso más restrictivo sin quitar visibilidad.</li></ul><p><br></p>', 'comment', NULL, NULL, NULL, 0, '2025-09-03 18:34:39'),
-(76, 219, 39, '<p>Buen día, comparto lista de agentes pendientes por colocar sus rino monedas en la app, por favor </p>', 'comment', NULL, NULL, NULL, 0, '2025-09-09 21:17:33');
+(76, 219, 39, '<p>Buen día, comparto lista de agentes pendientes por colocar sus rino monedas en la app, por favor </p>', 'comment', NULL, NULL, NULL, 0, '2025-09-09 21:17:33'),
+(77, 221, 22, '<p>☐ Entrega de propuesta por parte de Nueriel para Domingo 14 de Septiembre </p>', 'comment', NULL, NULL, NULL, 0, '2025-09-10 18:38:20'),
+(78, 222, 22, '<p>☐ Programacion de la entrega de tapas para el 12 de Septiembre </p>', 'comment', NULL, NULL, NULL, 0, '2025-09-10 18:38:53'),
+(79, 224, 22, '<p>☐ Mover de lugar los postes </p><p>☐ Recableado de lamparas </p><p>☐ Reacomodo de interruptor de lamparas</p><p>☐ Subir la altura de las Lamparas</p>', 'comment', NULL, NULL, NULL, 0, '2025-09-10 18:52:33');
 
 -- --------------------------------------------------------
 
@@ -1674,7 +1703,12 @@ INSERT INTO `Tasks` (`task_id`, `parent_task_id`, `task_name`, `description`, `p
 (539, NULL, 'Pagos IA (18/12/2025)', 'Checar con Abdiel pago a Carlos y Jhonatan\r\nAvisar a Angelica', 200, 16, 16, 'medium', '2025-12-18', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-09-08 21:06:33', '2025-09-08 21:06:33', 1, 0, NULL, NULL, NULL, NULL, 524),
 (543, NULL, 'Rino Monedas', 'Control y seguimiento de Rino monedas.', 65, 2, 2, 'medium', '2025-12-31', NULL, NULL, 100.00, 0.00, 0.00, '#3B82F6', 0, 0, 'completed', 1, '2025-09-09 21:38:30', '2025-09-09 17:38:03', '2025-09-09 21:38:30', 0, 0, NULL, NULL, NULL, NULL, NULL),
 (560, NULL, 'Tarea personal de seguimiento.', 'Esto es una tarea personal de seguimiento', 42, 2, 2, 'medium', '2025-09-10', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-09-10 17:34:34', '2025-09-10 17:34:34', 1, 0, NULL, NULL, NULL, NULL, NULL),
-(561, NULL, 'Actualizacion final para primera etapa', 'Avance', 66, 2, 2, 'medium', '2025-09-10', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-09-10 17:41:43', '2025-09-10 17:41:43', 0, 0, NULL, NULL, NULL, NULL, NULL);
+(561, NULL, 'Actualizacion final para primera etapa', 'Avance', 66, 2, 2, 'medium', '2025-09-10', NULL, NULL, 100.00, 0.00, 0.00, '#3B82F6', 0, 0, 'completed', 1, '2025-09-10 18:20:51', '2025-09-10 17:41:43', '2025-09-10 18:20:51', 0, 0, NULL, NULL, NULL, NULL, NULL),
+(562, NULL, 'ARQUITECTO NURIEL', 'Sin descripción', 204, 49, 22, 'medium', '2026-03-31', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-09-10 18:02:51', '2025-09-10 18:44:50', 0, 0, NULL, NULL, NULL, NULL, NULL),
+(563, NULL, 'ING. ARMANDO ELECTRICIDAD', '', 204, 49, 22, 'medium', '2026-03-10', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-09-10 18:51:16', '2025-09-10 18:54:09', 0, 0, NULL, NULL, NULL, NULL, NULL),
+(564, NULL, 'Tarea de seguimiento 2', 'Sin descripcion', 66, 2, 2, 'medium', '2025-09-10', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-09-10 18:56:12', '2025-09-10 18:56:12', 0, 0, NULL, NULL, NULL, NULL, NULL),
+(565, NULL, 'INSTALACION DE CAMARAS DE SEGURIDAD', 'Reemplazo de camaras existentes e instalacion de nuevas en areas especificas', 204, 49, 22, 'medium', '2025-10-10', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-09-10 18:56:40', '2025-09-10 19:03:29', 0, 0, NULL, NULL, NULL, NULL, NULL),
+(566, NULL, 'PRROVEEDOR DE RIEGO', 'Buscar 3 propuestas para nueva instalacion de riego', 204, 49, 22, 'medium', '2025-09-16', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-09-10 19:05:33', '2025-09-10 19:06:11', 0, 0, NULL, NULL, NULL, NULL, NULL);
 
 --
 -- Disparadores `Tasks`
@@ -2110,7 +2144,12 @@ INSERT INTO `Task_Assignments` (`assignment_id`, `task_id`, `user_id`, `assigned
 (506, 543, 39, 25.00, '2025-09-09 17:38:31', 2, 'assigned', NULL),
 (507, 546, 2, 100.00, '2025-09-09 18:21:15', 2, 'assigned', NULL),
 (508, 559, 4, 100.00, '2025-09-09 22:20:58', 2, 'assigned', NULL),
-(509, 561, 2, 100.00, '2025-09-10 17:41:43', 2, 'assigned', NULL);
+(509, 561, 2, 100.00, '2025-09-10 17:41:43', 2, 'assigned', NULL),
+(510, 562, 49, 100.00, '2025-09-10 18:02:51', 22, 'assigned', NULL),
+(511, 563, 49, 100.00, '2025-09-10 18:51:16', 22, 'assigned', NULL),
+(512, 564, 2, 100.00, '2025-09-10 18:56:12', 2, 'assigned', NULL),
+(513, 565, 49, 100.00, '2025-09-10 18:56:40', 22, 'assigned', NULL),
+(514, 566, 49, 100.00, '2025-09-10 19:05:33', 22, 'assigned', NULL);
 
 -- --------------------------------------------------------
 
@@ -4149,7 +4188,43 @@ INSERT INTO `Task_History` (`history_id`, `task_id`, `user_id`, `action_type`, `
 (2581, 472, 4, 'status_changed', 'status', 'pending', 'completed', NULL, 'Estado cambiado de pending a completed', '2025-09-10 16:02:03'),
 (2582, 476, 4, 'status_changed', 'status', 'pending', 'completed', NULL, 'Estado cambiado de pending a completed', '2025-09-10 16:02:05'),
 (2583, 561, 2, 'assigned', 'assigned_users', NULL, '2', NULL, 'Múltiples usuarios asignados', '2025-09-10 17:41:43'),
-(2584, 561, 2, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-09-10 17:41:43');
+(2584, 561, 2, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-09-10 17:41:43'),
+(2585, 562, 22, 'assigned', 'assigned_users', NULL, '49', NULL, 'Múltiples usuarios asignados', '2025-09-10 18:02:51'),
+(2586, 562, 22, 'created', 'subtask', NULL, 'Reja principal', NULL, 'Subtarea creada: Reja principal', '2025-09-10 18:02:51'),
+(2587, 562, 22, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-09-10 18:02:51'),
+(2588, 562, 22, 'assigned', 'subtask_assignment', 'múltiples usuarios', 'Diana Gonzalez', NULL, 'Subtarea \"Reja principal\" asignada a 1 usuario(s): Diana Gonzalez', '2025-09-10 18:03:18'),
+(2589, 561, 2, 'status_changed', 'status', 'pending', 'completed', NULL, 'Estado cambiado de pending a completed', '2025-09-10 18:20:51'),
+(2590, 562, 22, 'created', 'subtask', NULL, 'Desnivel de area comun', NULL, 'Subtarea creada: Desnivel de area comun', '2025-09-10 18:36:09'),
+(2591, 562, 22, 'created', 'subtask', NULL, 'Tapas metalicas para Biodigestores', NULL, 'Subtarea creada: Tapas metalicas para Biodigestores', '2025-09-10 18:37:19'),
+(2592, 562, 22, 'updated', 'subtask_status', NULL, 'in_progress', NULL, 'Estado de subtarea actualizado', '2025-09-10 18:37:19'),
+(2593, 562, 22, 'commented', 'subtask_comment', NULL, '<p>☐ Entrega de propuesta por parte de Nueriel para Domingo 14 de Septiembre </p>', NULL, 'Comentario agregado en subtarea: Desnivel de area comun', '2025-09-10 18:38:20'),
+(2594, 562, 22, 'commented', 'subtask_comment', NULL, '<p>☐ Programacion de la entrega de tapas para el 12 de Septiembre </p>', NULL, 'Comentario agregado en subtarea: Tapas metalicas para Biodigestores', '2025-09-10 18:38:53'),
+(2595, 562, 22, 'created', 'subtask', NULL, 'Reja de almacen de materiales', NULL, 'Subtarea creada: Reja de almacen de materiales', '2025-09-10 18:44:16'),
+(2596, 562, 22, 'assigned', 'subtask_assignment', 'múltiples usuarios', 'Diana Gonzalez', NULL, 'Subtarea \"Desnivel de area comun\" asignada a 1 usuario(s): Diana Gonzalez', '2025-09-10 18:44:26'),
+(2597, 562, 22, 'assigned', 'subtask_assignment', 'múltiples usuarios', 'Diana Gonzalez', NULL, 'Subtarea \"Tapas metalicas para Biodigestores\" asignada a 1 usuario(s): Diana Gonzalez', '2025-09-10 18:44:35'),
+(2598, 562, 22, 'assigned', 'subtask_assignment', 'múltiples usuarios', 'Diana Gonzalez', NULL, 'Subtarea \"Reja de almacen de materiales\" asignada a 1 usuario(s): Diana Gonzalez', '2025-09-10 18:44:50'),
+(2599, 563, 22, 'assigned', 'assigned_users', NULL, '49', NULL, 'Múltiples usuarios asignados', '2025-09-10 18:51:16'),
+(2600, 563, 22, 'created', 'subtask', NULL, 'Postes de cancha e tenis', NULL, 'Subtarea creada: Postes de cancha e tenis', '2025-09-10 18:51:16'),
+(2601, 563, 22, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-09-10 18:51:16'),
+(2602, 563, 22, 'commented', 'subtask_comment', NULL, '<p>☐ Mover de lugar los postes </p><p>☐ Recableado de lamparas </p><p>☐ Reacomodo de interruptor de lamparas</p><p>☐ Subir la altura de las Lamparas</p>', NULL, 'Comentario agregado en subtarea: Postes de cancha e tenis', '2025-09-10 18:52:33'),
+(2603, 563, 22, 'assigned', 'subtask_assignment', 'múltiples usuarios', 'Diana Gonzalez', NULL, 'Subtarea \"Postes de cancha e tenis\" asignada a 1 usuario(s): Diana Gonzalez', '2025-09-10 18:52:44'),
+(2604, 564, 2, 'assigned', 'assigned_users', NULL, '2', NULL, 'Múltiples usuarios asignados', '2025-09-10 18:56:12'),
+(2605, 564, 2, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-09-10 18:56:12'),
+(2606, 565, 22, 'assigned', 'assigned_users', NULL, '49', NULL, 'Múltiples usuarios asignados', '2025-09-10 18:56:40'),
+(2607, 565, 22, 'created', 'subtask', NULL, 'Propuesta', NULL, 'Subtarea creada: Propuesta', '2025-09-10 18:56:40'),
+(2608, 565, 22, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-09-10 18:56:40'),
+(2609, 565, 22, 'assigned', 'subtask_assignment', 'múltiples usuarios', 'Diana Gonzalez', NULL, 'Subtarea \"Propuesta por parte de equipo de sistemas\" asignada a 1 usuario(s): Diana Gonzalez', '2025-09-10 18:57:44'),
+(2610, 565, 22, 'created', 'subtask', NULL, 'Cotizacion de Camaras', NULL, 'Subtarea creada: Cotizacion de Camaras', '2025-09-10 18:58:06'),
+(2611, 565, 22, 'created', 'subtask', NULL, 'Cotizacion de instalcion de Camaras', NULL, 'Subtarea creada: Cotizacion de instalcion de Camaras', '2025-09-10 18:58:27'),
+(2612, 565, 22, 'created', 'subtask', NULL, 'Realizar la instalacion', NULL, 'Subtarea creada: Realizar la instalacion', '2025-09-10 18:58:51'),
+(2613, 565, 22, 'assigned', 'subtask_assignment', 'múltiples usuarios', 'Diana Gonzalez', NULL, 'Subtarea \"Cotizacion de Camaras\" asignada a 1 usuario(s): Diana Gonzalez', '2025-09-10 19:03:08'),
+(2614, 565, 22, 'assigned', 'subtask_assignment', 'múltiples usuarios', 'Diana Gonzalez', NULL, 'Subtarea \"Cotizacion de instalcion de Camaras\" asignada a 1 usuario(s): Diana Gonzalez', '2025-09-10 19:03:22'),
+(2615, 565, 22, 'assigned', 'subtask_assignment', 'múltiples usuarios', 'Diana Gonzalez', NULL, 'Subtarea \"Realizar la instalacion\" asignada a 1 usuario(s): Diana Gonzalez', '2025-09-10 19:03:29'),
+(2616, 566, 22, 'assigned', 'assigned_users', NULL, '49', NULL, 'Múltiples usuarios asignados', '2025-09-10 19:05:33'),
+(2617, 566, 22, 'created', 'subtask', NULL, 'Opcion 1 - LUKE GUTIERREZ', NULL, 'Subtarea creada: Opcion 1 - LUKE GUTIERREZ', '2025-09-10 19:05:33'),
+(2618, 566, 22, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-09-10 19:05:33'),
+(2619, 566, 22, 'assigned', 'subtask_assignment', 'múltiples usuarios', 'Diana Gonzalez', NULL, 'Subtarea \"Opcion 1 - LUKE GUTIERREZ\" asignada a 1 usuario(s): Diana Gonzalez', '2025-09-10 19:06:07'),
+(2620, 566, 22, 'updated', 'subtask_status', NULL, 'in_progress', NULL, 'Estado de subtarea actualizado', '2025-09-10 19:06:11');
 
 -- --------------------------------------------------------
 
@@ -4268,7 +4343,7 @@ INSERT INTO `Users` (`user_id`, `username`, `password_hash`, `email`, `full_name
 (46, 'lizbethv', '123456', 'servicio.vgm@rinorisk.com', 'Lizbeth Vega', 1, NULL, '2025-08-06 21:50:57', ''),
 (47, 'alejandrar', '123456', 'auditor.siniestros@rinorisk.com', 'Alejandra Ramos', 1, NULL, '2025-08-06 21:51:48', ''),
 (48, 'myriamt', '123456', 'servicio.aydtj@rinorisk.com', 'Myriam Torres', 1, NULL, '2025-08-06 21:52:21', ''),
-(49, 'dianag', 'pU;4[97%/', 'coordinador.inmuebles@rinorisk.com', 'Diana Gonzalez', 1, '2025-09-08 20:54:00', '2025-08-06 21:52:51', ''),
+(49, 'dianag', 'pU;4[97%/', 'coordinador.inmuebles@rinorisk.com', 'Diana Gonzalez', 1, '2025-09-10 18:03:42', '2025-08-06 21:52:51', ''),
 (50, 'karenf', '123456', 'gerentegeneral@zax.mx', 'Karen Fletes', 1, '2025-08-28 21:20:01', '2025-08-06 21:54:25', ''),
 (55, 'rosaliae', '123456', 'servicio.vgmmty@rinorisk.com', 'Rosalia Enriquez', 1, NULL, '2025-08-06 23:21:11', ''),
 (56, 'sonial', '123456', 'atencionaclientes4@rinorisk.com', 'Sonia Lopez', 1, NULL, '2025-08-06 23:24:15', ''),
@@ -4616,25 +4691,25 @@ ALTER TABLE `Comment_Checkbox_States`
 -- AUTO_INCREMENT de la tabla `Notification_Log`
 --
 ALTER TABLE `Notification_Log`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=478;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=483;
 
 --
 -- AUTO_INCREMENT de la tabla `Projects`
 --
 ALTER TABLE `Projects`
-  MODIFY `project_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=204;
+  MODIFY `project_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=205;
 
 --
 -- AUTO_INCREMENT de la tabla `Subtasks`
 --
 ALTER TABLE `Subtasks`
-  MODIFY `subtask_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=220;
+  MODIFY `subtask_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=230;
 
 --
 -- AUTO_INCREMENT de la tabla `Subtask_Assignments`
 --
 ALTER TABLE `Subtask_Assignments`
-  MODIFY `assignment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=67;
+  MODIFY `assignment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=77;
 
 --
 -- AUTO_INCREMENT de la tabla `Subtask_Attachments`
@@ -4646,19 +4721,19 @@ ALTER TABLE `Subtask_Attachments`
 -- AUTO_INCREMENT de la tabla `Subtask_Comments`
 --
 ALTER TABLE `Subtask_Comments`
-  MODIFY `comment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=77;
+  MODIFY `comment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=80;
 
 --
 -- AUTO_INCREMENT de la tabla `Tasks`
 --
 ALTER TABLE `Tasks`
-  MODIFY `task_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=562;
+  MODIFY `task_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=567;
 
 --
 -- AUTO_INCREMENT de la tabla `Task_Assignments`
 --
 ALTER TABLE `Task_Assignments`
-  MODIFY `assignment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=510;
+  MODIFY `assignment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=515;
 
 --
 -- AUTO_INCREMENT de la tabla `Task_Attachments`
@@ -4676,7 +4751,7 @@ ALTER TABLE `Task_Comments`
 -- AUTO_INCREMENT de la tabla `Task_History`
 --
 ALTER TABLE `Task_History`
-  MODIFY `history_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2585;
+  MODIFY `history_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2621;
 
 --
 -- AUTO_INCREMENT de la tabla `Users`
