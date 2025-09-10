@@ -3017,13 +3017,13 @@ function switchTab(tabName) {
         targetButton.classList.add('active');
     }
     
-    // Filtrar las tablas existentes según el tab
+    // Cargar datos según el tab (usando funciones existentes)
     if (tabName === 'my-tasks') {
-        console.log('🔵 Mostrando MIS tareas en tabla existente...');
-        filterTasksTable('my');
+        console.log('🔵 Cargando MIS tareas...');
+        loadMyTasks();
     } else if (tabName === 'team-tasks') {
-        console.log('🟡 Mostrando tareas del EQUIPO en tabla existente...');
-        filterTasksTable('team');
+        console.log('🟡 Cargando tareas del EQUIPO...');
+        loadTeamTasks();
     }
 }
 
@@ -3796,88 +3796,15 @@ console.log('🚀 Tasks.php JavaScript cargado - Tabs implementados');
 
 // Función switchTasksTab removida - se usa switchTab existente
 
-// Función para filtrar las tablas existentes según el tab
-function filterTasksTable(type) {
-    console.log('🔄 filterTasksTable llamado con:', type);
-    
-    // Obtener todas las filas de tareas de las tablas existentes
-    const allTaskRows = document.querySelectorAll('tbody tr[data-task-row]');
-    
-    if (allTaskRows.length === 0) {
-        console.log('⚠️ No se encontraron filas de tareas para filtrar');
-        return;
-    }
-    
-    // Obtener ID del usuario actual desde PHP (si está disponible)
-    const currentUserId = <?= $this->currentUser['user_id'] ?? 'null' ?>;
-    
-    allTaskRows.forEach(row => {
-        const assignedUserId = row.getAttribute('data-assigned-user-id');
-        const isPersonal = row.getAttribute('data-is-personal') === '1';
-        const shouldShow = (type === 'my') ? 
-            (assignedUserId == currentUserId) : 
-            (assignedUserId != currentUserId && assignedUserId != null && !isPersonal);
-        
-        if (shouldShow) {
-            row.style.display = '';
-            row.classList.add('visible');
-        } else {
-            row.style.display = 'none';
-            row.classList.remove('visible');
-        }
-    });
-    
-    // Actualizar contadores si existen
-    updateTaskCounters(type);
-}
-
-// Función para actualizar contadores
-function updateTaskCounters(type) {
-    const visibleRows = document.querySelectorAll('tbody tr[data-task-row].visible');
-    const totalElement = document.querySelector('.tasks-total-count');
-    
-    if (totalElement) {
-        totalElement.textContent = `${visibleRows.length} tareas ${type === 'my' ? 'asignadas a ti' : 'del equipo'}`;
-    }
-}
+// Funciones de filtrado removidas - se usan las funciones existentes de carga de datos
 
 // Inicializar cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 DOM listo - Iniciando tasks page con filtrado');
+    console.log('🚀 DOM listo - Iniciando tasks page');
     
-    // Agregar atributos data a las filas existentes si no los tienen
-    addDataAttributesToTaskRows();
-    
-    // Inicializar con "Mis Tareas"
+    // Inicializar con "Mis Tareas" usando función existente
     switchTab('my-tasks');
 });
-
-// Función para agregar atributos data a las filas existentes
-function addDataAttributesToTaskRows() {
-    const taskRows = document.querySelectorAll('tbody tr');
-    
-    taskRows.forEach((row, index) => {
-        if (!row.getAttribute('data-task-row')) {
-            row.setAttribute('data-task-row', 'true');
-            
-            // Intentar extraer información de la fila
-            const assignedCell = row.querySelector('td:nth-child(4)'); // Columna de asignado
-            const projectCell = row.querySelector('td:nth-child(2)'); // Columna de proyecto
-            
-            if (assignedCell) {
-                // Extraer ID del usuario asignado (esto puede requerir ajuste según la estructura)
-                const assignedText = assignedCell.textContent.trim();
-                row.setAttribute('data-assigned-user-name', assignedText);
-                
-                // Por ahora, marcar como personal si contiene "Personal" o similar
-                const isPersonal = projectCell && projectCell.textContent.includes('Personal');
-                row.setAttribute('data-is-personal', isPersonal ? '1' : '0');
-            }
-        }
-    });
-    
-    console.log('✅ Atributos data agregados a', taskRows.length, 'filas de tareas');
-}
 </script>
 
 <?php
