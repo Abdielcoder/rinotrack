@@ -3861,11 +3861,13 @@ class ClanLeaderController {
     }
     
     /**
-     * Obtener tareas del equipo/clan (TODAS las tareas del clan excepto personales)
+     * Obtener tareas del equipo/clan (tareas del clan que NO están asignadas al líder)
      */
     public function getTeamTasks() {
-        // Asegurar que la respuesta sea JSON
+        // Asegurar que la respuesta sea JSON y evitar caché
         header('Content-Type: application/json');
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        header('Pragma: no-cache');
         
         $this->requireAuth();
         
@@ -3875,19 +3877,19 @@ class ClanLeaderController {
         }
 
         try {
-            $clanId = $this->currentUser['clan_id'];
             $userId = $this->currentUser['user_id'];
+            $clanId = $this->userClan['clan_id'] ?? null;
             
-            if (!$clanId) {
-                Utils::jsonResponse(['success' => false, 'message' => 'Usuario sin clan asignado'], 400);
+            if (!$userId || !$clanId) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Usuario o clan no válido'], 400);
                 return;
             }
 
             $db = Database::getInstance();
             
-            // Consulta simplificada para tareas del equipo
+            // Consulta para tareas del equipo (del clan pero NO asignadas al líder)
             $query = "
-                SELECT DISTINCT
+                SELECT 
                     t.task_id,
                     t.task_name,
                     t.description,
@@ -3907,12 +3909,23 @@ class ClanLeaderController {
                     p.clan_id = :clan_id
                     AND (p.is_personal = 0 OR p.is_personal IS NULL)
                     AND (t.is_subtask = 0 OR t.is_subtask IS NULL)
+                    AND (
+                        -- Excluir tareas asignadas directamente al líder
+                        t.assigned_to_user_id != :user_id1 OR t.assigned_to_user_id IS NULL
+                    )
+                    AND (
+                        -- Excluir tareas donde el líder está en Task_Assignments
+                        NOT EXISTS (SELECT 1 FROM Task_Assignments ta WHERE ta.task_id = t.task_id AND ta.user_id = :user_id2)
+                    )
+                GROUP BY t.task_id
                 ORDER BY t.due_date ASC
                 LIMIT 200
             ";
 
             $stmt = $db->prepare($query);
             $stmt->bindParam(':clan_id', $clanId, PDO::PARAM_INT);
+            $stmt->bindParam(':user_id1', $userId, PDO::PARAM_INT);
+            $stmt->bindParam(':user_id2', $userId, PDO::PARAM_INT);
             
             if (!$stmt->execute()) {
                 throw new Exception("Error ejecutando consulta de tareas del equipo");
@@ -3928,7 +3941,12 @@ class ClanLeaderController {
             Utils::jsonResponse([
                 'success' => true,
                 'tasks' => $tasks,
-                'total' => count($tasks)
+                'total' => count($tasks),
+                'debug' => [
+                    'userId' => $userId,
+                    'clanId' => $clanId,
+                    'excludedLeaderTasks' => 'Tasks assigned to leader are excluded from team view'
+                ]
             ]);
 
         } catch (Exception $e) {
