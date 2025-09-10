@@ -4175,6 +4175,126 @@ class ClanLeaderController {
     }
     
     /**
+     * Obtener tareas del equipo organizadas para Kanban (excluye tareas del líder)
+     */
+    public function getTeamKanbanTasks() {
+        // Evitar caché para datos en tiempo real
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        header('Pragma: no-cache');
+        
+        $this->requireAuth();
+        
+        if (!$this->hasClanLeaderAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+            return;
+        }
+
+        try {
+            $userId = $this->currentUser['user_id'];
+            $clanId = $this->userClan['clan_id'] ?? null;
+            error_log("DEBUG getTeamKanbanTasks - userId: $userId, clanId: $clanId");
+            
+            if (!$userId || !$clanId) {
+                throw new Exception("Usuario o clan no válido");
+            }
+            
+            // Consulta para obtener tareas del EQUIPO (excluyendo las del líder)
+            $tasksStmt = $this->db->prepare("
+                SELECT 
+                    t.task_id,
+                    t.task_name,
+                    t.description,
+                    t.status,
+                    t.priority,
+                    t.due_date,
+                    t.completion_percentage,
+                    t.created_by_user_id,
+                    p.project_id,
+                    p.project_name,
+                    p.is_personal,
+                    u.full_name as assigned_user_name,
+                    CASE 
+                        WHEN t.due_date IS NULL THEN 999
+                        ELSE DATEDIFF(t.due_date, CURDATE())
+                    END as days_until_due,
+                    'task' as item_type,
+                    0 as is_completed
+                FROM Tasks t
+                INNER JOIN Projects p ON t.project_id = p.project_id
+                LEFT JOIN Users u ON t.assigned_to_user_id = u.user_id
+                WHERE 
+                    p.clan_id = :clan_id
+                    AND (t.is_subtask = 0 OR t.is_subtask IS NULL)
+                    AND t.status <> 'completed'
+                    AND COALESCE(t.completion_percentage, 0) < 100
+                    AND (p.is_personal = 0 OR p.is_personal IS NULL)
+                    AND (
+                        t.assigned_to_user_id != :user_id1 
+                        OR t.assigned_to_user_id IS NULL
+                    )
+                    AND NOT EXISTS (
+                        SELECT 1 FROM Task_Assignments ta 
+                        WHERE ta.task_id = t.task_id 
+                        AND ta.user_id = :user_id2
+                    )
+                GROUP BY t.task_id
+                ORDER BY t.due_date ASC
+            ");
+            
+            $tasksStmt->execute([
+                ':clan_id' => $clanId,
+                ':user_id1' => $userId,
+                ':user_id2' => $userId
+            ]);
+            $allTasks = $tasksStmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            error_log("DEBUG getTeamKanbanTasks - Total tareas del equipo encontradas: " . count($allTasks));
+            
+            // Organizar tareas en columnas Kanban
+            $kanbanTasks = [
+                'vencidas' => [],
+                'hoy' => [],
+                'semana1' => [],
+                'semana2' => []
+            ];
+            
+            foreach ($allTasks as $task) {
+                $daysUntilDue = (int)($task['days_until_due'] ?? 999);
+                
+                if ($daysUntilDue < 0) {
+                    $kanbanTasks['vencidas'][] = $task;
+                } elseif ($daysUntilDue == 0) {
+                    $kanbanTasks['hoy'][] = $task;
+                } elseif ($daysUntilDue <= 7) {
+                    $kanbanTasks['semana1'][] = $task;
+                } else {
+                    $kanbanTasks['semana2'][] = $task;
+                }
+            }
+            
+            error_log("DEBUG getTeamKanbanTasks - Distribución: vencidas=" . count($kanbanTasks['vencidas']) . 
+                     ", hoy=" . count($kanbanTasks['hoy']) . 
+                     ", semana1=" . count($kanbanTasks['semana1']) . 
+                     ", semana2=" . count($kanbanTasks['semana2']));
+
+            Utils::jsonResponse([
+                'success' => true,
+                'kanbanTasks' => $kanbanTasks,
+                'total' => count($allTasks),
+                'debug' => [
+                    'userId' => $userId,
+                    'clanId' => $clanId,
+                    'totalTasks' => count($allTasks)
+                ]
+            ]);
+
+        } catch (Exception $e) {
+            error_log("Error en getTeamKanbanTasks: " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor: ' . $e->getMessage()], 500);
+        }
+    }
+    
+    /**
      * Cargar vista
      */
     private function loadView($viewPath, $data = []) {
