@@ -3040,10 +3040,22 @@ function loadMyTasks() {
     
     tbody.innerHTML = '<tr class="loading"><td colspan="8" class="text-center"><i class="fas fa-spinner fa-spin"></i> Cargando mis tareas...</td></tr>';
     
-    fetch('?route=clan_leader/get-my-tasks')
+    // Agregar timestamp para evitar cache
+    const timestamp = new Date().getTime();
+    fetch(`?route=clan_leader/get-my-tasks&_=${timestamp}`, {
+        cache: 'no-store',
+        headers: {
+            'Cache-Control': 'no-cache'
+        }
+    })
         .then(response => response.json())
         .then(data => {
+            console.log('DEBUG loadMyTasks response:', data);
             if (data.success) {
+                console.log('DEBUG loadMyTasks tasks count:', data.tasks.length);
+                data.tasks.forEach(task => {
+                    console.log(`DEBUG My Task: ID=${task.task_id}, Name=${task.task_name}, Project=${task.project_name}`);
+                });
                 renderTasksTable(data.tasks, 'my-tasks-table-body');
             } else {
                 tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Error al cargar tareas: ' + data.message + '</td></tr>';
@@ -3062,10 +3074,22 @@ function loadTeamTasks() {
     
     tbody.innerHTML = '<tr class="loading"><td colspan="9" class="text-center"><i class="fas fa-spinner fa-spin"></i> Cargando tareas del equipo...</td></tr>';
     
-    fetch('?route=clan_leader/get-team-tasks')
+    // Agregar timestamp para evitar cache
+    const timestamp = new Date().getTime();
+    fetch(`?route=clan_leader/get-team-tasks&_=${timestamp}`, {
+        cache: 'no-store',
+        headers: {
+            'Cache-Control': 'no-cache'
+        }
+    })
         .then(response => response.json())
         .then(data => {
+            console.log('DEBUG loadTeamTasks response:', data);
             if (data.success) {
+                console.log('DEBUG loadTeamTasks tasks count:', data.tasks.length);
+                data.tasks.forEach(task => {
+                    console.log(`DEBUG Team Task: ID=${task.task_id}, Name=${task.task_name}, Project=${task.project_name}, Assigned=${task.assigned_user_name}`);
+                });
                 renderTeamTasksTable(data.tasks, 'team-tasks-table-body');
             } else {
                 tbody.innerHTML = '<tr><td colspan="9" class="text-center text-danger">Error al cargar tareas del equipo: ' + data.message + '</td></tr>';
@@ -3258,7 +3282,8 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Timestamp para forzar recarga: <?= time() ?>
-// Cache-bust version: v3.1.<?= date('His') ?>
+// Cache-bust version: v4.0.<?= date('His') ?>
+// Updated: <?= date('Y-m-d H:i:s') ?>
 </script>
 
 <!-- Estilos para el modal de clonación -->
