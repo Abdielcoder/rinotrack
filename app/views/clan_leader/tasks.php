@@ -6,6 +6,63 @@ ob_start();
 <!-- Cargar CSS de rediseño -->
 <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/clan-leader-redesign.css">
 
+<style>
+/* Banner informativo */
+.info-banner {
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    border: 1px solid #90caf9;
+    border-radius: 10px;
+    padding: 15px 20px;
+    margin-bottom: 25px;
+    box-shadow: 0 2px 8px rgba(33, 150, 243, 0.1);
+}
+
+.info-content {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    justify-content: space-between;
+}
+
+.info-content i {
+    color: #1976d2;
+    font-size: 20px;
+}
+
+.info-content span {
+    color: #0d47a1;
+    font-weight: 500;
+    flex: 1;
+}
+
+.btn-info {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: #2196f3;
+    color: white;
+    text-decoration: none;
+    border-radius: 6px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.btn-info:hover {
+    background: #1976d2;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+}
+
+@media (max-width: 768px) {
+    .info-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 10px;
+    }
+}
+</style>
+
 <div class="clan-leader-tasks-container">
     <!-- Header Mejorado -->
     <div class="page-header">
@@ -25,92 +82,17 @@ ob_start();
 
     <!-- Contenido Principal -->
     <div class="main-content">
-        <?php if (isset($projects) && !empty($projects)): ?>
-            <!-- Proyectos -->
-            <div class="projects-section">
-                <h2 class="section-title">Proyectos del Clan</h2>
-                <div class="projects-grid">
-                    <?php foreach ($projects as $project): ?>
-                    <div class="project-card">
-                        <div class="project-header">
-                            <h3 class="project-name"><?= htmlspecialchars($project['project_name']) ?></h3>
-                            <div class="project-header-actions">
-                                <div class="project-status status-<?= $project['status'] ?>">
-                                    <?= ucfirst($project['status']) ?>
-                                </div>
-                                <div class="project-menu-container">
-                                    <button class="project-menu-btn" onclick="toggleProjectMenu(<?= $project['project_id'] ?>)">
-                                        <i class="fas fa-ellipsis-v"></i>
-                                    </button>
-                                    <div class="project-menu" id="projectMenu<?= $project['project_id'] ?>">
-                                        <button class="menu-item" onclick="openCloneProjectModal(<?= $project['project_id'] ?>)">
-                                            <i class="fas fa-copy"></i>
-                                            Clonar Proyecto
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="project-stats">
-                            <div class="stat-item">
-                                <div class="stat-icon">
-                                    <i class="fas fa-tasks"></i>
-                                </div>
-                                <div class="stat-content">
-                                    <div class="stat-number"><?= $project['total_tasks'] ?></div>
-                                    <div class="stat-label">Total</div>
-                                </div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-icon completed">
-                                    <i class="fas fa-check-circle"></i>
-                                </div>
-                                <div class="stat-content">
-                                    <div class="stat-number"><?= $project['completed_tasks'] ?></div>
-                                    <div class="stat-label">Completadas</div>
-                                </div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-icon progress">
-                                    <i class="fas fa-chart-line"></i>
-                                </div>
-                                <div class="stat-content">
-                                    <div class="stat-number"><?= $project['progress_percentage'] ?>%</div>
-                                    <div class="stat-label">Progreso</div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="project-progress">
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: <?= $project['progress_percentage'] ?>%"></div>
-                            </div>
-                        </div>
-                        
-                        <div class="project-delegation">
-                            <label class="delegation-checkbox">
-                                <input type="checkbox" 
-                                       class="delegation-toggle" 
-                                       data-project-id="<?= $project['project_id'] ?>"
-                                       <?= isset($project['allow_delegation']) && $project['allow_delegation'] ? 'checked' : '' ?>
-                                       onchange="toggleProjectDelegation(<?= $project['project_id'] ?>, this.checked)">
-                                <span class="checkbox-label">
-                                    <i class="fas fa-user-plus"></i> Delegar tareas
-                                </span>
-                            </label>
-                        </div>
-                        
-                        <div class="project-actions">
-                            <a href="<?= APP_URL ?>?route=clan_leader/tasks&project_id=<?= $project['project_id'] ?>" class="btn-minimal primary">
-                                <i class="fas fa-eye"></i> Ver Tareas
-                            </a>
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
-                </div>
+        <!-- Nota: La sección de proyectos se ha movido a /projects para mejor organización -->
+        <div class="info-banner">
+            <div class="info-content">
+                <i class="fas fa-info-circle"></i>
+                <span>La gestión de proyectos se ha movido a una sección dedicada.</span>
+                <a href="?route=clan_leader/projects" class="btn-info">
+                    <i class="fas fa-project-diagram"></i>
+                    Ir a Proyectos
+                </a>
             </div>
-        <?php endif; ?>
+        </div>
 
         <!-- Debug: Verificar si allTasks está definido -->
         <?php 

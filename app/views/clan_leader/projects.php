@@ -3,95 +3,196 @@
 ob_start();
 ?>
 
-<div class="clan-leader-projects minimal">
-    <!-- Header Minimalista -->
-    <header class="minimal-header">
-        <div class="header-row">
-            <div class="title-minimal">
-                <h1>Gestionar Proyectos</h1>
-                <span class="subtitle"><?php echo htmlspecialchars($clan['clan_name'] ?? 'Sin clan asignado'); ?></span>
+<!-- Cargar CSS de rediseño -->
+<link rel="stylesheet" href="<?= APP_URL ?>/assets/css/clan-leader-redesign.css">
+
+<div class="clan-leader-projects-redesign">
+    <!-- Header Mejorado -->
+    <div class="page-header">
+        <div class="header-content">
+            <div class="header-left">
+                <h1 class="page-title">Gestión de Proyectos</h1>
+                <p class="page-subtitle">Administra proyectos y tareas de <?php echo htmlspecialchars($clan['clan_name'] ?? 'tu clan'); ?></p>
             </div>
-            
-            <div class="actions-minimal">
-                <button class="btn-minimal primary" onclick="openCreateProjectModal()">
+            <div class="header-actions">
+                <button class="btn-create" onclick="openCreateProjectModal()">
                     <i class="fas fa-plus"></i>
-                    Crear Proyecto
+                    Nuevo Proyecto
                 </button>
             </div>
         </div>
         
-        <!-- Búsqueda -->
-        <div class="search-minimal">
-            <form method="GET" action="?route=clan_leader/projects">
-                <div class="search-input">
+        <!-- Búsqueda mejorada -->
+        <div class="search-section">
+            <form method="GET" action="?route=clan_leader/projects" class="search-form">
+                <div class="search-input-group">
                     <i class="fas fa-search"></i>
                     <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" 
-                           placeholder="Buscar proyectos...">
+                           placeholder="Buscar proyectos por nombre o descripción...">
+                    <button type="submit" class="btn-search">Buscar</button>
+                    <?php if (!empty($search)): ?>
+                        <a href="?route=clan_leader/projects" class="btn-clear">
+                            <i class="fas fa-times"></i>
+                        </a>
+                    <?php endif; ?>
                 </div>
-                <button type="submit" class="btn-minimal">Buscar</button>
-                <?php if (!empty($search)): ?>
-                    <a href="?route=clan_leader/projects" class="btn-minimal secondary">Limpiar</a>
-                <?php endif; ?>
             </form>
         </div>
-    </header>
+    </div>
 
-    <!-- Lista de Proyectos -->
-    <div class="content-minimal">
-        <section class="projects-minimal">
-            <?php if (!empty($projects)): ?>
-                <div class="projects-list">
+    <!-- Contenido Principal -->
+    <div class="main-content">
+        <?php if (!empty($projects)): ?>
+            <!-- Proyectos del Clan con Cards Mejorados -->
+            <div class="projects-section">
+                <h2 class="section-title">Proyectos del Clan</h2>
+                <div class="projects-grid">
                     <?php foreach ($projects as $project): ?>
-                        <div class="project-item">
-                            <div class="project-info">
-                                <div class="project-icon">
-                                    <i class="fas fa-project-diagram"></i>
-                                </div>
-                                <div class="project-details">
-                                    <div class="project-name"><?php echo htmlspecialchars($project['project_name']); ?></div>
-                                    <div class="project-description"><?php echo htmlspecialchars($project['description']); ?></div>
-                                    <div class="project-meta">
-                                        <span class="project-status status-<?php echo $project['status']; ?>">
-                                            <?php echo ucfirst($project['status']); ?>
-                                        </span>
-                                        <?php if ($project['kpi_points'] > 0): ?>
-                                            <span class="project-kpi">
-                                                <i class="fas fa-chart-line"></i>
-                                                <?php echo number_format($project['kpi_points']); ?> puntos KPI
-                                            </span>
-                                        <?php endif; ?>
-                                        <span class="project-date">
-                                            <i class="fas fa-calendar"></i>
-                                            <?php echo date('d/m/Y', strtotime($project['created_at'])); ?>
-                                        </span>
-                                    </div>
+                    <div class="project-card-enhanced">
+                        <div class="project-header">
+                            <div class="project-title-section">
+                                <h3 class="project-name"><?= htmlspecialchars($project['project_name']) ?></h3>
+                                <div class="project-status status-<?= $project['status'] ?>">
+                                    <?= ucfirst($project['status']) ?>
                                 </div>
                             </div>
-                            
-                            <div class="project-actions">
-                                <button class="btn-minimal" onclick="openEditProjectModal(<?php echo $project['project_id']; ?>, '<?php echo htmlspecialchars($project['project_name']); ?>', '<?php echo htmlspecialchars($project['description']); ?>', '<?php echo $project['time_limit'] ?? ''; ?>')">
-                                    <i class="fas fa-edit"></i>
-                                    Editar
+                            <div class="project-menu-container">
+                                <button class="project-menu-btn" onclick="toggleProjectMenu(<?= $project['project_id'] ?>)">
+                                    <i class="fas fa-ellipsis-v"></i>
                                 </button>
-                                <a href="?route=clan_leader/tasks&project_id=<?php echo $project['project_id']; ?>" class="btn-minimal">
-                                    <i class="fas fa-tasks"></i>
-                                    Tareas
-                                </a>
-                                <button class="btn-minimal danger" onclick="deleteProject(<?php echo $project['project_id']; ?>, '<?php echo htmlspecialchars($project['project_name']); ?>')">
-                                    <i class="fas fa-trash"></i>
-                                    Eliminar
-                                </button>
+                                <div class="project-menu" id="projectMenu<?= $project['project_id'] ?>">
+                                    <button class="menu-item" onclick="openEditProjectModal(<?= $project['project_id'] ?>, '<?= htmlspecialchars($project['project_name']) ?>', '<?= htmlspecialchars($project['description']) ?>', '<?= $project['time_limit'] ?? '' ?>')">
+                                        <i class="fas fa-edit"></i>
+                                        Editar Proyecto
+                                    </button>
+                                    <button class="menu-item" onclick="openCloneProjectModal(<?= $project['project_id'] ?>)">
+                                        <i class="fas fa-copy"></i>
+                                        Clonar Proyecto
+                                    </button>
+                                    <button class="menu-item danger" onclick="deleteProject(<?= $project['project_id'] ?>, '<?= htmlspecialchars($project['project_name']) ?>')">
+                                        <i class="fas fa-trash"></i>
+                                        Eliminar Proyecto
+                                    </button>
+                                </div>
                             </div>
                         </div>
+                        
+                        <?php if (!empty($project['description'])): ?>
+                        <div class="project-description">
+                            <?= htmlspecialchars($project['description']) ?>
+                        </div>
+                        <?php endif; ?>
+                        
+                        <div class="project-stats">
+                            <div class="stat-item">
+                                <div class="stat-icon">
+                                    <i class="fas fa-tasks"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-number"><?= $project['total_tasks'] ?? 0 ?></div>
+                                    <div class="stat-label">Total</div>
+                                </div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-icon completed">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-number"><?= $project['completed_tasks'] ?? 0 ?></div>
+                                    <div class="stat-label">Completadas</div>
+                                </div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-icon progress">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-number"><?= $project['progress_percentage'] ?? 0 ?>%</div>
+                                    <div class="stat-label">Progreso</div>
+                                </div>
+                            </div>
+                            <?php if (isset($project['kpi_points']) && $project['kpi_points'] > 0): ?>
+                            <div class="stat-item">
+                                <div class="stat-icon kpi">
+                                    <i class="fas fa-star"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-number"><?= number_format($project['kpi_points']) ?></div>
+                                    <div class="stat-label">KPI</div>
+                                </div>
+                            </div>
+                            <?php endif; ?>
+                        </div>
+                        
+                        <div class="project-progress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: <?= $project['progress_percentage'] ?? 0 ?>%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="project-delegation">
+                            <label class="delegation-checkbox">
+                                <input type="checkbox" 
+                                       class="delegation-toggle" 
+                                       data-project-id="<?= $project['project_id'] ?>"
+                                       <?= isset($project['allow_delegation']) && $project['allow_delegation'] ? 'checked' : '' ?>
+                                       onchange="toggleProjectDelegation(<?= $project['project_id'] ?>, this.checked)">
+                                <span class="checkbox-label">
+                                    <i class="fas fa-user-plus"></i> Permitir delegación de tareas
+                                </span>
+                            </label>
+                        </div>
+                        
+                        <div class="project-actions-enhanced">
+                            <button class="btn-action primary" onclick="showProjectTasks(<?= $project['project_id'] ?>)">
+                                <i class="fas fa-eye"></i>
+                                Ver Tareas
+                            </button>
+                            <button class="btn-action secondary" onclick="openCreateTaskModal(<?= $project['project_id'] ?>)">
+                                <i class="fas fa-plus"></i>
+                                Nueva Tarea
+                            </button>
+                            <a href="?route=clan_leader/project_tasks&project_id=<?= $project['project_id'] ?>" class="btn-action info">
+                                <i class="fas fa-list"></i>
+                                Gestionar
+                            </a>
+                        </div>
+                        
+                        <!-- Sección de tareas del proyecto (colapsable) -->
+                        <div class="project-tasks-section" id="projectTasks<?= $project['project_id'] ?>" style="display: none;">
+                            <div class="tasks-header">
+                                <h4>Tareas del Proyecto</h4>
+                                <div class="tasks-actions">
+                                    <button class="btn-mini" onclick="refreshProjectTasks(<?= $project['project_id'] ?>)">
+                                        <i class="fas fa-sync"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="tasks-container" id="tasksContainer<?= $project['project_id'] ?>">
+                                <!-- Las tareas se cargan dinámicamente -->
+                                <div class="loading-tasks">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                    Cargando tareas...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <?php endforeach; ?>
                 </div>
-            <?php else: ?>
-                <div class="empty-minimal">
-                    <span>📋 No hay proyectos en el clan</span>
-                    <button class="btn-minimal primary" onclick="openCreateProjectModal()">Crear primer proyecto</button>
+            </div>
+        <?php else: ?>
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="fas fa-project-diagram"></i>
                 </div>
-            <?php endif; ?>
-        </section>
+                <h3>No hay proyectos en el clan</h3>
+                <p>Crea tu primer proyecto para comenzar a organizar las tareas del equipo.</p>
+                <button class="btn-create" onclick="openCreateProjectModal()">
+                    <i class="fas fa-plus"></i>
+                    Crear Primer Proyecto
+                </button>
+            </div>
+        <?php endif; ?>
     </div>
 </div>
 
@@ -338,6 +439,285 @@ document.getElementById('editProjectModal').addEventListener('click', function(e
         closeEditProjectModal();
     }
 });
+
+// ========== NUEVAS FUNCIONALIDADES MEJORADAS ==========
+
+// Mostrar/ocultar tareas del proyecto
+function showProjectTasks(projectId) {
+    const tasksSection = document.getElementById(`projectTasks${projectId}`);
+    const isVisible = tasksSection.style.display !== 'none';
+    
+    if (isVisible) {
+        tasksSection.style.display = 'none';
+    } else {
+        tasksSection.style.display = 'block';
+        loadProjectTasks(projectId);
+    }
+}
+
+// Cargar tareas del proyecto dinámicamente
+function loadProjectTasks(projectId) {
+    const container = document.getElementById(`tasksContainer${projectId}`);
+    
+    container.innerHTML = `
+        <div class="loading-tasks">
+            <i class="fas fa-spinner fa-spin"></i>
+            Cargando tareas...
+        </div>
+    `;
+    
+    fetch(`?route=clan_leader/get-project-tasks&project_id=${projectId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.tasks) {
+                renderProjectTasks(container, data.tasks, projectId);
+            } else {
+                container.innerHTML = `
+                    <div class="no-tasks">
+                        <i class="fas fa-inbox"></i>
+                        <p>No hay tareas en este proyecto</p>
+                        <button class="btn-mini primary" onclick="openCreateTaskModal(${projectId})">
+                            <i class="fas fa-plus"></i> Crear Primera Tarea
+                        </button>
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            container.innerHTML = `
+                <div class="error-tasks">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <p>Error al cargar las tareas</p>
+                    <button class="btn-mini" onclick="loadProjectTasks(${projectId})">
+                        <i class="fas fa-sync"></i> Reintentar
+                    </button>
+                </div>
+            `;
+        });
+}
+
+// Renderizar tareas del proyecto
+function renderProjectTasks(container, tasks, projectId) {
+    if (!tasks || tasks.length === 0) {
+        container.innerHTML = `
+            <div class="no-tasks">
+                <i class="fas fa-inbox"></i>
+                <p>No hay tareas en este proyecto</p>
+                <button class="btn-mini primary" onclick="openCreateTaskModal(${projectId})">
+                    <i class="fas fa-plus"></i> Crear Primera Tarea
+                </button>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '<div class="tasks-list">';
+    
+    tasks.forEach(task => {
+        const statusClass = task.status === 'completed' ? 'completed' : 
+                          task.status === 'in_progress' ? 'in-progress' : 'pending';
+        
+        const priorityClass = task.priority === 'high' ? 'high' : 
+                            task.priority === 'medium' ? 'medium' : 'low';
+        
+        html += `
+            <div class="task-item-mini ${statusClass}">
+                <div class="task-info">
+                    <div class="task-header-inline">
+                        <h5 class="task-title">${task.task_name}</h5>
+                        <div class="task-badges">
+                            <span class="task-status status-${statusClass}">${task.status}</span>
+                            <span class="task-priority priority-${priorityClass}">${task.priority}</span>
+                        </div>
+                    </div>
+                    ${task.description ? `<p class="task-description">${task.description}</p>` : ''}
+                    <div class="task-meta">
+                        ${task.assigned_user_name ? `<span class="task-assigned"><i class="fas fa-user"></i> ${task.assigned_user_name}</span>` : ''}
+                        ${task.due_date ? `<span class="task-due"><i class="fas fa-calendar"></i> ${formatDate(task.due_date)}</span>` : ''}
+                        ${task.completion_percentage ? `<span class="task-progress"><i class="fas fa-chart-line"></i> ${task.completion_percentage}%</span>` : ''}
+                    </div>
+                </div>
+                <div class="task-actions-mini">
+                    <button class="btn-task-action edit" onclick="openEditTaskModal(${task.task_id})" title="Editar Tarea">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn-task-action delete" onclick="deleteTask(${task.task_id}, '${task.task_name}', ${projectId})" title="Eliminar Tarea">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                    <a href="?route=clan_leader/task_details&task_id=${task.task_id}" class="btn-task-action view" title="Ver Detalles">
+                        <i class="fas fa-eye"></i>
+                    </a>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+// Refrescar tareas del proyecto
+function refreshProjectTasks(projectId) {
+    loadProjectTasks(projectId);
+}
+
+// Abrir modal para crear tarea
+function openCreateTaskModal(projectId) {
+    // Implementar modal de creación de tarea
+    window.location.href = `?route=clan_leader/tasks&action=create&project_id=${projectId}`;
+}
+
+// Abrir modal para editar tarea
+function openEditTaskModal(taskId) {
+    // Implementar modal de edición de tarea
+    window.location.href = `?route=clan_leader/tasks&action=edit&task_id=${taskId}`;
+}
+
+// Eliminar tarea
+function deleteTask(taskId, taskName, projectId) {
+    if (confirm(`¿Estás seguro de que quieres eliminar la tarea "${taskName}"?`)) {
+        const formData = new FormData();
+        formData.append('task_id', taskId);
+        
+        fetch('?route=clan_leader/delete-task', {
+            method: 'POST',
+            credentials: 'same-origin',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast(data.message || 'Tarea eliminada exitosamente', 'success');
+                // Refrescar las tareas del proyecto
+                loadProjectTasks(projectId);
+            } else {
+                showToast(data.message || 'Error al eliminar la tarea', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Error de conexión', 'error');
+        });
+    }
+}
+
+// Función para formatear fechas
+function formatDate(dateString) {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES');
+}
+
+// Función para mostrar mensajes toast
+function showToast(message, type = 'info') {
+    // Crear elemento toast si no existe
+    let toast = document.getElementById('toast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'toast';
+        toast.className = 'toast';
+        document.body.appendChild(toast);
+    }
+    
+    // Configurar mensaje y tipo
+    toast.textContent = message;
+    toast.className = `toast toast-${type} show`;
+    
+    // Ocultar después de 3 segundos
+    setTimeout(() => {
+        toast.classList.remove('show');
+    }, 3000);
+}
+
+// Función para clonar proyecto
+function openCloneProjectModal(projectId) {
+    if (confirm('¿Deseas clonar este proyecto con todas sus tareas?')) {
+        const formData = new FormData();
+        formData.append('project_id', projectId);
+        
+        fetch('?route=clan_leader/clone-project', {
+            method: 'POST',
+            credentials: 'same-origin',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast(data.message || 'Proyecto clonado exitosamente', 'success');
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+            } else {
+                showToast(data.message || 'Error al clonar el proyecto', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Error de conexión', 'error');
+        });
+    }
+}
+
+// Toggle del menú del proyecto
+function toggleProjectMenu(projectId) {
+    const menu = document.getElementById(`projectMenu${projectId}`);
+    const allMenus = document.querySelectorAll('.project-menu');
+    
+    // Cerrar todos los otros menús
+    allMenus.forEach(m => {
+        if (m !== menu) {
+            m.classList.remove('show');
+        }
+    });
+    
+    // Toggle del menú actual
+    menu.classList.toggle('show');
+}
+
+// Cerrar menús al hacer clic fuera
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.project-menu-container')) {
+        document.querySelectorAll('.project-menu').forEach(menu => {
+            menu.classList.remove('show');
+        });
+    }
+});
+
+// Toggle delegación de proyecto
+function toggleProjectDelegation(projectId, isAllowed) {
+    const formData = new FormData();
+    formData.append('project_id', projectId);
+    formData.append('allow_delegation', isAllowed ? '1' : '0');
+    
+    fetch('?route=clan_leader/toggle-project-delegation', {
+        method: 'POST',
+        credentials: 'same-origin',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast(data.message || 'Configuración actualizada', 'success');
+        } else {
+            showToast(data.message || 'Error al actualizar configuración', 'error');
+            // Revertir checkbox si hay error
+            const checkbox = document.querySelector(`[data-project-id="${projectId}"]`);
+            if (checkbox) {
+                checkbox.checked = !isAllowed;
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Error de conexión', 'error');
+        // Revertir checkbox si hay error
+        const checkbox = document.querySelector(`[data-project-id="${projectId}"]`);
+        if (checkbox) {
+            checkbox.checked = !isAllowed;
+        }
+    });
+}
 </script>
 
 <style>
@@ -393,6 +773,395 @@ document.getElementById('editProjectModal').addEventListener('click', function(e
 .checkbox-label input[type="checkbox"]:checked ~ i {
     color: #3b82f6;
 }
+
+/* ========== ESTILOS MEJORADOS PARA PROYECTOS ========== */
+
+/* Cards de proyecto mejorados */
+.project-card-enhanced {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    padding: 20px;
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    position: relative;
+    overflow: hidden;
+}
+
+.project-card-enhanced:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+}
+
+/* Menú del proyecto */
+.project-menu-container {
+    position: relative;
+}
+
+.project-menu-btn {
+    background: none;
+    border: none;
+    padding: 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    color: #666;
+    transition: all 0.2s ease;
+}
+
+.project-menu-btn:hover {
+    background: #f5f5f5;
+    color: #333;
+}
+
+.project-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    padding: 8px 0;
+    min-width: 180px;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+}
+
+.project-menu.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    background: none;
+    border: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    font-size: 14px;
+    color: #333;
+    transition: background 0.2s ease;
+}
+
+.menu-item:hover {
+    background: #f8f9fa;
+}
+
+.menu-item.danger {
+    color: #dc3545;
+}
+
+.menu-item.danger:hover {
+    background: #fff5f5;
+}
+
+/* Acciones del proyecto */
+.project-actions-enhanced {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.btn-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex: 1;
+    justify-content: center;
+    min-width: 0;
+}
+
+.btn-action.primary {
+    background: #007bff;
+    color: white;
+}
+
+.btn-action.primary:hover {
+    background: #0056b3;
+    transform: translateY(-1px);
+}
+
+.btn-action.secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-action.secondary:hover {
+    background: #545b62;
+    transform: translateY(-1px);
+}
+
+.btn-action.info {
+    background: #17a2b8;
+    color: white;
+}
+
+.btn-action.info:hover {
+    background: #138496;
+    transform: translateY(-1px);
+}
+
+/* Sección de tareas del proyecto */
+.project-tasks-section {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 2px solid #f1f3f4;
+    background: #fafbfc;
+    border-radius: 8px;
+    padding: 15px;
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.tasks-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.tasks-header h4 {
+    margin: 0;
+    color: #2c3e50;
+    font-size: 16px;
+}
+
+.btn-mini {
+    padding: 6px 10px;
+    border: none;
+    border-radius: 4px;
+    background: #e9ecef;
+    color: #495057;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s ease;
+}
+
+.btn-mini:hover {
+    background: #dee2e6;
+}
+
+.btn-mini.primary {
+    background: #007bff;
+    color: white;
+}
+
+.btn-mini.primary:hover {
+    background: #0056b3;
+}
+
+/* Lista de tareas */
+.tasks-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.task-item-mini {
+    background: white;
+    border-radius: 8px;
+    padding: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-left: 4px solid #dee2e6;
+}
+
+.task-item-mini:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.task-item-mini.completed {
+    border-left-color: #27ae60;
+    opacity: 0.8;
+}
+
+.task-item-mini.in-progress {
+    border-left-color: #3498db;
+}
+
+.task-item-mini.pending {
+    border-left-color: #f39c12;
+}
+
+.task-info {
+    flex: 1;
+}
+
+.task-header-inline {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+
+.task-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #2c3e50;
+    margin: 0;
+    line-height: 1.3;
+}
+
+.task-badges {
+    display: flex;
+    gap: 6px;
+}
+
+.task-status, .task-priority {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.task-status.status-completed { background: #d4edda; color: #155724; }
+.task-status.status-in-progress { background: #cce7ff; color: #004085; }
+.task-status.status-pending { background: #fff3cd; color: #856404; }
+
+.task-priority.priority-high { background: #f8d7da; color: #721c24; }
+.task-priority.priority-medium { background: #fff3cd; color: #856404; }
+.task-priority.priority-low { background: #d1ecf1; color: #0c5460; }
+
+.task-description {
+    font-size: 12px;
+    color: #666;
+    margin: 0 0 8px 0;
+    line-height: 1.4;
+}
+
+.task-meta {
+    display: flex;
+    gap: 12px;
+    font-size: 11px;
+    color: #666;
+}
+
+.task-meta span {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Acciones de tarea */
+.task-actions-mini {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.btn-task-action {
+    padding: 6px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-task-action.edit {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.btn-task-action.edit:hover {
+    background: #ffeaa7;
+}
+
+.btn-task-action.delete {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.btn-task-action.delete:hover {
+    background: #f5c6cb;
+}
+
+.btn-task-action.view {
+    background: #cce7ff;
+    color: #004085;
+}
+
+.btn-task-action.view:hover {
+    background: #b3d7ff;
+}
+
+/* Estados especiales */
+.loading-tasks, .no-tasks, .error-tasks {
+    text-align: center;
+    padding: 30px;
+    color: #666;
+}
+
+.loading-tasks i {
+    font-size: 24px;
+    color: #007bff;
+    margin-bottom: 10px;
+}
+
+.no-tasks i, .error-tasks i {
+    font-size: 32px;
+    margin-bottom: 15px;
+    opacity: 0.5;
+}
+
+/* Toast notifications */
+.toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 12px 20px;
+    border-radius: 6px;
+    color: white;
+    font-weight: 600;
+    z-index: 10000;
+    opacity: 0;
+    transform: translateX(100%);
+    transition: all 0.3s ease;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.toast-success { background: #27ae60; }
+.toast-error { background: #e74c3c; }
+.toast-info { background: #3498db; }
 </style>
 
 <?php
