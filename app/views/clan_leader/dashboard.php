@@ -367,16 +367,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <!-- Estilos para los tabs del Kanban -->
 <style>
-/* Contenedor principal de tabs */
-.kanban-tabs {
-    display: flex;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 15px 15px 0 0;
-    padding: 8px;
-    margin-bottom: 0;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+/* Contenedor principal de tabs - FORZADO */
+.kanban-section .kanban-tabs {
+    display: flex !important;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    border-radius: 15px 15px 0 0 !important;
+    padding: 12px !important;
+    margin-bottom: 0 !important;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15) !important;
     position: relative;
     overflow: hidden;
+    border: none !important;
 }
 
 .kanban-tabs::before {
@@ -390,28 +391,29 @@ document.addEventListener('DOMContentLoaded', function() {
     pointer-events: none;
 }
 
-/* Botones de los tabs */
-.kanban-tab-button {
-    flex: 1;
-    padding: 16px 24px;
-    border: none;
-    background: rgba(255, 255, 255, 0.1);
-    color: rgba(255, 255, 255, 0.8);
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    border-radius: 12px;
-    margin: 0 4px;
-    font-weight: 600;
-    font-size: 15px;
-    letter-spacing: 0.5px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
+/* Botones de los tabs - FORZADO */
+.kanban-section .kanban-tab-button {
+    flex: 1 !important;
+    padding: 18px 28px !important;
+    border: none !important;
+    background: rgba(255, 255, 255, 0.15) !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+    cursor: pointer !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    border-radius: 12px !important;
+    margin: 0 6px !important;
+    font-weight: 700 !important;
+    font-size: 16px !important;
+    letter-spacing: 0.8px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 12px !important;
     position: relative;
     overflow: hidden;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(15px) !important;
+    border: 2px solid rgba(255, 255, 255, 0.2) !important;
+    text-transform: uppercase;
 }
 
 .kanban-tab-button::before {
@@ -436,41 +438,85 @@ document.addEventListener('DOMContentLoaded', function() {
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
-/* Tab activo */
-.kanban-tab-button.active {
-    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-    color: #2c3e50;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-    transform: translateY(-3px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+/* Tab activo - FORZADO */
+.kanban-section .kanban-tab-button.active {
+    background: linear-gradient(135deg, #ffffff 0%, #f1f3f4 100%) !important;
+    color: #2c3e50 !important;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25) !important;
+    transform: translateY(-4px) !important;
+    border: 2px solid rgba(255, 255, 255, 0.8) !important;
+    font-weight: 800 !important;
 }
 
-.kanban-tab-button.active i {
-    color: #3498db;
-    transform: scale(1.1);
+.kanban-section .kanban-tab-button.active i {
+    color: #3498db !important;
+    transform: scale(1.2) !important;
+    text-shadow: 0 2px 4px rgba(52, 152, 219, 0.3) !important;
 }
 
-/* Iconos de los tabs */
-.kanban-tab-button i {
-    font-size: 18px;
-    transition: all 0.3s ease;
+/* Iconos de los tabs - FORZADO */
+.kanban-section .kanban-tab-button i {
+    font-size: 20px !important;
+    transition: all 0.3s ease !important;
+    color: rgba(255, 255, 255, 0.9) !important;
 }
 
-.kanban-tab-button:hover i {
-    transform: scale(1.05);
+.kanban-section .kanban-tab-button:hover i {
+    transform: scale(1.1) !important;
+    color: white !important;
 }
 
-/* Contenido de los tabs */
-.kanban-tab-content {
-    background: white;
-    border-radius: 0 0 15px 15px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+.kanban-section .kanban-tab-button:hover {
+    background: rgba(255, 255, 255, 0.25) !important;
+    color: white !important;
+    transform: translateY(-3px) !important;
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Contenido de los tabs - FORZADO */
+.kanban-section .kanban-tab-content {
+    background: white !important;
+    border-radius: 0 0 15px 15px !important;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15) !important;
     overflow: hidden;
-    transition: all 0.3s ease;
+    transition: all 0.4s ease !important;
+    border: 1px solid rgba(0, 0, 0, 0.05) !important;
+    margin-top: 0 !important;
 }
 
 .kanban-tab-content.active {
     animation: fadeInUp 0.4s ease-out;
+}
+
+/* Efectos específicos por tab */
+.kanban-section #my-tasks-kanban-tab.active {
+    background: linear-gradient(135deg, #e8f4fd 0%, #ffffff 100%) !important;
+    color: #2980b9 !important;
+    border: 2px solid #3498db !important;
+}
+
+.kanban-section #my-tasks-kanban-tab.active i {
+    color: #2980b9 !important;
+    filter: drop-shadow(0 2px 4px rgba(41, 128, 185, 0.3));
+}
+
+.kanban-section #team-tasks-kanban-tab.active {
+    background: linear-gradient(135deg, #fdf2e8 0%, #ffffff 100%) !important;
+    color: #e67e22 !important;
+    border: 2px solid #f39c12 !important;
+}
+
+.kanban-section #team-tasks-kanban-tab.active i {
+    color: #e67e22 !important;
+    filter: drop-shadow(0 2px 4px rgba(230, 126, 34, 0.3));
+}
+
+/* Efecto de brillos en hover */
+.kanban-section .kanban-tab-button:hover {
+    background: rgba(255, 255, 255, 0.3) !important;
+    color: white !important;
+    transform: translateY(-3px) scale(1.02) !important;
+    box-shadow: 0 15px 45px rgba(0, 0, 0, 0.25) !important;
 }
 
 @keyframes fadeInUp {
@@ -663,21 +709,45 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 /* Animación de carga mejorada */
-.loading-message {
-    text-align: center;
-    padding: 60px 20px;
-    color: #7f8c8d;
-    font-size: 16px;
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    border-radius: 12px;
-    margin: 20px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+.kanban-section .loading-message {
+    text-align: center !important;
+    padding: 80px 30px !important;
+    color: #5a6c7d !important;
+    font-size: 18px !important;
+    font-weight: 500 !important;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
+    border-radius: 16px !important;
+    margin: 30px !important;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08) !important;
+    border: 1px solid rgba(0, 0, 0, 0.05) !important;
 }
 
-.loading-message i {
-    font-size: 32px;
-    margin-bottom: 16px;
-    color: #3498db;
+.kanban-section .loading-message i {
+    font-size: 48px !important;
+    margin-bottom: 20px !important;
+    color: #3498db !important;
+    animation: pulse 2s infinite !important;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.1); opacity: 0.7; }
+}
+
+/* Efecto de transición entre tabs */
+.kanban-section .kanban-tab-content {
+    animation: slideInFromRight 0.5s ease-out;
+}
+
+@keyframes slideInFromRight {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
 }
 </style>
 
