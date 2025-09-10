@@ -648,7 +648,7 @@ document.addEventListener('DOMContentLoaded', function() {
     border-left: 3px solid #3498db !important;
     position: relative;
     overflow: hidden;
-    min-height: 39px !important;
+    min-height: 42px !important;
     width: calc(100% - 12px) !important;
     display: flex !important;
     flex-direction: column !important;
@@ -681,7 +681,7 @@ document.addEventListener('DOMContentLoaded', function() {
     display: flex !important;
     align-items: center !important;
     gap: 6px !important;
-    min-height: 18px !important;
+    min-height: 20px !important;
 }
 
 .kanban-section .task-checkbox-mini {
@@ -695,7 +695,7 @@ document.addEventListener('DOMContentLoaded', function() {
 .kanban-section .task-name-mini {
     font-weight: 600 !important;
     color: #2c3e50 !important;
-    font-size: 11px !important;
+    font-size: 12px !important;
     line-height: 1.3 !important;
     flex: 1 !important;
     word-wrap: break-word !important;
@@ -712,7 +712,7 @@ document.addEventListener('DOMContentLoaded', function() {
     flex-wrap: wrap !important;
     gap: 2px !important;
     align-items: center !important;
-    max-height: 16px !important;
+    max-height: 18px !important;
     overflow: hidden !important;
 }
 
@@ -721,22 +721,22 @@ document.addEventListener('DOMContentLoaded', function() {
     display: inline-flex !important;
     align-items: center !important;
     gap: 3px !important;
-    font-size: 8px !important;
+    font-size: 9px !important;
     font-weight: 600 !important;
-    padding: 2px 4px !important;
+    padding: 2px 5px !important;
     border-radius: 8px !important;
     text-transform: uppercase !important;
     letter-spacing: 0.2px !important;
     white-space: nowrap !important;
     border: 1px solid transparent !important;
     transition: all 0.2s ease !important;
-    max-width: 70px !important;
+    max-width: 75px !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
 }
 
 .task-tag i {
-    font-size: 7px !important;
+    font-size: 8px !important;
 }
 
 /* Etiqueta de proyecto */
