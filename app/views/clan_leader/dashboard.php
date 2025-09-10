@@ -837,29 +837,29 @@ document.addEventListener('DOMContentLoaded', function() {
 
 /* ========== ESTILOS PARA SUBTAREAS ========== */
 
-/* Cards de subtareas ultra micro */
+/* Cards de subtareas del mismo tamaño que tareas principales */
 .kanban-section .subtask-card-micro {
-    margin: 2px 4px !important;
-    padding: 3px 5px !important;
+    margin: 3px 6px !important;
+    padding: 6px 8px !important;
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
-    border-radius: 4px !important;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+    border-radius: 6px !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05) !important;
     transition: all 0.2s ease !important;
-    border-left: 2px solid #6c757d !important;
+    border-left: 3px solid #6c757d !important;
     position: relative;
     overflow: hidden;
-    min-height: 28px !important;
-    width: calc(100% - 8px) !important;
+    min-height: 42px !important;
+    width: calc(100% - 12px) !important;
     display: flex !important;
     flex-direction: column !important;
-    gap: 2px !important;
-    opacity: 0.9 !important;
+    gap: 3px !important;
+    opacity: 0.95 !important;
     border: 1px solid rgba(108, 117, 125, 0.2) !important;
 }
 
 .subtask-card-micro:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.10);
     opacity: 1 !important;
 }
 
@@ -886,55 +886,55 @@ document.addEventListener('DOMContentLoaded', function() {
 
 /* Icono de subtarea */
 .subtask-icon {
-    font-size: 7px !important;
+    font-size: 8px !important;
     color: #6c757d !important;
-    margin-right: 3px !important;
-    opacity: 0.7 !important;
+    margin-right: 4px !important;
+    opacity: 0.8 !important;
 }
 
 /* Indicador de tarea padre */
 .parent-task-hint {
-    font-size: 8px !important;
+    font-size: 9px !important;
     color: #6c757d !important;
-    margin-left: 4px !important;
-    opacity: 0.6 !important;
+    margin-left: 5px !important;
+    opacity: 0.7 !important;
     cursor: help !important;
 }
 
-/* Etiquetas de subtareas más pequeñas */
+/* Etiquetas de subtareas del mismo tamaño que las principales */
 .kanban-section .subtask-tag {
-    font-size: 6px !important;
-    padding: 1px 2px !important;
-    border-radius: 4px !important;
-    max-width: 40px !important;
-    opacity: 0.8 !important;
+    font-size: 8px !important;
+    padding: 2px 4px !important;
+    border-radius: 6px !important;
+    max-width: 65px !important;
+    opacity: 0.9 !important;
 }
 
 .kanban-section .subtask-tag i {
-    font-size: 5px !important;
+    font-size: 7px !important;
 }
 
 /* Ajustes específicos para subtareas en el header */
 .subtask-card-micro .task-header-mini {
-    min-height: 14px !important;
-    gap: 3px !important;
+    min-height: 20px !important;
+    gap: 6px !important;
 }
 
 .subtask-card-micro .task-name-mini {
-    font-size: 9px !important;
-    line-height: 1.2 !important;
+    font-size: 11px !important;
+    line-height: 1.3 !important;
     color: #495057 !important;
-    font-weight: 500 !important;
+    font-weight: 600 !important;
 }
 
 .subtask-card-micro .task-checkbox-mini {
-    transform: scale(0.7) !important;
+    transform: scale(0.9) !important;
 }
 
 /* Contenedor de etiquetas para subtareas */
 .subtask-card-micro .task-tags-mini {
-    max-height: 12px !important;
-    gap: 1px !important;
+    max-height: 18px !important;
+    gap: 2px !important;
 }
 
 /* Animación sutil para subtareas */
@@ -956,18 +956,18 @@ document.addEventListener('DOMContentLoaded', function() {
 /* Responsive para subtareas */
 @media (max-width: 768px) {
     .subtask-card-micro {
-        margin: 1px 2px !important;
-        padding: 2px 3px !important;
-        min-height: 24px !important;
+        margin: 2px 4px !important;
+        padding: 4px 6px !important;
+        min-height: 36px !important;
     }
     
     .subtask-card-micro .task-name-mini {
-        font-size: 8px !important;
+        font-size: 10px !important;
     }
     
     .kanban-section .subtask-tag {
-        font-size: 5px !important;
-        max-width: 30px !important;
+        font-size: 7px !important;
+        max-width: 50px !important;
     }
 }
 
