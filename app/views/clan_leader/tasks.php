@@ -320,7 +320,7 @@ ob_start();
 /* Reset y Base */
 .clan-leader-tasks-container {
     min-height: 100vh;
-    background: #f5f7fa;
+    background: transparent;
     padding: 0;
     margin: 0;
 }
@@ -3521,7 +3521,7 @@ console.log('🚀 Tasks.php cargado - Versión 6.0 - Debug activo');
 
 /* Contenido de tareas */
 .tasks-content-minimal {
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    background: transparent;
     border-radius: 12px;
     padding: 20px;
     min-height: 350px;
