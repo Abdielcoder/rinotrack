@@ -3035,9 +3035,14 @@ function switchTab(tabName) {
 
 // Función para cargar mis tareas
 function loadMyTasks() {
+    console.log('🔵 loadMyTasks() iniciado');
     const tbody = document.getElementById('my-tasks-table-body');
-    if (!tbody) return;
+    if (!tbody) {
+        console.error('🔴 No se encontró tbody: my-tasks-table-body');
+        return;
+    }
     
+    console.log('✅ tbody encontrado, cargando...');
     tbody.innerHTML = '<tr class="loading"><td colspan="8" class="text-center"><i class="fas fa-spinner fa-spin"></i> Cargando mis tareas...</td></tr>';
     
     // Agregar timestamp para evitar cache
@@ -3050,9 +3055,11 @@ function loadMyTasks() {
     })
         .then(response => response.json())
         .then(data => {
-            console.log('=== DEBUG loadMyTasks FRONTEND ===');
-            console.log('Full response:', data);
-            console.log('Backend debug:', data.debug_backend);
+            console.log('🔵 === DEBUG loadMyTasks RESPUESTA ===');
+            console.log('🔵 Respuesta completa:', data);
+            console.log('🔵 Success:', data.success);
+            console.log('🔵 Tasks count:', data.tasks ? data.tasks.length : 'NO TASKS');
+            console.log('🔵 Debug backend:', data.debug_backend);
             if (data.success) {
                 console.log('Tasks count from backend:', data.tasks.length);
                 console.log('Tasks received:');
@@ -3075,8 +3082,13 @@ function loadMyTasks() {
 
 // Función para cargar tareas del equipo
 function loadTeamTasks() {
+    console.log('🟡 loadTeamTasks() iniciado');
     const tbody = document.getElementById('team-tasks-table-body');
-    if (!tbody) return;
+    if (!tbody) {
+        console.error('🔴 No se encontró tbody: team-tasks-table-body');
+        return;
+    }
+    console.log('✅ tbody del equipo encontrado, cargando...');
     
     tbody.innerHTML = '<tr class="loading"><td colspan="9" class="text-center"><i class="fas fa-spinner fa-spin"></i> Cargando tareas del equipo...</td></tr>';
     
@@ -3090,9 +3102,11 @@ function loadTeamTasks() {
     })
         .then(response => response.json())
         .then(data => {
-            console.log('=== DEBUG loadTeamTasks FRONTEND ===');
-            console.log('Full response:', data);
-            console.log('Backend debug:', data.debug_backend);
+            console.log('🟡 === DEBUG loadTeamTasks RESPUESTA ===');
+            console.log('🟡 Respuesta completa:', data);
+            console.log('🟡 Success:', data.success);
+            console.log('🟡 Tasks count:', data.tasks ? data.tasks.length : 'NO TASKS');
+            console.log('🟡 Debug backend:', data.debug_backend);
             if (data.success) {
                 console.log('Team tasks count from backend:', data.tasks.length);
                 console.log('Team tasks received:');
@@ -3301,9 +3315,10 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Timestamp para forzar recarga: <?= time() ?>
-// Cache-bust version: v5.0.<?= date('His') ?>
+// Cache-bust version: v6.0.<?= date('His') ?>
 // Updated: <?= date('Y-m-d H:i:s') ?>
 // DEBUG MODE: ENABLED
+console.log('🚀 Tasks.php cargado - Versión 6.0 - Debug activo');
 </script>
 
 <!-- Estilos para el modal de clonación -->
