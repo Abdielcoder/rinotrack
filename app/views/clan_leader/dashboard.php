@@ -240,16 +240,16 @@ function renderMyKanbanBoard(kanbanTasks) {
                 <div class="task-tags-mini">
                     <span class="task-tag project-tag ${isPersonal ? 'personal' : 'clan'}">
                         ${isPersonal ? 
-                            '<i class="fas fa-user"></i> Personal' : 
-                            '<i class="fas fa-users"></i> ' + (task.project_name || 'Sin proyecto')
+                            '<i class="fas fa-user"></i>' : 
+                            '<i class="fas fa-users"></i>'
                         }
                     </span>
-                    ${task.assigned_user_name ? `<span class="task-tag assignee-tag"><i class="fas fa-user-tag"></i> ${task.assigned_user_name}</span>` : ''}
+                    ${task.assigned_user_name ? `<span class="task-tag assignee-tag" title="${task.assigned_user_name}"><i class="fas fa-user-tag"></i></span>` : ''}
                     <span class="task-tag due-tag ${columnClass}">
-                        ${column === 'vencidas' ? '<i class="fas fa-exclamation-triangle"></i> Vencida' : 
-                          column === 'hoy' ? '<i class="fas fa-clock"></i> Hoy' :
-                          column === 'semana1' ? '<i class="fas fa-calendar"></i> 1 sem' :
-                          '<i class="fas fa-calendar-plus"></i> ' + (task.days_until_due || '0') + 'd'}
+                        ${column === 'vencidas' ? '<i class="fas fa-exclamation-triangle"></i>' : 
+                          column === 'hoy' ? '<i class="fas fa-clock"></i>' :
+                          column === 'semana1' ? '<i class="fas fa-calendar"></i>' :
+                          '<i class="fas fa-calendar-plus"></i>'}
                     </span>
                 </div>
             </div>`;
@@ -295,15 +295,15 @@ function renderTeamKanbanBoard(kanbanTasks) {
                     </div>
                 </div>
                 <div class="task-tags-mini">
-                    <span class="task-tag project-tag team">
-                        <i class="fas fa-users"></i> ${task.project_name || 'Sin proyecto'}
+                    <span class="task-tag project-tag team" title="${task.project_name || 'Sin proyecto'}">
+                        <i class="fas fa-users"></i>
                     </span>
-                    ${task.assigned_user_name ? `<span class="task-tag assignee-tag"><i class="fas fa-user-tag"></i> ${task.assigned_user_name}</span>` : ''}
+                    ${task.assigned_user_name ? `<span class="task-tag assignee-tag" title="${task.assigned_user_name}"><i class="fas fa-user-tag"></i></span>` : ''}
                     <span class="task-tag due-tag ${columnClass}">
-                        ${column === 'vencidas' ? '<i class="fas fa-exclamation-triangle"></i> Vencida' : 
-                          column === 'hoy' ? '<i class="fas fa-clock"></i> Hoy' :
-                          column === 'semana1' ? '<i class="fas fa-calendar"></i> 1 sem' :
-                          '<i class="fas fa-calendar-plus"></i> ' + (task.days_until_due || '0') + 'd'}
+                        ${column === 'vencidas' ? '<i class="fas fa-exclamation-triangle"></i>' : 
+                          column === 'hoy' ? '<i class="fas fa-clock"></i>' :
+                          column === 'semana1' ? '<i class="fas fa-calendar"></i>' :
+                          '<i class="fas fa-calendar-plus"></i>'}
                     </span>
                 </div>
             </div>`;
@@ -637,27 +637,27 @@ document.addEventListener('DOMContentLoaded', function() {
     background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
 }
 
-/* Tarjetas de tareas mini con diseño compacto */
+/* Tarjetas de tareas ultra mini con altura reducida 3x */
 .kanban-section .task-card-mini {
-    margin: 6px 8px !important;
-    padding: 10px !important;
+    margin: 2px 4px !important;
+    padding: 4px 6px !important;
     background: white !important;
-    border-radius: 8px !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+    border-radius: 4px !important;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04) !important;
     transition: all 0.2s ease !important;
-    border-left: 3px solid #3498db !important;
+    border-left: 2px solid #3498db !important;
     position: relative;
     overflow: hidden;
-    min-height: 80px !important;
-    width: calc(100% - 16px) !important;
+    min-height: 26px !important;
+    width: calc(100% - 8px) !important;
     display: flex !important;
     flex-direction: column !important;
-    gap: 8px !important;
+    gap: 2px !important;
 }
 
 .task-card-mini:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .task-card-mini.overdue {
@@ -676,57 +676,67 @@ document.addEventListener('DOMContentLoaded', function() {
     border-left-color: #27ae60;
 }
 
-/* Header de la tarea mini */
+/* Header de la tarea ultra mini */
 .kanban-section .task-header-mini {
     display: flex !important;
-    align-items: flex-start !important;
-    gap: 8px !important;
+    align-items: center !important;
+    gap: 4px !important;
+    min-height: 14px !important;
 }
 
 .kanban-section .task-checkbox-mini {
-    margin-top: 2px !important;
-    transform: scale(1.1) !important;
+    margin: 0 !important;
+    transform: scale(0.8) !important;
     cursor: pointer !important;
+    flex-shrink: 0 !important;
 }
 
-/* Nombre de la tarea mini */
+/* Nombre de la tarea ultra mini */
 .kanban-section .task-name-mini {
     font-weight: 600 !important;
     color: #2c3e50 !important;
-    font-size: 12px !important;
-    line-height: 1.3 !important;
+    font-size: 10px !important;
+    line-height: 1.2 !important;
     flex: 1 !important;
     word-wrap: break-word !important;
     overflow-wrap: break-word !important;
     margin: 0 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
 }
 
-/* Contenedor de etiquetas */
+/* Contenedor de etiquetas ultra compacto */
 .kanban-section .task-tags-mini {
     display: flex !important;
     flex-wrap: wrap !important;
-    gap: 4px !important;
+    gap: 1px !important;
     align-items: center !important;
+    max-height: 12px !important;
+    overflow: hidden !important;
 }
 
-/* Etiquetas base */
+/* Etiquetas ultra mini */
 .kanban-section .task-tag {
     display: inline-flex !important;
     align-items: center !important;
-    gap: 4px !important;
-    font-size: 9px !important;
+    gap: 2px !important;
+    font-size: 7px !important;
     font-weight: 600 !important;
-    padding: 3px 6px !important;
-    border-radius: 12px !important;
+    padding: 1px 3px !important;
+    border-radius: 6px !important;
     text-transform: uppercase !important;
-    letter-spacing: 0.3px !important;
+    letter-spacing: 0.1px !important;
     white-space: nowrap !important;
     border: 1px solid transparent !important;
     transition: all 0.2s ease !important;
+    max-width: 60px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
 }
 
 .task-tag i {
-    font-size: 8px !important;
+    font-size: 6px !important;
 }
 
 /* Etiqueta de proyecto */
@@ -805,10 +815,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 }
 
-/* Efectos hover para las etiquetas */
+/* Efectos hover para las etiquetas ultra mini */
 .kanban-section .task-tag:hover {
-    transform: scale(1.05) !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+    transform: scale(1.1) !important;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12) !important;
+    z-index: 10 !important;
 }
 
 /* Responsive design mejorado */
