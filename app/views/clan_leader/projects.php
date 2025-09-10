@@ -159,10 +159,6 @@ ob_start();
                                 <i class="fas fa-plus"></i>
                                 Nueva Tarea
                             </button>
-                            <a href="?route=clan_leader/project_tasks&project_id=<?= $project['project_id'] ?>" class="btn-minimal info">
-                                <i class="fas fa-list"></i>
-                                Gestionar
-                            </a>
                         </div>
                         
                         <!-- Nota: La sección colapsable se ha removido - ahora se usa navegación directa -->
@@ -949,10 +945,10 @@ function toggleProjectDelegation(projectId, isAllowed) {
     font-size: 16px;
 }
 
-/* Acciones minimalistas */
+/* Acciones minimalistas - 2 botones */
 .project-actions-minimal {
     display: flex;
-    gap: 8px;
+    gap: 12px;
     flex-wrap: wrap;
 }
 
@@ -960,20 +956,9 @@ function toggleProjectDelegation(projectId, isAllowed) {
     flex: 1;
     min-width: 0;
     justify-content: center;
-    padding: 10px 12px;
-    font-size: 13px;
-}
-
-.project-actions-minimal .btn-minimal.info {
-    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
-    color: white;
-    border: none;
-}
-
-.project-actions-minimal .btn-minimal.info:hover {
-    background: linear-gradient(135deg, #138496 0%, #0f6674 100%);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(23, 162, 184, 0.3);
+    padding: 12px 16px;
+    font-size: 14px;
+    font-weight: 600;
 }
 
 /* Estado vacío minimalista */
