@@ -4045,6 +4045,20 @@ class ClanLeaderController {
             // Combinar tareas y subtareas
             $allTasks = array_merge($allTasks, $subtasks);
             
+            // Eliminar duplicados por task_id (en caso de que existan)
+            $uniqueTasks = [];
+            $seenIds = [];
+            foreach ($allTasks as $task) {
+                $taskId = $task['task_id'];
+                if (!in_array($taskId, $seenIds)) {
+                    $uniqueTasks[] = $task;
+                    $seenIds[] = $taskId;
+                } else {
+                    error_log("DEBUG: Duplicado detectado y eliminado - Task ID: $taskId");
+                }
+            }
+            $allTasks = $uniqueTasks;
+            
             error_log("DEBUG getMyKanbanTasks - Total tareas encontradas: " . count($allTasks) . " (incluyendo " . count($subtasks) . " subtareas)");
             
             // Procesar las tareas para agregar days_until_due si no existe
@@ -4056,8 +4070,14 @@ class ClanLeaderController {
                         $task['days_until_due'] = 999;
                     }
                 }
-                $task['item_type'] = 'task';
+                // Solo establecer item_type si no existe
+                if (!isset($task['item_type'])) {
+                    $task['item_type'] = 'task';
+                }
                 $task['is_completed'] = 0;
+                
+                // Debug logging para identificar duplicados
+                error_log("DEBUG Task: ID={$task['task_id']}, Name={$task['task_name']}, Type={$task['item_type']}, Project={$task['project_name']}, Days={$task['days_until_due']}");
             }
             
             // Organizar tareas en columnas Kanban
@@ -4084,10 +4104,21 @@ class ClanLeaderController {
             
             error_log("DEBUG getMyKanbanTasks - Kanban distribution: vencidas=" . count($kanbanTasks['vencidas']) . ", hoy=" . count($kanbanTasks['hoy']) . ", semana1=" . count($kanbanTasks['semana1']) . ", semana2=" . count($kanbanTasks['semana2']));
 
+            // Log detallado de las tareas en "hoy" para debug
+            foreach ($kanbanTasks['hoy'] as $task) {
+                error_log("DEBUG HOY Task: ID={$task['task_id']}, Name={$task['task_name']}, Project={$task['project_name']}");
+            }
+
             Utils::jsonResponse([
                 'success' => true,
                 'kanbanTasks' => $kanbanTasks,
-                'total' => count($allTasks)
+                'total' => count($allTasks),
+                'debug' => [
+                    'userId' => $userId,
+                    'clanId' => $clanId,
+                    'totalTasks' => count($allTasks),
+                    'taskIds' => array_column($allTasks, 'task_id')
+                ]
             ]);
 
         } catch (Exception $e) {
