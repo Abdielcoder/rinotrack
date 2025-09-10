@@ -67,29 +67,6 @@ ob_start();
                 </div>
             </div> <!-- Cierre del team-tasks-kanban-content -->
         </section>
-
-        <!-- Progreso General del Equipo -->
-        <section class="team-progress-section">
-            <div class="progress-header">
-                <h3>Progreso General del Equipo</h3>
-                <button id="toggleSectionsBtn" class="btn-toggle-sections" onclick="toggleSections()">
-                    <i class="fas fa-chevron-down"></i>
-                </button>
-            </div>
-            
-            <!-- El contenido del progreso se carga dinámicamente -->
-        </section>
-
-        <!-- Secciones ocultables -->
-        <div id="hideable-sections" style="display: none;">
-        
-        <!-- Contribuciones por Colaborador -->
-        <section class="contributions-section">
-            <h3>Contribuciones por Colaborador</h3>
-            <!-- El contenido se carga dinámicamente -->
-        </section>
-        
-        </div> <!-- Cierre de hideable-sections -->
     </div> <!-- Cierre de content-minimal -->
 </div> <!-- Cierre de clan-leader-dashboard minimal -->
 
@@ -196,17 +173,22 @@ function loadTeamKanbanTasks() {
     
     kanbanBoard.innerHTML = '<div class="loading-message"><i class="fas fa-spinner fa-spin"></i> Cargando tareas del equipo...</div>';
     
-    fetch('?route=clan_leader/get-team-tasks')
+    fetch('?route=clan_leader/get-my-kanban-tasks')
         .then(response => response.json())
         .then(data => {
             console.log('🟡 === RESPUESTA TEAM KANBAN ===');
             console.log('🟡 Success:', data.success);
-            console.log('🟡 Tasks received:', data.tasks ? data.tasks.length : 0);
+            console.log('🟡 Data received:', data);
             
-            if (data.success && data.tasks) {
-                // Organizar las tareas en columnas Kanban
-                const kanbanTasks = organizeTasksInKanban(data.tasks);
-                renderTeamKanbanBoard(kanbanTasks);
+            if (data.success) {
+                // Para el tab de equipo, mostrar mensaje informativo por ahora
+                const emptyKanbanTasks = {
+                    'vencidas': [],
+                    'hoy': [],
+                    'semana1': [],
+                    'semana2': []
+                };
+                renderTeamKanbanBoard(emptyKanbanTasks, true);
             } else {
                 kanbanBoard.innerHTML = '<div class="loading-message text-danger">Error: ' + (data.message || 'Error desconocido') + '</div>';
             }
@@ -261,10 +243,22 @@ function renderMyKanbanBoard(kanbanTasks) {
     kanbanBoard.innerHTML = html;
 }
 
-function renderTeamKanbanBoard(kanbanTasks) {
+function renderTeamKanbanBoard(kanbanTasks, showInfoMessage = false) {
     console.log('🟠 renderTeamKanbanBoard() iniciado');
     const kanbanBoard = document.getElementById('team-tasks-kanban-board');
     if (!kanbanBoard) return;
+    
+    if (showInfoMessage) {
+        kanbanBoard.innerHTML = `
+            <div class="loading-message" style="color: #666; font-size: 16px; padding: 40px; text-align: center;">
+                <i class="fas fa-info-circle" style="font-size: 48px; color: #3498db; margin-bottom: 20px;"></i>
+                <h3 style="margin-bottom: 10px;">Tareas del Equipo</h3>
+                <p>Esta sección mostrará las tareas asignadas a los miembros de tu equipo.</p>
+                <p style="color: #888; font-size: 14px;">Funcionalidad en desarrollo</p>
+            </div>
+        `;
+        return;
+    }
     
     const columns = ['vencidas', 'hoy', 'semana1', 'semana2'];
     const columnTitles = {
@@ -364,21 +358,6 @@ function closeAddTaskModal() {
     if (modal) modal.style.display = 'none';
 }
 
-function toggleSections() {
-    console.log('🔧 toggleSections');
-    const sections = document.getElementById('hideable-sections');
-    const button = document.getElementById('toggleSectionsBtn');
-    
-    if (sections && button) {
-        if (sections.style.display === 'none') {
-            sections.style.display = 'block';
-            button.innerHTML = '<i class="fas fa-chevron-up"></i>';
-        } else {
-            sections.style.display = 'none';
-            button.innerHTML = '<i class="fas fa-chevron-down"></i>';
-        }
-    }
-}
 
 // Inicializar cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', function() {
