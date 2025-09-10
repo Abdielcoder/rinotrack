@@ -3050,14 +3050,20 @@ function loadMyTasks() {
     })
         .then(response => response.json())
         .then(data => {
-            console.log('DEBUG loadMyTasks response:', data);
+            console.log('=== DEBUG loadMyTasks FRONTEND ===');
+            console.log('Full response:', data);
+            console.log('Backend debug:', data.debug_backend);
             if (data.success) {
-                console.log('DEBUG loadMyTasks tasks count:', data.tasks.length);
-                data.tasks.forEach(task => {
-                    console.log(`DEBUG My Task: ID=${task.task_id}, Name=${task.task_name}, Project=${task.project_name}`);
+                console.log('Tasks count from backend:', data.tasks.length);
+                console.log('Tasks received:');
+                data.tasks.forEach((task, index) => {
+                    console.log(`  [${index}] ID=${task.task_id}, Name="${task.task_name}", Project="${task.project_name}", Assigned="${task.assigned_user_name || 'None'}"`);
                 });
+                console.log('Calling renderTasksTable...');
                 renderTasksTable(data.tasks, 'my-tasks-table-body');
+                console.log('=== END loadMyTasks FRONTEND ===');
             } else {
+                console.error('Error loading my tasks:', data.message);
                 tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Error al cargar tareas: ' + data.message + '</td></tr>';
             }
         })
@@ -3084,14 +3090,20 @@ function loadTeamTasks() {
     })
         .then(response => response.json())
         .then(data => {
-            console.log('DEBUG loadTeamTasks response:', data);
+            console.log('=== DEBUG loadTeamTasks FRONTEND ===');
+            console.log('Full response:', data);
+            console.log('Backend debug:', data.debug_backend);
             if (data.success) {
-                console.log('DEBUG loadTeamTasks tasks count:', data.tasks.length);
-                data.tasks.forEach(task => {
-                    console.log(`DEBUG Team Task: ID=${task.task_id}, Name=${task.task_name}, Project=${task.project_name}, Assigned=${task.assigned_user_name}`);
+                console.log('Team tasks count from backend:', data.tasks.length);
+                console.log('Team tasks received:');
+                data.tasks.forEach((task, index) => {
+                    console.log(`  [${index}] ID=${task.task_id}, Name="${task.task_name}", Project="${task.project_name}", Assigned="${task.assigned_user_name || 'None'}"`);
                 });
+                console.log('Calling renderTeamTasksTable...');
                 renderTeamTasksTable(data.tasks, 'team-tasks-table-body');
+                console.log('=== END loadTeamTasks FRONTEND ===');
             } else {
+                console.error('Error loading team tasks:', data.message);
                 tbody.innerHTML = '<tr><td colspan="9" class="text-center text-danger">Error al cargar tareas del equipo: ' + data.message + '</td></tr>';
             }
         })
@@ -3190,10 +3202,17 @@ function renderTeamTasksTable(tasks, tbodyId) {
 
 // Función para renderizar tabla de tareas (mis tareas)
 function renderTasksTable(tasks, tbodyId) {
+    console.log('=== DEBUG renderTasksTable FRONTEND ===');
+    console.log('Rendering', tasks.length, 'tasks to tbody:', tbodyId);
+    
     const tbody = document.getElementById(tbodyId);
-    if (!tbody) return;
+    if (!tbody) {
+        console.error('tbody not found:', tbodyId);
+        return;
+    }
     
     if (tasks.length === 0) {
+        console.log('No tasks to render, showing empty message');
         tbody.innerHTML = '<tr class="empty"><td colspan="8" class="text-center"><i class="fas fa-inbox"></i><br>No hay tareas disponibles</td></tr>';
         return;
     }
@@ -3282,8 +3301,9 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Timestamp para forzar recarga: <?= time() ?>
-// Cache-bust version: v4.0.<?= date('His') ?>
+// Cache-bust version: v5.0.<?= date('His') ?>
 // Updated: <?= date('Y-m-d H:i:s') ?>
+// DEBUG MODE: ENABLED
 </script>
 
 <!-- Estilos para el modal de clonación -->

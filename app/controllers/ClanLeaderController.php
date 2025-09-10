@@ -3843,6 +3843,15 @@ class ClanLeaderController {
             
             $tasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
+            // Log detallado de la consulta getMyTasks
+            error_log("=== DEBUG getMyTasks - BACKEND ===");
+            error_log("User ID: $userId, Clan ID: $clanId");
+            error_log("Total tasks found: " . count($tasks));
+            foreach ($tasks as $task) {
+                error_log("My Task: ID={$task['task_id']}, Name={$task['task_name']}, Project={$task['project_name']}, Assigned={$task['assigned_user_name']}");
+            }
+            error_log("=== END getMyTasks ===");
+            
             // Asegurar que tasks es un array
             if (!is_array($tasks)) {
                 $tasks = [];
@@ -3851,7 +3860,14 @@ class ClanLeaderController {
             Utils::jsonResponse([
                 'success' => true,
                 'tasks' => $tasks,
-                'total' => count($tasks)
+                'total' => count($tasks),
+                'debug_backend' => [
+                    'query_type' => 'getMyTasks',
+                    'user_id' => $userId,
+                    'clan_id' => $clanId,
+                    'task_count' => count($tasks),
+                    'task_ids' => array_column($tasks, 'task_id')
+                ]
             ]);
 
         } catch (Exception $e) {
@@ -3933,6 +3949,15 @@ class ClanLeaderController {
             
             $tasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
+            // Log detallado de la consulta getTeamTasks
+            error_log("=== DEBUG getTeamTasks - BACKEND ===");
+            error_log("User ID: $userId, Clan ID: $clanId");
+            error_log("Total team tasks found: " . count($tasks));
+            foreach ($tasks as $task) {
+                error_log("Team Task: ID={$task['task_id']}, Name={$task['task_name']}, Project={$task['project_name']}, Assigned={$task['assigned_user_name']}");
+            }
+            error_log("=== END getTeamTasks ===");
+            
             // Asegurar que tasks es un array
             if (!is_array($tasks)) {
                 $tasks = [];
@@ -3942,9 +3967,12 @@ class ClanLeaderController {
                 'success' => true,
                 'tasks' => $tasks,
                 'total' => count($tasks),
-                'debug' => [
-                    'userId' => $userId,
-                    'clanId' => $clanId,
+                'debug_backend' => [
+                    'query_type' => 'getTeamTasks',
+                    'user_id' => $userId,
+                    'clan_id' => $clanId,
+                    'task_count' => count($tasks),
+                    'task_ids' => array_column($tasks, 'task_id'),
                     'excludedLeaderTasks' => 'Tasks assigned to leader are excluded from team view'
                 ]
             ]);
