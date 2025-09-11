@@ -122,8 +122,8 @@ class ClanLeaderController {
         error_log("Task Stats: " . json_encode($taskStats));
         error_log("Member Contributions Count: " . count($memberContributions));
 
-        // Obtener tareas para el tablero Kanban (incluye tareas de otros clanes, EXCLUYENDO tareas personales del líder)
-        $kanbanTasks = $this->getKanbanTasksForLeader($this->currentUser['user_id'], $this->userClan['clan_id'], true);
+        // Obtener tareas para el tablero Kanban (incluye tareas de otros clanes, INCLUYENDO todas las tareas asignadas al usuario)
+        $kanbanTasks = $this->getKanbanTasksForLeader($this->currentUser['user_id'], $this->userClan['clan_id'], false);
         
         $data = [
             'userStats' => $this->getUserStats(),
@@ -1067,11 +1067,8 @@ class ClanLeaderController {
             // - MÁS tareas personales del líder actual
             $clanTasks = $this->taskModel->getAllTasksByClanStrict($this->userClan['clan_id'], $page, $perPage, $search, $statusFilter);
 
-            // Obtener tareas recurrentes y eventuales del usuario (simple: por assigned_to_user_id)
-            $ownLogical = $this->taskModel->getUserTasksByProjectNames(
-                $this->currentUser['user_id'],
-                ['Tareas Recurrentes', 'Tareas Eventuales', 'Mis Tareas Recurrentes']
-            );
+            // Obtener TODAS las tareas asignadas al usuario de proyectos recurrentes y eventuales (sin filtro de clan)
+            $ownLogical = $this->getRecurrentAndEventualTasks($this->currentUser['user_id']);
 
             // Obtener tareas personales del líder actual
             $ownPersonalTasks = $this->taskModel->getPersonalTasksForClanLeader(
@@ -4962,6 +4959,48 @@ class ClanLeaderController {
     }
     
     /**
+     * Obtener tareas recurrentes y eventuales asignadas al usuario (sin filtro de clan)
+     */
+    private function getRecurrentAndEventualTasks($userId) {
+        try {
+            $stmt = $this->db->prepare("
+                SELECT 
+                    t.task_id,
+                    t.task_name,
+                    t.description,
+                    t.due_date,
+                    t.priority,
+                    t.status,
+                    t.completion_percentage,
+                    t.automatic_points,
+                    t.created_by_user_id,
+                    p.project_name,
+                    p.project_id,
+                    p.project_type,
+                    p.clan_id,
+                    DATEDIFF(t.due_date, CURDATE()) as days_until_due
+                FROM Tasks t
+                JOIN Projects p ON t.project_id = p.project_id
+                LEFT JOIN Task_Assignments ta ON ta.task_id = t.task_id
+                WHERE t.is_subtask = 0
+                  AND (t.assigned_to_user_id = ? OR ta.user_id = ?)
+                  AND (
+                    p.project_name IN ('Tareas Recurrentes', 'Tareas Eventuales', 'Mis Tareas Recurrentes')
+                    OR p.project_type = 'recurrent'
+                  )
+                ORDER BY t.due_date ASC, t.task_id ASC
+            ");
+            
+            $stmt->execute([$userId, $userId]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+        } catch (Exception $e) {
+            error_log("Error en getRecurrentAndEventualTasks: " . $e->getMessage());
+            return [];
+        }
+    }
+    
+    /**
      * Mostrar página de edición de tarea
      */
     public function taskEdit() {
@@ -5206,9 +5245,9 @@ class ClanLeaderController {
     private function getKanbanTasksForLeader($userId, $primaryClanId, $excludePersonalTasks = false) {
         try {
             
-            // Obtener TODAS las tareas donde miembros del clan estén asignados + tareas del clan
-            $stmt = $this->db->prepare(
-                "SELECT 
+            // CONSULTA SIMPLE: Obtener TODAS las tareas asignadas al usuario
+            $stmt = $this->db->prepare("
+                SELECT 
                     t.task_id,
                     t.task_name,
                     t.description,
@@ -5220,6 +5259,7 @@ class ClanLeaderController {
                     p.project_name,
                     p.project_id,
                     p.project_type,
+                    p.is_personal,
                     p.clan_id,
                     c.clan_name,
                     u_assigned.full_name as assigned_to_name,
@@ -5228,88 +5268,38 @@ class ClanLeaderController {
                         WHEN t.due_date IS NULL THEN 999
                         ELSE DATEDIFF(t.due_date, CURDATE())
                     END as days_until_due,
-                    CASE 
-                        WHEN p.clan_id = ? THEN 1
-                        ELSE 0
-                    END as is_primary_clan,
                     'task' as item_type
-                 FROM Tasks t
-                 INNER JOIN Projects p ON p.project_id = t.project_id
-                 LEFT JOIN Clans c ON p.clan_id = c.clan_id
-                 LEFT JOIN Task_Assignments ta ON ta.task_id = t.task_id
-                 LEFT JOIN Clan_Members cm ON (t.assigned_to_user_id = cm.user_id OR ta.user_id = cm.user_id)
-                 LEFT JOIN Users u_assigned ON t.assigned_to_user_id = u_assigned.user_id
-                 WHERE (
-                        -- Tareas del clan principal (todas)
-                        (p.clan_id = ? AND (p.is_personal IS NULL OR p.is_personal != 1))
-                        " . ($excludePersonalTasks ? "" : "
-                        -- Tareas personales del clan principal del usuario
-                        OR (p.clan_id = ? AND p.is_personal = 1 AND p.created_by_user_id = ? AND (
-                            t.assigned_to_user_id = ? OR t.created_by_user_id = ?
-                        ))") . "
-                        -- Tareas recurrentes y eventuales asignadas al usuario
-                        OR (p.project_name IN ('Tareas Recurrentes', 'Tareas Eventuales', 'Mis Tareas Recurrentes') AND (
-                            t.assigned_to_user_id = ? OR ta.user_id = ?
-                        ))
-                        -- Tareas de OTROS clanes donde CUALQUIER miembro del clan esté asignado
-                        OR (p.clan_id != ? AND (
-                            t.assigned_to_user_id IN (SELECT user_id FROM Clan_Members WHERE clan_id = ?)
-                            OR ta.user_id IN (SELECT user_id FROM Clan_Members WHERE clan_id = ?)
-                            OR ta.user_id = ?
-                        ))
-                        -- Tareas de OTROS clanes donde CUALQUIER miembro del clan esté asignado
-                        OR (p.clan_id != ? AND cm.clan_id = ? AND cm.clan_id IS NOT NULL)
-                       )
-                   AND t.is_subtask = 0
-                   AND t.status != 'completed'
-                   AND t.status != 'cancelled'
-                 GROUP BY t.task_id
-                 ORDER BY is_primary_clan DESC, t.due_date ASC, t.task_id ASC"
-            );
+                FROM Tasks t
+                JOIN Projects p ON p.project_id = t.project_id
+                LEFT JOIN Clans c ON p.clan_id = c.clan_id
+                LEFT JOIN Task_Assignments ta ON ta.task_id = t.task_id
+                LEFT JOIN Users u_assigned ON t.assigned_to_user_id = u_assigned.user_id
+                WHERE t.is_subtask = 0
+                  AND t.status != 'completed'
+                  AND t.status != 'cancelled'
+                  AND (t.assigned_to_user_id = ? OR ta.user_id = ?)
+                ORDER BY t.due_date ASC, t.task_id ASC
+            ");
             
-            if ($excludePersonalTasks) {
-                $params = [
-                    $primaryClanId, // is_primary_clan CASE
-                    $primaryClanId, // tareas del clan principal
-                    $userId, $userId, // tareas recurrentes/eventuales asignadas al usuario
-                    $primaryClanId, // para excluir clan principal de otros clanes
-                    $primaryClanId, $primaryClanId, // miembros asignados en otros clanes
-                    $userId, // usuario específico en otros clanes
-                    $primaryClanId, $primaryClanId // clan de los miembros asignados en otros clanes
-                ];
-            } else {
-                $params = [
-                    $primaryClanId, // is_primary_clan CASE
-                    $primaryClanId, // tareas del clan principal
-                    $primaryClanId, // tareas personales del clan principal
-                    $userId, // creador de tareas personales
-                    $userId, $userId, // asignado/creador de tareas personales
-                    $userId, $userId, // tareas recurrentes/eventuales asignadas al usuario
-                    $primaryClanId, // para excluir clan principal de otros clanes
-                    $primaryClanId, $primaryClanId, // miembros asignados en otros clanes
-                    $userId, // usuario específico en otros clanes
-                    $primaryClanId, $primaryClanId // clan de los miembros asignados en otros clanes
-                ];
-            }
-            
-            $stmt->execute($params);
+            $stmt->execute([$userId, $userId]);
             $allTasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
-            // Obtener subtareas asignadas a miembros del clan
-            $subtaskStmt = $this->db->prepare(
-                "SELECT 
+            // Obtener subtareas asignadas al usuario (simple)
+            $subtaskStmt = $this->db->prepare("
+                SELECT 
                     s.subtask_id as task_id,
                     s.task_id as parent_task_id,
                     s.title as task_name,
                     s.description,
                     s.due_date,
-                    'medium' as priority,  -- Las subtareas tendrán prioridad media por defecto
+                    'medium' as priority,
                     s.status,
                     s.completion_percentage,
                     0 as automatic_points,
                     CONCAT('Subtarea de: ', t.task_name) as project_name,
                     t.project_id,
                     p.project_type,
+                    p.is_personal,
                     p.clan_id,
                     c.clan_name,
                     u_assigned.full_name as assigned_to_name,
@@ -5318,36 +5308,19 @@ class ClanLeaderController {
                         WHEN s.due_date IS NULL THEN 999
                         ELSE DATEDIFF(s.due_date, CURDATE())
                     END as days_until_due,
-                    CASE 
-                        WHEN p.clan_id = ? THEN 1
-                        ELSE 0
-                    END as is_primary_clan,
                     'subtask' as item_type
-                 FROM Subtasks s
-                 INNER JOIN Tasks t ON s.task_id = t.task_id
-                 INNER JOIN Projects p ON t.project_id = p.project_id
-                 LEFT JOIN Clans c ON p.clan_id = c.clan_id
-                 LEFT JOIN Users u_assigned ON s.assigned_to_user_id = u_assigned.user_id
-                 LEFT JOIN Clan_Members cm ON s.assigned_to_user_id = cm.user_id
-                 WHERE s.status != 'completed' AND s.completion_percentage < 100
-                   AND (
-                       -- Subtareas del clan principal
-                       (p.clan_id = ? AND cm.clan_id = ?)
-                       -- Subtareas de otros clanes donde miembros del clan estén asignados
-                       OR (p.clan_id != ? AND cm.clan_id = ?)
-                   )
-                 ORDER BY s.due_date ASC"
-            );
+                FROM Subtasks s
+                JOIN Tasks t ON s.task_id = t.task_id
+                JOIN Projects p ON t.project_id = p.project_id
+                LEFT JOIN Clans c ON p.clan_id = c.clan_id
+                LEFT JOIN Users u_assigned ON s.assigned_to_user_id = u_assigned.user_id
+                WHERE s.status != 'completed' 
+                  AND s.completion_percentage < 100
+                  AND s.assigned_to_user_id = ?
+                ORDER BY s.due_date ASC
+            ");
             
-            $subtaskParams = [
-                $primaryClanId, // is_primary_clan CASE
-                $primaryClanId, // subtareas del clan principal
-                $primaryClanId, // miembros del clan principal
-                $primaryClanId, // para excluir clan principal de otros clanes
-                $primaryClanId  // clan de los miembros asignados en otros clanes
-            ];
-            
-            $subtaskStmt->execute($subtaskParams);
+            $subtaskStmt->execute([$userId]);
             $allSubtasks = $subtaskStmt->fetchAll(PDO::FETCH_ASSOC);
             
             // Combinar tareas y subtareas

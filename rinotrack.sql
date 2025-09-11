@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1:3306
--- Tiempo de generación: 11-09-2025 a las 05:11:57
+-- Tiempo de generación: 11-09-2025 a las 07:34:12
 -- Versión del servidor: 11.8.2-MariaDB
 -- Versión de PHP: 8.3.23
 
@@ -1085,7 +1085,20 @@ INSERT INTO `Notification_Log` (`id`, `event_type`, `entity_id`, `user_id`, `sen
 (566, 'task_assigned', 583, 2, 'redskullcoder@gmail.com', NULL, '2025-09-11 05:00:59'),
 (567, 'task_assigned', 584, 2, 'redskullcoder@gmail.com', NULL, '2025-09-11 05:06:17'),
 (568, 'task_assigned', 585, 2, 'redskullcoder@gmail.com', NULL, '2025-09-11 05:09:05'),
-(569, 'task_assigned', 586, 2, 'redskullcoder@gmail.com', NULL, '2025-09-11 05:09:49');
+(569, 'task_assigned', 586, 2, 'redskullcoder@gmail.com', NULL, '2025-09-11 05:09:49'),
+(570, 'task_assigned', 587, 2, 'redskullcoder@gmail.com', NULL, '2025-09-11 05:24:28'),
+(571, 'task_assigned', 588, 2, 'redskullcoder@gmail.com', NULL, '2025-09-11 05:25:38'),
+(572, 'task_assigned', 589, 2, 'redskullcoder@gmail.com', NULL, '2025-09-11 05:36:34'),
+(573, 'task_assigned', 590, 2, 'redskullcoder@gmail.com', NULL, '2025-09-11 06:00:45'),
+(574, 'task_assigned', 591, 2, 'redskullcoder@gmail.com', NULL, '2025-09-11 06:08:13'),
+(575, 'task_assigned', 591, 4, 'desarrollo2@rinorisk.com', NULL, '2025-09-11 06:08:14'),
+(576, 'task_assigned', 592, 2, 'redskullcoder@gmail.com', NULL, '2025-09-11 06:56:49'),
+(577, 'task_assigned', 595, 2, 'redskullcoder@gmail.com', NULL, '2025-09-11 07:05:10'),
+(578, 'task_assigned', 596, 2, 'redskullcoder@gmail.com', NULL, '2025-09-11 07:05:20'),
+(579, 'task_assigned', 597, 2, 'redskullcoder@gmail.com', NULL, '2025-09-11 07:05:31'),
+(580, 'task_assigned', 598, 2, 'redskullcoder@gmail.com', NULL, '2025-09-11 07:05:47'),
+(581, 'task_assigned', 599, 2, 'redskullcoder@gmail.com', NULL, '2025-09-11 07:06:03'),
+(582, 'task_assigned', 600, 2, 'redskullcoder@gmail.com', NULL, '2025-09-11 07:11:34');
 
 -- --------------------------------------------------------
 
@@ -1148,7 +1161,7 @@ CREATE TABLE `Projects` (
 INSERT INTO `Projects` (`project_id`, `project_name`, `description`, `clan_id`, `created_by_user_id`, `status`, `total_tasks`, `completed_tasks`, `progress_percentage`, `created_at`, `updated_at`, `kpi_quarter_id`, `kpi_points`, `task_distribution_mode`, `time_limit`, `is_personal`, `allow_delegation`, `project_type`) VALUES
 (34, 'Tareas Recurrentes', 'Tareas Recurrentes', 13, 1, 'open', 35, 23, 0.00, '2025-08-14 05:48:31', '2025-09-10 16:02:03', NULL, 0, 'automatic', NULL, 0, 1, 'normal'),
 (35, 'Tareas Eventuales', 'Tareas Eventuales', 13, 1, 'open', 5, 5, 0.00, '2025-08-14 05:48:31', '2025-09-10 16:02:05', NULL, 0, 'automatic', NULL, 0, 1, 'normal'),
-(42, 'Tareas Personales', 'Proyecto personal para tareas individuales del usuario', 5, 2, 'active', 7, 5, 0.00, '2025-08-19 20:29:39', '2025-09-08 20:47:13', NULL, 0, 'automatic', NULL, 1, 0, 'normal'),
+(42, 'Tareas Personales', 'Proyecto personal para tareas individuales del usuario', 5, 2, 'active', 4, 3, 0.00, '2025-08-19 20:29:39', '2025-09-11 06:49:25', NULL, 0, 'automatic', NULL, 1, 0, 'normal'),
 (43, 'Tareas Personales', 'Proyecto personal para tareas individuales del usuario', 5, 4, 'active', 41, 2, 0.00, '2025-08-20 15:09:12', '2025-09-09 16:50:19', NULL, 0, 'automatic', NULL, 1, 0, 'normal'),
 (44, 'AGENCIAS RINO', 'Proyeccion de Crecimiento 2026', 12, 22, 'open', 4, 0, 0.00, '2025-08-20 18:09:56', '2025-08-21 15:55:09', NULL, 0, 'automatic', NULL, 0, 0, 'normal'),
 (46, 'Tareas Personales', 'Proyecto personal para tareas individuales del usuario', 7, 40, 'active', 10, 0, 0.00, '2025-08-26 21:15:04', '2025-09-03 19:36:08', NULL, 0, 'automatic', NULL, 1, 0, 'normal'),
@@ -1160,7 +1173,7 @@ INSERT INTO `Projects` (`project_id`, `project_name`, `description`, `clan_id`, 
 (59, 'Tareas Personales', 'Proyecto personal para tareas individuales del usuario', 12, 30, 'active', 1, 1, 0.00, '2025-08-28 16:56:02', '2025-08-28 16:56:34', NULL, 0, 'automatic', NULL, 1, 0, 'normal'),
 (61, 'Rinificación Manzanares Mexicali', 'Desarrollo e instalación de nuevo diseño de oficina.', 6, 13, 'open', 10, 8, 0.00, '2025-08-29 17:49:08', '2025-08-29 19:08:42', NULL, 0, 'automatic', '2025-09-12', 0, 0, 'normal'),
 (62, 'Rinificación Perla Las Americas', 'Desarrollo e instalación de nuevo diseño de oficina.', 6, 13, 'open', 10, 1, 0.00, '2025-08-29 17:49:48', '2025-08-29 19:25:56', NULL, 0, 'automatic', '2025-09-30', 0, 0, 'normal'),
-(63, 'Metas consultoria Etapa1', 'Actualización del modulo de promotoría para que sea posible poner metas e indicadores en base a prima pagada y nuevos negocios.', 5, 2, 'open', 3, 2, 0.00, '2025-09-02 17:17:52', '2025-09-10 16:01:55', NULL, 0, 'automatic', '2025-10-31', 0, 0, 'normal'),
+(63, 'Metas consultoria Etapa1', 'Actualización del modulo de promotoría para que sea posible poner metas e indicadores en base a prima pagada y nuevos negocios.', 5, 2, 'open', 1, 0, 0.00, '2025-09-02 17:17:52', '2025-09-11 06:09:32', NULL, 0, 'automatic', '2025-10-31', 0, 0, 'normal'),
 (64, 'Biblioteca Digital.', 'Proyecto para tener una nube empresarial organizada accesible que se integre a diferentes sistemas.', 5, 2, 'open', 4, 4, 0.00, '2025-09-02 17:19:13', '2025-09-09 21:04:48', NULL, 0, 'automatic', '2025-09-27', 0, 0, 'normal'),
 (65, 'Sistemas', 'Tareas eventuales o recurrentes para el departamento de sistemas', 5, 2, 'open', 2, 2, 0.00, '2025-09-02 19:11:47', '2025-09-09 21:38:30', NULL, 0, 'automatic', '2025-12-31', 0, 0, 'normal'),
 (66, 'Polaris', 'Sistema de seguimiento y gestión de tareas.', 5, 2, 'open', 1, 1, 0.00, '2025-09-03 15:06:15', '2025-09-10 18:20:51', NULL, 0, 'automatic', '2025-10-31', 0, 1, 'normal'),
@@ -1842,8 +1855,21 @@ INSERT INTO `Tasks` (`task_id`, `parent_task_id`, `task_name`, `description`, `p
 (582, NULL, 'afdasfasdf', 'asdfdasfasd', 202, 2, 2, 'medium', '2025-09-11', NULL, NULL, 100.00, 0.00, 0.00, '#3B82F6', 0, 0, 'completed', 0, '2025-09-10 23:08:09', '2025-09-11 05:00:03', '2025-09-11 05:08:09', 0, 0, NULL, NULL, NULL, NULL, NULL),
 (583, NULL, 'fgdhdfghdfg', 'gfdsgsdfgsdf', 202, 2, 2, 'high', '2025-09-17', NULL, NULL, 100.00, 0.00, 0.00, '#3B82F6', 0, 0, 'completed', 0, '2025-09-10 23:08:13', '2025-09-11 05:00:58', '2025-09-11 05:08:13', 0, 0, NULL, NULL, NULL, NULL, NULL),
 (584, NULL, 'gs2', 'sadfsadf', 202, 2, 2, 'medium', '2025-09-11', NULL, NULL, 100.00, 0.00, 0.00, '#3B82F6', 0, 0, 'completed', 0, '2025-09-10 23:08:10', '2025-09-11 05:06:16', '2025-09-11 05:08:10', 0, 0, NULL, NULL, NULL, NULL, NULL),
-(585, NULL, 'fasdf', 'fsadf32', 202, 2, 2, 'medium', '2025-09-11', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-09-11 05:09:04', '2025-09-11 05:09:04', 0, 0, NULL, NULL, NULL, NULL, NULL),
-(586, NULL, 'xcvb2', 'sdfa', 202, 2, 2, 'medium', '2025-09-11', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-09-11 05:09:48', '2025-09-11 05:09:48', 0, 0, NULL, NULL, NULL, NULL, NULL);
+(585, NULL, 'fasdf', 'fsadf32', 202, 2, 2, 'medium', '2025-09-11', NULL, NULL, 100.00, 0.00, 0.00, '#3B82F6', 0, 0, 'completed', 0, '2025-09-10 23:12:51', '2025-09-11 05:09:04', '2025-09-11 05:12:51', 0, 0, NULL, NULL, NULL, NULL, NULL),
+(586, NULL, 'xcvb2', 'sdfa', 202, 2, 2, 'medium', '2025-09-11', NULL, NULL, 100.00, 0.00, 0.00, '#3B82F6', 0, 0, 'completed', 0, '2025-09-10 23:12:52', '2025-09-11 05:09:48', '2025-09-11 05:12:52', 0, 0, NULL, NULL, NULL, NULL, NULL),
+(587, NULL, 'sadfasdf', 'sdfasdfsadf', 42, 2, 2, 'medium', '2025-09-11', NULL, NULL, 100.00, 0.00, 0.00, '#3B82F6', 0, 0, 'completed', 0, '2025-09-10 23:25:17', '2025-09-11 05:24:27', '2025-09-11 05:25:17', 0, 0, NULL, NULL, NULL, NULL, NULL),
+(588, NULL, 'Tarea de modal', 'Esto es una tarea de modal', 42, 2, 2, 'medium', '2025-09-11', NULL, NULL, 100.00, 0.00, 0.00, '#3B82F6', 0, 0, 'completed', 0, '2025-09-10 23:31:24', '2025-09-11 05:25:38', '2025-09-11 05:31:24', 0, 0, NULL, NULL, NULL, NULL, NULL),
+(590, NULL, 'Edicion tarea modal', 'asdfasd', 42, 2, 2, 'medium', '2025-09-11', NULL, NULL, 50.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-09-11 06:00:44', '2025-09-11 06:49:04', 0, 0, NULL, NULL, NULL, NULL, NULL),
+(591, NULL, 'Correjir WS', 'PARA  dos desarrollos', 63, 2, 2, 'medium', '2025-09-11', NULL, NULL, 44.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-09-11 06:08:13', '2025-09-11 06:09:32', 0, 0, NULL, NULL, NULL, NULL, NULL),
+(592, NULL, 'Prueba de Asignacion', 'dfasdfasd', 34, 2, 1, 'medium', '2025-09-12', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-09-11 06:56:48', '2025-09-11 06:56:48', 0, 0, NULL, NULL, NULL, NULL, NULL),
+(593, NULL, 'Prueba de Asignacion', 'dfasdfasd', 34, 2, 1, 'medium', '2025-09-19', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-09-11 06:56:48', '2025-09-11 06:56:48', 0, 0, NULL, NULL, NULL, NULL, NULL),
+(594, NULL, 'Prueba de Asignacion', 'dfasdfasd', 34, 2, 1, 'medium', '2025-09-26', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-09-11 06:56:48', '2025-09-11 06:56:48', 0, 0, NULL, NULL, NULL, NULL, NULL),
+(595, NULL, 'thrtgsesdfgsdfg', 'fgsdfgdsf', 42, 2, 2, 'medium', '2025-09-11', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-09-11 07:05:08', '2025-09-11 07:05:08', 0, 0, NULL, NULL, NULL, NULL, NULL),
+(596, NULL, 'asdfsadfasd', 'sadfsadfsadfsadf', 42, 2, 2, 'medium', '2025-09-11', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-09-11 07:05:20', '2025-09-11 07:05:20', 0, 0, NULL, NULL, NULL, NULL, NULL),
+(597, NULL, 'sdfasdfasdf', 'sadfsadfasdf', 42, 2, 2, 'medium', '2025-09-11', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-09-11 07:05:30', '2025-09-11 07:05:30', 0, 0, NULL, NULL, NULL, NULL, NULL),
+(598, NULL, 'asdfdsafasd', 'asdfsdafasdf', 42, 2, 2, 'medium', '2025-09-11', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-09-11 07:05:46', '2025-09-11 07:05:46', 0, 0, NULL, NULL, NULL, NULL, NULL),
+(599, NULL, 'asdfdsafsadfaerter', 'dfdsafadsfsda', 42, 2, 2, 'medium', '2025-09-11', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-09-11 07:06:02', '2025-09-11 07:06:02', 0, 0, NULL, NULL, NULL, NULL, NULL),
+(600, NULL, 'rev', 'sfdsdafs', 35, 2, 1, 'medium', '2025-09-11', NULL, NULL, 0.00, 0.00, 0.00, '#3B82F6', 0, 0, 'pending', 0, NULL, '2025-09-11 07:11:33', '2025-09-11 07:11:33', 0, 0, NULL, NULL, NULL, NULL, NULL);
 
 --
 -- Disparadores `Tasks`
@@ -2305,7 +2331,22 @@ INSERT INTO `Task_Assignments` (`assignment_id`, `task_id`, `user_id`, `assigned
 (532, 583, 2, 100.00, '2025-09-11 05:00:58', 2, 'assigned', NULL),
 (533, 584, 2, 100.00, '2025-09-11 05:06:16', 2, 'assigned', NULL),
 (534, 585, 2, 100.00, '2025-09-11 05:09:04', 2, 'assigned', NULL),
-(535, 586, 2, 100.00, '2025-09-11 05:09:48', 2, 'assigned', NULL);
+(535, 586, 2, 100.00, '2025-09-11 05:09:48', 2, 'assigned', NULL),
+(536, 587, 2, 100.00, '2025-09-11 05:24:27', 2, 'assigned', NULL),
+(537, 588, 2, 100.00, '2025-09-11 05:25:38', 2, 'assigned', NULL),
+(538, 589, 2, 100.00, '2025-09-11 05:36:33', 2, 'assigned', NULL),
+(539, 590, 2, 100.00, '2025-09-11 06:00:44', 2, 'assigned', NULL),
+(540, 591, 2, 50.00, '2025-09-11 06:08:13', 2, 'assigned', NULL),
+(541, 591, 4, 50.00, '2025-09-11 06:08:13', 2, 'assigned', NULL),
+(542, 592, 2, 100.00, '2025-09-11 06:56:48', 1, 'assigned', NULL),
+(543, 593, 2, 100.00, '2025-09-11 06:56:48', 1, 'assigned', NULL),
+(544, 594, 2, 100.00, '2025-09-11 06:56:48', 1, 'assigned', NULL),
+(545, 595, 2, 100.00, '2025-09-11 07:05:08', 2, 'assigned', NULL),
+(546, 596, 2, 100.00, '2025-09-11 07:05:20', 2, 'assigned', NULL),
+(547, 597, 2, 100.00, '2025-09-11 07:05:30', 2, 'assigned', NULL),
+(548, 598, 2, 100.00, '2025-09-11 07:05:46', 2, 'assigned', NULL),
+(549, 599, 2, 100.00, '2025-09-11 07:06:02', 2, 'assigned', NULL),
+(550, 600, 2, 100.00, '2025-09-11 07:11:33', 1, 'assigned', NULL);
 
 -- --------------------------------------------------------
 
@@ -4518,7 +4559,39 @@ INSERT INTO `Task_History` (`history_id`, `task_id`, `user_id`, `action_type`, `
 (2754, 585, 2, 'assigned', 'assigned_users', NULL, '2', NULL, 'Múltiples usuarios asignados', '2025-09-11 05:09:04'),
 (2755, 585, 2, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-09-11 05:09:04'),
 (2756, 586, 2, 'assigned', 'assigned_users', NULL, '2', NULL, 'Múltiples usuarios asignados', '2025-09-11 05:09:48'),
-(2757, 586, 2, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-09-11 05:09:48');
+(2757, 586, 2, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-09-11 05:09:48'),
+(2758, 585, 2, 'status_changed', 'status', 'pending', 'completed', NULL, 'Estado cambiado de pending a completed', '2025-09-11 05:12:51'),
+(2759, 586, 2, 'status_changed', 'status', 'pending', 'completed', NULL, 'Estado cambiado de pending a completed', '2025-09-11 05:12:52'),
+(2760, 587, 2, 'assigned', 'assigned_users', NULL, '2', NULL, 'Múltiples usuarios asignados', '2025-09-11 05:24:27'),
+(2761, 587, 2, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-09-11 05:24:27'),
+(2762, 587, 2, 'status_changed', 'status', 'pending', 'completed', NULL, 'Estado cambiado de pending a completed', '2025-09-11 05:25:17'),
+(2763, 588, 2, 'assigned', 'assigned_users', NULL, '2', NULL, 'Múltiples usuarios asignados', '2025-09-11 05:25:38'),
+(2764, 588, 2, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-09-11 05:25:38'),
+(2765, 588, 2, 'status_changed', 'status', 'pending', 'completed', NULL, 'Estado cambiado de pending a completed', '2025-09-11 05:31:24'),
+(2766, 589, 2, 'assigned', 'assigned_users', NULL, '2', NULL, 'Múltiples usuarios asignados', '2025-09-11 05:36:33'),
+(2767, 589, 2, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-09-11 05:36:33'),
+(2768, 590, 2, 'assigned', 'assigned_users', NULL, '2', NULL, 'Múltiples usuarios asignados', '2025-09-11 06:00:44'),
+(2769, 590, 2, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-09-11 06:00:44'),
+(2770, 591, 2, 'assigned', 'assigned_users', NULL, '2,4', NULL, 'Múltiples usuarios asignados', '2025-09-11 06:08:13'),
+(2771, 591, 2, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-09-11 06:08:13'),
+(2772, 592, 1, 'assigned', 'assigned_users', NULL, '2', NULL, 'Múltiples usuarios asignados', '2025-09-11 06:56:48'),
+(2773, 592, 1, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-09-11 06:56:48'),
+(2774, 593, 1, 'assigned', 'assigned_users', NULL, '2', NULL, 'Múltiples usuarios asignados', '2025-09-11 06:56:48'),
+(2775, 593, 1, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-09-11 06:56:48'),
+(2776, 594, 1, 'assigned', 'assigned_users', NULL, '2', NULL, 'Múltiples usuarios asignados', '2025-09-11 06:56:48'),
+(2777, 594, 1, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-09-11 06:56:48'),
+(2778, 595, 2, 'assigned', 'assigned_users', NULL, '2', NULL, 'Múltiples usuarios asignados', '2025-09-11 07:05:08'),
+(2779, 595, 2, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-09-11 07:05:08'),
+(2780, 596, 2, 'assigned', 'assigned_users', NULL, '2', NULL, 'Múltiples usuarios asignados', '2025-09-11 07:05:20'),
+(2781, 596, 2, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-09-11 07:05:20'),
+(2782, 597, 2, 'assigned', 'assigned_users', NULL, '2', NULL, 'Múltiples usuarios asignados', '2025-09-11 07:05:30'),
+(2783, 597, 2, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-09-11 07:05:30'),
+(2784, 598, 2, 'assigned', 'assigned_users', NULL, '2', NULL, 'Múltiples usuarios asignados', '2025-09-11 07:05:46'),
+(2785, 598, 2, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-09-11 07:05:46'),
+(2786, 599, 2, 'assigned', 'assigned_users', NULL, '2', NULL, 'Múltiples usuarios asignados', '2025-09-11 07:06:02'),
+(2787, 599, 2, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-09-11 07:06:02'),
+(2788, 600, 1, 'assigned', 'assigned_users', NULL, '2', NULL, 'Múltiples usuarios asignados', '2025-09-11 07:11:33'),
+(2789, 600, 1, 'created', NULL, NULL, NULL, NULL, 'Tarea creada', '2025-09-11 07:11:33');
 
 -- --------------------------------------------------------
 
@@ -4592,8 +4665,8 @@ CREATE TABLE `Users` (
 --
 
 INSERT INTO `Users` (`user_id`, `username`, `password_hash`, `email`, `full_name`, `is_active`, `last_login`, `created_at`, `avatar_path`) VALUES
-(1, 'super', '123456', 'desarrollo@rinorisk.com', 'Usuario Administrador', 1, '2025-09-10 23:53:00', '2025-07-29 22:45:12', ''),
-(2, 'abdielc', 'Aquiles2#tetis', 'redskullcoder@gmail.com', 'Abdiel Carrasco', 1, '2025-09-11 03:25:11', '2025-07-29 23:23:21', 'uploads/avatar_2_1756834255.png'),
+(1, 'super', '123456', 'desarrollo@rinorisk.com', 'Usuario Administrador', 1, '2025-09-11 07:23:02', '2025-07-29 22:45:12', ''),
+(2, 'abdielc', 'Aquiles2#tetis', 'redskullcoder@gmail.com', 'Abdiel Carrasco', 1, '2025-09-11 07:26:06', '2025-07-29 23:23:21', 'uploads/avatar_2_1756834255.png'),
 (4, 'franklinb', 'Grok2024', 'desarrollo2@rinorisk.com', 'Franklin Benitez', 1, '2025-09-09 21:37:42', '2025-07-30 17:10:05', 'uploads/avatar_4_1755619752.jpeg'),
 (5, 'rubend', '123456', 'desarrollo3@rinorisk.com', 'Ruben Dorado', 1, NULL, '2025-07-30 18:20:45', ''),
 (6, 'gaelh', '123456', 'desarrollo.fulstack@rinorisk.com', 'Gael Herrera', 1, NULL, '2025-07-30 19:36:11', ''),
@@ -4610,9 +4683,9 @@ INSERT INTO `Users` (`user_id`, `username`, `password_hash`, `email`, `full_name
 (19, 'arisbethc', '123456', 'gerente.servicio@rinorisk.com', 'Arisbeth Cuevas', 1, '2025-08-07 20:20:36', '2025-08-06 21:05:25', ''),
 (20, 'marlenef', '123456', 'cobranza@rinorisk.com', 'Marlene Flores', 1, NULL, '2025-08-06 21:06:16', ''),
 (21, 'beatrizi', '123456', 'servicio.vgmtj@rinorisk.com', 'Beatriz Ita', 1, NULL, '2025-08-06 21:07:46', ''),
-(22, 'sofiag', 'Cur7ywhoi#!', 'Sofia@rinorisk.com', 'Sofia Gallardo', 1, '2025-09-10 23:41:18', '2025-08-06 21:09:03', ''),
+(22, 'sofiag', 'Cur7ywhoi#!', 'Sofia@rinorisk.com', 'Sofia Gallardo', 1, '2025-09-11 06:52:00', '2025-08-06 21:09:03', ''),
 (23, 'taniab', 'q9345;Y{t', 'asistente.operaciones@rinorisk.com', 'Tania Barboza', 1, '2025-09-05 22:17:15', '2025-08-06 21:09:43', ''),
-(24, 'angelicav', 'uKI9r%5`8', 'gerente.administrativo@rinorisk.com', 'Angelica Vallejo', 1, '2025-09-08 20:08:31', '2025-08-06 21:10:52', ''),
+(24, 'angelicav', 'uKI9r%5`8', 'gerente.administrativo@rinorisk.com', 'Angelica Vallejo', 1, '2025-09-11 06:51:05', '2025-08-06 21:10:52', ''),
 (25, 'yazmint', 'bR0£2O`P6', 'contabilidad@rinorisk.com', 'Yazmin Trejo', 1, '2025-09-05 22:15:53', '2025-08-06 21:11:37', ''),
 (26, 'mitchellq', '2#~Gv06g!', 'auxiliar.contable@rinorisk.com', 'Mitchell Quiroz', 1, '2025-09-08 19:32:07', '2025-08-06 21:12:36', ''),
 (27, 'evelind', 'l(0)w(0)lK', 'analista.financiero@rinorisk.com', 'Evelin Duran', 1, '2025-09-05 22:12:24', '2025-08-06 21:13:10', ''),
@@ -4627,7 +4700,7 @@ INSERT INTO `Users` (`user_id`, `username`, `password_hash`, `email`, `full_name
 (36, 'porfiriog', '123456', 'mantenimiento6@rinorisk.com', 'Porfirio Gonzales', 1, NULL, '2025-08-06 21:28:22', ''),
 (37, 'ronym', '123456', 'mantenimiento7@rinorisk.com', 'Rony Marquez', 1, NULL, '2025-08-06 21:29:47', ''),
 (38, 'sistemas', 'P01475#2025', 'sistemas@rinorisk.com', 'Sistem', 1, '2025-09-11 00:00:19', '2025-08-06 21:30:21', ''),
-(39, 'yesseniav', '123456', 'capacitacion@rinorisk.com', 'Yessenia Villalobos', 1, '2025-09-10 23:52:07', '2025-08-06 21:46:27', ''),
+(39, 'yesseniav', '123456', 'capacitacion@rinorisk.com', 'Yessenia Villalobos', 1, '2025-09-11 06:49:46', '2025-08-06 21:46:27', ''),
 (40, 'karenv', '123456', 'capacitacion2@rinorisk.com', 'Karen Vazquez', 1, '2025-09-10 23:55:51', '2025-08-06 21:47:02', 'uploads/avatar_40_1756914545.jpg'),
 (41, 'angelr', '123456', 'sincorreo10@rinorisk.com', 'Angel Ramos', 1, NULL, '2025-08-06 21:47:43', ''),
 (42, 'fernandam', '123456', 'administrativo1@zax.mx', 'Fernanda Moreno', 1, NULL, '2025-08-06 21:48:14', ''),
@@ -4985,7 +5058,7 @@ ALTER TABLE `Comment_Checkbox_States`
 -- AUTO_INCREMENT de la tabla `Notification_Log`
 --
 ALTER TABLE `Notification_Log`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=570;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=583;
 
 --
 -- AUTO_INCREMENT de la tabla `Projects`
@@ -5021,13 +5094,13 @@ ALTER TABLE `Subtask_Comments`
 -- AUTO_INCREMENT de la tabla `Tasks`
 --
 ALTER TABLE `Tasks`
-  MODIFY `task_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=587;
+  MODIFY `task_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=601;
 
 --
 -- AUTO_INCREMENT de la tabla `Task_Assignments`
 --
 ALTER TABLE `Task_Assignments`
-  MODIFY `assignment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=536;
+  MODIFY `assignment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=551;
 
 --
 -- AUTO_INCREMENT de la tabla `Task_Attachments`
@@ -5045,7 +5118,7 @@ ALTER TABLE `Task_Comments`
 -- AUTO_INCREMENT de la tabla `Task_History`
 --
 ALTER TABLE `Task_History`
-  MODIFY `history_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2758;
+  MODIFY `history_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2790;
 
 --
 -- AUTO_INCREMENT de la tabla `Users`
