@@ -54,14 +54,17 @@
     text-align: center;
 }
 
-/* Kanban Board - 4 columnas fijas */
+/* Kanban Board - 4 columnas fijas - HOMOGÉNEO */
 .kanban-board {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr 1fr;
     gap: 20px;
+    margin: 0 auto;
+    max-width: 1400px;
+    width: 100%;
 }
 
-/* Kanban Board para EQUIPO - Mismo ancho que Mis Tareas */
+/* Kanban Board para EQUIPO - IDÉNTICO a Mis Tareas */
 .team-kanban-board {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr 1fr;
@@ -2339,18 +2342,23 @@ function switchDashboardTab(tabName) {
             console.log('🧹 Contenedor del Equipo limpiado');
         }
         
-        // ASEGURAR que el Kanban de "Mis Tareas" use todo el ancho
+        // ASEGURAR que "Mis Tareas" sea HOMOGÉNEO con Equipo
         const myTasksContent = document.getElementById('my-tasks-content');
         if (myTasksContent) {
             myTasksContent.style.cssText = `
                 display: block !important;
+                visibility: visible !important;
+                opacity: 1 !important;
                 width: 100% !important;
-                max-width: 100% !important;
-                margin: 0 !important;
-                padding: 0 !important;
+                max-width: 1400px !important;
+                margin: 0 auto !important;
+                height: auto !important;
+                min-height: 500px !important;
+                position: relative !important;
+                z-index: 1 !important;
             `;
             
-            // Ajustar el Kanban interno para que use todo el ancho
+            // Ajustar el Kanban interno para que sea HOMOGÉNEO con Equipo
             const myTasksKanban = myTasksContent.querySelector('.kanban-board');
             if (myTasksKanban) {
                 myTasksKanban.style.cssText = `
@@ -2358,8 +2366,8 @@ function switchDashboardTab(tabName) {
                     grid-template-columns: repeat(4, 1fr) !important;
                     gap: 20px !important;
                     width: 100% !important;
-                    max-width: none !important;
-                    margin: 0 !important;
+                    max-width: 1400px !important;
+                    margin: 0 auto !important;
                 `;
             }
             
