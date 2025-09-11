@@ -2286,7 +2286,7 @@ class Task {
     /**
      * Obtener o crear un proyecto personal para el usuario
      */
-    private function getOrCreatePersonalProject($userId) {
+    public function getOrCreatePersonalProject($userId) {
         try {
             error_log("getOrCreatePersonalProject - INICIO para usuario $userId");
             

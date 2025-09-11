@@ -1244,18 +1244,25 @@ class ClanLeaderController {
         error_log('Auth logged in: ' . ($this->auth->isLoggedIn() ? 'YES' : 'NO'));
         
         try {
+            error_log('createTask - Iniciando try principal');
+            
             // Inicializar taskModel si no existe
             if (!isset($this->taskModel) || !$this->taskModel) {
+                error_log('createTask - taskModel no existe, creando nueva instancia...');
                 $this->taskModel = new Task();
-                error_log('createTask - taskModel inicializado');
+                error_log('createTask - taskModel inicializado exitosamente');
+            } else {
+                error_log('createTask - taskModel ya existe');
             }
             
             // Verificar autenticación
+            error_log('createTask - Verificando autenticación...');
             if (!$this->auth->isLoggedIn()) {
                 error_log('createTask - Error: No autenticado');
                 Utils::jsonResponse(['success' => false, 'message' => 'No autenticado'], 401);
                 return;
             }
+            error_log('createTask - Usuario autenticado correctamente');
             
             // Verificar permisos de líder de clan
             if (!$this->hasClanLeaderAccess()) {
@@ -1341,24 +1348,45 @@ class ClanLeaderController {
         $taskProject = (int)($_POST['task_project'] ?? 0);
         error_log('createTask - taskProject recibido desde POST: ' . $taskProject);
         
-        // Si el proyecto es 0, obtener o crear proyecto personal
-        if ($taskProject === 0) {
-            error_log('createTask - taskProject es 0, obteniendo proyecto personal...');
+        // Si el proyecto es 0 o no se especificó, obtener o crear proyecto personal
+        if ($taskProject <= 0) {
+            error_log('createTask - taskProject es 0 o inválido (' . $taskProject . '), obteniendo proyecto personal...');
             
-            // Usar la instancia existente o crear una nueva si no existe
-            if (!$this->taskModel) {
-                $this->taskModel = new Task();
-            }
-            
-            $personalProjectId = $this->taskModel->getOrCreatePersonalProject($_SESSION['user_id']);
-            if ($personalProjectId) {
-                $taskProject = $personalProjectId;
-                error_log('createTask - Proyecto personal obtenido/creado: ' . $taskProject);
-            } else {
-                error_log('createTask - ERROR: No se pudo obtener/crear proyecto personal');
-                Utils::jsonResponse(['success' => false, 'message' => 'No se pudo obtener el proyecto personal'], 500);
+            try {
+                // Usar la instancia existente o crear una nueva si no existe
+                if (!$this->taskModel) {
+                    error_log('createTask - Creando nueva instancia de Task para proyecto personal...');
+                    $this->taskModel = new Task();
+                }
+                
+                $userId = $_SESSION['user_id'] ?? 0;
+                error_log('createTask - Obteniendo proyecto personal para usuario: ' . $userId);
+                
+                if (!$userId || $userId <= 0) {
+                    error_log('createTask - ERROR: userId inválido: ' . $userId);
+                    Utils::jsonResponse(['success' => false, 'message' => 'Usuario no válido'], 400);
+                    return;
+                }
+                
+                $personalProjectId = $this->taskModel->getOrCreatePersonalProject($userId);
+                error_log('createTask - Resultado getOrCreatePersonalProject: ' . ($personalProjectId ? $personalProjectId : 'FALSE'));
+                
+                if ($personalProjectId && $personalProjectId > 0) {
+                    $taskProject = $personalProjectId;
+                    error_log('createTask - Proyecto personal obtenido/creado exitosamente: ' . $taskProject);
+                } else {
+                    error_log('createTask - ERROR: No se pudo obtener/crear proyecto personal para usuario ' . $userId);
+                    Utils::jsonResponse(['success' => false, 'message' => 'No se pudo obtener el proyecto personal'], 500);
+                    return;
+                }
+            } catch (Exception $e) {
+                error_log('createTask - EXCEPCIÓN al obtener proyecto personal: ' . $e->getMessage());
+                error_log('createTask - Stack trace: ' . $e->getTraceAsString());
+                Utils::jsonResponse(['success' => false, 'message' => 'Error al obtener proyecto personal: ' . $e->getMessage()], 500);
                 return;
             }
+        } else {
+            error_log('createTask - Usando proyecto especificado: ' . $taskProject);
         }
         
         error_log('createTask - taskProject FINAL a usar: ' . $taskProject);
@@ -4669,11 +4697,20 @@ class ClanLeaderController {
                 return;
             }
             
-            $userId = $_SESSION['user_id'];
+            $userId = $_SESSION['user_id'] ?? 0;
             error_log("getPersonalProjectId - Usuario ID: $userId");
             
+            if (!$userId || $userId <= 0) {
+                error_log("getPersonalProjectId - ERROR: userId inválido: $userId");
+                Utils::jsonResponse(['success' => false, 'message' => 'Usuario no válido'], 400);
+                return;
+            }
+            
             // Obtener o crear proyecto personal
+            error_log("getPersonalProjectId - Creando instancia de Task...");
             $taskModel = new Task();
+            error_log("getPersonalProjectId - Task instanciado correctamente");
+            
             error_log("getPersonalProjectId - Llamando getOrCreatePersonalProject para usuario $userId");
             $personalProjectId = $taskModel->getOrCreatePersonalProject($userId);
             error_log("getPersonalProjectId - Resultado: " . ($personalProjectId ?: 'FALSE'));
