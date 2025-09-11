@@ -37,16 +37,22 @@ ob_start();
                 </div>
             </div>
             
-            <!-- Tabs para separar Mis Tareas y Equipo -->
-            <div class="kanban-tabs">
-                <button class="kanban-tab-button active" onclick="switchKanbanTab('my-tasks')" id="my-tasks-kanban-tab">
-                    <i class="fas fa-user"></i>
-                    Mis Tareas
-                </button>
-                <button class="kanban-tab-button" onclick="switchKanbanTab('team-tasks')" id="team-tasks-kanban-tab">
-                    <i class="fas fa-users"></i>
-                    Equipo
-                </button>
+            <!-- Tabs Minimalistas -->
+            <div class="tabs-container-minimal">
+                <div class="tabs-wrapper-minimal">
+                    <button class="tab-minimal active" onclick="switchKanbanTab('my-tasks')" id="my-tasks-kanban-tab">
+                        <div class="tab-icon-minimal">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <span class="tab-text-minimal">Mis Tareas</span>
+                    </button>
+                    <button class="tab-minimal" onclick="switchKanbanTab('team-tasks')" id="team-tasks-kanban-tab">
+                        <div class="tab-icon-minimal">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <span class="tab-text-minimal">Equipo</span>
+                    </button>
+                </div>
             </div>
             
             <!-- Tab Content: Mis Tareas -->
@@ -103,7 +109,7 @@ function switchKanbanTab(tabName) {
     });
     
     // Remover active de TODOS los tab buttons
-    document.querySelectorAll('.kanban-tab-button').forEach(button => {
+    document.querySelectorAll('.tab-minimal').forEach(button => {
         button.classList.remove('active');
     });
     
@@ -410,7 +416,7 @@ function toggleTaskStatusKanban(taskId, isChecked, itemType) {
             } else if (taskCard && !isChecked) {
                 // Si se desmarca, recargar para que aparezca en la columna correcta
                 setTimeout(() => {
-                    const activeTab = document.querySelector('.kanban-tab-button.active');
+                    const activeTab = document.querySelector('.tab-minimal.active');
                     if (activeTab && activeTab.id === 'my-tasks-kanban-tab') {
                         loadMyKanbanTasks();
                     } else if (activeTab && activeTab.id === 'team-tasks-kanban-tab') {
@@ -470,34 +476,99 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<!-- Estilos para los tabs del Kanban -->
+<!-- Estilos para los tabs minimalistas del Kanban -->
 <style>
-/* Contenedor principal de tabs - FORZADO */
-.kanban-section .kanban-tabs {
-    display: flex !important;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-    border-radius: 15px 15px 0 0 !important;
-    padding: 12px !important;
-    margin-bottom: 0 !important;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15) !important;
+/* Tabs Minimalistas para Kanban */
+.kanban-section .tabs-container-minimal {
+    margin-bottom: 32px;
+}
+
+.kanban-section .tabs-wrapper-minimal {
+    display: flex;
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 6px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.kanban-section .tab-minimal {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    color: #64748b;
     position: relative;
     overflow: hidden;
-    border: none !important;
 }
 
-.kanban-tabs::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
-    pointer-events: none;
+.kanban-section .tab-minimal:hover {
+    background: rgba(100, 116, 139, 0.1);
+    color: #475569;
 }
 
-/* Botones de los tabs - FORZADO */
-.kanban-section .kanban-tab-button {
+.kanban-section .tab-minimal.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    transform: translateY(-1px);
+}
+
+.kanban-section .tab-icon-minimal {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+}
+
+.kanban-section .tab-icon-minimal i {
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+.kanban-section .tab-minimal.active .tab-icon-minimal i {
+    transform: scale(1.1);
+}
+
+.kanban-section .tab-text-minimal {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.025em;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .kanban-section .tabs-wrapper-minimal {
+        max-width: 100%;
+        margin: 0 16px;
+    }
+    
+    .kanban-section .tab-minimal {
+        padding: 10px 16px;
+        gap: 6px;
+    }
+    
+    .kanban-section .tab-text-minimal {
+        font-size: 13px;
+    }
+    
+    .kanban-section .tab-icon-minimal i {
+        font-size: 14px;
+    }
+}
+
+
+ {
     flex: 1 !important;
     padding: 18px 28px !important;
     border: none !important;
@@ -521,7 +592,7 @@ document.addEventListener('DOMContentLoaded', function() {
     text-transform: uppercase;
 }
 
-.kanban-tab-button::before {
+::before {
     content: '';
     position: absolute;
     top: 0;
@@ -532,11 +603,11 @@ document.addEventListener('DOMContentLoaded', function() {
     transition: left 0.5s;
 }
 
-.kanban-tab-button:hover::before {
+:hover::before {
     left: 100%;
 }
 
-.kanban-tab-button:hover {
+:hover {
     background: rgba(255, 255, 255, 0.2);
     color: white;
     transform: translateY(-2px);
@@ -544,7 +615,7 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 /* Tab activo - FORZADO */
-.kanban-section .kanban-tab-button.active {
+.active {
     background: linear-gradient(135deg, #ffffff 0%, #f1f3f4 100%) !important;
     color: #2c3e50 !important;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25) !important;
@@ -553,25 +624,25 @@ document.addEventListener('DOMContentLoaded', function() {
     font-weight: 800 !important;
 }
 
-.kanban-section .kanban-tab-button.active i {
+.active i {
     color: #3498db !important;
     transform: scale(1.2) !important;
     text-shadow: 0 2px 4px rgba(52, 152, 219, 0.3) !important;
 }
 
 /* Iconos de los tabs - FORZADO */
-.kanban-section .kanban-tab-button i {
+ i {
     font-size: 20px !important;
     transition: all 0.3s ease !important;
     color: rgba(255, 255, 255, 0.9) !important;
 }
 
-.kanban-section .kanban-tab-button:hover i {
+:hover i {
     transform: scale(1.1) !important;
     color: white !important;
 }
 
-.kanban-section .kanban-tab-button:hover {
+:hover {
     background: rgba(255, 255, 255, 0.25) !important;
     color: white !important;
     transform: translateY(-3px) !important;
@@ -617,7 +688,7 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 /* Efecto de brillos en hover */
-.kanban-section .kanban-tab-button:hover {
+:hover {
     background: rgba(255, 255, 255, 0.3) !important;
     color: white !important;
     transform: translateY(-3px) scale(1.02) !important;
@@ -1067,12 +1138,12 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 @media (max-width: 768px) {
-    .kanban-section .kanban-tabs {
+    .kanban-section  {
         flex-direction: column !important;
         gap: 8px !important;
     }
     
-    .kanban-section .kanban-tab-button {
+ {
         margin: 0 !important;
     }
     

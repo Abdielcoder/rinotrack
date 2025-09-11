@@ -7,6 +7,94 @@ ob_start();
 <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/clan-leader-redesign.css">
 
 <style>
+/* Tabs Minimalistas */
+.tabs-container-minimal {
+    margin-bottom: 32px;
+}
+
+.tabs-wrapper-minimal {
+    display: flex;
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 6px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.tab-minimal {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    color: #64748b;
+    position: relative;
+    overflow: hidden;
+}
+
+.tab-minimal:hover {
+    background: rgba(100, 116, 139, 0.1);
+    color: #475569;
+}
+
+.tab-minimal.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    transform: translateY(-1px);
+}
+
+.tab-icon-minimal {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+}
+
+.tab-icon-minimal i {
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+.tab-minimal.active .tab-icon-minimal i {
+    transform: scale(1.1);
+}
+
+.tab-text-minimal {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.025em;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .tabs-wrapper-minimal {
+        max-width: 100%;
+        margin: 0 16px;
+    }
+    
+    .tab-minimal {
+        padding: 10px 16px;
+        gap: 6px;
+    }
+    
+    .tab-text-minimal {
+        font-size: 13px;
+    }
+    
+    .tab-icon-minimal i {
+        font-size: 14px;
+    }
+}
 </style>
 
 <div class="clan-leader-tasks-container">
@@ -37,16 +125,20 @@ ob_start();
         }
         ?>
 
-        <!-- Tabs Consistentes con Dashboard -->
-        <div class="tasks-section-minimal">
-            <div class="tasks-tabs-minimal">
-                <button class="tasks-tab-button active" onclick="switchTab('my-tasks')" id="my-tasks-tab">
-                    <i class="fas fa-user"></i>
-                    Mis Tareas
+        <!-- Tabs Minimalistas -->
+        <div class="tabs-container-minimal">
+            <div class="tabs-wrapper-minimal">
+                <button class="tab-minimal active" onclick="switchTab('my-tasks')" id="my-tasks-tab">
+                    <div class="tab-icon-minimal">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <span class="tab-text-minimal">Mis Tareas</span>
                 </button>
-                <button class="tasks-tab-button" onclick="switchTab('team-tasks')" id="team-tasks-tab">
-                    <i class="fas fa-users"></i>
-                    Equipo
+                <button class="tab-minimal" onclick="switchTab('team-tasks')" id="team-tasks-tab">
+                    <div class="tab-icon-minimal">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <span class="tab-text-minimal">Equipo</span>
                 </button>
             </div>
         </div>
@@ -2935,7 +3027,7 @@ function switchTab(tabName) {
     });
     
     // Remover active de todos los tab buttons
-    document.querySelectorAll('.tasks-tab-button, .tab-button').forEach(button => {
+    document.querySelectorAll('.tab-minimal, .tasks-tab-button, .tab-button').forEach(button => {
         button.classList.remove('active');
     });
     
@@ -4194,7 +4286,7 @@ function renderTasksTableFromKanban(tasks, tbodyId) {
 
 // Función para aplicar filtros actuales
 function applyCurrentFilters(tasks) {
-    const activeTab = document.querySelector('.tasks-tab-button.active');
+    const activeTab = document.querySelector('.tab-minimal.active');
     const tabType = activeTab ? activeTab.id.replace('-tab', '') : 'my-tasks';
     
     // Obtener valores de filtros del formulario correspondiente
@@ -4242,7 +4334,7 @@ function applyCurrentFilters(tasks) {
 // Función para recargar con filtros
 function applyFilters() {
     console.log('🔍 Aplicando filtros...');
-    const activeTab = document.querySelector('.tasks-tab-button.active');
+    const activeTab = document.querySelector('.tab-minimal.active');
     if (activeTab) {
         const tabId = activeTab.id.replace('-tab', '');
         if (tabId === 'my-tasks') {
@@ -4289,7 +4381,7 @@ function deleteTaskTable(taskId, taskName) {
             if (data.success) {
                 showTaskToast(data.message || 'Tarea eliminada exitosamente', 'success');
                 // Recargar el tab actual
-                const activeTab = document.querySelector('.tasks-tab-button.active');
+                const activeTab = document.querySelector('.tab-minimal.active');
                 if (activeTab) {
                     const tabId = activeTab.id.replace('-tab', '');
                     if (tabId === 'my-tasks') {
