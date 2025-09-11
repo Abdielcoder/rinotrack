@@ -708,7 +708,7 @@ ob_start();
             <div class="header-actions">
                 <button class="btn-create" onclick="openCreateTaskModal()">
                     <i class="fas fa-plus"></i>
-                    Agregar Tarea
+                    Agregar Tarea Personal
                 </button>
             </div>
         </div>
@@ -772,41 +772,43 @@ ob_start();
         </div>
         
         <form id="createTaskForm" class="modal-body">
+            <!-- Campo oculto para marcar como tarea personal -->
+            <input type="hidden" name="is_personal" value="1">
             <!-- Campo oculto para asignar la tarea al usuario actual -->
-            <input type="hidden" name="assigned_members[]" value="<?php echo $_SESSION['user_id']; ?>">
-            <!-- Campo oculto para el proyecto personal -->
-            <input type="hidden" id="personal_project_id" name="task_project" value="">
+            <input type="hidden" name="user_id" value="<?php echo $_SESSION['user_id']; ?>">
             
             <div class="form-group">
-                <label for="title">
+                <label for="task_name">
                     <i class="fas fa-tasks"></i>
                     Nombre de la Tarea *
                 </label>
-                <input type="text" id="title" name="task_title" required 
+                <input type="text" id="task_name" name="task_name" required 
                        placeholder="Ej: Revisar documentación del proyecto" 
                        class="form-control">
-    </div>
+            </div>
             
             <div class="form-group">
                 <label for="description">
                     <i class="fas fa-align-left"></i>
                     Descripción
                 </label>
-                <textarea id="description" name="task_description" 
+                <textarea id="description" name="description" 
                           placeholder="Descripción detallada de la tarea (opcional)"
                           class="form-control" rows="3"></textarea>
-</div>
+            </div>
 
             <div class="form-group">
                 <label for="due_date">
                     <i class="fas fa-calendar"></i>
                     Fecha de Vencimiento *
                 </label>
-                <input type="date" id="due_date" name="task_due_date" required class="form-control">
+                <input type="date" id="due_date" name="due_date" required class="form-control">
             </div>
             
             <!-- Campo oculto para prioridad por defecto -->
             <input type="hidden" name="priority" value="medium">
+            <!-- Campo oculto para status por defecto -->
+            <input type="hidden" name="status" value="pending">
         </form>
         
         <div class="modal-footer">
@@ -1096,22 +1098,10 @@ function openCreateTaskModal() {
     }
 }
 
-// Función para obtener el ID del proyecto personal
+// Función para obtener el ID del proyecto personal (ya no necesaria para tareas personales)
 function getPersonalProjectId() {
-    fetch('?route=clan_leader/get-personal-project-id')
-        .then(response => response.json())
-        .then(data => {
-            if (data.success && data.project_id) {
-                document.getElementById('personal_project_id').value = data.project_id;
-                console.log('✅ Proyecto personal ID:', data.project_id);
-            } else {
-                console.error('❌ Error obteniendo proyecto personal:', data.message);
-                // Mantener valor vacío si no se puede obtener
-            }
-        })
-        .catch(error => {
-            console.error('❌ Error de conexión obteniendo proyecto personal:', error);
-        });
+    // Las tareas personales no necesitan proyecto específico
+    console.log('✅ Tarea personal - no se requiere proyecto específico');
 }
 
 
@@ -1151,16 +1141,16 @@ function goToTaskDetail(taskId, itemType = 'task') {
     window.location.href = url;
 }
 
-// Función para crear tarea
+// Función para crear tarea personal
 function createTask() {
     const form = document.getElementById('createTaskForm');
     const formData = new FormData(form);
     
     // Validaciones básicas
-    const title = formData.get('task_title');
-    const dueDate = formData.get('task_due_date');
+    const taskName = formData.get('task_name');
+    const dueDate = formData.get('due_date');
     
-    if (!title || title.trim().length < 3) {
+    if (!taskName || taskName.trim().length < 3) {
         alert('El nombre de la tarea debe tener al menos 3 caracteres');
         return;
     }
@@ -1170,9 +1160,9 @@ function createTask() {
         return;
     }
     
-    console.log('📝 Creando tarea:', title);
+    console.log('📝 Creando tarea personal:', taskName);
     
-    fetch('?route=clan_leader/create-task', {
+    fetch('?route=clan_leader/create-personal-task', {
         method: 'POST',
         credentials: 'same-origin',
         body: formData
@@ -1180,7 +1170,7 @@ function createTask() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            console.log('✅ Tarea creada exitosamente');
+            console.log('✅ Tarea personal creada exitosamente');
             closeCreateTaskModal();
             
             // Recargar el tab activo
@@ -1192,15 +1182,15 @@ function createTask() {
             }
             
             // Mostrar mensaje de éxito
-            alert('Tarea creada exitosamente');
+            alert('Tarea personal creada exitosamente');
         } else {
             console.error('❌ Error:', data.message);
-            alert('Error al crear tarea: ' + (data.message || 'Error desconocido'));
+            alert('Error al crear tarea personal: ' + (data.message || 'Error desconocido'));
         }
     })
     .catch(error => {
         console.error('❌ Error:', error);
-        alert('Error de conexión al crear tarea');
+        alert('Error de conexión al crear tarea personal');
     });
 }
 
