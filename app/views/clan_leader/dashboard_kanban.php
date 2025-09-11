@@ -164,6 +164,56 @@
 .task-card.project-eventual { border-left-color: #f97316 !important; } /* naranja para tareas eventuales */
 .task-card.project-normal { border-left-color: #10b981 !important; } /* verde para proyectos normales */
 
+/* Estilos para Subtareas - Fondo pastel para diferenciarlas */
+.subtask-card {
+    background: linear-gradient(135deg, #fef7ff 0%, #f3e8ff 100%); /* Fondo pastel morado suave */
+    border: 1px solid #e9d5ff;
+    border-radius: 8px;
+    padding: 8px 10px;
+    margin-bottom: 6px;
+    box-shadow: 0 1px 3px rgba(139, 92, 246, 0.1);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    border-left: 4px solid #a855f7; /* Borde izquierdo morado más intenso */
+}
+
+.subtask-card:hover {
+    box-shadow: 0 2px 8px rgba(139, 92, 246, 0.2);
+    transform: translateY(-1px);
+    background: linear-gradient(135deg, #fdf4ff 0%, #f1e8ff 100%);
+}
+
+.subtask-card::before {
+    content: "📋";
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 12px;
+    opacity: 0.7;
+}
+
+/* Colores de borde por columna para subtareas */
+.subtask-card.vencidas {
+    border-left-color: #ef4444;
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+}
+
+.subtask-card.hoy {
+    border-left-color: #f59e0b;
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+}
+
+.subtask-card.semana {
+    border-left-color: #3b82f6;
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+}
+
+.subtask-card.futuras {
+    border-left-color: #10b981;
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+}
+
 .task-header {
     display: flex;
     align-items: flex-start;
@@ -471,14 +521,24 @@
             <div class="column-content">
                 <?php if (count($vencidas) > 0): ?>
                     <?php foreach ($vencidas as $task): ?>
-                        <div class="task-card vencidas project-<?= htmlspecialchars($task['project_type'] ?? 'normal') ?>" onclick="goToTaskDetail(event, <?= $task['task_id'] ?>)">
+                        <?php $isSubtask = ($task['item_type'] ?? 'task') === 'subtask'; ?>
+                        <?php $cardClass = $isSubtask ? 'subtask-card' : 'task-card'; ?>
+                        <div class="<?= $cardClass ?> vencidas project-<?= htmlspecialchars($task['project_type'] ?? 'normal') ?>" onclick="goToTaskDetail(event, <?= $task['task_id'] ?>, '<?= $task['item_type'] ?? 'task' ?>')">
                             <div class="task-header">
                                 <div class="task-checkbox">
                                 <input type="checkbox" id="vencidas-<?= $task['task_id'] ?>" 
                                        onclick="event.stopPropagation()" 
-                                       onchange="handleTaskCheck('vencidas-<?= $task['task_id'] ?>', <?= $task['task_id'] ?>, this.checked)">
+                                       onchange="handleTaskCheck('vencidas-<?= $task['task_id'] ?>', <?= $task['task_id'] ?>, this.checked, '<?= $task['item_type'] ?? 'task' ?>')">
                                 </div>
-                                <div class="task-name"><?= htmlspecialchars($task['task_name']) ?></div>
+                                <div class="task-name">
+                                    <?php if ($isSubtask): ?>
+                                        <span style="color: #8b5cf6; font-weight: 600; margin-right: 6px;">↳</span>
+                                    <?php endif; ?>
+                                    <?= htmlspecialchars($task['task_name']) ?>
+                                    <?php if ($isSubtask && !empty($task['parent_task_name'])): ?>
+                                        <br><small style="color: #6b7280; font-size: 11px;">📋 de: <?= htmlspecialchars($task['parent_task_name']) ?></small>
+                                    <?php endif; ?>
+                                </div>
                             </div>
                             <div class="task-project">
                                 <div class="task-project-name"><?= isset($task['project_name']) ? htmlspecialchars($task['project_name']) : 'Tareas Personales' ?></div>
@@ -501,14 +561,24 @@
             <div class="column-content">
                 <?php if (count($hoy) > 0): ?>
                     <?php foreach ($hoy as $task): ?>
-                        <div class="task-card hoy project-<?= htmlspecialchars($task['project_type'] ?? 'normal') ?>" onclick="goToTaskDetail(event, <?= $task['task_id'] ?>)">
+                        <?php $isSubtask = ($task['item_type'] ?? 'task') === 'subtask'; ?>
+                        <?php $cardClass = $isSubtask ? 'subtask-card' : 'task-card'; ?>
+                        <div class="<?= $cardClass ?> hoy project-<?= htmlspecialchars($task['project_type'] ?? 'normal') ?>" onclick="goToTaskDetail(event, <?= $task['task_id'] ?>, '<?= $task['item_type'] ?? 'task' ?>')">
                             <div class="task-header">
                                 <div class="task-checkbox">
                                 <input type="checkbox" id="hoy-<?= $task['task_id'] ?>" 
                                        onclick="event.stopPropagation()" 
-                                       onchange="handleTaskCheck('hoy-<?= $task['task_id'] ?>', <?= $task['task_id'] ?>, this.checked)">
+                                       onchange="handleTaskCheck('hoy-<?= $task['task_id'] ?>', <?= $task['task_id'] ?>, this.checked, '<?= $task['item_type'] ?? 'task' ?>')">
                                 </div>
-                                <div class="task-name"><?= htmlspecialchars($task['task_name']) ?></div>
+                                <div class="task-name">
+                                    <?php if ($isSubtask): ?>
+                                        <span style="color: #8b5cf6; font-weight: 600; margin-right: 6px;">↳</span>
+                                    <?php endif; ?>
+                                    <?= htmlspecialchars($task['task_name']) ?>
+                                    <?php if ($isSubtask && !empty($task['parent_task_name'])): ?>
+                                        <br><small style="color: #6b7280; font-size: 11px;">📋 de: <?= htmlspecialchars($task['parent_task_name']) ?></small>
+                                    <?php endif; ?>
+                                </div>
                             </div>
                             <div class="task-project">
                                 <div class="task-project-name"><?= isset($task['project_name']) ? htmlspecialchars($task['project_name']) : 'Tareas Personales' ?></div>
@@ -531,14 +601,24 @@
             <div class="column-content">
                 <?php if (count($semana) > 0): ?>
                     <?php foreach ($semana as $task): ?>
-                        <div class="task-card semana project-<?= htmlspecialchars($task['project_type'] ?? 'normal') ?>" onclick="goToTaskDetail(event, <?= $task['task_id'] ?>)">
+                        <?php $isSubtask = ($task['item_type'] ?? 'task') === 'subtask'; ?>
+                        <?php $cardClass = $isSubtask ? 'subtask-card' : 'task-card'; ?>
+                        <div class="<?= $cardClass ?> semana project-<?= htmlspecialchars($task['project_type'] ?? 'normal') ?>" onclick="goToTaskDetail(event, <?= $task['task_id'] ?>, '<?= $task['item_type'] ?? 'task' ?>')">
                             <div class="task-header">
                                 <div class="task-checkbox">
                                 <input type="checkbox" id="semana-<?= $task['task_id'] ?>" 
                                        onclick="event.stopPropagation()" 
-                                       onchange="handleTaskCheck('semana-<?= $task['task_id'] ?>', <?= $task['task_id'] ?>, this.checked)">
+                                       onchange="handleTaskCheck('semana-<?= $task['task_id'] ?>', <?= $task['task_id'] ?>, this.checked, '<?= $task['item_type'] ?? 'task' ?>')">
                                 </div>
-                                <div class="task-name"><?= htmlspecialchars($task['task_name']) ?></div>
+                                <div class="task-name">
+                                    <?php if ($isSubtask): ?>
+                                        <span style="color: #8b5cf6; font-weight: 600; margin-right: 6px;">↳</span>
+                                    <?php endif; ?>
+                                    <?= htmlspecialchars($task['task_name']) ?>
+                                    <?php if ($isSubtask && !empty($task['parent_task_name'])): ?>
+                                        <br><small style="color: #6b7280; font-size: 11px;">📋 de: <?= htmlspecialchars($task['parent_task_name']) ?></small>
+                                    <?php endif; ?>
+                                </div>
                             </div>
                             <div class="task-project">
                                 <div class="task-project-name"><?= isset($task['project_name']) ? htmlspecialchars($task['project_name']) : 'Tareas Personales' ?></div>
@@ -561,14 +641,24 @@
             <div class="column-content">
                 <?php if (count($futuras) > 0): ?>
                     <?php foreach (array_slice($futuras, 0, 8) as $task): ?>
-                        <div class="task-card futuras project-<?= htmlspecialchars($task['project_type'] ?? 'normal') ?>" onclick="goToTaskDetail(event, <?= $task['task_id'] ?>)">
+                        <?php $isSubtask = ($task['item_type'] ?? 'task') === 'subtask'; ?>
+                        <?php $cardClass = $isSubtask ? 'subtask-card' : 'task-card'; ?>
+                        <div class="<?= $cardClass ?> futuras project-<?= htmlspecialchars($task['project_type'] ?? 'normal') ?>" onclick="goToTaskDetail(event, <?= $task['task_id'] ?>, '<?= $task['item_type'] ?? 'task' ?>')">
                             <div class="task-header">
                                 <div class="task-checkbox">
                                 <input type="checkbox" id="futuras-<?= $task['task_id'] ?>" 
                                        onclick="event.stopPropagation()" 
-                                       onchange="handleTaskCheck('futuras-<?= $task['task_id'] ?>', <?= $task['task_id'] ?>, this.checked)">
+                                       onchange="handleTaskCheck('futuras-<?= $task['task_id'] ?>', <?= $task['task_id'] ?>, this.checked, '<?= $task['item_type'] ?? 'task' ?>')">
                                 </div>
-                                <div class="task-name"><?= htmlspecialchars($task['task_name']) ?></div>
+                                <div class="task-name">
+                                    <?php if ($isSubtask): ?>
+                                        <span style="color: #8b5cf6; font-weight: 600; margin-right: 6px;">↳</span>
+                                    <?php endif; ?>
+                                    <?= htmlspecialchars($task['task_name']) ?>
+                                    <?php if ($isSubtask && !empty($task['parent_task_name'])): ?>
+                                        <br><small style="color: #6b7280; font-size: 11px;">📋 de: <?= htmlspecialchars($task['parent_task_name']) ?></small>
+                                    <?php endif; ?>
+                                </div>
                             </div>
                             <div class="task-project">
                                 <div class="task-project-name"><?= isset($task['project_name']) ? htmlspecialchars($task['project_name']) : 'Tareas Personales' ?></div>
@@ -895,23 +985,33 @@ function switchDashboardTab(tabName) {
 
 // Función para manejar el click en el card (togglea el checkbox)
 // Función para ir al detalle de la tarea
-function goToTaskDetail(event, taskId) {
+function goToTaskDetail(event, taskId, itemType = 'task') {
     // Si el click fue en el checkbox, no redireccionar
     if (event.target.type === 'checkbox') {
         return;
     }
     
-    // Redireccionar al detalle de la tarea
-    window.location.href = '<?= APP_URL ?>?route=clan_leader/get-task-details&task_id=' + taskId;
+    const itemLabel = itemType === 'subtask' ? 'subtarea' : 'tarea';
+    console.log(`🔗 Navegando al detalle de ${itemLabel}:`, taskId);
+    
+    // Para subtareas, redirigir al detalle de la tarea padre
+    let url = '<?= APP_URL ?>?route=clan_leader/get-task-details&task_id=' + taskId;
+    if (itemType === 'subtask') {
+        url += '&type=subtask';
+    }
+    
+    window.location.href = url;
 }
 
 // Función para manejar cuando se marca/desmarca una tarea
-function handleTaskCheck(uniqueTaskId, taskId, isChecked) {
-    console.log('📝 Tarea', taskId, isChecked ? 'marcada' : 'desmarcada');
+function handleTaskCheck(uniqueTaskId, taskId, isChecked, itemType = 'task') {
+    const itemLabel = itemType === 'subtask' ? 'Subtarea' : 'Tarea';
+    console.log(`📝 ${itemLabel}`, taskId, isChecked ? 'marcada' : 'desmarcada');
     console.log('📝 UniqueTaskId:', uniqueTaskId);
+    console.log('📝 ItemType:', itemType);
     
     const checkbox = document.getElementById(uniqueTaskId);
-    const card = checkbox ? checkbox.closest('.task-card') : null;
+    const card = checkbox ? checkbox.closest('.task-card, .subtask-card') : null;
     
     if (!card || !checkbox) {
         console.error('No se encontró el checkbox o el card');
@@ -996,7 +1096,7 @@ function updateTaskCounts() {
     
     columns.forEach(column => {
         const columnElement = document.querySelector(`.column-header.${column}`);
-        const tasksInColumn = document.querySelectorAll(`.task-card.${column}`).length;
+        const tasksInColumn = document.querySelectorAll(`.task-card.${column}, .subtask-card.${column}`).length;
         const countElement = columnElement.querySelector('.task-count');
         
         if (countElement) {
@@ -1005,8 +1105,8 @@ function updateTaskCounts() {
     });
     
     // Actualizar contador total si existe
-    const totalTasks = document.querySelectorAll('.task-card').length;
-    console.log('📊 Total de tareas restantes:', totalTasks);
+    const totalTasks = document.querySelectorAll('.task-card, .subtask-card').length;
+    console.log('📊 Total de tareas y subtareas restantes:', totalTasks);
 }
 
 // Función para abrir modal de crear tarea

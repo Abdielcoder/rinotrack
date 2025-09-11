@@ -118,7 +118,7 @@ class ClanLeaderController {
         $userId = $this->currentUser['user_id'];
         
         $sql = "
-            SELECT 
+            (SELECT 
                 t.task_id,
                 t.task_name,
                 t.status,
@@ -136,18 +136,53 @@ class ClanLeaderController {
                     ELSE 'normal'
                 END AS project_type,
                 COALESCE(p.is_personal, t.is_personal, 0) AS is_personal,
-                DATEDIFF(t.due_date, CURDATE()) AS days_until_due
+                DATEDIFF(t.due_date, CURDATE()) AS days_until_due,
+                'task' AS item_type,
+                NULL AS parent_task_id,
+                NULL AS parent_task_name
             FROM Tasks t
             LEFT JOIN Projects p ON p.project_id = t.project_id
             WHERE t.assigned_to_user_id = ?
                 AND (t.is_subtask = 0 OR t.is_subtask IS NULL)
                 AND t.status != 'completed'
-                AND t.is_completed = 0
-            ORDER BY t.due_date ASC
+                AND t.is_completed = 0)
+            
+            UNION ALL
+            
+            (SELECT 
+                s.subtask_id AS task_id,
+                s.title AS task_name,
+                s.status,
+                s.priority,
+                s.due_date,
+                s.assigned_to_user_id,
+                t.project_id,
+                COALESCE(p.project_name, 'Tareas Personales') AS project_name,
+                CASE 
+                    WHEN p.project_type IS NOT NULL THEN p.project_type
+                    WHEN t.is_personal = 1 THEN 'personal'
+                    WHEN p.project_name LIKE '%Recurrente%' OR p.project_name LIKE '%recurrente%' THEN 'recurrent'
+                    WHEN p.project_name LIKE '%Eventual%' OR p.project_name LIKE '%eventual%' THEN 'eventual'
+                    WHEN p.project_name = 'Tareas Personales' OR t.project_id IS NULL THEN 'personal'
+                    ELSE 'normal'
+                END AS project_type,
+                COALESCE(p.is_personal, t.is_personal, 0) AS is_personal,
+                DATEDIFF(s.due_date, CURDATE()) AS days_until_due,
+                'subtask' AS item_type,
+                s.task_id AS parent_task_id,
+                t.task_name AS parent_task_name
+            FROM Subtasks s
+            INNER JOIN Tasks t ON s.task_id = t.task_id
+            LEFT JOIN Projects p ON p.project_id = t.project_id
+            WHERE s.assigned_to_user_id = ?
+                AND s.status != 'completed'
+                AND s.due_date IS NOT NULL)
+            
+            ORDER BY due_date ASC
         ";
         
         $stmt = $this->db->prepare($sql);
-        $stmt->execute([$userId]);
+        $stmt->execute([$userId, $userId]); // Pasar userId dos veces: una para tareas, otra para subtareas
         $myTasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         // Organizar por fecha
