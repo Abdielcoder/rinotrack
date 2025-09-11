@@ -99,27 +99,23 @@
 }
 
 .column-header.vencidas {
-    background: #fef2f2;
-    color: #7f1d1d;
-    border-bottom: 2px solid #fca5a5;
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
 }
 
 .column-header.hoy {
-    background: #fffbeb;
-    color: #78350f;
-    border-bottom: 2px solid #fcd34d;
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
 }
 
 .column-header.semana {
-    background: #eff6ff;
-    color: #1e3a8a;
-    border-bottom: 2px solid #93c5fd;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
 }
 
 .column-header.futuras {
-    background: #f0fdf4;
-    color: #14532d;
-    border-bottom: 2px solid #86efac;
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
 }
 
 .task-count {
