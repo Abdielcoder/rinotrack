@@ -667,7 +667,7 @@ function handleTaskCheck(uniqueTaskId, taskId, isChecked) {
     
     console.log('Enviando AJAX para completar task_id:', taskId);
     
-    fetch('<?= APP_URL ?>clan_leader/completeTask', {
+    fetch('<?= APP_URL ?>simple-complete-task.php', {
         method: 'POST',
         body: formData
     })
@@ -707,10 +707,18 @@ function handleTaskCheck(uniqueTaskId, taskId, isChecked) {
     .catch(error => {
         // Error de red: revertir checkbox
         console.error('Error de red:', error);
+        console.error('Error completo:', error.stack);
         checkbox.checked = false;
         card.style.opacity = '1';
         checkbox.disabled = false;
-        alert('Error de conexión. Inténtalo de nuevo.');
+        
+        // Mostrar error más descriptivo
+        const errorMsg = `Error de conexión: ${error.message}. 
+Task ID: ${taskId}. 
+URL: <?= APP_URL ?>simple-complete-task.php
+Revisa la consola para más detalles.`;
+        
+        alert(errorMsg);
     });
 }
 
