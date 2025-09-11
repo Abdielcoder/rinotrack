@@ -2293,18 +2293,33 @@ function switchDashboardTab(tabName) {
         // OCULTAR COMPLETAMENTE el contenedor de "Mis Tareas" cuando esté en "Equipo"
         const myTasksContent = document.getElementById('my-tasks-content');
         if (myTasksContent) {
-            myTasksContent.style.display = 'none';
-            console.log('🙈 Contenedor completo de "Mis Tareas" ocultado');
+            myTasksContent.style.cssText = 'display: none !important;';
+            console.log('🙈 Contenedor completo de "Mis Tareas" FORZADO A OCULTO');
+        }
+        
+        // ASEGURAR que el contenedor del Equipo sea visible
+        const teamTasksContent = document.getElementById('team-tasks-content');
+        if (teamTasksContent) {
+            teamTasksContent.style.cssText = 'display: block !important; width: 100% !important;';
+            console.log('👁️ Contenedor del Equipo FORZADO A VISIBLE');
         }
         
         // Esperar un momento y mostrar el Kanban del equipo
         setTimeout(() => {
             mostrarKanbanEquipoDefinitivo();
         }, 100);
-    } else {
-        console.log('🎯 Tab seleccionado:', tabName);
         
-        // MOSTRAR COMPLETAMENTE el contenedor de "Mis Tareas" cuando NO esté en "Equipo"
+    } else if (tabName === 'my-tasks') {
+        console.log('🎯 Tab my-tasks detectado, mostrando Kanban personal...');
+        
+        // OCULTAR COMPLETAMENTE el contenedor del Equipo cuando esté en "Mis Tareas"
+        const teamTasksContent = document.getElementById('team-tasks-content');
+        if (teamTasksContent) {
+            teamTasksContent.style.cssText = 'display: none !important;';
+            console.log('🙈 Contenedor del Equipo FORZADO A OCULTO');
+        }
+        
+        // MOSTRAR COMPLETAMENTE el contenedor de "Mis Tareas" con ancho completo
         const myTasksContent = document.getElementById('my-tasks-content');
         if (myTasksContent) {
             myTasksContent.style.cssText = `
@@ -2328,15 +2343,11 @@ function switchDashboardTab(tabName) {
                 `;
             }
             
-            console.log('👁️ Contenedor completo de "Mis Tareas" mostrado con ancho completo');
+            console.log('👁️ Contenedor de "Mis Tareas" FORZADO A VISIBLE con ancho completo');
         }
         
-        // OCULTAR el contenedor del Equipo cuando NO esté en "Equipo"
-        const teamTasksContent = document.getElementById('team-tasks-content');
-        if (teamTasksContent) {
-            teamTasksContent.style.display = 'none';
-            console.log('🙈 Contenedor del Equipo ocultado');
-        }
+    } else {
+        console.log('🎯 Tab seleccionado:', tabName);
     }
     
     console.log('✅ Tab dashboard cambiado a:', tabName);
