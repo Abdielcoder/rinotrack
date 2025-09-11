@@ -2247,12 +2247,19 @@ window.mostrarKanbanEmergencia = function() {
 function switchDashboardTab(tabName) {
     console.log('🔄 Cambiando tab dashboard:', tabName);
     
-    // Ocultar todos los contenidos de tabs
-    const allContents = document.querySelectorAll('.tab-content');
-    allContents.forEach(content => {
-        content.classList.remove('active');
-        content.style.display = 'none';
-    });
+    // OCULTAR EXPLÍCITAMENTE AMBOS CONTENEDORES PRIMERO
+    const myTasksContent = document.getElementById('my-tasks-content');
+    const teamTasksContent = document.getElementById('team-tasks-content');
+    
+    if (myTasksContent) {
+        myTasksContent.style.display = 'none';
+        console.log('🙈 my-tasks-content OCULTO');
+    }
+    
+    if (teamTasksContent) {
+        teamTasksContent.style.display = 'none';
+        console.log('🙈 team-tasks-content OCULTO');
+    }
     
     // Ocultar todas las estadísticas
     const allStats = document.querySelectorAll('.dashboard-stats');
@@ -2266,12 +2273,11 @@ function switchDashboardTab(tabName) {
         button.classList.remove('active');
     });
     
-    // Mostrar el contenido del tab seleccionado
+    // MOSTRAR SOLO EL CONTENEDOR CORRECTO
     const targetContent = document.getElementById(tabName + '-content');
     if (targetContent) {
-        targetContent.classList.add('active');
         targetContent.style.display = 'block';
-        console.log(`🔍 Forzando visibilidad para ${tabName}-content:`, targetContent.style.display);
+        console.log(`👁️ ${tabName}-content MOSTRADO`);
     }
     
     // Mostrar las estadísticas correspondientes
