@@ -1324,6 +1324,22 @@ class ClanLeaderController {
         }
         
         $taskProject = (int)($_POST['task_project'] ?? 0);
+        error_log('createTask - taskProject recibido desde POST: ' . $taskProject);
+        
+        // Si el proyecto es 0, obtener o crear proyecto personal
+        if ($taskProject === 0) {
+            error_log('createTask - taskProject es 0, obteniendo proyecto personal...');
+            $taskModel = new Task();
+            $personalProjectId = $taskModel->getOrCreatePersonalProject($_SESSION['user_id']);
+            if ($personalProjectId) {
+                $taskProject = $personalProjectId;
+                error_log('createTask - Proyecto personal obtenido/creado: ' . $taskProject);
+            } else {
+                error_log('createTask - ERROR: No se pudo obtener/crear proyecto personal');
+            }
+        }
+        
+        error_log('createTask - taskProject FINAL a usar: ' . $taskProject);
         $taskDescription = Utils::sanitizeInput($_POST['task_description'] ?? '');
         
         // Campos de recurrencia
@@ -4601,10 +4617,13 @@ class ClanLeaderController {
             }
             
             $userId = $_SESSION['user_id'];
+            error_log("getPersonalProjectId - Usuario ID: $userId");
             
             // Obtener o crear proyecto personal
             $taskModel = new Task();
+            error_log("getPersonalProjectId - Llamando getOrCreatePersonalProject para usuario $userId");
             $personalProjectId = $taskModel->getOrCreatePersonalProject($userId);
+            error_log("getPersonalProjectId - Resultado: " . ($personalProjectId ?: 'FALSE'));
             
             if ($personalProjectId) {
                 Utils::jsonResponse([

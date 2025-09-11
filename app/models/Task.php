@@ -2310,16 +2310,29 @@ class Task {
             // Buscar proyecto personal existente en el clan del usuario
             $stmt = $this->db->prepare("
                 SELECT project_id FROM Projects 
-                WHERE project_name LIKE ? AND clan_id = ? AND created_by_user_id = ? AND is_personal = 1
+                WHERE project_name = ? AND clan_id = ? AND created_by_user_id = ? AND is_personal = 1
                 LIMIT 1
             ");
             $personalProjectName = "Tareas Personales";
+            error_log("Buscando proyecto personal: nombre='$personalProjectName', clan_id=$clanId, user_id=$userId");
             $stmt->execute([$personalProjectName, $clanId, $userId]);
             $existingProject = $stmt->fetch();
             
             if ($existingProject) {
-                error_log("Proyecto personal existente encontrado: " . $existingProject['project_id']);
+                error_log("✅ Proyecto personal existente encontrado: " . $existingProject['project_id']);
                 return $existingProject['project_id'];
+            } else {
+                error_log("❌ NO se encontró proyecto personal existente para usuario $userId en clan $clanId");
+                
+                // Debug: Buscar todos los proyectos del usuario para diagnosticar
+                $debugStmt = $this->db->prepare("
+                    SELECT project_id, project_name, is_personal, clan_id, created_by_user_id 
+                    FROM Projects 
+                    WHERE created_by_user_id = ?
+                ");
+                $debugStmt->execute([$userId]);
+                $userProjects = $debugStmt->fetchAll();
+                error_log("🔍 Proyectos del usuario $userId: " . print_r($userProjects, true));
             }
             
             // Si no existe, crear uno nuevo en el clan del usuario
