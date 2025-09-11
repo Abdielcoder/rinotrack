@@ -1225,6 +1225,9 @@ class ClanLeaderController {
      * Crear tarea con múltiples usuarios y subtareas
      */
     public function createTask() {
+        // Asegurar que siempre devolvemos JSON
+        header('Content-Type: application/json');
+        
         // Suprimir warnings temporalmente para evitar interferencia con JSON
         error_reporting(E_ALL & ~E_WARNING);
         
@@ -1235,6 +1238,12 @@ class ClanLeaderController {
         error_log('Auth logged in: ' . ($this->auth->isLoggedIn() ? 'YES' : 'NO'));
         
         try {
+            // Inicializar taskModel si no existe
+            if (!isset($this->taskModel) || !$this->taskModel) {
+                $this->taskModel = new Task();
+                error_log('createTask - taskModel inicializado');
+            }
+            
             // Verificar autenticación
             if (!$this->auth->isLoggedIn()) {
                 error_log('createTask - Error: No autenticado');
@@ -1329,13 +1338,20 @@ class ClanLeaderController {
         // Si el proyecto es 0, obtener o crear proyecto personal
         if ($taskProject === 0) {
             error_log('createTask - taskProject es 0, obteniendo proyecto personal...');
-            $taskModel = new Task();
-            $personalProjectId = $taskModel->getOrCreatePersonalProject($_SESSION['user_id']);
+            
+            // Usar la instancia existente o crear una nueva si no existe
+            if (!$this->taskModel) {
+                $this->taskModel = new Task();
+            }
+            
+            $personalProjectId = $this->taskModel->getOrCreatePersonalProject($_SESSION['user_id']);
             if ($personalProjectId) {
                 $taskProject = $personalProjectId;
                 error_log('createTask - Proyecto personal obtenido/creado: ' . $taskProject);
             } else {
                 error_log('createTask - ERROR: No se pudo obtener/crear proyecto personal');
+                Utils::jsonResponse(['success' => false, 'message' => 'No se pudo obtener el proyecto personal'], 500);
+                return;
             }
         }
         

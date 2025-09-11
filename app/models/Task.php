@@ -2288,6 +2288,14 @@ class Task {
      */
     private function getOrCreatePersonalProject($userId) {
         try {
+            error_log("getOrCreatePersonalProject - INICIO para usuario $userId");
+            
+            // Validar userId
+            if (!$userId || $userId <= 0) {
+                error_log("getOrCreatePersonalProject - ERROR: userId inválido: $userId");
+                return false;
+            }
+            
             // Primero obtener el clan del usuario
             $stmt = $this->db->prepare("
                 SELECT cm.clan_id, c.clan_name 
@@ -2298,6 +2306,8 @@ class Task {
             ");
             $stmt->execute([$userId]);
             $userClan = $stmt->fetch();
+            
+            error_log("getOrCreatePersonalProject - Consulta clan ejecutada para usuario $userId");
             
             if (!$userClan) {
                 error_log("Usuario $userId no pertenece a ningún clan");
