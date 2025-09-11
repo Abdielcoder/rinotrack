@@ -4796,7 +4796,7 @@ class ClanLeaderController {
             $project = $this->projectModel->findById($task['project_id']);
             
             // Verificar que la tarea pertenece al clan del usuario
-            if (!$project || $project['clan_id'] != $this->userClan['clan_id']) {
+            if (!$project || !$this->userClan || $project['clan_id'] != $this->userClan['clan_id']) {
                 header('Location: ?route=clan_leader/tasks');
                 exit();
             }
@@ -4804,7 +4804,8 @@ class ClanLeaderController {
             $this->loadView('clan_leader/task_edit', [
                 'task' => $task,
                 'user' => $this->currentUser,
-                'userClan' => $this->userClan
+                'userClan' => $this->userClan,
+                'clan' => $this->userClan ?: ['clan_name' => 'Sin clan asignado', 'clan_id' => null]
             ]);
             
         } catch (Exception $e) {
