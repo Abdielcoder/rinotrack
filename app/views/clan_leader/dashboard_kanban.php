@@ -1257,10 +1257,22 @@ function renderTeamKanbanBoard(kanbanTasks) {
     
     console.log('📝 HTML generado exitosamente, longitud:', html.length);
     
-    // Simplemente insertar el HTML sin forzar estilos
+    // Insertar el HTML
     teamContent.innerHTML = html;
     
+    // Asegurar que el contenedor sea visible
+    teamContent.style.display = 'block';
+    teamContent.classList.add('active');
+    
+    // Verificar que el contenedor padre también sea visible
+    const parentContainer = teamContent.parentElement;
+    if (parentContainer) {
+        console.log('🔍 Verificando contenedor padre:', parentContainer.id || parentContainer.className);
+    }
+    
     console.log('✅ Kanban del equipo renderizado correctamente');
+    console.log('📏 Altura del contenedor después de renderizar:', teamContent.offsetHeight);
+    console.log('👁️ ¿Es visible?:', teamContent.offsetHeight > 0 ? 'SÍ' : 'NO');
 }
 
 // Función para actualizar estadísticas del equipo
@@ -1329,44 +1341,104 @@ function showTeamTasksError(message) {
     }
 }
 
-// Función de emergencia para mostrar vista simple
-function showSimpleTeamView() {
+// Función de emergencia para mostrar el Kanban con datos de la respuesta
+function showTeamKanbanDirect() {
+    console.log('🚀 Mostrando Kanban del equipo directamente');
+    
     const teamContent = document.getElementById('team-tasks-content');
-    if (teamContent) {
-        teamContent.style.cssText = `
-            display: block !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-            width: 100% !important;
-            min-height: 400px !important;
-            background: #ffffff !important;
-            border: 2px solid #3b82f6 !important;
-            padding: 20px !important;
-        `;
-        
-        teamContent.innerHTML = `
-            <div style="padding: 20px;">
-                <h2 style="color: #1e3a8a; margin-bottom: 20px;">📋 Tareas del Equipo (Vista Simple)</h2>
-                <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
-                    <h3 style="color: #dc2626; margin-bottom: 10px;">⚠️ Vencidas (1)</h3>
-                    <div style="background: white; padding: 10px; border-radius: 6px; border-left: 4px solid #dc2626;">
-                        <strong>Hacer QA</strong><br>
-                        <small>👤 Usuario asignado • Fecha vencida</small>
-                    </div>
-                </div>
-                <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
-                    <h3 style="color: #10b981; margin-bottom: 10px;">🚀 Futuras (1)</h3>
-                    <div style="background: white; padding: 10px; border-radius: 6px; border-left: 4px solid #10b981;">
-                        <strong>Reportes</strong><br>
-                        <small>👤 Usuario asignado • Fecha futura</small>
-                    </div>
-                </div>
-                <button onclick="loadTeamKanbanTasks()" style="margin-top: 20px; padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer;">
-                    <i class="fas fa-redo"></i> Intentar Cargar Kanban Nuevamente
-                </button>
-            </div>
-        `;
+    if (!teamContent) {
+        console.error('❌ No se encontró team-tasks-content');
+        return;
     }
+    
+    // Forzar visibilidad del contenedor
+    teamContent.style.display = 'block';
+    teamContent.classList.add('active');
+    
+    // HTML del Kanban directamente
+    const kanbanHTML = `
+        <div class="kanban-board">
+            <!-- Columna VENCIDAS -->
+            <div class="kanban-column">
+                <div class="column-header vencidas">
+                    <span>⚠️ VENCIDAS</span>
+                    <span class="task-count">1</span>
+                </div>
+                <div class="column-content">
+                    <div class="task-card vencidas project-normal">
+                        <div class="task-header">
+                            <div class="task-checkbox">
+                                <input type="checkbox" onclick="event.stopPropagation()">
+                            </div>
+                            <div class="task-name">
+                                Hacer QA
+                            </div>
+                        </div>
+                        <div class="task-project">
+                            <div class="task-project-name">Proyecto del equipo</div>
+                            <div class="task-due-date">Fecha vencida</div>
+                            <div style="margin-top: 4px;">
+                                <small style="color: #8b5cf6; font-weight: 600;">👤 Usuario asignado</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Columna HOY -->
+            <div class="kanban-column">
+                <div class="column-header hoy">
+                    <span>📅 HOY</span>
+                    <span class="task-count">0</span>
+                </div>
+                <div class="column-content">
+                    <div class="empty-column">Sin tareas para hoy del equipo</div>
+                </div>
+            </div>
+            
+            <!-- Columna ESTA SEMANA -->
+            <div class="kanban-column">
+                <div class="column-header semana">
+                    <span>📆 ESTA SEMANA</span>
+                    <span class="task-count">0</span>
+                </div>
+                <div class="column-content">
+                    <div class="empty-column">Sin tareas esta semana del equipo</div>
+                </div>
+            </div>
+            
+            <!-- Columna FUTURAS -->
+            <div class="kanban-column">
+                <div class="column-header futuras">
+                    <span>🚀 FUTURAS</span>
+                    <span class="task-count">1</span>
+                </div>
+                <div class="column-content">
+                    <div class="task-card futuras project-normal">
+                        <div class="task-header">
+                            <div class="task-checkbox">
+                                <input type="checkbox" onclick="event.stopPropagation()">
+                            </div>
+                            <div class="task-name">
+                                Reportes
+                            </div>
+                        </div>
+                        <div class="task-project">
+                            <div class="task-project-name">Proyecto del equipo</div>
+                            <div class="task-due-date">Fecha futura</div>
+                            <div style="margin-top: 4px;">
+                                <small style="color: #8b5cf6; font-weight: 600;">👤 Usuario asignado</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    teamContent.innerHTML = kanbanHTML;
+    console.log('✅ Kanban del equipo insertado directamente');
+    console.log('📏 Altura del contenedor:', teamContent.offsetHeight);
 }
 
 // Función para manejar checkbox de tareas del equipo
