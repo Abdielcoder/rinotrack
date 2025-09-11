@@ -1248,18 +1248,53 @@ function loadTeamKanban() {
         });
 }
 
-// Mostrar spinner de carga
+// Mostrar spinner de carga - ESTRATEGIA DIRECTA
 function showTeamLoading() {
-    hideAllTeamViews();
-    document.getElementById('team-loading').style.display = 'flex';
+    const teamContent = document.getElementById('team-tasks-content');
+    if (teamContent) {
+        teamContent.innerHTML = `
+            <div style="display: flex; justify-content: center; align-items: center; height: 400px; background: #f8fafc; border-radius: 12px; border: 1px solid #e5e7eb;">
+                <div style="text-align: center;">
+                    <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: #3b82f6; margin-bottom: 1rem;"></i>
+                    <p style="color: #6b7280; font-size: 1.1rem; margin: 0;">Cargando tareas del equipo...</p>
+                </div>
+            </div>
+        `;
+        
+        // Asegurar visibilidad
+        teamContent.style.cssText = `
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            width: 100% !important;
+        `;
+    }
 }
 
-// Mostrar error
+// Mostrar error - ESTRATEGIA DIRECTA
 function showTeamError(message) {
-    hideAllTeamViews();
-    const errorDiv = document.getElementById('team-error');
-    errorDiv.style.display = 'flex';
-    errorDiv.querySelector('p').textContent = message;
+    const teamContent = document.getElementById('team-tasks-content');
+    if (teamContent) {
+        teamContent.innerHTML = `
+            <div style="display: flex; justify-content: center; align-items: center; height: 400px; background: #fef2f2; border-radius: 12px; border: 2px solid #ef4444;">
+                <div style="text-align: center;">
+                    <i class="fas fa-exclamation-triangle" style="font-size: 2rem; color: #ef4444; margin-bottom: 1rem;"></i>
+                    <p style="color: #dc2626; font-size: 1.1rem; margin-bottom: 1rem;">${message}</p>
+                    <button onclick="loadTeamKanban()" style="background: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.9rem;">
+                        Reintentar
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        // Asegurar visibilidad
+        teamContent.style.cssText = `
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            width: 100% !important;
+        `;
+    }
 }
 
 // Ocultar todas las vistas del equipo
@@ -1269,15 +1304,20 @@ function hideAllTeamViews() {
     document.getElementById('team-error').style.display = 'none';
 }
 
-// Renderizar el Kanban del equipo
+// Renderizar el Kanban del equipo - ESTRATEGIA DIRECTA
 function renderTeamKanban(kanbanTasks) {
     console.log('🎨 Renderizando Kanban del equipo:', kanbanTasks);
     
-    hideAllTeamViews();
-    const kanbanBoard = document.getElementById('team-kanban-board');
+    // ESTRATEGIA: Insertar directamente en team-tasks-content sin subdivisiones
+    const teamContent = document.getElementById('team-tasks-content');
+    if (!teamContent) {
+        console.error('❌ No se encontró team-tasks-content');
+        return;
+    }
     
-    // Crear HTML del Kanban
-    let html = '';
+    // Crear HTML del Kanban DIRECTAMENTE igual que "Mis Tareas"
+    let html = '<div class="kanban-board">';
+    
     const columns = ['vencidas', 'hoy', 'semana1', 'semana2'];
     const columnTitles = {
         'vencidas': '⚠️ VENCIDAS',
@@ -1336,10 +1376,38 @@ function renderTeamKanban(kanbanTasks) {
         `;
     });
     
-    kanbanBoard.innerHTML = html;
-    kanbanBoard.style.display = 'grid';
+    html += '</div>'; // Cerrar kanban-board
     
-    console.log('✅ Kanban del equipo renderizado correctamente');
+    // INSERTAR DIRECTAMENTE en team-tasks-content
+    teamContent.innerHTML = html;
+    
+    // FORZAR VISIBILIDAD AGRESIVA
+    teamContent.style.cssText = `
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        width: 100% !important;
+        height: auto !important;
+        min-height: 500px !important;
+        background: transparent !important;
+    `;
+    
+    console.log('✅ Kanban del equipo insertado DIRECTAMENTE');
+    console.log('📏 Dimensiones finales:', teamContent.getBoundingClientRect());
+    
+    // Verificar que el HTML se insertó
+    const kanbanBoard = teamContent.querySelector('.kanban-board');
+    if (kanbanBoard) {
+        console.log('✅ .kanban-board encontrado dentro de team-tasks-content');
+        kanbanBoard.style.cssText = `
+            display: grid !important;
+            grid-template-columns: 1fr 1fr 1fr 1fr !important;
+            gap: 20px !important;
+            width: 100% !important;
+        `;
+    } else {
+        console.error('❌ .kanban-board NO encontrado después de insertar HTML');
+    }
 }
 
 // Actualizar estadísticas del equipo
