@@ -634,7 +634,7 @@ function goToTaskDetail(event, taskId) {
     }
     
     // Redireccionar al detalle de la tarea
-    window.location.href = '<?= APP_URL ?>clan_leader/get-task-details&task_id=' + taskId;
+    window.location.href = '<?= APP_URL ?>?route=clan_leader/get-task-details&task_id=' + taskId;
 }
 
 // Función para manejar cuando se marca/desmarca una tarea
