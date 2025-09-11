@@ -657,6 +657,18 @@ function toggleProjectDelegation(projectId, isAllowed) {
     .then(data => {
         if (data.success) {
             showToast(data.message || 'Configuración actualizada', 'success');
+            
+            // Actualizar visualmente el checkbox
+            const checkmark = document.querySelector(`[data-project-id="${projectId}"] + .checkmark`);
+            if (checkmark) {
+                if (isAllowed) {
+                    checkmark.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                    checkmark.style.borderColor = '#667eea';
+                } else {
+                    checkmark.style.background = '#fff';
+                    checkmark.style.borderColor = '#d1d5db';
+                }
+            }
         } else {
             showToast(data.message || 'Error al actualizar configuración', 'error');
             // Revertir checkbox si hay error
@@ -1093,8 +1105,46 @@ function toggleProjectDelegation(projectId, isAllowed) {
     transition: all 0.2s ease;
 }
 
+.checkbox-label-minimal input[type="checkbox"] {
+    display: none;
+}
+
 .checkbox-label-minimal:hover {
     opacity: 0.8;
+}
+
+.checkbox-label-minimal:hover .checkmark {
+    border-color: #764ba2;
+    transform: scale(1.05);
+}
+
+.checkbox-label-minimal .checkmark {
+    width: 24px;
+    height: 24px;
+    background-color: #fff;
+    border: 2px solid #d1d5db;
+    border-radius: 6px;
+    position: relative;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.checkbox-label-minimal input[type="checkbox"]:checked + .checkmark {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-color: #667eea;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.checkbox-label-minimal input[type="checkbox"]:checked + .checkmark::after {
+    content: '';
+    position: absolute;
+    left: 8px;
+    top: 3px;
+    width: 6px;
+    height: 12px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
 }
 
 .checkbox-text {

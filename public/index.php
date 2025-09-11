@@ -774,6 +774,11 @@ try {
         $controller->updateTaskStatus();
         break;
         
+    case 'clan_leader/toggle-project-delegation':
+        $controller = new ClanLeaderController();
+        $controller->updateProjectDelegation();
+        break;
+        
         // Rutas de Gamificación
         case 'gamification':
             $controller = new GamificationController();
