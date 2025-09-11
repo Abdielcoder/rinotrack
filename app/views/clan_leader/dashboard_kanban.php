@@ -113,6 +113,7 @@
     font-size: 0.75rem;
     font-weight: 600;
     backdrop-filter: blur(10px);
+    color: #374151;
 }
 
 .column-content {
