@@ -487,6 +487,21 @@
     opacity: 0.7;
 }
 
+/* ===== Punto Kanban (marcador visible del tablero de equipo) ===== */
+.equipo-kanban-board { position: relative; }
+.equipo-kanban-marker {
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    width: 18px;
+    height: 18px;
+    background: #ef4444;
+    border: 3px solid #ffffff;
+    border-radius: 50%;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+    z-index: 10;
+}
+
 .team-column {
     flex: 1;
     background: white;
@@ -1651,7 +1666,7 @@ function renderTeamKanban(kanbanTasks) {
     }
     
     // USAR CLASES COMPLETAMENTE NUEVAS PARA EVITAR CONFLICTOS
-    let html = '<div class="equipo-kanban-board">';
+    let html = '<div class="equipo-kanban-board">\n<div class="equipo-kanban-marker" title="Punto Kanban"></div>';
     
     const columns = ['vencidas', 'hoy', 'semana1', 'semana2'];
     const columnConfig = {
