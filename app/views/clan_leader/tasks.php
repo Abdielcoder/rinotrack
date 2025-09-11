@@ -22,7 +22,7 @@ ob_start();
     margin: 0 auto;
 }
 
-.tab-minimal {
+.tasks-tab-button {
     flex: 1;
     display: flex;
     align-items: center;
@@ -40,36 +40,28 @@ ob_start();
     overflow: hidden;
 }
 
-.tab-minimal:hover {
+.tasks-tab-button:hover {
     background: rgba(100, 116, 139, 0.1);
     color: #475569;
 }
 
-.tab-minimal.active {
+.tasks-tab-button.active {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
     transform: translateY(-1px);
 }
 
-.tab-icon-minimal {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 24px;
-    height: 24px;
-}
-
-.tab-icon-minimal i {
+.tasks-tab-button i {
     font-size: 16px;
     transition: all 0.3s ease;
 }
 
-.tab-minimal.active .tab-icon-minimal i {
+.tasks-tab-button.active i {
     transform: scale(1.1);
 }
 
-.tab-text-minimal {
+.tasks-tab-button span {
     font-size: 14px;
     font-weight: 600;
     letter-spacing: 0.025em;
@@ -82,16 +74,16 @@ ob_start();
         margin: 0 16px;
     }
     
-    .tab-minimal {
+    .tasks-tab-button {
         padding: 10px 16px;
         gap: 6px;
     }
     
-    .tab-text-minimal {
+    .tasks-tab-button span {
         font-size: 13px;
     }
     
-    .tab-icon-minimal i {
+    .tasks-tab-button i {
         font-size: 14px;
     }
 }
@@ -128,17 +120,13 @@ ob_start();
         <!-- Tabs Minimalistas -->
         <div class="tabs-container-minimal">
             <div class="tabs-wrapper-minimal">
-                <button class="tab-minimal active" onclick="switchTab('my-tasks')" id="my-tasks-tab">
-                    <div class="tab-icon-minimal">
-                        <i class="fas fa-user"></i>
-                    </div>
-                    <span class="tab-text-minimal">Mis Tareas</span>
+                <button class="tasks-tab-button active" onclick="switchTab('my-tasks')" id="my-tasks-tab">
+                    <i class="fas fa-user"></i>
+                    <span>Mis Tareas</span>
                 </button>
-                <button class="tab-minimal" onclick="switchTab('team-tasks')" id="team-tasks-tab">
-                    <div class="tab-icon-minimal">
-                        <i class="fas fa-users"></i>
-                    </div>
-                    <span class="tab-text-minimal">Equipo</span>
+                <button class="tasks-tab-button" onclick="switchTab('team-tasks')" id="team-tasks-tab">
+                    <i class="fas fa-users"></i>
+                    <span>Equipo</span>
                 </button>
             </div>
         </div>
@@ -3027,7 +3015,7 @@ function switchTab(tabName) {
     });
     
     // Remover active de todos los tab buttons
-    document.querySelectorAll('.tab-minimal, .tasks-tab-button, .tab-button').forEach(button => {
+    document.querySelectorAll('.tasks-tab-button, .tab-button').forEach(button => {
         button.classList.remove('active');
     });
     
@@ -4286,7 +4274,7 @@ function renderTasksTableFromKanban(tasks, tbodyId) {
 
 // Función para aplicar filtros actuales
 function applyCurrentFilters(tasks) {
-    const activeTab = document.querySelector('.tab-minimal.active');
+    const activeTab = document.querySelector('.tasks-tab-button.active');
     const tabType = activeTab ? activeTab.id.replace('-tab', '') : 'my-tasks';
     
     // Obtener valores de filtros del formulario correspondiente
@@ -4334,7 +4322,7 @@ function applyCurrentFilters(tasks) {
 // Función para recargar con filtros
 function applyFilters() {
     console.log('🔍 Aplicando filtros...');
-    const activeTab = document.querySelector('.tab-minimal.active');
+    const activeTab = document.querySelector('.tasks-tab-button.active');
     if (activeTab) {
         const tabId = activeTab.id.replace('-tab', '');
         if (tabId === 'my-tasks') {
@@ -4381,7 +4369,7 @@ function deleteTaskTable(taskId, taskName) {
             if (data.success) {
                 showTaskToast(data.message || 'Tarea eliminada exitosamente', 'success');
                 // Recargar el tab actual
-                const activeTab = document.querySelector('.tab-minimal.active');
+                const activeTab = document.querySelector('.tasks-tab-button.active');
                 if (activeTab) {
                     const tabId = activeTab.id.replace('-tab', '');
                     if (tabId === 'my-tasks') {
