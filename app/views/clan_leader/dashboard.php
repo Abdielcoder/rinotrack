@@ -556,12 +556,15 @@ ob_start();
         </div>
         
         <form id="createTaskForm" class="modal-body">
+            <!-- Campo oculto para asignar la tarea al usuario actual -->
+            <input type="hidden" name="assigned_members[]" value="<?php echo $_SESSION['user_id']; ?>">
+            
             <div class="form-group">
                 <label for="title">
                     <i class="fas fa-tasks"></i>
                     Nombre de la Tarea *
                 </label>
-                <input type="text" id="title" name="title" required 
+                <input type="text" id="title" name="task_title" required 
                        placeholder="Ej: Revisar documentación del proyecto" 
                        class="form-control">
             </div>
@@ -571,7 +574,7 @@ ob_start();
                     <i class="fas fa-align-left"></i>
                     Descripción
                 </label>
-                <textarea id="description" name="description" 
+                <textarea id="description" name="task_description" 
                           placeholder="Descripción detallada de la tarea (opcional)"
                           class="form-control" rows="3"></textarea>
             </div>
@@ -582,7 +585,7 @@ ob_start();
                         <i class="fas fa-calendar"></i>
                         Fecha de Vencimiento *
                     </label>
-                    <input type="date" id="due_date" name="due_date" required class="form-control">
+                    <input type="date" id="due_date" name="task_due_date" required class="form-control">
                 </div>
                 
                 <div class="form-group">
@@ -935,8 +938,8 @@ function createTask() {
     const formData = new FormData(form);
     
     // Validaciones básicas
-    const title = formData.get('title');
-    const dueDate = formData.get('due_date');
+    const title = formData.get('task_title');
+    const dueDate = formData.get('task_due_date');
     
     if (!title || title.trim().length < 3) {
         alert('El nombre de la tarea debe tener al menos 3 caracteres');
