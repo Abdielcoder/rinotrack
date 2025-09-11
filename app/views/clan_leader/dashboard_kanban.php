@@ -165,8 +165,8 @@
 
 .task-header {
     display: flex;
-    align-items: center;
-    gap: 8px;
+    align-items: flex-start;
+    gap: 6px;
 }
 
 .task-checkbox {
@@ -207,7 +207,8 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    flex: 1;
+    margin: 0;
+    padding: 0;
 }
 
 .task-project {
@@ -220,6 +221,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    margin-left: 20px;
 }
 
 .task-project::before {
