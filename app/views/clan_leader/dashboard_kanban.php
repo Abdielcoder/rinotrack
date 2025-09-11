@@ -665,15 +665,13 @@ function handleTaskCheck(uniqueTaskId, taskId, isChecked) {
     checkbox.disabled = true;
     card.style.opacity = '0.6';
     
-    // Hacer llamada AJAX para actualizar en base de datos
+    // Hacer llamada AJAX para completar tarea
     const formData = new FormData();
     formData.append('task_id', taskId);
-    formData.append('status', 'completed');
-    formData.append('item_type', 'task');
     
-    console.log('Enviando AJAX con task_id:', taskId, 'status: completed');
+    console.log('Enviando AJAX para completar task_id:', taskId);
     
-    fetch('<?= APP_URL ?>clan_leader/updateTaskStatus', {
+    fetch('<?= APP_URL ?>clan_leader/completeTask', {
         method: 'POST',
         body: formData
     })

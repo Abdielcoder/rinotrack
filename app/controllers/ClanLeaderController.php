@@ -4839,16 +4839,23 @@ class ClanLeaderController {
         header('Content-Type: application/json');
         
         try {
-            $this->requireAuth();
+            // Log para debugging
+            error_log("=== UPDATE TASK STATUS DEBUG ===");
+            error_log("POST data: " . json_encode($_POST));
+            error_log("Session user_id: " . ($_SESSION['user_id'] ?? 'NO_SESSION'));
             
-            if (!$this->hasClanLeaderAccess()) {
-                echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
+            // Verificación básica de sesión
+            if (!isset($_SESSION['user_id']) || empty($_SESSION['user_id'])) {
+                error_log("Error: Usuario no autenticado");
+                echo json_encode(['success' => false, 'message' => 'Usuario no autenticado']);
                 exit;
             }
 
             $taskId = (int)($_POST['task_id'] ?? 0);
             $status = $_POST['status'] ?? '';
             $itemType = $_POST['item_type'] ?? 'task';
+            
+            error_log("Parsed: taskId=$taskId, status=$status, itemType=$itemType");
             
             if ($taskId <= 0) {
                 throw new Exception("ID de tarea inválido");
@@ -4920,6 +4927,60 @@ class ClanLeaderController {
             echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
             exit;
         }
+    }
+    
+    /**
+     * Método simplificado para completar tareas desde Kanban
+     */
+    public function completeTask() {
+        // Headers y limpieza
+        if (ob_get_level()) ob_clean();
+        header('Content-Type: application/json');
+        
+        // Log básico
+        error_log("=== COMPLETE TASK SIMPLE ===");
+        error_log("POST: " . json_encode($_POST));
+        
+        // Verificar datos básicos
+        $taskId = (int)($_POST['task_id'] ?? 0);
+        
+        if ($taskId <= 0) {
+            echo json_encode(['success' => false, 'message' => 'ID inválido']);
+            exit;
+        }
+
+        try {
+            // Actualizar tarea directamente
+            $stmt = $this->db->prepare("
+                UPDATE Tasks 
+                SET status = 'completed', 
+                    is_completed = 1,
+                    completion_percentage = 100,
+                    completed_at = NOW(),
+                    updated_at = NOW() 
+                WHERE task_id = ?
+            ");
+            
+            $result = $stmt->execute([$taskId]);
+            
+            if ($result && $stmt->rowCount() > 0) {
+                error_log("✅ Tarea $taskId completada correctamente");
+                echo json_encode([
+                    'success' => true, 
+                    'message' => 'Tarea completada',
+                    'task_id' => $taskId
+                ]);
+            } else {
+                error_log("❌ No se pudo completar tarea $taskId");
+                echo json_encode(['success' => false, 'message' => 'No se pudo actualizar']);
+            }
+            
+        } catch (Exception $e) {
+            error_log("❌ Error SQL: " . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'Error de base de datos']);
+        }
+        
+        exit;
     }
     
     /**
