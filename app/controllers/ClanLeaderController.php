@@ -125,8 +125,13 @@ class ClanLeaderController {
                 t.priority,
                 t.due_date,
                 t.assigned_to_user_id,
-                DATEDIFF(t.due_date, CURDATE()) as days_until_due
+                t.project_id,
+                COALESCE(p.project_name, 'Tareas Personales') AS project_name,
+                COALESCE(p.project_type, CASE WHEN t.is_personal = 1 THEN 'personal' ELSE 'normal' END) AS project_type,
+                COALESCE(p.is_personal, t.is_personal, 0) AS is_personal,
+                DATEDIFF(t.due_date, CURDATE()) AS days_until_due
             FROM Tasks t
+            LEFT JOIN Projects p ON p.project_id = t.project_id
             WHERE t.assigned_to_user_id = ?
                 AND (t.is_subtask = 0 OR t.is_subtask IS NULL)
             ORDER BY t.due_date ASC
