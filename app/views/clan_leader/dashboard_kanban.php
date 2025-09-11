@@ -2018,75 +2018,83 @@ function createPersonalTask() {
 }
 
 // Inicializar con "Mis Tareas" activo
-// ===== SOLUCIÓN DEFINITIVA - KANBAN HARDCODED =====
+// ===== SOLUCIÓN USANDO LAS CLASES CSS EXISTENTES DEL PROYECTO =====
 function mostrarKanbanEquipoDefinitivo() {
-    console.log('🚨 SOLUCIÓN DEFINITIVA ACTIVADA');
+    console.log('🚨 USANDO CSS EXISTENTE DEL PROYECTO');
     
     const teamContent = document.getElementById('team-tasks-content');
     if (!teamContent) return;
     
-    // KANBAN HTML COMPLETO HARDCODED
+    // USAR LAS CLASES kanban-board Y kanban-column QUE YA EXISTEN EN clan-leader.css
     teamContent.innerHTML = `
-        <div style="display: flex !important; gap: 20px !important; padding: 20px !important; background: #f8fafc !important; border-radius: 12px !important; width: 100% !important; box-sizing: border-box !important;">
+        <div class="kanban-board">
             <!-- COLUMNA VENCIDAS -->
-            <div style="flex: 1 !important; background: white !important; border-radius: 8px !important; box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important; overflow: hidden !important; min-height: 400px !important;">
-                <div style="background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%) !important; color: #991b1b !important; padding: 16px !important; font-weight: bold !important; border-bottom: 3px solid #ef4444 !important; font-size: 14px !important;">
-                    ⚠️ VENCIDAS <span style="background: white; padding: 2px 8px; border-radius: 12px; float: right;">1</span>
+            <div class="kanban-column">
+                <div class="column-header vencidas">
+                    <span>⚠️ VENCIDAS</span>
+                    <span class="task-count">1</span>
                 </div>
-                <div style="padding: 16px !important;">
-                    <div style="background: white !important; border: 1px solid #ef4444 !important; border-radius: 6px !important; padding: 12px !important; margin-bottom: 8px !important; cursor: pointer !important; box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;">
-                        <div style="display: flex !important; gap: 8px !important; margin-bottom: 8px !important;">
-                            <input type="checkbox" style="cursor: pointer !important;">
-                            <strong style="color: #1f2937 !important;">Hacer QA</strong>
+                <div class="column-content">
+                    <div class="task-card vencidas project-normal">
+                        <div class="task-header">
+                            <div class="task-checkbox">
+                                <input type="checkbox" onclick="event.stopPropagation()">
+                            </div>
+                            <div class="task-name">Hacer QA</div>
                         </div>
-                        <div style="font-size: 12px !important; color: #6b7280 !important;">
-                            <div>📁 Proyecto del equipo</div>
-                            <div style="color: #8b5cf6 !important; margin-top: 4px !important;">👤 Usuario Asignado</div>
-                            <div style="color: #ef4444 !important;">⏰ Vencida: 2024-01-15</div>
+                        <div class="task-project">
+                            <div class="task-project-name">Proyecto del equipo</div>
+                            <div class="task-due-date">Vencida: 2024-01-15</div>
+                            <div style="margin-top: 4px;">
+                                <small style="color: #8b5cf6; font-weight: 600;">👤 Usuario Asignado</small>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
             
             <!-- COLUMNA HOY -->
-            <div style="flex: 1 !important; background: white !important; border-radius: 8px !important; box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important; overflow: hidden !important; min-height: 400px !important;">
-                <div style="background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%) !important; color: #92400e !important; padding: 16px !important; font-weight: bold !important; border-bottom: 3px solid #f59e0b !important; font-size: 14px !important;">
-                    📅 HOY <span style="background: white; padding: 2px 8px; border-radius: 12px; float: right;">0</span>
+            <div class="kanban-column">
+                <div class="column-header hoy">
+                    <span>📅 HOY</span>
+                    <span class="task-count">0</span>
                 </div>
-                <div style="padding: 16px !important; text-align: center !important; color: #9ca3af !important;">
-                    <div style="padding: 40px 20px !important; background: #f9fafb !important; border-radius: 8px !important; border: 2px dashed #d1d5db !important;">
-                        Sin tareas para hoy
-                    </div>
+                <div class="column-content">
+                    <div class="empty-column">Sin tareas para hoy del equipo</div>
                 </div>
             </div>
             
             <!-- COLUMNA ESTA SEMANA -->
-            <div style="flex: 1 !important; background: white !important; border-radius: 8px !important; box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important; overflow: hidden !important; min-height: 400px !important;">
-                <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important; color: #1e40af !important; padding: 16px !important; font-weight: bold !important; border-bottom: 3px solid #3b82f6 !important; font-size: 14px !important;">
-                    📆 ESTA SEMANA <span style="background: white; padding: 2px 8px; border-radius: 12px; float: right;">0</span>
+            <div class="kanban-column">
+                <div class="column-header semana">
+                    <span>📆 ESTA SEMANA</span>
+                    <span class="task-count">0</span>
                 </div>
-                <div style="padding: 16px !important; text-align: center !important; color: #9ca3af !important;">
-                    <div style="padding: 40px 20px !important; background: #f9fafb !important; border-radius: 8px !important; border: 2px dashed #d1d5db !important;">
-                        Sin tareas esta semana
-                    </div>
+                <div class="column-content">
+                    <div class="empty-column">Sin tareas esta semana del equipo</div>
                 </div>
             </div>
             
             <!-- COLUMNA FUTURAS -->
-            <div style="flex: 1 !important; background: white !important; border-radius: 8px !important; box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important; overflow: hidden !important; min-height: 400px !important;">
-                <div style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%) !important; color: #166534 !important; padding: 16px !important; font-weight: bold !important; border-bottom: 3px solid #10b981 !important; font-size: 14px !important;">
-                    🚀 FUTURAS <span style="background: white; padding: 2px 8px; border-radius: 12px; float: right;">1</span>
+            <div class="kanban-column">
+                <div class="column-header futuras">
+                    <span>🚀 FUTURAS</span>
+                    <span class="task-count">1</span>
                 </div>
-                <div style="padding: 16px !important;">
-                    <div style="background: white !important; border: 1px solid #10b981 !important; border-radius: 6px !important; padding: 12px !important; margin-bottom: 8px !important; cursor: pointer !important; box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;">
-                        <div style="display: flex !important; gap: 8px !important; margin-bottom: 8px !important;">
-                            <input type="checkbox" style="cursor: pointer !important;">
-                            <strong style="color: #1f2937 !important;">Reportes</strong>
+                <div class="column-content">
+                    <div class="task-card futuras project-normal">
+                        <div class="task-header">
+                            <div class="task-checkbox">
+                                <input type="checkbox" onclick="event.stopPropagation()">
+                            </div>
+                            <div class="task-name">Reportes</div>
                         </div>
-                        <div style="font-size: 12px !important; color: #6b7280 !important;">
-                            <div>📁 Proyecto del equipo</div>
-                            <div style="color: #8b5cf6 !important; margin-top: 4px !important;">👤 Usuario Asignado</div>
-                            <div style="color: #10b981 !important;">📅 Fecha: 2024-02-01</div>
+                        <div class="task-project">
+                            <div class="task-project-name">Proyecto del equipo</div>
+                            <div class="task-due-date">Fecha: 2024-02-01</div>
+                            <div style="margin-top: 4px;">
+                                <small style="color: #8b5cf6; font-weight: 600;">👤 Usuario Asignado</small>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -2094,10 +2102,18 @@ function mostrarKanbanEquipoDefinitivo() {
         </div>
     `;
     
-    // FORZAR VISIBILIDAD ABSOLUTA
-    teamContent.style.cssText = 'display: block !important; visibility: visible !important; opacity: 1 !important; width: 100% !important; min-height: 500px !important;';
+    // Asegurar que el contenedor sea visible
+    teamContent.classList.add('active');
+    teamContent.style.display = 'block';
     
-    console.log('✅ KANBAN HARDCODED INSERTADO');
+    console.log('✅ KANBAN INSERTADO CON CLASES CSS EXISTENTES');
+    
+    // Verificar que se insertó correctamente
+    const kanbanBoard = teamContent.querySelector('.kanban-board');
+    if (kanbanBoard) {
+        console.log('✅ .kanban-board encontrado y usando CSS del proyecto');
+        console.log('📏 Dimensiones:', kanbanBoard.getBoundingClientRect());
+    }
 }
 
 // Función para cambiar entre tabs del dashboard (RESTAURADA)
