@@ -223,11 +223,11 @@ ob_start();
 .task-tag {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    padding: 2px 6px;
+    padding: 3px 8px;
     border-radius: 12px;
     font-size: 11px;
-    font-weight: 500;
+    font-weight: 600;
+    white-space: nowrap;
 }
 
 .project-tag.personal {
@@ -579,27 +579,16 @@ ob_start();
                           class="form-control" rows="3"></textarea>
             </div>
             
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="due_date">
-                        <i class="fas fa-calendar"></i>
-                        Fecha de Vencimiento *
-                    </label>
-                    <input type="date" id="due_date" name="task_due_date" required class="form-control">
-                </div>
-                
-                <div class="form-group">
-                    <label for="priority">
-                        <i class="fas fa-flag"></i>
-                        Prioridad
-                    </label>
-                    <select id="priority" name="priority" class="form-control">
-                        <option value="medium">Media</option>
-                        <option value="high">Alta</option>
-                        <option value="low">Baja</option>
-                    </select>
-                </div>
+            <div class="form-group">
+                <label for="due_date">
+                    <i class="fas fa-calendar"></i>
+                    Fecha de Vencimiento *
+                </label>
+                <input type="date" id="due_date" name="task_due_date" required class="form-control">
             </div>
+            
+            <!-- Campo oculto para prioridad por defecto -->
+            <input type="hidden" name="priority" value="medium">
         </form>
         
         <div class="modal-footer">
@@ -750,14 +739,7 @@ function renderMyKanbanBoard(kanbanTasks) {
                 </div>
                 <div class="task-tags-mini">
                     <span class="task-tag project-tag ${isPersonal ? 'personal' : 'clan'}">
-                        ${isPersonal ? '<i class="fas fa-user"></i>' : '<i class="fas fa-users"></i>'}
-                    </span>
-                    ${task.assigned_user_name ? `<span class="task-tag assignee-tag" title="${task.assigned_user_name}"><i class="fas fa-user-tag"></i></span>` : ''}
-                    <span class="task-tag due-tag ${columnClass}">
-                        ${column === 'vencidas' ? '<i class="fas fa-exclamation-triangle"></i>' : 
-                          column === 'hoy' ? '<i class="fas fa-clock"></i>' :
-                          column === 'semana1' ? '<i class="fas fa-calendar"></i>' :
-                          '<i class="fas fa-calendar-plus"></i>'}
+                        ${isPersonal ? 'Personal' : (task.project_name || 'Proyecto')}
                     </span>
                 </div>
             </div>`;
@@ -816,15 +798,9 @@ function renderTeamKanbanBoard(kanbanTasks) {
                 </div>
                 <div class="task-tags-mini">
                     <span class="task-tag project-tag team">
-                        <i class="fas fa-users"></i>
+                        ${task.project_name || 'Proyecto'}
                     </span>
-                    ${task.assigned_user_name ? `<span class="task-tag assignee-tag" title="${task.assigned_user_name}"><i class="fas fa-user-tag"></i></span>` : ''}
-                    <span class="task-tag due-tag ${columnClass}">
-                        ${column === 'vencidas' ? '<i class="fas fa-exclamation-triangle"></i>' : 
-                          column === 'hoy' ? '<i class="fas fa-clock"></i>' :
-                          column === 'semana1' ? '<i class="fas fa-calendar"></i>' :
-                          '<i class="fas fa-calendar-plus"></i>'}
-                    </span>
+                    ${task.assigned_user_name ? `<span class="task-tag assignee-tag">${task.assigned_user_name}</span>` : ''}
                 </div>
             </div>`;
         });
