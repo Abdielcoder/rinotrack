@@ -657,7 +657,8 @@ function handleTaskCheck(uniqueTaskId, taskId, isChecked) {
     // Hacer llamada AJAX para actualizar en base de datos
     const formData = new FormData();
     formData.append('task_id', taskId);
-    formData.append('is_completed', isChecked ? '1' : '0');
+    formData.append('status', isChecked ? 'completed' : 'pending');
+    formData.append('item_type', 'task');
     
     fetch('<?= APP_URL ?>/clan_leader/updateTaskStatus', {
         method: 'POST',
