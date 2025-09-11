@@ -7,60 +7,6 @@ ob_start();
 <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/clan-leader-redesign.css">
 
 <style>
-/* Banner informativo */
-.info-banner {
-    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
-    border: 1px solid #90caf9;
-    border-radius: 10px;
-    padding: 15px 20px;
-    margin-bottom: 25px;
-    box-shadow: 0 2px 8px rgba(33, 150, 243, 0.1);
-}
-
-.info-content {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    justify-content: space-between;
-}
-
-.info-content i {
-    color: #1976d2;
-    font-size: 20px;
-}
-
-.info-content span {
-    color: #0d47a1;
-    font-weight: 500;
-    flex: 1;
-}
-
-.btn-info {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
-    background: #2196f3;
-    color: white;
-    text-decoration: none;
-    border-radius: 6px;
-    font-weight: 600;
-    transition: all 0.2s ease;
-}
-
-.btn-info:hover {
-    background: #1976d2;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
-}
-
-@media (max-width: 768px) {
-    .info-content {
-        flex-direction: column;
-        text-align: center;
-        gap: 10px;
-    }
-}
 </style>
 
 <div class="clan-leader-tasks-container">
@@ -82,17 +28,6 @@ ob_start();
 
     <!-- Contenido Principal -->
     <div class="main-content">
-        <!-- Nota: La sección de proyectos se ha movido a /projects para mejor organización -->
-        <div class="info-banner">
-            <div class="info-content">
-                <i class="fas fa-info-circle"></i>
-                <span>La gestión de proyectos se ha movido a una sección dedicada.</span>
-                <a href="?route=clan_leader/projects" class="btn-info">
-                    <i class="fas fa-project-diagram"></i>
-                    Ir a Proyectos
-                </a>
-            </div>
-        </div>
 
         <!-- Debug: Verificar si allTasks está definido -->
         <?php 
