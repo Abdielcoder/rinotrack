@@ -54,24 +54,17 @@
     text-align: center;
 }
 
-/* Kanban Board - 4 columnas fijas - HOMOGÉNEO */
-.kanban-board {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr 1fr;
-    gap: 20px;
-    margin: 0 auto;
-    max-width: 1400px;
-    width: 100%;
-}
-
-/* Kanban Board para EQUIPO - IDÉNTICO a Mis Tareas */
+/* KANBAN BOARDS - ESTILOS IDÉNTICOS PARA AMBOS TABS */
+.kanban-board,
 .team-kanban-board {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr 1fr;
     gap: 20px;
-    margin: 0 auto;
-    max-width: 1400px;
+    margin: 0;
+    padding: 0;
     width: 100%;
+    max-width: none;
+    background: transparent;
 }
 
 .kanban-column {
@@ -2152,23 +2145,25 @@ function mostrarKanbanEquipoDefinitivo() {
     // Verificar que se insertó correctamente con la nueva clase
     const teamKanbanBoard = teamContent.querySelector('.team-kanban-board');
     if (teamKanbanBoard) {
-        // FORZAR VISIBILIDAD DEL KANBAN BOARD DEL EQUIPO CON ANCHO LIMITADO
+        // FORZAR KANBAN EQUIPO IDÉNTICO A MIS TAREAS
         teamKanbanBoard.style.cssText = `
             display: grid !important;
             grid-template-columns: repeat(4, 1fr) !important;
             gap: 20px !important;
             width: 100% !important;
-            max-width: 1400px !important;
-            margin: 0 auto !important;
+            max-width: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
             height: auto !important;
             visibility: visible !important;
             opacity: 1 !important;
+            background: transparent !important;
         `;
         
         console.log('✅ .team-kanban-board encontrado y forzado a visible');
         console.log('📏 Dimensiones DESPUÉS de forzar:', teamKanbanBoard.getBoundingClientRect());
         
-        // También forzar visibilidad de cada columna
+        // Forzar columnas del equipo IDÉNTICAS a Mis Tareas
         const columns = teamKanbanBoard.querySelectorAll('.kanban-column');
         columns.forEach((column, index) => {
             column.style.cssText = `
@@ -2178,8 +2173,13 @@ function mostrarKanbanEquipoDefinitivo() {
                 width: 100% !important;
                 height: auto !important;
                 min-height: 400px !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                background: white !important;
+                border-radius: 16px !important;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
             `;
-            console.log(`✅ Columna del equipo ${index + 1} forzada a visible`);
+            console.log(`✅ Columna del equipo ${index + 1} estilo idéntico`);
         });
     } else {
         console.error('❌ .team-kanban-board NO encontrado después de insertar');
@@ -2363,7 +2363,7 @@ function switchDashboardTab(tabName) {
                 z-index: 1 !important;
             `;
             
-            // Ajustar el Kanban interno para que sea HOMOGÉNEO con Equipo
+            // Ajustar el Kanban de Mis Tareas IDÉNTICO al Equipo
             const myTasksKanban = myTasksContent.querySelector('.kanban-board');
             if (myTasksKanban) {
                 myTasksKanban.style.cssText = `
@@ -2371,8 +2371,13 @@ function switchDashboardTab(tabName) {
                     grid-template-columns: repeat(4, 1fr) !important;
                     gap: 20px !important;
                     width: 100% !important;
-                    max-width: 1400px !important;
-                    margin: 0 auto !important;
+                    max-width: none !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    height: auto !important;
+                    visibility: visible !important;
+                    opacity: 1 !important;
+                    background: transparent !important;
                 `;
             }
             
