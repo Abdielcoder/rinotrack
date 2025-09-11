@@ -703,12 +703,21 @@ ob_start();
             </div>
             </div>
             
-            <!-- Tab Content: Mis Tareas SIMPLE -->
+            <!-- Tab Content: Mis Tareas DESHABILITADO -->
             <div id="my-tasks-kanban-content" class="kanban-tab-content active" style="display: block;">
                 <div id="simple-kanban-board" class="kanban-board-compact">
-                    <div class="loading-message">
-                        <i class="fas fa-spinner fa-spin"></i>
-                        <br>Cargando mis tareas (solo assigned_to_user_id)...
+                    <div style="text-align: center; padding: 100px 20px; background: #f3f4f6; border-radius: 10px; margin: 20px;">
+                        <h1 style="color: #ef4444; font-size: 48px;">🚫</h1>
+                        <h2 style="color: #374151; margin: 20px 0;">Tablero Kanban Vacío</h2>
+                        <p style="color: #6b7280; font-size: 16px; line-height: 1.6;">
+                            El tablero está completamente deshabilitado.<br>
+                            No se cargan tareas automáticamente.<br>
+                            Toda la lógica JavaScript ha sido eliminada.<br><br>
+                            <strong>Configuración:</strong><br>
+                            <code style="background: #fee2e2; padding: 5px 10px; border-radius: 4px; color: #dc2626;">
+                                Solo Tasks.assigned_to_user_id = tu usuario
+                            </code>
+                        </p>
                     </div>
                 </div>
             </div>
@@ -821,38 +830,52 @@ function switchKanbanTab(tabName) {
     
     // Cargar datos del tab activo
     if (tabName === 'my-tasks') {
-        loadMyKanbanTasks();
+        // NO CARGAR NADA - TABLERO DESHABILITADO
+        console.log('🚫 Tab my-tasks seleccionado pero NO se cargan tareas');
+        const kanbanBoard = document.getElementById('simple-kanban-board');
+        if (kanbanBoard) {
+            kanbanBoard.innerHTML = `
+                <div style="text-align: center; padding: 100px 20px; background: #f3f4f6; border-radius: 10px; margin: 20px;">
+                    <h1 style="color: #ef4444; font-size: 48px;">🚫</h1>
+                    <h2 style="color: #374151; margin: 20px 0;">Tablero Kanban Completamente Vacío</h2>
+                    <p style="color: #6b7280; font-size: 16px; line-height: 1.6;">
+                        Toda la lógica anterior ha sido eliminada.<br>
+                        No se están cargando tareas.<br>
+                        No hay filtros, no hay condiciones.<br><br>
+                        <strong>Solo se mostrarán tareas donde:</strong><br>
+                        <code style="background: #fee2e2; padding: 5px 10px; border-radius: 4px; color: #dc2626;">
+                            Tasks.assigned_to_user_id = ${<?php echo $_SESSION['user_id'] ?? '?' ?>}
+                        </code>
+                    </p>
+                </div>
+            `;
+        }
     } else if (tabName === 'team-tasks') {
         loadTeamKanbanTasks();
     }
 }
 
-// NUEVO: Cargar SOLO tareas donde assigned_to_user_id = mi usuario
+// TABLERO VACÍO - NO CARGAR NADA
 function loadMyKanbanTasks() {
-    console.log('🔄 Cargando KANBAN SIMPLE - Solo tareas asignadas a mí...');
+    console.log('🚫 TABLERO DESHABILITADO - No se cargan tareas');
     const kanbanBoard = document.getElementById('simple-kanban-board');
     
-    if (!kanbanBoard) {
-        console.error('No se encontró el elemento simple-kanban-board');
-        return;
+    if (kanbanBoard) {
+        kanbanBoard.innerHTML = `
+            <div style="text-align: center; padding: 50px; color: #666;">
+                <h2>🚫 Tablero Kanban Deshabilitado</h2>
+                <p>El tablero está vacío - Sin lógica de carga</p>
+                <p style="margin-top: 20px; font-size: 14px; color: #999;">
+                    Solo se mostrarán tareas donde assigned_to_user_id = tu usuario<br>
+                    Toda la lógica anterior ha sido eliminada
+                </p>
+            </div>
+        `;
     }
     
-    kanbanBoard.innerHTML = '<div class="loading-message"><i class="fas fa-spinner fa-spin"></i><br>Cargando tareas simples...</div>';
-    
-    fetch('?route=clan_leader/simple-kanban-tasks')
-        .then(response => response.json())
-        .then(data => {
-            console.log('📋 Respuesta KANBAN SIMPLE:', data);
-            if (data.success && data.kanban) {
-                renderSimpleKanban(data.kanban, data.total, data.user_id);
-            } else {
-                kanbanBoard.innerHTML = '<div class="loading-message">Error: ' + (data.message || 'Error desconocido') + '</div>';
-            }
-        })
-        .catch(error => {
-            console.error('Error cargando kanban simple:', error);
-            kanbanBoard.innerHTML = '<div class="loading-message">Error de conexión</div>';
-        });
+    // NO HACER NINGUNA LLAMADA AL SERVIDOR
+    // NO CARGAR NINGUNA TAREA
+    // TABLERO COMPLETAMENTE VACÍO
 }
 
 // Cargar tareas del equipo para Kanban
@@ -878,131 +901,18 @@ function loadTeamKanbanTasks() {
         });
 }
 
-// NUEVO: Renderizar Kanban SIMPLE - Solo tareas asignadas a mí
+// FUNCIÓN VACÍA - NO RENDERIZAR NADA
 function renderSimpleKanban(kanban, total, userId) {
-    console.log('🎨 Renderizando KANBAN SIMPLE');
-    console.log(`Usuario: ${userId}, Total tareas: ${total}`);
-    
-    const kanbanBoard = document.getElementById('simple-kanban-board');
-    if (!kanbanBoard) return;
-    
-    const columns = [
-        { key: 'vencidas', title: '⚠️ Vencidas', class: 'overdue' },
-        { key: 'hoy', title: '📅 Hoy', class: 'today' },
-        { key: 'semana', title: '📆 Esta Semana', class: 'week1' },
-        { key: 'futuras', title: '🚀 Futuras', class: 'week2' }
-    ];
-    
-    let html = '';
-    
-    columns.forEach(column => {
-        const tasks = kanban[column.key] || [];
-        
-        html += `<div class="kanban-column-compact">
-            <div class="column-header ${column.class}">
-                <h4>${column.title}</h4>
-                <span class="task-count">${tasks.length}</span>
-            </div>
-            <div class="column-content-compact">`;
-        
-        if (tasks.length === 0) {
-            html += '<div style="text-align:center; color:#999; padding:20px;">Sin tareas</div>';
-        } else {
-            tasks.forEach(task => {
-                const priorityClass = `priority-${task.priority || 'medium'}`;
-                const statusBadge = task.status === 'completed' ? '✅' : 
-                                  task.status === 'in_progress' ? '🔄' : '⏳';
-                
-                html += `
-                    <div class="task-card-mini" data-task-id="${task.task_id}">
-                        <div class="task-header-mini">
-                            <div class="task-name-mini">
-                                ${statusBadge} #${task.task_id} - ${task.task_name || 'Sin nombre'}
-                            </div>
-                        </div>
-                        <div class="task-meta-mini">
-                            <span class="${priorityClass}">${task.priority || 'medium'}</span>
-                            ${task.due_date ? `<span>📅 ${new Date(task.due_date).toLocaleDateString('es-ES')}</span>` : ''}
-                        </div>
-                    </div>
-                `;
-            });
-        }
-        
-        html += '</div></div>';
-    });
-    
-    kanbanBoard.innerHTML = html;
-    console.log('✅ Kanban Simple renderizado');
+    console.log('🚫 RENDERIZADO DESHABILITADO');
+    // NO HACER NADA
+    // FUNCIÓN COMPLETAMENTE VACÍA
 }
 
-// Renderizar tablero Kanban personal (ANTIGUO - NO USAR)
+// FUNCIÓN ELIMINADA - NO USAR
 function renderMyKanbanBoard(kanbanTasks) {
-    console.log('🎨 Renderizando tablero personal');
-    const kanbanBoard = document.getElementById('my-tasks-kanban-board');
-    
-    const columns = ['vencidas', 'hoy', 'semana1', 'semana2'];
-    const columnTitles = {
-        'vencidas': 'Vencidas',
-        'hoy': 'Hoy', 
-        'semana1': '1 Semana',
-        'semana2': '2+ Semanas'
-    };
-    const columnClasses = {
-        'vencidas': 'overdue',
-        'hoy': 'today',
-        'semana1': 'week1',
-        'semana2': 'week2'
-    };
-    
-    let html = '';
-    columns.forEach(column => {
-        const tasks = kanbanTasks[column] || [];
-        const columnClass = columnClasses[column];
-        
-        html += `<div class="kanban-column-compact">
-            <div class="column-header ${columnClass}">
-                <h4>${columnTitles[column]}</h4>
-                <span class="task-count">${tasks.length}</span>
-            </div>
-            <div class="column-content-compact">`;
-        
-        tasks.forEach(task => {
-            const isSubtask = task.item_type === 'subtask';
-            const cardClass = isSubtask ? 'subtask-card-micro' : 'task-card-mini';
-            const isPersonal = task.is_personal == 1;
-            const isRecurrent = task.project_type === 'recurrent' || task.project_name === 'Mis Tareas Recurrentes';
-            const isEventual = task.project_name === 'Tareas Eventuales';
-            
-            // Log para debugging
-            console.log('🎯 Tarea líder:', task.task_id, 'Proyecto:', task.project_name, 'Personal:', isPersonal);
-            
-            html += `<div class="${cardClass}" data-task-id="${task.task_id}" data-item-type="${task.item_type}">
-                <div class="task-header-mini">
-                    <input type="checkbox" class="task-checkbox-mini" ${task.status === 'completed' ? 'checked' : ''} 
-                           onchange="toggleTaskStatusKanban(${task.task_id}, this.checked, '${isSubtask ? 'subtask' : 'task'}')">
-                    <div class="task-name-mini">
-                        ${isSubtask ? '<i class="fas fa-arrow-right subtask-icon"></i>' : ''}
-                        ${isRecurrent ? '<i class="fas fa-sync-alt" title="Tarea Recurrente" style="color: #10b981; margin-right: 4px; font-size: 12px;"></i>' : ''}
-                        ${isEventual ? '<i class="fas fa-star" title="Tarea Eventual" style="color: #f59e0b; margin-right: 4px; font-size: 12px;"></i>' : ''}
-                        <a href="#" onclick="goToTaskDetail(${isSubtask ? (task.parent_task_id || task.task_id) : task.task_id}, '${isSubtask ? 'subtask' : 'task'}'); return false;" class="task-name-link">
-                            ${task.task_name || 'Sin nombre'}
-                        </a>
-                        ${isSubtask && task.parent_task_name ? `<span class="parent-task-hint" title="Tarea padre: ${task.parent_task_name}">↑</span>` : ''}
-                    </div>
-                </div>
-                <div class="task-tags-mini">
-                    <span class="task-tag project-tag ${isPersonal ? 'personal' : isRecurrent ? 'recurrent' : isEventual ? 'eventual' : 'clan'}">
-                        ${isRecurrent ? 'Recurrente' : isEventual ? 'Eventual' : isPersonal ? 'Personal' : (task.project_name || 'Proyecto')}
-                    </span>
-                </div>
-            </div>`;
-        });
-        
-        html += `</div></div>`;
-    });
-    
-    kanbanBoard.innerHTML = html;
+    console.log('🚫 FUNCIÓN ELIMINADA - renderMyKanbanBoard ya no existe');
+    // FUNCIÓN COMPLETAMENTE ELIMINADA
+    // NO RENDERIZAR NADA
 }
 
 // Renderizar tablero Kanban del equipo
@@ -1270,7 +1180,8 @@ function createTask() {
 // Inicializar dashboard
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 DOM listo - Iniciando dashboard');
-    switchKanbanTab('my-tasks');
+    // DESHABILITADO - No cargar ningún tab automáticamente
+    // switchKanbanTab('my-tasks');
     
     // Cerrar modal con tecla Escape
     document.addEventListener('keydown', function(e) {
