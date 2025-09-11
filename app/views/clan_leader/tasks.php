@@ -2723,8 +2723,6 @@ function openEditTaskModal(taskId) {
 
 // Función para cargar datos de la tarea
 function loadTaskData(taskId) {
-    console.log('📥 Cargando datos de tarea:', taskId);
-    
     // Mostrar indicador de carga
     const modal = document.getElementById('editTaskModal');
     if (modal) {
@@ -2737,7 +2735,7 @@ function loadTaskData(taskId) {
     fetch(`?route=clan_leader/get-task-data&task_id=${taskId}`)
         .then(response => {
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                throw new Error(`Error al cargar datos: ${response.status}`);
             }
             return response.json();
         })
@@ -2809,23 +2807,19 @@ function loadTaskData(taskId) {
                 }
                 
             } else {
-                console.error('❌ Error cargando tarea:', data.message || 'Respuesta inválida');
-                console.error('❌ Respuesta completa:', data);
                 alert('Error: ' + (data.message || 'No se pudieron cargar los datos de la tarea'));
                 closeEditTaskModal();
             }
         })
         .catch(error => {
-            console.error('❌ Error de conexión:', error);
-            alert('Error de conexión. Por favor, intente nuevamente.');
+            console.error('Error al cargar tarea:', error);
+            alert('Error al cargar los datos. Por favor, intente nuevamente.');
             closeEditTaskModal();
         });
 }
 
 // Función para cerrar modal
 function closeEditTaskModal() {
-    console.log('🔄 Cerrar modal editar tarea');
-    
     const modal = document.getElementById('editTaskModal');
     if (modal) {
         modal.style.display = 'none';
@@ -2891,14 +2885,12 @@ function submitEditTask(event) {
     })
     .then(response => {
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            throw new Error(`Error al actualizar: ${response.status}`);
         }
         return response.json();
     })
     .then(data => {
         if (data.success) {
-            console.log('✅ Tarea actualizada exitosamente');
-            
             // Mostrar mensaje de éxito
             alert('Tarea actualizada exitosamente');
             
