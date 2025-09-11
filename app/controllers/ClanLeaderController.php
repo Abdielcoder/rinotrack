@@ -4753,6 +4753,156 @@ class ClanLeaderController {
     }
     
     /**
+     * Método para obtener datos de una tarea para edición (AJAX)
+     */
+    public function getTaskData() {
+        header('Content-Type: application/json');
+        error_reporting(E_ALL & ~E_WARNING);
+        
+        try {
+            // Verificar autenticación
+            if (!$this->auth->isLoggedIn()) {
+                Utils::jsonResponse(false, 'Usuario no autenticado');
+                return;
+            }
+            
+            // Verificar acceso de clan leader
+            if (!$this->hasClanLeaderAccess()) {
+                Utils::jsonResponse(false, 'Acceso denegado');
+                return;
+            }
+            
+            // Obtener task_id
+            $taskId = $_GET['task_id'] ?? null;
+            if (!$taskId || !is_numeric($taskId)) {
+                Utils::jsonResponse(false, 'ID de tarea inválido');
+                return;
+            }
+            
+            // Inicializar modelo si no está definido
+            if (!isset($this->taskModel)) {
+                $this->taskModel = new Task();
+            }
+            
+            // Obtener datos de la tarea
+            $task = $this->taskModel->findById($taskId);
+            if (!$task) {
+                Utils::jsonResponse(false, 'Tarea no encontrada');
+                return;
+            }
+            
+            // Verificar que la tarea pertenece al clan del usuario
+            if (!isset($this->projectModel)) {
+                $this->projectModel = new Project();
+            }
+            
+            $project = $this->projectModel->findById($task['project_id']);
+            if (!$project || $project['clan_id'] != $this->userClan['clan_id']) {
+                Utils::jsonResponse(false, 'Tarea no pertenece a tu clan');
+                return;
+            }
+            
+            Utils::jsonResponse(true, 'Datos obtenidos exitosamente', ['task' => $task]);
+            
+        } catch (Exception $e) {
+            error_log("Error en getTaskData: " . $e->getMessage());
+            Utils::jsonResponse(false, 'Error crítico del servidor');
+        }
+    }
+    
+    /**
+     * Método para actualizar una tarea (AJAX)
+     */
+    public function updateTask() {
+        header('Content-Type: application/json');
+        error_reporting(E_ALL & ~E_WARNING);
+        
+        try {
+            // Verificar autenticación
+            if (!$this->auth->isLoggedIn()) {
+                Utils::jsonResponse(false, 'Usuario no autenticado');
+                return;
+            }
+            
+            // Verificar acceso de clan leader
+            if (!$this->hasClanLeaderAccess()) {
+                Utils::jsonResponse(false, 'Acceso denegado');
+                return;
+            }
+            
+            // Verificar método POST
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                Utils::jsonResponse(false, 'Método no permitido');
+                return;
+            }
+            
+            // Obtener datos del formulario
+            $taskId = $_POST['task_id'] ?? null;
+            $taskTitle = trim($_POST['task_title'] ?? '');
+            $taskDescription = trim($_POST['task_description'] ?? '');
+            $taskDueDate = $_POST['task_due_date'] ?? null;
+            $priority = $_POST['priority'] ?? 'medium';
+            $status = $_POST['status'] ?? 'pending';
+            
+            // Validaciones
+            if (!$taskId || !is_numeric($taskId)) {
+                Utils::jsonResponse(false, 'ID de tarea inválido');
+                return;
+            }
+            
+            if (empty($taskTitle)) {
+                Utils::jsonResponse(false, 'El título es requerido');
+                return;
+            }
+            
+            // Inicializar modelos si no están definidos
+            if (!isset($this->taskModel)) {
+                $this->taskModel = new Task();
+            }
+            
+            if (!isset($this->projectModel)) {
+                $this->projectModel = new Project();
+            }
+            
+            // Verificar que la tarea existe
+            $existingTask = $this->taskModel->findById($taskId);
+            if (!$existingTask) {
+                Utils::jsonResponse(false, 'Tarea no encontrada');
+                return;
+            }
+            
+            // Verificar que la tarea pertenece al clan del usuario
+            $project = $this->projectModel->findById($existingTask['project_id']);
+            if (!$project || $project['clan_id'] != $this->userClan['clan_id']) {
+                Utils::jsonResponse(false, 'Tarea no pertenece a tu clan');
+                return;
+            }
+            
+            // Preparar datos para actualizar
+            $updateData = [
+                'task_name' => $taskTitle,
+                'task_description' => $taskDescription,
+                'due_date' => $taskDueDate ?: null,
+                'priority' => $priority,
+                'status' => $status
+            ];
+            
+            // Actualizar tarea
+            $result = $this->taskModel->update($taskId, $updateData);
+            
+            if ($result) {
+                Utils::jsonResponse(true, 'Tarea actualizada exitosamente');
+            } else {
+                Utils::jsonResponse(false, 'Error al actualizar la tarea');
+            }
+            
+        } catch (Exception $e) {
+            error_log("Error en updateTask: " . $e->getMessage());
+            Utils::jsonResponse(false, 'Error crítico del servidor');
+        }
+    }
+    
+    /**
      * Mostrar página de edición de tarea
      */
     public function taskEdit() {

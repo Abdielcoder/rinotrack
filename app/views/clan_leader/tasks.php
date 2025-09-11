@@ -2250,11 +2250,430 @@ ob_start();
         border-bottom-color: transparent;
     }
 }
+
+/* ===============================
+   ESTILOS MODAL DE EDICIÓN
+   =============================== */
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(4px);
+}
+
+.modal-content {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    width: 90%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow: hidden;
+    animation: modalFadeIn 0.3s ease-out;
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.modal-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: white;
+    color: #374151;
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: #6b7280;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.modal-body {
+    padding: 24px;
+    max-height: calc(90vh - 140px);
+    overflow-y: auto;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 500;
+    color: #374151;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.modal-footer {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    padding-top: 20px;
+    border-top: 1px solid #e2e8f0;
+    margin-top: 24px;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+    background: #f3f4f6;
+    color: #374151;
+    border: 1px solid #d1d5db;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+    background: #e2e8f0;
+    transform: translateY(-1px);
+}
+
+/* Responsive para Modal */
+@media (max-width: 768px) {
+    .modal-content {
+        width: 95%;
+        margin: 20px;
+        max-height: calc(100vh - 40px);
+    }
+    
+    .modal-header {
+        padding: 16px 20px;
+    }
+    
+    .modal-body {
+        padding: 20px;
+        max-height: calc(100vh - 120px);
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    
+    .modal-footer {
+        flex-direction: column-reverse;
+        gap: 8px;
+    }
+    
+    .btn-primary,
+    .btn-secondary {
+        width: 100%;
+        justify-content: center;
+    }
+}
 </style>
+
+    <!-- Modal para editar tarea -->
+    <div id="editTaskModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-edit"></i> Editar Tarea</h3>
+                <button type="button" class="modal-close" onclick="closeEditTaskModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="editTaskForm" class="modal-body">
+                <input type="hidden" id="edit_task_id" name="task_id" value="">
+                
+                <div class="form-group">
+                    <label for="edit_title">
+                        <i class="fas fa-tasks"></i>
+                        Nombre de la Tarea *
+                    </label>
+                    <input type="text" id="edit_title" name="task_title" required 
+                           placeholder="Nombre de la tarea" 
+                           class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label for="edit_description">
+                        <i class="fas fa-align-left"></i>
+                        Descripción
+                    </label>
+                    <textarea id="edit_description" name="task_description" 
+                              placeholder="Descripción de la tarea (opcional)" 
+                              class="form-control" rows="3"></textarea>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="edit_due_date">
+                            <i class="fas fa-calendar-alt"></i>
+                            Fecha Límite
+                        </label>
+                        <input type="date" id="edit_due_date" name="task_due_date" class="form-control">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit_priority">
+                            <i class="fas fa-flag"></i>
+                            Prioridad
+                        </label>
+                        <select id="edit_priority" name="priority" class="form-control">
+                            <option value="low">Baja</option>
+                            <option value="medium">Media</option>
+                            <option value="high">Alta</option>
+                            <option value="urgent">Urgente</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="edit_status">
+                        <i class="fas fa-list-ul"></i>
+                        Estado
+                    </label>
+                    <select id="edit_status" name="status" class="form-control">
+                        <option value="pending">Pendiente</option>
+                        <option value="in_progress">En Progreso</option>
+                        <option value="completed">Completado</option>
+                    </select>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" onclick="closeEditTaskModal()">
+                        <i class="fas fa-times"></i>
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-save"></i>
+                        Guardar Cambios
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 
 </div> <!-- Cierre de clan-leader-tasks-container -->
 
 <script>
+// ===============================
+// FUNCIONES MODAL DE EDICIÓN
+// ===============================
+
+// Función para abrir modal de editar tarea
+function openEditTaskModal(taskId) {
+    console.log('🔄 Abrir modal editar tarea:', taskId);
+    
+    if (!taskId || taskId <= 0) {
+        console.error('❌ ID de tarea inválido:', taskId);
+        return;
+    }
+    
+    const modal = document.getElementById('editTaskModal');
+    if (!modal) {
+        console.error('❌ Modal no encontrado');
+        return;
+    }
+    
+    // Cargar datos de la tarea
+    loadTaskData(taskId);
+    
+    // Mostrar modal
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+// Función para cargar datos de la tarea
+function loadTaskData(taskId) {
+    console.log('📥 Cargando datos de tarea:', taskId);
+    
+    fetch(`?route=clan_leader/get-task-data&task_id=${taskId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.task) {
+                const task = data.task;
+                console.log('✅ Datos de tarea cargados:', task);
+                
+                // Llenar formulario
+                document.getElementById('edit_task_id').value = task.task_id;
+                document.getElementById('edit_title').value = task.task_name || '';
+                document.getElementById('edit_description').value = task.task_description || '';
+                document.getElementById('edit_due_date').value = task.due_date || '';
+                document.getElementById('edit_priority').value = task.priority || 'medium';
+                document.getElementById('edit_status').value = task.status || 'pending';
+                
+            } else {
+                console.error('❌ Error cargando tarea:', data.message);
+                alert('Error al cargar los datos de la tarea');
+                closeEditTaskModal();
+            }
+        })
+        .catch(error => {
+            console.error('❌ Error de conexión:', error);
+            alert('Error de conexión al cargar la tarea');
+            closeEditTaskModal();
+        });
+}
+
+// Función para cerrar modal
+function closeEditTaskModal() {
+    console.log('🔄 Cerrar modal editar tarea');
+    
+    const modal = document.getElementById('editTaskModal');
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+        
+        // Limpiar formulario
+        document.getElementById('editTaskForm').reset();
+        document.getElementById('edit_task_id').value = '';
+    }
+}
+
+// Función para enviar formulario de edición
+function submitEditTask(event) {
+    event.preventDefault();
+    
+    const form = document.getElementById('editTaskForm');
+    const formData = new FormData(form);
+    
+    console.log('📤 Enviando datos de edición...');
+    
+    fetch('?route=clan_leader/update-task', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            console.log('✅ Tarea actualizada exitosamente');
+            closeEditTaskModal();
+            
+            // Recargar datos de la tabla
+            location.reload();
+        } else {
+            console.error('❌ Error actualizando tarea:', data.message);
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('❌ Error de conexión:', error);
+        alert('Error de conexión al actualizar la tarea');
+    });
+}
+
+// Event listeners para el modal
+document.addEventListener('DOMContentLoaded', function() {
+    // Envío del formulario
+    const editForm = document.getElementById('editTaskForm');
+    if (editForm) {
+        editForm.addEventListener('submit', submitEditTask);
+    }
+    
+    // Cerrar modal con tecla Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const modal = document.getElementById('editTaskModal');
+            if (modal && modal.style.display === 'flex') {
+                closeEditTaskModal();
+            }
+        }
+    });
+    
+    // Cerrar modal al hacer clic fuera de él
+    const editModal = document.getElementById('editTaskModal');
+    if (editModal) {
+        editModal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeEditTaskModal();
+            }
+        });
+    }
+});
+
+// ===============================
+// FUNCIONES EXISTENTES
+// ===============================
+
 // Función para cambiar el estado de delegación de un proyecto
 function toggleProjectDelegation(projectId, allowDelegation) {
     console.log('Cambiando delegación para proyecto:', projectId, 'a:', allowDelegation);
@@ -4019,6 +4438,8 @@ console.log('🚀 Tasks.php cargado - Versión 6.0 - Debug activo');
 .btn-action-table.edit {
     background: rgba(243, 156, 18, 0.1);
     color: #f39c12;
+    border: none;
+    cursor: pointer;
 }
 
 .btn-action-table.edit:hover {
@@ -4283,9 +4704,9 @@ function renderTasksTableFromKanban(tasks, tbodyId) {
                         <a href="?route=clan_leader/get-task-details&task_id=${isSubtask ? (task.parent_task_id || task.task_id) : task.task_id}${isSubtask ? '&type=subtask' : ''}" class="btn-action-table view" title="Ver Detalles">
                             <i class="fas fa-eye"></i>
                         </a>
-                        ${!isSubtask ? `<a href="?route=clan_leader/task_edit&task_id=${task.task_id}" class="btn-action-table edit" title="Editar">
+                        ${!isSubtask ? `<button onclick="openEditTaskModal(${task.task_id})" class="btn-action-table edit" title="Editar">
                             <i class="fas fa-edit"></i>
-                        </a>` : `<span class="btn-action-table edit disabled" title="Las subtareas no se pueden editar directamente">
+                        </button>` : `<span class="btn-action-table edit disabled" title="Las subtareas no se pueden editar directamente">
                             <i class="fas fa-edit"></i>
                         </span>`}
                         <button class="btn-action-table delete" onclick="deleteTaskTable(${task.task_id}, '${task.task_name}')" title="Eliminar">

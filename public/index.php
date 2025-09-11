@@ -502,6 +502,11 @@ try {
         $controller->getPersonalProjectId();
         break;
         
+    case 'clan_leader/get-task-data':
+        $controller = new ClanLeaderController();
+        $controller->getTaskData();
+        break;
+        
     case 'clan_leader/update-task':
         $controller = new ClanLeaderController();
         $controller->updateTask();
