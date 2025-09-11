@@ -344,25 +344,25 @@
 }
 
 .equipo-column-header.vencidas {
-    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    background: linear-gradient(135deg, #fef2f2 0%, #fecaca 100%);
     color: #dc2626;
     border-bottom: 3px solid #ef4444;
 }
 
 .equipo-column-header.hoy {
-    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
     color: #d97706;
     border-bottom: 3px solid #f59e0b;
 }
 
 .equipo-column-header.semana {
-    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
     color: #2563eb;
     border-bottom: 3px solid #3b82f6;
 }
 
 .equipo-column-header.futuras {
-    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
     color: #059669;
     border-bottom: 3px solid #10b981;
 }
@@ -387,15 +387,15 @@
     background: #ffffff;
     border: 1px solid #e5e7eb;
     border-radius: 8px;
-    padding: 8px 10px;
-    margin-bottom: 6px;
+    padding: 9px 11px;
+    margin-bottom: 7px;
     transition: all 0.2s ease;
     cursor: pointer;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    min-height: 50px;
+    gap: 5px;
+    min-height: 55px;
 }
 
 .equipo-task-card:hover {
@@ -405,24 +405,28 @@
 
 .equipo-task-card.vencidas {
     border-left: 4px solid #ef4444;
+    background: linear-gradient(135deg, #fef7f7 0%, #fef2f2 100%);
 }
 
 .equipo-task-card.hoy {
     border-left: 4px solid #f59e0b;
+    background: linear-gradient(135deg, #fffcf5 0%, #fffbeb 100%);
 }
 
 .equipo-task-card.semana {
     border-left: 4px solid #3b82f6;
+    background: linear-gradient(135deg, #f8faff 0%, #eff6ff 100%);
 }
 
 .equipo-task-card.futuras {
     border-left: 4px solid #10b981;
+    background: linear-gradient(135deg, #f7fef9 0%, #f0fdf4 100%);
 }
 
 .equipo-task-header {
     display: flex;
     align-items: flex-start;
-    gap: 6px;
+    gap: 7px;
 }
 
 .equipo-task-checkbox {
@@ -430,8 +434,8 @@
 }
 
 .equipo-task-checkbox input[type="checkbox"] {
-    width: 14px;
-    height: 14px;
+    width: 15px;
+    height: 15px;
     cursor: pointer;
     accent-color: #10b981;
     margin: 0;
@@ -441,19 +445,19 @@
     flex: 1;
     font-weight: 600;
     color: #1f2937;
-    font-size: 14px;
+    font-size: 15px;
     line-height: 1.4;
 }
 
 .equipo-task-project {
     color: #4b5563;
-    font-size: 0.7rem;
+    font-size: 0.77rem;
     font-weight: 500;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 8px;
-    margin-left: 20px;
+    gap: 9px;
+    margin-left: 22px;
 }
 
 .equipo-task-project-name {
@@ -473,17 +477,17 @@
 
 .equipo-task-due-date {
     color: #6b7280;
-    font-size: 0.65rem;
+    font-size: 0.72rem;
     font-weight: 400;
     white-space: nowrap;
     flex-shrink: 0;
 }
 
 .equipo-task-user {
-    font-size: 0.65rem;
+    font-size: 0.72rem;
     color: #8b5cf6;
     font-weight: 600;
-    margin-top: 2px;
+    margin-top: 3px;
 }
 
 .equipo-subtask-card {
