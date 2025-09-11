@@ -697,7 +697,13 @@
     
     <!-- Contenido del tab EQUIPO -->
     <div id="team-tasks-content" class="tab-content">
-        <!-- El contenido se carga dinámicamente vía JavaScript -->
+        <!-- Botón temporal de debug -->
+        <div style="text-align: center; padding: 20px; background: #f8fafc; border-radius: 12px; margin: 20px;">
+            <p style="color: #6b7280; margin-bottom: 15px;">Si no se cargan las tareas automáticamente, haz clic aquí:</p>
+            <button onclick="loadTeamKanbanTasks()" style="padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                🔄 Cargar Tareas del Equipo Manualmente
+            </button>
+        </div>
     </div>
     
 </div>
@@ -988,7 +994,10 @@ function switchDashboardTab(tabName) {
     
     // Cargar datos según el tab seleccionado
     if (tabName === 'team-tasks') {
+        console.log('🎯 Tab team-tasks detectado, cargando tareas del equipo...');
         loadTeamKanbanTasks();
+    } else {
+        console.log('🎯 Tab seleccionado:', tabName);
     }
     
     console.log('✅ Tab dashboard cambiado a:', tabName);
@@ -1107,30 +1116,42 @@ function loadTeamKanbanTasks() {
     
     // Mostrar indicador de carga
     const teamContent = document.getElementById('team-tasks-content');
-    if (teamContent) {
-        teamContent.innerHTML = `
-            <div style="display: flex; justify-content: center; align-items: center; height: 400px; background: #f8fafc; border-radius: 12px;">
-                <div style="text-align: center;">
-                    <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: #3b82f6; margin-bottom: 1rem;"></i>
-                    <p style="color: #6b7280; font-size: 1.1rem;">Cargando tareas del equipo...</p>
-                </div>
-            </div>
-        `;
+    if (!teamContent) {
+        console.error('❌ No se encontró el elemento team-tasks-content');
+        return;
     }
     
+    console.log('✅ Elemento team-tasks-content encontrado');
+    teamContent.innerHTML = `
+        <div style="display: flex; justify-content: center; align-items: center; height: 400px; background: #f8fafc; border-radius: 12px;">
+            <div style="text-align: center;">
+                <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: #3b82f6; margin-bottom: 1rem;"></i>
+                <p style="color: #6b7280; font-size: 1.1rem;">Cargando tareas del equipo...</p>
+            </div>
+        </div>
+    `;
+    
+    console.log('🌐 Haciendo fetch a: ?route=clan_leader/get-team-kanban-tasks');
+    
     fetch('?route=clan_leader/get-team-kanban-tasks')
-        .then(response => response.json())
+        .then(response => {
+            console.log('📡 Response status:', response.status);
+            console.log('📡 Response headers:', response.headers);
+            return response.json();
+        })
         .then(data => {
-            console.log('👥 Respuesta tareas del equipo:', data);
+            console.log('👥 Respuesta completa tareas del equipo:', data);
             if (data.success && data.kanbanTasks) {
+                console.log('✅ Datos válidos recibidos, renderizando tablero...');
                 renderTeamKanbanBoard(data.kanbanTasks);
                 updateTeamTasksStats(data.kanbanTasks);
             } else {
+                console.error('❌ Respuesta sin éxito:', data);
                 showTeamTasksError(data.message || 'Error desconocido al cargar tareas del equipo');
             }
         })
         .catch(error => {
-            console.error('❌ Error cargando tareas del equipo:', error);
+            console.error('❌ Error en fetch:', error);
             showTeamTasksError('Error de conexión al cargar tareas del equipo');
         });
 }
