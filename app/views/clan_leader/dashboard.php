@@ -517,4 +517,3 @@ $content = ob_get_clean();
 // Incluir el layout con el contenido
 include __DIR__ . '/../layout.php';
 ?>
-?>
