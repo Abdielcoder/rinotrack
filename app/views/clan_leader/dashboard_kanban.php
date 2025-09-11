@@ -696,19 +696,8 @@
     </div>
     
     <!-- Contenido del tab EQUIPO -->
-    <div id="team-tasks-content" class="tab-content" style="display: block !important; visibility: visible !important; min-height: 400px !important;">
-        <!-- Botón temporal de debug -->
-        <div style="text-align: center; padding: 20px; background: #f8fafc; border-radius: 12px; margin: 20px; border: 2px solid #3b82f6;">
-            <p style="color: #1e3a8a; margin-bottom: 15px; font-weight: 600;">🔧 Panel de Debug - Tareas del Equipo</p>
-            <button onclick="loadTeamKanbanTasks()" style="padding: 12px 24px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; margin: 5px;">
-                🔄 Cargar Kanban del Equipo
-            </button>
-            <button onclick="showSimpleTeamView()" style="padding: 12px 24px; background: #10b981; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; margin: 5px;">
-                📋 Vista Simple de Emergencia
-            </button>
-            <br><br>
-            <small style="color: #6b7280;">Si no funciona el Kanban, usa la vista simple para ver las tareas del equipo</small>
-        </div>
+    <div id="team-tasks-content" class="tab-content">
+        <!-- El contenido del Kanban del equipo se cargará aquí dinámicamente -->
     </div>
     
 </div>
@@ -1191,19 +1180,24 @@ function renderTeamKanbanBoard(kanbanTasks) {
         'semana2': '🚀 FUTURAS'
     };
     
-    let html = '<div class="kanban-board" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; padding: 20px; min-height: 400px; width: 100%;">';
+    // Usar las mismas clases que el tab "Mis Tareas"
+    let html = '<div class="kanban-board">';
     
     columns.forEach(column => {
         const tasks = kanbanTasks[column] || [];
         console.log(`🏗️ Procesando columna ${column}: ${tasks.length} tareas`);
         
+        // Mapear los nombres de columna del backend a los del frontend
+        const columnClass = column === 'semana1' ? 'semana' : 
+                           column === 'semana2' ? 'futuras' : column;
+        
         html += `
-            <div class="kanban-column" style="background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); min-height: 300px; display: flex; flex-direction: column;">
-                <div class="column-header ${column}" style="padding: 16px; font-weight: 600; display: flex; justify-content: space-between; align-items: center;">
+            <div class="kanban-column">
+                <div class="column-header ${columnClass}">
                     <span>${columnTitles[column]}</span>
-                    <span class="task-count" style="background: rgba(255,255,255,0.8); padding: 4px 8px; border-radius: 12px; font-size: 12px;">${tasks.length}</span>
+                    <span class="task-count">${tasks.length}</span>
                 </div>
-                <div class="column-content" style="padding: 12px; flex: 1; overflow-y: auto;">
+                <div class="column-content">
         `;
         
         if (tasks.length > 0) {
@@ -1217,31 +1211,26 @@ function renderTeamKanbanBoard(kanbanTasks) {
                 const userName = (task.assigned_user_name || 'Sin asignar').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
                 const parentTaskName = task.parent_task_name ? task.parent_task_name.replace(/'/g, '&#39;').replace(/"/g, '&quot;') : '';
                 
-                const cardStyle = isSubtask ? 
-                    'background: linear-gradient(135deg, #fef7ff 0%, #f3e8ff 100%); border: 1px solid #e9d5ff; border-left: 4px solid #a855f7;' :
-                    'background: white; border: 1px solid #e5e7eb; border-left: 4px solid #3b82f6;';
-                
                 html += `
-                    <div class="${cardClass} ${column} project-${task.project_type || 'normal'}" 
-                         onclick="goToTaskDetail(event, ${task.task_id}, '${task.item_type}')"
-                         style="${cardStyle} border-radius: 8px; padding: 12px; margin-bottom: 8px; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                        <div class="task-header" style="display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px;">
+                    <div class="${cardClass} ${columnClass} project-${task.project_type || 'normal'}" 
+                         onclick="goToTaskDetail(event, ${task.task_id}, '${task.item_type}')">
+                        <div class="task-header">
                             <div class="task-checkbox">
                                 <input type="checkbox" id="team-${column}-${task.task_id}" 
                                        onclick="event.stopPropagation()" 
                                        onchange="handleTeamTaskCheck('team-${column}-${task.task_id}', ${task.task_id}, this.checked, '${task.item_type}')"
                                        ${task.status === 'completed' ? 'checked' : ''}>
                             </div>
-                            <div class="task-name" style="flex: 1; font-weight: 600; color: #1e293b; font-size: 14px;">
+                            <div class="task-name">
                                 ${isSubtask ? '<span style="color: #8b5cf6; font-weight: 600; margin-right: 6px;">↳</span>' : ''}
                                 ${taskName}
                                 ${isSubtask && parentTaskName ? `<br><small style="color: #6b7280; font-size: 11px;">📋 de: ${parentTaskName}</small>` : ''}
                             </div>
                         </div>
                         <div class="task-project">
-                            <div class="task-project-name" style="font-size: 13px; color: #374151; margin-bottom: 4px;">${projectName}</div>
-                            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px;">
-                                <div class="task-due-date" style="color: #6b7280;">${task.due_date ? new Date(task.due_date).toLocaleDateString('es-ES') : 'Sin fecha'}</div>
+                            <div class="task-project-name">${projectName}</div>
+                            <div class="task-due-date">${task.due_date ? new Date(task.due_date).toLocaleDateString('es-ES') : 'Sin fecha'}</div>
+                            <div style="margin-top: 4px;">
                                 <small style="color: #8b5cf6; font-weight: 600;">👤 ${userName}</small>
                             </div>
                         </div>
@@ -1255,7 +1244,7 @@ function renderTeamKanbanBoard(kanbanTasks) {
                 'semana1': 'Sin tareas esta semana del equipo',
                 'semana2': 'Sin tareas futuras del equipo'
             };
-            html += `<div class="empty-column" style="text-align: center; padding: 20px; color: #6b7280; font-style: italic;">${emptyMessages[column]}</div>`;
+            html += `<div class="empty-column">${emptyMessages[column]}</div>`;
         }
         
         html += `
@@ -1266,48 +1255,12 @@ function renderTeamKanbanBoard(kanbanTasks) {
     
     html += '</div>';
     
-    console.log('📝 HTML generado (primeros 500 chars):', html.substring(0, 500));
-    console.log('📏 Longitud total del HTML:', html.length);
+    console.log('📝 HTML generado exitosamente, longitud:', html.length);
     
-    // Forzar estilos de visibilidad antes de insertar HTML
-    teamContent.style.display = 'block !important';
-    teamContent.style.visibility = 'visible !important';
-    teamContent.style.opacity = '1 !important';
-    teamContent.style.width = '100% !important';
-    teamContent.style.height = 'auto !important';
-    teamContent.style.minHeight = '400px !important';
-    
+    // Simplemente insertar el HTML sin forzar estilos
     teamContent.innerHTML = html;
     
-    console.log('✅ HTML insertado en team-tasks-content');
-    console.log('🔍 Contenido actual del elemento:', teamContent.innerHTML.substring(0, 200));
-    
-    // Debug de visibilidad después de insertar
-    setTimeout(() => {
-        const computedStyle = window.getComputedStyle(teamContent);
-        console.log('👁️ Display del elemento después:', computedStyle.display);
-        console.log('👁️ Visibility del elemento después:', computedStyle.visibility);
-        console.log('👁️ Opacity del elemento después:', computedStyle.opacity);
-        console.log('👁️ Height del elemento después:', computedStyle.height);
-        console.log('📏 Dimensiones del elemento después:', teamContent.getBoundingClientRect());
-        
-        // Si aún no es visible, forzar más estilos
-        if (teamContent.getBoundingClientRect().height === 0) {
-            console.log('🚨 Elemento aún colapsado, forzando estilos adicionales...');
-            teamContent.style.cssText = `
-                display: block !important;
-                visibility: visible !important;
-                opacity: 1 !important;
-                width: 100% !important;
-                height: auto !important;
-                min-height: 500px !important;
-                background: #f8fafc !important;
-                border: 2px solid #3b82f6 !important;
-                padding: 20px !important;
-                margin: 10px 0 !important;
-            `;
-        }
-    }, 100);
+    console.log('✅ Kanban del equipo renderizado correctamente');
 }
 
 // Función para actualizar estadísticas del equipo
