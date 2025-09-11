@@ -1476,9 +1476,9 @@ function hideAllTeamViews() {
     document.getElementById('team-error').style.display = 'none';
 }
 
-// ===== KANBAN EQUIPO COMPLETAMENTE NUEVO =====
+// ===== KANBAN EQUIPO CON CLASES ESTÁNDAR =====
 function renderTeamKanban(kanbanTasks) {
-    console.log('🎨 NUEVO KANBAN: Renderizando Kanban del equipo con clases únicas');
+    console.log('🎨 Renderizando Kanban del equipo con clases estándar');
     
     const teamContent = document.getElementById('team-tasks-content');
     if (!teamContent) {
@@ -1486,15 +1486,15 @@ function renderTeamKanban(kanbanTasks) {
         return;
     }
     
-    // CREAR HTML CON CLASES COMPLETAMENTE NUEVAS
-    let html = '<div class="team-kanban-grid">';
+    // USAR LAS MISMAS CLASES QUE "MIS TAREAS" PARA GARANTIZAR VISIBILIDAD
+    let html = '<div class="team-kanban-board">';
     
     const columns = ['vencidas', 'hoy', 'semana1', 'semana2'];
     const columnConfig = {
-        'vencidas': { title: '⚠️ VENCIDAS', class: 'team-vencidas' },
-        'hoy': { title: '📅 HOY', class: 'team-hoy' }, 
-        'semana1': { title: '📆 ESTA SEMANA', class: 'team-semana' },
-        'semana2': { title: '🚀 FUTURAS', class: 'team-futuras' }
+        'vencidas': { title: '⚠️ VENCIDAS', class: 'vencidas' },
+        'hoy': { title: '📅 HOY', class: 'hoy' }, 
+        'semana1': { title: '📆 ESTA SEMANA', class: 'semana' },
+        'semana2': { title: '🚀 FUTURAS', class: 'futuras' }
     };
     
     columns.forEach(column => {
@@ -1502,45 +1502,40 @@ function renderTeamKanban(kanbanTasks) {
         const config = columnConfig[column];
         
         html += `
-            <div class="team-column">
-                <div class="team-column-header ${config.class}">
+            <div class="kanban-column">
+                <div class="column-header ${config.class}">
                     <span>${config.title}</span>
-                    <span class="team-task-count">${tasks.length}</span>
+                    <span class="task-count">${tasks.length}</span>
                 </div>
-                <div class="team-column-body">
+                <div class="column-content">
         `;
         
-        if (tasks.length === 0) {
-            html += `<div class="team-empty-column">Sin tareas del equipo</div>`;
-        } else {
-            tasks.forEach(task => {
-                const isSubtask = task.item_type === 'subtask';
-                const itemClass = isSubtask ? 'team-subtask-item' : 'team-task-item';
-                const taskName = (task.task_name || 'Sin nombre').replace(/'/g, '&#39;');
-                const userName = (task.assigned_user_name || 'Sin asignar').replace(/'/g, '&#39;');
-                const projectName = (task.project_name || 'Sin proyecto').replace(/'/g, '&#39;');
-                const dueDate = task.due_date || 'Sin fecha';
-                
-                html += `
-                    <div class="${itemClass}" onclick="console.log('Click en tarea:', '${taskName}')">
-                        <div class="team-task-header">
-                            <div class="team-task-checkbox">
-                                <input type="checkbox" onclick="event.stopPropagation()">
-                            </div>
-                            <div class="team-task-name">${taskName}</div>
+        tasks.forEach(task => {
+            const isSubtask = task.item_type === 'subtask';
+            const itemClass = isSubtask ? 'subtask-card' : 'task-card';
+            const taskName = (task.task_name || 'Sin nombre').replace(/'/g, '&#39;');
+            const userName = (task.assigned_user_name || 'Sin asignar').replace(/'/g, '&#39;');
+            const projectName = (task.project_name || 'Sin proyecto').replace(/'/g, '&#39;');
+            const dueDate = task.due_date || 'Sin fecha';
+            
+            html += `
+                <div class="${itemClass} ${config.class} project-normal" onclick="goToTaskDetail(event, ${task.task_id}, '${task.item_type}')">
+                    <div class="task-header">
+                        <div class="task-checkbox">
+                            <input type="checkbox" onclick="event.stopPropagation(); handleTaskCheck(this, ${task.task_id}, '${task.item_type}')">
                         </div>
-                        <div class="team-task-info">
-                            <div class="team-task-project">${projectName}</div>
-                            <div class="team-task-user">
-                                <span>👤</span> ${userName}
-                            </div>
-                            <div class="team-task-date">${dueDate}</div>
-                            ${isSubtask ? `<div class="team-subtask-parent">↳ Subtarea de: ${task.parent_task_name || 'Tarea padre'}</div>` : ''}
+                        <div class="task-name">${taskName}</div>
+                    </div>
+                    <div class="task-project">
+                        <div class="task-project-name">${projectName}</div>
+                        <div class="task-due-date">${dueDate}</div>
+                        <div style="margin-top: 4px;">
+                            <small style="color: #8b5cf6; font-weight: 600;">👤 ${userName}</small>
                         </div>
                     </div>
-                `;
-            });
-        }
+                </div>
+            `;
+        });
         
         html += `
                 </div>
@@ -1548,7 +1543,7 @@ function renderTeamKanban(kanbanTasks) {
         `;
     });
     
-    html += '</div>'; // Cerrar team-kanban-grid
+    html += '</div>'; // Cerrar team-kanban-board
     
     // INSERTAR HTML DIRECTAMENTE
     teamContent.innerHTML = html;
@@ -1570,12 +1565,12 @@ function renderTeamKanban(kanbanTasks) {
     console.log('📏 Dimensiones del contenedor:', teamContent.getBoundingClientRect());
     
     // Verificar que el nuevo Kanban se insertó
-    const teamKanban = teamContent.querySelector('.team-kanban-grid');
+    const teamKanban = teamContent.querySelector('.team-kanban-board');
     if (teamKanban) {
-        console.log('✅ NUEVO KANBAN: .team-kanban-grid encontrado y visible');
+        console.log('✅ KANBAN EQUIPO: .team-kanban-board encontrado y visible');
         console.log('📏 Dimensiones del Kanban:', teamKanban.getBoundingClientRect());
     } else {
-        console.error('❌ NUEVO KANBAN: .team-kanban-grid NO encontrado');
+        console.error('❌ KANBAN EQUIPO: .team-kanban-board NO encontrado');
     }
 }
 
