@@ -4922,28 +4922,29 @@ class ClanLeaderController {
                 exit;
             }
             
-            // Preparar datos para actualizar
-            $updateData = [
-                'task_name' => $taskTitle,
-                'task_description' => $taskDescription,
-                'due_date' => $taskDueDate ?: null,
-                'priority' => $priority,
-                'status' => $status,
-                'completion_percentage' => $taskProgress
-            ];
+            // Actualizar tarea usando la firma correcta del método
+            // public function update($taskId, $taskName, $description, $assignedUserId = null, $priority = null, $dueDate = null, $assignedPercentage = null, $status = null, $completionPercentage = null)
+            $result = $this->taskModel->update(
+                $taskId,
+                $taskTitle,                                                    // taskName
+                $taskDescription,                                               // description
+                $assignedToUserId > 0 ? $assignedToUserId : null,             // assignedUserId
+                $priority,                                                      // priority
+                $taskDueDate,                                                  // dueDate
+                null,                                                          // assignedPercentage (no se usa aquí)
+                $status,                                                       // status
+                $taskProgress                                                  // completionPercentage
+            );
             
-            // Solo actualizar proyecto si se especifica uno válido
-            if ($taskProject > 0) {
-                $updateData['project_id'] = $taskProject;
+            // Si se especifica un proyecto diferente, actualizarlo por separado
+            if ($taskProject > 0 && $taskProject != $existingTask['project_id']) {
+                try {
+                    $stmt = $this->db->prepare("UPDATE Tasks SET project_id = ? WHERE task_id = ?");
+                    $stmt->execute([$taskProject, $taskId]);
+                } catch (Exception $e) {
+                    error_log("Error actualizando project_id: " . $e->getMessage());
+                }
             }
-            
-            // Solo actualizar asignación si se especifica
-            if ($assignedToUserId !== null && $assignedToUserId >= 0) {
-                $updateData['assigned_to_user_id'] = $assignedToUserId > 0 ? $assignedToUserId : null;
-            }
-            
-            // Actualizar tarea
-            $result = $this->taskModel->update($taskId, $updateData);
             
             if ($result) {
                 echo json_encode(['success' => true, 'message' => 'Tarea actualizada exitosamente']);

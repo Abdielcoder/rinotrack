@@ -2748,13 +2748,13 @@ function loadTaskData(taskId) {
                 
                 console.log('✅ Datos de tarea cargados:', task);
                 
-                // Llenar campos básicos
+                // Llenar campos básicos (usando nombres correctos de columnas)
                 document.getElementById('edit_task_id').value = task.task_id;
                 document.getElementById('edit_title').value = task.task_name || '';
-                document.getElementById('edit_description').value = task.task_description || task.description || '';
+                document.getElementById('edit_description').value = task.description || '';  // Columna correcta: description
                 document.getElementById('edit_due_date').value = task.due_date || '';
                 document.getElementById('edit_priority').value = task.priority || 'medium';
-                document.getElementById('edit_status').value = task.status || task.task_status || 'pending';
+                document.getElementById('edit_status').value = task.status || 'pending';
                 document.getElementById('edit_assigned_to').value = task.assigned_to_user_id || '';
                 
                 // Llenar proyectos
