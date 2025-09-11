@@ -35,6 +35,9 @@ class ClanMemberController {
             return;
         }
 
+        // Obtener TODAS las tareas del usuario usando la nueva función optimizada
+        $allUserTasks = $this->taskModel->getAllUserTasksForDashboard($this->currentUser['user_id']);
+        
         if (!$this->userClan || !isset($this->userClan['clan_id'])) {
             // Usuario sin clan pero puede tener tareas asignadas de otros clanes
             $userTaskStats = $this->getUserTaskStatsForAllClans($this->currentUser['user_id'], null);
@@ -47,7 +50,8 @@ class ClanMemberController {
                 'userTaskStats' => $userTaskStats,
                 'ownContribution' => $ownContribution,
                 'clanMembers' => [], // Sin miembros del clan ya que no tiene clan
-                'kanbanTasks' => $this->getKanbanTasksForUser($this->currentUser['user_id'], null)
+                'kanbanTasks' => $this->getKanbanTasksForUser($this->currentUser['user_id'], null),
+                'allUserTasks' => $allUserTasks // Agregar todas las tareas del usuario
             ];
             $this->loadView('clan_member/dashboard', $data);
             return;
@@ -91,7 +95,8 @@ class ClanMemberController {
             'ownContributionDetails' => $ownTasksDetails,
             'kanbanTasks' => $kanbanTasks,
             'editTaskId' => $editTaskId,
-            'taskToEdit' => $taskToEdit
+            'taskToEdit' => $taskToEdit,
+            'allUserTasks' => $allUserTasks // Agregar todas las tareas del usuario con manejo de tareas personales
         ];
         $this->loadView('clan_member/dashboard', $data);
     }
@@ -354,6 +359,51 @@ class ClanMemberController {
         $this->loadView('clan_member/tasks', $data);
     }
 
+    /**
+     * Obtener todas las tareas del usuario en formato JSON
+     * Incluye manejo especial de tareas personales (is_personal = 1 muestra "Personal" como proyecto)
+     */
+    public function getMyAllTasks() {
+        header('Content-Type: application/json');
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        header('Pragma: no-cache');
+        
+        $this->requireAuth();
+        if (!$this->hasMemberAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+            return;
+        }
+        
+        try {
+            // Obtener todas las tareas del usuario usando la nueva función
+            $result = $this->taskModel->getAllUserTasksForDashboard($this->currentUser['user_id']);
+            
+            if ($result['success']) {
+                Utils::jsonResponse([
+                    'success' => true,
+                    'tasks' => $result['tasks'],
+                    'tasks_by_project' => $result['tasks_by_project'],
+                    'stats' => $result['stats'],
+                    'total' => $result['total'],
+                    'user_id' => $this->currentUser['user_id'],
+                    'user_name' => $this->currentUser['full_name'] ?? $this->currentUser['username']
+                ]);
+            } else {
+                Utils::jsonResponse([
+                    'success' => false,
+                    'message' => $result['error'] ?? 'Error al obtener las tareas'
+                ], 500);
+            }
+            
+        } catch (Exception $e) {
+            error_log("Error en getMyAllTasks: " . $e->getMessage());
+            Utils::jsonResponse([
+                'success' => false,
+                'message' => 'Error al obtener las tareas del usuario'
+            ], 500);
+        }
+    }
+    
     public function toggleTaskStatus() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
@@ -1376,117 +1426,37 @@ class ClanMemberController {
 
     /**
      * Obtener tareas Kanban para el usuario incluyendo de otros clanes
+     * Usa la nueva función optimizada que maneja correctamente tareas personales
      */
     private function getKanbanTasksForUser($userId, $primaryClanId = null) {
         try {
+            // Usar la nueva función optimizada para obtener TODAS las tareas
+            $result = $this->taskModel->getAllUserTasksForDashboard($userId);
             
-            // Obtener TODAS las tareas asignadas al usuario (de cualquier clan)
-            $allTasks = [];
-            $stmt = $this->db->prepare(
-                "SELECT 
-                    t.task_id,
-                    t.task_name,
-                    t.description,
-                    t.due_date,
-                    t.priority,
-                    t.status,
-                    t.completion_percentage,
-                    t.automatic_points,
-                    p.project_name,
-                    p.project_id,
-                    p.clan_id,
-                    c.clan_name,
-                    DATEDIFF(t.due_date, CURDATE()) as days_until_due,
-                    CASE 
-                        WHEN p.clan_id = ? THEN 1
-                        ELSE 0
-                    END as is_primary_clan,
-                    'task' as item_type
-                 FROM Tasks t
-                 INNER JOIN Projects p ON p.project_id = t.project_id
-                 LEFT JOIN Clans c ON p.clan_id = c.clan_id
-                 LEFT JOIN Task_Assignments ta ON ta.task_id = t.task_id
-                 WHERE t.is_subtask = 0
-                   AND t.is_personal = 0
-                   AND t.status != 'completed'
-                   AND (t.assigned_to_user_id = ? OR ta.user_id = ?)
-                 GROUP BY t.task_id
-                 ORDER BY is_primary_clan DESC, t.due_date ASC"
-            );
-            $stmt->execute([$primaryClanId, $userId, $userId]);
-            $allTasks = $stmt->fetchAll();
-            
-            // Obtener tareas personales del usuario
-            $personalTasks = [];
-            $personalStmt = $this->db->prepare(
-                "SELECT 
-                    t.task_id,
-                    t.task_name,
-                    t.description,
-                    t.due_date,
-                    t.priority,
-                    t.status,
-                    t.completion_percentage,
-                    t.automatic_points,
-                    p.project_name,
-                    p.project_id,
-                    p.clan_id,
-                    c.clan_name,
-                    CASE 
-                        WHEN t.due_date IS NULL THEN 999
-                        ELSE DATEDIFF(t.due_date, CURDATE())
-                    END as days_until_due,
-                    1 as is_primary_clan,
-                    'task' as item_type
-                 FROM Tasks t
-                 INNER JOIN Projects p ON p.project_id = t.project_id
-                 LEFT JOIN Clans c ON p.clan_id = c.clan_id
-                 WHERE t.is_personal = 1
-                   AND t.assigned_to_user_id = ?
-                   AND t.status != 'completed'
-                   AND t.is_subtask = 0
-                 ORDER BY t.due_date ASC"
-            );
-            $personalStmt->execute([$userId]);
-            $personalTasks = $personalStmt->fetchAll();
-            
-            // Obtener tareas especiales (eventuales y recurrentes) del clan principal
-            $specialTasks = [];
-            if ($primaryClanId) {
-                $specialStmt = $this->db->prepare(
-                    "SELECT 
-                        t.task_id,
-                        t.task_name,
-                        t.description,
-                        t.due_date,
-                        t.priority,
-                        t.status,
-                        t.completion_percentage,
-                        t.automatic_points,
-                        p.project_name,
-                        p.project_id,
-                        p.clan_id,
-                        c.clan_name,
-                        DATEDIFF(t.due_date, CURDATE()) as days_until_due,
-                        1 as is_primary_clan,
-                        'task' as item_type
-                     FROM Tasks t
-                     INNER JOIN Projects p ON p.project_id = t.project_id
-                     LEFT JOIN Clans c ON p.clan_id = c.clan_id
-                     LEFT JOIN Task_Assignments ta ON ta.task_id = t.task_id
-                     WHERE p.clan_id = ?
-                       AND p.project_name IN ('Tareas Recurrentes', 'Tareas Eventuales')
-                       AND t.is_subtask = 0
-                       AND t.status != 'completed'
-                       AND (t.assigned_to_user_id = ? OR ta.user_id = ?)
-                     GROUP BY t.task_id
-                     ORDER BY t.due_date ASC"
-                );
-                $specialStmt->execute([$primaryClanId, $userId, $userId]);
-                $specialTasks = $specialStmt->fetchAll();
+            if (!$result['success']) {
+                error_log('Error obteniendo tareas para Kanban: ' . ($result['error'] ?? 'Error desconocido'));
+                return [
+                    'vencidas' => [],
+                    'hoy' => [],
+                    '1_semana' => [],
+                    '2_semanas' => []
+                ];
             }
             
-            // Obtener subtareas asignadas al usuario
+            // Filtrar solo tareas no completadas para el Kanban
+            $allTasks = array_filter($result['tasks'], function($task) {
+                return $task['status'] !== 'completed' && ($task['is_completed'] ?? 0) != 1;
+            });
+            
+            // Agregar información adicional necesaria para el Kanban
+            $allTasks = array_map(function($task) use ($primaryClanId) {
+                $task['is_primary_clan'] = ($task['clan_id'] == $primaryClanId) ? 1 : 0;
+                $task['item_type'] = 'task';
+                // La función ya maneja el project_name correctamente (muestra "Personal" cuando is_personal = 1)
+                return $task;
+            }, $allTasks);
+            
+            // Obtener también las subtareas asignadas al usuario
             $subtasks = [];
             $subtaskStmt = $this->db->prepare(
                 "SELECT 
@@ -1495,7 +1465,7 @@ class ClanMemberController {
                     s.title as task_name,
                     s.description,
                     s.due_date,
-                    'medium' as priority,  -- Las subtareas tendrán prioridad media por defecto
+                    'medium' as priority,
                     s.status,
                     s.completion_percentage,
                     0 as automatic_points,
@@ -1521,10 +1491,10 @@ class ClanMemberController {
                  ORDER BY s.due_date ASC"
             );
             $subtaskStmt->execute([$primaryClanId, $userId]);
-            $subtasks = $subtaskStmt->fetchAll();
+            $subtasks = $subtaskStmt->fetchAll(PDO::FETCH_ASSOC);
             
-            // Combinar todas las tareas (clan, especiales, personales y subtareas)
-            $allCombinedTasks = array_merge($allTasks, $specialTasks, $personalTasks, $subtasks);
+            // Combinar tareas principales y subtareas
+            $allCombinedTasks = array_merge($allTasks, $subtasks);
             
             // Clasificar tareas por tiempo hasta vencimiento
             $kanbanColumns = [

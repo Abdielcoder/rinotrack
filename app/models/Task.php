@@ -1787,6 +1787,179 @@ class Task {
             return [];
         }
     }
+    
+    /**
+     * Obtener todas las tareas del usuario para el dashboard con manejo especial de tareas personales
+     * Cuando is_personal = 1, muestra "Personal" en lugar del nombre del proyecto
+     */
+    public function getAllUserTasksForDashboard($userId) {
+        try {
+            $sql = "
+                SELECT 
+                    t.task_id,
+                    t.task_name,
+                    t.description,
+                    t.project_id,
+                    t.assigned_to_user_id,
+                    t.created_by_user_id,
+                    t.priority,
+                    t.due_date,
+                    t.estimated_hours,
+                    t.actual_hours,
+                    t.completion_percentage,
+                    t.automatic_points,
+                    t.assigned_percentage,
+                    t.color_tag,
+                    t.status,
+                    t.is_completed,
+                    t.completed_at,
+                    t.created_at,
+                    t.updated_at,
+                    t.is_personal,
+                    t.is_recurrent,
+                    t.recurrence_type,
+                    -- Si is_personal = 1, mostrar 'Personal' como nombre del proyecto
+                    CASE 
+                        WHEN t.is_personal = 1 THEN 'Personal'
+                        ELSE p.project_name
+                    END AS project_name,
+                    p.clan_id,
+                    p.status as project_status,
+                    p.kpi_quarter_id,
+                    p.kpi_points,
+                    p.task_distribution_mode,
+                    p.time_limit as project_time_limit,
+                    p.project_type,
+                    c.clan_name,
+                    c.clan_departamento,
+                    u_assigned.full_name as assigned_user_name,
+                    u_assigned.username as assigned_username,
+                    u_creator.full_name as created_by_name,
+                    u_creator.username as created_by_username,
+                    DATEDIFF(t.due_date, CURDATE()) as days_until_due,
+                    -- Clasificación de urgencia
+                    CASE 
+                        WHEN t.status = 'completed' THEN 'completed'
+                        WHEN DATEDIFF(t.due_date, CURDATE()) < 0 THEN 'overdue'
+                        WHEN DATEDIFF(t.due_date, CURDATE()) <= 3 THEN 'urgent'
+                        WHEN DATEDIFF(t.due_date, CURDATE()) <= 7 THEN 'soon'
+                        ELSE 'normal'
+                    END AS urgency_status
+                FROM Tasks t
+                LEFT JOIN Projects p ON t.project_id = p.project_id
+                LEFT JOIN Clans c ON p.clan_id = c.clan_id
+                LEFT JOIN Users u_assigned ON t.assigned_to_user_id = u_assigned.user_id
+                LEFT JOIN Users u_creator ON t.created_by_user_id = u_creator.user_id
+                LEFT JOIN Task_Assignments ta ON t.task_id = ta.task_id
+                WHERE 
+                    -- Solo tareas principales (no subtareas)
+                    (t.is_subtask = 0 OR t.is_subtask IS NULL)
+                    AND (
+                        -- Tareas asignadas directamente al usuario
+                        t.assigned_to_user_id = :user_id1
+                        -- O tareas donde el usuario está en Task_Assignments
+                        OR ta.user_id = :user_id2
+                        -- O tareas personales creadas por el usuario
+                        OR (t.is_personal = 1 AND t.created_by_user_id = :user_id3)
+                    )
+                GROUP BY t.task_id
+                ORDER BY 
+                    -- Primero tareas vencidas
+                    CASE WHEN t.status != 'completed' AND DATEDIFF(t.due_date, CURDATE()) < 0 THEN 0 ELSE 1 END,
+                    -- Luego por prioridad
+                    CASE t.priority 
+                        WHEN 'critical' THEN 1
+                        WHEN 'high' THEN 2
+                        WHEN 'medium' THEN 3
+                        WHEN 'low' THEN 4
+                        ELSE 5
+                    END,
+                    -- Luego por fecha de vencimiento
+                    t.due_date ASC,
+                    -- Finalmente por fecha de creación
+                    t.created_at DESC
+            ";
+            
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([
+                'user_id1' => $userId,
+                'user_id2' => $userId,
+                'user_id3' => $userId
+            ]);
+            
+            $tasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Agrupar tareas por proyecto para facilitar el renderizado
+            $tasksByProject = [];
+            $stats = [
+                'total_tasks' => 0,
+                'completed_tasks' => 0,
+                'pending_tasks' => 0,
+                'in_progress_tasks' => 0,
+                'overdue_tasks' => 0,
+                'personal_tasks' => 0,
+                'project_tasks' => 0
+            ];
+            
+            foreach ($tasks as $task) {
+                $projectKey = $task['project_id'] ?? 0;
+                if (!isset($tasksByProject[$projectKey])) {
+                    $tasksByProject[$projectKey] = [
+                        'project_id' => $task['project_id'],
+                        'project_name' => $task['project_name'],
+                        'clan_name' => $task['clan_name'],
+                        'tasks' => []
+                    ];
+                }
+                $tasksByProject[$projectKey]['tasks'][] = $task;
+                
+                // Actualizar estadísticas
+                $stats['total_tasks']++;
+                
+                if ($task['is_personal'] == 1) {
+                    $stats['personal_tasks']++;
+                } else {
+                    $stats['project_tasks']++;
+                }
+                
+                switch ($task['status']) {
+                    case 'completed':
+                        $stats['completed_tasks']++;
+                        break;
+                    case 'in_progress':
+                        $stats['in_progress_tasks']++;
+                        break;
+                    case 'pending':
+                        $stats['pending_tasks']++;
+                        break;
+                }
+                
+                if ($task['urgency_status'] == 'overdue') {
+                    $stats['overdue_tasks']++;
+                }
+            }
+            
+            return [
+                'success' => true,
+                'tasks' => $tasks,
+                'tasks_by_project' => $tasksByProject,
+                'stats' => $stats,
+                'total' => count($tasks)
+            ];
+            
+        } catch (PDOException $e) {
+            error_log("Error en getAllUserTasksForDashboard: " . $e->getMessage());
+            return [
+                'success' => false,
+                'tasks' => [],
+                'tasks_by_project' => [],
+                'stats' => [],
+                'total' => 0,
+                'error' => 'Error al obtener las tareas del usuario'
+            ];
+        }
+    }
+    
     /**
      * Obtener todas las tareas del usuario (incluye asignación directa y por Task_Assignments)
      */

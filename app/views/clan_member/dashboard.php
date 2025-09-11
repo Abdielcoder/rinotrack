@@ -186,14 +186,14 @@ ob_start();
                                     <h4 class="task-title"><?php echo htmlspecialchars($task['task_name']); ?></h4>
 
                                     <div class="task-project-info">
-                                        <?php if (in_array($task['project_name'], ['Tareas Recurrentes', 'Tareas Eventuales', 'Tareas Personales'])): ?>
-                                            <!-- Solo mostrar etiqueta para tareas especiales -->
+                                        <?php if (in_array($task['project_name'], ['Tareas Recurrentes', 'Tareas Eventuales', 'Tareas Personales', 'Personal'])): ?>
+                                            <!-- Solo mostrar etiqueta para tareas especiales y personales -->
                                             <span class="task-type-badge <?php echo strtolower(str_replace(' ', '-', $task['project_name'])); ?>">
                                                 <?php if ($task['project_name'] === 'Tareas Recurrentes'): ?>
                                                     <i class="fas fa-redo"></i> Recurrente
                                                 <?php elseif ($task['project_name'] === 'Tareas Eventuales'): ?>
                                                     <i class="fas fa-calendar-alt"></i> Eventual
-                                                <?php elseif ($task['project_name'] === 'Tareas Personales'): ?>
+                                                <?php elseif ($task['project_name'] === 'Tareas Personales' || $task['project_name'] === 'Personal'): ?>
                                                     <i class="fas fa-user"></i> Personal
                                                 <?php endif; ?>
                                             </span>
@@ -245,14 +245,14 @@ ob_start();
                                     <h4 class="task-title"><?php echo htmlspecialchars($task['task_name']); ?></h4>
 
                                     <div class="task-project-info">
-                                        <?php if (in_array($task['project_name'], ['Tareas Recurrentes', 'Tareas Eventuales', 'Tareas Personales'])): ?>
-                                            <!-- Solo mostrar etiqueta para tareas especiales -->
+                                        <?php if (in_array($task['project_name'], ['Tareas Recurrentes', 'Tareas Eventuales', 'Tareas Personales', 'Personal'])): ?>
+                                            <!-- Solo mostrar etiqueta para tareas especiales y personales -->
                                             <span class="task-type-badge <?php echo strtolower(str_replace(' ', '-', $task['project_name'])); ?>">
                                                 <?php if ($task['project_name'] === 'Tareas Recurrentes'): ?>
                                                     <i class="fas fa-redo"></i> Recurrente
                                                 <?php elseif ($task['project_name'] === 'Tareas Eventuales'): ?>
                                                     <i class="fas fa-calendar-alt"></i> Eventual
-                                                <?php elseif ($task['project_name'] === 'Tareas Personales'): ?>
+                                                <?php elseif ($task['project_name'] === 'Tareas Personales' || $task['project_name'] === 'Personal'): ?>
                                                     <i class="fas fa-user"></i> Personal
                                                 <?php endif; ?>
                                             </span>
@@ -300,14 +300,14 @@ ob_start();
                                     <h4 class="task-title"><?php echo htmlspecialchars($task['task_name']); ?></h4>
 
                                     <div class="task-project-info">
-                                        <?php if (in_array($task['project_name'], ['Tareas Recurrentes', 'Tareas Eventuales', 'Tareas Personales'])): ?>
-                                            <!-- Solo mostrar etiqueta para tareas especiales -->
+                                        <?php if (in_array($task['project_name'], ['Tareas Recurrentes', 'Tareas Eventuales', 'Tareas Personales', 'Personal'])): ?>
+                                            <!-- Solo mostrar etiqueta para tareas especiales y personales -->
                                             <span class="task-type-badge <?php echo strtolower(str_replace(' ', '-', $task['project_name'])); ?>">
                                                 <?php if ($task['project_name'] === 'Tareas Recurrentes'): ?>
                                                     <i class="fas fa-redo"></i> Recurrente
                                                 <?php elseif ($task['project_name'] === 'Tareas Eventuales'): ?>
                                                     <i class="fas fa-calendar-alt"></i> Eventual
-                                                <?php elseif ($task['project_name'] === 'Tareas Personales'): ?>
+                                                <?php elseif ($task['project_name'] === 'Tareas Personales' || $task['project_name'] === 'Personal'): ?>
                                                     <i class="fas fa-user"></i> Personal
                                                 <?php endif; ?>
                                             </span>
@@ -355,14 +355,14 @@ ob_start();
                                     <h4 class="task-title"><?php echo htmlspecialchars($task['task_name']); ?></h4>
 
                                     <div class="task-project-info">
-                                        <?php if (in_array($task['project_name'], ['Tareas Recurrentes', 'Tareas Eventuales', 'Tareas Personales'])): ?>
-                                            <!-- Solo mostrar etiqueta para tareas especiales -->
+                                        <?php if (in_array($task['project_name'], ['Tareas Recurrentes', 'Tareas Eventuales', 'Tareas Personales', 'Personal'])): ?>
+                                            <!-- Solo mostrar etiqueta para tareas especiales y personales -->
                                             <span class="task-type-badge <?php echo strtolower(str_replace(' ', '-', $task['project_name'])); ?>">
                                                 <?php if ($task['project_name'] === 'Tareas Recurrentes'): ?>
                                                     <i class="fas fa-redo"></i> Recurrente
                                                 <?php elseif ($task['project_name'] === 'Tareas Eventuales'): ?>
                                                     <i class="fas fa-calendar-alt"></i> Eventual
-                                                <?php elseif ($task['project_name'] === 'Tareas Personales'): ?>
+                                                <?php elseif ($task['project_name'] === 'Tareas Personales' || $task['project_name'] === 'Personal'): ?>
                                                     <i class="fas fa-user"></i> Personal
                                                 <?php endif; ?>
                                             </span>
