@@ -759,6 +759,11 @@ try {
         $controller->cloneProject();
         break;
         
+    case 'clan_leader/simple-kanban-tasks':
+        $controller = new ClanLeaderController();
+        $controller->getSimpleKanbanTasks();
+        break;
+        
     case 'clan_leader/get-my-tasks':
         $controller = new ClanLeaderController();
         $controller->getMyTasks();

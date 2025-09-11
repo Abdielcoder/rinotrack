@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Tablero Kanban Simple - RinoTrack</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .info-bar {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .kanban-board {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .kanban-column {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            min-height: 400px;
+        }
+        
+        .column-header {
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-weight: bold;
+            text-align: center;
+            color: white;
+        }
+        
+        .column-header.vencidas {
+            background: #ef4444;
+        }
+        
+        .column-header.hoy {
+            background: #f59e0b;
+        }
+        
+        .column-header.semana {
+            background: #3b82f6;
+        }
+        
+        .column-header.futuras {
+            background: #10b981;
+        }
+        
+        .task-count {
+            background: rgba(255,255,255,0.3);
+            padding: 2px 8px;
+            border-radius: 12px;
+            margin-left: 10px;
+            font-size: 0.9rem;
+        }
+        
+        .task-card {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .task-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .task-name {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 5px;
+        }
+        
+        .task-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 8px;
+        }
+        
+        .task-date {
+            font-size: 0.85rem;
+            color: #6b7280;
+        }
+        
+        .task-priority {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        .priority-high {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+        
+        .priority-medium {
+            background: #fed7aa;
+            color: #ea580c;
+        }
+        
+        .priority-low {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: white;
+            font-size: 1.2rem;
+        }
+        
+        .error {
+            background: #fee2e2;
+            color: #dc2626;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .empty-column {
+            text-align: center;
+            color: #9ca3af;
+            padding: 20px;
+            font-style: italic;
+        }
+        
+        .refresh-btn {
+            background: #8b5cf6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        
+        .refresh-btn:hover {
+            background: #7c3aed;
+        }
+        
+        .status-badge {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+        
+        .status-pending {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+        
+        .status-in_progress {
+            background: #fef3c7;
+            color: #d97706;
+        }
+        
+        .status-completed {
+            background: #d1fae5;
+            color: #059669;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Mi Tablero Kanban Simple</h1>
+        
+        <div class="info-bar">
+            <div>
+                <strong>Usuario ID:</strong> <span id="userId">-</span> | 
+                <strong>Total Tareas:</strong> <span id="totalTasks">0</span>
+            </div>
+            <button class="refresh-btn" onclick="loadKanbanTasks()">🔄 Actualizar</button>
+        </div>
+        
+        <div id="kanbanBoard" class="kanban-board">
+            <div class="loading">Cargando tareas...</div>
+        </div>
+    </div>
+
+    <script>
+        // Función para cargar las tareas del Kanban
+        function loadKanbanTasks() {
+            const board = document.getElementById('kanbanBoard');
+            board.innerHTML = '<div class="loading">Cargando tareas...</div>';
+            
+            fetch('index.php?route=clan_leader/simple-kanban-tasks')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Respuesta del servidor:', data);
+                    
+                    if (data.success) {
+                        renderKanban(data.kanban, data.user_id, data.total);
+                    } else {
+                        board.innerHTML = `<div class="error">Error: ${data.message || 'Error desconocido'}</div>`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    board.innerHTML = '<div class="error">Error de conexión</div>';
+                });
+        }
+        
+        // Función para renderizar el tablero Kanban
+        function renderKanban(kanban, userId, total) {
+            const board = document.getElementById('kanbanBoard');
+            document.getElementById('userId').textContent = userId;
+            document.getElementById('totalTasks').textContent = total;
+            
+            const columns = [
+                { key: 'vencidas', title: '⚠️ Vencidas', class: 'vencidas' },
+                { key: 'hoy', title: '📅 Hoy', class: 'hoy' },
+                { key: 'semana', title: '📆 Esta Semana', class: 'semana' },
+                { key: 'futuras', title: '🚀 Futuras', class: 'futuras' }
+            ];
+            
+            let html = '';
+            
+            columns.forEach(column => {
+                const tasks = kanban[column.key] || [];
+                
+                html += `
+                    <div class="kanban-column">
+                        <div class="column-header ${column.class}">
+                            ${column.title}
+                            <span class="task-count">${tasks.length}</span>
+                        </div>
+                        <div class="column-content">
+                `;
+                
+                if (tasks.length === 0) {
+                    html += '<div class="empty-column">No hay tareas</div>';
+                } else {
+                    tasks.forEach(task => {
+                        const priorityClass = `priority-${task.priority || 'medium'}`;
+                        const statusClass = `status-${task.status || 'pending'}`;
+                        const dueDate = task.due_date ? new Date(task.due_date).toLocaleDateString('es-ES') : 'Sin fecha';
+                        
+                        html += `
+                            <div class="task-card" onclick="viewTask(${task.task_id})">
+                                <div class="task-name">
+                                    #${task.task_id} - ${task.task_name || 'Sin nombre'}
+                                </div>
+                                <div class="task-meta">
+                                    <span class="task-date">📅 ${dueDate}</span>
+                                    <div>
+                                        <span class="task-priority ${priorityClass}">${task.priority || 'medium'}</span>
+                                        <span class="status-badge ${statusClass}">${formatStatus(task.status)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                
+                html += `
+                        </div>
+                    </div>
+                `;
+            });
+            
+            board.innerHTML = html;
+        }
+        
+        // Función para formatear el estado
+        function formatStatus(status) {
+            const statusMap = {
+                'pending': 'Pendiente',
+                'in_progress': 'En Progreso',
+                'completed': 'Completada',
+                'cancelled': 'Cancelada'
+            };
+            return statusMap[status] || status;
+        }
+        
+        // Función para ver detalles de una tarea (puedes personalizar esto)
+        function viewTask(taskId) {
+            console.log('Ver tarea:', taskId);
+            // Aquí puedes agregar la lógica para ver los detalles de la tarea
+            alert(`Ver detalles de la tarea #${taskId}`);
+        }
+        
+        // Cargar las tareas al iniciar
+        document.addEventListener('DOMContentLoaded', function() {
+            loadKanbanTasks();
+            
+            // Actualizar automáticamente cada 30 segundos
+            setInterval(loadKanbanTasks, 30000);
+        });
+    </script>
+</body>
+</html>

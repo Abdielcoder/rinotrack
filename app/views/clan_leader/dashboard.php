@@ -703,12 +703,12 @@ ob_start();
             </div>
             </div>
             
-            <!-- Tab Content: Mis Tareas -->
+            <!-- Tab Content: Mis Tareas SIMPLE -->
             <div id="my-tasks-kanban-content" class="kanban-tab-content active" style="display: block;">
-                <div id="my-tasks-kanban-board" class="kanban-board-compact">
+                <div id="simple-kanban-board" class="kanban-board-compact">
                     <div class="loading-message">
                         <i class="fas fa-spinner fa-spin"></i>
-                    <br>Cargando mis tareas...
+                        <br>Cargando mis tareas (solo assigned_to_user_id)...
                     </div>
                 </div>
             </div>
@@ -827,25 +827,30 @@ function switchKanbanTab(tabName) {
     }
 }
 
-// Cargar mis tareas para Kanban
+// NUEVO: Cargar SOLO tareas donde assigned_to_user_id = mi usuario
 function loadMyKanbanTasks() {
-    console.log('🔄 Cargando mis tareas Kanban...');
-    const kanbanBoard = document.getElementById('my-tasks-kanban-board');
+    console.log('🔄 Cargando KANBAN SIMPLE - Solo tareas asignadas a mí...');
+    const kanbanBoard = document.getElementById('simple-kanban-board');
     
-    kanbanBoard.innerHTML = '<div class="loading-message"><i class="fas fa-spinner fa-spin"></i><br>Cargando mis tareas...</div>';
+    if (!kanbanBoard) {
+        console.error('No se encontró el elemento simple-kanban-board');
+        return;
+    }
     
-    fetch('?route=clan_leader/get-my-kanban-tasks')
+    kanbanBoard.innerHTML = '<div class="loading-message"><i class="fas fa-spinner fa-spin"></i><br>Cargando tareas simples...</div>';
+    
+    fetch('?route=clan_leader/simple-kanban-tasks')
         .then(response => response.json())
         .then(data => {
-            console.log('📋 Respuesta mis tareas:', data);
-            if (data.success && data.kanbanTasks) {
-                renderMyKanbanBoard(data.kanbanTasks);
+            console.log('📋 Respuesta KANBAN SIMPLE:', data);
+            if (data.success && data.kanban) {
+                renderSimpleKanban(data.kanban, data.total, data.user_id);
             } else {
                 kanbanBoard.innerHTML = '<div class="loading-message">Error: ' + (data.message || 'Error desconocido') + '</div>';
             }
         })
         .catch(error => {
-            console.error('❌ Error:', error);
+            console.error('Error cargando kanban simple:', error);
             kanbanBoard.innerHTML = '<div class="loading-message">Error de conexión</div>';
         });
 }
@@ -873,7 +878,65 @@ function loadTeamKanbanTasks() {
         });
 }
 
-// Renderizar tablero Kanban personal
+// NUEVO: Renderizar Kanban SIMPLE - Solo tareas asignadas a mí
+function renderSimpleKanban(kanban, total, userId) {
+    console.log('🎨 Renderizando KANBAN SIMPLE');
+    console.log(`Usuario: ${userId}, Total tareas: ${total}`);
+    
+    const kanbanBoard = document.getElementById('simple-kanban-board');
+    if (!kanbanBoard) return;
+    
+    const columns = [
+        { key: 'vencidas', title: '⚠️ Vencidas', class: 'overdue' },
+        { key: 'hoy', title: '📅 Hoy', class: 'today' },
+        { key: 'semana', title: '📆 Esta Semana', class: 'week1' },
+        { key: 'futuras', title: '🚀 Futuras', class: 'week2' }
+    ];
+    
+    let html = '';
+    
+    columns.forEach(column => {
+        const tasks = kanban[column.key] || [];
+        
+        html += `<div class="kanban-column-compact">
+            <div class="column-header ${column.class}">
+                <h4>${column.title}</h4>
+                <span class="task-count">${tasks.length}</span>
+            </div>
+            <div class="column-content-compact">`;
+        
+        if (tasks.length === 0) {
+            html += '<div style="text-align:center; color:#999; padding:20px;">Sin tareas</div>';
+        } else {
+            tasks.forEach(task => {
+                const priorityClass = `priority-${task.priority || 'medium'}`;
+                const statusBadge = task.status === 'completed' ? '✅' : 
+                                  task.status === 'in_progress' ? '🔄' : '⏳';
+                
+                html += `
+                    <div class="task-card-mini" data-task-id="${task.task_id}">
+                        <div class="task-header-mini">
+                            <div class="task-name-mini">
+                                ${statusBadge} #${task.task_id} - ${task.task_name || 'Sin nombre'}
+                            </div>
+                        </div>
+                        <div class="task-meta-mini">
+                            <span class="${priorityClass}">${task.priority || 'medium'}</span>
+                            ${task.due_date ? `<span>📅 ${new Date(task.due_date).toLocaleDateString('es-ES')}</span>` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+        }
+        
+        html += '</div></div>';
+    });
+    
+    kanbanBoard.innerHTML = html;
+    console.log('✅ Kanban Simple renderizado');
+}
+
+// Renderizar tablero Kanban personal (ANTIGUO - NO USAR)
 function renderMyKanbanBoard(kanbanTasks) {
     console.log('🎨 Renderizando tablero personal');
     const kanbanBoard = document.getElementById('my-tasks-kanban-board');

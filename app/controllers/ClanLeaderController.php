@@ -3855,6 +3855,72 @@ class ClanLeaderController {
     }
     
     /**
+     * KANBAN SIMPLE - Solo tareas donde assigned_to_user_id = mi usuario
+     * Sin filtros, sin condiciones adicionales
+     */
+    public function getSimpleKanbanTasks() {
+        header('Content-Type: application/json');
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        
+        $this->requireAuth();
+        
+        try {
+            $userId = $this->currentUser['user_id'];
+            
+            // CONSULTA ULTRA SIMPLE - Solo tareas asignadas a mí
+            $sql = "
+                SELECT 
+                    t.task_id,
+                    t.task_name,
+                    t.status,
+                    t.priority,
+                    t.due_date,
+                    DATEDIFF(t.due_date, CURDATE()) as days_until_due
+                FROM Tasks t
+                WHERE t.assigned_to_user_id = ?
+                    AND (t.is_subtask = 0 OR t.is_subtask IS NULL)
+                ORDER BY t.due_date ASC
+            ";
+            
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$userId]);
+            $tasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Organizar en columnas Kanban por fecha
+            $kanban = [
+                'vencidas' => [],
+                'hoy' => [],
+                'semana' => [],
+                'futuras' => []
+            ];
+            
+            foreach ($tasks as $task) {
+                $days = (int)$task['days_until_due'];
+                
+                if ($days < 0) {
+                    $kanban['vencidas'][] = $task;
+                } elseif ($days == 0) {
+                    $kanban['hoy'][] = $task;
+                } elseif ($days <= 7) {
+                    $kanban['semana'][] = $task;
+                } else {
+                    $kanban['futuras'][] = $task;
+                }
+            }
+            
+            Utils::jsonResponse([
+                'success' => true,
+                'kanban' => $kanban,
+                'total' => count($tasks),
+                'user_id' => $userId
+            ]);
+            
+        } catch (Exception $e) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
+        }
+    }
+    
+    /**
      * Obtener MIS tareas (SOLO las asignadas directamente a mi user_id)
      */
     public function getMyTasks() {
