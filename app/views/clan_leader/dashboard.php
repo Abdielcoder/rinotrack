@@ -334,8 +334,8 @@ ob_start();
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    background: white;
+    color: #374151;
 }
 
 .modal-header h3 {
@@ -350,7 +350,7 @@ ob_start();
 .modal-close {
     background: none;
     border: none;
-    color: white;
+    color: #6b7280;
     font-size: 18px;
     cursor: pointer;
     padding: 8px;
@@ -359,7 +359,8 @@ ob_start();
 }
 
 .modal-close:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: #f3f4f6;
+    color: #374151;
     transform: scale(1.1);
 }
 
@@ -548,7 +549,7 @@ ob_start();
 <div id="createTaskModal" class="modal-overlay" style="display: none;">
     <div class="modal-content">
         <div class="modal-header">
-            <h3><i class="fas fa-plus-circle"></i> Agregar Nueva Tarea</h3>
+            <h3><i class="fas fa-plus-circle"></i> Agregar Nueva Tarea Personal</h3>
             <button type="button" class="modal-close" onclick="closeCreateTaskModal()">
                 <i class="fas fa-times"></i>
             </button>
@@ -556,21 +557,21 @@ ob_start();
         
         <form id="createTaskForm" class="modal-body">
             <div class="form-group">
-                <label for="task_name">
+                <label for="title">
                     <i class="fas fa-tasks"></i>
                     Nombre de la Tarea *
                 </label>
-                <input type="text" id="task_name" name="task_name" required 
+                <input type="text" id="title" name="title" required 
                        placeholder="Ej: Revisar documentación del proyecto" 
                        class="form-control">
             </div>
             
             <div class="form-group">
-                <label for="task_description">
+                <label for="description">
                     <i class="fas fa-align-left"></i>
                     Descripción
                 </label>
-                <textarea id="task_description" name="task_description" 
+                <textarea id="description" name="description" 
                           placeholder="Descripción detallada de la tarea (opcional)"
                           class="form-control" rows="3"></textarea>
             </div>
@@ -595,17 +596,6 @@ ob_start();
                         <option value="low">Baja</option>
                     </select>
                 </div>
-            </div>
-            
-            <div class="form-group">
-                <label for="project_id">
-                    <i class="fas fa-project-diagram"></i>
-                    Proyecto (Opcional)
-                </label>
-                <select id="project_id" name="project_id" class="form-control">
-                    <option value="">Seleccionar proyecto...</option>
-                    <!-- Las opciones se cargarán dinámicamente -->
-                </select>
             </div>
         </form>
         
@@ -921,36 +911,12 @@ function openCreateTaskModal() {
         modal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
         
-        // Cargar proyectos disponibles
-        loadProjects();
-        
         // Establecer fecha mínima como hoy
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('due_date').min = today;
     }
 }
 
-// Función para cargar proyectos
-function loadProjects() {
-    fetch('?route=clan_leader/get-projects')
-        .then(response => response.json())
-        .then(data => {
-            if (data.success && data.projects) {
-                const projectSelect = document.getElementById('project_id');
-                projectSelect.innerHTML = '<option value="">Seleccionar proyecto...</option>';
-                
-                data.projects.forEach(project => {
-                    const option = document.createElement('option');
-                    option.value = project.project_id;
-                    option.textContent = project.project_name;
-                    projectSelect.appendChild(option);
-                });
-            }
-        })
-        .catch(error => {
-            console.error('❌ Error cargando proyectos:', error);
-        });
-}
 
 // Función para cerrar modal
 function closeCreateTaskModal() {
@@ -969,10 +935,10 @@ function createTask() {
     const formData = new FormData(form);
     
     // Validaciones básicas
-    const taskName = formData.get('task_name');
+    const title = formData.get('title');
     const dueDate = formData.get('due_date');
     
-    if (!taskName || taskName.trim().length < 3) {
+    if (!title || title.trim().length < 3) {
         alert('El nombre de la tarea debe tener al menos 3 caracteres');
         return;
     }
@@ -982,7 +948,7 @@ function createTask() {
         return;
     }
     
-    console.log('📝 Creando tarea:', taskName);
+    console.log('📝 Creando tarea:', title);
     
     fetch('?route=clan_leader/create-task', {
         method: 'POST',
