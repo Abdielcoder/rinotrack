@@ -121,12 +121,12 @@ function switchKanbanTab(tabName) {
 // Cargar tareas personales para Kanban
 function loadMyKanbanTasks() {
     console.log('🔄 Cargando mis tareas Kanban...');
-    fetch('?route=clan_leader/my-kanban-tasks')
+    fetch('?route=clan_leader/get-my-kanban-tasks')
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            myKanbanTasks = data.tasks || [];
-            console.log('✅ Mis tareas Kanban cargadas:', myKanbanTasks.length);
+            myKanbanTasks = data.tasks || {};
+            console.log('✅ Mis tareas Kanban cargadas:', data.total || 0);
             renderMyKanbanBoard(myKanbanTasks);
             updateKanbanStats();
         } else {
@@ -141,12 +141,12 @@ function loadMyKanbanTasks() {
 // Cargar tareas del equipo para Kanban
 function loadTeamKanbanTasks() {
     console.log('🔄 Cargando tareas del equipo Kanban...');
-    fetch('?route=clan_leader/team-kanban-tasks')
+    fetch('?route=clan_leader/get-team-kanban-tasks')
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            teamKanbanTasks = data.tasks || [];
-            console.log('✅ Tareas del equipo Kanban cargadas:', teamKanbanTasks.length);
+            teamKanbanTasks = data.tasks || {};
+            console.log('✅ Tareas del equipo Kanban cargadas:', data.total || 0);
             renderTeamKanbanBoard(teamKanbanTasks);
             updateKanbanStats();
         } else {
@@ -159,16 +159,16 @@ function loadTeamKanbanTasks() {
 }
 
 // Renderizar tablero Kanban personal
-function renderMyKanbanBoard(tasks) {
-    console.log('🎨 Renderizando tablero Kanban personal con', tasks.length, 'tareas');
+function renderMyKanbanBoard(kanbanData) {
+    console.log('🎨 Renderizando tablero Kanban personal');
     const board = document.getElementById('my-tasks-kanban-board');
     if (!board) return;
 
     const columns = {
-        'overdue': [],
-        'today': [],
-        'week1': [],
-        'week2plus': []
+        'overdue': kanbanData.vencidas || [],
+        'today': kanbanData.hoy || [],
+        'week1': kanbanData.semana1 || [],
+        'week2plus': kanbanData.semana2 || []
     };
 
     const columnTitles = {
@@ -177,14 +177,6 @@ function renderMyKanbanBoard(tasks) {
         'week1': '1 Semana',
         'week2plus': '2+ Semanas'
     };
-
-    // Clasificar tareas por columnas
-    tasks.forEach(task => {
-        const column = getKanbanColumn(task.due_date);
-        if (columns[column]) {
-            columns[column].push(task);
-        }
-    });
 
     let html = '';
     Object.keys(columns).forEach(column => {
@@ -241,16 +233,16 @@ function renderMyKanbanBoard(tasks) {
 }
 
 // Renderizar tablero Kanban del equipo
-function renderTeamKanbanBoard(tasks) {
-    console.log('🎨 Renderizando tablero Kanban del equipo con', tasks.length, 'tareas');
+function renderTeamKanbanBoard(kanbanData) {
+    console.log('🎨 Renderizando tablero Kanban del equipo');
     const board = document.getElementById('team-tasks-kanban-board');
     if (!board) return;
 
     const columns = {
-        'overdue': [],
-        'today': [],
-        'week1': [],
-        'week2plus': []
+        'overdue': kanbanData.vencidas || [],
+        'today': kanbanData.hoy || [],
+        'week1': kanbanData.semana1 || [],
+        'week2plus': kanbanData.semana2 || []
     };
 
     const columnTitles = {
@@ -259,14 +251,6 @@ function renderTeamKanbanBoard(tasks) {
         'week1': '1 Semana',
         'week2plus': '2+ Semanas'
     };
-
-    // Clasificar tareas por columnas
-    tasks.forEach(task => {
-        const column = getKanbanColumn(task.due_date);
-        if (columns[column]) {
-            columns[column].push(task);
-        }
-    });
 
     let html = '';
     Object.keys(columns).forEach(column => {
@@ -336,10 +320,19 @@ function getKanbanColumn(dueDate) {
 // Actualizar estadísticas del Kanban
 function updateKanbanStats() {
     const activeTab = document.querySelector('.kanban-tab-button.active');
-    const tasks = activeTab && activeTab.id === 'my-tasks-kanban-tab' ? myKanbanTasks : teamKanbanTasks;
+    const kanbanData = activeTab && activeTab.id === 'my-tasks-kanban-tab' ? myKanbanTasks : teamKanbanTasks;
     
-    const totalTasks = tasks.length;
-    const completedTasks = tasks.filter(task => task.status === 'completed').length;
+    let totalTasks = 0;
+    let completedTasks = 0;
+    
+    if (kanbanData && typeof kanbanData === 'object') {
+        ['vencidas', 'hoy', 'semana1', 'semana2'].forEach(column => {
+            if (kanbanData[column]) {
+                totalTasks += kanbanData[column].length;
+                completedTasks += kanbanData[column].filter(task => task.status === 'completed').length;
+            }
+        });
+    }
     
     document.getElementById('total-tasks').textContent = totalTasks;
     document.getElementById('completed-tasks').textContent = completedTasks;

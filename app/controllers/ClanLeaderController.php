@@ -4120,7 +4120,7 @@ class ClanLeaderController {
 
             Utils::jsonResponse([
                 'success' => true,
-                'kanbanTasks' => $kanbanTasks,
+                'tasks' => $kanbanTasks,
                 'total' => count($allTasks),
                 'debug' => [
                     'userId' => $userId,
@@ -4379,7 +4379,7 @@ class ClanLeaderController {
 
             Utils::jsonResponse([
                 'success' => true,
-                'kanbanTasks' => $kanbanTasks,
+                'tasks' => $kanbanTasks,
                 'total' => count($allTasks),
                 'debug' => [
                     'leaderId' => $userId,
