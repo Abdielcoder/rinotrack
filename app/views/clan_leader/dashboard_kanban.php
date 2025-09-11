@@ -217,14 +217,30 @@
     font-weight: 500;
     display: flex;
     align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-left: 20px;
+}
+
+.task-project-name {
+    display: flex;
+    align-items: center;
     gap: 3px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    margin-left: 20px;
+    flex: 1;
 }
 
-.task-project::before {
+.task-due-date {
+    color: #6b7280;
+    font-size: 0.65rem;
+    font-weight: 400;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.task-project-name::before {
     content: '👥';
     font-size: 0.7rem;
 }
@@ -441,7 +457,10 @@
                                 </div>
                                 <div class="task-name"><?= htmlspecialchars($task['task_name']) ?></div>
                             </div>
-                            <div class="task-project"><?= isset($task['project_name']) ? htmlspecialchars($task['project_name']) : 'Tareas Personales' ?></div>
+                            <div class="task-project">
+                                <div class="task-project-name"><?= isset($task['project_name']) ? htmlspecialchars($task['project_name']) : 'Tareas Personales' ?></div>
+                                <div class="task-due-date"><?= date('d/m/Y', strtotime($task['due_date'])) ?></div>
+                            </div>
                         </div>
                     <?php endforeach; ?>
                 <?php else: ?>
@@ -468,7 +487,10 @@
                                 </div>
                                 <div class="task-name"><?= htmlspecialchars($task['task_name']) ?></div>
                             </div>
-                            <div class="task-project"><?= isset($task['project_name']) ? htmlspecialchars($task['project_name']) : 'Tareas Personales' ?></div>
+                            <div class="task-project">
+                                <div class="task-project-name"><?= isset($task['project_name']) ? htmlspecialchars($task['project_name']) : 'Tareas Personales' ?></div>
+                                <div class="task-due-date"><?= date('d/m/Y', strtotime($task['due_date'])) ?></div>
+                            </div>
                         </div>
                     <?php endforeach; ?>
                 <?php else: ?>
@@ -495,7 +517,10 @@
                                 </div>
                                 <div class="task-name"><?= htmlspecialchars($task['task_name']) ?></div>
                             </div>
-                            <div class="task-project"><?= isset($task['project_name']) ? htmlspecialchars($task['project_name']) : 'Tareas Personales' ?></div>
+                            <div class="task-project">
+                                <div class="task-project-name"><?= isset($task['project_name']) ? htmlspecialchars($task['project_name']) : 'Tareas Personales' ?></div>
+                                <div class="task-due-date"><?= date('d/m/Y', strtotime($task['due_date'])) ?></div>
+                            </div>
                         </div>
                     <?php endforeach; ?>
                 <?php else: ?>
@@ -522,7 +547,10 @@
                                 </div>
                                 <div class="task-name"><?= htmlspecialchars($task['task_name']) ?></div>
                             </div>
-                            <div class="task-project"><?= isset($task['project_name']) ? htmlspecialchars($task['project_name']) : 'Tareas Personales' ?></div>
+                            <div class="task-project">
+                                <div class="task-project-name"><?= isset($task['project_name']) ? htmlspecialchars($task['project_name']) : 'Tareas Personales' ?></div>
+                                <div class="task-due-date"><?= date('d/m/Y', strtotime($task['due_date'])) ?></div>
+                            </div>
                         </div>
                     <?php endforeach; ?>
                     <?php if (count($futuras) > 8): ?>
