@@ -448,7 +448,7 @@
             <div class="column-content">
                 <?php if (count($vencidas) > 0): ?>
                     <?php foreach ($vencidas as $task): ?>
-                        <div class="task-card vencidas project-<?= htmlspecialchars($task['project_type'] ?? 'normal') ?>" onclick="toggleTaskCheckbox(event, 'vencidas-<?= $task['task_id'] ?>')">
+                        <div class="task-card vencidas project-<?= htmlspecialchars($task['project_type'] ?? 'normal') ?>" onclick="goToTaskDetail(event, <?= $task['task_id'] ?>)">
                             <div class="task-header">
                                 <div class="task-checkbox">
                                 <input type="checkbox" id="vencidas-<?= $task['task_id'] ?>" 
@@ -478,7 +478,7 @@
             <div class="column-content">
                 <?php if (count($hoy) > 0): ?>
                     <?php foreach ($hoy as $task): ?>
-                        <div class="task-card hoy project-<?= htmlspecialchars($task['project_type'] ?? 'normal') ?>" onclick="toggleTaskCheckbox(event, 'hoy-<?= $task['task_id'] ?>')">
+                        <div class="task-card hoy project-<?= htmlspecialchars($task['project_type'] ?? 'normal') ?>" onclick="goToTaskDetail(event, <?= $task['task_id'] ?>)">
                             <div class="task-header">
                                 <div class="task-checkbox">
                                 <input type="checkbox" id="hoy-<?= $task['task_id'] ?>" 
@@ -508,7 +508,7 @@
             <div class="column-content">
                 <?php if (count($semana) > 0): ?>
                     <?php foreach ($semana as $task): ?>
-                        <div class="task-card semana project-<?= htmlspecialchars($task['project_type'] ?? 'normal') ?>" onclick="toggleTaskCheckbox(event, 'semana-<?= $task['task_id'] ?>')">
+                        <div class="task-card semana project-<?= htmlspecialchars($task['project_type'] ?? 'normal') ?>" onclick="goToTaskDetail(event, <?= $task['task_id'] ?>)">
                             <div class="task-header">
                                 <div class="task-checkbox">
                                 <input type="checkbox" id="semana-<?= $task['task_id'] ?>" 
@@ -538,7 +538,7 @@
             <div class="column-content">
                 <?php if (count($futuras) > 0): ?>
                     <?php foreach (array_slice($futuras, 0, 8) as $task): ?>
-                        <div class="task-card futuras project-<?= htmlspecialchars($task['project_type'] ?? 'normal') ?>" onclick="toggleTaskCheckbox(event, 'futuras-<?= $task['task_id'] ?>')">
+                        <div class="task-card futuras project-<?= htmlspecialchars($task['project_type'] ?? 'normal') ?>" onclick="goToTaskDetail(event, <?= $task['task_id'] ?>)">
                             <div class="task-header">
                                 <div class="task-checkbox">
                                 <input type="checkbox" id="futuras-<?= $task['task_id'] ?>" 
@@ -626,19 +626,15 @@ function switchDashboardTab(tabName) {
 }
 
 // Función para manejar el click en el card (togglea el checkbox)
-function toggleTaskCheckbox(event, uniqueTaskId) {
-    // Si el click fue en el checkbox mismo, no hacer nada
+// Función para ir al detalle de la tarea
+function goToTaskDetail(event, taskId) {
+    // Si el click fue en el checkbox, no redireccionar
     if (event.target.type === 'checkbox') {
         return;
     }
     
-    const checkbox = document.getElementById(uniqueTaskId);
-    if (checkbox) {
-        checkbox.checked = !checkbox.checked;
-        // Extraer el ID real de la tarea del ID único
-        const taskId = uniqueTaskId.split('-').slice(1).join('-');
-        handleTaskCheck(uniqueTaskId, taskId, checkbox.checked);
-    }
+    // Redireccionar al detalle de la tarea
+    window.location.href = '<?= APP_URL ?>clan_leader/get-task-details&task_id=' + taskId;
 }
 
 // Función para manejar cuando se marca/desmarca una tarea
@@ -671,7 +667,7 @@ function handleTaskCheck(uniqueTaskId, taskId, isChecked) {
     
     console.log('Enviando AJAX para completar task_id:', taskId);
     
-    fetch('<?= APP_URL ?>test-simple-complete.php', {
+    fetch('<?= APP_URL ?>clan_leader/completeTask', {
         method: 'POST',
         body: formData
     })
