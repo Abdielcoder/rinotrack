@@ -4224,8 +4224,7 @@ class ClanLeaderController {
                 JOIN Tasks t ON s.task_id = t.task_id
                 JOIN Projects p ON t.project_id = p.project_id
                 LEFT JOIN Users u ON s.assigned_to_user_id = u.user_id
-                WHERE (s.assigned_to_user_id = :user_id2 
-                    OR s.subtask_id IN (SELECT sa.subtask_id FROM Subtask_Assignments sa WHERE sa.user_id = :user_id3))
+                WHERE s.assigned_to_user_id = :user_id2
                     AND p.clan_id = :clan_id2
                     AND s.status != 'completed'
                     AND s.completion_percentage < 100)
@@ -4236,7 +4235,6 @@ class ClanLeaderController {
                 ':user_id' => $userId,
                 ':clan_id' => $clanId,
                 ':user_id2' => $userId,
-                ':user_id3' => $userId,
                 ':clan_id2' => $clanId
             ]);
             
