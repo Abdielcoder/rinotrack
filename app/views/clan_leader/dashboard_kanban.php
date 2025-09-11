@@ -1161,7 +1161,12 @@ function renderTeamKanbanBoard(kanbanTasks) {
     console.log('🎨 Renderizando tablero del equipo con tareas:', kanbanTasks);
     
     const teamContent = document.getElementById('team-tasks-content');
-    if (!teamContent) return;
+    if (!teamContent) {
+        console.error('❌ No se encontró team-tasks-content en renderTeamKanbanBoard');
+        return;
+    }
+    
+    console.log('✅ team-tasks-content encontrado para renderizar');
     
     const columns = ['vencidas', 'hoy', 'semana1', 'semana2'];
     const columnTitles = {
@@ -1175,6 +1180,7 @@ function renderTeamKanbanBoard(kanbanTasks) {
     
     columns.forEach(column => {
         const tasks = kanbanTasks[column] || [];
+        console.log(`🏗️ Procesando columna ${column}: ${tasks.length} tareas`);
         
         html += `
             <div class="kanban-column">
@@ -1186,9 +1192,15 @@ function renderTeamKanbanBoard(kanbanTasks) {
         `;
         
         if (tasks.length > 0) {
-            tasks.forEach(task => {
+            tasks.forEach((task, index) => {
+                console.log(`📋 Procesando tarea ${index + 1}/${tasks.length} en ${column}:`, task.task_name);
                 const isSubtask = task.item_type === 'subtask';
                 const cardClass = isSubtask ? 'subtask-card' : 'task-card';
+                
+                const taskName = (task.task_name || 'Sin nombre').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+                const projectName = (task.project_name || 'Sin proyecto').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+                const userName = (task.assigned_user_name || 'Sin asignar').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+                const parentTaskName = task.parent_task_name ? task.parent_task_name.replace(/'/g, '&#39;').replace(/"/g, '&quot;') : '';
                 
                 html += `
                     <div class="${cardClass} ${column} project-${task.project_type || 'normal'}" onclick="goToTaskDetail(event, ${task.task_id}, '${task.item_type}')">
@@ -1201,15 +1213,15 @@ function renderTeamKanbanBoard(kanbanTasks) {
                             </div>
                             <div class="task-name">
                                 ${isSubtask ? '<span style="color: #8b5cf6; font-weight: 600; margin-right: 6px;">↳</span>' : ''}
-                                ${task.task_name || 'Sin nombre'}
-                                ${isSubtask && task.parent_task_name ? `<br><small style="color: #6b7280; font-size: 11px;">📋 de: ${task.parent_task_name}</small>` : ''}
+                                ${taskName}
+                                ${isSubtask && parentTaskName ? `<br><small style="color: #6b7280; font-size: 11px;">📋 de: ${parentTaskName}</small>` : ''}
                             </div>
                         </div>
                         <div class="task-project">
-                            <div class="task-project-name">${task.project_name || 'Sin proyecto'}</div>
+                            <div class="task-project-name">${projectName}</div>
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
                                 <div class="task-due-date">${task.due_date ? new Date(task.due_date).toLocaleDateString('es-ES') : 'Sin fecha'}</div>
-                                <small style="color: #8b5cf6; font-weight: 600;">👤 ${task.assigned_user_name || 'Sin asignar'}</small>
+                                <small style="color: #8b5cf6; font-weight: 600;">👤 ${userName}</small>
                             </div>
                         </div>
                     </div>
@@ -1232,7 +1244,14 @@ function renderTeamKanbanBoard(kanbanTasks) {
     });
     
     html += '</div>';
+    
+    console.log('📝 HTML generado (primeros 500 chars):', html.substring(0, 500));
+    console.log('📏 Longitud total del HTML:', html.length);
+    
     teamContent.innerHTML = html;
+    
+    console.log('✅ HTML insertado en team-tasks-content');
+    console.log('🔍 Contenido actual del elemento:', teamContent.innerHTML.substring(0, 200));
 }
 
 // Función para actualizar estadísticas del equipo
