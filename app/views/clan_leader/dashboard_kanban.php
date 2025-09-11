@@ -451,9 +451,9 @@
                         <div class="task-card vencidas project-<?= htmlspecialchars($task['project_type'] ?? 'normal') ?>" onclick="toggleTaskCheckbox(event, 'vencidas-<?= $task['task_id'] ?>')">
                             <div class="task-header">
                                 <div class="task-checkbox">
-                                    <input type="checkbox" id="vencidas-<?= $task['task_id'] ?>" 
-                                           onclick="event.stopPropagation()" 
-                                           onchange="handleTaskCheck(<?= $task['task_id'] ?>, this.checked)">
+                                <input type="checkbox" id="vencidas-<?= $task['task_id'] ?>" 
+                                       onclick="event.stopPropagation()" 
+                                       onchange="handleTaskCheck('vencidas-<?= $task['task_id'] ?>', <?= $task['task_id'] ?>, this.checked)">
                                 </div>
                                 <div class="task-name"><?= htmlspecialchars($task['task_name']) ?></div>
                             </div>
@@ -481,9 +481,9 @@
                         <div class="task-card hoy project-<?= htmlspecialchars($task['project_type'] ?? 'normal') ?>" onclick="toggleTaskCheckbox(event, 'hoy-<?= $task['task_id'] ?>')">
                             <div class="task-header">
                                 <div class="task-checkbox">
-                                    <input type="checkbox" id="hoy-<?= $task['task_id'] ?>" 
-                                           onclick="event.stopPropagation()" 
-                                           onchange="handleTaskCheck(<?= $task['task_id'] ?>, this.checked)">
+                                <input type="checkbox" id="hoy-<?= $task['task_id'] ?>" 
+                                       onclick="event.stopPropagation()" 
+                                       onchange="handleTaskCheck('hoy-<?= $task['task_id'] ?>', <?= $task['task_id'] ?>, this.checked)">
                                 </div>
                                 <div class="task-name"><?= htmlspecialchars($task['task_name']) ?></div>
                             </div>
@@ -511,9 +511,9 @@
                         <div class="task-card semana project-<?= htmlspecialchars($task['project_type'] ?? 'normal') ?>" onclick="toggleTaskCheckbox(event, 'semana-<?= $task['task_id'] ?>')">
                             <div class="task-header">
                                 <div class="task-checkbox">
-                                    <input type="checkbox" id="semana-<?= $task['task_id'] ?>" 
-                                           onclick="event.stopPropagation()" 
-                                           onchange="handleTaskCheck(<?= $task['task_id'] ?>, this.checked)">
+                                <input type="checkbox" id="semana-<?= $task['task_id'] ?>" 
+                                       onclick="event.stopPropagation()" 
+                                       onchange="handleTaskCheck('semana-<?= $task['task_id'] ?>', <?= $task['task_id'] ?>, this.checked)">
                                 </div>
                                 <div class="task-name"><?= htmlspecialchars($task['task_name']) ?></div>
                             </div>
@@ -541,9 +541,9 @@
                         <div class="task-card futuras project-<?= htmlspecialchars($task['project_type'] ?? 'normal') ?>" onclick="toggleTaskCheckbox(event, 'futuras-<?= $task['task_id'] ?>')">
                             <div class="task-header">
                                 <div class="task-checkbox">
-                                    <input type="checkbox" id="futuras-<?= $task['task_id'] ?>" 
-                                           onclick="event.stopPropagation()" 
-                                           onchange="handleTaskCheck(<?= $task['task_id'] ?>, this.checked)">
+                                <input type="checkbox" id="futuras-<?= $task['task_id'] ?>" 
+                                       onclick="event.stopPropagation()" 
+                                       onchange="handleTaskCheck('futuras-<?= $task['task_id'] ?>', <?= $task['task_id'] ?>, this.checked)">
                                 </div>
                                 <div class="task-name"><?= htmlspecialchars($task['task_name']) ?></div>
                             </div>
@@ -644,11 +644,22 @@ function toggleTaskCheckbox(event, uniqueTaskId) {
 // Función para manejar cuando se marca/desmarca una tarea
 function handleTaskCheck(uniqueTaskId, taskId, isChecked) {
     console.log('📝 Tarea', taskId, isChecked ? 'marcada' : 'desmarcada');
+    console.log('📝 UniqueTaskId:', uniqueTaskId);
     
     const checkbox = document.getElementById(uniqueTaskId);
     const card = checkbox ? checkbox.closest('.task-card') : null;
     
-    if (!card || !checkbox) return;
+    if (!card || !checkbox) {
+        console.error('No se encontró el checkbox o el card');
+        return;
+    }
+    
+    // Solo procesar si se está marcando como completada
+    if (!isChecked) {
+        // Si se desmarca, volver a marcar (no permitir desmarcar)
+        checkbox.checked = true;
+        return;
+    }
     
     // Deshabilitar checkbox temporalmente
     checkbox.disabled = true;
@@ -657,44 +668,45 @@ function handleTaskCheck(uniqueTaskId, taskId, isChecked) {
     // Hacer llamada AJAX para actualizar en base de datos
     const formData = new FormData();
     formData.append('task_id', taskId);
-    formData.append('status', isChecked ? 'completed' : 'pending');
+    formData.append('status', 'completed');
     formData.append('item_type', 'task');
+    
+    console.log('Enviando AJAX con task_id:', taskId, 'status: completed');
     
     fetch('<?= APP_URL ?>/clan_leader/updateTaskStatus', {
         method: 'POST',
         body: formData
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('Respuesta recibida:', response);
+        return response.json();
+    })
     .then(data => {
+        console.log('Data recibida:', data);
         if (data.success) {
-            if (isChecked) {
-                // Animar y remover la tarea del DOM
-                card.style.transition = 'all 0.3s ease';
-                card.style.transform = 'translateX(100%)';
-                card.style.opacity = '0';
-                
-                setTimeout(() => {
-                    card.remove();
-                    updateTaskCounts();
-                }, 300);
-            } else {
-                // Restaurar estado si se desmarca
-                card.style.opacity = '1';
-                checkbox.disabled = false;
-            }
+            // Animar y remover la tarea del DOM
+            card.style.transition = 'all 0.3s ease';
+            card.style.transform = 'translateX(100%)';
+            card.style.opacity = '0';
+            
+            setTimeout(() => {
+                card.remove();
+                updateTaskCounts();
+                console.log('✅ Tarea removida del DOM');
+            }, 300);
         } else {
             // Error: revertir checkbox
             console.error('Error al actualizar tarea:', data.message);
-            checkbox.checked = !isChecked;
+            checkbox.checked = false;
             card.style.opacity = '1';
             checkbox.disabled = false;
-            alert('Error al actualizar la tarea: ' + data.message);
+            alert('Error al actualizar la tarea: ' + (data.message || 'Error desconocido'));
         }
     })
     .catch(error => {
         // Error de red: revertir checkbox
         console.error('Error de red:', error);
-        checkbox.checked = !isChecked;
+        checkbox.checked = false;
         card.style.opacity = '1';
         checkbox.disabled = false;
         alert('Error de conexión. Inténtalo de nuevo.');

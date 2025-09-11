@@ -4883,15 +4883,17 @@ class ClanLeaderController {
                 $stmt = $this->db->prepare("
                     UPDATE Tasks 
                     SET status = ?, 
+                        is_completed = ?,
                         completion_percentage = ?,
                         completed_at = ?,
                         updated_at = CURRENT_TIMESTAMP 
                     WHERE task_id = ?
                 ");
                 
+                $isCompleted = ($status === 'completed') ? 1 : 0;
                 $completionPercentage = ($status === 'completed') ? 100 : 0;
                 $completedAt = ($status === 'completed') ? date('Y-m-d H:i:s') : null;
-                $stmt->execute([$status, $completionPercentage, $completedAt, $taskId]);
+                $stmt->execute([$status, $isCompleted, $completionPercentage, $completedAt, $taskId]);
                 
                 if ($stmt->rowCount() > 0) {
                     error_log("Tarea actualizada: ID=$taskId, Status=$status");
