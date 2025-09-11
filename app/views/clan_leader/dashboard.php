@@ -755,7 +755,7 @@ function renderMyKanbanBoard(kanbanTasks) {
                            onchange="toggleTaskStatusKanban(${task.task_id}, this.checked, '${isSubtask ? 'subtask' : 'task'}')">
                     <div class="task-name-mini">
                         ${isSubtask ? '<i class="fas fa-arrow-right subtask-icon"></i>' : ''}
-                        <a href="#" onclick="goToTaskDetail(${task.task_id}, '${isSubtask ? 'subtask' : 'task'}'); return false;" class="task-name-link">
+                        <a href="#" onclick="goToTaskDetail(${isSubtask ? (task.parent_task_id || task.task_id) : task.task_id}, '${isSubtask ? 'subtask' : 'task'}'); return false;" class="task-name-link">
                             ${task.task_name || 'Sin nombre'}
                         </a>
                         ${isSubtask && task.parent_task_name ? `<span class="parent-task-hint" title="Tarea padre: ${task.parent_task_name}">↑</span>` : ''}
@@ -816,7 +816,7 @@ function renderTeamKanbanBoard(kanbanTasks) {
                            onchange="toggleTaskStatusKanban(${task.task_id}, this.checked, '${isSubtask ? 'subtask' : 'task'}')">
                     <div class="task-name-mini">
                         ${isSubtask ? '<i class="fas fa-arrow-right subtask-icon"></i>' : ''}
-                        <a href="#" onclick="goToTaskDetail(${task.task_id}, '${isSubtask ? 'subtask' : 'task'}'); return false;" class="task-name-link">
+                        <a href="#" onclick="goToTaskDetail(${isSubtask ? (task.parent_task_id || task.task_id) : task.task_id}, '${isSubtask ? 'subtask' : 'task'}'); return false;" class="task-name-link">
                             ${task.task_name || 'Sin nombre'}
                         </a>
                         ${isSubtask && task.parent_task_name ? `<span class="parent-task-hint" title="Tarea padre: ${task.parent_task_name}">↑</span>` : ''}
@@ -957,7 +957,7 @@ function closeCreateTaskModal() {
 
 // Función para ir al detalle de tarea/subtarea
 function goToTaskDetail(taskId, itemType = 'task') {
-    console.log(`🔗 Navegando al detalle: ${itemType} ID ${taskId}`);
+    console.log(`🔗 Navegando al detalle: ${itemType} - Task ID ${taskId}`);
     
     if (!taskId || taskId <= 0) {
         console.error('❌ ID de tarea inválido:', taskId);
@@ -967,10 +967,12 @@ function goToTaskDetail(taskId, itemType = 'task') {
     // Usar la ruta correcta para detalles de tarea
     let url;
     if (itemType === 'subtask') {
-        // Para subtareas, usar la misma ruta con parámetro adicional
+        // Para subtareas, navegar al detalle de la tarea padre
+        console.log(`📋 Subtarea detectada - navegando a tarea padre ID: ${taskId}`);
         url = `?route=clan_leader/get-task-details&task_id=${taskId}&type=subtask`;
     } else {
         // Para tareas normales
+        console.log(`📝 Tarea normal - navegando a tarea ID: ${taskId}`);
         url = `?route=clan_leader/get-task-details&task_id=${taskId}`;
     }
     
