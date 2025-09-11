@@ -4036,6 +4036,20 @@ console.log('🚀 Tasks.php cargado - Versión 6.0 - Debug activo');
     transform: scale(1.05);
 }
 
+.btn-action-table.disabled {
+    background: rgba(156, 163, 175, 0.1);
+    color: #9ca3af;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.btn-action-table.disabled:hover {
+    background: rgba(156, 163, 175, 0.1);
+    color: #9ca3af;
+    transform: none;
+    cursor: not-allowed;
+}
+
 /* Descripción de tarea en tabla */
 .task-description-table {
     font-size: 12px;
@@ -4269,9 +4283,11 @@ function renderTasksTableFromKanban(tasks, tbodyId) {
                         <a href="?route=clan_leader/get-task-details&task_id=${isSubtask ? (task.parent_task_id || task.task_id) : task.task_id}${isSubtask ? '&type=subtask' : ''}" class="btn-action-table view" title="Ver Detalles">
                             <i class="fas fa-eye"></i>
                         </a>
-                        <a href="?route=clan_leader/task_edit&task_id=${isSubtask ? (task.parent_task_id || task.task_id) : task.task_id}" class="btn-action-table edit" title="Editar">
+                        ${!isSubtask ? `<a href="?route=clan_leader/task_edit&task_id=${task.task_id}" class="btn-action-table edit" title="Editar">
                             <i class="fas fa-edit"></i>
-                        </a>
+                        </a>` : `<span class="btn-action-table edit disabled" title="Las subtareas no se pueden editar directamente">
+                            <i class="fas fa-edit"></i>
+                        </span>`}
                         <button class="btn-action-table delete" onclick="deleteTaskTable(${task.task_id}, '${task.task_name}')" title="Eliminar">
                             <i class="fas fa-trash"></i>
                         </button>
