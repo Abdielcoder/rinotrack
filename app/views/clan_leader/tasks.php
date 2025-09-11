@@ -2553,6 +2553,38 @@ ob_start();
         justify-content: center;
     }
 }
+
+/* Iconos para tipos de tareas */
+.personal-icon {
+    color: #dc2626;
+    margin-right: 6px;
+}
+
+.recurrent-icon {
+    color: #10b981;
+    margin-right: 6px;
+}
+
+.eventual-icon {
+    color: #f59e0b;
+    margin-right: 6px;
+}
+
+.team-icon {
+    color: #2563eb;
+    margin-right: 6px;
+}
+
+/* Badges para proyectos */
+.project-badge.recurrent {
+    background: #ecfdf5;
+    color: #10b981;
+}
+
+.project-badge.eventual {
+    background: #fef3c7;
+    color: #f59e0b;
+}
 </style>
 
     <!-- Modal para editar tarea -->
@@ -4922,6 +4954,8 @@ function renderTasksTableFromKanban(tasks, tbodyId) {
     filteredTasks.forEach(task => {
         const isPersonal = (task.is_personal == 1);
         const isSubtask = (task.item_type === 'subtask');
+        const isRecurrent = task.project_type === 'recurrent' || task.project_name === 'Mis Tareas Recurrentes';
+        const isEventual = task.project_name === 'Tareas Eventuales';
         
         // Calcular días hasta vencimiento para mostrar urgencia
         let urgencyClass = '';
@@ -4959,14 +4993,19 @@ function renderTasksTableFromKanban(tasks, tbodyId) {
                 <td class="task-cell">
                     <div class="task-name-table">
                         ${isSubtask ? '<i class="fas fa-arrow-right subtask-icon-table"></i>' : ''}
-                        ${isPersonal ? '<i class="fas fa-user-circle personal-icon" title="Tarea Personal"></i>' : '<i class="fas fa-users team-icon" title="Tarea de Clan"></i>'}
+                        ${isRecurrent ? '<i class="fas fa-sync-alt recurrent-icon" title="Tarea Recurrente"></i>' : 
+                          isEventual ? '<i class="fas fa-star eventual-icon" title="Tarea Eventual"></i>' :
+                          isPersonal ? '<i class="fas fa-user-circle personal-icon" title="Tarea Personal"></i>' : 
+                          '<i class="fas fa-users team-icon" title="Tarea de Clan"></i>'}
                         ${task.task_name || 'Sin nombre'}
                         ${isSubtask && task.parent_task_name ? `<span class="parent-task-indicator" title="Tarea padre: ${task.parent_task_name}">↑</span>` : ''}
                     </div>
                     ${task.description ? `<div class="task-description-table">${task.description}</div>` : ''}
                 </td>
                 <td class="project-cell">
-                    <span class="project-badge ${isPersonal ? 'personal' : 'clan'}">${task.project_name || 'Sin proyecto'}</span>
+                    <span class="project-badge ${isRecurrent ? 'recurrent' : isEventual ? 'eventual' : isPersonal ? 'personal' : 'clan'}">
+                        ${isRecurrent ? 'Recurrente' : isEventual ? 'Eventual' : (task.project_name || 'Sin proyecto')}
+                    </span>
                 </td>
                 <td class="due-date-cell">
                     ${task.due_date ? `<span class="due-date-badge ${urgencyClass}">${urgencyText}</span>` : '<span class="no-due-date">Sin fecha</span>'}

@@ -5242,13 +5242,17 @@ class ClanLeaderController {
                         (p.clan_id = ? AND (p.is_personal IS NULL OR p.is_personal != 1))
                         " . ($excludePersonalTasks ? "" : "
                         -- Tareas personales del clan principal asignadas a miembros del clan
-                        OR (p.clan_id = ? AND p.is_personal = 1 AND p.created_by_user_id = ? AND (
+                        OR (p.clan_id = ? AND p.is_personal = 1 AND p.project_type = 'normal' AND p.created_by_user_id = ? AND (
                             t.assigned_to_user_id IN (SELECT user_id FROM Clan_Members WHERE clan_id = ?) 
                             OR ta.user_id IN (SELECT user_id FROM Clan_Members WHERE clan_id = ?)
                             OR t.assigned_to_user_id = ?
                             OR t.created_by_user_id = ?
+                        ))
+                        -- Tareas recurrentes del usuario del clan principal
+                        OR (p.clan_id = ? AND p.project_type = 'recurrent' AND p.is_personal = 1 AND p.created_by_user_id = ? AND (
+                            t.assigned_to_user_id = ? OR t.created_by_user_id = ?
                         ))") . "
-                        -- Tareas especiales del clan principal asignadas a miembros del clan
+                        -- Tareas eventuales del clan principal asignadas a miembros del clan
                         OR (p.clan_id = ? AND p.project_name IN ('Tareas Recurrentes', 'Tareas Eventuales') AND (
                             t.assigned_to_user_id IN (SELECT user_id FROM Clan_Members WHERE clan_id = ?)
                             OR ta.user_id IN (SELECT user_id FROM Clan_Members WHERE clan_id = ?)
@@ -5269,9 +5273,9 @@ class ClanLeaderController {
                 $params = [
                     $primaryClanId, // is_primary_clan CASE
                     $primaryClanId, // tareas del clan principal
-                    $primaryClanId, // tareas especiales del clan principal  
-                    $primaryClanId, $primaryClanId, // miembros asignados a tareas especiales
-                    $userId, $userId, // líder asignado a tareas especiales
+                    $primaryClanId, // tareas eventuales del clan principal  
+                    $primaryClanId, $primaryClanId, // miembros asignados a tareas eventuales
+                    $userId, $userId, // líder asignado a tareas eventuales
                     $primaryClanId, // para excluir clan principal de otros clanes
                     $primaryClanId // clan de los miembros asignados en otros clanes
                 ];
@@ -5283,6 +5287,9 @@ class ClanLeaderController {
                     $userId, // creador de tareas personales
                     $primaryClanId, $primaryClanId, // miembros asignados a tareas personales
                     $userId, $userId, // líder asignado a tareas personales
+                    $primaryClanId, // tareas recurrentes del clan principal
+                    $userId, // creador de tareas recurrentes
+                    $userId, $userId, // líder asignado/creador de tareas recurrentes
                     $primaryClanId, // tareas especiales del clan principal  
                     $primaryClanId, $primaryClanId, // miembros asignados a tareas especiales
                     $userId, $userId, // líder asignado a tareas especiales

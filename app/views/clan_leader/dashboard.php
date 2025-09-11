@@ -270,6 +270,16 @@ ob_start();
     color: #dc2626;
 }
 
+.project-tag.recurrent {
+    background: #ecfdf5;
+    color: #10b981;
+}
+
+.project-tag.eventual {
+    background: #fef3c7;
+    color: #f59e0b;
+}
+
 .project-tag.clan, .project-tag.team {
     background: #eff6ff;
     color: #2563eb;
@@ -898,6 +908,8 @@ function renderMyKanbanBoard(kanbanTasks) {
             const isSubtask = task.item_type === 'subtask';
             const cardClass = isSubtask ? 'subtask-card-micro' : 'task-card-mini';
             const isPersonal = task.is_personal == 1;
+            const isRecurrent = task.project_type === 'recurrent' || task.project_name === 'Mis Tareas Recurrentes';
+            const isEventual = task.project_name === 'Tareas Eventuales';
             
             html += `<div class="${cardClass}" data-task-id="${task.task_id}" data-item-type="${task.item_type}">
                 <div class="task-header-mini">
@@ -905,6 +917,8 @@ function renderMyKanbanBoard(kanbanTasks) {
                            onchange="toggleTaskStatusKanban(${task.task_id}, this.checked, '${isSubtask ? 'subtask' : 'task'}')">
                     <div class="task-name-mini">
                         ${isSubtask ? '<i class="fas fa-arrow-right subtask-icon"></i>' : ''}
+                        ${isRecurrent ? '<i class="fas fa-sync-alt" title="Tarea Recurrente" style="color: #10b981; margin-right: 4px; font-size: 12px;"></i>' : ''}
+                        ${isEventual ? '<i class="fas fa-star" title="Tarea Eventual" style="color: #f59e0b; margin-right: 4px; font-size: 12px;"></i>' : ''}
                         <a href="#" onclick="goToTaskDetail(${isSubtask ? (task.parent_task_id || task.task_id) : task.task_id}, '${isSubtask ? 'subtask' : 'task'}'); return false;" class="task-name-link">
                             ${task.task_name || 'Sin nombre'}
                         </a>
@@ -912,8 +926,8 @@ function renderMyKanbanBoard(kanbanTasks) {
                     </div>
                 </div>
                 <div class="task-tags-mini">
-                    <span class="task-tag project-tag ${isPersonal ? 'personal' : 'clan'}">
-                        ${isPersonal ? 'Personal' : (task.project_name || 'Proyecto')}
+                    <span class="task-tag project-tag ${isPersonal ? 'personal' : isRecurrent ? 'recurrent' : isEventual ? 'eventual' : 'clan'}">
+                        ${isRecurrent ? 'Recurrente' : isEventual ? 'Eventual' : isPersonal ? 'Personal' : (task.project_name || 'Proyecto')}
                     </span>
                 </div>
             </div>`;
@@ -959,6 +973,8 @@ function renderTeamKanbanBoard(kanbanTasks) {
         tasks.forEach(task => {
             const isSubtask = task.item_type === 'subtask';
             const cardClass = isSubtask ? 'subtask-card-micro' : 'task-card-mini';
+            const isRecurrent = task.project_type === 'recurrent' || task.project_name === 'Mis Tareas Recurrentes';
+            const isEventual = task.project_name === 'Tareas Eventuales';
             
             html += `<div class="${cardClass}" data-task-id="${task.task_id}" data-item-type="${task.item_type}">
                 <div class="task-header-mini">
@@ -966,6 +982,8 @@ function renderTeamKanbanBoard(kanbanTasks) {
                            onchange="toggleTaskStatusKanban(${task.task_id}, this.checked, '${isSubtask ? 'subtask' : 'task'}')">
                     <div class="task-name-mini">
                         ${isSubtask ? '<i class="fas fa-arrow-right subtask-icon"></i>' : ''}
+                        ${isRecurrent ? '<i class="fas fa-sync-alt" title="Tarea Recurrente" style="color: #10b981; margin-right: 4px; font-size: 12px;"></i>' : ''}
+                        ${isEventual ? '<i class="fas fa-star" title="Tarea Eventual" style="color: #f59e0b; margin-right: 4px; font-size: 12px;"></i>' : ''}
                         <a href="#" onclick="goToTaskDetail(${isSubtask ? (task.parent_task_id || task.task_id) : task.task_id}, '${isSubtask ? 'subtask' : 'task'}'); return false;" class="task-name-link">
                             ${task.task_name || 'Sin nombre'}
                         </a>
@@ -973,8 +991,8 @@ function renderTeamKanbanBoard(kanbanTasks) {
                     </div>
                 </div>
                 <div class="task-tags-mini">
-                    <span class="task-tag project-tag team">
-                        ${task.project_name || 'Proyecto'}
+                    <span class="task-tag project-tag ${isRecurrent ? 'recurrent' : isEventual ? 'eventual' : 'team'}">
+                        ${isRecurrent ? 'Recurrente' : isEventual ? 'Eventual' : (task.project_name || 'Proyecto')}
                     </span>
                     ${task.assigned_user_name ? `<span class="task-tag assignee-tag">${task.assigned_user_name}</span>` : ''}
                 </div>

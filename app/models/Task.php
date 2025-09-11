@@ -1672,7 +1672,9 @@ class Task {
             if (empty($projectNames)) { return []; }
             $placeholders = implode(',', array_fill(0, count($projectNames), '?'));
             $params = $projectNames;
-            array_unshift($params, $userId, $userId); // userId twice
+            array_unshift($params, $userId, $userId); // userId for assigned checks
+            // Agregar userId dos veces más para las nuevas condiciones de is_personal y project_type
+            $params = array_merge($params, [$userId, $userId]);
 
             $sql = "
                 SELECT 
@@ -1693,8 +1695,11 @@ class Task {
                 LEFT JOIN Task_Assignments ta ON ta.task_id = t.task_id
                 WHERE t.is_subtask = 0
                   AND (t.assigned_to_user_id = ? OR ta.user_id = ?)
-                  AND p.project_name IN ($placeholders)
-                  AND (p.is_personal IS NULL OR p.is_personal != 1)
+                  AND (
+                    (p.project_name IN ($placeholders) AND (p.is_personal IS NULL OR p.is_personal != 1))
+                    OR (p.project_name IN ($placeholders) AND p.is_personal = 1 AND p.created_by_user_id = ?)
+                    OR (p.project_type = 'recurrent' AND p.is_personal = 1 AND p.created_by_user_id = ?)
+                  )
             ";
             $stmt = $this->db->prepare($sql);
             $stmt->execute($params);
@@ -1766,6 +1771,7 @@ class Task {
                   AND p.is_personal = 1
                   AND p.created_by_user_id = ?
                   AND (t.assigned_to_user_id = ? OR t.created_by_user_id = ?)
+                  AND (p.project_type = 'normal' OR p.project_type = 'recurrent')
                 ORDER BY 
                     CASE t.priority 
                         WHEN 'urgent' THEN 1 
