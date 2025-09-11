@@ -2289,12 +2289,33 @@ function switchDashboardTab(tabName) {
     // Cargar datos según el tab seleccionado
     if (tabName === 'team-tasks') {
         console.log('🎯 Tab team-tasks detectado, mostrando Kanban del equipo...');
-        // Esperar un momento y mostrar el Kanban hardcoded
+        
+        // OCULTAR el Kanban de "Mis Tareas" cuando esté en "Equipo"
+        const myTasksContent = document.getElementById('my-tasks-content');
+        if (myTasksContent) {
+            const myTasksKanban = myTasksContent.querySelector('.kanban-board');
+            if (myTasksKanban) {
+                myTasksKanban.style.display = 'none';
+                console.log('🙈 Kanban de "Mis Tareas" ocultado');
+            }
+        }
+        
+        // Esperar un momento y mostrar el Kanban del equipo
         setTimeout(() => {
             mostrarKanbanEquipoDefinitivo();
         }, 100);
     } else {
         console.log('🎯 Tab seleccionado:', tabName);
+        
+        // MOSTRAR el Kanban de "Mis Tareas" cuando NO esté en "Equipo"
+        const myTasksContent = document.getElementById('my-tasks-content');
+        if (myTasksContent) {
+            const myTasksKanban = myTasksContent.querySelector('.kanban-board');
+            if (myTasksKanban) {
+                myTasksKanban.style.display = 'grid';
+                console.log('👁️ Kanban de "Mis Tareas" mostrado');
+            }
+        }
     }
     
     console.log('✅ Tab dashboard cambiado a:', tabName);
