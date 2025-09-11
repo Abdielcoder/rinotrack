@@ -4758,7 +4758,7 @@ class ClanLeaderController {
     public function taskEdit() {
         try {
             // Verificar autenticación y permisos
-            if (!$this->isAuthenticated()) {
+            if (!$this->auth->isLoggedIn()) {
                 header('Location: ?route=login');
                 exit();
             }
@@ -4777,16 +4777,26 @@ class ClanLeaderController {
             }
             
             // Obtener datos de la tarea
-            $taskModel = new Task();
-            $task = $taskModel->getById($taskId);
+            if (!$this->taskModel) {
+                $this->taskModel = new Task();
+            }
+            
+            $task = $this->taskModel->findById($taskId);
             
             if (!$task) {
                 header('Location: ?route=clan_leader/tasks');
                 exit();
             }
             
+            // Obtener datos del proyecto para verificar clan
+            if (!$this->projectModel) {
+                $this->projectModel = new Project();
+            }
+            
+            $project = $this->projectModel->findById($task['project_id']);
+            
             // Verificar que la tarea pertenece al clan del usuario
-            if ($task['clan_id'] != $this->userClan['clan_id']) {
+            if (!$project || $project['clan_id'] != $this->userClan['clan_id']) {
                 header('Location: ?route=clan_leader/tasks');
                 exit();
             }
