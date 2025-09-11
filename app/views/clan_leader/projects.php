@@ -648,7 +648,7 @@ function toggleProjectDelegation(projectId, isAllowed) {
     formData.append('project_id', projectId);
     formData.append('allow_delegation', isAllowed ? '1' : '0');
     
-    fetch('?route=clan_leader/toggle-project-delegation', {
+    fetch('?route=clan_leader/update-project-delegation', {
         method: 'POST',
         credentials: 'same-origin',
         body: formData

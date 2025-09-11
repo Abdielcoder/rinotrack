@@ -4588,66 +4588,6 @@ class ClanLeaderController {
     }
     
     /**
-     * Actualizar configuración de delegación de proyecto
-     */
-    public function updateProjectDelegation() {
-        header('Content-Type: application/json');
-        
-        $this->requireAuth();
-        
-        if (!$this->hasClanLeaderAccess()) {
-            Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
-            return;
-        }
-
-        try {
-            $projectId = (int)($_POST['project_id'] ?? 0);
-            $allowDelegation = ($_POST['allow_delegation'] ?? '0') === '1';
-            
-            if ($projectId <= 0) {
-                throw new Exception("ID de proyecto inválido");
-            }
-            
-            // Verificar que el proyecto pertenece al clan del usuario
-            $stmt = $this->db->prepare("
-                SELECT p.project_id 
-                FROM Projects p 
-                WHERE p.project_id = ? AND p.clan_id = ?
-            ");
-            $stmt->execute([$projectId, $this->userClan['clan_id']]);
-            
-            if (!$stmt->fetch()) {
-                throw new Exception("Proyecto no encontrado o no pertenece a tu clan");
-            }
-            
-            // Actualizar configuración de delegación
-            $updateStmt = $this->db->prepare("
-                UPDATE Projects 
-                SET allow_delegation = ?,
-                    updated_at = CURRENT_TIMESTAMP 
-                WHERE project_id = ?
-            ");
-            
-            $updateStmt->execute([$allowDelegation ? 1 : 0, $projectId]);
-            
-            if ($updateStmt->rowCount() > 0) {
-                error_log("Delegación de proyecto actualizada: ID=$projectId, Allow=$allowDelegation");
-                Utils::jsonResponse([
-                    'success' => true, 
-                    'message' => $allowDelegation ? 'Delegación habilitada' : 'Delegación deshabilitada',
-                    'allow_delegation' => $allowDelegation
-                ]);
-            } else {
-                throw new Exception("No se pudo actualizar la configuración");
-            }
-
-        } catch (Exception $e) {
-            error_log("Error en updateProjectDelegation: " . $e->getMessage());
-            Utils::jsonResponse(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
-        }
-    }
-    
-    /**
      * Cargar vista
      */
     private function loadView($viewPath, $data = []) {
