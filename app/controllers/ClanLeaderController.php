@@ -4755,7 +4755,7 @@ class ClanLeaderController {
     /**
      * Método para obtener datos de una tarea para edición (AJAX)
      */
-    public function getTaskData() {
+    public function getTaskDataForEdit() {
         header('Content-Type: application/json');
         error_reporting(E_ALL & ~E_WARNING);
         
@@ -4805,7 +4805,7 @@ class ClanLeaderController {
             Utils::jsonResponse(true, 'Datos obtenidos exitosamente', ['task' => $task]);
             
         } catch (Exception $e) {
-            error_log("Error en getTaskData: " . $e->getMessage());
+            error_log("Error en getTaskDataForEdit: " . $e->getMessage());
             Utils::jsonResponse(false, 'Error crítico del servidor');
         }
     }

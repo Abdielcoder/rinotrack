@@ -504,7 +504,7 @@ try {
         
     case 'clan_leader/get-task-data':
         $controller = new ClanLeaderController();
-        $controller->getTaskData();
+        $controller->getTaskDataForEdit();
         break;
         
     case 'clan_leader/update-task':
@@ -742,11 +742,6 @@ try {
     case 'clan_leader/collaborator-availability':
         $controller = new ClanLeaderController();
         $controller->collaboratorAvailability();
-        break;
-
-    case 'clan_leader/get-task-data':
-        $controller = new ClanLeaderController();
-        $controller->getTaskData();
         break;
 
     case 'clan_leader/clone-task':
