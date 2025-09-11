@@ -61,6 +61,13 @@
     gap: 20px;
 }
 
+/* Kanban Board para EQUIPO - Clases separadas */
+.team-kanban-board {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 20px;
+}
+
 .kanban-column {
     background: white;
     border-radius: 16px;
@@ -2025,9 +2032,9 @@ function mostrarKanbanEquipoDefinitivo() {
     const teamContent = document.getElementById('team-tasks-content');
     if (!teamContent) return;
     
-    // USAR LAS CLASES kanban-board Y kanban-column QUE YA EXISTEN EN clan-leader.css
+    // USAR CLASES DIFERENTES PARA EL EQUIPO
     teamContent.innerHTML = `
-        <div class="kanban-board">
+        <div class="team-kanban-board">
             <!-- COLUMNA VENCIDAS -->
             <div class="kanban-column">
                 <div class="column-header vencidas">
@@ -2130,11 +2137,11 @@ function mostrarKanbanEquipoDefinitivo() {
     
     console.log('✅ KANBAN INSERTADO CON CLASES CSS EXISTENTES');
     
-    // Verificar que se insertó correctamente
-    const kanbanBoard = teamContent.querySelector('.kanban-board');
-    if (kanbanBoard) {
-        // FORZAR VISIBILIDAD DEL KANBAN BOARD TAMBIÉN
-        kanbanBoard.style.cssText = `
+    // Verificar que se insertó correctamente con la nueva clase
+    const teamKanbanBoard = teamContent.querySelector('.team-kanban-board');
+    if (teamKanbanBoard) {
+        // FORZAR VISIBILIDAD DEL KANBAN BOARD DEL EQUIPO
+        teamKanbanBoard.style.cssText = `
             display: grid !important;
             grid-template-columns: repeat(4, 1fr) !important;
             gap: 20px !important;
@@ -2144,11 +2151,11 @@ function mostrarKanbanEquipoDefinitivo() {
             opacity: 1 !important;
         `;
         
-        console.log('✅ .kanban-board encontrado y forzado a visible');
-        console.log('📏 Dimensiones DESPUÉS de forzar:', kanbanBoard.getBoundingClientRect());
+        console.log('✅ .team-kanban-board encontrado y forzado a visible');
+        console.log('📏 Dimensiones DESPUÉS de forzar:', teamKanbanBoard.getBoundingClientRect());
         
         // También forzar visibilidad de cada columna
-        const columns = kanbanBoard.querySelectorAll('.kanban-column');
+        const columns = teamKanbanBoard.querySelectorAll('.kanban-column');
         columns.forEach((column, index) => {
             column.style.cssText = `
                 display: block !important;
@@ -2158,10 +2165,10 @@ function mostrarKanbanEquipoDefinitivo() {
                 height: auto !important;
                 min-height: 400px !important;
             `;
-            console.log(`✅ Columna ${index + 1} forzada a visible`);
+            console.log(`✅ Columna del equipo ${index + 1} forzada a visible`);
         });
     } else {
-        console.error('❌ .kanban-board NO encontrado después de insertar');
+        console.error('❌ .team-kanban-board NO encontrado después de insertar');
     }
 }
 
@@ -2247,7 +2254,21 @@ window.mostrarKanbanEmergencia = function() {
 function switchDashboardTab(tabName) {
     console.log('🔄 Cambiando tab dashboard:', tabName);
     
-    // OCULTAR EXPLÍCITAMENTE AMBOS CONTENEDORES PRIMERO
+    // OCULTAR AMBOS KANBAN POR CLASES ESPECÍFICAS
+    const myTasksKanban = document.querySelector('.kanban-board');
+    const teamTasksKanban = document.querySelector('.team-kanban-board');
+    
+    if (myTasksKanban) {
+        myTasksKanban.style.display = 'none';
+        console.log('🙈 .kanban-board (Mis Tareas) OCULTO');
+    }
+    
+    if (teamTasksKanban) {
+        teamTasksKanban.style.display = 'none';
+        console.log('🙈 .team-kanban-board (Equipo) OCULTO');
+    }
+    
+    // También ocultar contenedores
     const myTasksContent = document.getElementById('my-tasks-content');
     const teamTasksContent = document.getElementById('team-tasks-content');
     
