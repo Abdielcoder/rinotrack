@@ -4803,7 +4803,7 @@ class ClanLeaderController {
             
             $this->loadView('clan_leader/task_edit', [
                 'task' => $task,
-                'user' => $this->user,
+                'user' => $this->currentUser,
                 'userClan' => $this->userClan
             ]);
             
