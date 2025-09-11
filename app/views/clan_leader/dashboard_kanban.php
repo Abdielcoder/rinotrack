@@ -730,6 +730,9 @@
                     </div>
                     <span class="tab-text-minimal">Equipo</span>
                 </button>
+                <button class="btn btn-warning btn-sm" onclick="debugTeamTasks()" style="margin-left: 10px; height: 40px;">
+                    🔍 Debug
+                </button>
             </div>
         </div>
         
@@ -2033,6 +2036,45 @@ function createPersonalTask() {
     });
 }
 
+// ===== FUNCIÓN DEBUG PARA VERIFICAR TAREAS DEL EQUIPO =====
+async function debugTeamTasks() {
+    console.log('🔍 DEBUG: Iniciando verificación de tareas del equipo...');
+    
+    try {
+        const response = await fetch('?route=clan_leader/debug-team-tasks');
+        const data = await response.json();
+        
+        if (data.success) {
+            console.log('📊 DEBUG RESULTS:', data.debug_info);
+            console.log('👤 Usuario actual:', data.debug_info.current_user_id);
+            console.log('🏘️ Clan ID:', data.debug_info.clan_id);
+            console.log('👥 Miembros del clan:', data.debug_info.clan_members);
+            console.log('📋 Tareas del clan:', data.debug_info.all_clan_tasks);
+            
+            // Mostrar resultados en consola de forma organizada
+            console.group('🔍 ANÁLISIS DE TAREAS');
+            data.debug_info.all_clan_tasks.forEach((task, index) => {
+                console.log(`${index + 1}. ${task.task_name}`);
+                console.log(`   - ID: ${task.task_id}`);
+                console.log(`   - Asignada a: ${task.assigned_user_name || 'SIN ASIGNAR'} (ID: ${task.assigned_to_user_id || 'NULL'})`);
+                console.log(`   - Estado: ${task.status} (${task.completion_percentage}%)`);
+                console.log(`   - Proyecto: ${task.project_name} (Personal: ${task.is_personal})`);
+                console.log(`   - Clan del usuario: ${task.user_clan_id || 'NO ENCONTRADO'}`);
+                console.log('   ---');
+            });
+            console.groupEnd();
+            
+            alert('🔍 Debug completado. Revisa la consola para ver los resultados detallados.');
+        } else {
+            console.error('❌ Error en debug:', data.message);
+            alert('Error en debug: ' + data.message);
+        }
+    } catch (error) {
+        console.error('❌ Error ejecutando debug:', error);
+        alert('Error ejecutando debug: ' + error.message);
+    }
+}
+
 // Inicializar con "Mis Tareas" activo
 // ===== SOLUCIÓN USANDO LAS CLASES CSS EXISTENTES DEL PROYECTO =====
 function mostrarKanbanEquipoDefinitivo() {
@@ -2059,10 +2101,10 @@ function mostrarKanbanEquipoDefinitivo() {
                             <div class="task-name">Hacer QA</div>
                         </div>
                         <div class="task-project">
-                            <div class="task-project-name">Proyecto del equipo</div>
-                            <div class="task-due-date">Vencida: 2024-01-15</div>
+                            <div class="task-project-name">${projectName}</div>
+                            <div class="task-due-date">${task.due_date || 'Sin fecha'}</div>
                             <div style="margin-top: 4px;">
-                                <small style="color: #8b5cf6; font-weight: 600;">👤 Usuario Asignado</small>
+                                <small style="color: #8b5cf6; font-weight: 600;">👤 ${userName}</small>
                             </div>
                         </div>
                     </div>
@@ -2106,10 +2148,10 @@ function mostrarKanbanEquipoDefinitivo() {
                             <div class="task-name">Reportes</div>
                         </div>
                         <div class="task-project">
-                            <div class="task-project-name">Proyecto del equipo</div>
-                            <div class="task-due-date">Fecha: 2024-02-01</div>
+                            <div class="task-project-name">${projectName}</div>
+                            <div class="task-due-date">${task.due_date || 'Sin fecha'}</div>
                             <div style="margin-top: 4px;">
-                                <small style="color: #8b5cf6; font-weight: 600;">👤 Usuario Asignado</small>
+                                <small style="color: #8b5cf6; font-weight: 600;">👤 ${userName}</small>
                             </div>
                         </div>
                     </div>
@@ -2223,7 +2265,7 @@ window.mostrarKanbanEmergencia = function() {
                         </div>
                         <div style="font-size: 12px; color: #6b7280;">
                             <div>📁 Proyecto del equipo</div>
-                            <div style="color: #8b5cf6;">👤 Usuario Asignado</div>
+                            <div style="color: #8b5cf6;">👤 Nombre Usuario</div>
                         </div>
                     </div>
                 </div>
@@ -2255,7 +2297,7 @@ window.mostrarKanbanEmergencia = function() {
                         </div>
                         <div style="font-size: 12px; color: #6b7280;">
                             <div>📁 Proyecto del equipo</div>
-                            <div style="color: #8b5cf6;">👤 Usuario Asignado</div>
+                            <div style="color: #8b5cf6;">👤 Nombre Usuario</div>
                         </div>
                     </div>
                 </div>
@@ -2348,9 +2390,9 @@ function switchDashboardTab(tabName) {
             console.log('📏 Dashboard container reducido 33% para vista equipo');
         }
         
-        // Esperar un momento y mostrar el Kanban del equipo
+        // Cargar datos reales del servidor para el equipo
         setTimeout(() => {
-            mostrarKanbanEquipoDefinitivo();
+            loadTeamKanban();
         }, 100);
         
     } else if (tabName === 'my-tasks') {

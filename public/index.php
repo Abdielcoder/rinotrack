@@ -798,6 +798,11 @@ try {
         $controller = new ClanLeaderController();
         $controller->getTeamKanbanTasks();
         break;
+    
+    case 'clan_leader/debug-team-tasks':
+        $controller = new ClanLeaderController();
+        $controller->debugTeamTasks();
+        break;
         
     case 'clan_leader/test-team-kanban':
         header('Content-Type: application/json');
