@@ -212,7 +212,7 @@
 }
 
 .task-project {
-    color: #dc2626;
+    color: #4b5563;
     font-size: 0.7rem;
     font-weight: 500;
     display: flex;
