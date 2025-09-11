@@ -3878,7 +3878,7 @@ class ClanLeaderController {
                     DATEDIFF(t.due_date, CURDATE()) as days_until_due
                 FROM Tasks t
                 WHERE t.assigned_to_user_id = ?
-                    AND (t.is_subtask = 0 OR t.is_subtask IS NULL)
+                
                 ORDER BY t.due_date ASC
             ";
             
