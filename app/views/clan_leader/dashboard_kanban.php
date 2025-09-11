@@ -117,7 +117,7 @@
 }
 
 .column-content {
-    padding: 12px;
+    padding: 8px;
     max-height: 500px;
     overflow-y: auto;
 }
@@ -125,32 +125,31 @@
 .task-card {
     background: #ffffff;
     border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    padding: 8px 10px;
-    margin-bottom: 8px;
+    border-radius: 6px;
+    padding: 4px 8px;
+    margin-bottom: 4px;
     transition: all 0.2s ease;
     cursor: pointer;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     gap: 8px;
+    min-height: 24px;
 }
 
 .task-card:hover {
     background: #fafafa;
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
     border-color: #d1d5db;
 }
 
 .task-checkbox {
     flex-shrink: 0;
-    margin-top: 2px;
 }
 
 .task-checkbox input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
     cursor: pointer;
     accent-color: #10b981;
 }
@@ -158,6 +157,9 @@
 .task-content {
     flex: 1;
     min-width: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .task-id {
@@ -167,48 +169,20 @@
 .task-name {
     color: #374151;
     font-weight: 500;
-    font-size: 0.75rem;
-    line-height: 1.2;
-    margin-bottom: 4px;
+    font-size: 0.7rem;
+    line-height: 1;
     word-wrap: break-word;
+    flex: 1;
 }
 
-.task-meta {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-bottom: 4px;
-}
-
-.task-status {
+.task-project {
+    color: #6b7280;
+    font-size: 0.6rem;
+    font-weight: 400;
+    background: #f3f4f6;
     padding: 2px 6px;
     border-radius: 4px;
-    font-size: 0.65rem;
-    font-weight: 500;
-    text-transform: uppercase;
-}
-
-.status-completed {
-    background: #f0fdf4;
-    color: #166534;
-}
-
-.status-pending {
-    background: #fef3c7;
-    color: #92400e;
-}
-
-.status-in_progress {
-    background: #eff6ff;
-    color: #1e40af;
-}
-
-/* Priority styles removed - no longer needed */
-
-.task-date {
-    color: #9ca3af;
-    font-size: 0.65rem;
-    font-weight: 400;
+    white-space: nowrap;
 }
 
 .empty-column {
@@ -412,21 +386,15 @@
             <div class="column-content">
                 <?php if (count($vencidas) > 0): ?>
                     <?php foreach ($vencidas as $task): ?>
-                        <?php 
-                        $statusClass = "status-" . str_replace(' ', '_', $task['status']);
-                        ?>
-                        <div class="task-card" onclick="toggleTaskCheckbox(event, <?= $task['task_id'] ?>)">
+                        <div class="task-card" onclick="toggleTaskCheckbox(event, 'vencidas-<?= $task['task_id'] ?>')">
                             <div class="task-checkbox">
-                                <input type="checkbox" id="task-<?= $task['task_id'] ?>" 
+                                <input type="checkbox" id="vencidas-<?= $task['task_id'] ?>" 
                                        onclick="event.stopPropagation()" 
                                        onchange="handleTaskCheck(<?= $task['task_id'] ?>, this.checked)">
                             </div>
                             <div class="task-content">
                                 <div class="task-name"><?= htmlspecialchars($task['task_name']) ?></div>
-                                <div class="task-meta">
-                                    <span class="task-status <?= $statusClass ?>"><?= $task['status'] ?></span>
-                                </div>
-                                <div class="task-date">📅 <?= $task['due_date'] ?> (<?= $task['days_until_due'] ?> días)</div>
+                                <div class="task-project"><?= isset($task['project_name']) ? htmlspecialchars($task['project_name']) : 'General' ?></div>
                             </div>
                         </div>
                     <?php endforeach; ?>
@@ -445,21 +413,15 @@
             <div class="column-content">
                 <?php if (count($hoy) > 0): ?>
                     <?php foreach ($hoy as $task): ?>
-                        <?php 
-                        $statusClass = "status-" . str_replace(' ', '_', $task['status']);
-                        ?>
-                        <div class="task-card" onclick="toggleTaskCheckbox(event, <?= $task['task_id'] ?>)">
+                        <div class="task-card" onclick="toggleTaskCheckbox(event, 'hoy-<?= $task['task_id'] ?>')">
                             <div class="task-checkbox">
-                                <input type="checkbox" id="task-<?= $task['task_id'] ?>" 
+                                <input type="checkbox" id="hoy-<?= $task['task_id'] ?>" 
                                        onclick="event.stopPropagation()" 
                                        onchange="handleTaskCheck(<?= $task['task_id'] ?>, this.checked)">
                             </div>
                             <div class="task-content">
                                 <div class="task-name"><?= htmlspecialchars($task['task_name']) ?></div>
-                                <div class="task-meta">
-                                    <span class="task-status <?= $statusClass ?>"><?= $task['status'] ?></span>
-                                </div>
-                                <div class="task-date">📅 <?= $task['due_date'] ?></div>
+                                <div class="task-project"><?= isset($task['project_name']) ? htmlspecialchars($task['project_name']) : 'General' ?></div>
                             </div>
                         </div>
                     <?php endforeach; ?>
@@ -478,21 +440,15 @@
             <div class="column-content">
                 <?php if (count($semana) > 0): ?>
                     <?php foreach ($semana as $task): ?>
-                        <?php 
-                        $statusClass = "status-" . str_replace(' ', '_', $task['status']);
-                        ?>
-                        <div class="task-card" onclick="toggleTaskCheckbox(event, <?= $task['task_id'] ?>)">
+                        <div class="task-card" onclick="toggleTaskCheckbox(event, 'semana-<?= $task['task_id'] ?>')">
                             <div class="task-checkbox">
-                                <input type="checkbox" id="task-<?= $task['task_id'] ?>" 
+                                <input type="checkbox" id="semana-<?= $task['task_id'] ?>" 
                                        onclick="event.stopPropagation()" 
                                        onchange="handleTaskCheck(<?= $task['task_id'] ?>, this.checked)">
                             </div>
                             <div class="task-content">
                                 <div class="task-name"><?= htmlspecialchars($task['task_name']) ?></div>
-                                <div class="task-meta">
-                                    <span class="task-status <?= $statusClass ?>"><?= $task['status'] ?></span>
-                                </div>
-                                <div class="task-date">📅 <?= $task['due_date'] ?> (<?= $task['days_until_due'] ?> días)</div>
+                                <div class="task-project"><?= isset($task['project_name']) ? htmlspecialchars($task['project_name']) : 'General' ?></div>
                             </div>
                         </div>
                     <?php endforeach; ?>
@@ -511,21 +467,15 @@
             <div class="column-content">
                 <?php if (count($futuras) > 0): ?>
                     <?php foreach (array_slice($futuras, 0, 8) as $task): ?>
-                        <?php 
-                        $statusClass = "status-" . str_replace(' ', '_', $task['status']);
-                        ?>
-                        <div class="task-card" onclick="toggleTaskCheckbox(event, <?= $task['task_id'] ?>)">
+                        <div class="task-card" onclick="toggleTaskCheckbox(event, 'futuras-<?= $task['task_id'] ?>')">
                             <div class="task-checkbox">
-                                <input type="checkbox" id="task-<?= $task['task_id'] ?>" 
+                                <input type="checkbox" id="futuras-<?= $task['task_id'] ?>" 
                                        onclick="event.stopPropagation()" 
                                        onchange="handleTaskCheck(<?= $task['task_id'] ?>, this.checked)">
                             </div>
                             <div class="task-content">
                                 <div class="task-name"><?= htmlspecialchars($task['task_name']) ?></div>
-                                <div class="task-meta">
-                                    <span class="task-status <?= $statusClass ?>"><?= $task['status'] ?></span>
-                                </div>
-                                <div class="task-date">📅 <?= $task['due_date'] ?> (<?= $task['days_until_due'] ?> días)</div>
+                                <div class="task-project"><?= isset($task['project_name']) ? htmlspecialchars($task['project_name']) : 'General' ?></div>
                             </div>
                         </div>
                     <?php endforeach; ?>
@@ -602,21 +552,23 @@ function switchDashboardTab(tabName) {
 }
 
 // Función para manejar el click en el card (togglea el checkbox)
-function toggleTaskCheckbox(event, taskId) {
+function toggleTaskCheckbox(event, uniqueTaskId) {
     // Si el click fue en el checkbox mismo, no hacer nada
     if (event.target.type === 'checkbox') {
         return;
     }
     
-    const checkbox = document.getElementById('task-' + taskId);
+    const checkbox = document.getElementById(uniqueTaskId);
     if (checkbox) {
         checkbox.checked = !checkbox.checked;
-        handleTaskCheck(taskId, checkbox.checked);
+        // Extraer el ID real de la tarea del ID único
+        const taskId = uniqueTaskId.split('-').slice(1).join('-');
+        handleTaskCheck(uniqueTaskId, taskId, checkbox.checked);
     }
 }
 
 // Función para manejar cuando se marca/desmarca una tarea
-function handleTaskCheck(taskId, isChecked) {
+function handleTaskCheck(uniqueTaskId, taskId, isChecked) {
     console.log('📝 Tarea', taskId, isChecked ? 'marcada' : 'desmarcada');
     
     // Aquí puedes agregar lógica adicional como:
@@ -624,7 +576,7 @@ function handleTaskCheck(taskId, isChecked) {
     // - Cambiar el estilo del card
     // - Mover la tarea a otra columna
     
-    const card = document.querySelector(`#task-${taskId}`).closest('.task-card');
+    const card = document.querySelector(`#${uniqueTaskId}`).closest('.task-card');
     if (card) {
         if (isChecked) {
             card.style.opacity = '0.6';
