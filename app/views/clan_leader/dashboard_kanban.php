@@ -966,10 +966,9 @@
                 <span class="stat-value">0</span>
             </div>
         </div>
-    </div>
-    
-    <!-- Contenido del tab MIS TAREAS -->
-    <div id="my-tasks-content" class="tab-content active">
+        
+        <!-- Contenido del tab MIS TAREAS -->
+        <div id="my-tasks-content" class="tab-content active">
         <div class="kanban-board">
         <!-- Columna VENCIDAS -->
         <div class="kanban-column">
@@ -1134,9 +1133,10 @@
             </div>
         </div>
     </div>
-    
-    <!-- Contenido del tab EQUIPO -->
-    <div id="team-tasks-content" class="tab-content">
+</div>
+
+<!-- Contenido del tab EQUIPO - FUERA DEL DASHBOARD-CONTAINER -->
+<div id="team-tasks-content" class="tab-content">
         <div class="team-kanban-container">
             <div class="loading-spinner" id="team-loading" style="display: none;">
                 <div class="spinner-content">
