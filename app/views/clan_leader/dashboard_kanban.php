@@ -241,7 +241,7 @@
 }
 
 .task-project-name::before {
-    content: '👥';
+    content: '📁';
     font-size: 0.7rem;
 }
 
