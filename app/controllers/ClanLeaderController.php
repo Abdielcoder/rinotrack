@@ -4831,16 +4831,21 @@ class ClanLeaderController {
      * Actualizar estado de tarea o subtarea
      */
     public function updateTaskStatus() {
+        // Limpiar cualquier output previo
+        if (ob_get_level()) {
+            ob_clean();
+        }
+        
         header('Content-Type: application/json');
         
-        $this->requireAuth();
-        
-        if (!$this->hasClanLeaderAccess()) {
-            Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
-            return;
-        }
-
         try {
+            $this->requireAuth();
+            
+            if (!$this->hasClanLeaderAccess()) {
+                echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
+                exit;
+            }
+
             $taskId = (int)($_POST['task_id'] ?? 0);
             $status = $_POST['status'] ?? '';
             $itemType = $_POST['item_type'] ?? 'task';
@@ -4868,12 +4873,13 @@ class ClanLeaderController {
                 
                 if ($stmt->rowCount() > 0) {
                     error_log("Subtarea actualizada: ID=$taskId, Status=$status");
-                    Utils::jsonResponse([
+                    echo json_encode([
                         'success' => true, 
                         'message' => 'Subtarea actualizada correctamente',
                         'new_status' => $status,
                         'completion_percentage' => $completionPercentage
                     ]);
+                    exit;
                 } else {
                     throw new Exception("No se pudo actualizar la subtarea");
                 }
@@ -4897,12 +4903,13 @@ class ClanLeaderController {
                 
                 if ($stmt->rowCount() > 0) {
                     error_log("Tarea actualizada: ID=$taskId, Status=$status");
-                    Utils::jsonResponse([
+                    echo json_encode([
                         'success' => true, 
                         'message' => 'Tarea actualizada correctamente',
                         'new_status' => $status,
                         'completion_percentage' => $completionPercentage
                     ]);
+                    exit;
                 } else {
                     throw new Exception("No se pudo actualizar la tarea");
                 }
@@ -4910,7 +4917,8 @@ class ClanLeaderController {
 
         } catch (Exception $e) {
             error_log("Error en updateTaskStatus: " . $e->getMessage());
-            Utils::jsonResponse(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
+            echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+            exit;
         }
     }
     

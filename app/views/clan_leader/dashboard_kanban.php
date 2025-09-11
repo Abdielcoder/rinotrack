@@ -673,12 +673,19 @@ function handleTaskCheck(uniqueTaskId, taskId, isChecked) {
     
     console.log('Enviando AJAX con task_id:', taskId, 'status: completed');
     
-    fetch('<?= APP_URL ?>/clan_leader/updateTaskStatus', {
+    fetch('<?= APP_URL ?>clan_leader/updateTaskStatus', {
         method: 'POST',
         body: formData
     })
     .then(response => {
         console.log('Respuesta recibida:', response);
+        if (!response.ok) {
+            // Si hay un error HTTP, intentar obtener el mensaje de error
+            return response.text().then(text => {
+                console.error('Error del servidor:', text);
+                throw new Error('Error del servidor: ' + response.status);
+            });
+        }
         return response.json();
     })
     .then(data => {
