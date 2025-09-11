@@ -142,215 +142,400 @@ class ClanLeaderController {
         $semana = array_filter($myTasks, fn($t) => $t['days_until_due'] > 0 && $t['days_until_due'] <= 7);
         $futuras = array_filter($myTasks, fn($t) => $t['days_until_due'] > 7);
 
-        // TABLERO KANBAN CON NAVEGACIÓN COMPLETA
-        header('Content-Type: text/html; charset=utf-8');
-        echo "<!DOCTYPE html>";
-        echo "<html><head>";
-        echo "<title>🎯 RinoTrack - Clan Leader Dashboard</title>";
-        echo "<meta charset='UTF-8'>";
-        echo "<meta name='viewport' content='width=device-width, initial-scale=1.0'>";
-        echo "<link href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css' rel='stylesheet'>";
-        echo "<style>";
-        // Estilos generales
-        echo "* { margin: 0; padding: 0; box-sizing: border-box; }";
-        echo "body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }";
-        
-        // Header y navegación
-        echo ".header { background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 1000; }";
-        echo ".nav-container { max-width: 1400px; margin: 0 auto; padding: 0 20px; }";
-        echo ".nav-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; }";
-        echo ".logo { display: flex; align-items: center; gap: 10px; font-size: 24px; font-weight: bold; color: #1f2937; text-decoration: none; }";
-        echo ".logo i { color: #667eea; }";
-        echo ".nav-menu { display: flex; gap: 30px; list-style: none; }";
-        echo ".nav-item a { text-decoration: none; color: #374151; font-weight: 500; padding: 8px 16px; border-radius: 6px; transition: all 0.3s; display: flex; align-items: center; gap: 8px; }";
-        echo ".nav-item a:hover { background: #f3f4f6; color: #667eea; }";
-        echo ".nav-item.active a { background: #667eea; color: white; }";
-        echo ".user-menu { display: flex; align-items: center; gap: 15px; }";
-        echo ".user-info { display: flex; align-items: center; gap: 10px; color: #374151; }";
-        echo ".user-avatar { width: 40px; height: 40px; border-radius: 50%; background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; }";
-        echo ".logout-btn { background: #ef4444; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; transition: all 0.3s; }";
-        echo ".logout-btn:hover { background: #dc2626; }";
-        
-        // Contenido principal
-        echo ".main-container { max-width: 1400px; margin: 0 auto; padding: 20px; }";
-        echo ".page-title { color: white; text-align: center; margin-bottom: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); font-size: 32px; }";
-        echo ".info-bar { background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }";
-        
-        // Kanban
-        echo ".kanban-board { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }";
-        echo ".kanban-column { background: white; border-radius: 10px; padding: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); min-height: 400px; }";
-        echo ".column-header { padding: 10px; border-radius: 8px; margin-bottom: 15px; font-weight: bold; text-align: center; color: white; }";
-        echo ".vencidas { background: #ef4444; }";
-        echo ".hoy { background: #f59e0b; }";
-        echo ".semana { background: #3b82f6; }";
-        echo ".futuras { background: #10b981; }";
-        echo ".task-card { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; margin-bottom: 10px; transition: transform 0.2s; cursor: pointer; }";
-        echo ".task-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }";
-        echo ".task-id { font-weight: bold; color: #1f2937; font-size: 14px; }";
-        echo ".task-name { color: #374151; margin: 5px 0; font-weight: 600; }";
-        echo ".task-meta { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; font-size: 12px; }";
-        echo ".task-status { padding: 2px 8px; border-radius: 4px; font-weight: bold; text-transform: uppercase; }";
-        echo ".status-completed { background: #d1fae5; color: #059669; }";
-        echo ".status-pending { background: #fef3c7; color: #d97706; }";
-        echo ".status-in_progress { background: #dbeafe; color: #2563eb; }";
-        echo ".priority { padding: 2px 6px; border-radius: 3px; font-size: 11px; font-weight: bold; }";
-        echo ".priority-high { background: #fee2e2; color: #dc2626; }";
-        echo ".priority-medium { background: #fed7aa; color: #ea580c; }";
-        echo ".priority-low { background: #dbeafe; color: #2563eb; }";
-        echo ".task-date { color: #6b7280; font-size: 11px; }";
-        echo ".empty-column { text-align: center; color: #9ca3af; padding: 40px 20px; font-style: italic; }";
-        
-        // Responsive
-        echo "@media (max-width: 768px) {";
-        echo ".nav-menu { display: none; }";
-        echo ".kanban-board { grid-template-columns: 1fr; }";
-        echo ".nav-header { flex-direction: column; gap: 15px; }";
-        echo "}";
-        
-        echo "</style>";
-        echo "</head><body>";
-        
-        // Header con navegación
-        echo "<header class='header'>";
-        echo "<div class='nav-container'>";
-        echo "<div class='nav-header'>";
-        echo "<a href='?route=clan_leader' class='logo'>";
-        echo "<i class='fas fa-star'></i>";
-        echo "RinoTrack";
-        echo "</a>";
-        
-        echo "<nav>";
-        echo "<ul class='nav-menu'>";
-        echo "<li class='nav-item active'><a href='?route=clan_leader'><i class='fas fa-tachometer-alt'></i>Dashboard</a></li>";
-        echo "<li class='nav-item'><a href='?route=clan_leader/tasks'><i class='fas fa-tasks'></i>Tareas</a></li>";
-        echo "<li class='nav-item'><a href='?route=clan_leader/projects'><i class='fas fa-folder'></i>Proyectos</a></li>";
-        echo "<li class='nav-item'><a href='?route=clan_leader/members'><i class='fas fa-users'></i>Miembros</a></li>";
-        echo "<li class='nav-item'><a href='?route=clan_leader/kpi-dashboard'><i class='fas fa-chart-bar'></i>KPI</a></li>";
-        echo "<li class='nav-item'><a href='?route=clan_leader/profile'><i class='fas fa-user'></i>Perfil</a></li>";
-        echo "</ul>";
-        echo "</nav>";
-        
-        echo "<div class='user-menu'>";
-        echo "<div class='user-info'>";
-        echo "<div class='user-avatar'>" . strtoupper(substr($this->currentUser['full_name'], 0, 2)) . "</div>";
-        echo "<span>{$this->currentUser['full_name']}</span>";
-        echo "</div>";
-        echo "<a href='?route=logout' class='logout-btn'><i class='fas fa-sign-out-alt'></i> Salir</a>";
-        echo "</div>";
-        
-        echo "</div>";
-        echo "</div>";
-        echo "</header>";
-        
-        // Contenido principal
-        echo "<div class='main-container'>";
-        echo "<h1 class='page-title'>🎯 MI TABLERO KANBAN</h1>";
-        echo "<div class='info-bar'>";
-        echo "<strong>Usuario:</strong> {$this->currentUser['full_name']} (ID: {$userId}) | ";
-        echo "<strong>Total tareas:</strong> " . count($myTasks) . " | ";
-        echo "<strong>Vencidas:</strong> " . count($vencidas) . " | ";
-        echo "<strong>Hoy:</strong> " . count($hoy) . " | ";
-        echo "<strong>Esta semana:</strong> " . count($semana) . " | ";
-        echo "<strong>Futuras:</strong> " . count($futuras);
-        echo "</div>";
-        
-        echo "<div class='kanban-board'>";
-        
-        // Columna VENCIDAS
-        echo "<div class='kanban-column'>";
-        echo "<div class='column-header vencidas'>⚠️ VENCIDAS (" . count($vencidas) . ")</div>";
-        if (count($vencidas) > 0) {
-            foreach ($vencidas as $task) {
-                $statusClass = "status-" . str_replace(' ', '_', $task['status']);
-                $priorityClass = "priority-" . $task['priority'];
-                echo "<div class='task-card'>";
-                echo "<div class='task-id'>#{$task['task_id']}</div>";
-                echo "<div class='task-name'>" . htmlspecialchars($task['task_name']) . "</div>";
-                echo "<div class='task-meta'>";
-                echo "<span class='task-status {$statusClass}'>{$task['status']}</span>";
-                echo "<span class='priority {$priorityClass}'>{$task['priority']}</span>";
-                echo "</div>";
-                echo "<div class='task-date'>📅 {$task['due_date']} ({$task['days_until_due']} días)</div>";
-                echo "</div>";
-            }
-        } else {
-            echo "<div class='empty-column'>Sin tareas vencidas</div>";
+        // USAR EL MISMO DISEÑO QUE TASKS - Cargar vista con layout existente
+        $data = [
+            'currentPage' => 'clan_leader',
+            'user' => $this->currentUser,
+            'clan' => $this->userClan,
+            'myTasks' => $myTasks,
+            'vencidas' => $vencidas,
+            'hoy' => $hoy,
+            'semana' => $semana,
+            'futuras' => $futuras,
+            'totalTasks' => count($myTasks)
+        ];
+
+        // HTML con el mismo diseño que tasks
+        ob_start();
+        ?>
+
+        <!-- Cargar CSS de rediseño igual que tasks -->
+        <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/clan-leader-redesign.css">
+
+        <style>
+        /* Estilos específicos para el Kanban Dashboard */
+        .dashboard-container {
+            padding: 24px;
+            background: #f8fafc;
+            min-height: calc(100vh - 58px);
         }
-        echo "</div>";
-        
-        // Columna HOY
-        echo "<div class='kanban-column'>";
-        echo "<div class='column-header hoy'>📅 HOY (" . count($hoy) . ")</div>";
-        if (count($hoy) > 0) {
-            foreach ($hoy as $task) {
-                $statusClass = "status-" . str_replace(' ', '_', $task['status']);
-                $priorityClass = "priority-" . $task['priority'];
-                echo "<div class='task-card'>";
-                echo "<div class='task-id'>#{$task['task_id']}</div>";
-                echo "<div class='task-name'>" . htmlspecialchars($task['task_name']) . "</div>";
-                echo "<div class='task-meta'>";
-                echo "<span class='task-status {$statusClass}'>{$task['status']}</span>";
-                echo "<span class='priority {$priorityClass}'>{$task['priority']}</span>";
-                echo "</div>";
-                echo "<div class='task-date'>📅 {$task['due_date']}</div>";
-                echo "</div>";
-            }
-        } else {
-            echo "<div class='empty-column'>Sin tareas para hoy</div>";
+
+        .dashboard-header {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
+            margin-bottom: 24px;
         }
-        echo "</div>";
-        
-        // Columna ESTA SEMANA
-        echo "<div class='kanban-column'>";
-        echo "<div class='column-header semana'>📆 ESTA SEMANA (" . count($semana) . ")</div>";
-        if (count($semana) > 0) {
-            foreach ($semana as $task) {
-                $statusClass = "status-" . str_replace(' ', '_', $task['status']);
-                $priorityClass = "priority-" . $task['priority'];
-                echo "<div class='task-card'>";
-                echo "<div class='task-id'>#{$task['task_id']}</div>";
-                echo "<div class='task-name'>" . htmlspecialchars($task['task_name']) . "</div>";
-                echo "<div class='task-meta'>";
-                echo "<span class='task-status {$statusClass}'>{$task['status']}</span>";
-                echo "<span class='priority {$priorityClass}'>{$task['priority']}</span>";
-                echo "</div>";
-                echo "<div class='task-date'>📅 {$task['due_date']} ({$task['days_until_due']} días)</div>";
-                echo "</div>";
-            }
-        } else {
-            echo "<div class='empty-column'>Sin tareas esta semana</div>";
+
+        .dashboard-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
-        echo "</div>";
-        
-        // Columna FUTURAS
-        echo "<div class='kanban-column'>";
-        echo "<div class='column-header futuras'>🚀 FUTURAS (" . count($futuras) . ")</div>";
-        if (count($futuras) > 0) {
-            foreach (array_slice($futuras, 0, 8) as $task) { // Solo primeras 8
-                $statusClass = "status-" . str_replace(' ', '_', $task['status']);
-                $priorityClass = "priority-" . $task['priority'];
-                echo "<div class='task-card'>";
-                echo "<div class='task-id'>#{$task['task_id']}</div>";
-                echo "<div class='task-name'>" . htmlspecialchars($task['task_name']) . "</div>";
-                echo "<div class='task-meta'>";
-                echo "<span class='task-status {$statusClass}'>{$task['status']}</span>";
-                echo "<span class='priority {$priorityClass}'>{$task['priority']}</span>";
-                echo "</div>";
-                echo "<div class='task-date'>📅 {$task['due_date']} ({$task['days_until_due']} días)</div>";
-                echo "</div>";
-            }
-            if (count($futuras) > 8) {
-                echo "<div class='empty-column'>... y " . (count($futuras) - 8) . " más</div>";
-            }
-        } else {
-            echo "<div class='empty-column'>Sin tareas futuras</div>";
+
+        .dashboard-stats {
+            display: flex;
+            gap: 24px;
+            align-items: center;
+            flex-wrap: wrap;
+            color: #6b7280;
+            font-size: 0.875rem;
         }
-        echo "</div>";
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .stat-value {
+            font-weight: 600;
+            color: #374151;
+        }
+
+        /* Kanban Board */
+        .kanban-board {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 24px;
+        }
+
+        .kanban-column {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .column-header {
+            padding: 16px 20px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .column-header.vencidas {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .column-header.hoy {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        .column-header.semana {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        }
+
+        .column-header.futuras {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .task-count {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .column-content {
+            padding: 16px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .task-card {
+            background: #fafbfc;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .task-card:hover {
+            background: #f0f4ff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+            border-color: #667eea;
+        }
+
+        .task-id {
+            font-weight: 600;
+            color: #667eea;
+            font-size: 0.75rem;
+            margin-bottom: 4px;
+        }
+
+        .task-name {
+            color: #1f2937;
+            font-weight: 500;
+            font-size: 0.875rem;
+            line-height: 1.4;
+            margin-bottom: 8px;
+        }
+
+        .task-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .task-status {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .status-completed {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-in_progress {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .priority {
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .priority-high {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .priority-medium {
+            background: #fed7aa;
+            color: #c2410c;
+        }
+
+        .priority-low {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .task-date {
+            color: #6b7280;
+            font-size: 0.75rem;
+            margin-top: 4px;
+        }
+
+        .empty-column {
+            text-align: center;
+            color: #9ca3af;
+            padding: 40px 20px;
+            font-style: italic;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .kanban-board {
+                grid-template-columns: 1fr;
+            }
+            
+            .dashboard-stats {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+        }
+        </style>
+
+        <div class="dashboard-container">
+            <div class="dashboard-header">
+                <h1 class="dashboard-title">🎯 Mi Tablero Kanban</h1>
+                <div class="dashboard-stats">
+                    <div class="stat-item">
+                        <span>Total tareas:</span>
+                        <span class="stat-value"><?= count($myTasks) ?></span>
+                    </div>
+                    <div class="stat-item">
+                        <span>•</span>
+                        <span>Vencidas:</span>
+                        <span class="stat-value"><?= count($vencidas) ?></span>
+                    </div>
+                    <div class="stat-item">
+                        <span>•</span>
+                        <span>Hoy:</span>
+                        <span class="stat-value"><?= count($hoy) ?></span>
+                    </div>
+                    <div class="stat-item">
+                        <span>•</span>
+                        <span>Esta semana:</span>
+                        <span class="stat-value"><?= count($semana) ?></span>
+                    </div>
+                    <div class="stat-item">
+                        <span>•</span>
+                        <span>Futuras:</span>
+                        <span class="stat-value"><?= count($futuras) ?></span>
+                    </div>
+                </div>
+            </div>
+
+                <!-- Columna VENCIDAS -->
+                <div class="kanban-column">
+                    <div class="column-header vencidas">
+                        <span>⚠️ VENCIDAS</span>
+                        <span class="task-count"><?= count($vencidas) ?></span>
+                    </div>
+                    <div class="column-content">
+                        <?php if (count($vencidas) > 0): ?>
+                            <?php foreach ($vencidas as $task): ?>
+                                <?php 
+                                $statusClass = "status-" . str_replace(' ', '_', $task['status']);
+                                $priorityClass = "priority-" . $task['priority'];
+                                ?>
+                                <div class="task-card">
+                                    <div class="task-id">#<?= $task['task_id'] ?></div>
+                                    <div class="task-name"><?= htmlspecialchars($task['task_name']) ?></div>
+                                    <div class="task-meta">
+                                        <span class="task-status <?= $statusClass ?>"><?= $task['status'] ?></span>
+                                        <span class="priority <?= $priorityClass ?>"><?= $task['priority'] ?></span>
+                                    </div>
+                                    <div class="task-date">📅 <?= $task['due_date'] ?> (<?= $task['days_until_due'] ?> días)</div>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <div class="empty-column">Sin tareas vencidas</div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <!-- Columna HOY -->
+                <div class="kanban-column">
+                    <div class="column-header hoy">
+                        <span>📅 HOY</span>
+                        <span class="task-count"><?= count($hoy) ?></span>
+                    </div>
+                    <div class="column-content">
+                        <?php if (count($hoy) > 0): ?>
+                            <?php foreach ($hoy as $task): ?>
+                                <?php 
+                                $statusClass = "status-" . str_replace(' ', '_', $task['status']);
+                                $priorityClass = "priority-" . $task['priority'];
+                                ?>
+                                <div class="task-card">
+                                    <div class="task-id">#<?= $task['task_id'] ?></div>
+                                    <div class="task-name"><?= htmlspecialchars($task['task_name']) ?></div>
+                                    <div class="task-meta">
+                                        <span class="task-status <?= $statusClass ?>"><?= $task['status'] ?></span>
+                                        <span class="priority <?= $priorityClass ?>"><?= $task['priority'] ?></span>
+                                    </div>
+                                    <div class="task-date">📅 <?= $task['due_date'] ?></div>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <div class="empty-column">Sin tareas para hoy</div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <!-- Columna ESTA SEMANA -->
+                <div class="kanban-column">
+                    <div class="column-header semana">
+                        <span>📆 ESTA SEMANA</span>
+                        <span class="task-count"><?= count($semana) ?></span>
+                    </div>
+                    <div class="column-content">
+                        <?php if (count($semana) > 0): ?>
+                            <?php foreach ($semana as $task): ?>
+                                <?php 
+                                $statusClass = "status-" . str_replace(' ', '_', $task['status']);
+                                $priorityClass = "priority-" . $task['priority'];
+                                ?>
+                                <div class="task-card">
+                                    <div class="task-id">#<?= $task['task_id'] ?></div>
+                                    <div class="task-name"><?= htmlspecialchars($task['task_name']) ?></div>
+                                    <div class="task-meta">
+                                        <span class="task-status <?= $statusClass ?>"><?= $task['status'] ?></span>
+                                        <span class="priority <?= $priorityClass ?>"><?= $task['priority'] ?></span>
+                                    </div>
+                                    <div class="task-date">📅 <?= $task['due_date'] ?> (<?= $task['days_until_due'] ?> días)</div>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <div class="empty-column">Sin tareas esta semana</div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <!-- Columna FUTURAS -->
+                <div class="kanban-column">
+                    <div class="column-header futuras">
+                        <span>🚀 FUTURAS</span>
+                        <span class="task-count"><?= count($futuras) ?></span>
+                    </div>
+                    <div class="column-content">
+                        <?php if (count($futuras) > 0): ?>
+                            <?php foreach (array_slice($futuras, 0, 8) as $task): ?>
+                                <?php 
+                                $statusClass = "status-" . str_replace(' ', '_', $task['status']);
+                                $priorityClass = "priority-" . $task['priority'];
+                                ?>
+                                <div class="task-card">
+                                    <div class="task-id">#<?= $task['task_id'] ?></div>
+                                    <div class="task-name"><?= htmlspecialchars($task['task_name']) ?></div>
+                                    <div class="task-meta">
+                                        <span class="task-status <?= $statusClass ?>"><?= $task['status'] ?></span>
+                                        <span class="priority <?= $priorityClass ?>"><?= $task['priority'] ?></span>
+                                    </div>
+                                    <div class="task-date">📅 <?= $task['due_date'] ?> (<?= $task['days_until_due'] ?> días)</div>
+                                </div>
+                            <?php endforeach; ?>
+                            <?php if (count($futuras) > 8): ?>
+                                <div class="empty-column">... y <?= count($futuras) - 8 ?> más</div>
+                            <?php endif; ?>
+                        <?php else: ?>
+                            <div class="empty-column">Sin tareas futuras</div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <?php
+        $content = ob_get_clean();
+        $data['content'] = $content;
         
-        echo "</div>"; // fin kanban-board
-        echo "</div>"; // fin main-container
-        echo "</body></html>";
-        exit;
+        // Usar el layout existente igual que tasks
+        Utils::render('layout', $data);
     }
     
     /**
