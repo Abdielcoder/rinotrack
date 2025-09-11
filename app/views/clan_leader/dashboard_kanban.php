@@ -200,6 +200,83 @@
     font-style: italic;
 }
 
+/* Tabs Minimalistas - Igual que en tasks */
+.tabs-container-minimal {
+    margin-bottom: 24px;
+}
+
+.tabs-wrapper-minimal {
+    display: flex;
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 6px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.tab-minimal {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    color: #64748b;
+    position: relative;
+    overflow: hidden;
+}
+
+.tab-minimal:hover {
+    background: rgba(100, 116, 139, 0.1);
+    color: #475569;
+}
+
+.tab-minimal.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    transform: translateY(-1px);
+}
+
+.tab-icon-minimal {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+}
+
+.tab-icon-minimal i {
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+.tab-minimal.active .tab-icon-minimal i {
+    transform: scale(1.1);
+}
+
+.tab-text-minimal {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.025em;
+}
+
+/* Tab Content */
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
 /* Responsive - Mantener 4 columnas */
 @media (max-width: 1200px) {
     .kanban-board {
@@ -250,17 +327,44 @@
 
 <div class="dashboard-container">
     <div class="dashboard-header">
-        <h1 class="dashboard-title">🎯 Mi Tablero Kanban</h1>
-        <div class="dashboard-stats">
+        <h1 class="dashboard-title">🎯 Panel de Tareas</h1>
+        <p style="color: #6b7280; margin-bottom: 20px;">Gestiona tus tareas de manera visual y eficiente</p>
+        
+        <!-- Tabs Minimalistas igual que en tasks -->
+        <div class="tabs-container-minimal">
+            <div class="tabs-wrapper-minimal">
+                <button class="tab-minimal active" onclick="switchDashboardTab('my-tasks')" id="my-tasks-dashboard-tab">
+                    <div class="tab-icon-minimal">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <span class="tab-text-minimal">Mis Tareas</span>
+                </button>
+                <button class="tab-minimal" onclick="switchDashboardTab('team-tasks')" id="team-tasks-dashboard-tab">
+                    <div class="tab-icon-minimal">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <span class="tab-text-minimal">Equipo</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Estadísticas para tab activo -->
+        <div id="my-tasks-stats" class="dashboard-stats">
             <span>Total: <span class="stat-value"><?= $totalTasks ?></span></span>
             <span>• Vencidas: <span class="stat-value"><?= count($vencidas) ?></span></span>
             <span>• Hoy: <span class="stat-value"><?= count($hoy) ?></span></span>
             <span>• Semana: <span class="stat-value"><?= count($semana) ?></span></span>
             <span>• Futuras: <span class="stat-value"><?= count($futuras) ?></span></span>
         </div>
+        
+        <div id="team-tasks-stats" class="dashboard-stats" style="display: none;">
+            <span>Tablero del equipo - <span class="stat-value">Próximamente</span></span>
+        </div>
     </div>
     
-    <div class="kanban-board">
+    <!-- Contenido del tab MIS TAREAS -->
+    <div id="my-tasks-content" class="tab-content active">
+        <div class="kanban-board">
         <!-- Columna VENCIDAS -->
         <div class="kanban-column">
             <div class="column-header vencidas">
@@ -380,4 +484,72 @@
             </div>
         </div>
     </div>
+    
+    <!-- Contenido del tab EQUIPO -->
+    <div id="team-tasks-content" class="tab-content">
+        <div class="kanban-board">
+            <div class="kanban-column" style="grid-column: 1 / -1;">
+                <div class="column-header" style="background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);">
+                    <span>👥 TAREAS DEL EQUIPO</span>
+                    <span class="task-count">0</span>
+                </div>
+                <div class="column-content">
+                    <div class="empty-column">
+                        <h3 style="color: #374151; margin-bottom: 10px;">🚧 Próximamente</h3>
+                        <p style="color: #6b7280;">Las tareas del equipo se mostrarán aquí</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
 </div>
+
+<script>
+// Función para cambiar entre tabs del dashboard
+function switchDashboardTab(tabName) {
+    console.log('🔄 Cambiando tab dashboard:', tabName);
+    
+    // Ocultar todos los contenidos
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+        content.style.display = 'none';
+    });
+    
+    // Desactivar todos los botones
+    document.querySelectorAll('.tab-minimal').forEach(button => {
+        button.classList.remove('active');
+    });
+    
+    // Ocultar todas las estadísticas
+    document.querySelectorAll('.dashboard-stats').forEach(stats => {
+        stats.style.display = 'none';
+    });
+    
+    // Mostrar contenido del tab seleccionado
+    const targetContent = document.getElementById(tabName + '-content');
+    const targetButton = document.getElementById(tabName + '-dashboard-tab');
+    const targetStats = document.getElementById(tabName + '-stats');
+    
+    if (targetContent) {
+        targetContent.classList.add('active');
+        targetContent.style.display = 'block';
+    }
+    
+    if (targetButton) {
+        targetButton.classList.add('active');
+    }
+    
+    if (targetStats) {
+        targetStats.style.display = 'flex';
+    }
+    
+    console.log('✅ Tab dashboard cambiado a:', tabName);
+}
+
+// Inicializar con "Mis Tareas" activo
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Dashboard Kanban cargado');
+    switchDashboardTab('my-tasks');
+});
+</script>
