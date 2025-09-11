@@ -964,14 +964,14 @@ function goToTaskDetail(taskId, itemType = 'task') {
         return;
     }
     
-    // Determinar la URL según el tipo
+    // Usar la ruta correcta para detalles de tarea
     let url;
     if (itemType === 'subtask') {
-        // Para subtareas, ir al detalle de la tarea padre
-        url = `?route=clan_leader/task_details&id=${taskId}&type=subtask`;
+        // Para subtareas, usar la misma ruta con parámetro adicional
+        url = `?route=clan_leader/get-task-details&task_id=${taskId}&type=subtask`;
     } else {
         // Para tareas normales
-        url = `?route=clan_leader/task_details&id=${taskId}`;
+        url = `?route=clan_leader/get-task-details&task_id=${taskId}`;
     }
     
     console.log('🚀 Redirigiendo a:', url);
