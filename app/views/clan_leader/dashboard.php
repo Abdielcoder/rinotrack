@@ -735,7 +735,9 @@ function renderMyKanbanBoard(kanbanTasks) {
                            onchange="toggleTaskStatusKanban(${task.task_id}, this.checked, '${isSubtask ? 'subtask' : 'task'}')">
                     <div class="task-name-mini">
                         ${isSubtask ? '<i class="fas fa-arrow-right subtask-icon"></i>' : ''}
-                        ${task.task_name || 'Sin nombre'}
+                        <a href="#" onclick="goToTaskDetail(${task.task_id}, '${isSubtask ? 'subtask' : 'task'}'); return false;" class="task-name-link">
+                            ${task.task_name || 'Sin nombre'}
+                        </a>
                         ${isSubtask && task.parent_task_name ? `<span class="parent-task-hint" title="Tarea padre: ${task.parent_task_name}">↑</span>` : ''}
                     </div>
                 </div>
@@ -794,7 +796,9 @@ function renderTeamKanbanBoard(kanbanTasks) {
                            onchange="toggleTaskStatusKanban(${task.task_id}, this.checked, '${isSubtask ? 'subtask' : 'task'}')">
                     <div class="task-name-mini">
                         ${isSubtask ? '<i class="fas fa-arrow-right subtask-icon"></i>' : ''}
-                        ${task.task_name || 'Sin nombre'}
+                        <a href="#" onclick="goToTaskDetail(${task.task_id}, '${isSubtask ? 'subtask' : 'task'}'); return false;" class="task-name-link">
+                            ${task.task_name || 'Sin nombre'}
+                        </a>
                         ${isSubtask && task.parent_task_name ? `<span class="parent-task-hint" title="Tarea padre: ${task.parent_task_name}">↑</span>` : ''}
                     </div>
                 </div>
