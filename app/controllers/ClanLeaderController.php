@@ -4811,9 +4811,9 @@ class ClanLeaderController {
     }
     
     /**
-     * Método para actualizar una tarea (AJAX)
+     * Método para actualizar una tarea desde modal (AJAX)
      */
-    public function updateTask() {
+    public function updateTaskFromModal() {
         header('Content-Type: application/json');
         error_reporting(E_ALL & ~E_WARNING);
         

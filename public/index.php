@@ -509,7 +509,7 @@ try {
         
     case 'clan_leader/update-task':
         $controller = new ClanLeaderController();
-        $controller->updateTask();
+        $controller->updateTaskFromModal();
         break;
         
     case 'clan_leader/toggle-task-status':
