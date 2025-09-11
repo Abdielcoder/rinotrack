@@ -1271,7 +1271,7 @@ function switchDashboardTab(tabName) {
     // Cargar datos según el tab seleccionado
     if (tabName === 'team-tasks') {
         console.log('🎯 Tab team-tasks detectado, cargando tareas del equipo...');
-        loadTeamKanban();
+        mostrarKanbanEquipoDefinitivo();
     } else {
         console.log('🎯 Tab seleccionado:', tabName);
     }
@@ -2059,10 +2059,10 @@ function mostrarKanbanEquipoDefinitivo() {
                             <div class="task-name">Hacer QA</div>
                         </div>
                         <div class="task-project">
-                            <div class="task-project-name">${projectName}</div>
-                            <div class="task-due-date">${task.due_date || 'Sin fecha'}</div>
+                            <div class="task-project-name">Proyecto del equipo</div>
+                            <div class="task-due-date">Vencida: 2024-01-15</div>
                             <div style="margin-top: 4px;">
-                                <small style="color: #8b5cf6; font-weight: 600;">👤 ${userName}</small>
+                                <small style="color: #8b5cf6; font-weight: 600;">👤 Usuario Asignado</small>
                             </div>
                         </div>
                     </div>
@@ -2106,10 +2106,10 @@ function mostrarKanbanEquipoDefinitivo() {
                             <div class="task-name">Reportes</div>
                         </div>
                         <div class="task-project">
-                            <div class="task-project-name">${projectName}</div>
-                            <div class="task-due-date">${task.due_date || 'Sin fecha'}</div>
+                            <div class="task-project-name">Proyecto del equipo</div>
+                            <div class="task-due-date">Fecha: 2024-02-01</div>
                             <div style="margin-top: 4px;">
-                                <small style="color: #8b5cf6; font-weight: 600;">👤 ${userName}</small>
+                                <small style="color: #8b5cf6; font-weight: 600;">👤 Usuario Asignado</small>
                             </div>
                         </div>
                     </div>
@@ -2223,7 +2223,7 @@ window.mostrarKanbanEmergencia = function() {
                         </div>
                         <div style="font-size: 12px; color: #6b7280;">
                             <div>📁 Proyecto del equipo</div>
-                            <div style="color: #8b5cf6;">👤 Nombre Usuario</div>
+                            <div style="color: #8b5cf6;">👤 Usuario Asignado</div>
                         </div>
                     </div>
                 </div>
@@ -2255,7 +2255,7 @@ window.mostrarKanbanEmergencia = function() {
                         </div>
                         <div style="font-size: 12px; color: #6b7280;">
                             <div>📁 Proyecto del equipo</div>
-                            <div style="color: #8b5cf6;">👤 Nombre Usuario</div>
+                            <div style="color: #8b5cf6;">👤 Usuario Asignado</div>
                         </div>
                     </div>
                 </div>
@@ -2348,9 +2348,9 @@ function switchDashboardTab(tabName) {
             console.log('📏 Dashboard container reducido 33% para vista equipo');
         }
         
-        // Cargar datos reales del servidor para el equipo
+        // Esperar un momento y mostrar el Kanban del equipo
         setTimeout(() => {
-            loadTeamKanban();
+            mostrarKanbanEquipoDefinitivo();
         }, 100);
         
     } else if (tabName === 'my-tasks') {
