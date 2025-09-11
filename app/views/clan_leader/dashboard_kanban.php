@@ -387,8 +387,30 @@
 
 <div class="dashboard-container">
     <div class="dashboard-header">
-        <h1 class="dashboard-title">🎯 Panel de Tareas</h1>
-        <p style="color: #6b7280; margin-bottom: 20px;">Gestiona tus tareas de manera visual y eficiente</p>
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+            <div>
+                <h1 class="dashboard-title">🎯 Panel de Tareas</h1>
+                <p style="color: #6b7280; margin: 0;">Gestiona tus tareas de manera visual y eficiente</p>
+            </div>
+            <button class="btn-create-personal" onclick="openCreateTaskModal()" style="
+                background: #1e3a8a;
+                color: white;
+                padding: 12px 20px;
+                border: none;
+                border-radius: 8px;
+                font-weight: 600;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                transition: all 0.3s ease;
+                box-shadow: 0 2px 4px rgba(30, 58, 138, 0.2);
+            " onmouseover="this.style.background='#1e40af'; this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 8px rgba(30, 58, 138, 0.3)'" 
+               onmouseout="this.style.background='#1e3a8a'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(30, 58, 138, 0.2)'">
+                <i class="fas fa-plus"></i>
+                Agregar Tarea Personal
+            </button>
+        </div>
         
         <!-- Tabs Minimalistas igual que en tasks -->
         <div class="tabs-container-minimal">
@@ -584,6 +606,251 @@
     
 </div>
 
+<!-- Modal para crear tarea personal -->
+<div id="createTaskModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-plus-circle"></i> Agregar Nueva Tarea Personal</h3>
+            <button type="button" class="modal-close" onclick="closeCreateTaskModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <form id="createTaskForm" class="modal-body">
+            <!-- Campo oculto para marcar como tarea personal -->
+            <input type="hidden" name="is_personal" value="1">
+            <!-- Campo oculto para asignar la tarea al usuario actual -->
+            <input type="hidden" name="user_id" value="<?php echo $_SESSION['user_id']; ?>">
+            
+            <div class="form-group">
+                <label for="task_name">
+                    <i class="fas fa-tasks"></i>
+                    Nombre de la Tarea *
+                </label>
+                <input type="text" id="task_name" name="task_name" required 
+                       placeholder="Ej: Revisar documentación del proyecto" 
+                       class="form-control">
+            </div>
+            
+            <div class="form-group">
+                <label for="description">
+                    <i class="fas fa-align-left"></i>
+                    Descripción
+                </label>
+                <textarea id="description" name="description" 
+                          placeholder="Descripción detallada de la tarea (opcional)"
+                          class="form-control" rows="3"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="due_date">
+                    <i class="fas fa-calendar"></i>
+                    Fecha de Vencimiento *
+                </label>
+                <input type="date" id="due_date" name="due_date" required class="form-control">
+            </div>
+            
+            <!-- Campo oculto para prioridad por defecto -->
+            <input type="hidden" name="priority" value="medium">
+            <!-- Campo oculto para status por defecto -->
+            <input type="hidden" name="status" value="pending">
+        </form>
+        
+        <div class="modal-footer">
+            <button type="button" class="btn-secondary" onclick="closeCreateTaskModal()">
+                <i class="fas fa-times"></i>
+                Cancelar
+            </button>
+            <button type="button" class="btn-primary" onclick="createPersonalTask()">
+                <i class="fas fa-plus"></i>
+                Crear Tarea
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Estilos para el Modal */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(4px);
+}
+
+.modal-content {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    width: 90%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow: hidden;
+    animation: modalFadeIn 0.3s ease-out;
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.modal-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: white;
+    color: #374151;
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    color: #6b7280;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+    background: #f3f4f6;
+    color: #374151;
+    transform: scale(1.1);
+}
+
+.modal-body {
+    padding: 24px;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+    color: #374151;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.form-group label i {
+    color: #667eea;
+    font-size: 14px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px 12px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    font-family: inherit;
+    box-sizing: border-box;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.modal-footer {
+    padding: 20px 24px;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    background: #f8fafc;
+}
+
+.btn-primary, .btn-secondary {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+}
+
+.btn-secondary:hover {
+    background: #e2e8f0;
+    transform: translateY(-1px);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .modal-content {
+        width: 95%;
+        margin: 20px;
+    }
+    
+    .modal-header, .modal-body, .modal-footer {
+        padding: 16px 20px;
+    }
+    
+    .modal-footer {
+        flex-direction: column;
+    }
+    
+    .btn-primary, .btn-secondary {
+        width: 100%;
+        justify-content: center;
+    }
+}
+</style>
+
 <script>
 // Función para cambiar entre tabs del dashboard
 function switchDashboardTab(tabName) {
@@ -742,9 +1009,102 @@ function updateTaskCounts() {
     console.log('📊 Total de tareas restantes:', totalTasks);
 }
 
+// Función para abrir modal de crear tarea
+function openCreateTaskModal() {
+    console.log('🔄 Abrir modal crear tarea personal');
+    const modal = document.getElementById('createTaskModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        
+        // Establecer fecha mínima como hoy
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('due_date').min = today;
+    }
+}
+
+// Función para cerrar modal
+function closeCreateTaskModal() {
+    const modal = document.getElementById('createTaskModal');
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+        // Limpiar formulario
+        document.getElementById('createTaskForm').reset();
+    }
+}
+
+// Función para crear tarea personal
+function createPersonalTask() {
+    const form = document.getElementById('createTaskForm');
+    const formData = new FormData(form);
+    
+    // Validaciones básicas
+    const taskName = formData.get('task_name');
+    const dueDate = formData.get('due_date');
+    
+    if (!taskName || taskName.trim().length < 3) {
+        alert('El nombre de la tarea debe tener al menos 3 caracteres');
+        return;
+    }
+    
+    if (!dueDate) {
+        alert('La fecha de vencimiento es requerida');
+        return;
+    }
+    
+    console.log('📝 Creando tarea personal:', taskName);
+    
+    fetch('?route=clan_leader/create-personal-task', {
+        method: 'POST',
+        credentials: 'same-origin',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            console.log('✅ Tarea personal creada exitosamente');
+            closeCreateTaskModal();
+            
+            // Mostrar mensaje de éxito
+            alert('Tarea personal creada exitosamente');
+            
+            // Recargar la página para mostrar la nueva tarea
+            window.location.reload();
+        } else {
+            console.error('❌ Error:', data.message);
+            alert('Error al crear tarea personal: ' + (data.message || 'Error desconocido'));
+        }
+    })
+    .catch(error => {
+        console.error('❌ Error:', error);
+        alert('Error de conexión al crear tarea personal');
+    });
+}
+
 // Inicializar con "Mis Tareas" activo
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 Dashboard Kanban cargado');
     switchDashboardTab('my-tasks');
+    
+    // Cerrar modal con tecla Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const modal = document.getElementById('createTaskModal');
+            if (modal && modal.style.display === 'flex') {
+                closeCreateTaskModal();
+            }
+        }
+    });
+    
+    // Cerrar modal al hacer clic fuera de él
+    const modal = document.getElementById('createTaskModal');
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeCreateTaskModal();
+            }
+        });
+    }
 });
 </script>
