@@ -301,7 +301,7 @@ ob_start();
                     <i class="fas fa-columns"></i>
                 </div>
                 <div class="page-info">
-                    <h1 class="page-title">Dashboard Kanban</h1>
+                    <h1 class="page-title">Panel de Tareas</h1>
                     <p class="page-description">Gestiona tus tareas de manera visual y eficiente</p>
                 </div>
             </div>
@@ -662,5 +662,4 @@ $content = ob_get_clean();
 
 // Incluir el layout con el contenido
 include __DIR__ . '/../layout.php';
-?>
 ?>
