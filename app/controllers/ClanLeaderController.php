@@ -142,73 +142,143 @@ class ClanLeaderController {
         $semana = array_filter($myTasks, fn($t) => $t['days_until_due'] > 0 && $t['days_until_due'] <= 7);
         $futuras = array_filter($myTasks, fn($t) => $t['days_until_due'] > 7);
 
-        // HTML DIRECTO SIN ESTILOS
+        // TABLERO KANBAN CON ESTILOS
         header('Content-Type: text/html; charset=utf-8');
         echo "<!DOCTYPE html>";
-        echo "<html><head><title>Clan Leader - Mis Tareas</title></head><body>";
-        echo "<h1>🎯 MIS TAREAS ASIGNADAS</h1>";
-        echo "<p><strong>Usuario:</strong> {$this->currentUser['full_name']} (ID: {$userId})</p>";
-        echo "<p><strong>Total tareas:</strong> " . count($myTasks) . "</p>";
-        echo "<hr>";
+        echo "<html><head>";
+        echo "<title>🎯 Mi Tablero Kanban</title>";
+        echo "<style>";
+        echo "body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; margin: 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }";
+        echo ".container { max-width: 1400px; margin: 0 auto; padding: 20px; }";
+        echo "h1 { color: white; text-align: center; margin-bottom: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }";
+        echo ".info { background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }";
+        echo ".kanban-board { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }";
+        echo ".kanban-column { background: white; border-radius: 10px; padding: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); min-height: 400px; }";
+        echo ".column-header { padding: 10px; border-radius: 8px; margin-bottom: 15px; font-weight: bold; text-align: center; color: white; }";
+        echo ".vencidas { background: #ef4444; }";
+        echo ".hoy { background: #f59e0b; }";
+        echo ".semana { background: #3b82f6; }";
+        echo ".futuras { background: #10b981; }";
+        echo ".task-card { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; margin-bottom: 10px; transition: transform 0.2s; }";
+        echo ".task-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }";
+        echo ".task-id { font-weight: bold; color: #1f2937; font-size: 14px; }";
+        echo ".task-name { color: #374151; margin: 5px 0; font-weight: 600; }";
+        echo ".task-meta { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; font-size: 12px; }";
+        echo ".task-status { padding: 2px 8px; border-radius: 4px; font-weight: bold; text-transform: uppercase; }";
+        echo ".status-completed { background: #d1fae5; color: #059669; }";
+        echo ".status-pending { background: #fef3c7; color: #d97706; }";
+        echo ".status-in_progress { background: #dbeafe; color: #2563eb; }";
+        echo ".priority { padding: 2px 6px; border-radius: 3px; font-size: 11px; font-weight: bold; }";
+        echo ".priority-high { background: #fee2e2; color: #dc2626; }";
+        echo ".priority-medium { background: #fed7aa; color: #ea580c; }";
+        echo ".priority-low { background: #dbeafe; color: #2563eb; }";
+        echo ".task-date { color: #6b7280; font-size: 11px; }";
+        echo ".empty-column { text-align: center; color: #9ca3af; padding: 40px 20px; font-style: italic; }";
+        echo "</style>";
+        echo "</head><body>";
         
-        // Mostrar tareas vencidas
-        echo "<h2>⚠️ VENCIDAS (" . count($vencidas) . ")</h2>";
+        echo "<div class='container'>";
+        echo "<h1>🎯 MI TABLERO KANBAN</h1>";
+        echo "<div class='info'>";
+        echo "<strong>Usuario:</strong> {$this->currentUser['full_name']} (ID: {$userId}) | ";
+        echo "<strong>Total tareas:</strong> " . count($myTasks);
+        echo "</div>";
+        
+        echo "<div class='kanban-board'>";
+        
+        // Columna VENCIDAS
+        echo "<div class='kanban-column'>";
+        echo "<div class='column-header vencidas'>⚠️ VENCIDAS (" . count($vencidas) . ")</div>";
         if (count($vencidas) > 0) {
-            echo "<ul>";
             foreach ($vencidas as $task) {
-                echo "<li><strong>#{$task['task_id']}</strong> - {$task['task_name']} - {$task['status']} - {$task['due_date']} ({$task['days_until_due']} días)</li>";
+                $statusClass = "status-" . str_replace(' ', '_', $task['status']);
+                $priorityClass = "priority-" . $task['priority'];
+                echo "<div class='task-card'>";
+                echo "<div class='task-id'>#{$task['task_id']}</div>";
+                echo "<div class='task-name'>" . htmlspecialchars($task['task_name']) . "</div>";
+                echo "<div class='task-meta'>";
+                echo "<span class='task-status {$statusClass}'>{$task['status']}</span>";
+                echo "<span class='priority {$priorityClass}'>{$task['priority']}</span>";
+                echo "</div>";
+                echo "<div class='task-date'>📅 {$task['due_date']} ({$task['days_until_due']} días)</div>";
+                echo "</div>";
             }
-            echo "</ul>";
         } else {
-            echo "<p>Sin tareas vencidas</p>";
+            echo "<div class='empty-column'>Sin tareas vencidas</div>";
         }
+        echo "</div>";
         
-        // Mostrar tareas de hoy
-        echo "<h2>📅 HOY (" . count($hoy) . ")</h2>";
+        // Columna HOY
+        echo "<div class='kanban-column'>";
+        echo "<div class='column-header hoy'>📅 HOY (" . count($hoy) . ")</div>";
         if (count($hoy) > 0) {
-            echo "<ul>";
             foreach ($hoy as $task) {
-                echo "<li><strong>#{$task['task_id']}</strong> - {$task['task_name']} - {$task['status']} - {$task['due_date']}</li>";
+                $statusClass = "status-" . str_replace(' ', '_', $task['status']);
+                $priorityClass = "priority-" . $task['priority'];
+                echo "<div class='task-card'>";
+                echo "<div class='task-id'>#{$task['task_id']}</div>";
+                echo "<div class='task-name'>" . htmlspecialchars($task['task_name']) . "</div>";
+                echo "<div class='task-meta'>";
+                echo "<span class='task-status {$statusClass}'>{$task['status']}</span>";
+                echo "<span class='priority {$priorityClass}'>{$task['priority']}</span>";
+                echo "</div>";
+                echo "<div class='task-date'>📅 {$task['due_date']}</div>";
+                echo "</div>";
             }
-            echo "</ul>";
         } else {
-            echo "<p>Sin tareas para hoy</p>";
+            echo "<div class='empty-column'>Sin tareas para hoy</div>";
         }
+        echo "</div>";
         
-        // Mostrar tareas de esta semana
-        echo "<h2>📆 ESTA SEMANA (" . count($semana) . ")</h2>";
+        // Columna ESTA SEMANA
+        echo "<div class='kanban-column'>";
+        echo "<div class='column-header semana'>📆 ESTA SEMANA (" . count($semana) . ")</div>";
         if (count($semana) > 0) {
-            echo "<ul>";
             foreach ($semana as $task) {
-                echo "<li><strong>#{$task['task_id']}</strong> - {$task['task_name']} - {$task['status']} - {$task['due_date']} ({$task['days_until_due']} días)</li>";
+                $statusClass = "status-" . str_replace(' ', '_', $task['status']);
+                $priorityClass = "priority-" . $task['priority'];
+                echo "<div class='task-card'>";
+                echo "<div class='task-id'>#{$task['task_id']}</div>";
+                echo "<div class='task-name'>" . htmlspecialchars($task['task_name']) . "</div>";
+                echo "<div class='task-meta'>";
+                echo "<span class='task-status {$statusClass}'>{$task['status']}</span>";
+                echo "<span class='priority {$priorityClass}'>{$task['priority']}</span>";
+                echo "</div>";
+                echo "<div class='task-date'>📅 {$task['due_date']} ({$task['days_until_due']} días)</div>";
+                echo "</div>";
             }
-            echo "</ul>";
         } else {
-            echo "<p>Sin tareas esta semana</p>";
+            echo "<div class='empty-column'>Sin tareas esta semana</div>";
         }
+        echo "</div>";
         
-        // Mostrar tareas futuras
-        echo "<h2>🚀 FUTURAS (" . count($futuras) . ")</h2>";
+        // Columna FUTURAS
+        echo "<div class='kanban-column'>";
+        echo "<div class='column-header futuras'>🚀 FUTURAS (" . count($futuras) . ")</div>";
         if (count($futuras) > 0) {
-            echo "<ul>";
-            foreach (array_slice($futuras, 0, 10) as $task) { // Solo primeras 10
-                echo "<li><strong>#{$task['task_id']}</strong> - {$task['task_name']} - {$task['status']} - {$task['due_date']} ({$task['days_until_due']} días)</li>";
+            foreach (array_slice($futuras, 0, 8) as $task) { // Solo primeras 8
+                $statusClass = "status-" . str_replace(' ', '_', $task['status']);
+                $priorityClass = "priority-" . $task['priority'];
+                echo "<div class='task-card'>";
+                echo "<div class='task-id'>#{$task['task_id']}</div>";
+                echo "<div class='task-name'>" . htmlspecialchars($task['task_name']) . "</div>";
+                echo "<div class='task-meta'>";
+                echo "<span class='task-status {$statusClass}'>{$task['status']}</span>";
+                echo "<span class='priority {$priorityClass}'>{$task['priority']}</span>";
+                echo "</div>";
+                echo "<div class='task-date'>📅 {$task['due_date']} ({$task['days_until_due']} días)</div>";
+                echo "</div>";
             }
-            if (count($futuras) > 10) {
-                echo "<li><em>... y " . (count($futuras) - 10) . " más</em></li>";
+            if (count($futuras) > 8) {
+                echo "<div class='empty-column'>... y " . (count($futuras) - 8) . " más</div>";
             }
-            echo "</ul>";
         } else {
-            echo "<p>Sin tareas futuras</p>";
+            echo "<div class='empty-column'>Sin tareas futuras</div>";
         }
+        echo "</div>";
         
-        echo "<hr>";
-        echo "<h2>🔍 CONSULTA EJECUTADA:</h2>";
-        echo "<pre>SELECT task_id, task_name, status, priority, due_date, assigned_to_user_id, DATEDIFF(due_date, CURDATE()) as days_until_due FROM Tasks WHERE assigned_to_user_id = {$userId} AND (is_subtask = 0 OR is_subtask IS NULL) ORDER BY due_date ASC</pre>";
-        
-        echo "<p><a href='?route=clan_leader/debug-database'>🔧 Ver debug de base de datos</a></p>";
-        echo "<p><a href='?route=logout'>🚪 Cerrar sesión</a></p>";
-        
+        echo "</div>"; // fin kanban-board
+        echo "</div>"; // fin container
         echo "</body></html>";
         exit;
     }
