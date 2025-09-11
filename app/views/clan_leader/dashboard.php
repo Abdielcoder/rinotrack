@@ -88,24 +88,29 @@ ob_start();
     }
 }
 
-/* Estilos específicos para el Kanban */
+/* Estilos específicos para el Kanban - Sin scroll horizontal */
 .kanban-board-compact {
     display: flex;
-    gap: 16px;
+    gap: 12px;
     padding: 20px;
     background: #f8fafc;
     border-radius: 12px;
-    overflow-x: auto;
     min-height: 500px;
+    width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden; /* Sin scroll horizontal */
 }
 
 .kanban-column-compact {
     flex: 1;
-    min-width: 280px;
+    min-width: 0; /* Permite que las columnas se encojan */
+    max-width: 25%; /* Cada columna ocupa máximo 25% del ancho */
     background: white;
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 .column-header {
@@ -152,17 +157,20 @@ ob_start();
     padding: 12px;
     max-height: 600px;
     overflow-y: auto;
+    flex: 1; /* Ocupa el espacio disponible en la columna */
 }
 
-/* Task Cards */
+/* Task Cards - Optimizadas para 4 columnas */
 .task-card-mini {
     background: white;
     border: 1px solid #e2e8f0;
     border-radius: 8px;
-    padding: 12px;
-    margin-bottom: 8px;
+    padding: 10px;
+    margin-bottom: 6px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     transition: all 0.2s ease;
+    font-size: 13px; /* Texto más pequeño para mejor ajuste */
+    word-wrap: break-word; /* Evita desbordamiento de texto */
 }
 
 .task-card-mini:hover {
@@ -175,10 +183,11 @@ ob_start();
     border: 1px solid #e2e8f0;
     border-left: 3px solid #64748b;
     border-radius: 6px;
-    padding: 10px;
-    margin-bottom: 6px;
-    font-size: 13px;
+    padding: 8px;
+    margin-bottom: 4px;
+    font-size: 12px; /* Texto más pequeño para subtareas */
     opacity: 0.9;
+    word-wrap: break-word;
 }
 
 .task-header-mini {
@@ -197,9 +206,10 @@ ob_start();
     flex: 1;
     font-weight: 600;
     color: #1e293b;
-    font-size: 14px;
-    line-height: 1.4;
+    font-size: 12px; /* Reducido para mejor ajuste */
+    line-height: 1.3;
     display: flex;
+    word-break: break-word; /* Evita desbordamiento */
     align-items: center;
     gap: 4px;
 }
@@ -236,18 +246,21 @@ ob_start();
 .task-tags-mini {
     display: flex;
     flex-wrap: wrap;
-    gap: 4px;
-    margin-top: 8px;
+    gap: 3px;
+    margin-top: 6px; /* Reducido para mejor ajuste */
 }
 
 .task-tag {
     display: inline-flex;
     align-items: center;
-    padding: 3px 8px;
-    border-radius: 12px;
-    font-size: 11px;
+    padding: 2px 6px; /* Reducido para mejor ajuste */
+    border-radius: 10px;
+    font-size: 10px; /* Más pequeño */
     font-weight: 600;
     white-space: nowrap;
+    max-width: 100%; /* Evita desbordamiento */
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .project-tag.personal {
@@ -299,6 +312,31 @@ ob_start();
 }
 
 /* Responsive para Kanban */
+@media (max-width: 1200px) {
+    .kanban-board-compact {
+        gap: 8px; /* Gap más pequeño en pantallas medianas */
+        padding: 16px;
+    }
+    
+    .kanban-column-compact {
+        max-width: none; /* Quitar restricción de ancho máximo */
+    }
+    
+    .task-card-mini, .subtask-card-micro {
+        padding: 8px;
+        font-size: 11px;
+    }
+    
+    .task-name-mini {
+        font-size: 11px;
+    }
+    
+    .task-tag {
+        font-size: 9px;
+        padding: 1px 4px;
+    }
+}
+
 @media (max-width: 768px) {
     .kanban-board-compact {
         flex-direction: column;
@@ -308,6 +346,7 @@ ob_start();
     
     .kanban-column-compact {
         min-width: auto;
+        max-width: none;
     }
 }
 
