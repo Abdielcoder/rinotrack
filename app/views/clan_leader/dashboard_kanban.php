@@ -295,6 +295,162 @@
     background: #dc2626;
 }
 
+/* ===== KANBAN EQUIPO - CLASES COMPLETAMENTE NUEVAS ===== */
+.team-kanban-grid {
+    display: flex;
+    gap: 24px;
+    width: 100%;
+    min-height: 600px;
+    padding: 20px;
+    background: #f8fafc;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.team-column {
+    flex: 1;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    min-height: 500px;
+}
+
+.team-column-header {
+    padding: 16px 20px;
+    font-weight: 700;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.team-column-header.team-vencidas {
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+    color: #991b1b;
+    border-bottom: 3px solid #ef4444;
+}
+
+.team-column-header.team-hoy {
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+    color: #92400e;
+    border-bottom: 3px solid #f59e0b;
+}
+
+.team-column-header.team-semana {
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    color: #1e40af;
+    border-bottom: 3px solid #3b82f6;
+}
+
+.team-column-header.team-futuras {
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    color: #166534;
+    border-bottom: 3px solid #10b981;
+}
+
+.team-task-count {
+    background: rgba(255, 255, 255, 0.9);
+    color: #374151;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.team-column-body {
+    padding: 16px;
+    min-height: 400px;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.team-task-item {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.team-task-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border-color: #3b82f6;
+}
+
+.team-subtask-item {
+    background: linear-gradient(135deg, #fef7ff 0%, #f3e8ff 100%);
+    border: 1px solid #d8b4fe;
+    border-left: 4px solid #8b5cf6;
+}
+
+.team-task-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.team-task-checkbox {
+    margin-top: 2px;
+}
+
+.team-task-name {
+    font-weight: 600;
+    color: #1f2937;
+    font-size: 14px;
+    line-height: 1.4;
+    flex: 1;
+}
+
+.team-task-info {
+    font-size: 12px;
+    color: #6b7280;
+    line-height: 1.3;
+}
+
+.team-task-project {
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 2px;
+}
+
+.team-task-user {
+    color: #8b5cf6;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.team-task-date {
+    color: #9ca3af;
+    margin-top: 4px;
+}
+
+.team-subtask-parent {
+    color: #7c3aed;
+    font-style: italic;
+    margin-top: 4px;
+    font-size: 11px;
+}
+
+.team-empty-column {
+    text-align: center;
+    color: #9ca3af;
+    font-style: italic;
+    padding: 40px 20px;
+    background: #f9fafb;
+    border-radius: 8px;
+    border: 2px dashed #d1d5db;
+}
+
 .task-header {
     display: flex;
     align-items: flex-start;
@@ -1304,66 +1460,66 @@ function hideAllTeamViews() {
     document.getElementById('team-error').style.display = 'none';
 }
 
-// Renderizar el Kanban del equipo - ESTRATEGIA DIRECTA
+// ===== KANBAN EQUIPO COMPLETAMENTE NUEVO =====
 function renderTeamKanban(kanbanTasks) {
-    console.log('🎨 Renderizando Kanban del equipo:', kanbanTasks);
+    console.log('🎨 NUEVO KANBAN: Renderizando Kanban del equipo con clases únicas');
     
-    // ESTRATEGIA: Insertar directamente en team-tasks-content sin subdivisiones
     const teamContent = document.getElementById('team-tasks-content');
     if (!teamContent) {
         console.error('❌ No se encontró team-tasks-content');
         return;
     }
     
-    // Crear HTML del Kanban DIRECTAMENTE igual que "Mis Tareas"
-    let html = '<div class="kanban-board">';
+    // CREAR HTML CON CLASES COMPLETAMENTE NUEVAS
+    let html = '<div class="team-kanban-grid">';
     
     const columns = ['vencidas', 'hoy', 'semana1', 'semana2'];
-    const columnTitles = {
-        'vencidas': '⚠️ VENCIDAS',
-        'hoy': '📅 HOY', 
-        'semana1': '📆 ESTA SEMANA',
-        'semana2': '🚀 FUTURAS'
+    const columnConfig = {
+        'vencidas': { title: '⚠️ VENCIDAS', class: 'team-vencidas' },
+        'hoy': { title: '📅 HOY', class: 'team-hoy' }, 
+        'semana1': { title: '📆 ESTA SEMANA', class: 'team-semana' },
+        'semana2': { title: '🚀 FUTURAS', class: 'team-futuras' }
     };
     
     columns.forEach(column => {
         const tasks = kanbanTasks[column] || [];
-        const columnClass = column === 'semana1' ? 'semana' : (column === 'semana2' ? 'futuras' : column);
+        const config = columnConfig[column];
         
         html += `
-            <div class="kanban-column">
-                <div class="column-header ${columnClass}">
-                    <span>${columnTitles[column]}</span>
-                    <span class="task-count">${tasks.length}</span>
+            <div class="team-column">
+                <div class="team-column-header ${config.class}">
+                    <span>${config.title}</span>
+                    <span class="team-task-count">${tasks.length}</span>
                 </div>
-                <div class="column-content">
+                <div class="team-column-body">
         `;
         
         if (tasks.length === 0) {
-            html += `<div class="empty-column">Sin tareas del equipo</div>`;
+            html += `<div class="team-empty-column">Sin tareas del equipo</div>`;
         } else {
             tasks.forEach(task => {
                 const isSubtask = task.item_type === 'subtask';
-                const cardClass = isSubtask ? 'subtask-card' : 'task-card';
+                const itemClass = isSubtask ? 'team-subtask-item' : 'team-task-item';
                 const taskName = (task.task_name || 'Sin nombre').replace(/'/g, '&#39;');
                 const userName = (task.assigned_user_name || 'Sin asignar').replace(/'/g, '&#39;');
                 const projectName = (task.project_name || 'Sin proyecto').replace(/'/g, '&#39;');
+                const dueDate = task.due_date || 'Sin fecha';
                 
                 html += `
-                    <div class="${cardClass} ${columnClass} project-normal">
-                        <div class="task-header">
-                            <div class="task-checkbox">
+                    <div class="${itemClass}" onclick="console.log('Click en tarea:', '${taskName}')">
+                        <div class="team-task-header">
+                            <div class="team-task-checkbox">
                                 <input type="checkbox" onclick="event.stopPropagation()">
                             </div>
-                            <div class="task-name">${taskName}</div>
+                            <div class="team-task-name">${taskName}</div>
                         </div>
-                        <div class="task-project">
-                            <div class="task-project-name">${projectName}</div>
-                            <div class="task-due-date">${task.due_date || 'Sin fecha'}</div>
-                            <div style="margin-top: 4px;">
-                                <small style="color: #8b5cf6; font-weight: 600;">👤 ${userName}</small>
+                        <div class="team-task-info">
+                            <div class="team-task-project">${projectName}</div>
+                            <div class="team-task-user">
+                                <span>👤</span> ${userName}
                             </div>
-                            ${isSubtask ? `<div class="subtask-indicator">↳ Subtarea de: ${task.parent_task_name || 'Tarea padre'}</div>` : ''}
+                            <div class="team-task-date">${dueDate}</div>
+                            ${isSubtask ? `<div class="team-subtask-parent">↳ Subtarea de: ${task.parent_task_name || 'Tarea padre'}</div>` : ''}
                         </div>
                     </div>
                 `;
@@ -1376,37 +1532,34 @@ function renderTeamKanban(kanbanTasks) {
         `;
     });
     
-    html += '</div>'; // Cerrar kanban-board
+    html += '</div>'; // Cerrar team-kanban-grid
     
-    // INSERTAR DIRECTAMENTE en team-tasks-content
+    // INSERTAR HTML DIRECTAMENTE
     teamContent.innerHTML = html;
     
-    // FORZAR VISIBILIDAD AGRESIVA
+    // FORZAR VISIBILIDAD TOTAL
     teamContent.style.cssText = `
         display: block !important;
         visibility: visible !important;
         opacity: 1 !important;
         width: 100% !important;
         height: auto !important;
-        min-height: 500px !important;
+        min-height: 600px !important;
         background: transparent !important;
+        position: relative !important;
+        z-index: 1 !important;
     `;
     
-    console.log('✅ Kanban del equipo insertado DIRECTAMENTE');
-    console.log('📏 Dimensiones finales:', teamContent.getBoundingClientRect());
+    console.log('✅ NUEVO KANBAN: Insertado con clases únicas');
+    console.log('📏 Dimensiones del contenedor:', teamContent.getBoundingClientRect());
     
-    // Verificar que el HTML se insertó
-    const kanbanBoard = teamContent.querySelector('.kanban-board');
-    if (kanbanBoard) {
-        console.log('✅ .kanban-board encontrado dentro de team-tasks-content');
-        kanbanBoard.style.cssText = `
-            display: grid !important;
-            grid-template-columns: 1fr 1fr 1fr 1fr !important;
-            gap: 20px !important;
-            width: 100% !important;
-        `;
+    // Verificar que el nuevo Kanban se insertó
+    const teamKanban = teamContent.querySelector('.team-kanban-grid');
+    if (teamKanban) {
+        console.log('✅ NUEVO KANBAN: .team-kanban-grid encontrado y visible');
+        console.log('📏 Dimensiones del Kanban:', teamKanban.getBoundingClientRect());
     } else {
-        console.error('❌ .kanban-board NO encontrado después de insertar HTML');
+        console.error('❌ NUEVO KANBAN: .team-kanban-grid NO encontrado');
     }
 }
 
