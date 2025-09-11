@@ -1735,7 +1735,7 @@ function renderTeamKanban(kanbanTasks) {
     // INSERTAR HTML DIRECTAMENTE
     teamContent.innerHTML = html;
     
-    // FORZAR VISIBILIDAD TOTAL
+    // FORZAR VISIBILIDAD TOTAL CON ESTILOS ULTRA AGRESIVOS
     teamContent.style.cssText = `
         display: block !important;
         visibility: visible !important;
@@ -1743,9 +1743,13 @@ function renderTeamKanban(kanbanTasks) {
         width: 100% !important;
         height: auto !important;
         min-height: 600px !important;
-        background: transparent !important;
+        background: #f8fafc !important;
         position: relative !important;
-        z-index: 1 !important;
+        z-index: 9999 !important;
+        padding: 20px !important;
+        margin-top: 20px !important;
+        border: 3px solid red !important;
+        box-shadow: 0 0 50px rgba(255,0,0,0.5) !important;
     `;
     
     console.log('✅ NUEVO KANBAN: Insertado con clases únicas');
@@ -1754,6 +1758,18 @@ function renderTeamKanban(kanbanTasks) {
     // Verificar que el nuevo Kanban se insertó
     const equipoKanban = teamContent.querySelector('.equipo-kanban-board');
     if (equipoKanban) {
+        // FORZAR VISIBILIDAD DEL KANBAN TAMBIÉN
+        equipoKanban.style.cssText = `
+            display: grid !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            position: relative !important;
+            z-index: 9998 !important;
+            background: white !important;
+            padding: 20px !important;
+            border: 2px solid blue !important;
+            min-height: 500px !important;
+        `;
         console.log('✅ KANBAN EQUIPO: .equipo-kanban-board encontrado y visible');
         console.log('📏 Dimensiones del Kanban:', equipoKanban.getBoundingClientRect());
     } else {
