@@ -131,8 +131,8 @@
     cursor: pointer;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     display: flex;
-    align-items: flex-start;
-    gap: 8px;
+    flex-direction: column;
+    gap: 4px;
     min-height: 50px;
 }
 
@@ -163,9 +163,14 @@
 .task-card.project-eventual { border-left-color: #f97316; } /* naranja */
 .task-card.project-normal { border-left-color: #10b981; } /* verde por defecto */
 
+.task-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
 .task-checkbox {
     flex-shrink: 0;
-    margin-top: 1px;
 }
 
 .task-checkbox input[type="checkbox"] {
@@ -202,7 +207,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    margin-bottom: 2px;
+    flex: 1;
 }
 
 .task-project {
@@ -426,15 +431,15 @@
                 <?php if (count($vencidas) > 0): ?>
                     <?php foreach ($vencidas as $task): ?>
                         <div class="task-card vencidas project-<?= htmlspecialchars($task['project_type'] ?? 'normal') ?>" onclick="toggleTaskCheckbox(event, 'vencidas-<?= $task['task_id'] ?>')">
-                            <div class="task-checkbox">
-                                <input type="checkbox" id="vencidas-<?= $task['task_id'] ?>" 
-                                       onclick="event.stopPropagation()" 
-                                       onchange="handleTaskCheck(<?= $task['task_id'] ?>, this.checked)">
-                            </div>
-                            <div class="task-content">
+                            <div class="task-header">
+                                <div class="task-checkbox">
+                                    <input type="checkbox" id="vencidas-<?= $task['task_id'] ?>" 
+                                           onclick="event.stopPropagation()" 
+                                           onchange="handleTaskCheck(<?= $task['task_id'] ?>, this.checked)">
+                                </div>
                                 <div class="task-name"><?= htmlspecialchars($task['task_name']) ?></div>
-                                <div class="task-project"><?= isset($task['project_name']) ? htmlspecialchars($task['project_name']) : 'Tareas Personales' ?></div>
                             </div>
+                            <div class="task-project"><?= isset($task['project_name']) ? htmlspecialchars($task['project_name']) : 'Tareas Personales' ?></div>
                         </div>
                     <?php endforeach; ?>
                 <?php else: ?>
@@ -453,15 +458,15 @@
                 <?php if (count($hoy) > 0): ?>
                     <?php foreach ($hoy as $task): ?>
                         <div class="task-card hoy project-<?= htmlspecialchars($task['project_type'] ?? 'normal') ?>" onclick="toggleTaskCheckbox(event, 'hoy-<?= $task['task_id'] ?>')">
-                            <div class="task-checkbox">
-                                <input type="checkbox" id="hoy-<?= $task['task_id'] ?>" 
-                                       onclick="event.stopPropagation()" 
-                                       onchange="handleTaskCheck(<?= $task['task_id'] ?>, this.checked)">
-                            </div>
-                            <div class="task-content">
+                            <div class="task-header">
+                                <div class="task-checkbox">
+                                    <input type="checkbox" id="hoy-<?= $task['task_id'] ?>" 
+                                           onclick="event.stopPropagation()" 
+                                           onchange="handleTaskCheck(<?= $task['task_id'] ?>, this.checked)">
+                                </div>
                                 <div class="task-name"><?= htmlspecialchars($task['task_name']) ?></div>
-                                <div class="task-project"><?= isset($task['project_name']) ? htmlspecialchars($task['project_name']) : 'Tareas Personales' ?></div>
                             </div>
+                            <div class="task-project"><?= isset($task['project_name']) ? htmlspecialchars($task['project_name']) : 'Tareas Personales' ?></div>
                         </div>
                     <?php endforeach; ?>
                 <?php else: ?>
@@ -480,15 +485,15 @@
                 <?php if (count($semana) > 0): ?>
                     <?php foreach ($semana as $task): ?>
                         <div class="task-card semana project-<?= htmlspecialchars($task['project_type'] ?? 'normal') ?>" onclick="toggleTaskCheckbox(event, 'semana-<?= $task['task_id'] ?>')">
-                            <div class="task-checkbox">
-                                <input type="checkbox" id="semana-<?= $task['task_id'] ?>" 
-                                       onclick="event.stopPropagation()" 
-                                       onchange="handleTaskCheck(<?= $task['task_id'] ?>, this.checked)">
-                            </div>
-                            <div class="task-content">
+                            <div class="task-header">
+                                <div class="task-checkbox">
+                                    <input type="checkbox" id="semana-<?= $task['task_id'] ?>" 
+                                           onclick="event.stopPropagation()" 
+                                           onchange="handleTaskCheck(<?= $task['task_id'] ?>, this.checked)">
+                                </div>
                                 <div class="task-name"><?= htmlspecialchars($task['task_name']) ?></div>
-                                <div class="task-project"><?= isset($task['project_name']) ? htmlspecialchars($task['project_name']) : 'Tareas Personales' ?></div>
                             </div>
+                            <div class="task-project"><?= isset($task['project_name']) ? htmlspecialchars($task['project_name']) : 'Tareas Personales' ?></div>
                         </div>
                     <?php endforeach; ?>
                 <?php else: ?>
@@ -507,15 +512,15 @@
                 <?php if (count($futuras) > 0): ?>
                     <?php foreach (array_slice($futuras, 0, 8) as $task): ?>
                         <div class="task-card futuras project-<?= htmlspecialchars($task['project_type'] ?? 'normal') ?>" onclick="toggleTaskCheckbox(event, 'futuras-<?= $task['task_id'] ?>')">
-                            <div class="task-checkbox">
-                                <input type="checkbox" id="futuras-<?= $task['task_id'] ?>" 
-                                       onclick="event.stopPropagation()" 
-                                       onchange="handleTaskCheck(<?= $task['task_id'] ?>, this.checked)">
-                            </div>
-                            <div class="task-content">
+                            <div class="task-header">
+                                <div class="task-checkbox">
+                                    <input type="checkbox" id="futuras-<?= $task['task_id'] ?>" 
+                                           onclick="event.stopPropagation()" 
+                                           onchange="handleTaskCheck(<?= $task['task_id'] ?>, this.checked)">
+                                </div>
                                 <div class="task-name"><?= htmlspecialchars($task['task_name']) ?></div>
-                                <div class="task-project"><?= isset($task['project_name']) ? htmlspecialchars($task['project_name']) : 'Tareas Personales' ?></div>
                             </div>
+                            <div class="task-project"><?= isset($task['project_name']) ? htmlspecialchars($task['project_name']) : 'Tareas Personales' ?></div>
                         </div>
                     <?php endforeach; ?>
                     <?php if (count($futuras) > 8): ?>
