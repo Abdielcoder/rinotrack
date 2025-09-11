@@ -4802,7 +4802,26 @@ class ClanLeaderController {
                 return;
             }
             
-            Utils::jsonResponse(true, 'Datos obtenidos exitosamente', ['task' => $task]);
+            // Obtener proyectos del clan
+            $projects = $this->projectModel->getByClan($this->userClan['clan_id']);
+            
+            // Obtener miembros del clan
+            $stmt = $this->db->prepare("
+                SELECT u.user_id, u.full_name, u.email
+                FROM Users u
+                JOIN Clan_Members cm ON u.user_id = cm.user_id
+                WHERE cm.clan_id = ? AND u.is_active = 1
+                ORDER BY u.full_name ASC
+            ");
+            $stmt->execute([$this->userClan['clan_id']]);
+            $members = $stmt->fetchAll();
+            
+            Utils::jsonResponse(true, 'Datos obtenidos exitosamente', [
+                'task' => $task,
+                'project' => $project,
+                'projects' => $projects,
+                'members' => $members
+            ]);
             
         } catch (Exception $e) {
             error_log("Error en getTaskDataForEdit: " . $e->getMessage());
@@ -4840,9 +4859,12 @@ class ClanLeaderController {
             $taskId = $_POST['task_id'] ?? null;
             $taskTitle = trim($_POST['task_title'] ?? '');
             $taskDescription = trim($_POST['task_description'] ?? '');
+            $taskProject = $_POST['task_project'] ?? null;
             $taskDueDate = $_POST['task_due_date'] ?? null;
             $priority = $_POST['priority'] ?? 'medium';
-            $status = $_POST['status'] ?? 'pending';
+            $status = $_POST['task_status'] ?? 'pending';
+            $assignedToUserId = $_POST['assigned_to_user_id'] ?? null;
+            $taskProgress = $_POST['task_progress'] ?? null;
             
             // Validaciones
             if (!$taskId || !is_numeric($taskId)) {
@@ -4884,8 +4906,19 @@ class ClanLeaderController {
                 'task_description' => $taskDescription,
                 'due_date' => $taskDueDate ?: null,
                 'priority' => $priority,
-                'status' => $status
+                'status' => $status,
+                'completion_percentage' => $taskProgress !== null ? (int)$taskProgress : null
             ];
+            
+            // Solo actualizar proyecto si se especifica uno
+            if ($taskProject && is_numeric($taskProject)) {
+                $updateData['project_id'] = (int)$taskProject;
+            }
+            
+            // Solo actualizar asignación si se especifica
+            if ($assignedToUserId !== null) {
+                $updateData['assigned_to_user_id'] = $assignedToUserId ? (int)$assignedToUserId : null;
+            }
             
             // Actualizar tarea
             $result = $this->taskModel->update($taskId, $updateData);

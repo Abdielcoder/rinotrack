@@ -2280,6 +2280,17 @@ ob_start();
     animation: modalFadeIn 0.3s ease-out;
 }
 
+.modal-content-large {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    width: 95%;
+    max-width: 900px;
+    max-height: 95vh;
+    overflow: hidden;
+    animation: modalFadeIn 0.3s ease-out;
+}
+
 @keyframes modalFadeIn {
     from {
         opacity: 0;
@@ -2330,6 +2341,19 @@ ob_start();
     padding: 24px;
     max-height: calc(90vh - 140px);
     overflow-y: auto;
+}
+
+.modal-body-large {
+    padding: 24px;
+    max-height: calc(95vh - 140px);
+    overflow-y: auto;
+}
+
+.modal-subtitle {
+    font-size: 14px;
+    color: #6b7280;
+    margin: 0;
+    font-weight: 400;
 }
 
 .form-group {
@@ -2415,9 +2439,86 @@ ob_start();
     transform: translateY(-1px);
 }
 
+/* Estilos del formulario */
+.form-section {
+    margin-bottom: 24px;
+}
+
+.form-section h4 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #374151;
+    margin: 0 0 16px 0;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+.date-input-wrapper {
+    position: relative;
+}
+
+.date-input-wrapper i {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6b7280;
+    pointer-events: none;
+}
+
+.select-wrapper {
+    position: relative;
+}
+
+.select-wrapper i {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6b7280;
+    pointer-events: none;
+}
+
+.task-info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.info-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.info-value {
+    font-size: 14px;
+    color: #374151;
+    font-weight: 500;
+}
+
 /* Responsive para Modal */
 @media (max-width: 768px) {
-    .modal-content {
+    .modal-content, .modal-content-large {
         width: 95%;
         margin: 20px;
         max-height: calc(100vh - 40px);
@@ -2427,7 +2528,7 @@ ob_start();
         padding: 16px 20px;
     }
     
-    .modal-body {
+    .modal-body, .modal-body-large {
         padding: 20px;
         max-height: calc(100vh - 120px);
     }
@@ -2435,6 +2536,10 @@ ob_start();
     .form-row {
         grid-template-columns: 1fr;
         gap: 12px;
+    }
+    
+    .task-info-grid {
+        grid-template-columns: 1fr;
     }
     
     .modal-footer {
@@ -2452,80 +2557,134 @@ ob_start();
 
     <!-- Modal para editar tarea -->
     <div id="editTaskModal" class="modal-overlay" style="display: none;">
-        <div class="modal-content">
+        <div class="modal-content-large">
             <div class="modal-header">
                 <h3><i class="fas fa-edit"></i> Editar Tarea</h3>
+                <p class="modal-subtitle">Kratos (DTYS)</p>
                 <button type="button" class="modal-close" onclick="closeEditTaskModal()">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
             
-            <form id="editTaskForm" class="modal-body">
+            <form id="editTaskForm" class="modal-body-large">
                 <input type="hidden" id="edit_task_id" name="task_id" value="">
                 
-                <div class="form-group">
-                    <label for="edit_title">
-                        <i class="fas fa-tasks"></i>
-                        Nombre de la Tarea *
-                    </label>
-                    <input type="text" id="edit_title" name="task_title" required 
-                           placeholder="Nombre de la tarea" 
-                           class="form-control">
-                </div>
-                
-                <div class="form-group">
-                    <label for="edit_description">
-                        <i class="fas fa-align-left"></i>
-                        Descripción
-                    </label>
-                    <textarea id="edit_description" name="task_description" 
-                              placeholder="Descripción de la tarea (opcional)" 
-                              class="form-control" rows="3"></textarea>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="edit_due_date">
-                            <i class="fas fa-calendar-alt"></i>
-                            Fecha Límite
-                        </label>
-                        <input type="date" id="edit_due_date" name="task_due_date" class="form-control">
+                <!-- Detalles de la Tarea -->
+                <div class="form-section">
+                    <h4>Detalles de la Tarea</h4>
+                    
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <label for="edit_title">Título de la tarea *</label>
+                            <input type="text" id="edit_title" name="task_title" required 
+                                   placeholder="Título de la tarea *" class="form-control">
+                        </div>
                     </div>
                     
-                    <div class="form-group">
-                        <label for="edit_priority">
-                            <i class="fas fa-flag"></i>
-                            Prioridad
-                        </label>
-                        <select id="edit_priority" name="priority" class="form-control">
-                            <option value="low">Baja</option>
-                            <option value="medium">Media</option>
-                            <option value="high">Alta</option>
-                            <option value="urgent">Urgente</option>
-                        </select>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="edit_due_date">Fecha límite *</label>
+                            <div class="date-input-wrapper">
+                                <input type="date" id="edit_due_date" name="task_due_date" required class="form-control">
+                                <i class="fas fa-calendar-alt"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="edit_project">Proyecto/Concepto</label>
+                            <div class="select-wrapper">
+                                <select id="edit_project" name="task_project" class="form-control">
+                                    <option value="">Seleccionar proyecto</option>
+                                </select>
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="edit_priority">Prioridad</label>
+                            <div class="select-wrapper">
+                                <select id="edit_priority" name="priority" class="form-control">
+                                    <option value="low">Baja</option>
+                                    <option value="medium">Media</option>
+                                    <option value="high">Alta</option>
+                                    <option value="urgent">Urgente</option>
+                                </select>
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="edit_status">Estado</label>
+                            <div class="select-wrapper">
+                                <select id="edit_status" name="task_status" class="form-control">
+                                    <option value="pending">Pendiente</option>
+                                    <option value="in_progress">En Progreso</option>
+                                    <option value="completed">Completado</option>
+                                </select>
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="edit_assigned_to">Asignar a</label>
+                            <div class="select-wrapper">
+                                <select id="edit_assigned_to" name="assigned_to_user_id" class="form-control">
+                                    <option value="">Sin asignar</option>
+                                </select>
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <label for="edit_description">Descripción</label>
+                            <textarea id="edit_description" name="task_description" rows="3" 
+                                      placeholder="Descripción de la tarea..." class="form-control"></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <label for="edit_progress">Progreso de la Tarea: <span id="edit_progress_value">0%</span></label>
+                            <div style="display: flex; align-items: center; gap: 15px;">
+                                <div style="flex: 1; position: relative; height: 30px; background: #f3f4f6; border-radius: 15px; cursor: pointer;" 
+                                     onclick="updateProgressFromClickModal(event)" id="edit_progress_bar">
+                                    <div id="edit_progress_fill" style="height: 100%; background: #10b981; border-radius: 15px; width: 0%; transition: width 0.3s ease;"></div>
+                                    <span id="edit_progress_text" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: 600; color: #374151; font-size: 14px;">0%</span>
+                                </div>
+                                <input type="range" id="edit_progress" name="task_progress" min="0" max="100" value="0" 
+                                       oninput="updateProgressDisplayModal(this.value)" style="width: 200px;">
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
-                <div class="form-group">
-                    <label for="edit_status">
-                        <i class="fas fa-list-ul"></i>
-                        Estado
-                    </label>
-                    <select id="edit_status" name="status" class="form-control">
-                        <option value="pending">Pendiente</option>
-                        <option value="in_progress">En Progreso</option>
-                        <option value="completed">Completado</option>
-                    </select>
+                <!-- Información de la Tarea -->
+                <div class="form-section" id="edit_task_info" style="display: none;">
+                    <h4>Información de la Tarea</h4>
+                    <div class="task-info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Creada por:</span>
+                            <span class="info-value" id="edit_created_by">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Fecha de creación:</span>
+                            <span class="info-value" id="edit_created_at">-</span>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="modal-footer">
                     <button type="button" class="btn-secondary" onclick="closeEditTaskModal()">
-                        <i class="fas fa-times"></i>
                         Cancelar
                     </button>
                     <button type="submit" class="btn-primary">
-                        <i class="fas fa-save"></i>
-                        Guardar Cambios
+                        Actualizar Tarea
                     </button>
                 </div>
             </form>
@@ -2571,15 +2730,61 @@ function loadTaskData(taskId) {
         .then(data => {
             if (data.success && data.task) {
                 const task = data.task;
+                const project = data.project;
+                const projects = data.projects || [];
+                const members = data.members || [];
+                
                 console.log('✅ Datos de tarea cargados:', task);
                 
-                // Llenar formulario
+                // Llenar campos básicos
                 document.getElementById('edit_task_id').value = task.task_id;
                 document.getElementById('edit_title').value = task.task_name || '';
-                document.getElementById('edit_description').value = task.task_description || '';
+                document.getElementById('edit_description').value = task.task_description || task.description || '';
                 document.getElementById('edit_due_date').value = task.due_date || '';
                 document.getElementById('edit_priority').value = task.priority || 'medium';
-                document.getElementById('edit_status').value = task.status || 'pending';
+                document.getElementById('edit_status').value = task.status || task.task_status || 'pending';
+                document.getElementById('edit_assigned_to').value = task.assigned_to_user_id || '';
+                
+                // Llenar proyectos
+                const projectSelect = document.getElementById('edit_project');
+                projectSelect.innerHTML = '<option value="">Seleccionar proyecto</option>';
+                projects.forEach(proj => {
+                    const option = document.createElement('option');
+                    option.value = proj.project_id;
+                    option.textContent = proj.project_name;
+                    if (proj.project_id == task.project_id) {
+                        option.selected = true;
+                    }
+                    projectSelect.appendChild(option);
+                });
+                
+                // Llenar miembros
+                const memberSelect = document.getElementById('edit_assigned_to');
+                memberSelect.innerHTML = '<option value="">Sin asignar</option>';
+                members.forEach(member => {
+                    const option = document.createElement('option');
+                    option.value = member.user_id;
+                    option.textContent = member.full_name;
+                    if (member.user_id == task.assigned_to_user_id) {
+                        option.selected = true;
+                    }
+                    memberSelect.appendChild(option);
+                });
+                
+                // Configurar progreso
+                const progress = parseInt(task.completion_percentage || 0);
+                document.getElementById('edit_progress').value = progress;
+                updateProgressDisplayModal(progress);
+                
+                // Mostrar información de la tarea si existe
+                if (task.created_by_name || task.created_at) {
+                    document.getElementById('edit_created_by').textContent = task.created_by_name || 'N/A';
+                    if (task.created_at) {
+                        const date = new Date(task.created_at);
+                        document.getElementById('edit_created_at').textContent = date.toLocaleDateString('es-ES') + ' ' + date.toLocaleTimeString('es-ES', {hour: '2-digit', minute: '2-digit'});
+                    }
+                    document.getElementById('edit_task_info').style.display = 'block';
+                }
                 
             } else {
                 console.error('❌ Error cargando tarea:', data.message);
@@ -2606,6 +2811,31 @@ function closeEditTaskModal() {
         // Limpiar formulario
         document.getElementById('editTaskForm').reset();
         document.getElementById('edit_task_id').value = '';
+        
+        // Ocultar información de tarea
+        document.getElementById('edit_task_info').style.display = 'none';
+        
+        // Resetear progreso
+        updateProgressDisplayModal(0);
+    }
+}
+
+// Funciones para manejar el slider de progreso
+function updateProgressDisplayModal(value) {
+    document.getElementById('edit_progress_fill').style.width = value + '%';
+    document.getElementById('edit_progress_value').textContent = value + '%';
+    document.getElementById('edit_progress_text').textContent = value + '%';
+}
+
+function updateProgressFromClickModal(event) {
+    const progressBar = event.currentTarget;
+    const rect = progressBar.getBoundingClientRect();
+    const clickX = event.clientX - rect.left;
+    const percentage = Math.round((clickX / rect.width) * 100);
+    
+    if (percentage >= 0 && percentage <= 100) {
+        document.getElementById('edit_progress').value = percentage;
+        updateProgressDisplayModal(percentage);
     }
 }
 

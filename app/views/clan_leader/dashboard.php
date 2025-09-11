@@ -613,16 +613,16 @@ ob_start();
             <div class="header-left">
                 <h1 class="page-title">Panel de Tareas</h1>
                 <p class="page-subtitle">Gestiona tus tareas de manera visual y eficiente</p>
-            </div>
+                </div>
             <div class="header-actions">
                 <button class="btn-create" onclick="openCreateTaskModal()">
-                    <i class="fas fa-plus"></i>
+                        <i class="fas fa-plus"></i>
                     Nueva Tarea
-                </button>
+                    </button>
             </div>
-        </div>
-    </div>
-
+                </div>
+            </div>
+            
     <!-- Contenido Principal -->
     <div class="main-content">
         <!-- Tabs Minimalistas -->
@@ -637,21 +637,21 @@ ob_start();
                     <span>Equipo</span>
                 </button>
             </div>
-        </div>
-
-        <!-- Tab Content: Mis Tareas -->
-        <div id="my-tasks-kanban-content" class="kanban-tab-content active" style="display: block;">
-            <div id="my-tasks-kanban-board" class="kanban-board-compact">
-                <div class="loading-message">
-                    <i class="fas fa-spinner fa-spin"></i>
+            </div>
+            
+            <!-- Tab Content: Mis Tareas -->
+            <div id="my-tasks-kanban-content" class="kanban-tab-content active" style="display: block;">
+                <div id="my-tasks-kanban-board" class="kanban-board-compact">
+                    <div class="loading-message">
+                        <i class="fas fa-spinner fa-spin"></i>
                     <br>Cargando mis tareas...
+                    </div>
                 </div>
             </div>
-        </div>
-
+            
         <!-- Tab Content: Equipo -->
-        <div id="team-tasks-kanban-content" class="kanban-tab-content" style="display: none;">
-            <div id="team-tasks-kanban-board" class="kanban-board-compact">
+            <div id="team-tasks-kanban-content" class="kanban-tab-content" style="display: none;">
+                <div id="team-tasks-kanban-board" class="kanban-board-compact">
                 <div class="loading-message">
                     <i class="fas fa-spinner fa-spin"></i>
                     <br>Cargando tareas del equipo...
@@ -685,7 +685,7 @@ ob_start();
                 <input type="text" id="title" name="task_title" required 
                        placeholder="Ej: Revisar documentación del proyecto" 
                        class="form-control">
-            </div>
+    </div>
             
             <div class="form-group">
                 <label for="description">
@@ -695,8 +695,8 @@ ob_start();
                 <textarea id="description" name="task_description" 
                           placeholder="Descripción detallada de la tarea (opcional)"
                           class="form-control" rows="3"></textarea>
-            </div>
-            
+</div>
+
             <div class="form-group">
                 <label for="due_date">
                     <i class="fas fa-calendar"></i>
@@ -817,7 +817,7 @@ function renderMyKanbanBoard(kanbanTasks) {
     const columns = ['vencidas', 'hoy', 'semana1', 'semana2'];
     const columnTitles = {
         'vencidas': 'Vencidas',
-        'hoy': 'Hoy',
+        'hoy': 'Hoy', 
         'semana1': '1 Semana',
         'semana2': '2+ Semanas'
     };
@@ -879,7 +879,7 @@ function renderTeamKanbanBoard(kanbanTasks) {
     const columns = ['vencidas', 'hoy', 'semana1', 'semana2'];
     const columnTitles = {
         'vencidas': 'Vencidas',
-        'hoy': 'Hoy',
+        'hoy': 'Hoy', 
         'semana1': '1 Semana',
         'semana2': '2+ Semanas'
     };
