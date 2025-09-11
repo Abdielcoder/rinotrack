@@ -141,6 +141,8 @@ class ClanLeaderController {
             LEFT JOIN Projects p ON p.project_id = t.project_id
             WHERE t.assigned_to_user_id = ?
                 AND (t.is_subtask = 0 OR t.is_subtask IS NULL)
+                AND t.status != 'completed'
+                AND t.is_completed = 0
             ORDER BY t.due_date ASC
         ";
         

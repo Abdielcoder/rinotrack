@@ -645,8 +645,8 @@ function toggleTaskCheckbox(event, uniqueTaskId) {
 function handleTaskCheck(uniqueTaskId, taskId, isChecked) {
     console.log('📝 Tarea', taskId, isChecked ? 'marcada' : 'desmarcada');
     
-    const card = document.querySelector(`#${uniqueTaskId}`).closest('.task-card');
-    const checkbox = document.querySelector(`#${uniqueTaskId}`);
+    const checkbox = document.getElementById(uniqueTaskId);
+    const card = checkbox ? checkbox.closest('.task-card') : null;
     
     if (!card || !checkbox) return;
     
