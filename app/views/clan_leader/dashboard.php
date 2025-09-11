@@ -88,23 +88,25 @@ ob_start();
     }
 }
 
-/* Estilos específicos para el Kanban - Sin scroll horizontal */
+/* Estilos específicos para el Kanban - Expandido para máxima visibilidad */
 .kanban-board-compact {
     display: flex;
-    gap: 12px;
-    padding: 20px;
+    gap: 16px; /* Gap más generoso con el espacio extra */
+    padding: 24px; /* Padding más generoso */
     background: #f8fafc;
     border-radius: 12px;
     min-height: 500px;
     width: 100%;
     box-sizing: border-box;
     overflow-x: hidden; /* Sin scroll horizontal */
+    margin: 0 -1rem; /* Expande más allá del contenedor principal */
+    padding-left: 2rem; /* Compensa el margen negativo */
+    padding-right: 2rem; /* Compensa el margen negativo */
 }
 
 .kanban-column-compact {
     flex: 1;
-    min-width: 0; /* Permite que las columnas se encojan */
-    max-width: 25%; /* Cada columna ocupa máximo 25% del ancho */
+    min-width: 280px; /* Ancho mínimo más generoso */
     background: white;
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -160,17 +162,17 @@ ob_start();
     flex: 1; /* Ocupa el espacio disponible en la columna */
 }
 
-/* Task Cards - Optimizadas para 4 columnas */
+/* Task Cards - Expandidas para mejor visibilidad */
 .task-card-mini {
     background: white;
     border: 1px solid #e2e8f0;
     border-radius: 8px;
-    padding: 10px;
-    margin-bottom: 6px;
+    padding: 14px; /* Padding más generoso con el espacio extra */
+    margin-bottom: 8px; /* Margen restaurado */
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     transition: all 0.2s ease;
-    font-size: 13px; /* Texto más pequeño para mejor ajuste */
-    word-wrap: break-word; /* Evita desbordamiento de texto */
+    font-size: 14px; /* Texto normal para mejor legibilidad */
+    word-wrap: break-word;
 }
 
 .task-card-mini:hover {
@@ -183,9 +185,9 @@ ob_start();
     border: 1px solid #e2e8f0;
     border-left: 3px solid #64748b;
     border-radius: 6px;
-    padding: 8px;
-    margin-bottom: 4px;
-    font-size: 12px; /* Texto más pequeño para subtareas */
+    padding: 12px; /* Padding más generoso */
+    margin-bottom: 6px; /* Margen restaurado */
+    font-size: 13px; /* Texto más legible */
     opacity: 0.9;
     word-wrap: break-word;
 }
@@ -206,12 +208,12 @@ ob_start();
     flex: 1;
     font-weight: 600;
     color: #1e293b;
-    font-size: 12px; /* Reducido para mejor ajuste */
-    line-height: 1.3;
+    font-size: 14px; /* Restaurado para mejor legibilidad */
+    line-height: 1.4;
     display: flex;
-    word-break: break-word; /* Evita desbordamiento */
+    word-break: break-word;
     align-items: center;
-    gap: 4px;
+    gap: 6px; /* Gap más generoso */
 }
 
 .task-name-link {
@@ -246,19 +248,19 @@ ob_start();
 .task-tags-mini {
     display: flex;
     flex-wrap: wrap;
-    gap: 3px;
-    margin-top: 6px; /* Reducido para mejor ajuste */
+    gap: 6px; /* Gap más generoso */
+    margin-top: 10px; /* Margen restaurado */
 }
 
 .task-tag {
     display: inline-flex;
     align-items: center;
-    padding: 2px 6px; /* Reducido para mejor ajuste */
-    border-radius: 10px;
-    font-size: 10px; /* Más pequeño */
+    padding: 4px 8px; /* Padding más generoso */
+    border-radius: 12px;
+    font-size: 11px; /* Tamaño más legible */
     font-weight: 600;
     white-space: nowrap;
-    max-width: 100%; /* Evita desbordamiento */
+    max-width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
 }
@@ -312,28 +314,41 @@ ob_start();
 }
 
 /* Responsive para Kanban */
+@media (max-width: 1400px) {
+    .kanban-board-compact {
+        margin: 0; /* Sin expansión negativa en pantallas medianas */
+        padding: 20px; /* Padding normal */
+    }
+}
+
 @media (max-width: 1200px) {
     .kanban-board-compact {
-        gap: 8px; /* Gap más pequeño en pantallas medianas */
-        padding: 16px;
+        gap: 12px;
+        padding: 18px;
+        margin: 0;
     }
     
     .kanban-column-compact {
-        max-width: none; /* Quitar restricción de ancho máximo */
+        min-width: 250px; /* Ancho mínimo reducido */
     }
     
-    .task-card-mini, .subtask-card-micro {
-        padding: 8px;
-        font-size: 11px;
+    .task-card-mini {
+        padding: 12px;
+        font-size: 13px;
+    }
+    
+    .subtask-card-micro {
+        padding: 10px;
+        font-size: 12px;
     }
     
     .task-name-mini {
-        font-size: 11px;
+        font-size: 13px;
     }
     
     .task-tag {
-        font-size: 9px;
-        padding: 1px 4px;
+        font-size: 10px;
+        padding: 3px 6px;
     }
 }
 
@@ -526,7 +541,7 @@ ob_start();
 }
 
 .header-content {
-    max-width: 1200px;
+    max-width: 1400px; /* Expandido de 1200px a 1400px */
     margin: 0 auto;
     padding: 1rem 1.5rem;
     display: flex;
@@ -595,11 +610,11 @@ ob_start();
     margin: 0;
 }
 
-/* Contenido Principal */
+/* Contenido Principal - Expandido para mejor visibilidad */
 .main-content {
-    max-width: 1200px;
+    max-width: 1400px; /* Expandido de 1200px a 1400px */
     margin: 0 auto;
-    padding: 0 1.5rem 2rem 1.5rem;
+    padding: 0 1rem 2rem 1rem; /* Padding reducido para aprovechar más espacio */
 }
 
 /* Responsive para Modal */
