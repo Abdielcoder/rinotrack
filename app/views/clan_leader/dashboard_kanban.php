@@ -982,6 +982,16 @@ function switchDashboardTab(tabName) {
     if (targetContent) {
         targetContent.classList.add('active');
         targetContent.style.display = 'block';
+        console.log(`🔍 Forzando visibilidad para ${tabName}-content:`, targetContent.style.display);
+        
+        // Debug adicional para el tab de equipo
+        if (tabName === 'team-tasks') {
+            console.log('🎯 Debug específico para team-tasks-content:');
+            console.log('- Element found:', !!targetContent);
+            console.log('- Has active class:', targetContent.classList.contains('active'));
+            console.log('- Display style:', targetContent.style.display);
+            console.log('- Computed display:', window.getComputedStyle(targetContent).display);
+        }
     }
     
     if (targetButton) {
@@ -1252,6 +1262,14 @@ function renderTeamKanbanBoard(kanbanTasks) {
     
     console.log('✅ HTML insertado en team-tasks-content');
     console.log('🔍 Contenido actual del elemento:', teamContent.innerHTML.substring(0, 200));
+    
+    // Debug de visibilidad
+    const computedStyle = window.getComputedStyle(teamContent);
+    console.log('👁️ Display del elemento:', computedStyle.display);
+    console.log('👁️ Visibility del elemento:', computedStyle.visibility);
+    console.log('👁️ Opacity del elemento:', computedStyle.opacity);
+    console.log('👁️ Height del elemento:', computedStyle.height);
+    console.log('📏 Dimensiones del elemento:', teamContent.getBoundingClientRect());
 }
 
 // Función para actualizar estadísticas del equipo
