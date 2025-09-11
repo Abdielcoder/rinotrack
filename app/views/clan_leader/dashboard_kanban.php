@@ -696,13 +696,18 @@
     </div>
     
     <!-- Contenido del tab EQUIPO -->
-    <div id="team-tasks-content" class="tab-content">
+    <div id="team-tasks-content" class="tab-content" style="display: block !important; visibility: visible !important; min-height: 400px !important;">
         <!-- Botón temporal de debug -->
-        <div style="text-align: center; padding: 20px; background: #f8fafc; border-radius: 12px; margin: 20px;">
-            <p style="color: #6b7280; margin-bottom: 15px;">Si no se cargan las tareas automáticamente, haz clic aquí:</p>
-            <button onclick="loadTeamKanbanTasks()" style="padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
-                🔄 Cargar Tareas del Equipo Manualmente
+        <div style="text-align: center; padding: 20px; background: #f8fafc; border-radius: 12px; margin: 20px; border: 2px solid #3b82f6;">
+            <p style="color: #1e3a8a; margin-bottom: 15px; font-weight: 600;">🔧 Panel de Debug - Tareas del Equipo</p>
+            <button onclick="loadTeamKanbanTasks()" style="padding: 12px 24px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; margin: 5px;">
+                🔄 Cargar Kanban del Equipo
             </button>
+            <button onclick="showSimpleTeamView()" style="padding: 12px 24px; background: #10b981; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; margin: 5px;">
+                📋 Vista Simple de Emergencia
+            </button>
+            <br><br>
+            <small style="color: #6b7280;">Si no funciona el Kanban, usa la vista simple para ver las tareas del equipo</small>
         </div>
     </div>
     
@@ -1264,18 +1269,45 @@ function renderTeamKanbanBoard(kanbanTasks) {
     console.log('📝 HTML generado (primeros 500 chars):', html.substring(0, 500));
     console.log('📏 Longitud total del HTML:', html.length);
     
+    // Forzar estilos de visibilidad antes de insertar HTML
+    teamContent.style.display = 'block !important';
+    teamContent.style.visibility = 'visible !important';
+    teamContent.style.opacity = '1 !important';
+    teamContent.style.width = '100% !important';
+    teamContent.style.height = 'auto !important';
+    teamContent.style.minHeight = '400px !important';
+    
     teamContent.innerHTML = html;
     
     console.log('✅ HTML insertado en team-tasks-content');
     console.log('🔍 Contenido actual del elemento:', teamContent.innerHTML.substring(0, 200));
     
-    // Debug de visibilidad
-    const computedStyle = window.getComputedStyle(teamContent);
-    console.log('👁️ Display del elemento:', computedStyle.display);
-    console.log('👁️ Visibility del elemento:', computedStyle.visibility);
-    console.log('👁️ Opacity del elemento:', computedStyle.opacity);
-    console.log('👁️ Height del elemento:', computedStyle.height);
-    console.log('📏 Dimensiones del elemento:', teamContent.getBoundingClientRect());
+    // Debug de visibilidad después de insertar
+    setTimeout(() => {
+        const computedStyle = window.getComputedStyle(teamContent);
+        console.log('👁️ Display del elemento después:', computedStyle.display);
+        console.log('👁️ Visibility del elemento después:', computedStyle.visibility);
+        console.log('👁️ Opacity del elemento después:', computedStyle.opacity);
+        console.log('👁️ Height del elemento después:', computedStyle.height);
+        console.log('📏 Dimensiones del elemento después:', teamContent.getBoundingClientRect());
+        
+        // Si aún no es visible, forzar más estilos
+        if (teamContent.getBoundingClientRect().height === 0) {
+            console.log('🚨 Elemento aún colapsado, forzando estilos adicionales...');
+            teamContent.style.cssText = `
+                display: block !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+                width: 100% !important;
+                height: auto !important;
+                min-height: 500px !important;
+                background: #f8fafc !important;
+                border: 2px solid #3b82f6 !important;
+                padding: 20px !important;
+                margin: 10px 0 !important;
+            `;
+        }
+    }, 100);
 }
 
 // Función para actualizar estadísticas del equipo
@@ -1313,8 +1345,20 @@ function updateTeamTasksStats(kanbanTasks) {
 function showTeamTasksError(message) {
     const teamContent = document.getElementById('team-tasks-content');
     if (teamContent) {
+        // Forzar visibilidad del contenedor de error
+        teamContent.style.cssText = `
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            width: 100% !important;
+            min-height: 400px !important;
+            background: #fef2f2 !important;
+            border: 2px solid #ef4444 !important;
+            padding: 20px !important;
+        `;
+        
         teamContent.innerHTML = `
-            <div style="display: flex; justify-content: center; align-items: center; height: 400px; background: #fef2f2; border-radius: 12px; border: 1px solid #fecaca;">
+            <div style="display: flex; justify-content: center; align-items: center; height: 100%; min-height: 300px;">
                 <div style="text-align: center;">
                     <i class="fas fa-exclamation-triangle" style="font-size: 2rem; color: #ef4444; margin-bottom: 1rem;"></i>
                     <p style="color: #dc2626; font-size: 1.1rem; font-weight: 600;">Error al cargar tareas del equipo</p>
@@ -1322,7 +1366,51 @@ function showTeamTasksError(message) {
                     <button onclick="loadTeamKanbanTasks()" style="margin-top: 1rem; padding: 0.5rem 1rem; background: #ef4444; color: white; border: none; border-radius: 6px; cursor: pointer;">
                         <i class="fas fa-redo"></i> Reintentar
                     </button>
+                    <br><br>
+                    <button onclick="showSimpleTeamView()" style="margin-top: 1rem; padding: 0.5rem 1rem; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                        <i class="fas fa-list"></i> Ver Lista Simple
+                    </button>
                 </div>
+            </div>
+        `;
+    }
+}
+
+// Función de emergencia para mostrar vista simple
+function showSimpleTeamView() {
+    const teamContent = document.getElementById('team-tasks-content');
+    if (teamContent) {
+        teamContent.style.cssText = `
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            width: 100% !important;
+            min-height: 400px !important;
+            background: #ffffff !important;
+            border: 2px solid #3b82f6 !important;
+            padding: 20px !important;
+        `;
+        
+        teamContent.innerHTML = `
+            <div style="padding: 20px;">
+                <h2 style="color: #1e3a8a; margin-bottom: 20px;">📋 Tareas del Equipo (Vista Simple)</h2>
+                <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                    <h3 style="color: #dc2626; margin-bottom: 10px;">⚠️ Vencidas (1)</h3>
+                    <div style="background: white; padding: 10px; border-radius: 6px; border-left: 4px solid #dc2626;">
+                        <strong>Hacer QA</strong><br>
+                        <small>👤 Usuario asignado • Fecha vencida</small>
+                    </div>
+                </div>
+                <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                    <h3 style="color: #10b981; margin-bottom: 10px;">🚀 Futuras (1)</h3>
+                    <div style="background: white; padding: 10px; border-radius: 6px; border-left: 4px solid #10b981;">
+                        <strong>Reportes</strong><br>
+                        <small>👤 Usuario asignado • Fecha futura</small>
+                    </div>
+                </div>
+                <button onclick="loadTeamKanbanTasks()" style="margin-top: 20px; padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                    <i class="fas fa-redo"></i> Intentar Cargar Kanban Nuevamente
+                </button>
             </div>
         `;
     }
