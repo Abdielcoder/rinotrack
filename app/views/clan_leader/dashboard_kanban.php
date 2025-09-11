@@ -12,10 +12,10 @@
     min-height: calc(100vh - 58px);
 }
 
-/* Dashboard container específico para EQUIPO - 33% menos */
+/* Dashboard container específico para EQUIPO - 33% menos + 15% más = 82% */
 .dashboard-container.team-view {
-    width: 67%;
-    max-width: 67%;
+    width: 82%;
+    max-width: 82%;
     margin: 0 auto;
     padding: 24px;
     background: #f8fafc;
