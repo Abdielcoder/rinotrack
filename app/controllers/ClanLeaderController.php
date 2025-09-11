@@ -532,10 +532,15 @@ class ClanLeaderController {
 
         <?php
         $content = ob_get_clean();
-        $data['content'] = $content;
         
-        // Usar el layout existente igual que tasks
-        Utils::render('layout', $data);
+        // Variables necesarias para el layout
+        $title = "Dashboard - RinoTrack";
+        $currentPage = 'clan_leader';
+        $user = $this->currentUser;
+        $route = 'clan_leader';
+        
+        // Incluir el layout manualmente
+        include __DIR__ . '/../views/layout.php';
     }
     
     /**
