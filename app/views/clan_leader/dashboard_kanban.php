@@ -1,5 +1,6 @@
 <?php
 // Vista del Dashboard Kanban para Clan Leader
+// El header "Polaris Líder" se carga automáticamente desde layout.php
 ?>
 
 <!-- Cargar CSS igual que tasks -->

@@ -5306,11 +5306,23 @@ class ClanLeaderController {
             Utils::asset('assets/js/clan-leader.js')
         ];
         
-        // Incluir archivo de vista
+        // Cargar contenido de la vista
         $viewFile = __DIR__ . '/../views/' . $viewPath . '.php';
         
         if (file_exists($viewFile)) {
+            // Capturar el contenido de la vista
+            ob_start();
             include $viewFile;
+            $content = ob_get_clean();
+            
+            // Configurar variables para el layout
+            $title = "RinoTrack - Clan Leader";
+            $currentPage = 'clan_leader';
+            $user = $this->currentUser;
+            $clan = $this->userClan;
+            
+            // Cargar el layout completo
+            include __DIR__ . '/../views/layout.php';
         } else {
             die('Vista no encontrada: ' . $viewPath);
         }
