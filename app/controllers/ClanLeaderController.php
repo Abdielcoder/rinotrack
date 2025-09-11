@@ -1225,6 +1225,12 @@ class ClanLeaderController {
      * Crear tarea con múltiples usuarios y subtareas
      */
     public function createTask() {
+        // Limpiar cualquier output previo
+        if (ob_get_level()) {
+            ob_clean();
+        }
+        ob_start();
+        
         // Asegurar que siempre devolvemos JSON
         header('Content-Type: application/json');
         
@@ -1657,8 +1663,26 @@ class ClanLeaderController {
         }
         
     } catch (Exception $e) {
-        error_log("Error en ClanLeaderController::createTask: " . $e->getMessage());
-        Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor'], 500);
+        error_log("=== ERROR FINAL en createTask ===");
+        error_log("Error message: " . $e->getMessage());
+        error_log("Error file: " . $e->getFile());
+        error_log("Error line: " . $e->getLine());
+        error_log("Stack trace: " . $e->getTraceAsString());
+        
+        Utils::jsonResponse([
+            'success' => false, 
+            'message' => 'Error interno del servidor: ' . $e->getMessage()
+        ], 500);
+    } catch (Throwable $t) {
+        error_log("=== THROWABLE FINAL en createTask ===");
+        error_log("Throwable message: " . $t->getMessage());
+        error_log("Throwable file: " . $t->getFile());
+        error_log("Throwable line: " . $t->getLine());
+        
+        Utils::jsonResponse([
+            'success' => false, 
+            'message' => 'Error crítico del servidor'
+        ], 500);
     }
 }
     
@@ -4623,11 +4647,24 @@ class ClanLeaderController {
      * Obtener ID del proyecto personal del usuario
      */
     public function getPersonalProjectId() {
+        // Limpiar cualquier output previo
+        if (ob_get_level()) {
+            ob_clean();
+        }
+        ob_start();
+        
+        // Asegurar que siempre devolvemos JSON
         header('Content-Type: application/json');
         
+        // Suprimir warnings para evitar interferencia con JSON
+        error_reporting(E_ALL & ~E_WARNING);
+        
         try {
+            error_log('=== getPersonalProjectId - INICIO ===');
+            
             // Verificar autenticación
             if (!$this->isAuthenticated()) {
+                error_log('getPersonalProjectId - Error: No autenticado');
                 Utils::jsonResponse(['success' => false, 'message' => 'No autenticado'], 401);
                 return;
             }
@@ -4655,10 +4692,25 @@ class ClanLeaderController {
             }
             
         } catch (Exception $e) {
-            error_log("Error en getPersonalProjectId: " . $e->getMessage());
+            error_log("=== ERROR en getPersonalProjectId ===");
+            error_log("Error message: " . $e->getMessage());
+            error_log("Error file: " . $e->getFile());
+            error_log("Error line: " . $e->getLine());
+            error_log("Stack trace: " . $e->getTraceAsString());
+            
             Utils::jsonResponse([
                 'success' => false, 
-                'message' => 'Error interno del servidor'
+                'message' => 'Error interno del servidor: ' . $e->getMessage()
+            ], 500);
+        } catch (Throwable $t) {
+            error_log("=== THROWABLE en getPersonalProjectId ===");
+            error_log("Throwable message: " . $t->getMessage());
+            error_log("Throwable file: " . $t->getFile());
+            error_log("Throwable line: " . $t->getLine());
+            
+            Utils::jsonResponse([
+                'success' => false, 
+                'message' => 'Error crítico del servidor'
             ], 500);
         }
     }

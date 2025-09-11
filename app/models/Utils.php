@@ -49,9 +49,21 @@ class Utils {
      * Enviar respuesta JSON
      */
     public static function jsonResponse($data, $statusCode = 200) {
+        // Limpiar cualquier output previo
+        if (ob_get_level()) {
+            ob_clean();
+        }
+        
         http_response_code($statusCode);
         header('Content-Type: application/json');
-        echo json_encode($data);
+        
+        $json = json_encode($data);
+        if ($json === false) {
+            error_log('ERROR: json_encode falló: ' . json_last_error_msg());
+            echo '{"success":false,"message":"Error de codificación JSON"}';
+        } else {
+            echo $json;
+        }
         exit();
     }
     
