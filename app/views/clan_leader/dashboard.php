@@ -548,6 +548,13 @@ ob_start();
     font-size: 0.85rem;
 }
 
+/* Contenido Principal */
+.main-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem 2rem 1.5rem;
+}
+
 /* Responsive para Modal */
 @media (max-width: 768px) {
     .modal-content {
@@ -583,6 +590,10 @@ ob_start();
     .header-actions {
         width: 100%;
         justify-content: flex-end;
+    }
+    
+    .main-content {
+        padding: 0 1rem 2rem 1rem;
     }
 }
 </style>
