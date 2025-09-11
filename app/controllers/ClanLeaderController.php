@@ -142,16 +142,41 @@ class ClanLeaderController {
         $semana = array_filter($myTasks, fn($t) => $t['days_until_due'] > 0 && $t['days_until_due'] <= 7);
         $futuras = array_filter($myTasks, fn($t) => $t['days_until_due'] > 7);
 
-        // TABLERO KANBAN CON ESTILOS
+        // TABLERO KANBAN CON NAVEGACIÓN COMPLETA
         header('Content-Type: text/html; charset=utf-8');
         echo "<!DOCTYPE html>";
         echo "<html><head>";
-        echo "<title>🎯 Mi Tablero Kanban</title>";
+        echo "<title>🎯 RinoTrack - Clan Leader Dashboard</title>";
+        echo "<meta charset='UTF-8'>";
+        echo "<meta name='viewport' content='width=device-width, initial-scale=1.0'>";
+        echo "<link href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css' rel='stylesheet'>";
         echo "<style>";
-        echo "body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; margin: 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }";
-        echo ".container { max-width: 1400px; margin: 0 auto; padding: 20px; }";
-        echo "h1 { color: white; text-align: center; margin-bottom: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }";
-        echo ".info { background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }";
+        // Estilos generales
+        echo "* { margin: 0; padding: 0; box-sizing: border-box; }";
+        echo "body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }";
+        
+        // Header y navegación
+        echo ".header { background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 1000; }";
+        echo ".nav-container { max-width: 1400px; margin: 0 auto; padding: 0 20px; }";
+        echo ".nav-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; }";
+        echo ".logo { display: flex; align-items: center; gap: 10px; font-size: 24px; font-weight: bold; color: #1f2937; text-decoration: none; }";
+        echo ".logo i { color: #667eea; }";
+        echo ".nav-menu { display: flex; gap: 30px; list-style: none; }";
+        echo ".nav-item a { text-decoration: none; color: #374151; font-weight: 500; padding: 8px 16px; border-radius: 6px; transition: all 0.3s; display: flex; align-items: center; gap: 8px; }";
+        echo ".nav-item a:hover { background: #f3f4f6; color: #667eea; }";
+        echo ".nav-item.active a { background: #667eea; color: white; }";
+        echo ".user-menu { display: flex; align-items: center; gap: 15px; }";
+        echo ".user-info { display: flex; align-items: center; gap: 10px; color: #374151; }";
+        echo ".user-avatar { width: 40px; height: 40px; border-radius: 50%; background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; }";
+        echo ".logout-btn { background: #ef4444; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; transition: all 0.3s; }";
+        echo ".logout-btn:hover { background: #dc2626; }";
+        
+        // Contenido principal
+        echo ".main-container { max-width: 1400px; margin: 0 auto; padding: 20px; }";
+        echo ".page-title { color: white; text-align: center; margin-bottom: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); font-size: 32px; }";
+        echo ".info-bar { background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }";
+        
+        // Kanban
         echo ".kanban-board { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }";
         echo ".kanban-column { background: white; border-radius: 10px; padding: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); min-height: 400px; }";
         echo ".column-header { padding: 10px; border-radius: 8px; margin-bottom: 15px; font-weight: bold; text-align: center; color: white; }";
@@ -159,7 +184,7 @@ class ClanLeaderController {
         echo ".hoy { background: #f59e0b; }";
         echo ".semana { background: #3b82f6; }";
         echo ".futuras { background: #10b981; }";
-        echo ".task-card { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; margin-bottom: 10px; transition: transform 0.2s; }";
+        echo ".task-card { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; margin-bottom: 10px; transition: transform 0.2s; cursor: pointer; }";
         echo ".task-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }";
         echo ".task-id { font-weight: bold; color: #1f2937; font-size: 14px; }";
         echo ".task-name { color: #374151; margin: 5px 0; font-weight: 600; }";
@@ -174,14 +199,59 @@ class ClanLeaderController {
         echo ".priority-low { background: #dbeafe; color: #2563eb; }";
         echo ".task-date { color: #6b7280; font-size: 11px; }";
         echo ".empty-column { text-align: center; color: #9ca3af; padding: 40px 20px; font-style: italic; }";
+        
+        // Responsive
+        echo "@media (max-width: 768px) {";
+        echo ".nav-menu { display: none; }";
+        echo ".kanban-board { grid-template-columns: 1fr; }";
+        echo ".nav-header { flex-direction: column; gap: 15px; }";
+        echo "}";
+        
         echo "</style>";
         echo "</head><body>";
         
-        echo "<div class='container'>";
-        echo "<h1>🎯 MI TABLERO KANBAN</h1>";
-        echo "<div class='info'>";
+        // Header con navegación
+        echo "<header class='header'>";
+        echo "<div class='nav-container'>";
+        echo "<div class='nav-header'>";
+        echo "<a href='?route=clan_leader' class='logo'>";
+        echo "<i class='fas fa-star'></i>";
+        echo "RinoTrack";
+        echo "</a>";
+        
+        echo "<nav>";
+        echo "<ul class='nav-menu'>";
+        echo "<li class='nav-item active'><a href='?route=clan_leader'><i class='fas fa-tachometer-alt'></i>Dashboard</a></li>";
+        echo "<li class='nav-item'><a href='?route=clan_leader/tasks'><i class='fas fa-tasks'></i>Tareas</a></li>";
+        echo "<li class='nav-item'><a href='?route=clan_leader/projects'><i class='fas fa-folder'></i>Proyectos</a></li>";
+        echo "<li class='nav-item'><a href='?route=clan_leader/members'><i class='fas fa-users'></i>Miembros</a></li>";
+        echo "<li class='nav-item'><a href='?route=clan_leader/kpi-dashboard'><i class='fas fa-chart-bar'></i>KPI</a></li>";
+        echo "<li class='nav-item'><a href='?route=clan_leader/profile'><i class='fas fa-user'></i>Perfil</a></li>";
+        echo "</ul>";
+        echo "</nav>";
+        
+        echo "<div class='user-menu'>";
+        echo "<div class='user-info'>";
+        echo "<div class='user-avatar'>" . strtoupper(substr($this->currentUser['full_name'], 0, 2)) . "</div>";
+        echo "<span>{$this->currentUser['full_name']}</span>";
+        echo "</div>";
+        echo "<a href='?route=logout' class='logout-btn'><i class='fas fa-sign-out-alt'></i> Salir</a>";
+        echo "</div>";
+        
+        echo "</div>";
+        echo "</div>";
+        echo "</header>";
+        
+        // Contenido principal
+        echo "<div class='main-container'>";
+        echo "<h1 class='page-title'>🎯 MI TABLERO KANBAN</h1>";
+        echo "<div class='info-bar'>";
         echo "<strong>Usuario:</strong> {$this->currentUser['full_name']} (ID: {$userId}) | ";
-        echo "<strong>Total tareas:</strong> " . count($myTasks);
+        echo "<strong>Total tareas:</strong> " . count($myTasks) . " | ";
+        echo "<strong>Vencidas:</strong> " . count($vencidas) . " | ";
+        echo "<strong>Hoy:</strong> " . count($hoy) . " | ";
+        echo "<strong>Esta semana:</strong> " . count($semana) . " | ";
+        echo "<strong>Futuras:</strong> " . count($futuras);
         echo "</div>";
         
         echo "<div class='kanban-board'>";
@@ -278,7 +348,7 @@ class ClanLeaderController {
         echo "</div>";
         
         echo "</div>"; // fin kanban-board
-        echo "</div>"; // fin container
+        echo "</div>"; // fin main-container
         echo "</body></html>";
         exit;
     }
