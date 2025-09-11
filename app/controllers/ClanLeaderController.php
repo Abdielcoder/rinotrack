@@ -4070,7 +4070,95 @@ class ClanLeaderController {
     }
     
     /**
-     * Obtener MIS tareas para Kanban - REESTRUCTURADO COMPLETAMENTE
+     * SOLUCIÓN DEFINITIVA: Obtener MIS tareas usando la misma lógica que clan_member
+     */
+    public function getMyKanbanTasksNew() {
+        header('Content-Type: application/json');
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        
+        $this->requireAuth();
+        
+        if (!$this->hasClanLeaderAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+            return;
+        }
+
+        try {
+            $userId = $this->currentUser['user_id'];
+            $clanId = $this->userClan['clan_id'] ?? null;
+            
+            error_log("=== getMyKanbanTasksNew CLAN LEADER ===");
+            error_log("User ID: $userId, Clan ID: $clanId");
+            
+            // USAR LA MISMA FUNCIÓN QUE CLAN_MEMBER
+            $result = $this->taskModel->getAllUserTasksForDashboard($userId);
+            
+            if (!$result['success']) {
+                error_log('Error obteniendo tareas para Kanban leader: ' . ($result['error'] ?? 'Error desconocido'));
+                Utils::jsonResponse([
+                    'success' => false,
+                    'message' => $result['error'] ?? 'Error al obtener tareas'
+                ], 500);
+                return;
+            }
+            
+            error_log("Tareas obtenidas para líder: " . count($result['tasks']));
+            
+            // Usar TODAS las tareas
+            $allTasks = $result['tasks'];
+            
+            // Organizar en columnas Kanban
+            $kanbanTasks = [
+                'vencidas' => [],
+                'hoy' => [],
+                'semana1' => [],
+                'semana2' => []
+            ];
+            
+            foreach ($allTasks as $task) {
+                $days = (int)$task['days_until_due'];
+                $task['item_type'] = 'task';
+                
+                error_log("Tarea líder ID={$task['task_id']}, días={$days}, proyecto={$task['project_name']}, personal=" . ($task['is_personal'] ?? 0));
+                
+                if ($days < 0) {
+                    $kanbanTasks['vencidas'][] = $task;
+                } elseif ($days <= 0) {
+                    $kanbanTasks['hoy'][] = $task;
+                } elseif ($days <= 7) {
+                    $kanbanTasks['semana1'][] = $task;
+                } else {
+                    $kanbanTasks['semana2'][] = $task;
+                }
+            }
+            
+            // Log del resultado
+            foreach ($kanbanTasks as $column => $tasks) {
+                error_log("Columna líder '{$column}': " . count($tasks) . " tareas");
+            }
+            
+            $personalCount = array_sum(array_map(function($task) {
+                return $task['is_personal'] == 1 ? 1 : 0;
+            }, $allTasks));
+            
+            error_log("Total tareas personales líder: {$personalCount}");
+            error_log("=== FIN getMyKanbanTasksNew ===");
+
+            Utils::jsonResponse([
+                'success' => true,
+                'kanbanTasks' => $kanbanTasks,
+                'total' => count($allTasks),
+                'personal_tasks' => $personalCount
+            ]);
+
+        } catch (Exception $e) {
+            error_log("Error en getMyKanbanTasksNew: " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
+        }
+    }
+    
+    /**
+     * MÉTODO ANTERIOR - Obtener MIS tareas para Kanban - REESTRUCTURADO COMPLETAMENTE
      */
     public function getMyKanbanTasks() {
         header('Content-Type: application/json');

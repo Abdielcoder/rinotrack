@@ -834,7 +834,7 @@ function loadMyKanbanTasks() {
     
     kanbanBoard.innerHTML = '<div class="loading-message"><i class="fas fa-spinner fa-spin"></i><br>Cargando mis tareas...</div>';
     
-    fetch('?route=clan_leader/get-my-kanban-tasks')
+    fetch('?route=clan_leader/getMyKanbanTasksNew')
         .then(response => response.json())
         .then(data => {
             console.log('📋 Respuesta mis tareas:', data);
@@ -910,6 +910,9 @@ function renderMyKanbanBoard(kanbanTasks) {
             const isPersonal = task.is_personal == 1;
             const isRecurrent = task.project_type === 'recurrent' || task.project_name === 'Mis Tareas Recurrentes';
             const isEventual = task.project_name === 'Tareas Eventuales';
+            
+            // Log para debugging
+            console.log('🎯 Tarea líder:', task.task_id, 'Proyecto:', task.project_name, 'Personal:', isPersonal);
             
             html += `<div class="${cardClass}" data-task-id="${task.task_id}" data-item-type="${task.item_type}">
                 <div class="task-header-mini">
