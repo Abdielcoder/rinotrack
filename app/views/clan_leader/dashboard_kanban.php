@@ -812,11 +812,19 @@
 
 /* Tab Content */
 .tab-content {
-    display: none;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    margin-bottom: 40px;
+    padding: 20px;
+    background: #f8fafc;
+    border-radius: 12px;
+    border: 2px solid #e5e7eb;
 }
 
 .tab-content.active {
-    display: block;
+    border-color: #3b82f6;
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
 }
 
 /* Responsive - Mantener 4 columnas */
@@ -1399,73 +1407,39 @@
 </style>
 
 <script>
-// Función para cambiar entre tabs del dashboard
+// Función para cambiar entre tabs del dashboard - SIN OCULTAR NADA
 function switchDashboardTab(tabName) {
     console.log('🔄 Cambiando tab dashboard:', tabName);
     
-    // Ocultar todos los contenidos
+    // MOSTRAR TODOS LOS CONTENIDOS SIEMPRE
     document.querySelectorAll('.tab-content').forEach(content => {
-        content.classList.remove('active');
-        content.style.display = 'none';
+        content.classList.add('active');
+        content.style.display = 'block';
+        content.style.visibility = 'visible';
+        content.style.opacity = '1';
     });
     
-    // Desactivar todos los botones
-    document.querySelectorAll('.tab-minimal').forEach(button => {
-        button.classList.remove('active');
-    });
-    
-    // Ocultar todas las estadísticas
-    document.querySelectorAll('.dashboard-stats').forEach(stats => {
-        stats.style.display = 'none';
-    });
-    
-    // Mostrar contenido del tab seleccionado
-    const targetContent = document.getElementById(tabName + '-content');
+    // Activar el botón seleccionado (pero no desactivar otros)
     const targetButton = document.getElementById(tabName + '-dashboard-tab');
-    const targetStats = document.getElementById(tabName + '-stats');
-    
-    if (targetContent) {
-        targetContent.classList.add('active');
-        targetContent.style.display = 'block';
-        targetContent.style.visibility = 'visible';
-        targetContent.style.opacity = '1';
-        targetContent.style.position = 'relative';
-        targetContent.style.zIndex = '10';
-        console.log(`✅ Mostrando ${tabName}-content`);
-    }
-    
     if (targetButton) {
+        document.querySelectorAll('.tab-minimal').forEach(button => {
+            button.classList.remove('active');
+        });
         targetButton.classList.add('active');
     }
     
-    if (targetStats) {
-        targetStats.style.display = 'flex';
-    }
+    // MOSTRAR TODAS LAS ESTADÍSTICAS
+    document.querySelectorAll('.dashboard-stats').forEach(stats => {
+        stats.style.display = 'flex';
+    });
     
     // Cargar datos según el tab seleccionado
     if (tabName === 'team-tasks') {
         console.log('🎯 Tab team-tasks detectado, cargando tareas del equipo...');
-        
-        // APLICAR CLASE team-view AL DASHBOARD-CONTAINER (33% menos)
-        const dashboardContainer = document.querySelector('.dashboard-container');
-        if (dashboardContainer) {
-            dashboardContainer.classList.add('team-view');
-        }
-        
-        // Cargar el Kanban del equipo
         loadTeamKanban();
-        
-    } else if (tabName === 'my-tasks') {
-        console.log('🎯 Tab my-tasks detectado');
-        
-        // QUITAR CLASE team-view DEL DASHBOARD-CONTAINER
-        const dashboardContainer = document.querySelector('.dashboard-container');
-        if (dashboardContainer) {
-            dashboardContainer.classList.remove('team-view');
-        }
     }
     
-    console.log('✅ Tab dashboard cambiado a:', tabName);
+    console.log('✅ TODOS LOS TABLEROS VISIBLES');
 }
 
 // Función para manejar el click en el card (togglea el checkbox)
@@ -2616,17 +2590,21 @@ function switchDashboardTab_ELIMINADA(tabName) {
 */
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 Dashboard Kanban cargado - VERSIÓN DEFINITIVA');
+    console.log('🚀 Dashboard Kanban cargado - TODOS LOS TABLEROS VISIBLES');
     
-    // Verificar si algún tab específico debe estar activo
-    const activeTab = document.querySelector('.tab-minimal.active');
-    if (activeTab && activeTab.id === 'team-tasks-dashboard-tab') {
-        // Si el tab de equipo está activo, cargar sus tareas
-        switchDashboardTab('team-tasks');
-    } else {
-        // Por defecto, activar "Mis Tareas"
-        switchDashboardTab('my-tasks');
-    }
+    // MOSTRAR TODOS LOS TABLEROS AL CARGAR
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.style.display = 'block';
+        content.style.visibility = 'visible';
+        content.style.opacity = '1';
+    });
+    
+    // CARGAR AMBOS TABLEROS
+    console.log('📊 Cargando Kanban de Mis Tareas...');
+    // El kanban de mis tareas ya está cargado desde PHP
+    
+    console.log('👥 Cargando Kanban del Equipo...');
+    loadTeamKanban();
     
     // Cerrar modal con tecla Escape
     document.addEventListener('keydown', function(e) {
