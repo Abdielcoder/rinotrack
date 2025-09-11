@@ -45,10 +45,10 @@
     color: #374151;
 }
 
-/* Kanban Board */
+/* Kanban Board - 4 columnas fijas */
 .kanban-board {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: 1fr 1fr 1fr 1fr;
     gap: 20px;
 }
 
@@ -199,16 +199,50 @@
     font-style: italic;
 }
 
-/* Responsive */
+/* Responsive - Mantener 4 columnas */
+@media (max-width: 1200px) {
+    .kanban-board {
+        gap: 15px;
+    }
+    
+    .kanban-column {
+        min-width: 250px;
+    }
+    
+    .column-header {
+        padding: 12px 16px;
+        font-size: 0.75rem;
+    }
+    
+    .task-card {
+        padding: 10px;
+    }
+}
+
 @media (max-width: 768px) {
     .kanban-board {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+    
+    .kanban-column {
+        min-width: auto;
     }
     
     .dashboard-stats {
         flex-direction: column;
         align-items: flex-start;
-        gap: 12px;
+        gap: 8px;
+    }
+    
+    .dashboard-container {
+        padding: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .kanban-board {
+        grid-template-columns: 1fr;
     }
 }
 </style>
