@@ -645,21 +645,78 @@ function toggleTaskCheckbox(event, uniqueTaskId) {
 function handleTaskCheck(uniqueTaskId, taskId, isChecked) {
     console.log('📝 Tarea', taskId, isChecked ? 'marcada' : 'desmarcada');
     
-    // Aquí puedes agregar lógica adicional como:
-    // - Actualizar el estado en la base de datos vía AJAX
-    // - Cambiar el estilo del card
-    // - Mover la tarea a otra columna
-    
     const card = document.querySelector(`#${uniqueTaskId}`).closest('.task-card');
-    if (card) {
-        if (isChecked) {
-            card.style.opacity = '0.6';
-            card.querySelector('.task-name').style.textDecoration = 'line-through';
+    const checkbox = document.querySelector(`#${uniqueTaskId}`);
+    
+    if (!card || !checkbox) return;
+    
+    // Deshabilitar checkbox temporalmente
+    checkbox.disabled = true;
+    card.style.opacity = '0.6';
+    
+    // Hacer llamada AJAX para actualizar en base de datos
+    const formData = new FormData();
+    formData.append('task_id', taskId);
+    formData.append('is_completed', isChecked ? '1' : '0');
+    
+    fetch('<?= APP_URL ?>/clan_leader/updateTaskStatus', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            if (isChecked) {
+                // Animar y remover la tarea del DOM
+                card.style.transition = 'all 0.3s ease';
+                card.style.transform = 'translateX(100%)';
+                card.style.opacity = '0';
+                
+                setTimeout(() => {
+                    card.remove();
+                    updateTaskCounts();
+                }, 300);
+            } else {
+                // Restaurar estado si se desmarca
+                card.style.opacity = '1';
+                checkbox.disabled = false;
+            }
         } else {
+            // Error: revertir checkbox
+            console.error('Error al actualizar tarea:', data.message);
+            checkbox.checked = !isChecked;
             card.style.opacity = '1';
-            card.querySelector('.task-name').style.textDecoration = 'none';
+            checkbox.disabled = false;
+            alert('Error al actualizar la tarea: ' + data.message);
         }
-    }
+    })
+    .catch(error => {
+        // Error de red: revertir checkbox
+        console.error('Error de red:', error);
+        checkbox.checked = !isChecked;
+        card.style.opacity = '1';
+        checkbox.disabled = false;
+        alert('Error de conexión. Inténtalo de nuevo.');
+    });
+}
+
+// Función para actualizar los contadores de tareas
+function updateTaskCounts() {
+    const columns = ['vencidas', 'hoy', 'semana', 'futuras'];
+    
+    columns.forEach(column => {
+        const columnElement = document.querySelector(`.column-header.${column}`);
+        const tasksInColumn = document.querySelectorAll(`.task-card.${column}`).length;
+        const countElement = columnElement.querySelector('.task-count');
+        
+        if (countElement) {
+            countElement.textContent = tasksInColumn;
+        }
+    });
+    
+    // Actualizar contador total si existe
+    const totalTasks = document.querySelectorAll('.task-card').length;
+    console.log('📊 Total de tareas restantes:', totalTasks);
 }
 
 // Inicializar con "Mis Tareas" activo

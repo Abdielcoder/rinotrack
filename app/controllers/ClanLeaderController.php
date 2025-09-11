@@ -170,6 +170,79 @@ class ClanLeaderController {
         // Cargar la vista del dashboard Kanban
         $this->loadView('clan_leader/dashboard_kanban', $data);
     }
+
+    /**
+     * Actualizar estado de tarea via AJAX
+     */
+    public function updateTaskStatus() {
+        header('Content-Type: application/json');
+        
+        // Verificar autenticación
+        $this->requireAuth();
+        if (!$this->hasClanLeaderAccess()) {
+            echo json_encode(['success' => false, 'message' => 'Sin permisos']);
+            exit;
+        }
+
+        // Validar datos de entrada
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+            exit;
+        }
+
+        $taskId = $_POST['task_id'] ?? null;
+        $isCompleted = $_POST['is_completed'] ?? false;
+
+        if (!$taskId) {
+            echo json_encode(['success' => false, 'message' => 'ID de tarea requerido']);
+            exit;
+        }
+
+        try {
+            // Verificar que la tarea pertenece al usuario actual
+            $checkSql = "SELECT task_id FROM Tasks WHERE task_id = ? AND assigned_to_user_id = ?";
+            $checkStmt = $this->db->prepare($checkSql);
+            $checkStmt->execute([$taskId, $this->currentUser['user_id']]);
+            
+            if (!$checkStmt->fetch()) {
+                echo json_encode(['success' => false, 'message' => 'Tarea no encontrada']);
+                exit;
+            }
+
+            // Actualizar estado de la tarea
+            $status = $isCompleted ? 'completed' : 'pending';
+            $completedAt = $isCompleted ? date('Y-m-d H:i:s') : null;
+            $completionPercentage = $isCompleted ? 100.00 : 0.00;
+
+            $updateSql = "UPDATE Tasks SET 
+                            status = ?, 
+                            is_completed = ?, 
+                            completed_at = ?,
+                            completion_percentage = ?,
+                            updated_at = CURRENT_TIMESTAMP 
+                          WHERE task_id = ?";
+            
+            $updateStmt = $this->db->prepare($updateSql);
+            $success = $updateStmt->execute([
+                $status, 
+                $isCompleted ? 1 : 0, 
+                $completedAt,
+                $completionPercentage,
+                $taskId
+            ]);
+
+            if ($success) {
+                echo json_encode(['success' => true, 'message' => 'Tarea actualizada']);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Error al actualizar']);
+            }
+
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => 'Error del servidor']);
+        }
+        
+        exit;
+    }
     
     /**
      * Gestión de miembros del clan

@@ -517,6 +517,11 @@ try {
         $controller->toggleTaskStatus();
         break;
         
+    case 'clan_leader/updateTaskStatus':
+        $controller = new ClanLeaderController();
+        $controller->updateTaskStatus();
+        break;
+        
     case 'clan_leader/simple-toggle-task':
         $controller = new ClanLeaderController();
         $controller->simpleToggleTask();
