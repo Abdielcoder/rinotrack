@@ -12,6 +12,16 @@
     min-height: calc(100vh - 58px);
 }
 
+/* Dashboard container específico para EQUIPO - 33% menos */
+.dashboard-container.team-view {
+    width: 67%;
+    max-width: 67%;
+    margin: 0 auto;
+    padding: 24px;
+    background: #f8fafc;
+    min-height: calc(100vh - 58px);
+}
+
 .dashboard-header {
     background: white;
     padding: 24px;
@@ -54,23 +64,12 @@
     text-align: center;
 }
 
-/* KANBAN BOARDS - MIS TAREAS (ANCHO COMPLETO) */
-.kanban-board {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr 1fr;
-    gap: 20px;
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    max-width: none;
-    background: transparent;
-}
-
-/* KANBAN EQUIPO - REDUCIDO 30% */
+/* KANBAN BOARDS - ESTILOS IDÉNTICOS (reducción en dashboard-container) */
+.kanban-board,
 .team-kanban-board {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr 1fr;
-    gap: 15px;
+    gap: 20px;
     margin: 0;
     padding: 0;
     width: 100%;
@@ -2119,15 +2118,15 @@ function mostrarKanbanEquipoDefinitivo() {
         </div>
     `;
     
-    // CONTENEDOR EQUIPO REDUCIDO 30% (70% del ancho original)
+    // CONTENEDOR EQUIPO - ANCHO NORMAL (reducción se aplica en dashboard-container)
     teamContent.classList.add('active');
     teamContent.style.cssText = `
         display: block !important;
         visibility: visible !important;
         opacity: 1 !important;
-        width: 70% !important;
-        max-width: 70% !important;
-        margin: 0 auto !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
         padding: 0 !important;
         height: auto !important;
         min-height: 500px !important;
@@ -2156,11 +2155,11 @@ function mostrarKanbanEquipoDefinitivo() {
     // Verificar que se insertó correctamente con la nueva clase
     const teamKanbanBoard = teamContent.querySelector('.team-kanban-board');
     if (teamKanbanBoard) {
-        // KANBAN EQUIPO REDUCIDO - SE ADAPTA AL CONTENEDOR 70%
+        // KANBAN EQUIPO - GAP NORMAL (reducción en dashboard-container)
         teamKanbanBoard.style.cssText = `
             display: grid !important;
             grid-template-columns: repeat(4, 1fr) !important;
-            gap: 15px !important;
+            gap: 20px !important;
             width: 100% !important;
             max-width: none !important;
             margin: 0 !important;
@@ -2342,6 +2341,13 @@ function switchDashboardTab(tabName) {
     if (tabName === 'team-tasks') {
         console.log('🎯 Tab team-tasks detectado, mostrando Kanban del equipo...');
         
+        // APLICAR CLASE team-view AL DASHBOARD-CONTAINER (33% menos)
+        const dashboardContainer = document.querySelector('.dashboard-container');
+        if (dashboardContainer) {
+            dashboardContainer.classList.add('team-view');
+            console.log('📏 Dashboard container reducido 33% para vista equipo');
+        }
+        
         // Esperar un momento y mostrar el Kanban del equipo
         setTimeout(() => {
             mostrarKanbanEquipoDefinitivo();
@@ -2349,6 +2355,13 @@ function switchDashboardTab(tabName) {
         
     } else if (tabName === 'my-tasks') {
         console.log('🎯 Tab my-tasks detectado, mostrando Kanban personal...');
+        
+        // QUITAR CLASE team-view DEL DASHBOARD-CONTAINER (ancho completo)
+        const dashboardContainer = document.querySelector('.dashboard-container');
+        if (dashboardContainer) {
+            dashboardContainer.classList.remove('team-view');
+            console.log('📏 Dashboard container restaurado a ancho completo para mis tareas');
+        }
         
         // LIMPIAR el contenedor del equipo
         const teamTasksContent = document.getElementById('team-tasks-content');
