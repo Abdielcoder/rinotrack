@@ -214,6 +214,87 @@
     background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
 }
 
+/* Estilos específicos para el tab EQUIPO */
+.team-kanban-container {
+    width: 100%;
+    min-height: 500px;
+    background: transparent;
+}
+
+.loading-spinner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 400px;
+    background: #f8fafc;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+}
+
+.spinner-content {
+    text-align: center;
+}
+
+.spinner-content i {
+    font-size: 2rem;
+    color: #3b82f6;
+    margin-bottom: 1rem;
+}
+
+.spinner-content p {
+    color: #6b7280;
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+.team-kanban-board {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 20px;
+    width: 100%;
+    background: transparent;
+}
+
+.team-error {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 400px;
+    background: #fef2f2;
+    border-radius: 12px;
+    border: 2px solid #ef4444;
+}
+
+.error-content {
+    text-align: center;
+}
+
+.error-content i {
+    font-size: 2rem;
+    color: #ef4444;
+    margin-bottom: 1rem;
+}
+
+.error-content p {
+    color: #dc2626;
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+}
+
+.retry-btn {
+    background: #ef4444;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.retry-btn:hover {
+    background: #dc2626;
+}
+
 .task-header {
     display: flex;
     align-items: flex-start;
@@ -697,7 +778,26 @@
     
     <!-- Contenido del tab EQUIPO -->
     <div id="team-tasks-content" class="tab-content">
-        <!-- El contenido del Kanban del equipo se cargará aquí dinámicamente -->
+        <div class="team-kanban-container">
+            <div class="loading-spinner" id="team-loading" style="display: none;">
+                <div class="spinner-content">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Cargando tareas del equipo...</p>
+                </div>
+            </div>
+            
+            <div class="team-kanban-board" id="team-kanban-board" style="display: none;">
+                <!-- El Kanban se generará aquí -->
+            </div>
+            
+            <div class="team-error" id="team-error" style="display: none;">
+                <div class="error-content">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <p>Error al cargar las tareas del equipo</p>
+                    <button onclick="loadTeamKanban()" class="retry-btn">Reintentar</button>
+                </div>
+            </div>
+        </div>
     </div>
     
 </div>
@@ -999,7 +1099,7 @@ function switchDashboardTab(tabName) {
     // Cargar datos según el tab seleccionado
     if (tabName === 'team-tasks') {
         console.log('🎯 Tab team-tasks detectado, cargando tareas del equipo...');
-        loadTeamKanbanTasks();
+        loadTeamKanban();
     } else {
         console.log('🎯 Tab seleccionado:', tabName);
     }
@@ -1114,7 +1214,156 @@ Revisa la consola para más detalles.`;
     });
 }
 
-// Función para cargar tareas del equipo en Kanban
+// ===== FUNCIONES COMPLETAMENTE NUEVAS PARA EL EQUIPO =====
+
+// Función principal para cargar el Kanban del equipo
+function loadTeamKanban() {
+    console.log('🚀 NUEVA FUNCIÓN: Cargando Kanban del equipo...');
+    
+    // Mostrar spinner de carga
+    showTeamLoading();
+    
+    // Hacer petición AJAX
+    fetch('?route=clan_leader/get-team-kanban-tasks')
+        .then(response => {
+            console.log('📡 Respuesta recibida, status:', response.status);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('📊 Datos del equipo:', data);
+            
+            if (data.success && data.kanbanTasks) {
+                renderTeamKanban(data.kanbanTasks);
+                updateTeamStats(data.kanbanTasks);
+            } else {
+                showTeamError(data.message || 'Error al cargar datos');
+            }
+        })
+        .catch(error => {
+            console.error('❌ Error:', error);
+            showTeamError('Error de conexión con el servidor');
+        });
+}
+
+// Mostrar spinner de carga
+function showTeamLoading() {
+    hideAllTeamViews();
+    document.getElementById('team-loading').style.display = 'flex';
+}
+
+// Mostrar error
+function showTeamError(message) {
+    hideAllTeamViews();
+    const errorDiv = document.getElementById('team-error');
+    errorDiv.style.display = 'flex';
+    errorDiv.querySelector('p').textContent = message;
+}
+
+// Ocultar todas las vistas del equipo
+function hideAllTeamViews() {
+    document.getElementById('team-loading').style.display = 'none';
+    document.getElementById('team-kanban-board').style.display = 'none';
+    document.getElementById('team-error').style.display = 'none';
+}
+
+// Renderizar el Kanban del equipo
+function renderTeamKanban(kanbanTasks) {
+    console.log('🎨 Renderizando Kanban del equipo:', kanbanTasks);
+    
+    hideAllTeamViews();
+    const kanbanBoard = document.getElementById('team-kanban-board');
+    
+    // Crear HTML del Kanban
+    let html = '';
+    const columns = ['vencidas', 'hoy', 'semana1', 'semana2'];
+    const columnTitles = {
+        'vencidas': '⚠️ VENCIDAS',
+        'hoy': '📅 HOY', 
+        'semana1': '📆 ESTA SEMANA',
+        'semana2': '🚀 FUTURAS'
+    };
+    
+    columns.forEach(column => {
+        const tasks = kanbanTasks[column] || [];
+        const columnClass = column === 'semana1' ? 'semana' : (column === 'semana2' ? 'futuras' : column);
+        
+        html += `
+            <div class="kanban-column">
+                <div class="column-header ${columnClass}">
+                    <span>${columnTitles[column]}</span>
+                    <span class="task-count">${tasks.length}</span>
+                </div>
+                <div class="column-content">
+        `;
+        
+        if (tasks.length === 0) {
+            html += `<div class="empty-column">Sin tareas del equipo</div>`;
+        } else {
+            tasks.forEach(task => {
+                const isSubtask = task.item_type === 'subtask';
+                const cardClass = isSubtask ? 'subtask-card' : 'task-card';
+                const taskName = (task.task_name || 'Sin nombre').replace(/'/g, '&#39;');
+                const userName = (task.assigned_user_name || 'Sin asignar').replace(/'/g, '&#39;');
+                const projectName = (task.project_name || 'Sin proyecto').replace(/'/g, '&#39;');
+                
+                html += `
+                    <div class="${cardClass} ${columnClass} project-normal">
+                        <div class="task-header">
+                            <div class="task-checkbox">
+                                <input type="checkbox" onclick="event.stopPropagation()">
+                            </div>
+                            <div class="task-name">${taskName}</div>
+                        </div>
+                        <div class="task-project">
+                            <div class="task-project-name">${projectName}</div>
+                            <div class="task-due-date">${task.due_date || 'Sin fecha'}</div>
+                            <div style="margin-top: 4px;">
+                                <small style="color: #8b5cf6; font-weight: 600;">👤 ${userName}</small>
+                            </div>
+                            ${isSubtask ? `<div class="subtask-indicator">↳ Subtarea de: ${task.parent_task_name || 'Tarea padre'}</div>` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+        }
+        
+        html += `
+                </div>
+            </div>
+        `;
+    });
+    
+    kanbanBoard.innerHTML = html;
+    kanbanBoard.style.display = 'grid';
+    
+    console.log('✅ Kanban del equipo renderizado correctamente');
+}
+
+// Actualizar estadísticas del equipo
+function updateTeamStats(kanbanTasks) {
+    const stats = document.getElementById('team-tasks-stats');
+    if (!stats) return;
+    
+    const vencidas = kanbanTasks.vencidas?.length || 0;
+    const hoy = kanbanTasks.hoy?.length || 0;
+    const semana = kanbanTasks.semana1?.length || 0;
+    const futuras = kanbanTasks.semana2?.length || 0;
+    const total = vencidas + hoy + semana + futuras;
+    
+    const statValues = stats.querySelectorAll('.stat-value');
+    if (statValues.length >= 5) {
+        statValues[0].textContent = total;
+        statValues[1].textContent = vencidas;
+        statValues[2].textContent = hoy;
+        statValues[3].textContent = semana;
+        statValues[4].textContent = futuras;
+    }
+}
+
+// FUNCIONES LEGACY (mantener por compatibilidad)
 function loadTeamKanbanTasks() {
     console.log('🔄 Cargando tareas del equipo...');
     
