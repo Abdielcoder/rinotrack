@@ -478,6 +478,76 @@ ob_start();
     transform: translateY(-1px);
 }
 
+/* Header Mejorado */
+.page-header {
+    background: transparent;
+    color: inherit;
+    padding: 1.5rem 0;
+    margin-bottom: 1.5rem;
+}
+
+.header-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #e0e7ff;
+    border: 1px solid #c7d2fe;
+    border-radius: 12px;
+}
+
+.header-left {
+    flex: 1;
+}
+
+.page-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0 0 0.25rem 0;
+    color: #1e3a8a;
+}
+
+.page-subtitle {
+    font-size: 0.95rem;
+    color: #374151;
+    margin: 0;
+    font-weight: 400;
+}
+
+.header-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.btn-create {
+    background: #1e3a8a;
+    color: #ffffff !important;
+    padding: 0.6rem 1.1rem;
+    border-radius: 10px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(30, 58, 138, 0.2);
+}
+
+.btn-create:hover {
+    background: #1e40af;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(30, 58, 138, 0.3);
+}
+
+.btn-create i {
+    font-size: 0.85rem;
+}
+
 /* Responsive para Modal */
 @media (max-width: 768px) {
     .modal-content {
@@ -502,26 +572,33 @@ ob_start();
         width: 100%;
         justify-content: center;
     }
+    
+    .header-content {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+        padding: 1rem;
+    }
+    
+    .header-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
 }
 </style>
 
 <div class="clan-leader-tasks-container">
-    <!-- Header -->
+    <!-- Header Mejorado -->
     <div class="page-header">
         <div class="header-content">
             <div class="header-left">
-                <div class="page-icon">
-                    <i class="fas fa-columns"></i>
-                </div>
-                <div class="page-info">
-                    <h1 class="page-title">Panel de Tareas</h1>
-                    <p class="page-description">Gestiona tus tareas de manera visual y eficiente</p>
-                </div>
+                <h1 class="page-title">Panel de Tareas</h1>
+                <p class="page-subtitle">Gestiona tus tareas de manera visual y eficiente</p>
             </div>
             <div class="header-actions">
-                <button class="btn-primary" onclick="openCreateTaskModal()">
+                <button class="btn-create" onclick="openCreateTaskModal()">
                     <i class="fas fa-plus"></i>
-                    Agregar Tarea
+                    Nueva Tarea
                 </button>
             </div>
         </div>
