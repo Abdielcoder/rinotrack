@@ -2290,14 +2290,11 @@ function switchDashboardTab(tabName) {
     if (tabName === 'team-tasks') {
         console.log('🎯 Tab team-tasks detectado, mostrando Kanban del equipo...');
         
-        // OCULTAR el Kanban de "Mis Tareas" cuando esté en "Equipo"
+        // OCULTAR COMPLETAMENTE el contenedor de "Mis Tareas" cuando esté en "Equipo"
         const myTasksContent = document.getElementById('my-tasks-content');
         if (myTasksContent) {
-            const myTasksKanban = myTasksContent.querySelector('.kanban-board');
-            if (myTasksKanban) {
-                myTasksKanban.style.display = 'none';
-                console.log('🙈 Kanban de "Mis Tareas" ocultado');
-            }
+            myTasksContent.style.display = 'none';
+            console.log('🙈 Contenedor completo de "Mis Tareas" ocultado');
         }
         
         // Esperar un momento y mostrar el Kanban del equipo
@@ -2307,14 +2304,18 @@ function switchDashboardTab(tabName) {
     } else {
         console.log('🎯 Tab seleccionado:', tabName);
         
-        // MOSTRAR el Kanban de "Mis Tareas" cuando NO esté en "Equipo"
+        // MOSTRAR COMPLETAMENTE el contenedor de "Mis Tareas" cuando NO esté en "Equipo"
         const myTasksContent = document.getElementById('my-tasks-content');
         if (myTasksContent) {
-            const myTasksKanban = myTasksContent.querySelector('.kanban-board');
-            if (myTasksKanban) {
-                myTasksKanban.style.display = 'grid';
-                console.log('👁️ Kanban de "Mis Tareas" mostrado');
-            }
+            myTasksContent.style.display = 'block';
+            console.log('👁️ Contenedor completo de "Mis Tareas" mostrado');
+        }
+        
+        // OCULTAR el contenedor del Equipo cuando NO esté en "Equipo"
+        const teamTasksContent = document.getElementById('team-tasks-content');
+        if (teamTasksContent) {
+            teamTasksContent.style.display = 'none';
+            console.log('🙈 Contenedor del Equipo ocultado');
         }
     }
     
