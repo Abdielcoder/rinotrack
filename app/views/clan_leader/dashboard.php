@@ -86,6 +86,27 @@ ob_start();
     .tab-minimal i {
         font-size: 14px;
     }
+    
+    .header-content {
+        flex-direction: column;
+        gap: 1rem;
+        padding: 1rem;
+        text-align: center;
+    }
+    
+    .header-left {
+        flex: none;
+    }
+    
+    .header-actions {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .btn-create {
+        padding: 0.75rem 2rem;
+        font-size: 1rem;
+    }
 }
 
 /* Estilos específicos para el Kanban - Expandido para máxima visibilidad */
@@ -551,15 +572,18 @@ ob_start();
 }
 
 .header-content {
-    max-width: 1400px; /* Expandido de 1200px a 1400px */
+    max-width: 1400px;
     margin: 0 auto;
-    padding: 1rem 1.5rem;
+    padding: 1.5rem 2rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: #e0e7ff;
-    border: 1px solid #c7d2fe;
-    border-radius: 12px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    position: relative;
+    z-index: 5;
 }
 
 .header-left {
@@ -588,18 +612,21 @@ ob_start();
 .btn-create {
     background: #1e3a8a;
     color: #ffffff !important;
-    padding: 0.6rem 1.1rem;
-    border-radius: 10px;
+    padding: 0.75rem 1.5rem;
+    border-radius: 12px;
     text-decoration: none;
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
     font-weight: 600;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     border: none;
     cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 4px rgba(30, 58, 138, 0.2);
+    transition: all 0.3s ease;
+    box-shadow: 0 3px 6px rgba(30, 58, 138, 0.25);
+    white-space: nowrap;
+    z-index: 10;
+    position: relative;
 }
 
 .btn-create:hover {
@@ -677,15 +704,15 @@ ob_start();
             <div class="header-left">
                 <h1 class="page-title">Panel de Tareas</h1>
                 <p class="page-subtitle">Gestiona tus tareas de manera visual y eficiente</p>
-                </div>
+            </div>
             <div class="header-actions">
                 <button class="btn-create" onclick="openCreateTaskModal()">
-                        <i class="fas fa-plus"></i>
+                    <i class="fas fa-plus"></i>
                     Agregar Tarea
-                    </button>
+                </button>
             </div>
-                </div>
-            </div>
+        </div>
+    </div>
             
     <!-- Contenido Principal -->
     <div class="main-content">
