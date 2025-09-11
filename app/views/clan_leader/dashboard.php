@@ -199,6 +199,26 @@ ob_start();
     color: #1e293b;
     font-size: 14px;
     line-height: 1.4;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.task-name-link {
+    color: inherit;
+    text-decoration: none;
+    cursor: pointer;
+    transition: color 0.2s ease;
+    flex: 1;
+}
+
+.task-name-link:hover {
+    color: #667eea;
+    text-decoration: underline;
+}
+
+.task-name-link:visited {
+    color: inherit;
 }
 
 .subtask-icon {
@@ -933,6 +953,29 @@ function closeCreateTaskModal() {
         // Limpiar formulario
         document.getElementById('createTaskForm').reset();
     }
+}
+
+// Función para ir al detalle de tarea/subtarea
+function goToTaskDetail(taskId, itemType = 'task') {
+    console.log(`🔗 Navegando al detalle: ${itemType} ID ${taskId}`);
+    
+    if (!taskId || taskId <= 0) {
+        console.error('❌ ID de tarea inválido:', taskId);
+        return;
+    }
+    
+    // Determinar la URL según el tipo
+    let url;
+    if (itemType === 'subtask') {
+        // Para subtareas, ir al detalle de la tarea padre
+        url = `?route=clan_leader/task_details&id=${taskId}&type=subtask`;
+    } else {
+        // Para tareas normales
+        url = `?route=clan_leader/task_details&id=${taskId}`;
+    }
+    
+    console.log('🚀 Redirigiendo a:', url);
+    window.location.href = url;
 }
 
 // Función para crear tarea
