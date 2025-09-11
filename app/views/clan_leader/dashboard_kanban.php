@@ -158,10 +158,10 @@
 }
 
 /* Colores por tipo de proyecto (sobre-escriben el color de la columna si aplica) */
-.task-card.project-personal { border-left-color: #8b5cf6; } /* morado suave */
-.task-card.project-recurrent { border-left-color: #06b6d4; } /* cian */
-.task-card.project-eventual { border-left-color: #f97316; } /* naranja */
-.task-card.project-normal { border-left-color: #10b981; } /* verde por defecto */
+.task-card.project-personal { border-left-color: #8b5cf6 !important; } /* morado para tareas personales */
+.task-card.project-recurrent { border-left-color: #06b6d4 !important; } /* cian para tareas recurrentes */
+.task-card.project-eventual { border-left-color: #f97316 !important; } /* naranja para tareas eventuales */
+.task-card.project-normal { border-left-color: #10b981 !important; } /* verde para proyectos normales */
 
 .task-header {
     display: flex;

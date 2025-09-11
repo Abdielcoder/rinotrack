@@ -127,7 +127,14 @@ class ClanLeaderController {
                 t.assigned_to_user_id,
                 t.project_id,
                 COALESCE(p.project_name, 'Tareas Personales') AS project_name,
-                COALESCE(p.project_type, CASE WHEN t.is_personal = 1 THEN 'personal' ELSE 'normal' END) AS project_type,
+                CASE 
+                    WHEN p.project_type IS NOT NULL THEN p.project_type
+                    WHEN t.is_personal = 1 THEN 'personal'
+                    WHEN p.project_name LIKE '%Recurrente%' OR p.project_name LIKE '%recurrente%' THEN 'recurrent'
+                    WHEN p.project_name LIKE '%Eventual%' OR p.project_name LIKE '%eventual%' THEN 'eventual'
+                    WHEN p.project_name = 'Tareas Personales' OR t.project_id IS NULL THEN 'personal'
+                    ELSE 'normal'
+                END AS project_type,
                 COALESCE(p.is_personal, t.is_personal, 0) AS is_personal,
                 DATEDIFF(t.due_date, CURDATE()) AS days_until_due
             FROM Tasks t
