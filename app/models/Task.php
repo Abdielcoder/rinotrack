@@ -1789,8 +1789,8 @@ class Task {
     }
     
     /**
-     * SOLUCIÓN ULTRA-SIMPLE: Como debe ser, sin mamadas
-     * SELECT * FROM Tasks WHERE assigned_to_user_id = 2, luego JOIN con Projects
+     * OBTENER SOLO TAREAS ASIGNADAS DIRECTAMENTE AL USUARIO
+     * SELECT * FROM Tasks WHERE assigned_to_user_id = userId (sin lógicas adicionales)
      */
     public function getAllUserTasksForDashboard($userId) {
         try {
@@ -1835,12 +1835,8 @@ class Task {
                 LEFT JOIN Clans c ON p.clan_id = c.clan_id
                 WHERE 
                     (
-                        -- Tareas asignadas directamente
+                        -- SOLO tareas asignadas directamente al usuario
                         t.assigned_to_user_id = ?
-                        -- O tareas personales creadas por el usuario  
-                        OR (t.is_personal = 1 AND t.created_by_user_id = ?)
-                        -- O tareas donde está en Task_Assignments
-                        OR EXISTS (SELECT 1 FROM Task_Assignments ta WHERE ta.task_id = t.task_id AND ta.user_id = ?)
                     )
                     AND (t.is_subtask = 0 OR t.is_subtask IS NULL)
                 ORDER BY 
@@ -1848,7 +1844,7 @@ class Task {
             ";
             
             $stmt = $this->db->prepare($sql);
-            $stmt->execute([$userId, $userId, $userId]);
+            $stmt->execute([$userId]);
             
             $tasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
             

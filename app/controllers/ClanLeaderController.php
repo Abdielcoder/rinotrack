@@ -3855,7 +3855,7 @@ class ClanLeaderController {
     }
     
     /**
-     * Obtener MIS tareas (personales + asignadas a mí)
+     * Obtener MIS tareas (SOLO las asignadas directamente a mi user_id)
      */
     public function getMyTasks() {
         // Asegurar que la respuesta sea JSON y evitar caché
@@ -3900,28 +3900,14 @@ class ClanLeaderController {
                 INNER JOIN Projects p ON t.project_id = p.project_id
                 LEFT JOIN Users u ON t.assigned_to_user_id = u.user_id
                 WHERE 
-                    p.clan_id = :clan_id
-                    AND (t.is_subtask = 0 OR t.is_subtask IS NULL)
-                    AND (
-                        -- Tareas personales creadas por el líder
-                        (p.is_personal = 1 AND p.created_by_user_id = :user_id1)
-                        OR
-                        -- Tareas asignadas directamente al líder
-                        (t.assigned_to_user_id = :user_id2)
-                        OR
-                        -- Tareas donde el líder está en Task_Assignments
-                        EXISTS (SELECT 1 FROM Task_Assignments ta WHERE ta.task_id = t.task_id AND ta.user_id = :user_id3)
-                    )
-                GROUP BY t.task_id
+                    (t.is_subtask = 0 OR t.is_subtask IS NULL)
+                    AND t.assigned_to_user_id = :user_id
                 ORDER BY t.due_date ASC
                 LIMIT 200
             ";
 
             $stmt = $db->prepare($query);
-            $stmt->bindParam(':clan_id', $clanId, PDO::PARAM_INT);
-            $stmt->bindParam(':user_id1', $userId, PDO::PARAM_INT);
-            $stmt->bindParam(':user_id2', $userId, PDO::PARAM_INT);
-            $stmt->bindParam(':user_id3', $userId, PDO::PARAM_INT);
+            $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
             
             if (!$stmt->execute()) {
                 throw new Exception("Error ejecutando consulta de tareas");
@@ -4311,7 +4297,7 @@ class ClanLeaderController {
     }
     
     /**
-     * Obtener MIS tareas para vista de lista
+     * Obtener MIS tareas para vista de lista (SOLO asignadas directamente a mi user_id)
      */
     public function getMyTasksList() {
         header('Content-Type: application/json');
@@ -4332,7 +4318,7 @@ class ClanLeaderController {
                 throw new Exception("Usuario o clan no válido");
             }
             
-            // CONSULTA PARA MIS TAREAS Y SUBTAREAS (incluye completadas)
+            // CONSULTA PARA MIS TAREAS Y SUBTAREAS (SOLO asignadas directamente)
             $stmt = $this->db->prepare("
                 (SELECT 
                     t.task_id,
@@ -4377,18 +4363,14 @@ class ClanLeaderController {
                 JOIN Tasks t ON s.task_id = t.task_id
                 JOIN Projects p ON t.project_id = p.project_id
                 LEFT JOIN Users u ON s.assigned_to_user_id = u.user_id
-                WHERE (s.assigned_to_user_id = :user_id2 
-                    OR s.subtask_id IN (SELECT sa.subtask_id FROM Subtask_Assignments sa WHERE sa.user_id = :user_id3))
-                    AND p.clan_id = :clan_id2)
+                WHERE s.assigned_to_user_id = :user_id2)
                 ORDER BY created_at DESC
             ");
             
             $stmt->execute([
                 ':user_id' => $userId,
                 ':clan_id' => $clanId,
-                ':user_id2' => $userId,
-                ':user_id3' => $userId,
-                ':clan_id2' => $clanId
+                ':user_id2' => $userId
             ]);
             
             $allTasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
