@@ -1834,14 +1834,21 @@ class Task {
                 LEFT JOIN Projects p ON t.project_id = p.project_id
                 LEFT JOIN Clans c ON p.clan_id = c.clan_id
                 WHERE 
-                    t.assigned_to_user_id = ?
+                    (
+                        -- Tareas asignadas directamente
+                        t.assigned_to_user_id = ?
+                        -- O tareas personales creadas por el usuario  
+                        OR (t.is_personal = 1 AND t.created_by_user_id = ?)
+                        -- O tareas donde está en Task_Assignments
+                        OR EXISTS (SELECT 1 FROM Task_Assignments ta WHERE ta.task_id = t.task_id AND ta.user_id = ?)
+                    )
                     AND (t.is_subtask = 0 OR t.is_subtask IS NULL)
                 ORDER BY 
                     t.task_id DESC
             ";
             
             $stmt = $this->db->prepare($sql);
-            $stmt->execute([$userId]);
+            $stmt->execute([$userId, $userId, $userId]);
             
             $tasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
             

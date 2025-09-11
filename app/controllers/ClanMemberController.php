@@ -1448,10 +1448,11 @@ class ClanMemberController {
             
             error_log("Tareas obtenidas para Kanban: " . count($result['tasks']));
             
-            // Filtrar solo tareas no completadas para el Kanban
-            $allTasks = array_filter($result['tasks'], function($task) {
-                return $task['status'] !== 'completed' && ($task['is_completed'] ?? 0) != 1;
-            });
+            // NO FILTRAR NADA - MOSTRAR TODAS LAS TAREAS
+            $allTasks = $result['tasks'];
+            
+            // Log para ver cuántas tareas tenemos
+            error_log("TODAS las tareas sin filtrar: " . count($allTasks));
             
             error_log("Tareas no completadas para Kanban: " . count($allTasks));
             
@@ -1510,7 +1511,7 @@ class ClanMemberController {
             $allCombinedTasks = array_merge($allTasks, $subtasks);
             error_log("Total tareas combinadas: " . count($allCombinedTasks));
             
-            // Clasificar tareas por tiempo hasta vencimiento
+            // Clasificar TODAS las tareas - SIN LÍMITES DE TIEMPO
             $kanbanColumns = [
                 'vencidas' => [],
                 'hoy' => [],
@@ -1522,7 +1523,7 @@ class ClanMemberController {
                 $daysUntilDue = (int)$task['days_until_due'];
                 
                 // Log de cada tarea para debugging
-                error_log("Clasificando tarea ID={$task['task_id']}, días={$daysUntilDue}, proyecto={$task['project_name']}");
+                error_log("Clasificando tarea ID={$task['task_id']}, días={$daysUntilDue}, proyecto={$task['project_name']}, estado={$task['status']}");
                 
                 if ($daysUntilDue < 0) {
                     $kanbanColumns['vencidas'][] = $task;
@@ -1530,7 +1531,8 @@ class ClanMemberController {
                     $kanbanColumns['hoy'][] = $task;
                 } elseif ($daysUntilDue <= 7) {
                     $kanbanColumns['1_semana'][] = $task;
-                } elseif ($daysUntilDue <= 14) {
+                } else {
+                    // TODAS las demás tareas van a 2+ semanas - SIN LÍMITE
                     $kanbanColumns['2_semanas'][] = $task;
                 }
             }
