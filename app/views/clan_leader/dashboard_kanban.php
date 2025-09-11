@@ -311,40 +311,36 @@
     background: #dc2626;
 }
 
-/* ===== KANBAN EQUIPO - ESTILOS IDÉNTICOS A MIS TAREAS ===== */
+/* ===== KANBAN EQUIPO - ESTILOS EXACTOS DE MIS TAREAS ===== */
 .equipo-kanban-board {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: 1fr 1fr 1fr 1fr;
     gap: 20px;
-    width: 100%;
-    max-width: 1400px;
-    margin: 0 auto;
+    margin: 0;
     padding: 0;
+    width: 100%;
+    max-width: none;
     background: transparent;
-    border-radius: 0;
-    min-height: 500px;
 }
 
 .equipo-column {
     background: white;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
     overflow: hidden;
-    min-height: 400px;
-    display: flex;
-    flex-direction: column;
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .equipo-column-header {
-    padding: 16px 20px;
-    font-weight: 700;
-    font-size: 13px;
+    padding: 20px;
+    font-weight: 600;
+    font-size: 0.875rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    color: white;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .equipo-column-header.vencidas {
@@ -372,40 +368,39 @@
 }
 
 .equipo-task-count {
-    background: rgba(255, 255, 255, 0.9);
-    border-radius: 12px;
-    padding: 2px 8px;
-    font-size: 12px;
-    font-weight: 700;
-    min-width: 20px;
-    text-align: center;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    background: rgba(255, 255, 255, 0.3);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    backdrop-filter: blur(10px);
+    color: #374151;
 }
 
 .equipo-column-content {
-    flex: 1;
-    padding: 16px 20px 20px;
+    padding: 8px;
+    max-height: 500px;
     overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
 }
 
 .equipo-task-card {
-    background: white;
-    border-radius: 8px;
+    background: #ffffff;
     border: 1px solid #e5e7eb;
-    padding: 16px;
-    cursor: pointer;
+    border-radius: 8px;
+    padding: 8px 10px;
+    margin-bottom: 6px;
     transition: all 0.2s ease;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-    margin-bottom: 12px;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-height: 50px;
 }
 
 .equipo-task-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-    border-color: #3b82f6;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    transform: translateY(-1px);
 }
 
 .equipo-task-card.vencidas {
@@ -427,20 +422,19 @@
 .equipo-task-header {
     display: flex;
     align-items: flex-start;
-    gap: 12px;
-    margin-bottom: 12px;
+    gap: 6px;
 }
 
 .equipo-task-checkbox {
-    margin-top: 2px;
+    flex-shrink: 0;
 }
 
 .equipo-task-checkbox input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
-    border-radius: 3px;
-    border: 2px solid #d1d5db;
+    width: 14px;
+    height: 14px;
     cursor: pointer;
+    accent-color: #10b981;
+    margin: 0;
 }
 
 .equipo-task-name {
@@ -448,32 +442,48 @@
     font-weight: 600;
     color: #1f2937;
     font-size: 14px;
-    line-height: 1.5;
+    line-height: 1.4;
 }
 
 .equipo-task-project {
-    margin-top: 12px;
-    padding-top: 12px;
-    border-top: 1px solid #f3f4f6;
+    color: #4b5563;
+    font-size: 0.7rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-left: 20px;
 }
 
 .equipo-task-project-name {
-    font-size: 12px;
-    color: #6b7280;
-    margin-bottom: 4px;
-    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
+}
+
+.equipo-task-project-name::before {
+    content: '📁';
+    font-size: 0.7rem;
 }
 
 .equipo-task-due-date {
-    font-size: 12px;
     color: #6b7280;
-    margin-bottom: 6px;
+    font-size: 0.65rem;
+    font-weight: 400;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .equipo-task-user {
-    font-size: 12px;
+    font-size: 0.65rem;
     color: #8b5cf6;
     font-weight: 600;
+    margin-top: 2px;
 }
 
 .equipo-subtask-card {
@@ -1712,8 +1722,8 @@ function renderTeamKanban(kanbanTasks) {
                     <div class="equipo-task-project">
                         <div class="equipo-task-project-name">${projectName}</div>
                         <div class="equipo-task-due-date">${dueDate}</div>
-                        <div class="equipo-task-user">👤 ${userName}</div>
                     </div>
+                    <div class="equipo-task-user">👤 ${userName}</div>
                 </div>
             `;
         });
