@@ -2288,49 +2288,61 @@ function switchDashboardTab(tabName) {
     
     // Cargar datos según el tab seleccionado
     if (tabName === 'team-tasks') {
-        console.log('🎯 Tab team-tasks detectado, mostrando Kanban del equipo...');
+        console.log('🎯 Tab team-tasks detectado, mostrando SOLO Kanban del equipo...');
         
-        // OCULTAR COMPLETAMENTE el contenedor de "Mis Tareas" cuando esté en "Equipo"
+        // ELIMINAR COMPLETAMENTE el contenido de "Mis Tareas" y ocultarlo
         const myTasksContent = document.getElementById('my-tasks-content');
         if (myTasksContent) {
-            myTasksContent.style.cssText = 'display: none !important;';
-            console.log('🙈 Contenedor completo de "Mis Tareas" FORZADO A OCULTO');
+            myTasksContent.innerHTML = ''; // VACIAR COMPLETAMENTE
+            myTasksContent.style.cssText = 'display: none !important; visibility: hidden !important; height: 0 !important; overflow: hidden !important;';
+            console.log('🗑️ Contenedor de "Mis Tareas" VACIADO Y OCULTO COMPLETAMENTE');
         }
         
-        // ASEGURAR que el contenedor del Equipo sea visible
+        // LIMPIAR y MOSTRAR el contenedor del Equipo
         const teamTasksContent = document.getElementById('team-tasks-content');
         if (teamTasksContent) {
-            teamTasksContent.style.cssText = 'display: block !important; width: 100% !important;';
-            console.log('👁️ Contenedor del Equipo FORZADO A VISIBLE');
+            teamTasksContent.innerHTML = ''; // LIMPIAR PRIMERO
+            teamTasksContent.style.cssText = 'display: block !important; width: 100% !important; visibility: visible !important;';
+            console.log('🧹 Contenedor del Equipo LIMPIADO Y VISIBLE');
         }
         
-        // Esperar un momento y mostrar el Kanban del equipo
+        // Mostrar el Kanban del equipo
         setTimeout(() => {
             mostrarKanbanEquipoDefinitivo();
-        }, 100);
+        }, 50);
         
     } else if (tabName === 'my-tasks') {
-        console.log('🎯 Tab my-tasks detectado, mostrando Kanban personal...');
+        console.log('🎯 Tab my-tasks detectado, mostrando SOLO Kanban personal...');
         
-        // OCULTAR COMPLETAMENTE el contenedor del Equipo cuando esté en "Mis Tareas"
+        // ELIMINAR COMPLETAMENTE el contenido del Equipo y ocultarlo
         const teamTasksContent = document.getElementById('team-tasks-content');
         if (teamTasksContent) {
-            teamTasksContent.style.cssText = 'display: none !important;';
-            console.log('🙈 Contenedor del Equipo FORZADO A OCULTO');
+            teamTasksContent.innerHTML = ''; // VACIAR COMPLETAMENTE
+            teamTasksContent.style.cssText = 'display: none !important; visibility: hidden !important; height: 0 !important; overflow: hidden !important;';
+            console.log('🗑️ Contenedor del Equipo VACIADO Y OCULTO COMPLETAMENTE');
         }
         
-        // MOSTRAR COMPLETAMENTE el contenedor de "Mis Tareas" con ancho completo
+        // RESTAURAR y MOSTRAR el contenedor de "Mis Tareas" 
         const myTasksContent = document.getElementById('my-tasks-content');
         if (myTasksContent) {
+            // Solo restaurar si está vacío
+            if (myTasksContent.innerHTML.trim() === '') {
+                location.reload(); // Recargar para restaurar el Kanban original
+                return;
+            }
+            
             myTasksContent.style.cssText = `
                 display: block !important;
+                visibility: visible !important;
                 width: 100% !important;
                 max-width: 100% !important;
                 margin: 0 !important;
                 padding: 0 !important;
+                height: auto !important;
+                overflow: visible !important;
             `;
             
-            // También ajustar el Kanban interno para que use todo el ancho
+            // Ajustar el Kanban interno para que use todo el ancho
             const myTasksKanban = myTasksContent.querySelector('.kanban-board');
             if (myTasksKanban) {
                 myTasksKanban.style.cssText = `
@@ -2343,7 +2355,7 @@ function switchDashboardTab(tabName) {
                 `;
             }
             
-            console.log('👁️ Contenedor de "Mis Tareas" FORZADO A VISIBLE con ancho completo');
+            console.log('🔄 Contenedor de "Mis Tareas" RESTAURADO con ancho completo');
         }
         
     } else {
