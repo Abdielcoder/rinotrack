@@ -681,7 +681,7 @@ ob_start();
             <div class="header-actions">
                 <button class="btn-create" onclick="openCreateTaskModal()">
                         <i class="fas fa-plus"></i>
-                    Nueva Tarea
+                    Agregar Tarea
                     </button>
             </div>
                 </div>
