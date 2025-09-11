@@ -2115,22 +2115,23 @@ function mostrarKanbanEquipoDefinitivo() {
         </div>
     `;
     
-    // FORZAR VISIBILIDAD DEL CONTENEDOR CON ANCHO CENTRADO
+    // FORZAR CONTENEDOR EQUIPO IDÉNTICO A MIS TAREAS
     teamContent.classList.add('active');
     teamContent.style.cssText = `
         display: block !important;
         visibility: visible !important;
         opacity: 1 !important;
         width: 100% !important;
-        max-width: 1400px !important;
-        margin: 0 auto !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
         height: auto !important;
         min-height: 500px !important;
         position: relative !important;
         z-index: 1 !important;
     `;
     
-    // También forzar visibilidad del contenedor padre si existe
+    // También forzar visibilidad del contenedor padre para que sea igual
     const parentContainer = teamContent.parentElement;
     if (parentContainer) {
         parentContainer.style.cssText = `
@@ -2138,9 +2139,12 @@ function mostrarKanbanEquipoDefinitivo() {
             visibility: visible !important;
             opacity: 1 !important;
             width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
             height: auto !important;
         `;
-        console.log('🔧 Contenedor padre también forzado a visible');
+        console.log('🔧 Contenedor padre del equipo forzado igual a mis tareas');
     }
     
     console.log('✅ KANBAN INSERTADO CON CLASES CSS EXISTENTES');
@@ -2342,7 +2346,7 @@ function switchDashboardTab(tabName) {
             console.log('🧹 Contenedor del Equipo limpiado');
         }
         
-        // ASEGURAR que "Mis Tareas" sea HOMOGÉNEO con Equipo
+        // ASEGURAR que "Mis Tareas" sea IDÉNTICO a Equipo
         const myTasksContent = document.getElementById('my-tasks-content');
         if (myTasksContent) {
             myTasksContent.style.cssText = `
@@ -2350,8 +2354,9 @@ function switchDashboardTab(tabName) {
                 visibility: visible !important;
                 opacity: 1 !important;
                 width: 100% !important;
-                max-width: 1400px !important;
-                margin: 0 auto !important;
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
                 height: auto !important;
                 min-height: 500px !important;
                 position: relative !important;
