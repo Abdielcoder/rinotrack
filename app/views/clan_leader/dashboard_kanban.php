@@ -671,7 +671,7 @@ function handleTaskCheck(uniqueTaskId, taskId, isChecked) {
     
     console.log('Enviando AJAX para completar task_id:', taskId);
     
-    fetch('<?= APP_URL ?>clan_leader/completeTask', {
+    fetch('<?= APP_URL ?>test-simple-complete.php', {
         method: 'POST',
         body: formData
     })
