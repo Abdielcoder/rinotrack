@@ -113,31 +113,6 @@ class ClanLeaderController {
             exit;
         }
 
-        $taskStats = $this->getTaskStats();
-        $memberContributions = $this->getMemberContributions();
-
-        // Debug seguro
-        error_log("Clan Leader Dashboard Debug:");
-        error_log("Clan ID: " . $this->userClan['clan_id']);
-        error_log("Task Stats: " . json_encode($taskStats));
-        error_log("Member Contributions Count: " . count($memberContributions));
-
-        // Obtener tareas para el tablero Kanban (incluye tareas de otros clanes, INCLUYENDO todas las tareas asignadas al usuario)
-        $kanbanTasks = $this->getKanbanTasksForLeader($this->currentUser['user_id'], $this->userClan['clan_id'], false);
-        
-        $data = [
-            'userStats' => $this->getUserStats(),
-            'projectStats' => $this->projectModel->getStatsByClan($this->userClan['clan_id']),
-            'clanStats' => $this->getClanStats(),
-            'taskStats' => $taskStats,
-            'memberContributions' => $memberContributions,
-            'kanbanTasks' => $kanbanTasks,
-            'clanIcon' => $this->getClanIcon($this->userClan['clan_name'] ?? ''),
-            'currentPage' => 'clan_leader',
-            'user' => $this->currentUser,
-            'clan' => $this->userClan
-        ];
-
         // PÁGINA RECREADA DESDE CERO - SOLO MIS TAREAS
         // CONSULTA DIRECTA - Solo tareas asignadas a mí
         $userId = $this->currentUser['user_id'];
