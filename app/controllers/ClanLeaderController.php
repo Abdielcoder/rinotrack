@@ -4600,7 +4600,6 @@ class ClanLeaderController {
         }
     }
     
-    
     /**
      * Obtener tareas del EQUIPO para Kanban - REESTRUCTURADO COMPLETAMENTE  
      */
