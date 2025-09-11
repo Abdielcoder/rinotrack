@@ -478,11 +478,11 @@ ob_start();
     transform: translateY(-1px);
 }
 
-/* Header Mejorado */
+/* Header Mejorado - Copiado exacto de tasks.php */
 .page-header {
     background: transparent;
     color: inherit;
-    padding: 0 0 0.5rem 0;
+    padding: 1.5rem 0;
     margin-bottom: 1.5rem;
 }
 
@@ -548,8 +548,10 @@ ob_start();
     font-size: 0.85rem;
 }
 
-/* Contenedor principal */
+/* Reset y Base - Copiado exacto de tasks.php */
 .clan-leader-tasks-container {
+    min-height: 100vh;
+    background: transparent;
     padding: 0;
     margin: 0;
 }
