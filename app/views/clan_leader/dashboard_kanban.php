@@ -505,7 +505,26 @@
         </div>
         
         <div id="team-tasks-stats" class="dashboard-stats" style="display: none;">
-            <span>Tablero del equipo - <span class="stat-value">Próximamente</span></span>
+            <div class="stat-item">
+                <span>Total Equipo:</span>
+                <span class="stat-value">-</span>
+            </div>
+            <div class="stat-item">
+                <span>• Vencidas:</span>
+                <span class="stat-value">-</span>
+            </div>
+            <div class="stat-item">
+                <span>• Hoy:</span>
+                <span class="stat-value">-</span>
+            </div>
+            <div class="stat-item">
+                <span>• Esta Semana:</span>
+                <span class="stat-value">-</span>
+            </div>
+            <div class="stat-item">
+                <span>• Futuras:</span>
+                <span class="stat-value">-</span>
+            </div>
         </div>
     </div>
     
@@ -980,6 +999,11 @@ function switchDashboardTab(tabName) {
         targetStats.style.display = 'flex';
     }
     
+    // Cargar datos según el tab seleccionado
+    if (tabName === 'team-tasks') {
+        loadTeamKanbanTasks();
+    }
+    
     console.log('✅ Tab dashboard cambiado a:', tabName);
 }
 
@@ -1088,6 +1112,183 @@ Revisa la consola para más detalles.`;
         
         alert(errorMsg);
     });
+}
+
+// Función para cargar tareas del equipo en Kanban
+function loadTeamKanbanTasks() {
+    console.log('🔄 Cargando tareas del equipo...');
+    
+    // Mostrar indicador de carga
+    const teamContent = document.getElementById('team-tasks-content');
+    if (teamContent) {
+        teamContent.innerHTML = `
+            <div style="display: flex; justify-content: center; align-items: center; height: 400px; background: #f8fafc; border-radius: 12px;">
+                <div style="text-align: center;">
+                    <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: #3b82f6; margin-bottom: 1rem;"></i>
+                    <p style="color: #6b7280; font-size: 1.1rem;">Cargando tareas del equipo...</p>
+                </div>
+            </div>
+        `;
+    }
+    
+    fetch('?route=clan_leader/get-team-kanban-tasks')
+        .then(response => response.json())
+        .then(data => {
+            console.log('👥 Respuesta tareas del equipo:', data);
+            if (data.success && data.kanbanTasks) {
+                renderTeamKanbanBoard(data.kanbanTasks);
+                updateTeamTasksStats(data.kanbanTasks);
+            } else {
+                showTeamTasksError(data.message || 'Error desconocido al cargar tareas del equipo');
+            }
+        })
+        .catch(error => {
+            console.error('❌ Error cargando tareas del equipo:', error);
+            showTeamTasksError('Error de conexión al cargar tareas del equipo');
+        });
+}
+
+// Función para renderizar el tablero Kanban del equipo
+function renderTeamKanbanBoard(kanbanTasks) {
+    console.log('🎨 Renderizando tablero del equipo con tareas:', kanbanTasks);
+    
+    const teamContent = document.getElementById('team-tasks-content');
+    if (!teamContent) return;
+    
+    const columns = ['vencidas', 'hoy', 'semana1', 'semana2'];
+    const columnTitles = {
+        'vencidas': '⚠️ VENCIDAS',
+        'hoy': '📅 HOY',
+        'semana1': '📆 ESTA SEMANA',
+        'semana2': '🚀 FUTURAS'
+    };
+    
+    let html = '<div class="kanban-board">';
+    
+    columns.forEach(column => {
+        const tasks = kanbanTasks[column] || [];
+        
+        html += `
+            <div class="kanban-column">
+                <div class="column-header ${column}">
+                    <span>${columnTitles[column]}</span>
+                    <span class="task-count">${tasks.length}</span>
+                </div>
+                <div class="column-content">
+        `;
+        
+        if (tasks.length > 0) {
+            tasks.forEach(task => {
+                const isSubtask = task.item_type === 'subtask';
+                const cardClass = isSubtask ? 'subtask-card' : 'task-card';
+                
+                html += `
+                    <div class="${cardClass} ${column} project-${task.project_type || 'normal'}" onclick="goToTaskDetail(event, ${task.task_id}, '${task.item_type}')">
+                        <div class="task-header">
+                            <div class="task-checkbox">
+                                <input type="checkbox" id="team-${column}-${task.task_id}" 
+                                       onclick="event.stopPropagation()" 
+                                       onchange="handleTeamTaskCheck('team-${column}-${task.task_id}', ${task.task_id}, this.checked, '${task.item_type}')"
+                                       ${task.status === 'completed' ? 'checked' : ''}>
+                            </div>
+                            <div class="task-name">
+                                ${isSubtask ? '<span style="color: #8b5cf6; font-weight: 600; margin-right: 6px;">↳</span>' : ''}
+                                ${task.task_name || 'Sin nombre'}
+                                ${isSubtask && task.parent_task_name ? `<br><small style="color: #6b7280; font-size: 11px;">📋 de: ${task.parent_task_name}</small>` : ''}
+                            </div>
+                        </div>
+                        <div class="task-project">
+                            <div class="task-project-name">${task.project_name || 'Sin proyecto'}</div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
+                                <div class="task-due-date">${task.due_date ? new Date(task.due_date).toLocaleDateString('es-ES') : 'Sin fecha'}</div>
+                                <small style="color: #8b5cf6; font-weight: 600;">👤 ${task.assigned_user_name || 'Sin asignar'}</small>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        } else {
+            const emptyMessages = {
+                'vencidas': 'Sin tareas vencidas del equipo',
+                'hoy': 'Sin tareas para hoy del equipo',
+                'semana1': 'Sin tareas esta semana del equipo',
+                'semana2': 'Sin tareas futuras del equipo'
+            };
+            html += `<div class="empty-column">${emptyMessages[column]}</div>`;
+        }
+        
+        html += `
+                </div>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    teamContent.innerHTML = html;
+}
+
+// Función para actualizar estadísticas del equipo
+function updateTeamTasksStats(kanbanTasks) {
+    const totalTasks = Object.values(kanbanTasks).reduce((total, columnTasks) => total + columnTasks.length, 0);
+    
+    const teamStats = document.getElementById('team-tasks-stats');
+    if (teamStats) {
+        teamStats.innerHTML = `
+            <div class="stat-item">
+                <span>Total Equipo:</span>
+                <span class="stat-value">${totalTasks}</span>
+            </div>
+            <div class="stat-item">
+                <span>• Vencidas:</span>
+                <span class="stat-value">${kanbanTasks.vencidas?.length || 0}</span>
+            </div>
+            <div class="stat-item">
+                <span>• Hoy:</span>
+                <span class="stat-value">${kanbanTasks.hoy?.length || 0}</span>
+            </div>
+            <div class="stat-item">
+                <span>• Esta Semana:</span>
+                <span class="stat-value">${kanbanTasks.semana1?.length || 0}</span>
+            </div>
+            <div class="stat-item">
+                <span>• Futuras:</span>
+                <span class="stat-value">${kanbanTasks.semana2?.length || 0}</span>
+            </div>
+        `;
+    }
+}
+
+// Función para manejar errores en tareas del equipo
+function showTeamTasksError(message) {
+    const teamContent = document.getElementById('team-tasks-content');
+    if (teamContent) {
+        teamContent.innerHTML = `
+            <div style="display: flex; justify-content: center; align-items: center; height: 400px; background: #fef2f2; border-radius: 12px; border: 1px solid #fecaca;">
+                <div style="text-align: center;">
+                    <i class="fas fa-exclamation-triangle" style="font-size: 2rem; color: #ef4444; margin-bottom: 1rem;"></i>
+                    <p style="color: #dc2626; font-size: 1.1rem; font-weight: 600;">Error al cargar tareas del equipo</p>
+                    <p style="color: #7f1d1d; margin-top: 0.5rem;">${message}</p>
+                    <button onclick="loadTeamKanbanTasks()" style="margin-top: 1rem; padding: 0.5rem 1rem; background: #ef4444; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                        <i class="fas fa-redo"></i> Reintentar
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+}
+
+// Función para manejar checkbox de tareas del equipo
+function handleTeamTaskCheck(uniqueTaskId, taskId, isChecked, itemType = 'task') {
+    const itemLabel = itemType === 'subtask' ? 'Subtarea' : 'Tarea';
+    console.log(`📝 ${itemLabel} del equipo`, taskId, isChecked ? 'marcada' : 'desmarcada');
+    
+    // Aquí puedes implementar la lógica para actualizar el estado de la tarea
+    // Por ahora, solo mostramos un mensaje
+    if (isChecked) {
+        alert(`${itemLabel} del equipo marcada como completada. ID: ${taskId}`);
+        // Opcional: recargar las tareas del equipo
+        setTimeout(() => loadTeamKanbanTasks(), 1000);
+    }
 }
 
 // Función para actualizar los contadores de tareas
