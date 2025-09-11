@@ -697,20 +697,7 @@
     
     <!-- Contenido del tab EQUIPO -->
     <div id="team-tasks-content" class="tab-content">
-        <div class="kanban-board">
-            <div class="kanban-column" style="grid-column: 1 / -1;">
-                <div class="column-header" style="background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);">
-                    <span>👥 TAREAS DEL EQUIPO</span>
-                    <span class="task-count">0</span>
-                </div>
-                <div class="column-content">
-                    <div class="empty-column">
-                        <h3 style="color: #374151; margin-bottom: 10px;">🚧 Próximamente</h3>
-                        <p style="color: #6b7280;">Las tareas del equipo se mostrarán aquí</p>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <!-- El contenido se carga dinámicamente vía JavaScript -->
     </div>
     
 </div>
@@ -1386,7 +1373,16 @@ function createPersonalTask() {
 // Inicializar con "Mis Tareas" activo
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 Dashboard Kanban cargado');
-    switchDashboardTab('my-tasks');
+    
+    // Verificar si algún tab específico debe estar activo
+    const activeTab = document.querySelector('.tab-minimal.active');
+    if (activeTab && activeTab.id === 'team-tasks-dashboard-tab') {
+        // Si el tab de equipo está activo, cargar sus tareas
+        switchDashboardTab('team-tasks');
+    } else {
+        // Por defecto, activar "Mis Tareas"
+        switchDashboardTab('my-tasks');
+    }
     
     // Cerrar modal con tecla Escape
     document.addEventListener('keydown', function(e) {
