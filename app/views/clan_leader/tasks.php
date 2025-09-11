@@ -2787,14 +2787,16 @@ function loadTaskData(taskId) {
                 }
                 
             } else {
-                console.error('❌ Error cargando tarea:', data.message);
-                alert('Error al cargar los datos de la tarea');
+                console.error('❌ Error cargando tarea:', data.message || data);
+                console.error('❌ Respuesta completa:', data);
+                alert('Error al cargar los datos de la tarea: ' + (data.message || 'Error desconocido'));
                 closeEditTaskModal();
             }
         })
         .catch(error => {
             console.error('❌ Error de conexión:', error);
-            alert('Error de conexión al cargar la tarea');
+            console.error('❌ Error details:', error.message);
+            alert('Error de conexión al cargar la tarea: ' + error.message);
             closeEditTaskModal();
         });
 }

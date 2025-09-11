@@ -15,6 +15,9 @@ class ClanLeaderController {
     private $db;
     
     public function __construct() {
+        // Inicializar conexión a base de datos
+        $this->db = Database::getInstance()->getConnection();
+        
         $this->auth = new Auth();
         $this->userModel = new User();
         $this->projectModel = new Project();
@@ -4756,27 +4759,39 @@ class ClanLeaderController {
      * Método para obtener datos de una tarea para edición (AJAX)
      */
     public function getTaskDataForEdit() {
+        // Limpiar cualquier output previo
+        if (ob_get_level()) {
+            ob_clean();
+        }
+        
         header('Content-Type: application/json');
         error_reporting(E_ALL & ~E_WARNING);
         
         try {
+            error_log("DEBUG getTaskDataForEdit - Inicio del método");
+            
             // Verificar autenticación
             if (!$this->auth->isLoggedIn()) {
-                Utils::jsonResponse(false, 'Usuario no autenticado');
-                return;
+                error_log("DEBUG getTaskDataForEdit - Usuario no autenticado");
+                echo json_encode(['success' => false, 'message' => 'Usuario no autenticado']);
+                exit;
             }
             
             // Verificar acceso de clan leader
             if (!$this->hasClanLeaderAccess()) {
-                Utils::jsonResponse(false, 'Acceso denegado');
-                return;
+                error_log("DEBUG getTaskDataForEdit - Acceso denegado");
+                echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
+                exit;
             }
             
             // Obtener task_id
             $taskId = $_GET['task_id'] ?? null;
+            error_log("DEBUG getTaskDataForEdit - Task ID recibido: " . ($taskId ?? 'NULL'));
+            
             if (!$taskId || !is_numeric($taskId)) {
-                Utils::jsonResponse(false, 'ID de tarea inválido');
-                return;
+                error_log("DEBUG getTaskDataForEdit - ID de tarea inválido: " . ($taskId ?? 'NULL'));
+                echo json_encode(['success' => false, 'message' => 'ID de tarea inválido']);
+                exit;
             }
             
             // Inicializar modelo si no está definido
@@ -4785,47 +4800,96 @@ class ClanLeaderController {
             }
             
             // Obtener datos de la tarea
+            error_log("DEBUG getTaskDataForEdit - Buscando tarea ID: $taskId");
             $task = $this->taskModel->findById($taskId);
             if (!$task) {
-                Utils::jsonResponse(false, 'Tarea no encontrada');
-                return;
+                error_log("DEBUG getTaskDataForEdit - Tarea no encontrada para ID: $taskId");
+                echo json_encode(['success' => false, 'message' => 'Tarea no encontrada']);
+                exit;
             }
+            error_log("DEBUG getTaskDataForEdit - Tarea encontrada: " . $task['task_name']);
             
             // Verificar que la tarea pertenece al clan del usuario
             if (!isset($this->projectModel)) {
                 $this->projectModel = new Project();
             }
             
+            error_log("DEBUG getTaskDataForEdit - Buscando proyecto ID: " . $task['project_id']);
             $project = $this->projectModel->findById($task['project_id']);
-            if (!$project || $project['clan_id'] != $this->userClan['clan_id']) {
-                Utils::jsonResponse(false, 'Tarea no pertenece a tu clan');
-                return;
+            if (!$project) {
+                error_log("DEBUG getTaskDataForEdit - Proyecto no encontrado para ID: " . $task['project_id']);
+                echo json_encode(['success' => false, 'message' => 'Proyecto de la tarea no encontrado']);
+                exit;
+            }
+            
+            $userClanId = $this->userClan['clan_id'] ?? 'NULL';
+            $projectClanId = $project['clan_id'] ?? 'NULL';
+            error_log("DEBUG getTaskDataForEdit - Clan usuario: $userClanId, Clan proyecto: $projectClanId");
+            
+            if ($project['clan_id'] != $this->userClan['clan_id']) {
+                error_log("DEBUG getTaskDataForEdit - Tarea no pertenece al clan del usuario");
+                echo json_encode(['success' => false, 'message' => 'Tarea no pertenece a tu clan']);
+                exit;
             }
             
             // Obtener proyectos del clan
+            error_log("DEBUG getTaskDataForEdit - Obteniendo proyectos del clan: " . $this->userClan['clan_id']);
             $projects = $this->projectModel->getByClan($this->userClan['clan_id']);
+            error_log("DEBUG getTaskDataForEdit - Proyectos encontrados: " . count($projects));
             
             // Obtener miembros del clan
-            $stmt = $this->db->prepare("
-                SELECT u.user_id, u.full_name, u.email
-                FROM Users u
-                JOIN Clan_Members cm ON u.user_id = cm.user_id
-                WHERE cm.clan_id = ? AND u.is_active = 1
-                ORDER BY u.full_name ASC
-            ");
-            $stmt->execute([$this->userClan['clan_id']]);
-            $members = $stmt->fetchAll();
+            $members = [];
+            try {
+                if (!$this->db) {
+                    throw new Exception("Database connection not available");
+                }
+                
+                $stmt = $this->db->prepare("
+                    SELECT u.user_id, u.full_name, u.email
+                    FROM Users u
+                    JOIN Clan_Members cm ON u.user_id = cm.user_id
+                    WHERE cm.clan_id = ? AND u.is_active = 1
+                    ORDER BY u.full_name ASC
+                ");
+                $stmt->execute([$this->userClan['clan_id']]);
+                $members = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                
+                error_log("DEBUG getTaskDataForEdit - Members count: " . count($members));
+                
+            } catch (Exception $e) {
+                error_log("Error obteniendo miembros: " . $e->getMessage());
+                // Continuar sin miembros si hay error
+            }
             
-            Utils::jsonResponse(true, 'Datos obtenidos exitosamente', [
+            error_log("DEBUG getTaskDataForEdit - Enviando respuesta exitosa");
+            error_log("DEBUG getTaskDataForEdit - Task: " . json_encode($task));
+            error_log("DEBUG getTaskDataForEdit - Projects count: " . count($projects));
+            error_log("DEBUG getTaskDataForEdit - Members count: " . count($members));
+            
+            // Respuesta JSON manual para evitar problemas
+            $response = [
+                'success' => true,
+                'message' => 'Datos obtenidos exitosamente',
                 'task' => $task,
                 'project' => $project,
                 'projects' => $projects,
                 'members' => $members
-            ]);
+            ];
+            
+            echo json_encode($response);
+            exit;
             
         } catch (Exception $e) {
-            error_log("Error en getTaskDataForEdit: " . $e->getMessage());
-            Utils::jsonResponse(false, 'Error crítico del servidor');
+            error_log("ERROR en getTaskDataForEdit: " . $e->getMessage());
+            error_log("ERROR Stack trace: " . $e->getTraceAsString());
+            
+            $errorResponse = [
+                'success' => false,
+                'message' => 'Error crítico del servidor: ' . $e->getMessage()
+            ];
+            
+            echo json_encode($errorResponse);
+            exit;
         }
     }
     
