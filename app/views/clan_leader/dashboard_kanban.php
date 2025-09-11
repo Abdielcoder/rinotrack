@@ -54,12 +54,23 @@
     text-align: center;
 }
 
-/* KANBAN BOARDS - ESTILOS IDÉNTICOS PARA AMBOS TABS */
-.kanban-board,
-.team-kanban-board {
+/* KANBAN BOARDS - MIS TAREAS (ANCHO COMPLETO) */
+.kanban-board {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr 1fr;
     gap: 20px;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    max-width: none;
+    background: transparent;
+}
+
+/* KANBAN EQUIPO - REDUCIDO 30% */
+.team-kanban-board {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 15px;
     margin: 0;
     padding: 0;
     width: 100%;
@@ -2108,15 +2119,15 @@ function mostrarKanbanEquipoDefinitivo() {
         </div>
     `;
     
-    // FORZAR CONTENEDOR EQUIPO IDÉNTICO A MIS TAREAS
+    // CONTENEDOR EQUIPO REDUCIDO 30% (70% del ancho original)
     teamContent.classList.add('active');
     teamContent.style.cssText = `
         display: block !important;
         visibility: visible !important;
         opacity: 1 !important;
-        width: 100% !important;
-        max-width: 100% !important;
-        margin: 0 !important;
+        width: 70% !important;
+        max-width: 70% !important;
+        margin: 0 auto !important;
         padding: 0 !important;
         height: auto !important;
         min-height: 500px !important;
@@ -2145,11 +2156,11 @@ function mostrarKanbanEquipoDefinitivo() {
     // Verificar que se insertó correctamente con la nueva clase
     const teamKanbanBoard = teamContent.querySelector('.team-kanban-board');
     if (teamKanbanBoard) {
-        // FORZAR KANBAN EQUIPO IDÉNTICO A MIS TAREAS
+        // KANBAN EQUIPO REDUCIDO - SE ADAPTA AL CONTENEDOR 70%
         teamKanbanBoard.style.cssText = `
             display: grid !important;
             grid-template-columns: repeat(4, 1fr) !important;
-            gap: 20px !important;
+            gap: 15px !important;
             width: 100% !important;
             max-width: none !important;
             margin: 0 !important;
