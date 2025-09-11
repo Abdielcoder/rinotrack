@@ -497,6 +497,11 @@ try {
         $controller->createTask();
         break;
         
+    case 'clan_leader/get-personal-project-id':
+        $controller = new ClanLeaderController();
+        $controller->getPersonalProjectId();
+        break;
+        
     case 'clan_leader/update-task':
         $controller = new ClanLeaderController();
         $controller->updateTask();

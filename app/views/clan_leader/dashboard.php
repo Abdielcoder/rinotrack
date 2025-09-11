@@ -558,6 +558,8 @@ ob_start();
         <form id="createTaskForm" class="modal-body">
             <!-- Campo oculto para asignar la tarea al usuario actual -->
             <input type="hidden" name="assigned_members[]" value="<?php echo $_SESSION['user_id']; ?>">
+            <!-- Campo oculto para el proyecto personal -->
+            <input type="hidden" id="personal_project_id" name="task_project" value="">
             
             <div class="form-group">
                 <label for="title">
@@ -893,7 +895,28 @@ function openCreateTaskModal() {
         // Establecer fecha mínima como hoy
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('due_date').min = today;
+        
+        // Obtener ID del proyecto personal
+        getPersonalProjectId();
     }
+}
+
+// Función para obtener el ID del proyecto personal
+function getPersonalProjectId() {
+    fetch('?route=clan_leader/get-personal-project-id')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.project_id) {
+                document.getElementById('personal_project_id').value = data.project_id;
+                console.log('✅ Proyecto personal ID:', data.project_id);
+            } else {
+                console.error('❌ Error obteniendo proyecto personal:', data.message);
+                // Mantener valor vacío si no se puede obtener
+            }
+        })
+        .catch(error => {
+            console.error('❌ Error de conexión obteniendo proyecto personal:', error);
+        });
 }
 
 

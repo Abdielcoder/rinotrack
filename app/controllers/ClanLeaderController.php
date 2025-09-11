@@ -4588,6 +4588,47 @@ class ClanLeaderController {
     }
     
     /**
+     * Obtener ID del proyecto personal del usuario
+     */
+    public function getPersonalProjectId() {
+        header('Content-Type: application/json');
+        
+        try {
+            // Verificar autenticación
+            if (!$this->isAuthenticated()) {
+                Utils::jsonResponse(['success' => false, 'message' => 'No autenticado'], 401);
+                return;
+            }
+            
+            $userId = $_SESSION['user_id'];
+            
+            // Obtener o crear proyecto personal
+            $taskModel = new Task();
+            $personalProjectId = $taskModel->getOrCreatePersonalProject($userId);
+            
+            if ($personalProjectId) {
+                Utils::jsonResponse([
+                    'success' => true, 
+                    'project_id' => $personalProjectId,
+                    'message' => 'Proyecto personal obtenido exitosamente'
+                ]);
+            } else {
+                Utils::jsonResponse([
+                    'success' => false, 
+                    'message' => 'No se pudo obtener/crear el proyecto personal'
+                ], 500);
+            }
+            
+        } catch (Exception $e) {
+            error_log("Error en getPersonalProjectId: " . $e->getMessage());
+            Utils::jsonResponse([
+                'success' => false, 
+                'message' => 'Error interno del servidor'
+            ], 500);
+        }
+    }
+    
+    /**
      * Cargar vista
      */
     private function loadView($viewPath, $data = []) {
