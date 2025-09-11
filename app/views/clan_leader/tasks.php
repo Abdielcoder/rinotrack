@@ -2725,8 +2725,22 @@ function openEditTaskModal(taskId) {
 function loadTaskData(taskId) {
     console.log('📥 Cargando datos de tarea:', taskId);
     
+    // Mostrar indicador de carga
+    const modal = document.getElementById('editTaskModal');
+    if (modal) {
+        const modalBody = modal.querySelector('.modal-body-large');
+        if (modalBody) {
+            modalBody.style.opacity = '0.5';
+        }
+    }
+    
     fetch(`?route=clan_leader/get-task-data&task_id=${taskId}`)
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.success && data.task) {
                 const task = data.task;
@@ -2786,17 +2800,24 @@ function loadTaskData(taskId) {
                     document.getElementById('edit_task_info').style.display = 'block';
                 }
                 
+                // Restaurar opacidad del modal
+                if (modal) {
+                    const modalBody = modal.querySelector('.modal-body-large');
+                    if (modalBody) {
+                        modalBody.style.opacity = '1';
+                    }
+                }
+                
             } else {
-                console.error('❌ Error cargando tarea:', data.message || data);
+                console.error('❌ Error cargando tarea:', data.message || 'Respuesta inválida');
                 console.error('❌ Respuesta completa:', data);
-                alert('Error al cargar los datos de la tarea: ' + (data.message || 'Error desconocido'));
+                alert('Error: ' + (data.message || 'No se pudieron cargar los datos de la tarea'));
                 closeEditTaskModal();
             }
         })
         .catch(error => {
             console.error('❌ Error de conexión:', error);
-            console.error('❌ Error details:', error.message);
-            alert('Error de conexión al cargar la tarea: ' + error.message);
+            alert('Error de conexión. Por favor, intente nuevamente.');
             closeEditTaskModal();
         });
 }
@@ -2848,28 +2869,66 @@ function submitEditTask(event) {
     const form = document.getElementById('editTaskForm');
     const formData = new FormData(form);
     
+    // Validar campos requeridos
+    const taskTitle = formData.get('task_title');
+    if (!taskTitle || taskTitle.trim() === '') {
+        alert('El título de la tarea es requerido');
+        return;
+    }
+    
     console.log('📤 Enviando datos de edición...');
+    
+    // Deshabilitar botón de envío
+    const submitBtn = form.querySelector('button[type="submit"]');
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Actualizando...';
+    }
     
     fetch('?route=clan_leader/update-task', {
         method: 'POST',
         body: formData
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
             console.log('✅ Tarea actualizada exitosamente');
+            
+            // Mostrar mensaje de éxito
+            alert('Tarea actualizada exitosamente');
+            
+            // Cerrar modal
             closeEditTaskModal();
             
-            // Recargar datos de la tabla
-            location.reload();
+            // Recargar la página para mostrar cambios
+            setTimeout(() => {
+                location.reload();
+            }, 500);
         } else {
             console.error('❌ Error actualizando tarea:', data.message);
-            alert('Error: ' + data.message);
+            alert('Error: ' + (data.message || 'No se pudo actualizar la tarea'));
+            
+            // Rehabilitar botón
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Actualizar Tarea';
+            }
         }
     })
     .catch(error => {
         console.error('❌ Error de conexión:', error);
-        alert('Error de conexión al actualizar la tarea');
+        alert('Error de conexión. Por favor, intente nuevamente.');
+        
+        // Rehabilitar botón
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = 'Actualizar Tarea';
+        }
     });
 }
 
