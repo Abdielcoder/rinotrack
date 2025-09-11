@@ -126,14 +126,15 @@
     background: #ffffff;
     border: 1px solid #e5e7eb;
     border-radius: 8px;
-    padding: 12px;
-    margin-bottom: 8px;
+    padding: 8px 10px;
+    margin-bottom: 6px;
     transition: all 0.2s ease;
     cursor: pointer;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     display: flex;
     align-items: flex-start;
-    gap: 12px;
+    gap: 8px;
+    min-height: 50px;
 }
 
 .task-card:hover {
@@ -165,12 +166,12 @@
 
 .task-checkbox {
     flex-shrink: 0;
-    margin-top: 2px;
+    margin-top: 1px;
 }
 
 .task-checkbox input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
     cursor: pointer;
     accent-color: #10b981;
 }
@@ -178,6 +179,7 @@
 .task-content {
     flex: 1;
     min-width: 0;
+    overflow: hidden;
 }
 
 .task-id {
@@ -187,20 +189,24 @@
 .task-name {
     color: #1e40af;
     font-weight: 600;
-    font-size: 0.9rem;
-    line-height: 1.3;
-    white-space: normal;
-    word-break: break-word;
-    margin-bottom: 4px;
+    font-size: 0.8rem;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 2px;
 }
 
 .task-project {
     color: #dc2626;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 500;
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .task-project::before {
