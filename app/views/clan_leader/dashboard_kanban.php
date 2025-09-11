@@ -760,11 +760,11 @@
         <div id="team-tasks-stats" class="dashboard-stats" style="display: none;">
             <div class="stat-item">
                 <span>Total Equipo:</span>
-                <span class="stat-value">2</span>
+                <span class="stat-value">0</span>
             </div>
             <div class="stat-item">
                 <span>• Vencidas:</span>
-                <span class="stat-value">1</span>
+                <span class="stat-value">0</span>
             </div>
             <div class="stat-item">
                 <span>• Hoy:</span>
@@ -776,7 +776,7 @@
             </div>
             <div class="stat-item">
                 <span>• Futuras:</span>
-                <span class="stat-value">1</span>
+                <span class="stat-value">0</span>
             </div>
         </div>
     </div>
@@ -1271,7 +1271,7 @@ function switchDashboardTab(tabName) {
     // Cargar datos según el tab seleccionado
     if (tabName === 'team-tasks') {
         console.log('🎯 Tab team-tasks detectado, cargando tareas del equipo...');
-        mostrarKanbanEquipoDefinitivo();
+        loadTeamKanban();
     } else {
         console.log('🎯 Tab seleccionado:', tabName);
     }
@@ -2348,9 +2348,9 @@ function switchDashboardTab(tabName) {
             console.log('📏 Dashboard container reducido 33% para vista equipo');
         }
         
-        // Esperar un momento y mostrar el Kanban del equipo
+        // Cargar datos reales del servidor para el equipo
         setTimeout(() => {
-            mostrarKanbanEquipoDefinitivo();
+            loadTeamKanban();
         }, 100);
         
     } else if (tabName === 'my-tasks') {
