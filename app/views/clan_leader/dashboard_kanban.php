@@ -1427,16 +1427,11 @@ function switchDashboardTab(tabName) {
     if (targetContent) {
         targetContent.classList.add('active');
         targetContent.style.display = 'block';
-        console.log(`🔍 Forzando visibilidad para ${tabName}-content:`, targetContent.style.display);
-        
-        // Debug adicional para el tab de equipo
-        if (tabName === 'team-tasks') {
-            console.log('🎯 Debug específico para team-tasks-content:');
-            console.log('- Element found:', !!targetContent);
-            console.log('- Has active class:', targetContent.classList.contains('active'));
-            console.log('- Display style:', targetContent.style.display);
-            console.log('- Computed display:', window.getComputedStyle(targetContent).display);
-        }
+        targetContent.style.visibility = 'visible';
+        targetContent.style.opacity = '1';
+        targetContent.style.position = 'relative';
+        targetContent.style.zIndex = '10';
+        console.log(`✅ Mostrando ${tabName}-content`);
     }
     
     if (targetButton) {
@@ -1450,9 +1445,24 @@ function switchDashboardTab(tabName) {
     // Cargar datos según el tab seleccionado
     if (tabName === 'team-tasks') {
         console.log('🎯 Tab team-tasks detectado, cargando tareas del equipo...');
+        
+        // APLICAR CLASE team-view AL DASHBOARD-CONTAINER (33% menos)
+        const dashboardContainer = document.querySelector('.dashboard-container');
+        if (dashboardContainer) {
+            dashboardContainer.classList.add('team-view');
+        }
+        
+        // Cargar el Kanban del equipo
         loadTeamKanban();
-    } else {
-        console.log('🎯 Tab seleccionado:', tabName);
+        
+    } else if (tabName === 'my-tasks') {
+        console.log('🎯 Tab my-tasks detectado');
+        
+        // QUITAR CLASE team-view DEL DASHBOARD-CONTAINER
+        const dashboardContainer = document.querySelector('.dashboard-container');
+        if (dashboardContainer) {
+            dashboardContainer.classList.remove('team-view');
+        }
     }
     
     console.log('✅ Tab dashboard cambiado a:', tabName);
@@ -2446,8 +2456,9 @@ window.mostrarKanbanEmergencia = function() {
     console.log('📏 Dimensiones finales:', teamContent.getBoundingClientRect());
 }
 
-// Función para cambiar entre tabs del dashboard (RESTAURADA)
-function switchDashboardTab(tabName) {
+// FUNCIÓN DUPLICADA - ELIMINADA
+/*
+function switchDashboardTab_ELIMINADA(tabName) {
     console.log('🔄 Cambiando tab dashboard:', tabName);
     
     // OCULTAR AMBOS KANBAN POR CLASES ESPECÍFICAS
@@ -2586,6 +2597,7 @@ function switchDashboardTab(tabName) {
     
     console.log('✅ Tab dashboard cambiado a:', tabName);
 }
+*/
 
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 Dashboard Kanban cargado - VERSIÓN DEFINITIVA');
