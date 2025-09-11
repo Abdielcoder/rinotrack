@@ -126,11 +126,14 @@
     background: #ffffff;
     border: 1px solid #e5e7eb;
     border-radius: 8px;
-    padding: 10px;
-    margin-bottom: 10px;
+    padding: 8px 10px;
+    margin-bottom: 8px;
     transition: all 0.2s ease;
     cursor: pointer;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
 }
 
 .task-card:hover {
@@ -140,6 +143,23 @@
     border-color: #d1d5db;
 }
 
+.task-checkbox {
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.task-checkbox input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: #10b981;
+}
+
+.task-content {
+    flex: 1;
+    min-width: 0;
+}
+
 .task-id {
     display: none;
 }
@@ -147,17 +167,17 @@
 .task-name {
     color: #374151;
     font-weight: 500;
-    font-size: 0.8rem;
-    line-height: 1.3;
-    margin-bottom: 8px;
+    font-size: 0.75rem;
+    line-height: 1.2;
+    margin-bottom: 4px;
+    word-wrap: break-word;
 }
 
 .task-meta {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    gap: 8px;
-    margin-bottom: 8px;
+    gap: 6px;
+    margin-bottom: 4px;
 }
 
 .task-status {
@@ -183,33 +203,11 @@
     color: #1e40af;
 }
 
-.priority {
-    padding: 2px 6px;
-    border-radius: 3px;
-    font-size: 0.65rem;
-    font-weight: 500;
-    text-transform: uppercase;
-}
-
-.priority-high {
-    background: #fef2f2;
-    color: #991b1b;
-}
-
-.priority-medium {
-    background: #fff7ed;
-    color: #c2410c;
-}
-
-.priority-low {
-    background: #f0f9ff;
-    color: #075985;
-}
+/* Priority styles removed - no longer needed */
 
 .task-date {
     color: #9ca3af;
     font-size: 0.65rem;
-    margin-top: 4px;
     font-weight: 400;
 }
 
@@ -416,15 +414,20 @@
                     <?php foreach ($vencidas as $task): ?>
                         <?php 
                         $statusClass = "status-" . str_replace(' ', '_', $task['status']);
-                        $priorityClass = "priority-" . $task['priority'];
                         ?>
-                        <div class="task-card">
-                            <div class="task-name"><?= htmlspecialchars($task['task_name']) ?></div>
-                            <div class="task-meta">
-                                <span class="task-status <?= $statusClass ?>"><?= $task['status'] ?></span>
-                                <span class="priority <?= $priorityClass ?>"><?= $task['priority'] ?></span>
+                        <div class="task-card" onclick="toggleTaskCheckbox(event, <?= $task['task_id'] ?>)">
+                            <div class="task-checkbox">
+                                <input type="checkbox" id="task-<?= $task['task_id'] ?>" 
+                                       onclick="event.stopPropagation()" 
+                                       onchange="handleTaskCheck(<?= $task['task_id'] ?>, this.checked)">
                             </div>
-                            <div class="task-date">📅 <?= $task['due_date'] ?> (<?= $task['days_until_due'] ?> días)</div>
+                            <div class="task-content">
+                                <div class="task-name"><?= htmlspecialchars($task['task_name']) ?></div>
+                                <div class="task-meta">
+                                    <span class="task-status <?= $statusClass ?>"><?= $task['status'] ?></span>
+                                </div>
+                                <div class="task-date">📅 <?= $task['due_date'] ?> (<?= $task['days_until_due'] ?> días)</div>
+                            </div>
                         </div>
                     <?php endforeach; ?>
                 <?php else: ?>
@@ -444,15 +447,20 @@
                     <?php foreach ($hoy as $task): ?>
                         <?php 
                         $statusClass = "status-" . str_replace(' ', '_', $task['status']);
-                        $priorityClass = "priority-" . $task['priority'];
                         ?>
-                        <div class="task-card">
-                            <div class="task-name"><?= htmlspecialchars($task['task_name']) ?></div>
-                            <div class="task-meta">
-                                <span class="task-status <?= $statusClass ?>"><?= $task['status'] ?></span>
-                                <span class="priority <?= $priorityClass ?>"><?= $task['priority'] ?></span>
+                        <div class="task-card" onclick="toggleTaskCheckbox(event, <?= $task['task_id'] ?>)">
+                            <div class="task-checkbox">
+                                <input type="checkbox" id="task-<?= $task['task_id'] ?>" 
+                                       onclick="event.stopPropagation()" 
+                                       onchange="handleTaskCheck(<?= $task['task_id'] ?>, this.checked)">
                             </div>
-                            <div class="task-date">📅 <?= $task['due_date'] ?></div>
+                            <div class="task-content">
+                                <div class="task-name"><?= htmlspecialchars($task['task_name']) ?></div>
+                                <div class="task-meta">
+                                    <span class="task-status <?= $statusClass ?>"><?= $task['status'] ?></span>
+                                </div>
+                                <div class="task-date">📅 <?= $task['due_date'] ?></div>
+                            </div>
                         </div>
                     <?php endforeach; ?>
                 <?php else: ?>
@@ -472,15 +480,20 @@
                     <?php foreach ($semana as $task): ?>
                         <?php 
                         $statusClass = "status-" . str_replace(' ', '_', $task['status']);
-                        $priorityClass = "priority-" . $task['priority'];
                         ?>
-                        <div class="task-card">
-                            <div class="task-name"><?= htmlspecialchars($task['task_name']) ?></div>
-                            <div class="task-meta">
-                                <span class="task-status <?= $statusClass ?>"><?= $task['status'] ?></span>
-                                <span class="priority <?= $priorityClass ?>"><?= $task['priority'] ?></span>
+                        <div class="task-card" onclick="toggleTaskCheckbox(event, <?= $task['task_id'] ?>)">
+                            <div class="task-checkbox">
+                                <input type="checkbox" id="task-<?= $task['task_id'] ?>" 
+                                       onclick="event.stopPropagation()" 
+                                       onchange="handleTaskCheck(<?= $task['task_id'] ?>, this.checked)">
                             </div>
-                            <div class="task-date">📅 <?= $task['due_date'] ?> (<?= $task['days_until_due'] ?> días)</div>
+                            <div class="task-content">
+                                <div class="task-name"><?= htmlspecialchars($task['task_name']) ?></div>
+                                <div class="task-meta">
+                                    <span class="task-status <?= $statusClass ?>"><?= $task['status'] ?></span>
+                                </div>
+                                <div class="task-date">📅 <?= $task['due_date'] ?> (<?= $task['days_until_due'] ?> días)</div>
+                            </div>
                         </div>
                     <?php endforeach; ?>
                 <?php else: ?>
@@ -500,15 +513,20 @@
                     <?php foreach (array_slice($futuras, 0, 8) as $task): ?>
                         <?php 
                         $statusClass = "status-" . str_replace(' ', '_', $task['status']);
-                        $priorityClass = "priority-" . $task['priority'];
                         ?>
-                        <div class="task-card">
-                            <div class="task-name"><?= htmlspecialchars($task['task_name']) ?></div>
-                            <div class="task-meta">
-                                <span class="task-status <?= $statusClass ?>"><?= $task['status'] ?></span>
-                                <span class="priority <?= $priorityClass ?>"><?= $task['priority'] ?></span>
+                        <div class="task-card" onclick="toggleTaskCheckbox(event, <?= $task['task_id'] ?>)">
+                            <div class="task-checkbox">
+                                <input type="checkbox" id="task-<?= $task['task_id'] ?>" 
+                                       onclick="event.stopPropagation()" 
+                                       onchange="handleTaskCheck(<?= $task['task_id'] ?>, this.checked)">
                             </div>
-                            <div class="task-date">📅 <?= $task['due_date'] ?> (<?= $task['days_until_due'] ?> días)</div>
+                            <div class="task-content">
+                                <div class="task-name"><?= htmlspecialchars($task['task_name']) ?></div>
+                                <div class="task-meta">
+                                    <span class="task-status <?= $statusClass ?>"><?= $task['status'] ?></span>
+                                </div>
+                                <div class="task-date">📅 <?= $task['due_date'] ?> (<?= $task['days_until_due'] ?> días)</div>
+                            </div>
                         </div>
                     <?php endforeach; ?>
                     <?php if (count($futuras) > 8): ?>
@@ -581,6 +599,41 @@ function switchDashboardTab(tabName) {
     }
     
     console.log('✅ Tab dashboard cambiado a:', tabName);
+}
+
+// Función para manejar el click en el card (togglea el checkbox)
+function toggleTaskCheckbox(event, taskId) {
+    // Si el click fue en el checkbox mismo, no hacer nada
+    if (event.target.type === 'checkbox') {
+        return;
+    }
+    
+    const checkbox = document.getElementById('task-' + taskId);
+    if (checkbox) {
+        checkbox.checked = !checkbox.checked;
+        handleTaskCheck(taskId, checkbox.checked);
+    }
+}
+
+// Función para manejar cuando se marca/desmarca una tarea
+function handleTaskCheck(taskId, isChecked) {
+    console.log('📝 Tarea', taskId, isChecked ? 'marcada' : 'desmarcada');
+    
+    // Aquí puedes agregar lógica adicional como:
+    // - Actualizar el estado en la base de datos vía AJAX
+    // - Cambiar el estilo del card
+    // - Mover la tarea a otra columna
+    
+    const card = document.querySelector(`#task-${taskId}`).closest('.task-card');
+    if (card) {
+        if (isChecked) {
+            card.style.opacity = '0.6';
+            card.querySelector('.task-name').style.textDecoration = 'line-through';
+        } else {
+            card.style.opacity = '1';
+            card.querySelector('.task-name').style.textDecoration = 'none';
+        }
+    }
 }
 
 // Inicializar con "Mis Tareas" activo
