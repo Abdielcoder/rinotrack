@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>🔧 Test Ruta Clan Leader</title>
+</head>
+<body>
+    <h1>🔧 Test Ruta Clan Leader</h1>
+    <button onclick="testRuta()">Probar Ruta</button>
+    <div id="resultado"></div>
+
+    <script>
+    function testRuta() {
+        console.log('🔄 Probando ruta...');
+        
+        fetch('?route=clan_leader/get-my-kanban-tasks')
+            .then(response => {
+                console.log('📡 Response status:', response.status);
+                return response.text();
+            })
+            .then(data => {
+                console.log('📋 Response data:', data);
+                document.getElementById('resultado').innerHTML = '<pre>' + data + '</pre>';
+                
+                try {
+                    const json = JSON.parse(data);
+                    if (json.success) {
+                        document.getElementById('resultado').innerHTML = 
+                            '<div style="background:lightgreen; padding:10px;">' +
+                            '✅ FUNCIONA: ' + (json.total || 0) + ' tareas encontradas' +
+                            '</div>' + 
+                            '<pre>' + JSON.stringify(json, null, 2) + '</pre>';
+                    }
+                } catch (e) {
+                    console.error('❌ No es JSON válido:', e);
+                }
+            })
+            .catch(error => {
+                console.error('❌ Error:', error);
+                document.getElementById('resultado').innerHTML = 
+                    '<div style="background:red; color:white; padding:10px;">❌ Error: ' + error + '</div>';
+            });
+    }
+    </script>
+</body>
+</html>

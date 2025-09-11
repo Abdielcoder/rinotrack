@@ -769,6 +769,11 @@ try {
         $controller->getMyKanbanTasks();
         break;
         
+    case 'clan_leader/getMyKanbanTasksNew':
+        $controller = new ClanLeaderController();
+        $controller->getMyKanbanTasksNew();
+        break;
+        
     case 'clan_leader/get-team-kanban-tasks':
         $controller = new ClanLeaderController();
         $controller->getTeamKanbanTasks();

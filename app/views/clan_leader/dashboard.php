@@ -834,7 +834,7 @@ function loadMyKanbanTasks() {
     
     kanbanBoard.innerHTML = '<div class="loading-message"><i class="fas fa-spinner fa-spin"></i><br>Cargando mis tareas...</div>';
     
-    fetch('?route=clan_leader/getMyKanbanTasksNew')
+    fetch('?route=clan_leader/get-my-kanban-tasks')
         .then(response => response.json())
         .then(data => {
             console.log('📋 Respuesta mis tareas:', data);

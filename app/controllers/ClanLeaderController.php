@@ -4158,7 +4158,7 @@ class ClanLeaderController {
     }
     
     /**
-     * MÉTODO ANTERIOR - Obtener MIS tareas para Kanban - REESTRUCTURADO COMPLETAMENTE
+     * MÉTODO ACTUALIZADO - Ahora usa la misma lógica que clan_member
      */
     public function getMyKanbanTasks() {
         header('Content-Type: application/json');
