@@ -482,7 +482,7 @@ ob_start();
 .page-header {
     background: transparent;
     color: inherit;
-    padding: 1.5rem 0;
+    padding: 0 0 0.5rem 0;
     margin-bottom: 1.5rem;
 }
 
@@ -546,6 +546,12 @@ ob_start();
 
 .btn-create i {
     font-size: 0.85rem;
+}
+
+/* Contenedor principal */
+.clan-leader-tasks-container {
+    padding: 0;
+    margin: 0;
 }
 
 /* Contenido Principal */
