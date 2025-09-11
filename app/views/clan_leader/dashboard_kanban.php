@@ -311,7 +311,7 @@
     background: #dc2626;
 }
 
-/* ===== KANBAN EQUIPO - CLASES COMPLETAMENTE NUEVAS ===== */
+/* ===== KANBAN EQUIPO - ESTILOS IDÉNTICOS A MIS TAREAS ===== */
 .equipo-kanban-board {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -319,31 +319,32 @@
     width: 100%;
     max-width: 1400px;
     margin: 0 auto;
-    padding: 20px;
-    background: #f8fafc;
-    border-radius: 12px;
-    min-height: 600px;
+    padding: 0;
+    background: transparent;
+    border-radius: 0;
+    min-height: 500px;
 }
 
 .equipo-column {
     background: white;
     border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     overflow: hidden;
-    min-height: 500px;
+    min-height: 400px;
     display: flex;
     flex-direction: column;
 }
 
 .equipo-column-header {
-    padding: 16px;
-    font-weight: 600;
-    font-size: 14px;
+    padding: 16px 20px;
+    font-weight: 700;
+    font-size: 13px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .equipo-column-header.vencidas {
@@ -371,18 +372,19 @@
 }
 
 .equipo-task-count {
-    background: rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.9);
     border-radius: 12px;
-    padding: 4px 8px;
+    padding: 2px 8px;
     font-size: 12px;
     font-weight: 700;
     min-width: 20px;
     text-align: center;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .equipo-column-content {
     flex: 1;
-    padding: 16px;
+    padding: 16px 20px 20px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
@@ -393,15 +395,16 @@
     background: white;
     border-radius: 8px;
     border: 1px solid #e5e7eb;
-    padding: 12px;
+    padding: 16px;
     cursor: pointer;
     transition: all 0.2s ease;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    margin-bottom: 12px;
 }
 
 .equipo-task-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
     border-color: #3b82f6;
 }
 
@@ -424,8 +427,8 @@
 .equipo-task-header {
     display: flex;
     align-items: flex-start;
-    gap: 8px;
-    margin-bottom: 8px;
+    gap: 12px;
+    margin-bottom: 12px;
 }
 
 .equipo-task-checkbox {
@@ -435,7 +438,7 @@
 .equipo-task-checkbox input[type="checkbox"] {
     width: 16px;
     height: 16px;
-    border-radius: 4px;
+    border-radius: 3px;
     border: 2px solid #d1d5db;
     cursor: pointer;
 }
@@ -445,12 +448,12 @@
     font-weight: 600;
     color: #1f2937;
     font-size: 14px;
-    line-height: 1.4;
+    line-height: 1.5;
 }
 
 .equipo-task-project {
-    margin-top: 8px;
-    padding-top: 8px;
+    margin-top: 12px;
+    padding-top: 12px;
     border-top: 1px solid #f3f4f6;
 }
 
@@ -458,12 +461,13 @@
     font-size: 12px;
     color: #6b7280;
     margin-bottom: 4px;
+    font-weight: 500;
 }
 
 .equipo-task-due-date {
     font-size: 12px;
     color: #6b7280;
-    margin-bottom: 4px;
+    margin-bottom: 6px;
 }
 
 .equipo-task-user {
