@@ -149,11 +149,12 @@ ob_start();
                         <div class="delegation-section-minimal">
                             <label class="checkbox-label-minimal">
                                 <input type="checkbox" 
-                                       class="delegation-toggle" 
+                                       class="delegation-toggle-hidden" 
                                        data-project-id="<?= $project['project_id'] ?>"
                                        <?= isset($project['allow_delegation']) && $project['allow_delegation'] ? 'checked' : '' ?>
-                                       onchange="toggleProjectDelegation(<?= $project['project_id'] ?>, this.checked)">
-                                <span class="checkmark"></span>
+                                       onchange="toggleProjectDelegation(<?= $project['project_id'] ?>, this.checked)"
+                                       style="display: none !important; position: absolute !important; left: -9999px !important;">
+                                <span class="checkmark-custom"></span>
                                 <span class="checkbox-text">
                                     <i class="fas fa-user-plus"></i>
                                     Permitir delegación de tareas
@@ -659,7 +660,7 @@ function toggleProjectDelegation(projectId, isAllowed) {
             showToast(data.message || 'Configuración actualizada', 'success');
             
             // Actualizar visualmente el checkbox
-            const checkmark = document.querySelector(`[data-project-id="${projectId}"] + .checkmark`);
+            const checkmark = document.querySelector(`[data-project-id="${projectId}"] + .checkmark-custom`);
             if (checkmark) {
                 if (isAllowed) {
                     checkmark.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
@@ -1106,19 +1107,32 @@ function toggleProjectDelegation(projectId, isAllowed) {
 }
 
 .checkbox-label-minimal input[type="checkbox"] {
-    display: none;
+    display: none !important;
+    position: absolute !important;
+    left: -9999px !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+/* Asegurar que no aparezcan checkboxes nativos */
+.delegation-toggle-hidden {
+    display: none !important;
+    position: absolute !important;
+    left: -9999px !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
 }
 
 .checkbox-label-minimal:hover {
     opacity: 0.8;
 }
 
-.checkbox-label-minimal:hover .checkmark {
+.checkbox-label-minimal:hover .checkmark-custom {
     border-color: #764ba2;
     transform: scale(1.05);
 }
 
-.checkbox-label-minimal .checkmark {
+.checkbox-label-minimal .checkmark-custom {
     width: 24px;
     height: 24px;
     background-color: #fff;
@@ -1127,15 +1141,16 @@ function toggleProjectDelegation(projectId, isAllowed) {
     position: relative;
     transition: all 0.3s ease;
     flex-shrink: 0;
+    cursor: pointer;
 }
 
-.checkbox-label-minimal input[type="checkbox"]:checked + .checkmark {
+.checkbox-label-minimal input[type="checkbox"]:checked + .checkmark-custom {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border-color: #667eea;
     box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
 }
 
-.checkbox-label-minimal input[type="checkbox"]:checked + .checkmark::after {
+.checkbox-label-minimal input[type="checkbox"]:checked + .checkmark-custom::after {
     content: '';
     position: absolute;
     left: 8px;
