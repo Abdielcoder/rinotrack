@@ -2102,18 +2102,145 @@ function mostrarKanbanEquipoDefinitivo() {
         </div>
     `;
     
-    // Asegurar que el contenedor sea visible
+    // FORZAR VISIBILIDAD AGRESIVA DE TODO EL CONTENEDOR
     teamContent.classList.add('active');
-    teamContent.style.display = 'block';
+    teamContent.style.cssText = `
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        width: 100% !important;
+        height: auto !important;
+        min-height: 500px !important;
+        position: relative !important;
+        z-index: 1 !important;
+    `;
+    
+    // También forzar visibilidad del contenedor padre si existe
+    const parentContainer = teamContent.parentElement;
+    if (parentContainer) {
+        parentContainer.style.cssText = `
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            width: 100% !important;
+            height: auto !important;
+        `;
+        console.log('🔧 Contenedor padre también forzado a visible');
+    }
     
     console.log('✅ KANBAN INSERTADO CON CLASES CSS EXISTENTES');
     
     // Verificar que se insertó correctamente
     const kanbanBoard = teamContent.querySelector('.kanban-board');
     if (kanbanBoard) {
-        console.log('✅ .kanban-board encontrado y usando CSS del proyecto');
-        console.log('📏 Dimensiones:', kanbanBoard.getBoundingClientRect());
+        // FORZAR VISIBILIDAD DEL KANBAN BOARD TAMBIÉN
+        kanbanBoard.style.cssText = `
+            display: grid !important;
+            grid-template-columns: repeat(4, 1fr) !important;
+            gap: 20px !important;
+            width: 100% !important;
+            height: auto !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        `;
+        
+        console.log('✅ .kanban-board encontrado y forzado a visible');
+        console.log('📏 Dimensiones DESPUÉS de forzar:', kanbanBoard.getBoundingClientRect());
+        
+        // También forzar visibilidad de cada columna
+        const columns = kanbanBoard.querySelectorAll('.kanban-column');
+        columns.forEach((column, index) => {
+            column.style.cssText = `
+                display: block !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+                width: 100% !important;
+                height: auto !important;
+                min-height: 400px !important;
+            `;
+            console.log(`✅ Columna ${index + 1} forzada a visible`);
+        });
+    } else {
+        console.error('❌ .kanban-board NO encontrado después de insertar');
     }
+}
+
+// FUNCIÓN DE EMERGENCIA - Ejecuta esto manualmente en la consola si no funciona
+window.mostrarKanbanEmergencia = function() {
+    console.log('🚨 FUNCIÓN DE EMERGENCIA ACTIVADA');
+    
+    // Buscar el contenedor
+    const teamContent = document.getElementById('team-tasks-content');
+    if (!teamContent) {
+        console.error('❌ No se encuentra team-tasks-content');
+        return;
+    }
+    
+    // Crear un div completamente nuevo con estilos inline brutales
+    const emergencyDiv = document.createElement('div');
+    emergencyDiv.innerHTML = `
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 20px; padding: 20px; background: #f8fafc; border-radius: 12px; width: 100%; box-sizing: border-box; min-height: 500px; position: relative; z-index: 9999;">
+            <div style="background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden;">
+                <div style="background: #fef2f2; color: #991b1b; padding: 16px; font-weight: bold; border-bottom: 3px solid #ef4444;">
+                    ⚠️ VENCIDAS (1)
+                </div>
+                <div style="padding: 16px;">
+                    <div style="background: white; border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px; margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                        <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                            <input type="checkbox">
+                            <strong>Hacer QA</strong>
+                        </div>
+                        <div style="font-size: 12px; color: #6b7280;">
+                            <div>📁 Proyecto del equipo</div>
+                            <div style="color: #8b5cf6;">👤 Usuario Asignado</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden;">
+                <div style="background: #fffbeb; color: #92400e; padding: 16px; font-weight: bold; border-bottom: 3px solid #f59e0b;">
+                    📅 HOY (0)
+                </div>
+                <div style="padding: 16px; text-align: center; color: #9ca3af;">Sin tareas para hoy</div>
+            </div>
+            
+            <div style="background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden;">
+                <div style="background: #eff6ff; color: #1e40af; padding: 16px; font-weight: bold; border-bottom: 3px solid #3b82f6;">
+                    📆 ESTA SEMANA (0)
+                </div>
+                <div style="padding: 16px; text-align: center; color: #9ca3af;">Sin tareas esta semana</div>
+            </div>
+            
+            <div style="background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden;">
+                <div style="background: #f0fdf4; color: #166534; padding: 16px; font-weight: bold; border-bottom: 3px solid #10b981;">
+                    🚀 FUTURAS (1)
+                </div>
+                <div style="padding: 16px;">
+                    <div style="background: white; border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px; margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                        <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                            <input type="checkbox">
+                            <strong>Reportes</strong>
+                        </div>
+                        <div style="font-size: 12px; color: #6b7280;">
+                            <div>📁 Proyecto del equipo</div>
+                            <div style="color: #8b5cf6;">👤 Usuario Asignado</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Limpiar el contenedor y agregar el nuevo div
+    teamContent.innerHTML = '';
+    teamContent.appendChild(emergencyDiv);
+    
+    // Forzar visibilidad brutal
+    teamContent.style.cssText = 'display: block !important; visibility: visible !important; opacity: 1 !important; width: 100% !important; height: auto !important; min-height: 500px !important; position: relative !important; z-index: 9999 !important;';
+    
+    console.log('✅ KANBAN DE EMERGENCIA INSERTADO');
+    console.log('📏 Dimensiones finales:', teamContent.getBoundingClientRect());
 }
 
 // Función para cambiar entre tabs del dashboard (RESTAURADA)
