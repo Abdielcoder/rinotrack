@@ -3,34 +3,31 @@
 ob_start();
 ?>
 
-<div class="clan-leader-dashboard minimal">
-    <!-- Header Minimalista -->
-    <header class="minimal-header">
-        <div class="header-row">
-            <div class="title-minimal">
-                <div class="clan-icon-large"><?php echo $clanIcon ?? ''; ?></div>
-                <h1><?php echo htmlspecialchars($clan['clan_name'] ?? ''); ?></h1>
-                <span class="subtitle"><?php echo htmlspecialchars($clan['clan_departamento'] ?? ''); ?></span>
-            </div>
-            
-            <div class="actions-minimal">
-                <a href="?route=logout" class="btn-minimal danger" title="Cerrar sesión">
-                    <i class="fas fa-sign-out-alt"></i>
-                    Cerrar Sesión
-                </a>
-            </div>
-        </div>
-    </header>
-
-    <!-- Tablero Kanban de Tareas del Clan -->
-    <div class="content-minimal">
-        <section class="kanban-section animate-fade-in">
-            <div class="kanban-header">
-                <div class="kanban-title">
-                    <h3><i class="fas fa-tasks icon-gradient"></i> Tareas</h3>
+<div class="kanban-section">
+    <div class="kanban-header">
+        <div class="header-content">
+            <div class="header-left">
+                <div class="header-icon">
+                    <i class="fas fa-columns"></i>
                 </div>
-                <div class="kanban-actions">
-                    <button class="btn-add-task" onclick="openAddTaskModal()">
+                <div class="header-text">
+                    <h1 class="page-title">Dashboard Kanban</h1>
+                    <p class="page-subtitle">Gestiona tus tareas de manera visual y eficiente</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <div class="stats-summary">
+                    <div class="stat-item">
+                        <div class="stat-number" id="total-tasks">0</div>
+                        <div class="stat-label">Tareas Totales</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="completed-tasks">0</div>
+                        <div class="stat-label">Completadas</div>
+                    </div>
+                </div>
+                <div class="header-buttons">
+                    <button class="btn-primary" onclick="openCreateTaskModal()">
                         <i class="fas fa-plus"></i>
                         Agregar Tarea
                     </button>
@@ -53,9 +50,9 @@ ob_start();
             <div id="my-tasks-kanban-content" class="kanban-tab-content active" style="display: block;">
                 <div id="my-tasks-kanban-board" class="kanban-board-compact">
                     <!-- El contenido se carga dinámicamente -->
-                    <div class="loading-message">
+                    <div class="loading-state">
                         <i class="fas fa-spinner fa-spin"></i>
-                        Cargando mis tareas...
+                        <p>Cargando tus tareas...</p>
                     </div>
                 </div>
             </div>
@@ -64,39 +61,26 @@ ob_start();
             <div id="team-tasks-kanban-content" class="kanban-tab-content" style="display: none;">
                 <div id="team-tasks-kanban-board" class="kanban-board-compact">
                     <!-- El contenido se carga dinámicamente mediante JavaScript -->
+                    <div class="loading-state">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <p>Cargando tareas del equipo...</p>
+                    </div>
                 </div>
-            </div> <!-- Cierre del team-tasks-kanban-content -->
-        </section>
-    </div> <!-- Cierre de content-minimal -->
-</div> <!-- Cierre de clan-leader-dashboard minimal -->
-
-<!-- Modales y Scripts -->
-
-<!-- Modal para agregar tarea -->
-<div id="addTaskModal" class="modal-overlay">
-    <div class="modal-content modal-large">
-        <div class="modal-header">
-            <h3>
-                <i class="fas fa-plus-circle"></i> 
-                Agregar Nueva Tarea Personal
-            </h3>
-            <button class="modal-close" onclick="closeAddTaskModal()">
-                <i class="fas fa-times"></i>
-            </button>
+            </div>
         </div>
-        <!-- Contenido del modal aquí -->
     </div>
 </div>
 
-<!-- Scripts -->
 <script>
-console.log('🚀 Dashboard.php JavaScript cargado - Debug activo v4.0');
+// Variables globales
+let myKanbanTasks = [];
+let teamKanbanTasks = [];
 
 // Función para cambiar entre tabs del Kanban
 function switchKanbanTab(tabName) {
-    console.log('🔄 switchKanbanTab llamado con:', tabName);
+    console.log('🔄 Cambiando a tab:', tabName);
     
-    // Ocultar TODOS los tab contents
+    // Ocultar todos los tab contents
     document.querySelectorAll('.kanban-tab-content').forEach(content => {
         content.classList.remove('active');
         content.style.display = 'none';
@@ -112,7 +96,7 @@ function switchKanbanTab(tabName) {
     if (targetContent) {
         targetContent.classList.add('active');
         targetContent.style.display = 'block';
-        console.log('✅ Tab content activado:', tabName + '-kanban-content');
+        console.log('✅ Tab content mostrado:', tabName + '-kanban-content');
     } else {
         console.error('🔴 No se encontró tab content:', tabName + '-kanban-content');
     }
@@ -128,113 +112,102 @@ function switchKanbanTab(tabName) {
     
     // Cargar datos SOLO del tab activo
     if (tabName === 'my-tasks') {
-        console.log('🔵 Cargando MIS tareas...');
         loadMyKanbanTasks();
     } else if (tabName === 'team-tasks') {
-        console.log('🟡 Cargando tareas del EQUIPO...');
         loadTeamKanbanTasks();
     }
 }
 
-// Función para cargar mis tareas en el Kanban
+// Cargar tareas personales para Kanban
 function loadMyKanbanTasks() {
-    console.log('🔵 loadMyKanbanTasks() iniciado');
-    const kanbanBoard = document.getElementById('my-tasks-kanban-board');
-    if (!kanbanBoard) {
-        console.error('🔴 No se encontró my-tasks-kanban-board');
-        return;
-    }
-    
-    kanbanBoard.innerHTML = '<div class="loading-message"><i class="fas fa-spinner fa-spin"></i> Cargando mis tareas...</div>';
-    
-    fetch('?route=clan_leader/get-my-kanban-tasks')
-        .then(response => response.json())
-        .then(data => {
-            console.log('🔵 === RESPUESTA KANBAN ===');
-            console.log('🔵 Success:', data.success);
-            console.log('🔵 Kanban Tasks:', data.kanbanTasks);
-            
-            if (data.success) {
-                renderMyKanbanBoard(data.kanbanTasks);
-            } else {
-                kanbanBoard.innerHTML = '<div class="loading-message text-danger">Error: ' + (data.message || 'Error desconocido') + '</div>';
-            }
-        })
-        .catch(error => {
-            console.error('🔴 Error:', error);
-            kanbanBoard.innerHTML = '<div class="loading-message text-danger">Error de conexión</div>';
-        });
+    console.log('🔄 Cargando mis tareas Kanban...');
+    fetch('?route=clan_leader/my-kanban-tasks')
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            myKanbanTasks = data.tasks || [];
+            console.log('✅ Mis tareas Kanban cargadas:', myKanbanTasks.length);
+            renderMyKanbanBoard(myKanbanTasks);
+            updateKanbanStats();
+        } else {
+            console.error('❌ Error al cargar mis tareas Kanban:', data.message);
+        }
+    })
+    .catch(error => {
+        console.error('❌ Error de conexión al cargar mis tareas Kanban:', error);
+    });
 }
 
-// Función para cargar tareas del equipo
+// Cargar tareas del equipo para Kanban
 function loadTeamKanbanTasks() {
-    console.log('🟡 loadTeamKanbanTasks() iniciado');
-    const kanbanBoard = document.getElementById('team-tasks-kanban-board');
-    if (!kanbanBoard) {
-        console.error('🔴 No se encontró team-tasks-kanban-board');
-        return;
-    }
-    
-    kanbanBoard.innerHTML = '<div class="loading-message"><i class="fas fa-spinner fa-spin"></i> Cargando tareas del equipo...</div>';
-    
-    fetch('?route=clan_leader/get-team-kanban-tasks')
-        .then(response => response.json())
-        .then(data => {
-            console.log('🟡 === RESPUESTA TEAM KANBAN ===');
-            console.log('🟡 Success:', data.success);
-            console.log('🟡 Debug:', data.debug);
-            console.log('🟡 Kanban Tasks:', data.kanbanTasks);
-            
-            if (data.success && data.kanbanTasks) {
-                console.log('🟡 Total tareas del equipo:', data.total);
-                renderTeamKanbanBoard(data.kanbanTasks);
-            } else {
-                kanbanBoard.innerHTML = '<div class="loading-message text-danger">Error: ' + (data.message || 'Error desconocido') + '</div>';
-            }
-        })
-        .catch(error => {
-            console.error('🔴 Error:', error);
-            kanbanBoard.innerHTML = '<div class="loading-message text-danger">Error de conexión</div>';
-        });
+    console.log('🔄 Cargando tareas del equipo Kanban...');
+    fetch('?route=clan_leader/team-kanban-tasks')
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            teamKanbanTasks = data.tasks || [];
+            console.log('✅ Tareas del equipo Kanban cargadas:', teamKanbanTasks.length);
+            renderTeamKanbanBoard(teamKanbanTasks);
+            updateKanbanStats();
+        } else {
+            console.error('❌ Error al cargar tareas del equipo Kanban:', data.message);
+        }
+    })
+    .catch(error => {
+        console.error('❌ Error de conexión al cargar tareas del equipo Kanban:', error);
+    });
 }
 
-// Función para renderizar el tablero Kanban
-function renderMyKanbanBoard(kanbanTasks) {
-    console.log('🟢 renderMyKanbanBoard() iniciado');
-    const kanbanBoard = document.getElementById('my-tasks-kanban-board');
-    if (!kanbanBoard) return;
-    
-    const columns = ['vencidas', 'hoy', 'semana1', 'semana2'];
-    const columnTitles = {
-        'vencidas': 'Vencidas',
-        'hoy': 'Hoy', 
-        'semana1': '1 Semana',
-        'semana2': '2+ Semanas'
+// Renderizar tablero Kanban personal
+function renderMyKanbanBoard(tasks) {
+    console.log('🎨 Renderizando tablero Kanban personal con', tasks.length, 'tareas');
+    const board = document.getElementById('my-tasks-kanban-board');
+    if (!board) return;
+
+    const columns = {
+        'overdue': [],
+        'today': [],
+        'week1': [],
+        'week2plus': []
     };
-    
+
+    const columnTitles = {
+        'overdue': 'Vencidas',
+        'today': 'Hoy',
+        'week1': '1 Semana',
+        'week2plus': '2+ Semanas'
+    };
+
+    // Clasificar tareas por columnas
+    tasks.forEach(task => {
+        const column = getKanbanColumn(task.due_date);
+        if (columns[column]) {
+            columns[column].push(task);
+        }
+    });
+
     let html = '';
-    columns.forEach(column => {
-        const tasks = kanbanTasks[column] || [];
-        const columnClass = column === 'vencidas' ? 'overdue' : column === 'hoy' ? 'today' : column === 'semana1' ? 'week1' : 'week2';
+    Object.keys(columns).forEach(column => {
+        const tasks = columns[column];
+        const columnClass = `column-${column}`;
         
-        html += `<div class="kanban-column-compact">
-            <div class="column-header ${columnClass}">
-                <h4>${columnTitles[column]}</h4>
-                <span class="task-count">${tasks.length}</span>
-            </div>
-            <div class="column-content-compact">`;
+        html += `
+            <div class="kanban-column-compact ${columnClass}">
+                <div class="column-header ${columnClass}">
+                    <h4>${columnTitles[column]}</h4>
+                    <span class="task-count">${tasks.length}</span>
+                </div>
+                <div class="column-content">`;
         
         tasks.forEach(task => {
-            const isPersonal = (task.is_personal == 1);
-            const isSubtask = (task.item_type === 'subtask');
+            const isSubtask = task.item_type === 'subtask';
+            const cardClass = isSubtask ? 'subtask-card-micro' : 'task-card-mini';
+            const isPersonal = true; // Es el tablero personal
             
-            // Log detallado de cada tarea que se renderiza
             console.log(`🟢 Renderizando: ID=${task.task_id}, Name="${task.task_name}", Type=${task.item_type}, Personal=${isPersonal}, Project="${task.project_name}"`);
             
-            const cardClass = isSubtask ? 'subtask-card-micro' : 'task-card-mini';
-            
             html += `<div class="${cardClass} ${columnClass}" data-task-id="${task.task_id}" data-item-type="${task.item_type}">
-                <div class="task-header-mini">
+                <div class="task-content-mini">
                     <input type="checkbox" class="task-checkbox-mini" ${task.status === 'completed' ? 'checked' : ''} 
                            onchange="toggleTaskStatusKanban(${task.task_id}, this.checked, '${isSubtask ? 'subtask' : 'task'}')">
                     <div class="task-name-mini">
@@ -245,62 +218,77 @@ function renderMyKanbanBoard(kanbanTasks) {
                 </div>
                 <div class="task-tags-mini">
                     <span class="task-tag project-tag ${isPersonal ? 'personal' : 'clan'} ${isSubtask ? 'subtask-tag' : ''}">
-                        ${isPersonal ? 
-                            '<i class="fas fa-user"></i>' : 
-                            '<i class="fas fa-users"></i>'
+                        ${task.project_name ? 
+                            (isPersonal ? '<i class="fas fa-user"></i>' : '<i class="fas fa-users"></i>') :
+                            '<i class="fas fa-inbox"></i>'
                         }
                     </span>
                     ${task.assigned_user_name ? `<span class="task-tag assignee-tag ${isSubtask ? 'subtask-tag' : ''}" title="${task.assigned_user_name}"><i class="fas fa-user-tag"></i></span>` : ''}
                     <span class="task-tag due-tag ${columnClass} ${isSubtask ? 'subtask-tag' : ''}">
-                        ${column === 'vencidas' ? '<i class="fas fa-exclamation-triangle"></i>' : 
-                          column === 'hoy' ? '<i class="fas fa-clock"></i>' :
-                          column === 'semana1' ? '<i class="fas fa-calendar"></i>' :
+                        ${column === 'overdue' ? '<i class="fas fa-exclamation-triangle"></i>' :
+                          column === 'today' ? '<i class="fas fa-clock"></i>' :
+                          column === 'week1' ? '<i class="fas fa-calendar-week"></i>' :
                           '<i class="fas fa-calendar-plus"></i>'}
                     </span>
                 </div>
             </div>`;
         });
-        
-        html += `</div></div>`;
+
+        html += '</div></div>';
     });
-    
-    kanbanBoard.innerHTML = html;
+
+    board.innerHTML = html;
 }
 
-function renderTeamKanbanBoard(kanbanTasks) {
-    console.log('🟠 renderTeamKanbanBoard() iniciado');
-    const kanbanBoard = document.getElementById('team-tasks-kanban-board');
-    if (!kanbanBoard) return;
-    
-    const columns = ['vencidas', 'hoy', 'semana1', 'semana2'];
-    const columnTitles = {
-        'vencidas': 'Vencidas',
-        'hoy': 'Hoy', 
-        'semana1': '1 Semana',
-        'semana2': '2+ Semanas'
+// Renderizar tablero Kanban del equipo
+function renderTeamKanbanBoard(tasks) {
+    console.log('🎨 Renderizando tablero Kanban del equipo con', tasks.length, 'tareas');
+    const board = document.getElementById('team-tasks-kanban-board');
+    if (!board) return;
+
+    const columns = {
+        'overdue': [],
+        'today': [],
+        'week1': [],
+        'week2plus': []
     };
-    
+
+    const columnTitles = {
+        'overdue': 'Vencidas',
+        'today': 'Hoy',
+        'week1': '1 Semana',
+        'week2plus': '2+ Semanas'
+    };
+
+    // Clasificar tareas por columnas
+    tasks.forEach(task => {
+        const column = getKanbanColumn(task.due_date);
+        if (columns[column]) {
+            columns[column].push(task);
+        }
+    });
+
     let html = '';
-    columns.forEach(column => {
-        const tasks = kanbanTasks[column] || [];
-        const columnClass = column === 'vencidas' ? 'overdue' : column === 'hoy' ? 'today' : column === 'semana1' ? 'week1' : 'week2';
+    Object.keys(columns).forEach(column => {
+        const tasks = columns[column];
+        const columnClass = `column-${column}`;
         
-        html += `<div class="kanban-column-compact">
-            <div class="column-header ${columnClass}">
-                <h4>${columnTitles[column]}</h4>
-                <span class="task-count">${tasks.length}</span>
-            </div>
-            <div class="column-content-compact">`;
+        html += `
+            <div class="kanban-column-compact ${columnClass}">
+                <div class="column-header ${columnClass}">
+                    <h4>${columnTitles[column]}</h4>
+                    <span class="task-count">${tasks.length}</span>
+                </div>
+                <div class="column-content">`;
         
         tasks.forEach(task => {
-            const isSubtask = (task.item_type === 'subtask');
+            const isSubtask = task.item_type === 'subtask';
+            const cardClass = isSubtask ? 'subtask-card-micro' : 'task-card-mini';
             
             console.log(`🟡 Renderizando Team: ID=${task.task_id}, Name="${task.task_name}", Type=${task.item_type}, Assigned="${task.assigned_user_name}"`);
             
-            const cardClass = isSubtask ? 'subtask-card-micro' : 'task-card-mini';
-            
             html += `<div class="${cardClass} ${columnClass}" data-task-id="${task.task_id}" data-item-type="${task.item_type}">
-                <div class="task-header-mini">
+                <div class="task-content-mini">
                     <input type="checkbox" class="task-checkbox-mini" ${task.status === 'completed' ? 'checked' : ''} 
                            onchange="toggleTaskStatusKanban(${task.task_id}, this.checked, '${isSubtask ? 'subtask' : 'task'}')">
                     <div class="task-name-mini">
@@ -315,71 +303,55 @@ function renderTeamKanbanBoard(kanbanTasks) {
                     </span>
                     ${task.assigned_user_name ? `<span class="task-tag assignee-tag ${isSubtask ? 'subtask-tag' : ''}" title="${task.assigned_user_name}"><i class="fas fa-user-tag"></i></span>` : ''}
                     <span class="task-tag due-tag ${columnClass} ${isSubtask ? 'subtask-tag' : ''}">
-                        ${column === 'vencidas' ? '<i class="fas fa-exclamation-triangle"></i>' : 
-                          column === 'hoy' ? '<i class="fas fa-clock"></i>' :
-                          column === 'semana1' ? '<i class="fas fa-calendar"></i>' :
+                        ${column === 'overdue' ? '<i class="fas fa-exclamation-triangle"></i>' :
+                          column === 'today' ? '<i class="fas fa-clock"></i>' :
+                          column === 'week1' ? '<i class="fas fa-calendar-week"></i>' :
                           '<i class="fas fa-calendar-plus"></i>'}
                     </span>
                 </div>
             </div>`;
         });
-        
-        html += `</div></div>`;
+
+        html += '</div></div>';
     });
-    
-    kanbanBoard.innerHTML = html;
+
+    board.innerHTML = html;
 }
 
-// Función para organizar tareas en columnas Kanban
-function organizeTasksInKanban(tasks) {
-    const kanbanTasks = {
-        'vencidas': [],
-        'hoy': [],
-        'semana1': [],
-        'semana2': []
-    };
+// Determinar columna Kanban según fecha de vencimiento
+function getKanbanColumn(dueDate) {
+    if (!dueDate) return 'week2plus';
     
-    tasks.forEach(task => {
-        // Calcular días hasta vencimiento
-        let daysUntilDue = 999;
-        if (task.due_date) {
-            const dueDate = new Date(task.due_date);
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            dueDate.setHours(0, 0, 0, 0);
-            daysUntilDue = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
-        }
-        
-        // Asignar a la columna correspondiente
-        if (daysUntilDue < 0) {
-            kanbanTasks['vencidas'].push(task);
-        } else if (daysUntilDue === 0) {
-            kanbanTasks['hoy'].push(task);
-        } else if (daysUntilDue <= 7) {
-            kanbanTasks['semana1'].push(task);
-        } else {
-            kanbanTasks['semana2'].push(task);
-        }
-    });
+    const today = new Date();
+    const due = new Date(dueDate);
+    const diffTime = due.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     
-    console.log('🟡 Tareas organizadas en Kanban:', {
-        vencidas: kanbanTasks.vencidas.length,
-        hoy: kanbanTasks.hoy.length,
-        semana1: kanbanTasks.semana1.length,
-        semana2: kanbanTasks.semana2.length
-    });
-    
-    return kanbanTasks;
+    if (diffDays < 0) return 'overdue';
+    if (diffDays === 0) return 'today';
+    if (diffDays <= 7) return 'week1';
+    return 'week2plus';
 }
 
-// Función para cambiar estado de tarea en kanban
-function toggleTaskStatusKanban(taskId, isChecked, itemType) {
-    console.log('🔧 toggleTaskStatusKanban:', taskId, isChecked, itemType);
+// Actualizar estadísticas del Kanban
+function updateKanbanStats() {
+    const activeTab = document.querySelector('.kanban-tab-button.active');
+    const tasks = activeTab && activeTab.id === 'my-tasks-kanban-tab' ? myKanbanTasks : teamKanbanTasks;
     
-    const newStatus = isChecked ? 'completed' : 'pending';
+    const totalTasks = tasks.length;
+    const completedTasks = tasks.filter(task => task.status === 'completed').length;
+    
+    document.getElementById('total-tasks').textContent = totalTasks;
+    document.getElementById('completed-tasks').textContent = completedTasks;
+}
+
+// Toggle status de tarea en Kanban
+function toggleTaskStatusKanban(taskId, isChecked, itemType = 'task') {
+    console.log(`🔄 Toggle status Kanban: ID=${taskId}, Checked=${isChecked}, Type=${itemType}`);
+    
     const formData = new FormData();
     formData.append('task_id', taskId);
-    formData.append('status', newStatus);
+    formData.append('status', isChecked ? 'completed' : 'pending');
     formData.append('item_type', itemType);
     
     fetch('?route=clan_leader/update-task-status', {
@@ -390,21 +362,18 @@ function toggleTaskStatusKanban(taskId, isChecked, itemType) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            console.log('✅ Estado actualizado correctamente');
+            console.log(`✅ Status actualizado: ${taskId} -> ${isChecked ? 'completed' : 'pending'}`);
             
-            // Si se marca como completada, hacer que el card desaparezca
             const taskCard = document.querySelector(`[data-task-id="${taskId}"]`);
             if (taskCard && isChecked) {
-                // Animación de desaparición
-                taskCard.style.transition = 'all 0.5s ease';
-                taskCard.style.transform = 'translateX(-100%)';
+                // Animar la desaparición del card
+                taskCard.style.transition = 'all 0.5s ease-out';
                 taskCard.style.opacity = '0';
+                taskCard.style.transform = 'translateX(100px)';
                 
-                // Remover el card después de la animación
                 setTimeout(() => {
                     taskCard.remove();
-                    
-                    // Actualizar el contador de la columna
+                    // Actualizar contador de la columna
                     updateColumnCount(taskCard.closest('.kanban-column-compact'));
                 }, 500);
             } else if (taskCard && !isChecked) {
@@ -420,7 +389,7 @@ function toggleTaskStatusKanban(taskId, isChecked, itemType) {
             }
             
         } else {
-            console.error('Error al actualizar estado:', data.message);
+            console.error('❌ Error al actualizar status:', data.message);
             // Revertir checkbox si hay error
             const checkbox = document.querySelector(`[data-task-id="${taskId}"] .task-checkbox-mini`);
             if (checkbox) {
@@ -429,7 +398,7 @@ function toggleTaskStatusKanban(taskId, isChecked, itemType) {
         }
     })
     .catch(error => {
-        console.error('Error:', error);
+        console.error('❌ Error de conexión:', error);
         // Revertir checkbox si hay error
         const checkbox = document.querySelector(`[data-task-id="${taskId}"] .task-checkbox-mini`);
         if (checkbox) {
@@ -438,32 +407,24 @@ function toggleTaskStatusKanban(taskId, isChecked, itemType) {
     });
 }
 
-// Función para actualizar contador de columna
+// Actualizar contador de columna
 function updateColumnCount(column) {
     if (!column) return;
     
-    const taskCountElement = column.querySelector('.task-count');
-    const remainingCards = column.querySelectorAll('.task-card-mini, .subtask-card-micro').length;
-    
-    if (taskCountElement) {
-        taskCountElement.textContent = remainingCards;
+    const taskCount = column.querySelectorAll('.task-card-mini, .subtask-card-micro').length;
+    const countElement = column.querySelector('.task-count');
+    if (countElement) {
+        countElement.textContent = taskCount;
     }
 }
 
-function openAddTaskModal() {
-    console.log('🔧 openAddTaskModal');
-    const modal = document.getElementById('addTaskModal');
-    if (modal) modal.style.display = 'flex';
+// Función para abrir modal de crear tarea (placeholder)
+function openCreateTaskModal() {
+    console.log('🔄 Abrir modal crear tarea');
+    // TODO: Implementar modal
 }
 
-function closeAddTaskModal() {
-    console.log('🔧 closeAddTaskModal');
-    const modal = document.getElementById('addTaskModal');
-    if (modal) modal.style.display = 'none';
-}
-
-
-// Inicializar cuando el DOM esté listo
+// Inicializar dashboard al cargar DOM
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 DOM listo - Iniciando dashboard');
     switchKanbanTab('my-tasks');
@@ -556,636 +517,4 @@ $content = ob_get_clean();
 // Incluir el layout con el contenido
 include __DIR__ . '/../layout.php';
 ?>
-    margin: 0 6px !important;
-    font-weight: 700 !important;
-    font-size: 16px !important;
-    letter-spacing: 0.8px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 12px !important;
-    position: relative;
-    overflow: hidden;
-    backdrop-filter: blur(15px) !important;
-    border: 2px solid rgba(255, 255, 255, 0.2) !important;
-    text-transform: uppercase;
-}
-
-::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-    transition: left 0.5s;
-}
-
-:hover::before {
-    left: 100%;
-}
-
-:hover {
-    background: rgba(255, 255, 255, 0.2);
-    color: white;
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-}
-
-/* Tab activo - FORZADO */
-.active {
-    background: linear-gradient(135deg, #ffffff 0%, #f1f3f4 100%) !important;
-    color: #2c3e50 !important;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25) !important;
-    transform: translateY(-4px) !important;
-    border: 2px solid rgba(255, 255, 255, 0.8) !important;
-    font-weight: 800 !important;
-}
-
-.active i {
-    color: #3498db !important;
-    transform: scale(1.2) !important;
-    text-shadow: 0 2px 4px rgba(52, 152, 219, 0.3) !important;
-}
-
-/* Iconos de los tabs - FORZADO */
- i {
-    font-size: 20px !important;
-    transition: all 0.3s ease !important;
-    color: rgba(255, 255, 255, 0.9) !important;
-}
-
-:hover i {
-    transform: scale(1.1) !important;
-    color: white !important;
-}
-
-:hover {
-    background: rgba(255, 255, 255, 0.25) !important;
-    color: white !important;
-    transform: translateY(-3px) !important;
-    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.2) !important;
-}
-
-/* Contenido de los tabs - FORZADO */
-.kanban-section .kanban-tab-content {
-    background: white !important;
-    border-radius: 0 0 15px 15px !important;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15) !important;
-    overflow: hidden;
-    transition: all 0.4s ease !important;
-    border: 1px solid rgba(0, 0, 0, 0.05) !important;
-    margin-top: 0 !important;
-}
-
-.kanban-tab-content.active {
-    animation: fadeInUp 0.4s ease-out;
-}
-
-/* Efectos específicos por tab */
-.kanban-section #my-tasks-kanban-tab.active {
-    background: linear-gradient(135deg, #e8f4fd 0%, #ffffff 100%) !important;
-    color: #2980b9 !important;
-    border: 2px solid #3498db !important;
-}
-
-.kanban-section #my-tasks-kanban-tab.active i {
-    color: #2980b9 !important;
-    filter: drop-shadow(0 2px 4px rgba(41, 128, 185, 0.3));
-}
-
-.kanban-section #team-tasks-kanban-tab.active {
-    background: linear-gradient(135deg, #fdf2e8 0%, #ffffff 100%) !important;
-    color: #e67e22 !important;
-    border: 2px solid #f39c12 !important;
-}
-
-.kanban-section #team-tasks-kanban-tab.active i {
-    color: #e67e22 !important;
-    filter: drop-shadow(0 2px 4px rgba(230, 126, 34, 0.3));
-}
-
-/* Efecto de brillos en hover */
-:hover {
-    background: rgba(255, 255, 255, 0.3) !important;
-    color: white !important;
-    transform: translateY(-3px) scale(1.02) !important;
-    box-shadow: 0 15px 45px rgba(0, 0, 0, 0.25) !important;
-}
-
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* Mejorar el tablero Kanban */
-.kanban-section .kanban-board-compact {
-    padding: 20px 16px !important;
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%) !important;
-    min-height: 500px !important;
-    display: flex !important;
-    gap: 12px !important;
-    overflow-x: auto !important;
-    justify-content: space-between !important;
-}
-
-/* Columnas del Kanban ultra compactas para máxima eficiencia */
-.kanban-section .kanban-column-compact {
-    background: white !important;
-    border-radius: 12px !important;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06) !important;
-    flex: 1 !important;
-    min-width: 200px !important;
-    max-width: 220px !important;
-    overflow: hidden;
-    transition: transform 0.3s ease, box-shadow 0.3s ease !important;
-    border: 1px solid rgba(0, 0, 0, 0.05) !important;
-    margin: 0 !important;
-}
-
-.kanban-column-compact:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
-}
-
-/* Headers de columnas ultra compactos */
-.kanban-section .column-header {
-    padding: 12px 10px !important;
-    font-weight: 700 !important;
-    color: white !important;
-    text-align: center !important;
-    position: relative;
-    overflow: hidden;
-}
-
-.column-header::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
-}
-
-.kanban-section .column-header h4 {
-    margin: 0 !important;
-    font-size: 14px !important;
-    letter-spacing: 0.4px !important;
-    position: relative;
-    z-index: 1;
-}
-
-.kanban-section .task-count {
-    background: rgba(255, 255, 255, 0.3) !important;
-    padding: 4px 8px !important;
-    border-radius: 16px !important;
-    font-size: 11px !important;
-    font-weight: 700 !important;
-    margin-left: 8px !important;
-    position: relative;
-    z-index: 1;
-    backdrop-filter: blur(10px) !important;
-    display: inline-block !important;
-    min-width: 24px !important;
-    text-align: center !important;
-}
-
-/* Colores específicos por columna */
-.column-header.overdue {
-    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-}
-
-.column-header.today {
-    background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
-}
-
-.column-header.week1 {
-    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
-}
-
-.column-header.week2 {
-    background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
-}
-
-/* Tarjetas de tareas mini optimizadas (aumentadas 0.5x) */
-.kanban-section .task-card-mini {
-    margin: 3px 6px !important;
-    padding: 6px 8px !important;
-    background: white !important;
-    border-radius: 6px !important;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05) !important;
-    transition: all 0.2s ease !important;
-    border-left: 3px solid #3498db !important;
-    position: relative;
-    overflow: hidden;
-    min-height: 42px !important;
-    width: calc(100% - 12px) !important;
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 3px !important;
-}
-
-.task-card-mini:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.10);
-}
-
-.task-card-mini.overdue {
-    border-left-color: #e74c3c;
-}
-
-.task-card-mini.today {
-    border-left-color: #f39c12;
-}
-
-.task-card-mini.week1 {
-    border-left-color: #3498db;
-}
-
-.task-card-mini.week2 {
-    border-left-color: #27ae60;
-}
-
-/* Header de la tarea mini optimizado */
-.kanban-section .task-header-mini {
-    display: flex !important;
-    align-items: center !important;
-    gap: 6px !important;
-    min-height: 20px !important;
-}
-
-.kanban-section .task-checkbox-mini {
-    margin: 0 !important;
-    transform: scale(0.9) !important;
-    cursor: pointer !important;
-    flex-shrink: 0 !important;
-}
-
-/* Nombre de la tarea mini optimizado */
-.kanban-section .task-name-mini {
-    font-weight: 600 !important;
-    color: #2c3e50 !important;
-    font-size: 12px !important;
-    line-height: 1.3 !important;
-    flex: 1 !important;
-    word-wrap: break-word !important;
-    overflow-wrap: break-word !important;
-    margin: 0 !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-}
-
-/* Contenedor de etiquetas optimizado */
-.kanban-section .task-tags-mini {
-    display: flex !important;
-    flex-wrap: wrap !important;
-    gap: 2px !important;
-    align-items: center !important;
-    max-height: 18px !important;
-    overflow: hidden !important;
-}
-
-/* Etiquetas mini optimizadas */
-.kanban-section .task-tag {
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 3px !important;
-    font-size: 9px !important;
-    font-weight: 600 !important;
-    padding: 2px 5px !important;
-    border-radius: 8px !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.2px !important;
-    white-space: nowrap !important;
-    border: 1px solid transparent !important;
-    transition: all 0.2s ease !important;
-    max-width: 75px !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-}
-
-.task-tag i {
-    font-size: 8px !important;
-}
-
-/* Etiqueta de proyecto */
-.kanban-section .project-tag.personal {
-    background: rgba(231, 76, 60, 0.15) !important;
-    color: #c0392b !important;
-    border-color: rgba(231, 76, 60, 0.3) !important;
-}
-
-.kanban-section .project-tag.clan {
-    background: rgba(52, 152, 219, 0.15) !important;
-    color: #2980b9 !important;
-    border-color: rgba(52, 152, 219, 0.3) !important;
-}
-
-.kanban-section .project-tag.team {
-    background: rgba(243, 156, 18, 0.15) !important;
-    color: #d68910 !important;
-    border-color: rgba(243, 156, 18, 0.3) !important;
-}
-
-/* Etiqueta de asignado */
-.kanban-section .assignee-tag {
-    background: rgba(155, 89, 182, 0.15) !important;
-    color: #8e44ad !important;
-    border-color: rgba(155, 89, 182, 0.3) !important;
-}
-
-/* Etiquetas de vencimiento */
-.kanban-section .due-tag.overdue {
-    background: rgba(231, 76, 60, 0.2) !important;
-    color: #e74c3c !important;
-    border-color: rgba(231, 76, 60, 0.4) !important;
-    animation: pulse-red 2s infinite !important;
-}
-
-.kanban-section .due-tag.today {
-    background: rgba(243, 156, 18, 0.2) !important;
-    color: #f39c12 !important;
-    border-color: rgba(243, 156, 18, 0.4) !important;
-    animation: pulse-orange 2s infinite !important;
-}
-
-.kanban-section .due-tag.week1 {
-    background: rgba(52, 152, 219, 0.15) !important;
-    color: #3498db !important;
-    border-color: rgba(52, 152, 219, 0.3) !important;
-}
-
-.kanban-section .due-tag.week2 {
-    background: rgba(39, 174, 96, 0.15) !important;
-    color: #27ae60 !important;
-    border-color: rgba(39, 174, 96, 0.3) !important;
-}
-
-/* Animaciones de pulsación para urgencia */
-@keyframes pulse-red {
-    0%, 100% { 
-        background: rgba(231, 76, 60, 0.2);
-        transform: scale(1); 
-    }
-    50% { 
-        background: rgba(231, 76, 60, 0.35);
-        transform: scale(1.05); 
-    }
-}
-
-@keyframes pulse-orange {
-    0%, 100% { 
-        background: rgba(243, 156, 18, 0.2);
-        transform: scale(1); 
-    }
-    50% { 
-        background: rgba(243, 156, 18, 0.35);
-        transform: scale(1.05); 
-    }
-}
-
-/* Efectos hover para las etiquetas ultra mini */
-.kanban-section .task-tag:hover {
-    transform: scale(1.1) !important;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12) !important;
-    z-index: 10 !important;
-}
-
-/* ========== ESTILOS PARA SUBTAREAS ========== */
-
-/* Cards de subtareas más grandes para mejor legibilidad */
-.kanban-section .subtask-card-micro {
-    margin: 4px 7px !important;
-    padding: 8px 10px !important;
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
-    border-radius: 8px !important;
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.06) !important;
-    transition: all 0.2s ease !important;
-    border-left: 4px solid #6c757d !important;
-    position: relative;
-    overflow: hidden;
-    min-height: 52px !important;
-    width: calc(100% - 14px) !important;
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 4px !important;
-    opacity: 0.95 !important;
-    border: 1px solid rgba(108, 117, 125, 0.2) !important;
-}
-
-.subtask-card-micro:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.10);
-    opacity: 1 !important;
-}
-
-/* Colores específicos para subtareas por columna */
-.subtask-card-micro.overdue {
-    border-left-color: #dc3545;
-    background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%) !important;
-}
-
-.subtask-card-micro.today {
-    border-left-color: #fd7e14;
-    background: linear-gradient(135deg, #fff8f0 0%, #ffeaa7 100%) !important;
-}
-
-.subtask-card-micro.week1 {
-    border-left-color: #0d6efd;
-    background: linear-gradient(135deg, #f0f7ff 0%, #cce7ff 100%) !important;
-}
-
-.subtask-card-micro.week2 {
-    border-left-color: #198754;
-    background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%) !important;
-}
-
-/* Icono de subtarea */
-.subtask-icon {
-    font-size: 9px !important;
-    color: #6c757d !important;
-    margin-right: 5px !important;
-    opacity: 0.8 !important;
-}
-
-/* Indicador de tarea padre */
-.parent-task-hint {
-    font-size: 10px !important;
-    color: #6c757d !important;
-    margin-left: 6px !important;
-    opacity: 0.7 !important;
-    cursor: help !important;
-}
-
-/* Etiquetas de subtareas más grandes */
-.kanban-section .subtask-tag {
-    font-size: 9px !important;
-    padding: 3px 5px !important;
-    border-radius: 8px !important;
-    max-width: 75px !important;
-    opacity: 0.9 !important;
-}
-
-.kanban-section .subtask-tag i {
-    font-size: 8px !important;
-}
-
-/* Ajustes específicos para subtareas en el header */
-.subtask-card-micro .task-header-mini {
-    min-height: 24px !important;
-    gap: 8px !important;
-}
-
-.subtask-card-micro .task-name-mini {
-    font-size: 12px !important;
-    line-height: 1.4 !important;
-    color: #495057 !important;
-    font-weight: 600 !important;
-}
-
-.subtask-card-micro .task-checkbox-mini {
-    transform: scale(0.9) !important;
-}
-
-/* Contenedor de etiquetas para subtareas */
-.subtask-card-micro .task-tags-mini {
-    max-height: 22px !important;
-    gap: 3px !important;
-}
-
-/* Animación sutil para subtareas */
-.subtask-card-micro {
-    animation: subtaskFadeIn 0.3s ease-out;
-}
-
-@keyframes subtaskFadeIn {
-    from {
-        opacity: 0;
-        transform: translateX(-10px);
-    }
-    to {
-        opacity: 0.9;
-        transform: translateX(0);
-    }
-}
-
-/* Responsive para subtareas */
-@media (max-width: 768px) {
-    .subtask-card-micro {
-        margin: 3px 5px !important;
-        padding: 6px 8px !important;
-        min-height: 44px !important;
-    }
-    
-    .subtask-card-micro .task-name-mini {
-        font-size: 11px !important;
-    }
-    
-    .kanban-section .subtask-tag {
-        font-size: 8px !important;
-        max-width: 60px !important;
-    }
-}
-
-/* Responsive design mejorado */
-@media (max-width: 1200px) {
-    .kanban-section .kanban-column-compact {
-        min-width: 220px !important;
-        max-width: 250px !important;
-    }
-}
-
-@media (max-width: 992px) {
-    .kanban-section .kanban-board-compact {
-        gap: 8px !important;
-        padding: 16px 12px !important;
-    }
-    
-    .kanban-section .kanban-column-compact {
-        min-width: 200px !important;
-        max-width: 230px !important;
-    }
-}
-
-@media (max-width: 768px) {
-    .kanban-section  {
-        flex-direction: column !important;
-        gap: 8px !important;
-    }
-    
- {
-        margin: 0 !important;
-    }
-    
-    .kanban-section .kanban-board-compact {
-        padding: 12px 8px !important;
-        flex-direction: column !important;
-        gap: 16px !important;
-    }
-    
-    .kanban-section .kanban-column-compact {
-        min-width: auto !important;
-        max-width: none !important;
-        width: 100% !important;
-    }
-}
-
-/* Animación de carga mejorada */
-.kanban-section .loading-message {
-    text-align: center !important;
-    padding: 80px 30px !important;
-    color: #5a6c7d !important;
-    font-size: 18px !important;
-    font-weight: 500 !important;
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
-    border-radius: 16px !important;
-    margin: 30px !important;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08) !important;
-    border: 1px solid rgba(0, 0, 0, 0.05) !important;
-}
-
-.kanban-section .loading-message i {
-    font-size: 48px !important;
-    margin-bottom: 20px !important;
-    color: #3498db !important;
-    animation: pulse 2s infinite !important;
-}
-
-@keyframes pulse {
-    0%, 100% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.1); opacity: 0.7; }
-}
-
-/* Efecto de transición entre tabs */
-.kanban-section .kanban-tab-content {
-    animation: slideInFromRight 0.5s ease-out;
-}
-
-@keyframes slideInFromRight {
-    from {
-        opacity: 0;
-        transform: translateX(30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-</style>
-
-<?php
-// Guardar el contenido generado
-$content = ob_get_clean();
-
-// Incluir el layout con el contenido
-include __DIR__ . '/../layout.php';
 ?>
