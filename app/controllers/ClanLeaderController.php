@@ -1067,9 +1067,10 @@ class ClanLeaderController {
             // - MÁS tareas personales del líder actual
             $clanTasks = $this->taskModel->getAllTasksByClanStrict($this->userClan['clan_id'], $page, $perPage, $search, $statusFilter);
 
+            // Obtener tareas recurrentes y eventuales del usuario (simple: por assigned_to_user_id)
             $ownLogical = $this->taskModel->getUserTasksByProjectNames(
                 $this->currentUser['user_id'],
-                ['Tareas Recurrentes', 'Tareas Eventuales']
+                ['Tareas Recurrentes', 'Tareas Eventuales', 'Mis Tareas Recurrentes']
             );
 
             // Obtener tareas personales del líder actual
@@ -5218,6 +5219,7 @@ class ClanLeaderController {
                     t.automatic_points,
                     p.project_name,
                     p.project_id,
+                    p.project_type,
                     p.clan_id,
                     c.clan_name,
                     u_assigned.full_name as assigned_to_name,
@@ -5241,22 +5243,18 @@ class ClanLeaderController {
                         -- Tareas del clan principal (todas)
                         (p.clan_id = ? AND (p.is_personal IS NULL OR p.is_personal != 1))
                         " . ($excludePersonalTasks ? "" : "
-                        -- Tareas personales del clan principal asignadas a miembros del clan
-                        OR (p.clan_id = ? AND p.is_personal = 1 AND p.project_type = 'normal' AND p.created_by_user_id = ? AND (
-                            t.assigned_to_user_id IN (SELECT user_id FROM Clan_Members WHERE clan_id = ?) 
-                            OR ta.user_id IN (SELECT user_id FROM Clan_Members WHERE clan_id = ?)
-                            OR t.assigned_to_user_id = ?
-                            OR t.created_by_user_id = ?
-                        ))
-                        -- Tareas recurrentes del usuario del clan principal
-                        OR (p.clan_id = ? AND p.project_type = 'recurrent' AND p.is_personal = 1 AND p.created_by_user_id = ? AND (
+                        -- Tareas personales del clan principal del usuario
+                        OR (p.clan_id = ? AND p.is_personal = 1 AND p.created_by_user_id = ? AND (
                             t.assigned_to_user_id = ? OR t.created_by_user_id = ?
                         ))") . "
-                        -- Tareas eventuales del clan principal asignadas a miembros del clan
-                        OR (p.clan_id = ? AND p.project_name IN ('Tareas Recurrentes', 'Tareas Eventuales') AND (
+                        -- Tareas recurrentes y eventuales asignadas al usuario
+                        OR (p.project_name IN ('Tareas Recurrentes', 'Tareas Eventuales', 'Mis Tareas Recurrentes') AND (
+                            t.assigned_to_user_id = ? OR ta.user_id = ?
+                        ))
+                        -- Tareas de OTROS clanes donde CUALQUIER miembro del clan esté asignado
+                        OR (p.clan_id != ? AND (
                             t.assigned_to_user_id IN (SELECT user_id FROM Clan_Members WHERE clan_id = ?)
                             OR ta.user_id IN (SELECT user_id FROM Clan_Members WHERE clan_id = ?)
-                            OR t.assigned_to_user_id = ?
                             OR ta.user_id = ?
                         ))
                         -- Tareas de OTROS clanes donde CUALQUIER miembro del clan esté asignado
@@ -5273,11 +5271,11 @@ class ClanLeaderController {
                 $params = [
                     $primaryClanId, // is_primary_clan CASE
                     $primaryClanId, // tareas del clan principal
-                    $primaryClanId, // tareas eventuales del clan principal  
-                    $primaryClanId, $primaryClanId, // miembros asignados a tareas eventuales
-                    $userId, $userId, // líder asignado a tareas eventuales
+                    $userId, $userId, // tareas recurrentes/eventuales asignadas al usuario
                     $primaryClanId, // para excluir clan principal de otros clanes
-                    $primaryClanId // clan de los miembros asignados en otros clanes
+                    $primaryClanId, $primaryClanId, // miembros asignados en otros clanes
+                    $userId, // usuario específico en otros clanes
+                    $primaryClanId, $primaryClanId // clan de los miembros asignados en otros clanes
                 ];
             } else {
                 $params = [
@@ -5285,16 +5283,12 @@ class ClanLeaderController {
                     $primaryClanId, // tareas del clan principal
                     $primaryClanId, // tareas personales del clan principal
                     $userId, // creador de tareas personales
-                    $primaryClanId, $primaryClanId, // miembros asignados a tareas personales
-                    $userId, $userId, // líder asignado a tareas personales
-                    $primaryClanId, // tareas recurrentes del clan principal
-                    $userId, // creador de tareas recurrentes
-                    $userId, $userId, // líder asignado/creador de tareas recurrentes
-                    $primaryClanId, // tareas especiales del clan principal  
-                    $primaryClanId, $primaryClanId, // miembros asignados a tareas especiales
-                    $userId, $userId, // líder asignado a tareas especiales
+                    $userId, $userId, // asignado/creador de tareas personales
+                    $userId, $userId, // tareas recurrentes/eventuales asignadas al usuario
                     $primaryClanId, // para excluir clan principal de otros clanes
-                    $primaryClanId // clan de los miembros asignados en otros clanes
+                    $primaryClanId, $primaryClanId, // miembros asignados en otros clanes
+                    $userId, // usuario específico en otros clanes
+                    $primaryClanId, $primaryClanId // clan de los miembros asignados en otros clanes
                 ];
             }
             
@@ -5315,6 +5309,7 @@ class ClanLeaderController {
                     0 as automatic_points,
                     CONCAT('Subtarea de: ', t.task_name) as project_name,
                     t.project_id,
+                    p.project_type,
                     p.clan_id,
                     c.clan_name,
                     u_assigned.full_name as assigned_to_name,
