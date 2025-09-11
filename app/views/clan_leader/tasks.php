@@ -4266,10 +4266,10 @@ function renderTasksTableFromKanban(tasks, tbodyId) {
                 </td>
                 <td class="actions-cell">
                     <div class="actions-group">
-                        <a href="?route=clan_leader/get-task-details&task_id=${task.task_id}" class="btn-action-table view" title="Ver Detalles">
+                        <a href="?route=clan_leader/get-task-details&task_id=${isSubtask ? (task.parent_task_id || task.task_id) : task.task_id}${isSubtask ? '&type=subtask' : ''}" class="btn-action-table view" title="Ver Detalles">
                             <i class="fas fa-eye"></i>
                         </a>
-                        <a href="?route=clan_leader/task_edit&task_id=${task.task_id}" class="btn-action-table edit" title="Editar">
+                        <a href="?route=clan_leader/task_edit&task_id=${isSubtask ? (task.parent_task_id || task.task_id) : task.task_id}" class="btn-action-table edit" title="Editar">
                             <i class="fas fa-edit"></i>
                         </a>
                         <button class="btn-action-table delete" onclick="deleteTaskTable(${task.task_id}, '${task.task_name}')" title="Eliminar">
