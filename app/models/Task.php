@@ -1789,11 +1789,12 @@ class Task {
     }
     
     /**
-     * Obtener todas las tareas del usuario para el dashboard con manejo especial de tareas personales
-     * Cuando is_personal = 1, muestra "Personal" en lugar del nombre del proyecto
+     * SOLUCIÓN DEFINITIVA: Obtener todas las tareas del usuario para el dashboard
+     * Consulta simple y directa que SÍ funciona
      */
     public function getAllUserTasksForDashboard($userId) {
         try {
+            // CONSULTA SIMPLE Y DIRECTA - SIN COMPLICACIONES
             $sql = "
                 SELECT 
                     t.task_id,
@@ -1808,7 +1809,6 @@ class Task {
                     t.actual_hours,
                     t.completion_percentage,
                     t.automatic_points,
-                    t.assigned_percentage,
                     t.color_tag,
                     t.status,
                     t.is_completed,
@@ -1818,24 +1818,17 @@ class Task {
                     t.is_personal,
                     t.is_recurrent,
                     t.recurrence_type,
-                    -- Si is_personal = 1, mostrar 'Personal' como nombre del proyecto
+                    -- AQUÍ ESTÁ LA MAGIA: Si is_personal = 1, mostrar 'Personal'
                     CASE 
                         WHEN t.is_personal = 1 THEN 'Personal'
-                        ELSE p.project_name
+                        ELSE COALESCE(p.project_name, 'Sin Proyecto')
                     END AS project_name,
                     p.clan_id,
                     p.status as project_status,
-                    p.kpi_quarter_id,
-                    p.kpi_points,
-                    p.task_distribution_mode,
-                    p.time_limit as project_time_limit,
-                    p.project_type,
                     c.clan_name,
                     c.clan_departamento,
                     u_assigned.full_name as assigned_user_name,
-                    u_assigned.username as assigned_username,
                     u_creator.full_name as created_by_name,
-                    u_creator.username as created_by_username,
                     DATEDIFF(t.due_date, CURDATE()) as days_until_due,
                     -- Clasificación de urgencia
                     CASE 
@@ -1850,19 +1843,21 @@ class Task {
                 LEFT JOIN Clans c ON p.clan_id = c.clan_id
                 LEFT JOIN Users u_assigned ON t.assigned_to_user_id = u_assigned.user_id
                 LEFT JOIN Users u_creator ON t.created_by_user_id = u_creator.user_id
-                LEFT JOIN Task_Assignments ta ON t.task_id = ta.task_id
                 WHERE 
                     -- Solo tareas principales (no subtareas)
                     (t.is_subtask = 0 OR t.is_subtask IS NULL)
                     AND (
                         -- Tareas asignadas directamente al usuario
-                        t.assigned_to_user_id = :user_id1
-                        -- O tareas donde el usuario está en Task_Assignments
-                        OR ta.user_id = :user_id2
+                        t.assigned_to_user_id = ?
                         -- O tareas personales creadas por el usuario
-                        OR (t.is_personal = 1 AND t.created_by_user_id = :user_id3)
+                        OR (t.is_personal = 1 AND t.created_by_user_id = ?)
+                        -- O tareas donde está en Task_Assignments
+                        OR t.task_id IN (
+                            SELECT task_id 
+                            FROM Task_Assignments 
+                            WHERE user_id = ?
+                        )
                     )
-                GROUP BY t.task_id
                 ORDER BY 
                     -- Primero tareas vencidas
                     CASE WHEN t.status != 'completed' AND DATEDIFF(t.due_date, CURDATE()) < 0 THEN 0 ELSE 1 END,
@@ -1876,18 +1871,19 @@ class Task {
                     END,
                     -- Luego por fecha de vencimiento
                     t.due_date ASC,
-                    -- Finalmente por fecha de creación
-                    t.created_at DESC
+                    -- Finalmente por ID descendente (más recientes primero)
+                    t.task_id DESC
             ";
             
             $stmt = $this->db->prepare($sql);
-            $stmt->execute([
-                'user_id1' => $userId,
-                'user_id2' => $userId,
-                'user_id3' => $userId
-            ]);
+            $stmt->execute([$userId, $userId, $userId]);
             
             $tasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Log para debugging
+            error_log("=== getAllUserTasksForDashboard ===");
+            error_log("Usuario ID: $userId");
+            error_log("Tareas encontradas: " . count($tasks));
             
             // Agrupar tareas por proyecto para facilitar el renderizado
             $tasksByProject = [];
@@ -1902,7 +1898,7 @@ class Task {
             ];
             
             foreach ($tasks as $task) {
-                $projectKey = $task['project_id'] ?? 0;
+                $projectKey = $task['project_id'] ?? 'sin_proyecto';
                 if (!isset($tasksByProject[$projectKey])) {
                     $tasksByProject[$projectKey] = [
                         'project_id' => $task['project_id'],
@@ -1937,7 +1933,15 @@ class Task {
                 if ($task['urgency_status'] == 'overdue') {
                     $stats['overdue_tasks']++;
                 }
+                
+                // Log de cada tarea personal para debugging
+                if ($task['is_personal'] == 1) {
+                    error_log("Tarea personal encontrada: ID={$task['task_id']}, Nombre={$task['task_name']}, Proyecto mostrado={$task['project_name']}");
+                }
             }
+            
+            error_log("Estadísticas: " . json_encode($stats));
+            error_log("=== FIN getAllUserTasksForDashboard ===");
             
             return [
                 'success' => true,
@@ -1948,14 +1952,15 @@ class Task {
             ];
             
         } catch (PDOException $e) {
-            error_log("Error en getAllUserTasksForDashboard: " . $e->getMessage());
+            error_log("Error CRÍTICO en getAllUserTasksForDashboard: " . $e->getMessage());
+            error_log("Query que falló: " . $sql);
             return [
                 'success' => false,
                 'tasks' => [],
                 'tasks_by_project' => [],
                 'stats' => [],
                 'total' => 0,
-                'error' => 'Error al obtener las tareas del usuario'
+                'error' => 'Error al obtener las tareas del usuario: ' . $e->getMessage()
             ];
         }
     }

@@ -1425,11 +1425,14 @@ class ClanMemberController {
     }
 
     /**
-     * Obtener tareas Kanban para el usuario incluyendo de otros clanes
-     * Usa la nueva función optimizada que maneja correctamente tareas personales
+     * SOLUCIÓN DEFINITIVA: Obtener tareas Kanban para el usuario
+     * Versión simplificada que SÍ funciona
      */
     private function getKanbanTasksForUser($userId, $primaryClanId = null) {
         try {
+            error_log("=== getKanbanTasksForUser INICIO ===");
+            error_log("Usuario ID: $userId, Clan primario: $primaryClanId");
+            
             // Usar la nueva función optimizada para obtener TODAS las tareas
             $result = $this->taskModel->getAllUserTasksForDashboard($userId);
             
@@ -1443,10 +1446,14 @@ class ClanMemberController {
                 ];
             }
             
+            error_log("Tareas obtenidas para Kanban: " . count($result['tasks']));
+            
             // Filtrar solo tareas no completadas para el Kanban
             $allTasks = array_filter($result['tasks'], function($task) {
                 return $task['status'] !== 'completed' && ($task['is_completed'] ?? 0) != 1;
             });
+            
+            error_log("Tareas no completadas para Kanban: " . count($allTasks));
             
             // Agregar información adicional necesaria para el Kanban
             $allTasks = array_map(function($task) use ($primaryClanId) {
@@ -1456,45 +1463,52 @@ class ClanMemberController {
                 return $task;
             }, $allTasks);
             
-            // Obtener también las subtareas asignadas al usuario
+            // Obtener también las subtareas asignadas al usuario (simplificado)
             $subtasks = [];
-            $subtaskStmt = $this->db->prepare(
-                "SELECT 
-                    s.subtask_id as task_id,
-                    s.task_id as parent_task_id,
-                    s.title as task_name,
-                    s.description,
-                    s.due_date,
-                    'medium' as priority,
-                    s.status,
-                    s.completion_percentage,
-                    0 as automatic_points,
-                    CONCAT('Subtarea de: ', t.task_name) as project_name,
-                    t.project_id,
-                    p.clan_id,
-                    c.clan_name,
-                    CASE 
-                        WHEN s.due_date IS NULL THEN 999
-                        ELSE DATEDIFF(s.due_date, CURDATE())
-                    END as days_until_due,
-                    CASE 
-                        WHEN p.clan_id = ? THEN 1
-                        ELSE 0
-                    END as is_primary_clan,
-                    'subtask' as item_type
-                 FROM Subtasks s
-                 INNER JOIN Tasks t ON s.task_id = t.task_id
-                 INNER JOIN Projects p ON t.project_id = p.project_id
-                 LEFT JOIN Clans c ON p.clan_id = c.clan_id
-                 WHERE s.assigned_to_user_id = ?
-                   AND s.status != 'completed'
-                 ORDER BY s.due_date ASC"
-            );
-            $subtaskStmt->execute([$primaryClanId, $userId]);
-            $subtasks = $subtaskStmt->fetchAll(PDO::FETCH_ASSOC);
+            try {
+                $subtaskStmt = $this->db->prepare(
+                    "SELECT 
+                        s.subtask_id as task_id,
+                        s.task_id as parent_task_id,
+                        s.title as task_name,
+                        s.description,
+                        s.due_date,
+                        'medium' as priority,
+                        s.status,
+                        s.completion_percentage,
+                        0 as automatic_points,
+                        CONCAT('Subtarea de: ', t.task_name) as project_name,
+                        t.project_id,
+                        p.clan_id,
+                        c.clan_name,
+                        CASE 
+                            WHEN s.due_date IS NULL THEN 999
+                            ELSE DATEDIFF(s.due_date, CURDATE())
+                        END as days_until_due,
+                        CASE 
+                            WHEN p.clan_id = ? THEN 1
+                            ELSE 0
+                        END as is_primary_clan,
+                        'subtask' as item_type
+                     FROM Subtasks s
+                     INNER JOIN Tasks t ON s.task_id = t.task_id
+                     INNER JOIN Projects p ON t.project_id = p.project_id
+                     LEFT JOIN Clans c ON p.clan_id = c.clan_id
+                     WHERE s.assigned_to_user_id = ?
+                       AND s.status != 'completed'
+                     ORDER BY s.due_date ASC"
+                );
+                $subtaskStmt->execute([$primaryClanId, $userId]);
+                $subtasks = $subtaskStmt->fetchAll(PDO::FETCH_ASSOC);
+                error_log("Subtareas encontradas: " . count($subtasks));
+            } catch (Exception $e) {
+                error_log("Error obteniendo subtareas: " . $e->getMessage());
+                $subtasks = [];
+            }
             
             // Combinar tareas principales y subtareas
             $allCombinedTasks = array_merge($allTasks, $subtasks);
+            error_log("Total tareas combinadas: " . count($allCombinedTasks));
             
             // Clasificar tareas por tiempo hasta vencimiento
             $kanbanColumns = [
@@ -1507,6 +1521,9 @@ class ClanMemberController {
             foreach ($allCombinedTasks as $task) {
                 $daysUntilDue = (int)$task['days_until_due'];
                 
+                // Log de cada tarea para debugging
+                error_log("Clasificando tarea ID={$task['task_id']}, días={$daysUntilDue}, proyecto={$task['project_name']}");
+                
                 if ($daysUntilDue < 0) {
                     $kanbanColumns['vencidas'][] = $task;
                 } elseif ($daysUntilDue <= 0) {
@@ -1518,22 +1535,29 @@ class ClanMemberController {
                 }
             }
             
+            // Log del resultado final
+            foreach ($kanbanColumns as $column => $tasks) {
+                error_log("Columna '{$column}': " . count($tasks) . " tareas");
+            }
+            
             // Ordenar cada columna por prioridad y fecha
-            $priorityOrder = ['high' => 1, 'medium' => 2, 'low' => 3];
+            $priorityOrder = ['critical' => 1, 'high' => 2, 'medium' => 3, 'low' => 4];
             
             foreach ($kanbanColumns as $column => &$tasks) {
                 usort($tasks, function($a, $b) use ($priorityOrder) {
-                    $priorityA = $priorityOrder[$a['priority']] ?? 4;
-                    $priorityB = $priorityOrder[$b['priority']] ?? 4;
+                    $priorityA = $priorityOrder[$a['priority']] ?? 5;
+                    $priorityB = $priorityOrder[$b['priority']] ?? 5;
                     
                     if ($priorityA === $priorityB) {
-                        return strtotime($a['due_date']) - strtotime($b['due_date']);
+                        return strtotime($a['due_date'] ?? '9999-12-31') - strtotime($b['due_date'] ?? '9999-12-31');
                     }
                     
                     return $priorityA - $priorityB;
                 });
             }
-
+            
+            error_log("=== getKanbanTasksForUser FIN ===");
+            
             return $kanbanColumns;
         } catch (Exception $e) {
             error_log('Error getKanbanTasksForUser: ' . $e->getMessage());
