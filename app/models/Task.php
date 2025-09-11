@@ -1789,12 +1789,12 @@ class Task {
     }
     
     /**
-     * SOLUCIÓN DEFINITIVA: Obtener todas las tareas del usuario para el dashboard
-     * Consulta simple y directa que SÍ funciona
+     * SOLUCIÓN ULTRA-SIMPLE: Como debe ser, sin mamadas
+     * SELECT * FROM Tasks WHERE assigned_to_user_id = 2, luego JOIN con Projects
      */
     public function getAllUserTasksForDashboard($userId) {
         try {
-            // CONSULTA SIMPLE Y DIRECTA - SIN COMPLICACIONES
+            // CONSULTA ULTRA-SIMPLE - Como debe ser, sin mamadas
             $sql = "
                 SELECT 
                     t.task_id,
@@ -1805,8 +1805,6 @@ class Task {
                     t.created_by_user_id,
                     t.priority,
                     t.due_date,
-                    t.estimated_hours,
-                    t.actual_hours,
                     t.completion_percentage,
                     t.automatic_points,
                     t.color_tag,
@@ -1814,23 +1812,17 @@ class Task {
                     t.is_completed,
                     t.completed_at,
                     t.created_at,
-                    t.updated_at,
                     t.is_personal,
-                    t.is_recurrent,
-                    t.recurrence_type,
-                    -- AQUÍ ESTÁ LA MAGIA: Si is_personal = 1, mostrar 'Personal'
+                    p.project_name as original_project_name,
+                    p.clan_id,
+                    c.clan_name,
+                    -- LA MAGIA: Si is_personal = 1, mostrar 'Personal'
                     CASE 
                         WHEN t.is_personal = 1 THEN 'Personal'
                         ELSE COALESCE(p.project_name, 'Sin Proyecto')
                     END AS project_name,
-                    p.clan_id,
-                    p.status as project_status,
-                    c.clan_name,
-                    c.clan_departamento,
-                    u_assigned.full_name as assigned_user_name,
-                    u_creator.full_name as created_by_name,
                     DATEDIFF(t.due_date, CURDATE()) as days_until_due,
-                    -- Clasificación de urgencia
+                    -- Clasificación simple de urgencia
                     CASE 
                         WHEN t.status = 'completed' THEN 'completed'
                         WHEN DATEDIFF(t.due_date, CURDATE()) < 0 THEN 'overdue'
@@ -1841,42 +1833,15 @@ class Task {
                 FROM Tasks t
                 LEFT JOIN Projects p ON t.project_id = p.project_id
                 LEFT JOIN Clans c ON p.clan_id = c.clan_id
-                LEFT JOIN Users u_assigned ON t.assigned_to_user_id = u_assigned.user_id
-                LEFT JOIN Users u_creator ON t.created_by_user_id = u_creator.user_id
                 WHERE 
-                    -- Solo tareas principales (no subtareas)
-                    (t.is_subtask = 0 OR t.is_subtask IS NULL)
-                    AND (
-                        -- Tareas asignadas directamente al usuario
-                        t.assigned_to_user_id = ?
-                        -- O tareas personales creadas por el usuario
-                        OR (t.is_personal = 1 AND t.created_by_user_id = ?)
-                        -- O tareas donde está en Task_Assignments
-                        OR t.task_id IN (
-                            SELECT task_id 
-                            FROM Task_Assignments 
-                            WHERE user_id = ?
-                        )
-                    )
+                    t.assigned_to_user_id = ?
+                    AND (t.is_subtask = 0 OR t.is_subtask IS NULL)
                 ORDER BY 
-                    -- Primero tareas vencidas
-                    CASE WHEN t.status != 'completed' AND DATEDIFF(t.due_date, CURDATE()) < 0 THEN 0 ELSE 1 END,
-                    -- Luego por prioridad
-                    CASE t.priority 
-                        WHEN 'critical' THEN 1
-                        WHEN 'high' THEN 2
-                        WHEN 'medium' THEN 3
-                        WHEN 'low' THEN 4
-                        ELSE 5
-                    END,
-                    -- Luego por fecha de vencimiento
-                    t.due_date ASC,
-                    -- Finalmente por ID descendente (más recientes primero)
                     t.task_id DESC
             ";
             
             $stmt = $this->db->prepare($sql);
-            $stmt->execute([$userId, $userId, $userId]);
+            $stmt->execute([$userId]);
             
             $tasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
