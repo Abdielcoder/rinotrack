@@ -527,6 +527,11 @@ try {
         $controller->getTaskDetails();
         break;
         
+    case 'clan_leader/task_edit':
+        $controller = new ClanLeaderController();
+        $controller->taskEdit();
+        break;
+        
     case 'clan_leader/get-team-tasks':
         $controller = new ClanLeaderController();
         $controller->getTeamTasks();

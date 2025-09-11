@@ -4753,6 +4753,58 @@ class ClanLeaderController {
     }
     
     /**
+     * Mostrar página de edición de tarea
+     */
+    public function taskEdit() {
+        try {
+            // Verificar autenticación y permisos
+            if (!$this->isAuthenticated()) {
+                header('Location: ?route=login');
+                exit();
+            }
+            
+            if (!$this->hasClanLeaderAccess()) {
+                header('Location: ?route=dashboard');
+                exit();
+            }
+            
+            // Obtener ID de la tarea
+            $taskId = (int)($_GET['task_id'] ?? 0);
+            
+            if ($taskId <= 0) {
+                header('Location: ?route=clan_leader/tasks');
+                exit();
+            }
+            
+            // Obtener datos de la tarea
+            $taskModel = new Task();
+            $task = $taskModel->getById($taskId);
+            
+            if (!$task) {
+                header('Location: ?route=clan_leader/tasks');
+                exit();
+            }
+            
+            // Verificar que la tarea pertenece al clan del usuario
+            if ($task['clan_id'] != $this->userClan['clan_id']) {
+                header('Location: ?route=clan_leader/tasks');
+                exit();
+            }
+            
+            $this->loadView('clan_leader/task_edit', [
+                'task' => $task,
+                'user' => $this->user,
+                'userClan' => $this->userClan
+            ]);
+            
+        } catch (Exception $e) {
+            error_log("Error en taskEdit: " . $e->getMessage());
+            header('Location: ?route=clan_leader/tasks');
+            exit();
+        }
+    }
+    
+    /**
      * Cargar vista
      */
     private function loadView($viewPath, $data = []) {

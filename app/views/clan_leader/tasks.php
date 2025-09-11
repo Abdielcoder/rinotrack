@@ -3222,7 +3222,7 @@ function renderTeamTasksTable(tasks, tbodyId) {
                         <a href="?route=clan_leader/get-task-details&task_id=${task.task_id}" class="btn-action btn-view" title="Ver detalles">
                             <i class="fas fa-eye"></i>
                         </a>
-                        <a href="?route=clan_leader/tasks&action=edit&task_id=${task.task_id}" class="btn-action btn-edit" title="Editar tarea">
+                        <a href="?route=clan_leader/task_edit&task_id=${task.task_id}" class="btn-action btn-edit" title="Editar tarea">
                             <i class="fas fa-edit"></i>
                         </a>
                         ${task.created_by_user_id == <?= $user['user_id'] ?? 0 ?> ? '<button class="btn-action btn-clone" onclick="openCloneTaskModal(' + task.task_id + ')" title="Clonar tarea"><i class="fas fa-copy"></i></button>' : ''}
@@ -3313,7 +3313,7 @@ function renderTasksTable(tasks, tbodyId) {
                         <a href="?route=clan_leader/get-task-details&task_id=${task.task_id}" class="btn-action btn-view" title="Ver detalles">
                             <i class="fas fa-eye"></i>
                         </a>
-                        <a href="?route=clan_leader/tasks&action=edit&task_id=${task.task_id}" class="btn-action btn-edit" title="Editar tarea">
+                        <a href="?route=clan_leader/task_edit&task_id=${task.task_id}" class="btn-action btn-edit" title="Editar tarea">
                             <i class="fas fa-edit"></i>
                         </a>
                         ${task.created_by_user_id == <?= $user['user_id'] ?? 0 ?> ? '<button class="btn-action btn-clone" onclick="openCloneTaskModal(' + task.task_id + ')" title="Clonar tarea"><i class="fas fa-copy"></i></button>' : ''}
@@ -4266,10 +4266,10 @@ function renderTasksTableFromKanban(tasks, tbodyId) {
                 </td>
                 <td class="actions-cell">
                     <div class="actions-group">
-                        <a href="?route=clan_leader/task_details&task_id=${task.task_id}" class="btn-action-table view" title="Ver Detalles">
+                        <a href="?route=clan_leader/get-task-details&task_id=${task.task_id}" class="btn-action-table view" title="Ver Detalles">
                             <i class="fas fa-eye"></i>
                         </a>
-                        <a href="?route=clan_leader/tasks&action=edit&task_id=${task.task_id}" class="btn-action-table edit" title="Editar">
+                        <a href="?route=clan_leader/task_edit&task_id=${task.task_id}" class="btn-action-table edit" title="Editar">
                             <i class="fas fa-edit"></i>
                         </a>
                         <button class="btn-action-table delete" onclick="deleteTaskTable(${task.task_id}, '${task.task_name}')" title="Eliminar">
