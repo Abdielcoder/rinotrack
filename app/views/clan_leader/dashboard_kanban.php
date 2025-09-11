@@ -3,8 +3,7 @@
 // El header "Polaris Líder" se carga automáticamente desde layout.php
 ?>
 
-<!-- Cargar CSS igual que tasks -->
-<link rel="stylesheet" href="<?= APP_URL ?>/assets/css/clan-leader-redesign.css">
+<!-- CSS específico para dashboard kanban -->
 
 <style>
 .dashboard-container {
@@ -174,6 +173,15 @@
     height: 14px;
     cursor: pointer;
     accent-color: #10b981;
+    margin: 0;
+    padding: 0;
+    vertical-align: top;
+}
+
+/* Asegurar que no hay pseudo-elementos duplicados */
+.task-checkbox input[type="checkbox"]::before,
+.task-checkbox input[type="checkbox"]::after {
+    display: none !important;
 }
 
 .task-content {
