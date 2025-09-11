@@ -61,11 +61,14 @@
     gap: 20px;
 }
 
-/* Kanban Board para EQUIPO - Clases separadas */
+/* Kanban Board para EQUIPO - Mismo ancho que Mis Tareas */
 .team-kanban-board {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr 1fr;
     gap: 20px;
+    margin: 0 auto;
+    max-width: 1400px;
+    width: 100%;
 }
 
 .kanban-column {
@@ -2109,13 +2112,15 @@ function mostrarKanbanEquipoDefinitivo() {
         </div>
     `;
     
-    // FORZAR VISIBILIDAD AGRESIVA DE TODO EL CONTENEDOR
+    // FORZAR VISIBILIDAD DEL CONTENEDOR CON ANCHO CENTRADO
     teamContent.classList.add('active');
     teamContent.style.cssText = `
         display: block !important;
         visibility: visible !important;
         opacity: 1 !important;
         width: 100% !important;
+        max-width: 1400px !important;
+        margin: 0 auto !important;
         height: auto !important;
         min-height: 500px !important;
         position: relative !important;
@@ -2140,12 +2145,14 @@ function mostrarKanbanEquipoDefinitivo() {
     // Verificar que se insertó correctamente con la nueva clase
     const teamKanbanBoard = teamContent.querySelector('.team-kanban-board');
     if (teamKanbanBoard) {
-        // FORZAR VISIBILIDAD DEL KANBAN BOARD DEL EQUIPO
+        // FORZAR VISIBILIDAD DEL KANBAN BOARD DEL EQUIPO CON ANCHO LIMITADO
         teamKanbanBoard.style.cssText = `
             display: grid !important;
             grid-template-columns: repeat(4, 1fr) !important;
             gap: 20px !important;
             width: 100% !important;
+            max-width: 1400px !important;
+            margin: 0 auto !important;
             height: auto !important;
             visibility: visible !important;
             opacity: 1 !important;
