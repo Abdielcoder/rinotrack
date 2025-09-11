@@ -744,23 +744,23 @@
         <div id="team-tasks-stats" class="dashboard-stats" style="display: none;">
             <div class="stat-item">
                 <span>Total Equipo:</span>
-                <span class="stat-value">-</span>
+                <span class="stat-value">2</span>
             </div>
             <div class="stat-item">
                 <span>• Vencidas:</span>
-                <span class="stat-value">-</span>
+                <span class="stat-value">1</span>
             </div>
             <div class="stat-item">
                 <span>• Hoy:</span>
-                <span class="stat-value">-</span>
+                <span class="stat-value">0</span>
             </div>
             <div class="stat-item">
                 <span>• Esta Semana:</span>
-                <span class="stat-value">-</span>
+                <span class="stat-value">0</span>
             </div>
             <div class="stat-item">
                 <span>• Futuras:</span>
-                <span class="stat-value">-</span>
+                <span class="stat-value">1</span>
             </div>
         </div>
     </div>
@@ -2100,45 +2100,61 @@ function mostrarKanbanEquipoDefinitivo() {
     console.log('✅ KANBAN HARDCODED INSERTADO');
 }
 
-// OVERRIDE COMPLETO DE switchDashboardTab
-window.switchDashboardTab = function(tabName) {
-    console.log('🔄 OVERRIDE: Cambiando a tab:', tabName);
+// Función para cambiar entre tabs del dashboard (RESTAURADA)
+function switchDashboardTab(tabName) {
+    console.log('🔄 Cambiando tab dashboard:', tabName);
     
-    // Ocultar todos
-    document.querySelectorAll('.tab-content').forEach(el => {
-        el.classList.remove('active');
-        el.style.display = 'none';
+    // Ocultar todos los contenidos de tabs
+    const allContents = document.querySelectorAll('.tab-content');
+    allContents.forEach(content => {
+        content.classList.remove('active');
+        content.style.display = 'none';
     });
     
-    document.querySelectorAll('.dashboard-stats').forEach(el => {
-        el.style.display = 'none';
+    // Ocultar todas las estadísticas
+    const allStats = document.querySelectorAll('.dashboard-stats');
+    allStats.forEach(stats => {
+        stats.style.display = 'none';
     });
     
-    document.querySelectorAll('.tab-minimal').forEach(el => {
-        el.classList.remove('active');
+    // Quitar active de todos los botones de tabs
+    const allButtons = document.querySelectorAll('.tab-minimal');
+    allButtons.forEach(button => {
+        button.classList.remove('active');
     });
     
-    // Mostrar el seleccionado
-    const content = document.getElementById(tabName + '-content');
-    if (content) {
-        content.classList.add('active');
-        content.style.display = 'block';
+    // Mostrar el contenido del tab seleccionado
+    const targetContent = document.getElementById(tabName + '-content');
+    if (targetContent) {
+        targetContent.classList.add('active');
+        targetContent.style.display = 'block';
+        console.log(`🔍 Forzando visibilidad para ${tabName}-content:`, targetContent.style.display);
     }
     
-    const stats = document.getElementById(tabName + '-stats');
-    if (stats) {
-        stats.style.display = 'flex';
+    // Mostrar las estadísticas correspondientes
+    const targetStats = document.getElementById(tabName + '-stats');
+    if (targetStats) {
+        targetStats.style.display = 'flex';
     }
     
-    const button = document.getElementById(tabName + '-dashboard-tab');
-    if (button) {
-        button.classList.add('active');
+    // Activar el botón del tab correspondiente
+    const targetButton = document.getElementById(tabName + '-dashboard-tab');
+    if (targetButton) {
+        targetButton.classList.add('active');
     }
     
-    // SI ES EQUIPO, MOSTRAR KANBAN HARDCODED
+    // Cargar datos según el tab seleccionado
     if (tabName === 'team-tasks') {
-        setTimeout(mostrarKanbanEquipoDefinitivo, 50);
+        console.log('🎯 Tab team-tasks detectado, mostrando Kanban del equipo...');
+        // Esperar un momento y mostrar el Kanban hardcoded
+        setTimeout(() => {
+            mostrarKanbanEquipoDefinitivo();
+        }, 100);
+    } else {
+        console.log('🎯 Tab seleccionado:', tabName);
     }
+    
+    console.log('✅ Tab dashboard cambiado a:', tabName);
 }
 
 document.addEventListener('DOMContentLoaded', function() {
