@@ -2307,8 +2307,28 @@ function switchDashboardTab(tabName) {
         // MOSTRAR COMPLETAMENTE el contenedor de "Mis Tareas" cuando NO esté en "Equipo"
         const myTasksContent = document.getElementById('my-tasks-content');
         if (myTasksContent) {
-            myTasksContent.style.display = 'block';
-            console.log('👁️ Contenedor completo de "Mis Tareas" mostrado');
+            myTasksContent.style.cssText = `
+                display: block !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            `;
+            
+            // También ajustar el Kanban interno para que use todo el ancho
+            const myTasksKanban = myTasksContent.querySelector('.kanban-board');
+            if (myTasksKanban) {
+                myTasksKanban.style.cssText = `
+                    display: grid !important;
+                    grid-template-columns: repeat(4, 1fr) !important;
+                    gap: 20px !important;
+                    width: 100% !important;
+                    max-width: none !important;
+                    margin: 0 !important;
+                `;
+            }
+            
+            console.log('👁️ Contenedor completo de "Mis Tareas" mostrado con ancho completo');
         }
         
         // OCULTAR el contenedor del Equipo cuando NO esté en "Equipo"
