@@ -759,6 +759,11 @@ try {
         $controller->cloneProject();
         break;
         
+    case 'clan_leader/debug-database':
+        $controller = new ClanLeaderController();
+        $controller->debugDatabase();
+        break;
+        
     case 'clan_leader/simple-kanban-tasks':
         $controller = new ClanLeaderController();
         $controller->getSimpleKanbanTasks();

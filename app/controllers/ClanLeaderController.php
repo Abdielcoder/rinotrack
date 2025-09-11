@@ -138,7 +138,104 @@ class ClanLeaderController {
             'clan' => $this->userClan
         ];
 
-        $this->loadView('clan_leader/dashboard', $data);
+        // PÁGINA RECREADA DESDE CERO - SOLO MIS TAREAS
+        // CONSULTA DIRECTA - Solo tareas asignadas a mí
+        $userId = $this->currentUser['user_id'];
+        
+        $sql = "
+            SELECT 
+                t.task_id,
+                t.task_name,
+                t.status,
+                t.priority,
+                t.due_date,
+                t.assigned_to_user_id,
+                DATEDIFF(t.due_date, CURDATE()) as days_until_due
+            FROM Tasks t
+            WHERE t.assigned_to_user_id = ?
+                AND (t.is_subtask = 0 OR t.is_subtask IS NULL)
+            ORDER BY t.due_date ASC
+        ";
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$userId]);
+        $myTasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Organizar por fecha
+        $vencidas = array_filter($myTasks, fn($t) => $t['days_until_due'] < 0);
+        $hoy = array_filter($myTasks, fn($t) => $t['days_until_due'] == 0);
+        $semana = array_filter($myTasks, fn($t) => $t['days_until_due'] > 0 && $t['days_until_due'] <= 7);
+        $futuras = array_filter($myTasks, fn($t) => $t['days_until_due'] > 7);
+
+        // HTML DIRECTO SIN ESTILOS
+        header('Content-Type: text/html; charset=utf-8');
+        echo "<!DOCTYPE html>";
+        echo "<html><head><title>Clan Leader - Mis Tareas</title></head><body>";
+        echo "<h1>🎯 MIS TAREAS ASIGNADAS</h1>";
+        echo "<p><strong>Usuario:</strong> {$this->currentUser['full_name']} (ID: {$userId})</p>";
+        echo "<p><strong>Total tareas:</strong> " . count($myTasks) . "</p>";
+        echo "<hr>";
+        
+        // Mostrar tareas vencidas
+        echo "<h2>⚠️ VENCIDAS (" . count($vencidas) . ")</h2>";
+        if (count($vencidas) > 0) {
+            echo "<ul>";
+            foreach ($vencidas as $task) {
+                echo "<li><strong>#{$task['task_id']}</strong> - {$task['task_name']} - {$task['status']} - {$task['due_date']} ({$task['days_until_due']} días)</li>";
+            }
+            echo "</ul>";
+        } else {
+            echo "<p>Sin tareas vencidas</p>";
+        }
+        
+        // Mostrar tareas de hoy
+        echo "<h2>📅 HOY (" . count($hoy) . ")</h2>";
+        if (count($hoy) > 0) {
+            echo "<ul>";
+            foreach ($hoy as $task) {
+                echo "<li><strong>#{$task['task_id']}</strong> - {$task['task_name']} - {$task['status']} - {$task['due_date']}</li>";
+            }
+            echo "</ul>";
+        } else {
+            echo "<p>Sin tareas para hoy</p>";
+        }
+        
+        // Mostrar tareas de esta semana
+        echo "<h2>📆 ESTA SEMANA (" . count($semana) . ")</h2>";
+        if (count($semana) > 0) {
+            echo "<ul>";
+            foreach ($semana as $task) {
+                echo "<li><strong>#{$task['task_id']}</strong> - {$task['task_name']} - {$task['status']} - {$task['due_date']} ({$task['days_until_due']} días)</li>";
+            }
+            echo "</ul>";
+        } else {
+            echo "<p>Sin tareas esta semana</p>";
+        }
+        
+        // Mostrar tareas futuras
+        echo "<h2>🚀 FUTURAS (" . count($futuras) . ")</h2>";
+        if (count($futuras) > 0) {
+            echo "<ul>";
+            foreach (array_slice($futuras, 0, 10) as $task) { // Solo primeras 10
+                echo "<li><strong>#{$task['task_id']}</strong> - {$task['task_name']} - {$task['status']} - {$task['due_date']} ({$task['days_until_due']} días)</li>";
+            }
+            if (count($futuras) > 10) {
+                echo "<li><em>... y " . (count($futuras) - 10) . " más</em></li>";
+            }
+            echo "</ul>";
+        } else {
+            echo "<p>Sin tareas futuras</p>";
+        }
+        
+        echo "<hr>";
+        echo "<h2>🔍 CONSULTA EJECUTADA:</h2>";
+        echo "<pre>SELECT task_id, task_name, status, priority, due_date, assigned_to_user_id, DATEDIFF(due_date, CURDATE()) as days_until_due FROM Tasks WHERE assigned_to_user_id = {$userId} AND (is_subtask = 0 OR is_subtask IS NULL) ORDER BY due_date ASC</pre>";
+        
+        echo "<p><a href='?route=clan_leader/debug-database'>🔧 Ver debug de base de datos</a></p>";
+        echo "<p><a href='?route=logout'>🚪 Cerrar sesión</a></p>";
+        
+        echo "</body></html>";
+        exit;
     }
     
     /**
@@ -3851,6 +3948,78 @@ class ClanLeaderController {
         } catch (Exception $e) {
             error_log("Error en cloneProject (ClanLeader): " . $e->getMessage());
             Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor'], 500);
+        }
+    }
+    
+    /**
+     * DEBUG - Revisar base de datos directamente (SIN AUTENTICACIÓN)
+     */
+    public function debugDatabase() {
+        header('Content-Type: text/html; charset=utf-8');
+        
+        try {
+            echo "<h1>🔍 DEBUG DIRECTO DE BASE DE DATOS</h1>";
+            echo "<p>Revisando tareas para user_id = 2</p>";
+            
+            // Consulta directa
+            $sql = "SELECT task_id, task_name, assigned_to_user_id, status, due_date 
+                    FROM Tasks 
+                    WHERE assigned_to_user_id = 2 
+                    LIMIT 10";
+            
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute();
+            $tasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            echo "<h2>📋 Tareas encontradas: " . count($tasks) . "</h2>";
+            
+            if (count($tasks) > 0) {
+                echo "<table border='1' style='border-collapse: collapse; padding: 5px;'>";
+                echo "<tr><th>ID</th><th>Nombre</th><th>Asignado a</th><th>Estado</th><th>Vencimiento</th></tr>";
+                
+                foreach ($tasks as $task) {
+                    echo "<tr>";
+                    echo "<td>" . $task['task_id'] . "</td>";
+                    echo "<td>" . htmlspecialchars($task['task_name']) . "</td>";
+                    echo "<td>" . $task['assigned_to_user_id'] . "</td>";
+                    echo "<td>" . $task['status'] . "</td>";
+                    echo "<td>" . $task['due_date'] . "</td>";
+                    echo "</tr>";
+                }
+                echo "</table>";
+            } else {
+                echo "<p style='color: red; font-size: 18px;'>❌ NO HAY TAREAS con assigned_to_user_id = 2</p>";
+            }
+            
+            // Ver todas las tareas
+            echo "<h2>🔍 Últimas 10 tareas (cualquier usuario):</h2>";
+            $sqlAll = "SELECT task_id, task_name, assigned_to_user_id, created_by_user_id, status 
+                       FROM Tasks 
+                       ORDER BY task_id DESC 
+                       LIMIT 10";
+            
+            $stmtAll = $this->db->prepare($sqlAll);
+            $stmtAll->execute();
+            $allTasks = $stmtAll->fetchAll(PDO::FETCH_ASSOC);
+            
+            echo "<table border='1' style='border-collapse: collapse; padding: 5px;'>";
+            echo "<tr><th>ID</th><th>Nombre</th><th>Asignado a</th><th>Creado por</th><th>Estado</th></tr>";
+            
+            foreach ($allTasks as $task) {
+                $highlight = ($task['assigned_to_user_id'] == 2) ? "style='background: yellow;'" : "";
+                echo "<tr $highlight>";
+                echo "<td>" . $task['task_id'] . "</td>";
+                echo "<td>" . htmlspecialchars($task['task_name']) . "</td>";
+                echo "<td>" . $task['assigned_to_user_id'] . "</td>";
+                echo "<td>" . $task['created_by_user_id'] . "</td>";
+                echo "<td>" . $task['status'] . "</td>";
+                echo "</tr>";
+            }
+            echo "</table>";
+            
+        } catch (Exception $e) {
+            echo "<h2 style='color: red;'>❌ ERROR</h2>";
+            echo "<p>Error: " . $e->getMessage() . "</p>";
         }
     }
     
