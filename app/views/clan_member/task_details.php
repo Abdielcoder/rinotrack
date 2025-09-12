@@ -10,19 +10,26 @@ $additionalJS[] = 'https://cdn.quilljs.com/1.3.6/quill.min.js';
   <div class="content-minimal" style="max-width:1100px;">
     
     <!-- Botones de Acción Superior -->
-    <div class="header-actions" style="display: flex; gap: 12px; margin-bottom: 20px; padding: 0 0 15px 0; border-bottom: 1px solid #e5e7eb;">
-      <button onclick="history.back()" style="background: #f3f4f6; color: #374151; padding: 12px 20px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;">
-        <i class="fas fa-arrow-left"></i> Volver Atrás
-      </button>
-      <?php 
-        // Solo mostrar botón editar si la tarea fue creada por el usuario actual (tareas personales)
-        $canEditTask = (int)($task['created_by_user_id'] ?? 0) === (int)$user['user_id']; 
-      ?>
-      <?php if ($canEditTask): ?>
-        <button class="btn-minimal primary" onclick="openEditTaskModal()" style="padding: 12px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;">
-          <i class="fas fa-edit"></i> Editar Tarea
+    <div class="header-actions" style="display: flex; gap: 12px; margin-bottom: 20px; padding: 0 0 15px 0; border-bottom: 1px solid #e5e7eb; justify-content: space-between; align-items: center;">
+      <div style="display: flex; gap: 12px;">
+        <button onclick="history.back()" style="background: #f3f4f6; color: #374151; padding: 12px 20px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+          <i class="fas fa-arrow-left"></i> Volver Atrás
         </button>
-      <?php endif; ?>
+        <?php 
+          // Solo mostrar botón editar si la tarea fue creada por el usuario actual (tareas personales)
+          $canEditTask = (int)($task['created_by_user_id'] ?? 0) === (int)$user['user_id']; 
+        ?>
+        <?php if ($canEditTask): ?>
+          <button class="btn-minimal primary" onclick="openEditTaskModal()" style="padding: 12px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-edit"></i> Editar Tarea
+          </button>
+        <?php endif; ?>
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <a href="?route=logout" style="background: #dc2626; color: #ffffff; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s ease;" title="Cerrar Sesión" onmouseover="this.style.background='#b91c1c'" onmouseout="this.style.background='#dc2626'">
+          <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+        </a>
+      </div>
     </div>
     
     <div class="task-details-grid">
