@@ -881,14 +881,14 @@ class Task {
                     p.project_name,
                     p.status as project_status
                 FROM Tasks t
-                INNER JOIN Projects p ON t.project_id = t.project_id
+                INNER JOIN Projects p ON t.project_id = p.project_id
                 WHERE (t.assigned_to_user_id = ? OR t.task_id IN (
                     SELECT task_id FROM Task_Assignments WHERE user_id = ?
                 ))
-                AND p.clan_id = (SELECT clan_id FROM Users WHERE user_id = ?)
+                AND (p.clan_id = (SELECT clan_id FROM Users WHERE user_id = ?) OR p.is_personal = 1)
                 AND t.is_subtask = 0
                 AND t.status IN ('pending', 'in_progress')
-                AND (t.due_date IS NULL OR t.due_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 15 DAY))
+                AND (t.due_date IS NULL OR t.due_date >= CURDATE())
                 AND (p.is_personal IS NULL OR p.is_personal != 1 OR (p.is_personal = 1 AND p.created_by_user_id = ?))
                 ORDER BY t.due_date ASC
             ");

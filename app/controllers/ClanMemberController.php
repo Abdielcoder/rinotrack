@@ -765,6 +765,22 @@ class ClanMemberController {
             return;
         }
         $tasks = $this->taskModel->getActiveTasksByUser($this->currentUser['user_id']);
+        
+        // Log para debugging de tareas recurrentes
+        error_log("=== AVAILABILITY CALENDAR ===");
+        error_log("Usuario ID: " . $this->currentUser['user_id']);
+        error_log("Total tareas cargadas: " . count($tasks));
+        
+        // Log de tareas recurrentes
+        $recurrentTasks = array_filter($tasks, function($task) {
+            return ($task['is_recurrent'] ?? 0) == 1;
+        });
+        error_log("Tareas recurrentes encontradas: " . count($recurrentTasks));
+        
+        foreach ($recurrentTasks as $task) {
+            error_log("Tarea recurrente: ID={$task['task_id']}, Nombre={$task['task_name']}, Fecha={$task['due_date']}, Proyecto={$task['project_name']}");
+        }
+        
         $summary = [
             'task_count' => count($tasks)
         ];

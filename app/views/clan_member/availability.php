@@ -1286,7 +1286,20 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-document.addEventListener('DOMContentLoaded',()=>{ window.calendarTasksData = <?= json_encode($tasks ?? []) ?>; setTasksData(calendarTasksData); });
+document.addEventListener('DOMContentLoaded',()=>{ 
+    window.calendarTasksData = <?= json_encode($tasks ?? []) ?>; 
+    console.log('=== TAREAS CARGADAS EN EL CALENDARIO ===');
+    console.log('Total tareas:', window.calendarTasksData.length);
+    
+    // Log de tareas recurrentes
+    const recurrentTasks = window.calendarTasksData.filter(task => task.is_recurrent == 1);
+    console.log('Tareas recurrentes:', recurrentTasks.length);
+    recurrentTasks.forEach(task => {
+        console.log(`Tarea recurrente: ID=${task.task_id}, Nombre=${task.task_name}, Fecha=${task.due_date}, Proyecto=${task.project_name}`);
+    });
+    
+    setTasksData(calendarTasksData); 
+});
 </script>
 
 <?php
