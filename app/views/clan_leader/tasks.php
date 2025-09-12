@@ -163,9 +163,9 @@ ob_start();
                                     <label for="statusFilter">Estado:</label>
                                     <select name="status_filter" id="statusFilter">
                                         <option value="">Todos</option>
-                                        <option value="pending" <?= (($_GET['status_filter'] ?? '') === 'pending') ? 'selected' : '' ?>>Pendiente</option>
-                                        <option value="in_progress" <?= (($_GET['status_filter'] ?? '') === 'in_progress') ? 'selected' : '' ?>>En Progreso</option>
-                                        <option value="completed" <?= (($_GET['status_filter'] ?? '') === 'completed') ? 'selected' : '' ?>>Completado</option>
+                                        <option value="pending" <?= (($_GET['status_filter'] ?? 'pending') === 'pending') ? 'selected' : '' ?>>Pendiente</option>
+                                        <option value="in_progress" <?= (($_GET['status_filter'] ?? 'pending') === 'in_progress') ? 'selected' : '' ?>>En Progreso</option>
+                                        <option value="completed" <?= (($_GET['status_filter'] ?? 'pending') === 'completed') ? 'selected' : '' ?>>Completado</option>
                                     </select>
                                 </div>
                                 
@@ -253,9 +253,9 @@ ob_start();
                                     <label for="statusFilterTeam">Estado:</label>
                                     <select name="status_filter" id="statusFilterTeam">
                                         <option value="">Todos</option>
-                                        <option value="pending" <?= (($_GET['status_filter'] ?? '') === 'pending') ? 'selected' : '' ?>>Pendiente</option>
-                                        <option value="in_progress" <?= (($_GET['status_filter'] ?? '') === 'in_progress') ? 'selected' : '' ?>>En Progreso</option>
-                                        <option value="completed" <?= (($_GET['status_filter'] ?? '') === 'completed') ? 'selected' : '' ?>>Completado</option>
+                                        <option value="pending" <?= (($_GET['status_filter'] ?? 'pending') === 'pending') ? 'selected' : '' ?>>Pendiente</option>
+                                        <option value="in_progress" <?= (($_GET['status_filter'] ?? 'pending') === 'in_progress') ? 'selected' : '' ?>>En Progreso</option>
+                                        <option value="completed" <?= (($_GET['status_filter'] ?? 'pending') === 'completed') ? 'selected' : '' ?>>Completado</option>
                                     </select>
                                 </div>
                                 
@@ -5110,12 +5110,12 @@ function resetFilters(tabType) {
     if (tabType === 'my-tasks') {
         const statusSelect = document.getElementById('statusFilter');
         const searchInput = document.getElementById('searchInputMyTasks');
-        if (statusSelect) statusSelect.value = '';
+        if (statusSelect) statusSelect.value = 'pending';
         if (searchInput) searchInput.value = '';
     } else {
         const statusSelect = document.getElementById('statusFilterTeam');
         const searchInput = document.getElementById('searchInputTeam');
-        if (statusSelect) statusSelect.value = '';
+        if (statusSelect) statusSelect.value = 'pending';
         if (searchInput) searchInput.value = '';
     }
     
@@ -5287,6 +5287,23 @@ function debounce(func, wait) {
         timeout = setTimeout(later, wait);
     };
 }
+
+// Establecer filtros por defecto al cargar la página
+document.addEventListener('DOMContentLoaded', function() {
+    // Establecer "Pendiente" como filtro por defecto para Mis Tareas
+    const statusFilterMyTasks = document.getElementById('statusFilter');
+    if (statusFilterMyTasks && !statusFilterMyTasks.value) {
+        statusFilterMyTasks.value = 'pending';
+    }
+    
+    // Establecer "Pendiente" como filtro por defecto para Equipo
+    const statusFilterTeam = document.getElementById('statusFilterTeam');
+    if (statusFilterTeam && !statusFilterTeam.value) {
+        statusFilterTeam.value = 'pending';
+    }
+    
+    console.log('✅ Filtros por defecto establecidos: Pendiente');
+});
 </script>
 
 <?php
