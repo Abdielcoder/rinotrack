@@ -25,10 +25,7 @@ ob_start();
                     </a>
                 </div>
                 
-                <a href="?route=logout" class="btn-minimal danger" title="Cerrar sesión">
-                    <i class="fas fa-sign-out-alt"></i>
-                    Cerrar Sesión
-                </a>
+                <!-- Botón de cerrar sesión removido - ahora está en el menú principal -->
             </div>
         </div>
     </header>
