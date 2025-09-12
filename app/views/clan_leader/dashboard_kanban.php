@@ -2223,19 +2223,6 @@ function showTeamKanbanDirect() {
     console.log('📏 Altura del contenedor:', teamContent.offsetHeight);
 }
 
-// Función para manejar checkbox de tareas del equipo
-function handleTeamTaskCheck(uniqueTaskId, taskId, isChecked, itemType = 'task') {
-    const itemLabel = itemType === 'subtask' ? 'Subtarea' : 'Tarea';
-    console.log(`📝 ${itemLabel} del equipo`, taskId, isChecked ? 'marcada' : 'desmarcada');
-    
-    // Aquí puedes implementar la lógica para actualizar el estado de la tarea
-    // Por ahora, solo mostramos un mensaje
-    if (isChecked) {
-        alert(`${itemLabel} del equipo marcada como completada. ID: ${taskId}`);
-        // Opcional: recargar las tareas del equipo
-        setTimeout(() => loadTeamKanbanTasks(), 1000);
-    }
-}
 
 // Función para actualizar los contadores de tareas
 function updateTaskCounts() {
