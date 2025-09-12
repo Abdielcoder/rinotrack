@@ -76,10 +76,16 @@ ob_start();
         <section class="calendar-view">
             <div class="calendar-header-section">
                 <h3>Calendario de Tareas</h3>
-                <button class="btn-collapse" onclick="toggleCalendar()" id="calendarToggle">
-                    <i class="fas fa-chevron-up" id="calendarIcon"></i>
-                    <span id="calendarToggleText">Ocultar</span>
-                </button>
+                <div class="calendar-info">
+                    <span class="calendar-hint">
+                        <i class="fas fa-info-circle"></i>
+                        Haz clic para ver tareas • Doble clic para crear nueva tarea
+                    </span>
+                    <button class="btn-collapse" onclick="toggleCalendar()" id="calendarToggle">
+                        <i class="fas fa-chevron-up" id="calendarIcon"></i>
+                        <span id="calendarToggleText">Ocultar</span>
+                    </button>
+                </div>
             </div>
             
             <div class="calendar-container" id="calendarContainer">
@@ -244,6 +250,127 @@ ob_start();
     </div>
 </div>
 
+<!-- Modal para crear nueva tarea -->
+<div class="task-modal" id="createTaskModal">
+    <div class="modal-content create-task-modal">
+        <div class="modal-header">
+            <h3 id="createModalTitle">Crear Nueva Tarea</h3>
+            <button class="modal-close" onclick="closeCreateTaskModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="createTaskForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="create_task_title">Título de la tarea *</label>
+                        <input type="text" id="create_task_title" name="task_title" placeholder="Título de la tarea *" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="create_task_due_date">Fecha límite *</label>
+                        <div class="date-input-wrapper">
+                            <input type="date" id="create_task_due_date" name="task_due_date" required>
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="create_task_project">Proyecto/Concepto</label>
+                        <div class="select-wrapper">
+                            <select id="create_task_project" name="task_project">
+                                <option value="">Seleccionar proyecto...</option>
+                                <?php 
+                                // Obtener proyectos para el clan actual
+                                if (isset($clan) && isset($clan['clan_id'])) {
+                                    require_once __DIR__ . '/../../models/Project.php';
+                                    $projectModel = new Project();
+                                    $projects = $projectModel->getByClan($clan['clan_id']);
+                                    
+                                    // Filtrar proyectos personales
+                                    $filteredProjects = array_filter($projects, function($project) {
+                                        if (($project['is_personal'] ?? 0) == 1) {
+                                            return ($project['created_by_user_id'] ?? 0) == ($_SESSION['user_id'] ?? 0);
+                                        }
+                                        return true;
+                                    });
+                                    $filteredProjects = array_values($filteredProjects);
+                                    
+                                    foreach ($filteredProjects as $project): 
+                                ?>
+                                    <option value="<?php echo $project['project_id']; ?>">
+                                        <?php echo htmlspecialchars($project['project_name']); ?>
+                                    </option>
+                                <?php 
+                                    endforeach;
+                                }
+                                ?>
+                            </select>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="create_priority">Prioridad</label>
+                        <div class="select-wrapper">
+                            <select id="create_priority" name="priority">
+                                <option value="low">Baja</option>
+                                <option value="medium" selected>Media</option>
+                                <option value="high">Alta</option>
+                                <option value="critical">Urgente</option>
+                            </select>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="create_assigned_to_user_id">Asignar a</label>
+                        <div class="select-wrapper">
+                            <select id="create_assigned_to_user_id" name="assigned_to_user_id">
+                                <option value="">Sin asignar</option>
+                                <?php 
+                                // Obtener miembros del clan
+                                if (isset($availability_data) && !empty($availability_data)) {
+                                    foreach ($availability_data as $collaborator): 
+                                        $member = $collaborator['member'];
+                                ?>
+                                    <option value="<?php echo $member['user_id']; ?>">
+                                        <?php echo htmlspecialchars($member['full_name']); ?>
+                                    </option>
+                                <?php 
+                                    endforeach;
+                                }
+                                ?>
+                            </select>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group full-width">
+                        <label for="create_task_description">Descripción</label>
+                        <textarea id="create_task_description" name="task_description" rows="3" placeholder="Descripción de la tarea..."></textarea>
+                    </div>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn-minimal secondary" onclick="closeCreateTaskModal()">
+                        <i class="fas fa-times"></i>
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn-minimal primary">
+                        <i class="fas fa-plus"></i>
+                        Crear Tarea
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <!-- Script para pasar datos de tareas al JavaScript -->
 <script>
 // Datos de tareas para el calendario
@@ -261,10 +388,225 @@ document.addEventListener('DOMContentLoaded', function() {
             generateCalendar();
         }
     }
+    
+    // Configurar el formulario de creación de tareas
+    setupCreateTaskModal();
 });
+
+// Función para configurar el modal de creación de tareas
+function setupCreateTaskModal() {
+    const form = document.getElementById('createTaskForm');
+    if (form) {
+        form.addEventListener('submit', handleCreateTask);
+    }
+}
+
+// Función para abrir el modal de creación de tareas
+function openCreateTaskModal(selectedDate = null) {
+    const modal = document.getElementById('createTaskModal');
+    const dateInput = document.getElementById('create_task_due_date');
+    
+    if (modal) {
+        modal.style.display = 'block';
+        
+        // Si se proporciona una fecha, establecerla en el campo
+        if (selectedDate) {
+            dateInput.value = selectedDate;
+        } else {
+            // Establecer la fecha de hoy como predeterminada
+            const today = new Date().toISOString().split('T')[0];
+            dateInput.value = today;
+        }
+        
+        // Enfocar el primer campo
+        document.getElementById('create_task_title').focus();
+    }
+}
+
+// Función para cerrar el modal de creación de tareas
+function closeCreateTaskModal() {
+    const modal = document.getElementById('createTaskModal');
+    if (modal) {
+        modal.style.display = 'none';
+        
+        // Limpiar el formulario
+        const form = document.getElementById('createTaskForm');
+        if (form) {
+            form.reset();
+        }
+    }
+}
+
+// Función para manejar el envío del formulario de creación de tareas
+function handleCreateTask(event) {
+    event.preventDefault();
+    
+    // Obtener los datos del formulario
+    const formData = new FormData(event.target);
+    
+    // Validaciones básicas
+    const taskTitle = formData.get('task_title');
+    const taskDueDate = formData.get('task_due_date');
+    const taskProject = formData.get('task_project');
+    
+    if (!taskTitle.trim()) {
+        showToast('El título de la tarea es requerido', 'error');
+        return;
+    }
+    
+    if (!taskDueDate) {
+        showToast('La fecha límite es requerida', 'error');
+        return;
+    }
+    
+    if (!taskProject) {
+        showToast('Debe seleccionar un proyecto', 'error');
+        return;
+    }
+    
+    // Mostrar indicador de carga
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creando...';
+    submitBtn.disabled = true;
+    
+    // Enviar solicitud al servidor
+    fetch('?route=clan_leader/create-task', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast('Tarea creada exitosamente', 'success');
+            closeCreateTaskModal();
+            
+            // Recargar la página para mostrar la nueva tarea
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        } else {
+            showToast('Error al crear la tarea: ' + (data.message || 'Error desconocido'), 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Error al crear la tarea', 'error');
+    })
+    .finally(() => {
+        // Restaurar el botón
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    });
+}
+
+// Función para mostrar notificaciones toast
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 16px 24px;
+        border-radius: 12px;
+        color: white;
+        font-weight: 600;
+        z-index: 10000;
+        animation: slideIn 0.3s ease;
+        max-width: 350px;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    `;
+    
+    if (type === 'success') {
+        toast.style.background = '#10b981';
+    } else if (type === 'error') {
+        toast.style.background = '#ef4444';
+    } else {
+        toast.style.background = '#3b82f6';
+    }
+    
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, 300);
+    }, 3000);
+}
+
+// Cerrar modal al hacer clic fuera de él
+document.addEventListener('click', function(event) {
+    const modal = document.getElementById('createTaskModal');
+    if (modal && event.target === modal) {
+        closeCreateTaskModal();
+    }
+});
+
+// Cerrar modal con tecla Escape
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        closeCreateTaskModal();
+    }
+});
+
+// Agregar estilos para las animaciones toast
+const toastStyles = document.createElement('style');
+toastStyles.textContent = `
+    @keyframes slideIn {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    @keyframes slideOut {
+        from {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        to {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+    }
+`;
+document.head.appendChild(toastStyles);
 </script>
 
 <style>
+/* Estilos para la información del calendario */
+.calendar-info {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.calendar-hint {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: #6b7280;
+    background: #f3f4f6;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    border: 1px solid #e5e7eb;
+}
+
+.calendar-hint i {
+    color: #3b82f6;
+}
+
 /* Estilos mejorados para los botones de vista */
 .view-toggle {
     display: flex;
@@ -402,6 +744,176 @@ document.addEventListener('DOMContentLoaded', function() {
     .view-toggle {
         gap: 2px;
         padding: 2px;
+    }
+}
+
+/* Estilos para el modal de creación de tareas */
+.create-task-modal {
+    max-width: 600px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.form-row .full-width {
+    grid-column: 1 / -1;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-group label {
+    font-weight: 600;
+    color: #374151;
+    font-size: 0.9rem;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    padding: 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    transition: border-color 0.2s ease;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.select-wrapper {
+    position: relative;
+}
+
+.select-wrapper select {
+    width: 100%;
+    appearance: none;
+    padding-right: 2.5rem;
+}
+
+.select-wrapper i {
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    pointer-events: none;
+}
+
+.date-input-wrapper {
+    position: relative;
+}
+
+.date-input-wrapper input {
+    width: 100%;
+    padding-right: 2.5rem;
+}
+
+.date-input-wrapper i {
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    pointer-events: none;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+.btn-minimal {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    font-size: 0.9rem;
+}
+
+.btn-minimal.primary {
+    background: #3b82f6;
+    color: white;
+}
+
+.btn-minimal.primary:hover {
+    background: #2563eb;
+}
+
+.btn-minimal.secondary {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+.btn-minimal.secondary:hover {
+    background: #e2e8f0;
+}
+
+/* Responsive para el modal */
+@media (max-width: 768px) {
+    .create-task-modal {
+        width: 95%;
+        margin: 1rem;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+    
+    .modal-actions {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .btn-minimal {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .calendar-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+    
+    .calendar-hint {
+        font-size: 0.8rem;
+        padding: 0.4rem 0.8rem;
     }
 }
 </style>
