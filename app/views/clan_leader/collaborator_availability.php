@@ -388,6 +388,10 @@ ob_start();
 // Datos de tareas para el calendario
 window.calendarTasksData = <?= json_encode($all_tasks) ?>;
 
+// Debug: verificar que los datos lleguen correctamente
+console.log('Datos de tareas para el calendario:', window.calendarTasksData);
+console.log('Cantidad de tareas:', window.calendarTasksData.length);
+
 // Esperar a que el DOM esté listo y las funciones estén disponibles
 document.addEventListener('DOMContentLoaded', function() {
     if (typeof setTasksData === 'function') {

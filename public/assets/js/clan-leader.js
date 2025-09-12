@@ -362,6 +362,10 @@ let currentDate = new Date();
 
 // Generar calendario
 function generateCalendar() {
+    console.log('Generando calendario...');
+    console.log('Datos de tareas disponibles:', tasksData);
+    console.log('Cantidad de tareas:', tasksData.length);
+    
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
     
@@ -576,9 +580,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Función para establecer los datos de tareas (llamada desde PHP)
 function setTasksData(data) {
+    console.log('setTasksData llamada con:', data);
     tasksData = data;
+    console.log('tasksData establecido:', tasksData);
     if (document.getElementById('calendarDays')) {
+        console.log('Elemento calendarDays encontrado, generando calendario...');
         generateCalendar();
+    } else {
+        console.error('Elemento calendarDays no encontrado');
     }
 }
 
