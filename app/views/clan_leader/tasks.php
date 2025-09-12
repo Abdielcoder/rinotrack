@@ -193,7 +193,7 @@ ob_start();
                                 
                                 <!-- Botones de acción -->
                                 <div class="filter-actions">
-                                    <button type="button" class="btn-apply-filters" onclick="applyFilters()">
+                                    <button type="button" class="btn-apply-filters" onclick="applyFilters()" style="display: none;">
                                         <i class="fas fa-filter"></i>
                                         Aplicar Filtros
                                     </button>
@@ -283,7 +283,7 @@ ob_start();
                                 
                                 <!-- Botones de acción -->
                                 <div class="filter-actions">
-                                    <button type="button" class="btn-apply-filters" onclick="applyFilters()">
+                                    <button type="button" class="btn-apply-filters" onclick="applyFilters()" style="display: none;">
                                         <i class="fas fa-filter"></i>
                                         Aplicar Filtros
                                     </button>
@@ -3273,8 +3273,7 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// Las funciones de búsqueda automática fueron removidas
-// Ahora se usan los botones "Aplicar Filtros" para mejor control
+// Los filtros se aplican automáticamente al cambiar los valores
 // Función para cambiar el estado de una tarea - VERSIÓN CORREGIDA
 function toggleTaskStatus(taskId, isChecked) {
     console.log('=== toggleTaskStatus Debug V3.0 ===');
