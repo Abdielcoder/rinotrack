@@ -1520,16 +1520,9 @@ function handleTeamTaskCheck(uniqueTaskId, taskId, isChecked, itemType = 'task')
                 card.remove();
                 updateTeamTaskCounts();
                 console.log('✅ Tarea del equipo removida del DOM');
-                
-                // Recargar el tablero del equipo después de 1 segundo
-                setTimeout(() => {
-                    console.log('🔄 Recargando tablero del equipo...');
-                    loadTeamKanban();
-                }, 1000);
             }, 300);
         } else {
             console.error('👥 Error al completar tarea del equipo:', data.message);
-            alert('Error al completar la tarea del equipo: ' + (data.message || 'Error desconocido'));
             
             // Rehabilitar checkbox si hay error
             checkbox.disabled = false;
@@ -1538,7 +1531,6 @@ function handleTeamTaskCheck(uniqueTaskId, taskId, isChecked, itemType = 'task')
     })
     .catch(error => {
         console.error('👥 Error de conexión al completar tarea del equipo:', error);
-        alert('Error de conexión al completar la tarea del equipo');
         
         // Rehabilitar checkbox si hay error
         checkbox.disabled = false;
