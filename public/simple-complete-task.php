@@ -89,7 +89,7 @@ try {
             $stmt = $db->prepare("
                 UPDATE Subtasks 
                 SET status = 'completed',
-                    completed_at = NOW(),
+                    completion_percentage = 100.00,
                     updated_at = NOW()
                 WHERE subtask_id = ?
             ");
