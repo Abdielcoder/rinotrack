@@ -3048,6 +3048,48 @@ section {
     color: #374151;
 }
 
+/* Estilos para el botón "Agregar tarea" en el modal */
+.modal-add-task-section {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e5e7eb;
+    text-align: center;
+}
+
+.btn-add-task-modal {
+    background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 12px rgba(30, 58, 138, 0.3);
+    text-decoration: none;
+    min-width: 140px;
+    justify-content: center;
+}
+
+.btn-add-task-modal:hover {
+    background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(30, 58, 138, 0.4);
+}
+
+.btn-add-task-modal:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(30, 58, 138, 0.3);
+}
+
+.btn-add-task-modal i {
+    font-size: 16px;
+}
+
 .task-list {
     display: flex;
     flex-direction: column;

@@ -527,6 +527,18 @@ function showTasksForDate(date, tasks) {
         });
     }
     
+    // Agregar botón "Agregar tarea" al final del modal
+    const addTaskButton = document.createElement('div');
+    addTaskButton.className = 'modal-add-task-section';
+    addTaskButton.innerHTML = `
+        <button class="btn-add-task-modal" onclick="openAddTaskModal('${date.toISOString().split('T')[0]}')">
+            <i class="fas fa-plus"></i>
+            Agregar tarea
+        </button>
+    `;
+    
+    modalTaskList.appendChild(addTaskButton);
+    
     modal.classList.add('show');
 }
 
@@ -1547,6 +1559,16 @@ function removeAttachment() {
     const input = document.getElementById('fileAttachment');
     if (preview) preview.style.display = 'none';
     if (input) input.value = '';
+}
+
+// Función para abrir modal de agregar tarea desde el calendario
+function openAddTaskModal(selectedDate) {
+    // Cerrar el modal actual de tareas
+    closeTaskModal();
+    
+    // Redirigir a la página de crear tarea con la fecha preseleccionada
+    const url = `?route=clan_leader/task-edit&due_date=${selectedDate}`;
+    window.location.href = url;
 }
 
 // Fin del archivo
