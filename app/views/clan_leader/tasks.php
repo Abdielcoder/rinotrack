@@ -212,9 +212,6 @@ ob_start();
                     <table class="tasks-table">
                         <thead>
                             <tr>
-                                <th class="th-checkbox" style="width: 40px;">
-                                    <input type="checkbox" id="select-all-my" onchange="toggleAllTasks(this, 'my')">
-                                </th>
                                 <th class="th-priority">Prioridad</th>
                                 <th class="th-task">Tarea</th>
                                 <th class="th-project">Proyecto</th>
@@ -226,7 +223,7 @@ ob_start();
                         </thead>
                         <tbody id="my-tasks-table-body">
                             <!-- Las tareas del líder se cargarán por JavaScript -->
-                            <tr><td colspan="8" class="text-center">Cargando mis tareas...</td></tr>
+                            <tr><td colspan="7" class="text-center">Cargando mis tareas...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -302,9 +299,6 @@ ob_start();
                     <table class="tasks-table">
                         <thead>
                             <tr>
-                                <th class="th-checkbox" style="width: 40px;">
-                                    <input type="checkbox" id="select-all-team" onchange="toggleAllTasks(this, 'team')">
-                                </th>
                                 <th class="th-priority">Prioridad</th>
                                 <th class="th-task">Tarea</th>
                                 <th class="th-project">Proyecto</th>
@@ -317,7 +311,7 @@ ob_start();
                         </thead>
                         <tbody id="team-tasks-table-body">
                             <!-- Las tareas del equipo se cargarán por JavaScript -->
-                            <tr><td colspan="9" class="text-center">Cargando tareas del equipo...</td></tr>
+                            <tr><td colspan="8" class="text-center">Cargando tareas del equipo...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -1519,17 +1513,9 @@ ob_start();
     text-align: center;
 }
 
-/* Estilos para checkbox */
-.th-checkbox, .td-checkbox {
-    width: 40px;
-    text-align: center;
-}
+/* Estilos para checkbox eliminados */
 
-.td-checkbox input[type="checkbox"] {
-    cursor: pointer;
-    width: 18px;
-    height: 18px;
-}
+/* Estilos de checkbox eliminados */
 
 /* Estilos para la barra de progreso */
 .progress-container {
@@ -3169,7 +3155,7 @@ function deleteTask(taskId) {
                     const tbody = document.querySelector('.tasks-table tbody');
                     if (tbody) {
                         const emptyRow = document.createElement('tr');
-                        emptyRow.innerHTML = '<td colspan="9">No hay tareas disponibles</td>';
+                        emptyRow.innerHTML = '<td colspan="8">No hay tareas disponibles</td>';
                         tbody.appendChild(emptyRow);
                     }
                 }
@@ -3420,16 +3406,7 @@ function toggleTaskStatusByElement(checkbox) {
     toggleTaskStatus(taskId, isChecked);
 }
 
-// Función para seleccionar/deseleccionar todas las tareas
-function toggleAllTasks(checkbox) {
-    const taskCheckboxes = document.querySelectorAll('.td-checkbox input[type="checkbox"]');
-    taskCheckboxes.forEach(taskCheckbox => {
-        if (taskCheckbox.checked !== checkbox.checked) {
-            taskCheckbox.checked = checkbox.checked;
-            // No llamamos a toggleTaskStatus aquí para evitar múltiples llamadas al servidor
-        }
-    });
-}
+// Función toggleAllTasks eliminada - checkboxes removidos
 
 // Función para actualizar el progreso de una tarea desde el slider
 function updateTaskProgress(taskId, newProgress) {
@@ -3798,7 +3775,7 @@ function loadMyTasks() {
     }
     
     console.log('✅ tbody encontrado, cargando...');
-    tbody.innerHTML = '<tr class="loading"><td colspan="8" class="text-center"><i class="fas fa-spinner fa-spin"></i> Cargando mis tareas...</td></tr>';
+    tbody.innerHTML = '<tr class="loading"><td colspan="7" class="text-center"><i class="fas fa-spinner fa-spin"></i> Cargando mis tareas...</td></tr>';
     
     // Agregar timestamp para evitar cache
     const timestamp = new Date().getTime();
@@ -3826,12 +3803,12 @@ function loadMyTasks() {
                 console.log('=== END loadMyTasks FRONTEND ===');
             } else {
                 console.error('Error loading my tasks:', data.message);
-                tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Error al cargar tareas: ' + data.message + '</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Error al cargar tareas: ' + data.message + '</td></tr>';
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No se pudieron cargar las tareas</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No se pudieron cargar las tareas</td></tr>';
         });
 }
 
@@ -3845,7 +3822,7 @@ function loadTeamTasks() {
     }
     console.log('✅ tbody del equipo encontrado, cargando...');
     
-    tbody.innerHTML = '<tr class="loading"><td colspan="9" class="text-center"><i class="fas fa-spinner fa-spin"></i> Cargando tareas del equipo...</td></tr>';
+    tbody.innerHTML = '<tr class="loading"><td colspan="8" class="text-center"><i class="fas fa-spinner fa-spin"></i> Cargando tareas del equipo...</td></tr>';
     
     // Agregar timestamp para evitar cache
     const timestamp = new Date().getTime();
@@ -3873,12 +3850,12 @@ function loadTeamTasks() {
                 console.log('=== END loadTeamTasks FRONTEND ===');
             } else {
                 console.error('Error loading team tasks:', data.message);
-                tbody.innerHTML = '<tr><td colspan="9" class="text-center text-danger">Error al cargar tareas del equipo: ' + data.message + '</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Error al cargar tareas del equipo: ' + data.message + '</td></tr>';
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted">No se pudieron cargar las tareas del equipo</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No se pudieron cargar las tareas del equipo</td></tr>';
         });
 }
 
@@ -3888,7 +3865,7 @@ function renderTeamTasksTable(tasks, tbodyId) {
     if (!tbody) return;
     
     if (tasks.length === 0) {
-        tbody.innerHTML = '<tr class="empty"><td colspan="9" class="text-center"><i class="fas fa-users-slash"></i><br>No hay tareas del equipo disponibles</td></tr>';
+        tbody.innerHTML = '<tr class="empty"><td colspan="8" class="text-center"><i class="fas fa-users-slash"></i><br>No hay tareas del equipo disponibles</td></tr>';
         return;
     }
     
@@ -3910,14 +3887,7 @@ function renderTeamTasksTable(tasks, tbodyId) {
         const daysUntilDue = task.days_until_due || 0;
         
         html += `
-            <tr class="task-row priority-${priority} ${daysUntilDue < 0 ? 'overdue' : ''} ${status === 'completed' ? 'completed' : ''}" data-task-id="${task.task_id}">
-                <td class="td-checkbox">
-                    <input type="checkbox" 
-                           id="team-task-${task.task_id}" 
-                           data-task-id="${task.task_id}"
-                           ${status === 'completed' ? 'checked' : ''}
-                           onchange="toggleTaskStatus('${task.task_id}', this.checked)">
-                </td>
+            <tr class="task-row priority-${priority} ${daysUntilDue < 0 ? 'overdue' : ''} ${status === 'completed' ? 'completed' : ''}" data-task-id="${task.task_id}">`;
                 <td class="td-priority">
                     <span class="priority-badge priority-${priority}">
                         ${priority === 'critical' ? 'Urgente' : priority === 'high' ? 'Alta' : priority === 'low' ? 'Baja' : 'Media'}
@@ -3982,7 +3952,7 @@ function renderTasksTable(tasks, tbodyId) {
     
     if (tasks.length === 0) {
         console.log('No tasks to render, showing empty message');
-        tbody.innerHTML = '<tr class="empty"><td colspan="8" class="text-center"><i class="fas fa-inbox"></i><br>No hay tareas disponibles</td></tr>';
+        tbody.innerHTML = '<tr class="empty"><td colspan="7" class="text-center"><i class="fas fa-inbox"></i><br>No hay tareas disponibles</td></tr>';
         return;
     }
     
@@ -4004,14 +3974,7 @@ function renderTasksTable(tasks, tbodyId) {
         const daysUntilDue = task.days_until_due || 0;
         
         html += `
-            <tr class="task-row priority-${priority} ${daysUntilDue < 0 ? 'overdue' : ''} ${status === 'completed' ? 'completed' : ''}" data-task-id="${task.task_id}">
-                <td class="td-checkbox">
-                    <input type="checkbox" 
-                           id="task-${task.task_id}" 
-                           data-task-id="${task.task_id}"
-                           ${status === 'completed' ? 'checked' : ''}
-                           onchange="toggleTaskStatus('${task.task_id}', this.checked)">
-                </td>
+            <tr class="task-row priority-${priority} ${daysUntilDue < 0 ? 'overdue' : ''} ${status === 'completed' ? 'completed' : ''}" data-task-id="${task.task_id}">`;
                 <td class="td-priority">
                     <span class="priority-badge priority-${priority}">
                         ${priority === 'critical' ? 'Urgente' : priority === 'high' ? 'Alta' : priority === 'low' ? 'Baja' : 'Media'}
@@ -4862,7 +4825,7 @@ function loadMyTasksTable() {
         return;
     }
     
-    tbody.innerHTML = '<tr class="loading"><td colspan="8" class="text-center"><i class="fas fa-spinner fa-spin"></i> Cargando mis tareas...</td></tr>';
+    tbody.innerHTML = '<tr class="loading"><td colspan="7" class="text-center"><i class="fas fa-spinner fa-spin"></i> Cargando mis tareas...</td></tr>';
     
     // Obtener filtros actuales
     const statusFilter = document.getElementById('statusFilter');
@@ -4907,12 +4870,12 @@ function loadMyTasksTable() {
                 
                 renderTasksTableFromKanban(allTasks, 'my-tasks-table-body');
             } else {
-                tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Error: ' + (data.message || 'Error desconocido') + '</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Error: ' + (data.message || 'Error desconocido') + '</td></tr>';
             }
         })
         .catch(error => {
             console.error('🔴 Error:', error);
-            tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Error de conexión</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Error de conexión</td></tr>';
         });
 }
 
@@ -4970,12 +4933,12 @@ function loadTeamTasksTable() {
                 
                 renderTasksTableFromKanban(allTasks, 'team-tasks-table-body');
             } else {
-                tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Error: ' + (data.message || 'Error desconocido') + '</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Error: ' + (data.message || 'Error desconocido') + '</td></tr>';
             }
         })
         .catch(error => {
             console.error('🔴 Error:', error);
-            tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Error de conexión</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Error de conexión</td></tr>';
         });
 }
 
@@ -4985,7 +4948,7 @@ function renderTasksTableFromKanban(tasks, tbodyId) {
     if (!tbody) return;
     
     if (!tasks || tasks.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No hay tareas disponibles</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No hay tareas disponibles</td></tr>';
         return;
     }
     
@@ -4993,7 +4956,7 @@ function renderTasksTableFromKanban(tasks, tbodyId) {
     const filteredTasks = applyCurrentFilters(tasks);
     
     if (filteredTasks.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No hay tareas que coincidan con los filtros</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No hay tareas que coincidan con los filtros</td></tr>';
         return;
     }
     
@@ -5030,11 +4993,7 @@ function renderTasksTableFromKanban(tasks, tbodyId) {
         }
         
         html += `
-            <tr class="task-row ${isSubtask ? 'subtask-row' : ''}" data-task-id="${task.task_id}">
-                <td class="checkbox-cell">
-                    <input type="checkbox" class="task-checkbox" ${task.status === 'completed' ? 'checked' : ''} 
-                           onchange="toggleTaskStatus(${task.task_id}, this.checked, '${isSubtask ? 'subtask' : 'task'}')">
-                </td>
+            <tr class="task-row ${isSubtask ? 'subtask-row' : ''}" data-task-id="${task.task_id}">`;
                 <td class="priority-cell">
                     <span class="priority-badge priority-${task.priority || 'medium'}">${task.priority || 'medium'}</span>
                 </td>
