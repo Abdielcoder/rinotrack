@@ -4367,11 +4367,47 @@ class ClanLeaderController {
             $userId = $this->currentUser['user_id'];
             $clanId = $this->userClan['clan_id'] ?? null;
             
+            // Obtener filtros de la URL
+            $statusFilter = $_GET['status_filter'] ?? '';
+            $searchFilter = $_GET['search'] ?? '';
+            
             if (!$userId || !$clanId) {
                 throw new Exception("Usuario o clan no válido");
             }
             
-            // CONSULTA MEJORADA - MIS TAREAS Y SUBTAREAS
+            // Construir filtros dinámicos
+            $taskStatusFilter = '';
+            $subtaskStatusFilter = '';
+            $params = [
+                ':user_id' => $userId,
+                ':clan_id' => $clanId,
+                ':user_id2' => $userId,
+                ':clan_id2' => $clanId
+            ];
+            
+            // Aplicar filtro de estado si está presente
+            if (!empty($statusFilter)) {
+                $taskStatusFilter = "AND t.status = :status_filter";
+                $subtaskStatusFilter = "AND s.status = :status_filter2";
+                $params[':status_filter'] = $statusFilter;
+                $params[':status_filter2'] = $statusFilter;
+            } else {
+                // Si no hay filtro específico, excluir completadas por defecto (comportamiento original)
+                $taskStatusFilter = "AND t.status != 'completed'";
+                $subtaskStatusFilter = "AND s.status != 'completed'";
+            }
+            
+            // Aplicar filtro de búsqueda si está presente
+            $searchTaskFilter = '';
+            $searchSubtaskFilter = '';
+            if (!empty($searchFilter)) {
+                $searchTaskFilter = "AND (t.task_name LIKE :search OR t.description LIKE :search OR p.project_name LIKE :search)";
+                $searchSubtaskFilter = "AND (s.title LIKE :search2 OR s.description LIKE :search2 OR p.project_name LIKE :search2)";
+                $params[':search'] = '%' . $searchFilter . '%';
+                $params[':search2'] = '%' . $searchFilter . '%';
+            }
+            
+            // CONSULTA MEJORADA - MIS TAREAS Y SUBTAREAS CON FILTROS
             $stmt = $this->db->prepare("
                 (SELECT 
                     t.task_id,
@@ -4401,8 +4437,8 @@ class ClanLeaderController {
                 WHERE t.assigned_to_user_id = :user_id
                     AND p.clan_id = :clan_id
                     AND t.is_subtask = 0
-                    AND t.status != 'completed'
-                    AND t.completion_percentage < 100)
+                    $taskStatusFilter
+                    $searchTaskFilter)
                 UNION ALL
                 (SELECT 
                     s.subtask_id as task_id,
@@ -4432,22 +4468,19 @@ class ClanLeaderController {
                 LEFT JOIN Users u ON s.assigned_to_user_id = u.user_id
                 WHERE s.assigned_to_user_id = :user_id2
                     AND p.clan_id = :clan_id2
-                    AND s.status != 'completed'
-                    AND s.completion_percentage < 100)
+                    $subtaskStatusFilter
+                    $searchSubtaskFilter)
                 ORDER BY item_type, task_id
             ");
             
-            $stmt->execute([
-                ':user_id' => $userId,
-                ':clan_id' => $clanId,
-                ':user_id2' => $userId,
-                ':clan_id2' => $clanId
-            ]);
+            $stmt->execute($params);
             
             $allTasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
             error_log("=== NUEVO getMyKanbanTasks ===");
             error_log("User: $userId, Clan: $clanId");
+            error_log("Status Filter: " . ($statusFilter ?: 'NONE'));
+            error_log("Search Filter: " . ($searchFilter ?: 'NONE'));
             error_log("Total tareas encontradas: " . count($allTasks));
             
             foreach ($allTasks as $task) {
@@ -4618,11 +4651,47 @@ class ClanLeaderController {
             $userId = $this->currentUser['user_id'];
             $clanId = $this->userClan['clan_id'] ?? null;
             
+            // Obtener filtros de la URL
+            $statusFilter = $_GET['status_filter'] ?? '';
+            $searchFilter = $_GET['search'] ?? '';
+            
             if (!$userId || !$clanId) {
                 throw new Exception("Usuario o clan no válido");
             }
             
-            // CONSULTA MEJORADA - TAREAS DEL EQUIPO Y SUBTAREAS (NO MÍAS)
+            // Construir filtros dinámicos para equipo
+            $taskStatusFilter = '';
+            $subtaskStatusFilter = '';
+            $params = [
+                ':clan_id' => $clanId,
+                ':user_id' => $userId,
+                ':clan_id2' => $clanId,
+                ':user_id2' => $userId
+            ];
+            
+            // Aplicar filtro de estado si está presente
+            if (!empty($statusFilter)) {
+                $taskStatusFilter = "AND t.status = :status_filter";
+                $subtaskStatusFilter = "AND s.status = :status_filter2";
+                $params[':status_filter'] = $statusFilter;
+                $params[':status_filter2'] = $statusFilter;
+            } else {
+                // Si no hay filtro específico, excluir completadas por defecto (comportamiento original)
+                $taskStatusFilter = "AND t.status != 'completed'";
+                $subtaskStatusFilter = "AND s.status != 'completed'";
+            }
+            
+            // Aplicar filtro de búsqueda si está presente
+            $searchTaskFilter = '';
+            $searchSubtaskFilter = '';
+            if (!empty($searchFilter)) {
+                $searchTaskFilter = "AND (t.task_name LIKE :search OR t.description LIKE :search OR p.project_name LIKE :search OR u.full_name LIKE :search)";
+                $searchSubtaskFilter = "AND (s.title LIKE :search2 OR s.description LIKE :search2 OR p.project_name LIKE :search2 OR u.full_name LIKE :search2)";
+                $params[':search'] = '%' . $searchFilter . '%';
+                $params[':search2'] = '%' . $searchFilter . '%';
+            }
+            
+            // CONSULTA MEJORADA - TAREAS DEL EQUIPO Y SUBTAREAS (NO MÍAS) CON FILTROS
             $stmt = $this->db->prepare("
                 (SELECT 
                     t.task_id,
@@ -4654,8 +4723,8 @@ class ClanLeaderController {
                     AND t.assigned_to_user_id != :user_id
                     AND t.assigned_to_user_id IS NOT NULL
                     AND t.is_subtask = 0
-                    AND t.status != 'completed'
-                    AND t.completion_percentage < 100
+                    $taskStatusFilter
+                    $searchTaskFilter
                     AND (p.is_personal = 0 OR p.is_personal IS NULL))
                 UNION ALL
                 (SELECT 
@@ -4687,23 +4756,20 @@ class ClanLeaderController {
                 LEFT JOIN Clan_Members cm ON u.user_id = cm.user_id
                 WHERE cm.clan_id = :clan_id2
                     AND (s.assigned_to_user_id != :user_id2 OR s.assigned_to_user_id IS NULL)
-                    AND s.status != 'completed'
-                    AND s.completion_percentage < 100
+                    $subtaskStatusFilter
+                    $searchSubtaskFilter
                     AND (p.is_personal = 0 OR p.is_personal IS NULL))
                 ORDER BY item_type, task_id
             ");
             
-            $stmt->execute([
-                ':clan_id' => $clanId,
-                ':user_id' => $userId,
-                ':clan_id2' => $clanId,
-                ':user_id2' => $userId
-            ]);
+            $stmt->execute($params);
             
             $allTasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
             error_log("=== NUEVO getTeamKanbanTasks ===");
             error_log("Leader: $userId, Clan: $clanId");
+            error_log("Status Filter: " . ($statusFilter ?: 'NONE'));
+            error_log("Search Filter: " . ($searchFilter ?: 'NONE'));
             error_log("Total tareas del equipo: " . count($allTasks));
             
             foreach ($allTasks as $task) {

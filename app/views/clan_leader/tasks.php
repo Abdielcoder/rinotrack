@@ -4864,8 +4864,32 @@ function loadMyTasksTable() {
     
     tbody.innerHTML = '<tr class="loading"><td colspan="8" class="text-center"><i class="fas fa-spinner fa-spin"></i> Cargando mis tareas...</td></tr>';
     
-    // Usar el MISMO endpoint del kanban
-    fetch('?route=clan_leader/get-my-kanban-tasks')
+    // Obtener filtros actuales
+    const statusFilter = document.getElementById('statusFilter');
+    const searchInput = document.getElementById('searchInputMyTasks');
+    
+    // Construir URL con filtros
+    let url = '?route=clan_leader/get-my-kanban-tasks';
+    const params = new URLSearchParams();
+    
+    if (statusFilter && statusFilter.value) {
+        params.append('status_filter', statusFilter.value);
+        console.log('🔵 Aplicando filtro de estado:', statusFilter.value);
+    }
+    
+    if (searchInput && searchInput.value.trim()) {
+        params.append('search', searchInput.value.trim());
+        console.log('🔵 Aplicando búsqueda:', searchInput.value.trim());
+    }
+    
+    if (params.toString()) {
+        url += '&' + params.toString();
+    }
+    
+    console.log('🔵 URL final:', url);
+    
+    // Usar el MISMO endpoint del kanban con filtros
+    fetch(url)
         .then(response => response.json())
         .then(data => {
             console.log('🔵 === RESPUESTA KANBAN PARA TABLA ===');
@@ -4903,8 +4927,32 @@ function loadTeamTasksTable() {
     
     tbody.innerHTML = '<tr class="loading"><td colspan="8" class="text-center"><i class="fas fa-spinner fa-spin"></i> Cargando tareas del equipo...</td></tr>';
     
-    // Usar el MISMO endpoint del kanban
-    fetch('?route=clan_leader/get-team-kanban-tasks')
+    // Obtener filtros actuales
+    const statusFilterTeam = document.getElementById('statusFilterTeam');
+    const searchInputTeam = document.getElementById('searchInputTeam');
+    
+    // Construir URL con filtros
+    let url = '?route=clan_leader/get-team-kanban-tasks';
+    const params = new URLSearchParams();
+    
+    if (statusFilterTeam && statusFilterTeam.value) {
+        params.append('status_filter', statusFilterTeam.value);
+        console.log('🟡 Aplicando filtro de estado del equipo:', statusFilterTeam.value);
+    }
+    
+    if (searchInputTeam && searchInputTeam.value.trim()) {
+        params.append('search', searchInputTeam.value.trim());
+        console.log('🟡 Aplicando búsqueda del equipo:', searchInputTeam.value.trim());
+    }
+    
+    if (params.toString()) {
+        url += '&' + params.toString();
+    }
+    
+    console.log('🟡 URL final:', url);
+    
+    // Usar el MISMO endpoint del kanban con filtros
+    fetch(url)
         .then(response => response.json())
         .then(data => {
             console.log('🟡 === RESPUESTA TEAM KANBAN PARA TABLA ===');
