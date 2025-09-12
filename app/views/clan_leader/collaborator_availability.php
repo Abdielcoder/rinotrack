@@ -79,7 +79,7 @@ ob_start();
                 <div class="calendar-info">
                     <span class="calendar-hint">
                         <i class="fas fa-info-circle"></i>
-                        Haz clic para ver tareas • Doble clic para crear nueva tarea
+                        Haz clic en una fecha para ver las tareas del día
                     </span>
                     <button class="btn-collapse" onclick="toggleCalendar()" id="calendarToggle">
                         <i class="fas fa-chevron-up" id="calendarIcon"></i>
@@ -242,10 +242,22 @@ ob_start();
     <div class="modal-content">
         <div class="modal-header">
             <h3 id="modalTitle">Tareas del día</h3>
-            <button class="modal-close" onclick="closeTaskModal()">&times;</button>
+            <div class="modal-header-actions">
+                <button class="btn-create-task" onclick="openCreateTaskFromModal()" title="Crear nueva tarea">
+                    <i class="fas fa-plus"></i>
+                    <span>Nueva Tarea</span>
+                </button>
+                <button class="modal-close" onclick="closeTaskModal()">&times;</button>
+            </div>
         </div>
         <div class="task-list" id="modalTaskList">
             <!-- Las tareas se cargarán dinámicamente -->
+        </div>
+        <div class="modal-footer">
+            <button class="btn-create-task-full" onclick="openCreateTaskFromModal()">
+                <i class="fas fa-plus"></i>
+                Crear Nueva Tarea para este Día
+            </button>
         </div>
     </div>
 </div>
@@ -437,6 +449,23 @@ function closeCreateTaskModal() {
     }
 }
 
+// Variable global para almacenar la fecha seleccionada
+let selectedCalendarDate = null;
+
+// Función para abrir el modal de creación desde el modal de tareas
+function openCreateTaskFromModal() {
+    // Cerrar el modal de tareas actual
+    closeTaskModal();
+    
+    // Usar la fecha que estaba seleccionada en el calendario
+    const dateToUse = window.selectedCalendarDate || new Date().toISOString().split('T')[0];
+    
+    // Abrir el modal de creación
+    setTimeout(() => {
+        openCreateTaskModal(dateToUse);
+    }, 300); // Pequeño delay para que se vea la transición
+}
+
 // Función para manejar el envío del formulario de creación de tareas
 function handleCreateTask(event) {
     event.preventDefault();
@@ -605,6 +634,63 @@ document.head.appendChild(toastStyles);
 
 .calendar-hint i {
     color: #3b82f6;
+}
+
+/* Estilos para el modal de tareas */
+.modal-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.btn-create-task {
+    background: #10b981;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.btn-create-task:hover {
+    background: #059669;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.modal-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #e5e7eb;
+    background: #f9fafb;
+    text-align: center;
+}
+
+.btn-create-task-full {
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0.75rem 1.5rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+}
+
+.btn-create-task-full:hover {
+    background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
 }
 
 /* Estilos mejorados para los botones de vista */
@@ -914,6 +1000,25 @@ document.head.appendChild(toastStyles);
     .calendar-hint {
         font-size: 0.8rem;
         padding: 0.4rem 0.8rem;
+    }
+    
+    .modal-header-actions {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .btn-create-task span {
+        display: none;
+    }
+    
+    .btn-create-task {
+        padding: 0.5rem;
+        min-width: auto;
+    }
+    
+    .btn-create-task-full {
+        width: 100%;
+        justify-content: center;
     }
 }
 </style>

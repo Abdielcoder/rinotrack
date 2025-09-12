@@ -443,19 +443,9 @@ function generateCalendar() {
             dayElement.appendChild(indicators);
         }
         
-        // Agregar evento click - doble clic para crear tarea, clic simple para ver tareas
-        let clickTimeout;
+        // Agregar evento click para ver tareas
         dayElement.addEventListener('click', () => {
-            clearTimeout(clickTimeout);
-            clickTimeout = setTimeout(() => {
-                showTasksForDate(currentDay, dayTasks);
-            }, 250); // Esperar 250ms para detectar doble clic
-        });
-        
-        dayElement.addEventListener('dblclick', (e) => {
-            e.preventDefault();
-            clearTimeout(clickTimeout);
-            openCreateTaskModalForDate(currentDay);
+            showTasksForDate(currentDay, dayTasks);
         });
         
         calendarDays.appendChild(dayElement);
@@ -476,6 +466,11 @@ function getTasksForDate(date) {
 
 // Mostrar tareas para una fecha específica
 function showTasksForDate(date, tasks) {
+    // Almacenar la fecha seleccionada globalmente
+    if (typeof window !== 'undefined') {
+        window.selectedCalendarDate = date.toISOString().split('T')[0];
+    }
+    
     const modal = document.getElementById('taskModal');
     const modalTitle = document.getElementById('modalTitle');
     const modalTaskList = document.getElementById('modalTaskList');
@@ -587,18 +582,6 @@ function setTasksData(data) {
     }
 }
 
-// Función para abrir el modal de creación de tareas con una fecha específica
-function openCreateTaskModalForDate(date) {
-    // Formatear la fecha para el input
-    const dateStr = date.toISOString().split('T')[0];
-    
-    // Llamar a la función global definida en la vista
-    if (typeof openCreateTaskModal === 'function') {
-        openCreateTaskModal(dateStr);
-    } else {
-        console.error('La función openCreateTaskModal no está disponible');
-    }
-}
 
 // Función para colapsar/expandir el calendario
 function toggleCalendar() {
