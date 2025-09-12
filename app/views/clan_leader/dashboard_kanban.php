@@ -1470,7 +1470,7 @@ function handleTeamTaskCheck(uniqueTaskId, taskId, isChecked, itemType = 'task')
     console.log(`👥 ${itemLabel} del equipo`, taskId, isChecked ? 'marcada' : 'desmarcada');
     
     const checkbox = document.getElementById(uniqueTaskId);
-    const card = checkbox ? checkbox.closest('.equipo-task-card, .equipo-subtask-card') : null;
+    const card = checkbox ? checkbox.closest('.task-card, .subtask-card') : null;
     
     if (!card || !checkbox) {
         console.error('No se encontró el checkbox o el card del equipo');
@@ -1556,7 +1556,7 @@ function updateTeamTaskCounts() {
         const columnElement = document.querySelector(`.equipo-column-header.${column}`);
         if (!columnElement) return;
         
-        const tasksInColumn = document.querySelectorAll(`.equipo-task-card.${column}, .equipo-subtask-card.${column}`).length;
+        const tasksInColumn = document.querySelectorAll(`.team-kanban-board .task-card.${column}, .team-kanban-board .subtask-card.${column}`).length;
         const countElement = columnElement.querySelector('.equipo-task-count');
         
         if (countElement) {
@@ -1565,7 +1565,7 @@ function updateTeamTaskCounts() {
     });
     
     // Actualizar estadísticas del equipo
-    const totalTeamTasks = document.querySelectorAll('.equipo-task-card, .equipo-subtask-card').length;
+    const totalTeamTasks = document.querySelectorAll('.team-kanban-board .task-card, .team-kanban-board .subtask-card').length;
     console.log('📊 Total de tareas del equipo restantes:', totalTeamTasks);
     
     // Actualizar estadísticas en el header
@@ -1576,10 +1576,10 @@ function updateTeamTaskCounts() {
             statValues[0].textContent = totalTeamTasks; // Total
             
             // Actualizar contadores individuales
-            const vencidas = document.querySelectorAll('.equipo-task-card.vencidas, .equipo-subtask-card.vencidas').length;
-            const hoy = document.querySelectorAll('.equipo-task-card.hoy, .equipo-subtask-card.hoy').length;
-            const semana = document.querySelectorAll('.equipo-task-card.semana, .equipo-subtask-card.semana').length;
-            const futuras = document.querySelectorAll('.equipo-task-card.futuras, .equipo-subtask-card.futuras').length;
+            const vencidas = document.querySelectorAll('.team-kanban-board .task-card.vencidas, .team-kanban-board .subtask-card.vencidas').length;
+            const hoy = document.querySelectorAll('.team-kanban-board .task-card.hoy, .team-kanban-board .subtask-card.hoy').length;
+            const semana = document.querySelectorAll('.team-kanban-board .task-card.semana, .team-kanban-board .subtask-card.semana').length;
+            const futuras = document.querySelectorAll('.team-kanban-board .task-card.futuras, .team-kanban-board .subtask-card.futuras').length;
             
             statValues[1].textContent = vencidas;
             statValues[2].textContent = hoy;
@@ -1822,7 +1822,7 @@ function renderTeamKanban(kanbanTasks) {
         
         tasks.forEach(task => {
             const isSubtask = task.item_type === 'subtask';
-            const itemClass = isSubtask ? 'equipo-subtask-card' : 'equipo-task-card';
+            const itemClass = isSubtask ? 'subtask-card' : 'task-card';
             const taskName = (task.task_name || 'Sin nombre').replace(/'/g, '&#39;');
             const userName = (task.assigned_user_name || 'Sin asignar').replace(/'/g, '&#39;');
             const projectName = (task.project_name || 'Sin proyecto').replace(/'/g, '&#39;');
@@ -1830,19 +1830,22 @@ function renderTeamKanban(kanbanTasks) {
             
             html += `
                 <div class="${itemClass} ${config.class}" onclick="goToTaskDetail(event, ${task.task_id}, '${task.item_type}')">
-                    <div class="equipo-task-header">
-                        <div class="equipo-task-checkbox">
+                    <div class="task-header">
+                        <div class="task-checkbox">
                             <input type="checkbox" id="equipo-${column}-${task.task_id}" 
                                    onclick="event.stopPropagation()" 
                                    onchange="handleTeamTaskCheck('equipo-${column}-${task.task_id}', ${task.task_id}, this.checked, '${task.item_type}')">
                         </div>
-                        <div class="equipo-task-name">${taskName}</div>
+                        <div class="task-name">
+                            ${isSubtask ? '<span style="color: #8b5cf6; font-weight: 600; margin-right: 6px;">↳</span>' : ''}
+                            ${taskName}
+                        </div>
                     </div>
-                    <div class="equipo-task-project">
-                        <div class="equipo-task-project-name">${projectName}</div>
-                        <div class="equipo-task-due-date">${dueDate}</div>
+                    <div class="task-project">
+                        <div class="task-project-name">${projectName}</div>
+                        <div class="task-due-date">${dueDate}</div>
                     </div>
-                    <div class="equipo-task-user">👤 ${userName}</div>
+                    <div class="task-user" style="font-size: 11px; color: #6b7280; margin-top: 4px;">👤 ${userName}</div>
                 </div>
             `;
         });
