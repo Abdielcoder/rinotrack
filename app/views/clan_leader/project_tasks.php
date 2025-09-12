@@ -812,7 +812,6 @@ if (!isset($project) || !isset($tasks)) {
                     <label for="priorityFilter">Prioridad</label>
                     <select id="priorityFilter" onchange="filterTasks()">
                         <option value="">Todas las prioridades</option>
-                        <option value="urgent">Urgente</option>
                         <option value="high">Alta</option>
                         <option value="medium">Media</option>
                         <option value="low">Baja</option>

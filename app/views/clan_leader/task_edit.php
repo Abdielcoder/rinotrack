@@ -94,7 +94,6 @@ function getActiveTasksCount($userId) {
                                     <option value="low" <?= ($task['priority'] == 'low') ? 'selected' : '' ?>>Baja</option>
                                     <option value="medium" <?= ($task['priority'] == 'medium') ? 'selected' : '' ?>>Media</option>
                                     <option value="high" <?= ($task['priority'] == 'high') ? 'selected' : '' ?>>Alta</option>
-                                    <option value="critical" <?= ($task['priority'] == 'critical') ? 'selected' : '' ?>>Urgente</option>
                                 </select>
                                 <i class="fas fa-chevron-down"></i>
                             </div>

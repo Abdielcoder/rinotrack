@@ -2641,7 +2641,6 @@ ob_start();
                                     <option value="low">Baja</option>
                                     <option value="medium">Media</option>
                                     <option value="high">Alta</option>
-                                    <option value="urgent">Urgente</option>
                                 </select>
                                 <i class="fas fa-chevron-down"></i>
                             </div>
@@ -3920,7 +3919,7 @@ function renderTeamTasksTable(tasks, tbodyId) {
                 </td>
                 <td class="td-priority">
                     <span class="priority-badge priority-${priority}">
-                        ${priority === 'critical' ? 'Urgente' : priority === 'high' ? 'Alta' : priority === 'low' ? 'Baja' : 'Media'}
+                        ${priority === 'critical' ? 'Alta' : priority === 'high' ? 'Alta' : priority === 'low' ? 'Baja' : 'Media'}
                     </span>
                 </td>
                 <td class="td-task">
@@ -4014,7 +4013,7 @@ function renderTasksTable(tasks, tbodyId) {
                 </td>
                 <td class="td-priority">
                     <span class="priority-badge priority-${priority}">
-                        ${priority === 'critical' ? 'Urgente' : priority === 'high' ? 'Alta' : priority === 'low' ? 'Baja' : 'Media'}
+                        ${priority === 'critical' ? 'Alta' : priority === 'high' ? 'Alta' : priority === 'low' ? 'Baja' : 'Media'}
                     </span>
                 </td>
                 <td class="td-task">
