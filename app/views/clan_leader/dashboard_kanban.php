@@ -1509,9 +1509,13 @@ function handleTeamTaskCheck(uniqueTaskId, taskId, isChecked, itemType = 'task')
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            console.log('👥 Tarea completada en BD:', taskId);
+            const itemLabel = data.type === 'subtask' ? 'Subtarea' : 'Tarea';
+            console.log(`👥 ${itemLabel} completada en BD:`, taskId);
+            if (data.type === 'subtask') {
+                console.log(`👥 Subtarea pertenecía a tarea principal:`, data.parent_task_id);
+            }
         } else {
-            console.log('👥 Tarea ya completada o no encontrada (ignorado):', data.message);
+            console.log('👥 Item ya completado o no encontrado (ignorado):', data.message);
         }
     })
     .catch(error => {
@@ -1611,11 +1615,11 @@ function handleTaskCheck(uniqueTaskId, taskId, isChecked, itemType = 'task') {
     checkbox.disabled = true;
     card.style.opacity = '0.6';
     
-    // Hacer llamada AJAX para completar tarea
+    // Hacer llamada AJAX para completar tarea o subtarea
     const formData = new FormData();
     formData.append('task_id', taskId);
     
-    console.log('Enviando AJAX para completar task_id:', taskId);
+    console.log(`Enviando AJAX para completar ${itemType}:`, taskId);
     
     fetch('<?= APP_URL ?>simple-complete-task.php', {
         method: 'POST',

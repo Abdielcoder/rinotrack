@@ -38,32 +38,83 @@ try {
     
     error_log("Conexión establecida para task_id: $taskId");
 
-    // Actualizar tarea
-    $stmt = $db->prepare("
-        UPDATE Tasks 
-        SET status = 'completed', 
-            is_completed = 1,
-            completion_percentage = 100,
-            completed_at = NOW(),
-            updated_at = NOW() 
-        WHERE task_id = ?
-    ");
+    // Primero verificar si es una tarea principal
+    $stmt = $db->prepare("SELECT task_id, status FROM Tasks WHERE task_id = ?");
+    $stmt->execute([$taskId]);
+    $task = $stmt->fetch(PDO::FETCH_ASSOC);
     
-    $result = $stmt->execute([$taskId]);
-    $rowCount = $stmt->rowCount();
-    
-    error_log("Query ejecutada. Rows affected: $rowCount");
+    if ($task) {
+        // Es una tarea principal
+        error_log("Procesando tarea principal ID: $taskId");
+        
+        $stmt = $db->prepare("
+            UPDATE Tasks 
+            SET status = 'completed', 
+                is_completed = 1,
+                completion_percentage = 100,
+                completed_at = NOW(),
+                updated_at = NOW() 
+            WHERE task_id = ?
+        ");
+        
+        $result = $stmt->execute([$taskId]);
+        $rowCount = $stmt->rowCount();
+        
+        error_log("Tarea principal actualizada. Rows affected: $rowCount");
 
-    if ($result && $rowCount > 0) {
-        $response = [
-            'success' => true, 
-            'message' => 'Tarea completada exitosamente',
-            'task_id' => $taskId
-        ];
-        error_log("✅ Éxito: " . json_encode($response));
-        echo json_encode($response);
+        if ($result && $rowCount > 0) {
+            $response = [
+                'success' => true, 
+                'message' => 'Tarea completada exitosamente',
+                'task_id' => $taskId,
+                'type' => 'task'
+            ];
+            error_log("✅ Éxito tarea principal: " . json_encode($response));
+            echo json_encode($response);
+        } else {
+            throw new Exception("No se pudo completar la tarea con ID $taskId");
+        }
     } else {
-        throw new Exception("No se encontró la tarea con ID $taskId o ya estaba completada");
+        // Verificar si es una subtarea
+        error_log("No es tarea principal, verificando si es subtarea ID: $taskId");
+        
+        $stmt = $db->prepare("SELECT subtask_id, status, task_id as parent_task_id FROM Subtasks WHERE subtask_id = ?");
+        $stmt->execute([$taskId]);
+        $subtask = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($subtask) {
+            // Es una subtarea
+            error_log("Procesando subtarea ID: $taskId, parent_task_id: " . $subtask['parent_task_id']);
+            
+            $stmt = $db->prepare("
+                UPDATE Subtasks 
+                SET status = 'completed',
+                    completed_at = NOW(),
+                    updated_at = NOW()
+                WHERE subtask_id = ?
+            ");
+            
+            $result = $stmt->execute([$taskId]);
+            $rowCount = $stmt->rowCount();
+            
+            error_log("Subtarea actualizada. Rows affected: $rowCount");
+
+            if ($result && $rowCount > 0) {
+                $response = [
+                    'success' => true, 
+                    'message' => 'Subtarea completada exitosamente',
+                    'task_id' => $taskId,
+                    'parent_task_id' => $subtask['parent_task_id'],
+                    'type' => 'subtask'
+                ];
+                error_log("✅ Éxito subtarea: " . json_encode($response));
+                echo json_encode($response);
+            } else {
+                throw new Exception("No se pudo completar la subtarea con ID $taskId");
+            }
+        } else {
+            throw new Exception("No se encontró la tarea o subtarea con ID $taskId");
+        }
     }
 
 } catch (Exception $e) {
