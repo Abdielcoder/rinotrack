@@ -3765,8 +3765,8 @@ function switchTab(tabName) {
     }
 }
 
-// Función para cargar mis tareas
-function loadMyTasks() {
+// Función para cargar mis tareas - DESHABILITADA (usar loadMyTasksTable)
+function loadMyTasks_DISABLED() {
     console.log('🔵 loadMyTasks() iniciado');
     const tbody = document.getElementById('my-tasks-table-body');
     if (!tbody) {
@@ -3812,8 +3812,8 @@ function loadMyTasks() {
         });
 }
 
-// Función para cargar tareas del equipo
-function loadTeamTasks() {
+// Función para cargar tareas del equipo - DESHABILITADA (usar loadTeamTasksTable)
+function loadTeamTasks_DISABLED() {
     console.log('🟡 loadTeamTasks() iniciado');
     const tbody = document.getElementById('team-tasks-table-body');
     if (!tbody) {
@@ -4023,14 +4023,7 @@ function renderTasksTable(tasks, tbodyId) {
     tbody.innerHTML = html;
 }
 
-// Inicializar tabs al cargar la página
-document.addEventListener('DOMContentLoaded', function() {
-    // Verificar qué tab está activo por URL o por defecto
-    const urlParams = new URLSearchParams(window.location.search);
-    const activeTab = urlParams.get('tab') || 'my-tasks';
-    
-    switchTab(activeTab);
-});
+// INICIALIZACIÓN CONSOLIDADA - TABS (movido al final del archivo)
 
 // Timestamp para forzar recarga: <?= time() ?>
 // Cache-bust version: v6.0.<?= date('His') ?>
@@ -4933,12 +4926,12 @@ function loadTeamTasksTable() {
                 
                 renderTasksTableFromKanban(allTasks, 'team-tasks-table-body');
             } else {
-                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Error: ' + (data.message || 'Error desconocido') + '</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Error: ' + (data.message || 'Error desconocido') + '</td></tr>';
             }
         })
         .catch(error => {
             console.error('🔴 Error:', error);
-            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Error de conexión</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Error de conexión</td></tr>';
         });
 }
 
@@ -4947,8 +4940,12 @@ function renderTasksTableFromKanban(tasks, tbodyId) {
     const tbody = document.getElementById(tbodyId);
     if (!tbody) return;
     
+    // Determinar número de columnas según la tabla
+    const isTeamTable = tbodyId === 'team-tasks-table-body';
+    const colSpan = isTeamTable ? '8' : '7';
+    
     if (!tasks || tasks.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No hay tareas disponibles</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="${colSpan}" class="text-center text-muted">No hay tareas disponibles</td></tr>`;
         return;
     }
     
@@ -4956,7 +4953,7 @@ function renderTasksTableFromKanban(tasks, tbodyId) {
     const filteredTasks = applyCurrentFilters(tasks);
     
     if (filteredTasks.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No hay tareas que coincidan con los filtros</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="${colSpan}" class="text-center text-muted">No hay tareas que coincidan con los filtros</td></tr>`;
         return;
     }
     
@@ -5014,6 +5011,9 @@ function renderTasksTableFromKanban(tasks, tbodyId) {
                         ${isRecurrent ? 'Recurrente' : isEventual ? 'Eventual' : (task.project_name || 'Sin proyecto')}
                     </span>
                 </td>
+                ${isTeamTable ? `<td class="assigned-cell">
+                    <span class="assigned-user">${task.assigned_user_name || 'Sin asignar'}</span>
+                </td>` : ''}
                 <td class="due-date-cell">
                     ${task.due_date ? `<span class="due-date-badge ${urgencyClass}">${urgencyText}</span>` : '<span class="no-due-date">Sin fecha</span>'}
                 </td>
@@ -5256,9 +5256,15 @@ function showTaskToast(message, type = 'info') {
     }, 3000);
 }
 
-// Inicializar cuando el DOM esté listo
+// Inicializar cuando el DOM esté listo - CONSOLIDADO
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 DOM listo - Iniciando tasks page');
+    
+    // INICIALIZAR TABS
+    const urlParams = new URLSearchParams(window.location.search);
+    const activeTab = urlParams.get('tab') || 'my-tasks';
+    console.log('🔄 Inicializando con tab:', activeTab);
+    switchTab(activeTab);
     
     // Agregar eventos a los filtros para aplicar automáticamente
     const statusFilter = document.getElementById('statusFilter');
