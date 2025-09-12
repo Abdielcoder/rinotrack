@@ -140,6 +140,115 @@ ob_start();
                 <div class="task-list" id="modalTaskList"></div>
             </div>
         </div>
+
+        <!-- Modal para crear tarea personal -->
+        <div id="addPersonalTaskModal" class="modal-overlay">
+            <div class="modal-content modal-large">
+                <div class="modal-header">
+                    <h3>
+                        <i class="fas fa-plus-circle"></i> 
+                        Agregar Tarea Personal
+                    </h3>
+                    <button class="modal-close" onclick="closeAddPersonalTaskModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <form id="addPersonalTaskForm" class="modal-form">
+                    <div class="form-group">
+                        <label for="personalTaskName">Nombre de la Tarea *</label>
+                        <input type="text" id="personalTaskName" name="task_name" required 
+                               placeholder="Escribe el nombre de la tarea">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="personalTaskDescription">Descripción</label>
+                        <textarea id="personalTaskDescription" name="description" rows="3" 
+                                  placeholder="Describe la tarea (opcional)"></textarea>
+                    </div>
+                    
+                    <!-- Configuración de recurrencia -->
+                    <div class="form-group">
+                        <div class="checkbox-container">
+                            <input type="checkbox" id="personalTaskIsRecurrent" name="is_recurrent" value="1" onchange="togglePersonalTaskRecurrenceFields()">
+                            <label for="personalTaskIsRecurrent" class="checkbox-label">
+                                <i class="fas fa-redo"></i>
+                                Tarea Recurrente
+                            </label>
+                        </div>
+                        <small class="field-help">Las tareas recurrentes se crearán automáticamente en el rango de fechas especificado</small>
+                    </div>
+                    
+                    <div id="personalTaskRecurrenceFields" class="recurrence-fields" style="display: none;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="personalTaskRecurrenceType">Tipo de Recurrencia *</label>
+                                <div class="select-wrapper">
+                                    <select id="personalTaskRecurrenceType" name="recurrence_type">
+                                        <option value="">Seleccionar...</option>
+                                        <option value="daily">Diaria</option>
+                                        <option value="weekly">Semanal</option>
+                                        <option value="monthly">Mensual</option>
+                                    </select>
+                                    <i class="fas fa-chevron-down"></i>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="personalTaskRecurrenceStartDate">Fecha de Inicio *</label>
+                                <div class="date-input-wrapper">
+                                    <input type="date" id="personalTaskRecurrenceStartDate" name="recurrence_start_date">
+                                    <i class="fas fa-calendar-alt"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="personalTaskRecurrenceEndDate">Fecha de Vigencia (Opcional)</label>
+                                <div class="date-input-wrapper">
+                                    <input type="date" id="personalTaskRecurrenceEndDate" name="recurrence_end_date">
+                                    <i class="fas fa-calendar-alt"></i>
+                                </div>
+                                <small class="field-help">Si no se especifica, la recurrencia será indefinida. Las tareas se crearán desde la fecha de inicio hasta esta fecha.</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group" id="personalTaskDueDateGroup">
+                            <label for="personalTaskDueDate">Fecha de Vencimiento *</label>
+                            <div class="date-input-wrapper">
+                                <input type="date" id="personalTaskDueDate" name="due_date" required>
+                                <i class="fas fa-calendar-alt"></i>
+                            </div>
+                        </div>
+                        
+                        <!-- Campo oculto para prioridad con valor fijo -->
+                        <input type="hidden" name="priority" value="medium">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="personalTaskStatus">Estado</label>
+                        <select name="status" id="personalTaskStatus" required>
+                            <option value="pending" selected>Pendiente</option>
+                            <option value="in_progress">En Progreso</option>
+                            <option value="completed">Completada</option>
+                            <option value="cancelled">Cancelada</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" onclick="closeAddPersonalTaskModal()">
+                            <i class="fas fa-times"></i>
+                            Cancelar
+                        </button>
+                        <button type="submit" class="btn-primary">
+                            <i class="fas fa-plus"></i>
+                            Crear Tarea
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </main>
 </div>
 
@@ -519,6 +628,310 @@ ob_start();
     text-align: center;
     font-size: 1.1rem;
 }
+
+/* Estilos para el botón de agregar tarea en el modal */
+.modal-add-task-section {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #e5e7eb;
+    text-align: center;
+}
+
+.btn-add-task-modal {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    box-shadow: 0 2px 4px rgba(30, 58, 138, 0.2);
+}
+
+.btn-add-task-modal:hover {
+    background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(30, 58, 138, 0.3);
+}
+
+.btn-add-task-modal i {
+    font-size: 1rem;
+}
+
+/* Estilos para el modal de crear tarea personal */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(4px);
+}
+
+.modal-content {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: modalSlideIn 0.3s ease;
+}
+
+.modal-large {
+    max-width: 600px;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: #1e3a8a;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+    background: #f3f4f6;
+    color: #1e3a8a;
+}
+
+.modal-form {
+    padding: 20px;
+}
+
+.modal-form .form-group {
+    margin-bottom: 20px;
+}
+
+.modal-form label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #1e3a8a;
+}
+
+.modal-form input,
+.modal-form textarea,
+.modal-form select {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    background: #ffffff;
+    box-sizing: border-box;
+}
+
+.modal-form input:focus,
+.modal-form textarea:focus,
+.modal-form select:focus {
+    outline: none;
+    border-color: #1e3a8a;
+    box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
+}
+
+.modal-form textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background: #f3f4f6;
+    color: #6b7280;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.btn-secondary:hover {
+    background: #e5e7eb;
+    color: #4b5563;
+}
+
+.btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(30, 58, 138, 0.3);
+}
+
+/* Estilos para campos de recurrencia */
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    background: #ffffff;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.checkbox-container:hover {
+    border-color: #1e3a8a;
+    background: #f8fafc;
+}
+
+.checkbox-container input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    cursor: pointer;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    color: #1e3a8a;
+    cursor: pointer;
+    margin: 0;
+}
+
+.checkbox-label i {
+    font-size: 1rem;
+    color: #667eea;
+}
+
+.recurrence-fields {
+    margin-top: 15px;
+    padding: 15px;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+}
+
+.field-help {
+    display: block;
+    margin-top: 5px;
+    font-size: 0.85rem;
+    color: #6b7280;
+    font-style: italic;
+}
+
+/* Wrappers para selects y fechas */
+.select-wrapper,
+.date-input-wrapper {
+    position: relative;
+}
+
+.select-wrapper i,
+.date-input-wrapper i {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6b7280;
+    pointer-events: none;
+}
+
+.select-wrapper select {
+    padding-right: 40px;
+    appearance: none;
+}
+
+.date-input-wrapper input {
+    padding-right: 40px;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Responsive para el modal */
+@media (max-width: 768px) {
+    .modal-content {
+        width: 95%;
+        margin: 20px;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+}
 </style>
 
 <script>
@@ -563,18 +976,316 @@ function showTasksForDate(date, list){
   const modal=document.getElementById('taskModal'); const title=document.getElementById('modalTitle'); const body=document.getElementById('modalTaskList');
   if(!modal||!title||!body) return; body.innerHTML='';
   title.textContent = 'Tareas del '+ date.toLocaleDateString('es-ES',{weekday:'long', year:'numeric', month:'long', day:'numeric'});
-  if(!list||list.length===0){ body.innerHTML='<p>No hay tareas programadas para este día.</p>'; modal.classList.add('show'); return; }
-  list.forEach(t=>{
-    const overdue = t.due_date && (new Date(t.due_date) < new Date()) && t.status!=='completed';
-    const st = overdue? 'overdue' : (t.status||'');
-    const el=document.createElement('div'); el.className='task-item';
-    el.innerHTML = `<div class=\"task-header\"><h4 class=\"task-title\">${(t.task_name||'')}</h4><span class=\"task-status ${st}\">${overdue?'Vencida':(t.status||'')}</span></div>
-    <div class=\"task-details\"><div class=\"task-project\"><i class=\"fas fa-folder\"></i> ${(t.project_name||'')}</div>${t.description?`<div style='margin-top:.5rem'><i class='fas fa-align-left'></i> ${t.description}</div>`:''}</div>`;
-    body.appendChild(el);
-  });
+  if(!list||list.length===0){ body.innerHTML='<p>No hay tareas programadas para este día.</p>'; } else {
+    list.forEach(t=>{
+      const overdue = t.due_date && (new Date(t.due_date) < new Date()) && t.status!=='completed';
+      const st = overdue? 'overdue' : (t.status||'');
+      const el=document.createElement('div'); el.className='task-item';
+      el.innerHTML = `<div class=\"task-header\"><h4 class=\"task-title\">${(t.task_name||'')}</h4><span class=\"task-status ${st}\">${overdue?'Vencida':(t.status||'')}</span></div>
+      <div class=\"task-details\"><div class=\"task-project\"><i class=\"fas fa-folder\"></i> ${(t.project_name||'')}</div>${t.description?`<div style='margin-top:.5rem'><i class='fas fa-align-left'></i> ${t.description}</div>`:''}</div>`;
+      body.appendChild(el);
+    });
+  }
+  
+  // Agregar botón "Agregar tarea" al final del modal
+  const addTaskButton = document.createElement('div');
+  addTaskButton.className = 'modal-add-task-section';
+  addTaskButton.innerHTML = `
+      <button class="btn-add-task-modal" onclick="openAddPersonalTaskModal('${date.toISOString().split('T')[0]}')">
+          <i class="fas fa-plus"></i>
+          Agregar tarea personal
+      </button>
+  `;
+  body.appendChild(addTaskButton);
   modal.classList.add('show');
 }
 function closeTaskModal(){ document.getElementById('taskModal')?.classList.remove('show'); }
+
+// Función para abrir modal de agregar tarea personal desde el calendario
+function openAddPersonalTaskModal(selectedDate) {
+    // Cerrar el modal actual de tareas
+    closeTaskModal();
+    
+    // Crear el modal si no existe
+    let modal = document.getElementById('addPersonalTaskModal');
+    if (!modal) {
+        console.error('Modal de agregar tarea personal no encontrado');
+        return;
+    }
+    
+    // Establecer la fecha preseleccionada
+    const dateInput = document.getElementById('personalTaskDueDate');
+    const recurrenceStartInput = document.getElementById('personalTaskRecurrenceStartDate');
+    
+    if (selectedDate) {
+        // Establecer en fecha límite (para tareas normales)
+        if (dateInput) {
+            dateInput.value = selectedDate;
+        }
+        
+        // También establecer en fecha de inicio de recurrencia (para tareas recurrentes)
+        if (recurrenceStartInput) {
+            recurrenceStartInput.value = selectedDate;
+        }
+    }
+    
+    // Mostrar el modal
+    modal.style.display = 'flex';
+    setTimeout(() => {
+        modal.classList.add('show');
+    }, 10);
+}
+
+// Función para cerrar el modal de agregar tarea personal
+function closeAddPersonalTaskModal() {
+    const modal = document.getElementById('addPersonalTaskModal');
+    if (modal) {
+        modal.style.display = 'none';
+        modal.classList.remove('show');
+        
+        // Limpiar formulario
+        const form = document.getElementById('addPersonalTaskForm');
+        if (form) {
+            form.reset();
+        }
+        
+        // Ocultar campos de recurrencia
+        const recurrenceFields = document.getElementById('personalTaskRecurrenceFields');
+        if (recurrenceFields) {
+            recurrenceFields.style.display = 'none';
+        }
+        
+        // Mostrar campo de fecha límite
+        const dueDateGroup = document.getElementById('personalTaskDueDateGroup');
+        if (dueDateGroup) {
+            dueDateGroup.style.display = 'block';
+        }
+    }
+}
+
+// Función para mostrar/ocultar campos de recurrencia en el modal de creación
+function togglePersonalTaskRecurrenceFields() {
+    const checkbox = document.getElementById('personalTaskIsRecurrent');
+    const fields = document.getElementById('personalTaskRecurrenceFields');
+    const dueDateField = document.getElementById('personalTaskDueDate');
+    const recurrenceStartField = document.getElementById('personalTaskRecurrenceStartDate');
+    const dueDateGroup = document.getElementById('personalTaskDueDateGroup');
+    
+    if (checkbox.checked) {
+        // Mostrar campos de recurrencia
+        fields.style.display = 'block';
+        
+        // Ocultar campo de fecha límite cuando es recurrente
+        if (dueDateGroup) {
+            dueDateGroup.style.display = 'none';
+        }
+        
+        // Quitar required y limpiar valor del campo de fecha límite
+        if (dueDateField) {
+            dueDateField.required = false;
+            dueDateField.removeAttribute('required');
+            // NO limpiar el valor, mantenerlo para referencia
+        }
+        
+        // Si la fecha de inicio de recurrencia está vacía, copiar la fecha límite
+        if (recurrenceStartField && !recurrenceStartField.value && dueDateField && dueDateField.value) {
+            recurrenceStartField.value = dueDateField.value;
+        }
+        
+        // Hacer requeridos los campos de recurrencia
+        document.getElementById('personalTaskRecurrenceType').required = true;
+        document.getElementById('personalTaskRecurrenceStartDate').required = true;
+    } else {
+        // Ocultar campos de recurrencia
+        fields.style.display = 'none';
+        
+        // Mostrar campo de fecha límite normal
+        if (dueDateGroup) {
+            dueDateGroup.style.display = 'block';
+        }
+        
+        // Restaurar required
+        if (dueDateField) {
+            dueDateField.required = true;
+            dueDateField.setAttribute('required', 'required');
+        }
+        
+        // Quitar requerimiento de campos de recurrencia
+        document.getElementById('personalTaskRecurrenceType').required = false;
+        document.getElementById('personalTaskRecurrenceStartDate').required = false;
+        
+        // Limpiar valores de recurrencia
+        document.getElementById('personalTaskRecurrenceType').value = '';
+        document.getElementById('personalTaskRecurrenceStartDate').value = '';
+        document.getElementById('personalTaskRecurrenceEndDate').value = '';
+    }
+}
+
+// Función para crear tarea personal
+function createPersonalTask() {
+    const form = document.getElementById('addPersonalTaskForm');
+    const formData = new FormData(form);
+    
+    // Agregar campos adicionales para tarea personal
+    formData.append('route', 'clan_member/create-personal-task');
+    formData.append('user_id', '<?php echo $user['user_id'] ?? 0; ?>');
+    
+    // Mostrar estado de carga
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creando...';
+    submitBtn.disabled = true;
+    
+    fetch('?route=clan_member/create-personal-task', {
+        method: 'POST',
+        body: formData,
+        credentials: 'same-origin'
+    })
+    .then(response => {
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            showNotification('Tarea personal creada exitosamente', 'success');
+            closeAddPersonalTaskModal();
+            
+            // Recargar la página para mostrar la nueva tarea
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+        } else {
+            showNotification(data.message || 'Error al crear la tarea', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error en fetch:', error);
+        showNotification('Error de conexión: ' + error.message, 'error');
+    })
+    .finally(() => {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    });
+}
+
+// Función para mostrar notificaciones
+function showNotification(message, type = 'info') {
+    // Crear contenedor de notificaciones si no existe
+    let notificationContainer = document.getElementById('notification-container');
+    if (!notificationContainer) {
+        notificationContainer = document.createElement('div');
+        notificationContainer.id = 'notification-container';
+        notificationContainer.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 400px;
+        `;
+        document.body.appendChild(notificationContainer);
+    }
+    
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.style.cssText = `
+        background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : type === 'warning' ? '#f59e0b' : '#3b82f6'};
+        color: white;
+        padding: 16px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 14px;
+        font-weight: 500;
+        transform: translateX(100%);
+        transition: all 0.3s ease;
+        max-width: 100%;
+        word-wrap: break-word;
+    `;
+    
+    // Icono según el tipo
+    let icon = 'info-circle';
+    if (type === 'success') icon = 'check-circle';
+    else if (type === 'error') icon = 'exclamation-circle';
+    else if (type === 'warning') icon = 'exclamation-triangle';
+    
+    notification.innerHTML = `
+        <i class="fas fa-${icon}" style="font-size: 18px; flex-shrink: 0;"></i>
+        <span style="flex: 1;">${message}</span>
+        <button onclick="this.parentElement.remove()" style="
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            font-size: 16px;
+            opacity: 0.7;
+            transition: opacity 0.2s ease;
+        " onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+    
+    // Agregar al contenedor
+    notificationContainer.appendChild(notification);
+    
+    // Mostrar con animación
+    setTimeout(() => {
+        notification.style.transform = 'translateX(0)';
+    }, 100);
+    
+    // Ocultar automáticamente después de 5 segundos
+    setTimeout(() => {
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+            if (notification.parentElement) {
+                notification.remove();
+            }
+        }, 300);
+    }, 5000);
+    
+    // Limpiar contenedor si está vacío
+    setTimeout(() => {
+        if (notificationContainer.children.length === 0) {
+            notificationContainer.remove();
+        }
+    }, 5300);
+}
+
+// Event listeners para el modal
+document.addEventListener('DOMContentLoaded', function() {
+    // Cerrar modal al hacer click fuera de él
+    const addPersonalTaskModal = document.getElementById('addPersonalTaskModal');
+    
+    if (addPersonalTaskModal) {
+        addPersonalTaskModal.addEventListener('click', function(e) {
+            if (e.target === addPersonalTaskModal) {
+                closeAddPersonalTaskModal();
+            }
+        });
+        
+        // Manejar envío del formulario
+        const form = document.getElementById('addPersonalTaskForm');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                createPersonalTask();
+            });
+        }
+    }
+    
+    // Cerrar modal con tecla Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeAddPersonalTaskModal();
+        }
+    });
+});
+
 document.addEventListener('DOMContentLoaded',()=>{ window.calendarTasksData = <?= json_encode($tasks ?? []) ?>; setTasksData(calendarTasksData); });
 </script>
 
