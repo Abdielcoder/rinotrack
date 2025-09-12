@@ -970,7 +970,7 @@
                     <?php foreach ($vencidas as $task): ?>
                         <?php $isSubtask = ($task['item_type'] ?? 'task') === 'subtask'; ?>
                         <?php $cardClass = $isSubtask ? 'subtask-card' : 'task-card'; ?>
-                        <div class="<?= $cardClass ?> vencidas project-<?= htmlspecialchars($task['project_type'] ?? 'normal') ?>" onclick="goToTaskDetail(event, <?= $task['task_id'] ?>, '<?= $task['item_type'] ?? 'task' ?>')">
+                        <div class="<?= $cardClass ?> vencidas project-<?= htmlspecialchars($task['project_type'] ?? 'normal') ?>" onclick="goToTaskDetail(event, <?= $task['task_id'] ?>, '<?= $task['item_type'] ?? 'task' ?>', <?= $task['parent_task_id'] ?? 'null' ?>)">
                             <div class="task-header">
                                 <div class="task-checkbox">
                                 <input type="checkbox" id="vencidas-<?= $task['task_id'] ?>" 
@@ -1010,7 +1010,7 @@
                     <?php foreach ($hoy as $task): ?>
                         <?php $isSubtask = ($task['item_type'] ?? 'task') === 'subtask'; ?>
                         <?php $cardClass = $isSubtask ? 'subtask-card' : 'task-card'; ?>
-                        <div class="<?= $cardClass ?> hoy project-<?= htmlspecialchars($task['project_type'] ?? 'normal') ?>" onclick="goToTaskDetail(event, <?= $task['task_id'] ?>, '<?= $task['item_type'] ?? 'task' ?>')">
+                        <div class="<?= $cardClass ?> hoy project-<?= htmlspecialchars($task['project_type'] ?? 'normal') ?>" onclick="goToTaskDetail(event, <?= $task['task_id'] ?>, '<?= $task['item_type'] ?? 'task' ?>', <?= $task['parent_task_id'] ?? 'null' ?>)">
                             <div class="task-header">
                                 <div class="task-checkbox">
                                 <input type="checkbox" id="hoy-<?= $task['task_id'] ?>" 
@@ -1050,7 +1050,7 @@
                     <?php foreach ($semana as $task): ?>
                         <?php $isSubtask = ($task['item_type'] ?? 'task') === 'subtask'; ?>
                         <?php $cardClass = $isSubtask ? 'subtask-card' : 'task-card'; ?>
-                        <div class="<?= $cardClass ?> semana project-<?= htmlspecialchars($task['project_type'] ?? 'normal') ?>" onclick="goToTaskDetail(event, <?= $task['task_id'] ?>, '<?= $task['item_type'] ?? 'task' ?>')">
+                        <div class="<?= $cardClass ?> semana project-<?= htmlspecialchars($task['project_type'] ?? 'normal') ?>" onclick="goToTaskDetail(event, <?= $task['task_id'] ?>, '<?= $task['item_type'] ?? 'task' ?>', <?= $task['parent_task_id'] ?? 'null' ?>)">
                             <div class="task-header">
                                 <div class="task-checkbox">
                                 <input type="checkbox" id="semana-<?= $task['task_id'] ?>" 
@@ -1090,7 +1090,7 @@
                     <?php foreach (array_slice($futuras, 0, 8) as $task): ?>
                         <?php $isSubtask = ($task['item_type'] ?? 'task') === 'subtask'; ?>
                         <?php $cardClass = $isSubtask ? 'subtask-card' : 'task-card'; ?>
-                        <div class="<?= $cardClass ?> futuras project-<?= htmlspecialchars($task['project_type'] ?? 'normal') ?>" onclick="goToTaskDetail(event, <?= $task['task_id'] ?>, '<?= $task['item_type'] ?? 'task' ?>')">
+                        <div class="<?= $cardClass ?> futuras project-<?= htmlspecialchars($task['project_type'] ?? 'normal') ?>" onclick="goToTaskDetail(event, <?= $task['task_id'] ?>, '<?= $task['item_type'] ?? 'task' ?>', <?= $task['parent_task_id'] ?? 'null' ?>)">
                             <div class="task-header">
                                 <div class="task-checkbox">
                                 <input type="checkbox" id="futuras-<?= $task['task_id'] ?>" 
@@ -1564,7 +1564,7 @@ function updateTeamTaskCounts() {
 
 // Función para manejar el click en el card (togglea el checkbox)
 // Función para ir al detalle de la tarea
-function goToTaskDetail(event, taskId, itemType = 'task') {
+function goToTaskDetail(event, taskId, itemType = 'task', parentTaskId = null) {
     // Si el click fue en el checkbox, no redireccionar
     if (event.target.type === 'checkbox') {
         return;
@@ -1573,11 +1573,14 @@ function goToTaskDetail(event, taskId, itemType = 'task') {
     const itemLabel = itemType === 'subtask' ? 'subtarea' : 'tarea';
     console.log(`🔗 Navegando al detalle de ${itemLabel}:`, taskId);
     
-    // Para subtareas, redirigir al detalle de la tarea padre
-    let url = '<?= APP_URL ?>?route=clan_leader/get-task-details&task_id=' + taskId;
-    if (itemType === 'subtask') {
-        url += '&type=subtask';
+    // Para subtareas, usar el parent_task_id en lugar del subtask_id
+    let targetTaskId = taskId;
+    if (itemType === 'subtask' && parentTaskId && parentTaskId !== 'null') {
+        targetTaskId = parentTaskId;
+        console.log(`🔗 Redirigiendo subtarea ${taskId} a tarea principal ${parentTaskId}`);
     }
+    
+    let url = '<?= APP_URL ?>?route=clan_leader/get-task-details&task_id=' + targetTaskId;
     
     window.location.href = url;
 }
@@ -1802,7 +1805,7 @@ function renderTeamKanban(kanbanTasks) {
             const dueDate = task.due_date || 'Sin fecha';
             
             html += `
-                <div class="${itemClass} ${config.class}" onclick="goToTaskDetail(event, ${task.task_id}, '${task.item_type}')">
+                <div class="${itemClass} ${config.class}" onclick="goToTaskDetail(event, ${task.task_id}, '${task.item_type}', ${task.parent_task_id || 'null'})">
                     <div class="task-header">
                         <div class="task-checkbox">
                             <input type="checkbox" id="equipo-${column}-${task.task_id}" 
@@ -1988,7 +1991,7 @@ function renderTeamKanbanBoard(kanbanTasks) {
                 
                 html += `
                     <div class="${cardClass} ${columnClass} project-${task.project_type || 'normal'}" 
-                         onclick="goToTaskDetail(event, ${task.task_id}, '${task.item_type}')">
+                         onclick="goToTaskDetail(event, ${task.task_id}, '${task.item_type}', ${task.parent_task_id || 'null'})">
                         <div class="task-header">
                             <div class="task-checkbox">
                                 <input type="checkbox" id="team-${column}-${task.task_id}" 
