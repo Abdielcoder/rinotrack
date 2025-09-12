@@ -1519,16 +1519,18 @@ ob_start();
     text-align: center;
 }
 
-/* Estilos para checkbox */
+/* Estilos para checkbox - OCULTOS */
 .th-checkbox, .td-checkbox {
     width: 40px;
     text-align: center;
+    display: none; /* Ocultar completamente las columnas de checkbox */
 }
 
 .td-checkbox input[type="checkbox"] {
     cursor: pointer;
     width: 18px;
     height: 18px;
+    display: none; /* Ocultar los checkboxes individuales */
 }
 
 /* Estilos para la barra de progreso */
