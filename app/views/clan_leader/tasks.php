@@ -212,8 +212,8 @@ ob_start();
                     <table class="tasks-table">
                         <thead>
                             <tr>
-                                <th class="th-checkbox" style="width: 40px;">
-                                    <input type="checkbox" id="select-all-my" onchange="toggleAllTasks(this, 'my')">
+                                <th class="th-checkbox" style="width: 100px;">
+                                    Seleccionar
                                 </th>
                                 <th class="th-priority">Prioridad</th>
                                 <th class="th-task">Tarea</th>
@@ -302,8 +302,8 @@ ob_start();
                     <table class="tasks-table">
                         <thead>
                             <tr>
-                                <th class="th-checkbox" style="width: 40px;">
-                                    <input type="checkbox" id="select-all-team" onchange="toggleAllTasks(this, 'team')">
+                                <th class="th-checkbox" style="width: 100px;">
+                                    Seleccionar
                                 </th>
                                 <th class="th-priority">Prioridad</th>
                                 <th class="th-task">Tarea</th>
@@ -1519,18 +1519,35 @@ ob_start();
     text-align: center;
 }
 
-/* Estilos para checkbox - OCULTOS */
+/* Estilos para checkbox - CAMBIADO A TEXTO "SELECCIONAR" */
 .th-checkbox, .td-checkbox {
-    width: 40px;
+    width: 100px;
     text-align: center;
-    display: none; /* Ocultar completamente las columnas de checkbox */
+    font-size: 12px;
+    font-weight: 600;
+    color: #6b7280;
 }
 
 .td-checkbox input[type="checkbox"] {
+    display: none; /* Ocultar los checkboxes */
+}
+
+.td-checkbox::after {
+    content: "Seleccionar";
+    display: block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    background: #f3f4f6;
+    border: 1px solid #d1d5db;
+    font-size: 11px;
+    color: #6b7280;
     cursor: pointer;
-    width: 18px;
-    height: 18px;
-    display: none; /* Ocultar los checkboxes individuales */
+    transition: all 0.2s ease;
+}
+
+.td-checkbox:hover::after {
+    background: #e5e7eb;
+    border-color: #9ca3af;
 }
 
 /* Estilos para la barra de progreso */
