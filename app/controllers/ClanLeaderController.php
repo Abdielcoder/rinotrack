@@ -3571,6 +3571,24 @@ class ClanLeaderController {
         header('Content-Type: application/json');
         
         try {
+            // Verificar autenticación
+            if (!$this->auth->isLoggedIn()) {
+                Utils::jsonResponse(['success' => false, 'message' => 'No autenticado'], 401);
+                return;
+            }
+            
+            // Verificar permisos de líder de clan
+            if (!$this->hasClanLeaderAccess()) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos de líder de clan'], 403);
+                return;
+            }
+            
+            // Verificar que el usuario tiene clan asignado
+            if (!$this->userClan) {
+                Utils::jsonResponse(['success' => false, 'message' => 'No tienes un clan asignado'], 403);
+                return;
+            }
+            
             $allProjects = $this->projectModel->getByClan($this->userClan['clan_id']);
             
             // Filtrar proyectos personales: mostrar solo los del líder actual
@@ -3586,6 +3604,8 @@ class ClanLeaderController {
             
             // Reindexar el array después del filtro
             $projects = array_values($projects);
+            
+            error_log("getProjectsForModal - Proyectos encontrados: " . count($projects));
             
             Utils::jsonResponse([
                 'success' => true,
@@ -3607,7 +3627,27 @@ class ClanLeaderController {
         header('Content-Type: application/json');
         
         try {
+            // Verificar autenticación
+            if (!$this->auth->isLoggedIn()) {
+                Utils::jsonResponse(['success' => false, 'message' => 'No autenticado'], 401);
+                return;
+            }
+            
+            // Verificar permisos de líder de clan
+            if (!$this->hasClanLeaderAccess()) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos de líder de clan'], 403);
+                return;
+            }
+            
+            // Verificar que el usuario tiene clan asignado
+            if (!$this->userClan) {
+                Utils::jsonResponse(['success' => false, 'message' => 'No tienes un clan asignado'], 403);
+                return;
+            }
+            
             $members = $this->clanModel->getMembers($this->userClan['clan_id']);
+            
+            error_log("getCollaboratorsForModal - Colaboradores encontrados: " . count($members));
             
             Utils::jsonResponse([
                 'success' => true,

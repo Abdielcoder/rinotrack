@@ -432,6 +432,16 @@ try {
         $controller->getAvailableUsers();
         break;
         
+    case 'clan_leader/get-projects-for-modal':
+        $controller = new ClanLeaderController();
+        $controller->getProjectsForModal();
+        break;
+        
+    case 'clan_leader/get-collaborators-for-modal':
+        $controller = new ClanLeaderController();
+        $controller->getCollaboratorsForModal();
+        break;
+        
     case 'clan_leader/get-clan-members':
         $controller = new ClanLeaderController();
         $controller->getClanMembers();

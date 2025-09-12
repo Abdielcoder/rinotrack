@@ -1737,33 +1737,49 @@ function createTaskModalHTML() {
 
 // Función para cargar datos necesarios para el modal
 function loadCreateTaskData() {
+    console.log('🔄 Cargando datos para el modal de creación de tareas...');
+    
     // Cargar proyectos
     fetch('?route=clan_leader/get-projects-for-modal')
-        .then(response => response.json())
+        .then(response => {
+            console.log('📡 Respuesta de proyectos:', response.status);
+            return response.json();
+        })
         .then(data => {
+            console.log('📊 Datos de proyectos recibidos:', data);
             if (data.success && data.projects) {
                 const projectSelect = document.getElementById('createTaskProject');
                 if (projectSelect) {
+                    console.log('✅ Cargando', data.projects.length, 'proyectos en el select');
                     data.projects.forEach(project => {
                         const option = document.createElement('option');
                         option.value = project.project_id;
                         option.textContent = project.project_name;
                         projectSelect.appendChild(option);
                     });
+                } else {
+                    console.error('❌ No se encontró el select de proyectos');
                 }
+            } else {
+                console.error('❌ Error en datos de proyectos:', data.message);
             }
         })
         .catch(error => {
-            console.error('Error cargando proyectos:', error);
+            console.error('💥 Error cargando proyectos:', error);
         });
     
     // Cargar colaboradores
     fetch('?route=clan_leader/get-collaborators-for-modal')
-        .then(response => response.json())
+        .then(response => {
+            console.log('📡 Respuesta de colaboradores:', response.status);
+            return response.json();
+        })
         .then(data => {
+            console.log('👥 Datos de colaboradores recibidos:', data);
             if (data.success && data.collaborators) {
                 const collaboratorsSelect = document.getElementById('createTaskAssignedMembers');
                 if (collaboratorsSelect) {
+                    console.log('✅ Cargando', data.collaborators.length, 'colaboradores en el select');
                     collaboratorsSelect.innerHTML = '';
                     data.collaborators.forEach(collaborator => {
                         const option = document.createElement('option');
@@ -1771,11 +1787,15 @@ function loadCreateTaskData() {
                         option.textContent = collaborator.full_name;
                         collaboratorsSelect.appendChild(option);
                     });
+                } else {
+                    console.error('❌ No se encontró el select de colaboradores');
                 }
+            } else {
+                console.error('❌ Error en datos de colaboradores:', data.message);
             }
         })
         .catch(error => {
-            console.error('Error cargando colaboradores:', error);
+            console.error('💥 Error cargando colaboradores:', error);
         });
 }
 
