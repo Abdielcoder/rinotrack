@@ -3238,92 +3238,77 @@ section {
     appearance: none;
 }
 
-/* Estilos para selección de colaboradores */
-.collaborators-selection {
-    background: #f8fafc;
-    border: 2px solid #e5e7eb;
-    border-radius: 12px;
-    padding: 20px;
-}
-
-.select-all-container {
+/* Estilos para campos de recurrencia */
+.checkbox-container {
     display: flex;
     align-items: center;
-    gap: 12px;
-    margin-bottom: 16px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid #e5e7eb;
+    gap: 0.75rem;
+    padding: 1rem;
+    background: #f8fafc;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    transition: all 0.3s ease;
 }
 
-.select-all-container input[type="checkbox"] {
+.checkbox-container:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+}
+
+.checkbox-container input[type="checkbox"] {
     width: 18px;
     height: 18px;
     cursor: pointer;
 }
 
-.select-all-container label {
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
     font-weight: 600;
     color: #374151;
     cursor: pointer;
     margin: 0;
 }
 
-.collaborators-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 12px;
-    max-height: 200px;
-    overflow-y: auto;
+.checkbox-label i {
+    color: #1e3a8a;
 }
 
-.collaborator-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px;
+.recurrence-fields {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-top: 1rem;
+}
+
+.field-help {
+    display: block;
+    color: #6b7280;
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+    font-style: italic;
+}
+
+/* Estilos para select múltiple */
+.create-task-modal-body select[multiple] {
+    min-height: 120px;
+    padding: 8px;
+}
+
+.create-task-modal-body select[multiple] option {
+    padding: 8px 12px;
+    border-radius: 4px;
+    margin: 2px 0;
     background: white;
     border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    transition: all 0.2s ease;
 }
 
-.collaborator-item:hover {
-    border-color: #3b82f6;
-    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
-}
-
-.collaborator-item input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
-    cursor: pointer;
-}
-
-.collaborator-item label {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    cursor: pointer;
-    margin: 0;
-    flex: 1;
-}
-
-.collaborator-avatar {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.create-task-modal-body select[multiple] option:checked {
+    background: #3b82f6;
     color: white;
-    font-weight: 600;
-    font-size: 14px;
-    flex-shrink: 0;
-}
-
-.collaborator-name {
-    font-weight: 500;
-    color: #374151;
-    font-size: 0.9rem;
+    border-color: #2563eb;
 }
 
 /* Footer del modal */

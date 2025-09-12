@@ -1636,6 +1636,51 @@ function createTaskModalHTML() {
                             </div>
                         </div>
                         
+                        <!-- Configuración de recurrencia -->
+                        <div class="form-group">
+                            <div class="checkbox-container">
+                                <input type="checkbox" id="createTaskIsRecurrent" name="is_recurrent" value="1" onchange="toggleCreateTaskRecurrenceFields()">
+                                <label for="createTaskIsRecurrent" class="checkbox-label">
+                                    <i class="fas fa-redo"></i>
+                                    Tarea Recurrente
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div id="createTaskRecurrenceFields" class="recurrence-fields" style="display: none;">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="createTaskRecurrenceType">Tipo de Recurrencia *</label>
+                                    <div class="select-wrapper">
+                                        <select id="createTaskRecurrenceType" name="recurrence_type">
+                                            <option value="">Seleccionar...</option>
+                                            <option value="daily">Diaria</option>
+                                            <option value="weekly">Semanal</option>
+                                            <option value="monthly">Mensual</option>
+                                        </select>
+                                        <i class="fas fa-chevron-down"></i>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="createTaskRecurrenceStartDate">Fecha de Inicio *</label>
+                                    <div class="date-input-wrapper">
+                                        <input type="date" id="createTaskRecurrenceStartDate" name="recurrence_start_date">
+                                        <i class="fas fa-calendar-alt"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="createTaskRecurrenceEndDate">Fecha de Vigencia (Opcional)</label>
+                                    <div class="date-input-wrapper">
+                                        <input type="date" id="createTaskRecurrenceEndDate" name="recurrence_end_date">
+                                        <i class="fas fa-calendar-alt"></i>
+                                    </div>
+                                    <small class="field-help">Si no se especifica, la recurrencia será indefinida</small>
+                                </div>
+                            </div>
+                        </div>
+                        
                         <!-- Descripción -->
                         <div class="form-group">
                             <label for="createTaskDescription">Descripción</label>
@@ -1658,16 +1703,14 @@ function createTaskModalHTML() {
                         
                         <!-- Asignar a colaboradores -->
                         <div class="form-group">
-                            <label>Asignar a colaboradores</label>
-                            <div class="collaborators-selection">
-                                <div class="select-all-container">
-                                    <input type="checkbox" id="selectAllCreateTask" onchange="toggleAllCollaborators()">
-                                    <label for="selectAllCreateTask">Seleccionar todos</label>
-                                </div>
-                                <div id="createTaskCollaborators" class="collaborators-list">
+                            <label for="createTaskAssignedMembers">Asignar a colaboradores *</label>
+                            <div class="select-wrapper">
+                                <select id="createTaskAssignedMembers" name="assigned_members[]" multiple required>
                                     <!-- Los colaboradores se cargarán dinámicamente -->
-                                </div>
+                                </select>
+                                <i class="fas fa-chevron-down"></i>
                             </div>
+                            <small class="field-help">Mantén presionado Ctrl (Cmd en Mac) para seleccionar múltiples colaboradores</small>
                         </div>
                     </form>
                 </div>
@@ -1719,23 +1762,14 @@ function loadCreateTaskData() {
         .then(response => response.json())
         .then(data => {
             if (data.success && data.collaborators) {
-                const collaboratorsContainer = document.getElementById('createTaskCollaborators');
-                if (collaboratorsContainer) {
-                    collaboratorsContainer.innerHTML = '';
+                const collaboratorsSelect = document.getElementById('createTaskAssignedMembers');
+                if (collaboratorsSelect) {
+                    collaboratorsSelect.innerHTML = '';
                     data.collaborators.forEach(collaborator => {
-                        const collaboratorHTML = `
-                            <div class="collaborator-item">
-                                <input type="checkbox" id="collaborator_${collaborator.user_id}" 
-                                       name="assigned_members[]" value="${collaborator.user_id}">
-                                <label for="collaborator_${collaborator.user_id}">
-                                    <div class="collaborator-avatar" style="background-color: ${getCollaboratorColor(collaborator.user_id)}">
-                                        ${collaborator.full_name.charAt(0).toUpperCase()}
-                                    </div>
-                                    <span class="collaborator-name">${collaborator.full_name}</span>
-                                </label>
-                            </div>
-                        `;
-                        collaboratorsContainer.insertAdjacentHTML('beforeend', collaboratorHTML);
+                        const option = document.createElement('option');
+                        option.value = collaborator.user_id;
+                        option.textContent = collaborator.full_name;
+                        collaboratorsSelect.appendChild(option);
                     });
                 }
             }
@@ -1751,15 +1785,58 @@ function getCollaboratorColor(userId) {
     return colors[userId % colors.length];
 }
 
-// Función para seleccionar/deseleccionar todos los colaboradores
-function toggleAllCollaborators() {
-    const selectAllCheckbox = document.getElementById('selectAllCreateTask');
-    const collaboratorCheckboxes = document.querySelectorAll('#createTaskCollaborators input[type="checkbox"]');
+// Función para mostrar/ocultar campos de recurrencia en el modal de creación
+function toggleCreateTaskRecurrenceFields() {
+    const checkbox = document.getElementById('createTaskIsRecurrent');
+    const fields = document.getElementById('createTaskRecurrenceFields');
+    const dueDateField = document.getElementById('createTaskDueDate');
+    const dueDateGroup = dueDateField ? dueDateField.closest('.form-group') : null;
     
-    collaboratorCheckboxes.forEach(checkbox => {
-        checkbox.checked = selectAllCheckbox.checked;
-    });
+    if (checkbox.checked) {
+        // Mostrar campos de recurrencia
+        fields.style.display = 'block';
+        
+        // Ocultar campo de fecha límite cuando es recurrente
+        if (dueDateGroup) {
+            dueDateGroup.style.display = 'none';
+        }
+        
+        // Quitar required y limpiar valor
+        if (dueDateField) {
+            dueDateField.required = false;
+            dueDateField.removeAttribute('required');
+            dueDateField.value = '';
+        }
+        
+        // Hacer requeridos los campos de recurrencia
+        document.getElementById('createTaskRecurrenceType').required = true;
+        document.getElementById('createTaskRecurrenceStartDate').required = true;
+    } else {
+        // Ocultar campos de recurrencia
+        fields.style.display = 'none';
+        
+        // Mostrar campo de fecha límite normal
+        if (dueDateGroup) {
+            dueDateGroup.style.display = 'block';
+        }
+        
+        // Restaurar required
+        if (dueDateField) {
+            dueDateField.required = true;
+            dueDateField.setAttribute('required', 'required');
+        }
+        
+        // Quitar requerimiento de campos de recurrencia
+        document.getElementById('createTaskRecurrenceType').required = false;
+        document.getElementById('createTaskRecurrenceStartDate').required = false;
+        
+        // Limpiar valores de recurrencia
+        document.getElementById('createTaskRecurrenceType').value = '';
+        document.getElementById('createTaskRecurrenceStartDate').value = '';
+        document.getElementById('createTaskRecurrenceEndDate').value = '';
+    }
 }
+
 
 // Función para cerrar el modal de creación de tareas
 function closeCreateTaskModal() {
@@ -1782,32 +1859,51 @@ function submitCreateTask() {
     // Validar campos requeridos
     const title = document.getElementById('createTaskTitle').value.trim();
     const dueDate = document.getElementById('createTaskDueDate').value;
-    const assignedMembers = document.querySelectorAll('#createTaskCollaborators input[type="checkbox"]:checked');
+    const isRecurrent = document.getElementById('createTaskIsRecurrent').checked;
+    const recurrenceStart = document.getElementById('createTaskRecurrenceStartDate').value;
+    const assignedMembersSelect = document.getElementById('createTaskAssignedMembers');
+    const selectedMembers = Array.from(assignedMembersSelect.selectedOptions);
     
     if (!title) {
         showToast('Por favor ingresa el título de la tarea', 'error');
         return;
     }
     
-    if (!dueDate) {
-        showToast('Por favor selecciona una fecha límite', 'error');
-        return;
+    // Validación de fecha según tipo de tarea
+    if (isRecurrent) {
+        if (!recurrenceStart) {
+            showToast('Por favor ingresa la fecha de inicio de recurrencia', 'error');
+            return;
+        }
+    } else {
+        if (!dueDate) {
+            showToast('Por favor selecciona una fecha límite', 'error');
+            return;
+        }
     }
     
-    if (assignedMembers.length === 0) {
+    if (selectedMembers.length === 0) {
         showToast('Debes asignar al menos un colaborador', 'error');
         return;
     }
     
     // Recopilar datos del formulario
     formData.append('task_title', title);
-    formData.append('task_due_date', dueDate);
+    formData.append('task_due_date', dueDate || '');
     formData.append('task_project', document.getElementById('createTaskProject').value);
     formData.append('task_description', document.getElementById('createTaskDescription').value);
     formData.append('priority', document.getElementById('createTaskPriority').value);
     
+    // Agregar campos de recurrencia si aplica
+    if (isRecurrent) {
+        formData.append('is_recurrent', '1');
+        formData.append('recurrence_type', document.getElementById('createTaskRecurrenceType').value);
+        formData.append('recurrence_start_date', recurrenceStart);
+        formData.append('recurrence_end_date', document.getElementById('createTaskRecurrenceEndDate').value || '');
+    }
+    
     // Agregar miembros asignados
-    assignedMembers.forEach(member => {
+    selectedMembers.forEach(member => {
         formData.append('assigned_members[]', member.value);
     });
     
