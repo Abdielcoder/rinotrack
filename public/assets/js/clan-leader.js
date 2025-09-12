@@ -428,11 +428,29 @@ function generateCalendar() {
         
         // Agregar indicadores de estado
         if (dayTasks.length > 0) {
+            console.log(`Agregando indicadores para ${dayTasks.length} tareas en fecha ${currentDay.toDateString()}`);
+            console.log('Tareas del día:', dayTasks);
+            
             const statusCounts = {};
-            dayTasks.forEach(task => {
-                const status = task.task.status;
-                statusCounts[status] = (statusCounts[status] || 0) + 1;
+            dayTasks.forEach((task, index) => {
+                console.log(`Procesando tarea ${index} para indicadores:`, task);
+                
+                // Manejar diferentes estructuras de datos
+                let status = null;
+                if (task.task && task.task.status) {
+                    status = task.task.status;
+                } else if (task.status) {
+                    status = task.status;
+                }
+                
+                console.log('Status encontrado:', status);
+                
+                if (status) {
+                    statusCounts[status] = (statusCounts[status] || 0) + 1;
+                }
             });
+            
+            console.log('Conteo de status:', statusCounts);
             
             const indicators = document.createElement('div');
             indicators.style.marginTop = '0.25rem';
@@ -459,17 +477,44 @@ function generateCalendar() {
 // Obtener tareas para una fecha específica
 function getTasksForDate(date) {
     const dateStr = date.toISOString().split('T')[0];
+    console.log('Buscando tareas para fecha:', dateStr);
+    console.log('Datos de tareas disponibles:', tasksData);
+    
+    if (!tasksData || !Array.isArray(tasksData)) {
+        console.log('No hay datos de tareas o no es un array');
+        return [];
+    }
     
     const filteredTasks = tasksData.filter(taskData => {
-        const taskDate = taskData.task.due_date;
-        return taskDate === dateStr;
+        console.log('Revisando tarea:', taskData);
+        
+        // Verificar diferentes posibles estructuras
+        let taskDate = null;
+        if (taskData.task && taskData.task.due_date) {
+            taskDate = taskData.task.due_date;
+        } else if (taskData.due_date) {
+            taskDate = taskData.due_date;
+        }
+        
+        console.log('Fecha de tarea encontrada:', taskDate);
+        
+        if (taskDate) {
+            const matches = taskDate === dateStr;
+            console.log('¿Coincide con la fecha buscada?', matches);
+            return matches;
+        }
+        
+        return false;
     });
     
+    console.log('Tareas filtradas para', dateStr, ':', filteredTasks);
     return filteredTasks;
 }
 
 // Mostrar tareas para una fecha específica
 function showTasksForDate(date, tasks) {
+    console.log('showTasksForDate llamada con:', date, tasks);
+    
     // Almacenar la fecha seleccionada globalmente
     if (typeof window !== 'undefined') {
         window.selectedCalendarDate = date.toISOString().split('T')[0];
@@ -479,7 +524,10 @@ function showTasksForDate(date, tasks) {
     const modalTitle = document.getElementById('modalTitle');
     const modalTaskList = document.getElementById('modalTaskList');
     
-    if (!modal || !modalTitle || !modalTaskList) return;
+    if (!modal || !modalTitle || !modalTaskList) {
+        console.error('Elementos del modal no encontrados');
+        return;
+    }
     
     const dateStr = date.toLocaleDateString('es-ES', {
         weekday: 'long',
@@ -491,42 +539,70 @@ function showTasksForDate(date, tasks) {
     modalTitle.textContent = `Tareas del ${dateStr}`;
     modalTaskList.innerHTML = '';
     
+    console.log('Cantidad de tareas a mostrar:', tasks.length);
+    
     if (tasks.length === 0) {
         modalTaskList.innerHTML = '<p>No hay tareas programadas para este día.</p>';
     } else {
-        tasks.forEach(taskData => {
-            const task = taskData.task;
-            const project = taskData.project;
-            const assignedUser = taskData.assigned_user;
+        tasks.forEach((taskData, index) => {
+            console.log(`Procesando tarea ${index}:`, taskData);
+            
+            // Manejar diferentes estructuras de datos
+            let task, project, assignedUser;
+            
+            if (taskData.task) {
+                // Estructura anidada: { task: {...}, project: {...}, assigned_user: {...} }
+                task = taskData.task;
+                project = taskData.project || { project_name: 'Sin proyecto' };
+                assignedUser = taskData.assigned_user || { full_name: 'Sin asignar' };
+            } else {
+                // Estructura plana: { task_name: "...", due_date: "...", ... }
+                task = taskData;
+                project = { project_name: taskData.project_name || 'Sin proyecto' };
+                assignedUser = { full_name: taskData.assigned_user_name || 'Sin asignar' };
+            }
+            
+            console.log('Datos procesados:', { task, project, assignedUser });
             
             const taskElement = document.createElement('div');
             taskElement.className = 'task-item';
             
-            const isOverdue = new Date(task.due_date) < new Date() && task.status !== 'completed';
-            const statusClass = isOverdue ? 'overdue' : task.status;
+            const taskDueDate = task.due_date || taskData.due_date;
+            const taskStatus = task.status || taskData.status;
+            
+            const isOverdue = taskDueDate && new Date(taskDueDate) < new Date() && taskStatus !== 'completed';
+            const statusClass = isOverdue ? 'overdue' : taskStatus;
+            
+            const taskName = task.task_name || taskData.task_name || 'Sin título';
+            const taskDescription = task.description || taskData.description || '';
+            const projectName = project.project_name || 'Sin proyecto';
+            const assignedUserName = assignedUser.full_name || 'Sin asignar';
             
             taskElement.innerHTML = `
                 <div class="task-header">
-                    <h4 class="task-title">${task.task_name}</h4>
+                    <h4 class="task-title">${taskName}</h4>
                     <span class="task-status ${statusClass}">
                         ${isOverdue ? 'Vencida' : 
-                          task.status === 'pending' ? 'Pendiente' :
-                          task.status === 'in_progress' ? 'En Progreso' :
-                          task.status === 'completed' ? 'Completada' : 'Cancelada'}
+                          taskStatus === 'pending' ? 'Pendiente' :
+                          taskStatus === 'in_progress' ? 'En Progreso' :
+                          taskStatus === 'completed' ? 'Completada' : 'Cancelada'}
                     </span>
                 </div>
                 <div class="task-details">
                     <div class="task-project">
-                        <i class="fas fa-folder"></i> ${project.project_name}
+                        <i class="fas fa-folder"></i> ${projectName}
                     </div>
-                    ${assignedUser ? `
-                        <div class="task-assigned">
-                            <i class="fas fa-user"></i> ${assignedUser.full_name}
+                    <div class="task-assigned">
+                        <i class="fas fa-user"></i> ${assignedUserName}
+                    </div>
+                    ${taskDueDate ? `
+                        <div class="task-due-date">
+                            <i class="fas fa-calendar"></i> ${new Date(taskDueDate).toLocaleDateString('es-ES')}
                         </div>
                     ` : ''}
-                    ${task.description ? `
+                    ${taskDescription ? `
                         <div style="margin-top: 0.5rem;">
-                            <i class="fas fa-align-left"></i> ${task.description}
+                            <i class="fas fa-align-left"></i> ${taskDescription}
                         </div>
                     ` : ''}
                 </div>
