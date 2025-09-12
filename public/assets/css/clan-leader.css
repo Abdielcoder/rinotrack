@@ -3090,6 +3090,329 @@ section {
     font-size: 16px;
 }
 
+/* Estilos para el modal de creación de tareas */
+.create-task-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    backdrop-filter: blur(5px);
+}
+
+.create-task-modal.show {
+    opacity: 1;
+}
+
+.create-task-modal-content {
+    background: white;
+    border-radius: 16px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+    transform: scale(0.9);
+    transition: transform 0.3s ease;
+}
+
+.create-task-modal.show .create-task-modal-content {
+    transform: scale(1);
+}
+
+.create-task-modal-header {
+    padding: 24px 32px 0;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.create-task-modal-header h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1e3a8a;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.create-task-modal-header h3 i {
+    color: #3b82f6;
+}
+
+.create-task-modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.create-task-modal-close:hover {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.create-task-modal-body {
+    padding: 0 32px;
+}
+
+.create-task-modal-body .form-group {
+    margin-bottom: 20px;
+}
+
+.create-task-modal-body .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.create-task-modal-body .form-group label {
+    display: block;
+    font-weight: 600;
+    color: #374151;
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+}
+
+.create-task-modal-body .form-group input,
+.create-task-modal-body .form-group textarea,
+.create-task-modal-body .form-group select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    background: white;
+}
+
+.create-task-modal-body .form-group input:focus,
+.create-task-modal-body .form-group textarea:focus,
+.create-task-modal-body .form-group select:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.create-task-modal-body .form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.create-task-modal-body .date-input-wrapper,
+.create-task-modal-body .select-wrapper {
+    position: relative;
+}
+
+.create-task-modal-body .date-input-wrapper input,
+.create-task-modal-body .select-wrapper select {
+    padding-right: 40px;
+}
+
+.create-task-modal-body .date-input-wrapper i,
+.create-task-modal-body .select-wrapper i {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    pointer-events: none;
+}
+
+.create-task-modal-body .select-wrapper select {
+    appearance: none;
+}
+
+/* Estilos para selección de colaboradores */
+.collaborators-selection {
+    background: #f8fafc;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.select-all-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.select-all-container input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.select-all-container label {
+    font-weight: 600;
+    color: #374151;
+    cursor: pointer;
+    margin: 0;
+}
+
+.collaborators-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.collaborator-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.collaborator-item:hover {
+    border-color: #3b82f6;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+}
+
+.collaborator-item input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+.collaborator-item label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    margin: 0;
+    flex: 1;
+}
+
+.collaborator-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.collaborator-name {
+    font-weight: 500;
+    color: #374151;
+    font-size: 0.9rem;
+}
+
+/* Footer del modal */
+.create-task-modal-footer {
+    padding: 24px 32px;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.btn-cancel,
+.btn-create {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    min-width: 120px;
+    justify-content: center;
+}
+
+.btn-cancel {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+.btn-cancel:hover {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.btn-create {
+    background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(30, 58, 138, 0.3);
+}
+
+.btn-create:hover {
+    background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(30, 58, 138, 0.4);
+}
+
+.btn-create:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .create-task-modal-content {
+        width: 95%;
+        margin: 20px;
+        max-height: 95vh;
+    }
+    
+    .create-task-modal-header,
+    .create-task-modal-body,
+    .create-task-modal-footer {
+        padding: 20px;
+    }
+    
+    .create-task-modal-body .form-row {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    
+    .collaborators-list {
+        grid-template-columns: 1fr;
+    }
+    
+    .create-task-modal-footer {
+        flex-direction: column;
+    }
+    
+    .btn-cancel,
+    .btn-create {
+        width: 100%;
+    }
+}
+
 .task-list {
     display: flex;
     flex-direction: column;

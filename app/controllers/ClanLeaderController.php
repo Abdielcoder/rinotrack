@@ -3565,6 +3565,64 @@ class ClanLeaderController {
     }
     
     /**
+     * Obtener proyectos para el modal de creación de tareas
+     */
+    public function getProjectsForModal() {
+        header('Content-Type: application/json');
+        
+        try {
+            $allProjects = $this->projectModel->getByClan($this->userClan['clan_id']);
+            
+            // Filtrar proyectos personales: mostrar solo los del líder actual
+            $projects = array_filter($allProjects, function($project) {
+                // Si es un proyecto personal (is_personal = 1)
+                if (($project['is_personal'] ?? 0) == 1) {
+                    // Solo mostrar si fue creado por el líder actual
+                    return ($project['created_by_user_id'] ?? 0) == $this->currentUser['user_id'];
+                }
+                // Mostrar todos los proyectos no personales
+                return true;
+            });
+            
+            // Reindexar el array después del filtro
+            $projects = array_values($projects);
+            
+            Utils::jsonResponse([
+                'success' => true,
+                'projects' => $projects
+            ]);
+        } catch (Exception $e) {
+            error_log("Error obteniendo proyectos para modal: " . $e->getMessage());
+            Utils::jsonResponse([
+                'success' => false,
+                'message' => 'Error al cargar proyectos'
+            ], 500);
+        }
+    }
+    
+    /**
+     * Obtener colaboradores para el modal de creación de tareas
+     */
+    public function getCollaboratorsForModal() {
+        header('Content-Type: application/json');
+        
+        try {
+            $members = $this->clanModel->getMembers($this->userClan['clan_id']);
+            
+            Utils::jsonResponse([
+                'success' => true,
+                'collaborators' => $members
+            ]);
+        } catch (Exception $e) {
+            error_log("Error obteniendo colaboradores para modal: " . $e->getMessage());
+            Utils::jsonResponse([
+                'success' => false,
+                'message' => 'Error al cargar colaboradores'
+            ], 500);
+        }
+    }
+
+    /**
      * Obtener color de avatar basado en el ID del usuario
      */
     private function getAvatarColor($userId) {

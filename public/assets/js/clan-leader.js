@@ -1566,9 +1566,308 @@ function openAddTaskModal(selectedDate) {
     // Cerrar el modal actual de tareas
     closeTaskModal();
     
-    // Redirigir a la página de crear tarea con la fecha preseleccionada
-    const url = `?route=clan_leader/task-edit&due_date=${selectedDate}`;
-    window.location.href = url;
+    // Mostrar el modal de creación de tareas
+    showCreateTaskModal(selectedDate);
 }
+
+// Función para mostrar el modal de creación de tareas
+function showCreateTaskModal(selectedDate) {
+    // Crear el modal si no existe
+    let modal = document.getElementById('createTaskModal');
+    if (!modal) {
+        createTaskModalHTML();
+        modal = document.getElementById('createTaskModal');
+    }
+    
+    // Establecer la fecha preseleccionada
+    const dateInput = document.getElementById('createTaskDueDate');
+    if (dateInput && selectedDate) {
+        dateInput.value = selectedDate;
+    }
+    
+    // Mostrar el modal
+    modal.style.display = 'flex';
+    setTimeout(() => {
+        modal.classList.add('show');
+    }, 10);
+}
+
+// Función para crear el HTML del modal de creación de tareas
+function createTaskModalHTML() {
+    const modalHTML = `
+        <div id="createTaskModal" class="create-task-modal" style="display: none;">
+            <div class="create-task-modal-content">
+                <div class="create-task-modal-header">
+                    <h3>
+                        <i class="fas fa-plus-circle"></i>
+                        Crear Nueva Tarea
+                    </h3>
+                    <button class="create-task-modal-close" onclick="closeCreateTaskModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <div class="create-task-modal-body">
+                    <form id="createTaskForm">
+                        <!-- Título de la tarea -->
+                        <div class="form-group">
+                            <label for="createTaskTitle">Título de la tarea *</label>
+                            <input type="text" id="createTaskTitle" name="task_title" placeholder="Título de la tarea *" required>
+                        </div>
+                        
+                        <!-- Fecha límite y Proyecto -->
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="createTaskDueDate">Fecha límite *</label>
+                                <div class="date-input-wrapper">
+                                    <input type="date" id="createTaskDueDate" name="task_due_date" required>
+                                    <i class="fas fa-calendar-alt"></i>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="createTaskProject">Proyecto/Concepto</label>
+                                <div class="select-wrapper">
+                                    <select id="createTaskProject" name="task_project">
+                                        <option value="">Seleccionar proyecto...</option>
+                                    </select>
+                                    <i class="fas fa-chevron-down"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Descripción -->
+                        <div class="form-group">
+                            <label for="createTaskDescription">Descripción</label>
+                            <textarea id="createTaskDescription" name="task_description" rows="3" placeholder="Descripción de la tarea..."></textarea>
+                        </div>
+                        
+                        <!-- Prioridad -->
+                        <div class="form-group">
+                            <label for="createTaskPriority">Prioridad</label>
+                            <div class="select-wrapper">
+                                <select id="createTaskPriority" name="priority">
+                                    <option value="low">Baja</option>
+                                    <option value="medium" selected>Media</option>
+                                    <option value="high">Alta</option>
+                                    <option value="critical">Urgente</option>
+                                </select>
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                        </div>
+                        
+                        <!-- Asignar a colaboradores -->
+                        <div class="form-group">
+                            <label>Asignar a colaboradores</label>
+                            <div class="collaborators-selection">
+                                <div class="select-all-container">
+                                    <input type="checkbox" id="selectAllCreateTask" onchange="toggleAllCollaborators()">
+                                    <label for="selectAllCreateTask">Seleccionar todos</label>
+                                </div>
+                                <div id="createTaskCollaborators" class="collaborators-list">
+                                    <!-- Los colaboradores se cargarán dinámicamente -->
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="create-task-modal-footer">
+                    <button type="button" class="btn-cancel" onclick="closeCreateTaskModal()">
+                        <i class="fas fa-times"></i>
+                        Cancelar
+                    </button>
+                    <button type="button" class="btn-create" onclick="submitCreateTask()">
+                        <i class="fas fa-plus"></i>
+                        Crear Tarea
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Cargar datos necesarios
+    loadCreateTaskData();
+}
+
+// Función para cargar datos necesarios para el modal
+function loadCreateTaskData() {
+    // Cargar proyectos
+    fetch('?route=clan_leader/get-projects-for-modal')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.projects) {
+                const projectSelect = document.getElementById('createTaskProject');
+                if (projectSelect) {
+                    data.projects.forEach(project => {
+                        const option = document.createElement('option');
+                        option.value = project.project_id;
+                        option.textContent = project.project_name;
+                        projectSelect.appendChild(option);
+                    });
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error cargando proyectos:', error);
+        });
+    
+    // Cargar colaboradores
+    fetch('?route=clan_leader/get-collaborators-for-modal')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.collaborators) {
+                const collaboratorsContainer = document.getElementById('createTaskCollaborators');
+                if (collaboratorsContainer) {
+                    collaboratorsContainer.innerHTML = '';
+                    data.collaborators.forEach(collaborator => {
+                        const collaboratorHTML = `
+                            <div class="collaborator-item">
+                                <input type="checkbox" id="collaborator_${collaborator.user_id}" 
+                                       name="assigned_members[]" value="${collaborator.user_id}">
+                                <label for="collaborator_${collaborator.user_id}">
+                                    <div class="collaborator-avatar" style="background-color: ${getCollaboratorColor(collaborator.user_id)}">
+                                        ${collaborator.full_name.charAt(0).toUpperCase()}
+                                    </div>
+                                    <span class="collaborator-name">${collaborator.full_name}</span>
+                                </label>
+                            </div>
+                        `;
+                        collaboratorsContainer.insertAdjacentHTML('beforeend', collaboratorHTML);
+                    });
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error cargando colaboradores:', error);
+        });
+}
+
+// Función para obtener color del colaborador
+function getCollaboratorColor(userId) {
+    const colors = ['#667eea', '#48bb78', '#ed8936', '#e53e3e', '#9f7aea', '#38b2ac', '#a0aec0', '#f6e05e'];
+    return colors[userId % colors.length];
+}
+
+// Función para seleccionar/deseleccionar todos los colaboradores
+function toggleAllCollaborators() {
+    const selectAllCheckbox = document.getElementById('selectAllCreateTask');
+    const collaboratorCheckboxes = document.querySelectorAll('#createTaskCollaborators input[type="checkbox"]');
+    
+    collaboratorCheckboxes.forEach(checkbox => {
+        checkbox.checked = selectAllCheckbox.checked;
+    });
+}
+
+// Función para cerrar el modal de creación de tareas
+function closeCreateTaskModal() {
+    const modal = document.getElementById('createTaskModal');
+    if (modal) {
+        modal.classList.remove('show');
+        setTimeout(() => {
+            modal.style.display = 'none';
+            // Limpiar formulario
+            document.getElementById('createTaskForm').reset();
+        }, 300);
+    }
+}
+
+// Función para enviar el formulario de creación de tareas
+function submitCreateTask() {
+    const form = document.getElementById('createTaskForm');
+    const formData = new FormData();
+    
+    // Validar campos requeridos
+    const title = document.getElementById('createTaskTitle').value.trim();
+    const dueDate = document.getElementById('createTaskDueDate').value;
+    const assignedMembers = document.querySelectorAll('#createTaskCollaborators input[type="checkbox"]:checked');
+    
+    if (!title) {
+        showToast('Por favor ingresa el título de la tarea', 'error');
+        return;
+    }
+    
+    if (!dueDate) {
+        showToast('Por favor selecciona una fecha límite', 'error');
+        return;
+    }
+    
+    if (assignedMembers.length === 0) {
+        showToast('Debes asignar al menos un colaborador', 'error');
+        return;
+    }
+    
+    // Recopilar datos del formulario
+    formData.append('task_title', title);
+    formData.append('task_due_date', dueDate);
+    formData.append('task_project', document.getElementById('createTaskProject').value);
+    formData.append('task_description', document.getElementById('createTaskDescription').value);
+    formData.append('priority', document.getElementById('createTaskPriority').value);
+    
+    // Agregar miembros asignados
+    assignedMembers.forEach(member => {
+        formData.append('assigned_members[]', member.value);
+    });
+    
+    // Agregar subtareas vacías
+    formData.append('subtasks', JSON.stringify([]));
+    
+    // Deshabilitar botón mientras se envía
+    const createBtn = document.querySelector('.btn-create');
+    const originalText = createBtn.innerHTML;
+    createBtn.disabled = true;
+    createBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creando...';
+    
+    // Enviar datos al servidor
+    fetch('?route=clan_leader/create-task', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast('Tarea creada exitosamente', 'success');
+            closeCreateTaskModal();
+            // Recargar la página para mostrar la nueva tarea
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        } else {
+            showToast(data.message || 'Error al crear la tarea', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Error al crear la tarea', 'error');
+    })
+    .finally(() => {
+        // Restaurar botón
+        createBtn.disabled = false;
+        createBtn.innerHTML = originalText;
+    });
+}
+
+// Event listeners para el modal de creación de tareas
+document.addEventListener('DOMContentLoaded', function() {
+    // Cerrar modal al hacer clic fuera de él
+    document.addEventListener('click', function(e) {
+        const modal = document.getElementById('createTaskModal');
+        if (modal && e.target === modal) {
+            closeCreateTaskModal();
+        }
+    });
+    
+    // Cerrar modal con tecla Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const modal = document.getElementById('createTaskModal');
+            if (modal && modal.style.display !== 'none') {
+                closeCreateTaskModal();
+            }
+        }
+    });
+});
 
 // Fin del archivo
