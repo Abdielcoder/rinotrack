@@ -1464,7 +1464,7 @@ function switchDashboardTab(tabName) {
     console.log('✅ Tab dashboard cambiado a:', tabName);
 }
 
-// Función para manejar checkbox del EQUIPO (igual que Mis Tareas pero recarga el equipo)
+// Función para manejar checkbox del EQUIPO (elimina inmediatamente sin esperar respuesta)
 function handleTeamTaskCheck(uniqueTaskId, taskId, isChecked, itemType = 'task') {
     const itemLabel = itemType === 'subtask' ? 'Subtarea' : 'Tarea';
     console.log(`👥 ${itemLabel} del equipo`, taskId, isChecked ? 'marcada' : 'desmarcada');
@@ -1484,57 +1484,38 @@ function handleTeamTaskCheck(uniqueTaskId, taskId, isChecked, itemType = 'task')
         return;
     }
     
-    // Deshabilitar checkbox temporalmente
-    checkbox.disabled = true;
-    card.style.opacity = '0.6';
+    // ELIMINAR INMEDIATAMENTE - No esperar respuesta del servidor
+    console.log('👥 Eliminando tarea del equipo inmediatamente:', taskId);
     
-    // Hacer llamada AJAX para completar tarea
+    // Animar y remover la tarea del DOM
+    card.style.transition = 'all 0.3s ease';
+    card.style.transform = 'translateX(100%)';
+    card.style.opacity = '0';
+    
+    setTimeout(() => {
+        card.remove();
+        updateTeamTaskCounts();
+        console.log('✅ Tarea del equipo removida del DOM');
+    }, 300);
+    
+    // Hacer llamada AJAX en segundo plano (sin afectar la UI)
     const formData = new FormData();
     formData.append('task_id', taskId);
-    
-    console.log('👥 Enviando AJAX para completar tarea del equipo:', taskId);
     
     fetch('<?= APP_URL ?>simple-complete-task.php', {
         method: 'POST',
         body: formData
     })
-    .then(response => {
-        console.log('👥 Respuesta recibida:', response);
-        if (!response.ok) {
-            return response.text().then(text => {
-                console.error('👥 Error del servidor:', text);
-                throw new Error('Error del servidor: ' + response.status);
-            });
-        }
-        return response.json();
-    })
+    .then(response => response.json())
     .then(data => {
-        console.log('👥 Data recibida:', data);
         if (data.success) {
-            // Animar y remover la tarea del DOM
-            card.style.transition = 'all 0.3s ease';
-            card.style.transform = 'translateX(100%)';
-            card.style.opacity = '0';
-            
-            setTimeout(() => {
-                card.remove();
-                updateTeamTaskCounts();
-                console.log('✅ Tarea del equipo removida del DOM');
-            }, 300);
+            console.log('👥 Tarea completada en BD:', taskId);
         } else {
-            console.error('👥 Error al completar tarea del equipo:', data.message);
-            
-            // Rehabilitar checkbox si hay error
-            checkbox.disabled = false;
-            card.style.opacity = '1';
+            console.log('👥 Tarea ya completada o no encontrada (ignorado):', data.message);
         }
     })
     .catch(error => {
-        console.error('👥 Error de conexión al completar tarea del equipo:', error);
-        
-        // Rehabilitar checkbox si hay error
-        checkbox.disabled = false;
-        card.style.opacity = '1';
+        console.log('👥 Error de conexión (ignorado):', error.message);
     });
 }
 
