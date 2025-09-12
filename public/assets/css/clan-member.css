@@ -40,6 +40,20 @@
 .btn-minimal.danger { background: var(--cm-danger); color: #fff; border-color: var(--cm-danger); }
 .btn-minimal.secondary { background: var(--cm-soft); }
 
+/* Estilo para botón de logout en navegación */
+.nav-link.logout-link {
+    color: #ef4444 !important;
+}
+
+.nav-link.logout-link:hover {
+    background: #fef2f2;
+    color: #dc2626 !important;
+}
+
+.nav-link.logout-link i {
+    color: #ef4444;
+}
+
 /* Contenido */
 .projects-strip { width: 100%; padding: 10px 20px; margin: 10px auto 0; max-width: 100vw; }
 .content-minimal { max-width: 1200px; margin: 12px auto 28px; padding: 0 20px; width: 75vw; min-width: min(95vw, 1200px); }

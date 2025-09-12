@@ -84,6 +84,12 @@ ob_start();
                         <span>Volver</span>
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a href="?route=logout" class="nav-link logout-link" title="Cerrar Sesión">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Cerrar Sesión</span>
+                    </a>
+                </li>
             </ul>
 
             <!-- Información del usuario -->

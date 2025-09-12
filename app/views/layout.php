@@ -88,6 +88,10 @@
                     </span>
                     <span>Perfil</span>
                 </a>
+                <a href="?route=logout" class="leader-nav__link leader-nav__logout" title="Cerrar Sesión">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Cerrar Sesión</span>
+                </a>
             </nav>
         </div>
         <style>
@@ -109,6 +113,10 @@
         .leader-avatar { width: 28px; height: 28px; border-radius: 50%; overflow: hidden; border: 2px solid #c7d2fe; background: #1e3a8a; display: inline-flex; align-items: center; justify-content: center; }
         .leader-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
         .leader-initial { color: #fff; font-weight: 700; font-size: 0.9rem; line-height: 1; }
+        .leader-nav__logout { color: #dc2626 !important; }
+        .leader-nav__logout i { color: #dc2626 !important; }
+        .leader-nav__logout:hover { background: #fef2f2; border-color: #fecaca; color: #dc2626 !important; }
+        .leader-nav__logout:hover i { color: #dc2626 !important; }
         .leader-nav__toggle { display: none; margin-left: auto; background: #1e3a8a; color: #ffffff; border: 1px solid #1e3a8a; width: 36px; height: 36px; border-radius: 8px; align-items: center; justify-content: center; }
         @media (max-width: 900px) {
             .leader-nav__toggle { display: inline-flex; }

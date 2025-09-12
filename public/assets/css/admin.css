@@ -192,6 +192,20 @@ a.nav-link, .nav-link:visited { color: var(--admin-text-secondary); }
     color: #ef4444;
 }
 
+/* Estilo para botón de logout en navegación */
+.nav-link.logout-link {
+    color: #ef4444 !important;
+}
+
+.nav-link.logout-link:hover {
+    background: #fef2f2;
+    color: #dc2626 !important;
+}
+
+.nav-link.logout-link i {
+    color: #ef4444;
+}
+
 /* Contenido principal */
 .main-content {
     max-width: 1400px;

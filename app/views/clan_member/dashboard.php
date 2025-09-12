@@ -26,6 +26,7 @@ ob_start();
                 <!-- <li class="nav-item"><a href="?route=clan_member/kpi-dashboard" class="nav-link"><i class="fas fa-chart-line"></i><span>KPI</span></a></li> -->
                 <li class="nav-item"><a href="?route=clan_member/availability" class="nav-link"><i class="fas fa-user-clock"></i><span>Agenda</span></a></li>
                 <li class="nav-item"><a href="?route=clan_member/profile" class="nav-link"><i class="fas fa-user"></i><span>Perfil</span></a></li>
+                <li class="nav-item"><a href="?route=logout" class="nav-link logout-link" title="Cerrar Sesión"><i class="fas fa-sign-out-alt"></i><span>Cerrar Sesión</span></a></li>
             </ul>
             
             <!-- Botón hamburguesa para móvil -->
@@ -73,6 +74,12 @@ ob_start();
                             <a href="?route=clan_member/profile" class="mobile-nav-link" style="display: flex; align-items: center; gap: 16px; padding: 20px; text-decoration: none; color: #6b7280; font-weight: 500; transition: all 0.2s ease;">
                                 <i class="fas fa-user" style="width: 20px; text-align: center; font-size: 1.1rem;"></i>
                                 <span>Perfil</span>
+                            </a>
+                        </li>
+                        <li class="mobile-nav-item">
+                            <a href="?route=logout" class="mobile-nav-link" style="display: flex; align-items: center; gap: 16px; padding: 20px; text-decoration: none; color: #dc2626; font-weight: 500; transition: all 0.2s ease;">
+                                <i class="fas fa-sign-out-alt" style="width: 20px; text-align: center; font-size: 1.1rem;"></i>
+                                <span>Cerrar Sesión</span>
                             </a>
                         </li>
                     </ul>
