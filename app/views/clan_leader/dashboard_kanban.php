@@ -1464,6 +1464,131 @@ function switchDashboardTab(tabName) {
     console.log('✅ Tab dashboard cambiado a:', tabName);
 }
 
+// Función para manejar checkbox del EQUIPO (igual que Mis Tareas pero recarga el equipo)
+function handleTeamTaskCheck(uniqueTaskId, taskId, isChecked, itemType = 'task') {
+    const itemLabel = itemType === 'subtask' ? 'Subtarea' : 'Tarea';
+    console.log(`👥 ${itemLabel} del equipo`, taskId, isChecked ? 'marcada' : 'desmarcada');
+    
+    const checkbox = document.getElementById(uniqueTaskId);
+    const card = checkbox ? checkbox.closest('.equipo-task-card, .equipo-subtask-card') : null;
+    
+    if (!card || !checkbox) {
+        console.error('No se encontró el checkbox o el card del equipo');
+        return;
+    }
+    
+    // Solo procesar si se está marcando como completada
+    if (!isChecked) {
+        // Si se desmarca, volver a marcar (no permitir desmarcar)
+        checkbox.checked = true;
+        return;
+    }
+    
+    // Deshabilitar checkbox temporalmente
+    checkbox.disabled = true;
+    card.style.opacity = '0.6';
+    
+    // Hacer llamada AJAX para completar tarea
+    const formData = new FormData();
+    formData.append('task_id', taskId);
+    
+    console.log('👥 Enviando AJAX para completar tarea del equipo:', taskId);
+    
+    fetch('<?= APP_URL ?>simple-complete-task.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        console.log('👥 Respuesta recibida:', response);
+        if (!response.ok) {
+            return response.text().then(text => {
+                console.error('👥 Error del servidor:', text);
+                throw new Error('Error del servidor: ' + response.status);
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('👥 Data recibida:', data);
+        if (data.success) {
+            // Animar y remover la tarea del DOM
+            card.style.transition = 'all 0.3s ease';
+            card.style.transform = 'translateX(100%)';
+            card.style.opacity = '0';
+            
+            setTimeout(() => {
+                card.remove();
+                updateTeamTaskCounts();
+                console.log('✅ Tarea del equipo removida del DOM');
+                
+                // Recargar el tablero del equipo después de 1 segundo
+                setTimeout(() => {
+                    console.log('🔄 Recargando tablero del equipo...');
+                    loadTeamKanban();
+                }, 1000);
+            }, 300);
+        } else {
+            console.error('👥 Error al completar tarea del equipo:', data.message);
+            alert('Error al completar la tarea del equipo: ' + (data.message || 'Error desconocido'));
+            
+            // Rehabilitar checkbox si hay error
+            checkbox.disabled = false;
+            card.style.opacity = '1';
+        }
+    })
+    .catch(error => {
+        console.error('👥 Error de conexión al completar tarea del equipo:', error);
+        alert('Error de conexión al completar la tarea del equipo');
+        
+        // Rehabilitar checkbox si hay error
+        checkbox.disabled = false;
+        card.style.opacity = '1';
+    });
+}
+
+// Función para actualizar contadores del equipo
+function updateTeamTaskCounts() {
+    console.log('📊 Actualizando contadores del equipo...');
+    
+    const columns = ['vencidas', 'hoy', 'semana', 'futuras'];
+    
+    columns.forEach(column => {
+        const columnElement = document.querySelector(`.equipo-column-header.${column}`);
+        if (!columnElement) return;
+        
+        const tasksInColumn = document.querySelectorAll(`.equipo-task-card.${column}, .equipo-subtask-card.${column}`).length;
+        const countElement = columnElement.querySelector('.equipo-task-count');
+        
+        if (countElement) {
+            countElement.textContent = tasksInColumn;
+        }
+    });
+    
+    // Actualizar estadísticas del equipo
+    const totalTeamTasks = document.querySelectorAll('.equipo-task-card, .equipo-subtask-card').length;
+    console.log('📊 Total de tareas del equipo restantes:', totalTeamTasks);
+    
+    // Actualizar estadísticas en el header
+    const teamStats = document.getElementById('team-tasks-stats');
+    if (teamStats) {
+        const statValues = teamStats.querySelectorAll('.stat-value');
+        if (statValues.length >= 5) {
+            statValues[0].textContent = totalTeamTasks; // Total
+            
+            // Actualizar contadores individuales
+            const vencidas = document.querySelectorAll('.equipo-task-card.vencidas, .equipo-subtask-card.vencidas').length;
+            const hoy = document.querySelectorAll('.equipo-task-card.hoy, .equipo-subtask-card.hoy').length;
+            const semana = document.querySelectorAll('.equipo-task-card.semana, .equipo-subtask-card.semana').length;
+            const futuras = document.querySelectorAll('.equipo-task-card.futuras, .equipo-subtask-card.futuras').length;
+            
+            statValues[1].textContent = vencidas;
+            statValues[2].textContent = hoy;
+            statValues[3].textContent = semana;
+            statValues[4].textContent = futuras;
+        }
+    }
+}
+
 // Función para manejar el click en el card (togglea el checkbox)
 // Función para ir al detalle de la tarea
 function goToTaskDetail(event, taskId, itemType = 'task') {
@@ -1707,7 +1832,9 @@ function renderTeamKanban(kanbanTasks) {
                 <div class="${itemClass} ${config.class}" onclick="goToTaskDetail(event, ${task.task_id}, '${task.item_type}')">
                     <div class="equipo-task-header">
                         <div class="equipo-task-checkbox">
-                            <input type="checkbox" onclick="event.stopPropagation(); handleTaskCheck(this, ${task.task_id}, '${task.item_type}')">
+                            <input type="checkbox" id="equipo-${column}-${task.task_id}" 
+                                   onclick="event.stopPropagation()" 
+                                   onchange="handleTeamTaskCheck('equipo-${column}-${task.task_id}', ${task.task_id}, this.checked, '${task.item_type}')">
                         </div>
                         <div class="equipo-task-name">${taskName}</div>
                     </div>
