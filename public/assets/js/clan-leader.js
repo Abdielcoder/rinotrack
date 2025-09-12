@@ -1581,8 +1581,18 @@ function showCreateTaskModal(selectedDate) {
     
     // Establecer la fecha preseleccionada
     const dateInput = document.getElementById('createTaskDueDate');
-    if (dateInput && selectedDate) {
-        dateInput.value = selectedDate;
+    const recurrenceStartInput = document.getElementById('createTaskRecurrenceStartDate');
+    
+    if (selectedDate) {
+        // Establecer en fecha límite (para tareas normales)
+        if (dateInput) {
+            dateInput.value = selectedDate;
+        }
+        
+        // También establecer en fecha de inicio de recurrencia (para tareas recurrentes)
+        if (recurrenceStartInput) {
+            recurrenceStartInput.value = selectedDate;
+        }
     }
     
     // Mostrar el modal
@@ -1645,6 +1655,7 @@ function createTaskModalHTML() {
                                     Tarea Recurrente
                                 </label>
                             </div>
+                            <small class="field-help">Las tareas recurrentes se crearán automáticamente en el rango de fechas especificado</small>
                         </div>
                         
                         <div id="createTaskRecurrenceFields" class="recurrence-fields" style="display: none;">
@@ -1676,7 +1687,7 @@ function createTaskModalHTML() {
                                         <input type="date" id="createTaskRecurrenceEndDate" name="recurrence_end_date">
                                         <i class="fas fa-calendar-alt"></i>
                                     </div>
-                                    <small class="field-help">Si no se especifica, la recurrencia será indefinida</small>
+                                    <small class="field-help">Si no se especifica, la recurrencia será indefinida. Las tareas se crearán desde la fecha de inicio hasta esta fecha.</small>
                                 </div>
                             </div>
                         </div>
@@ -1810,6 +1821,7 @@ function toggleCreateTaskRecurrenceFields() {
     const checkbox = document.getElementById('createTaskIsRecurrent');
     const fields = document.getElementById('createTaskRecurrenceFields');
     const dueDateField = document.getElementById('createTaskDueDate');
+    const recurrenceStartField = document.getElementById('createTaskRecurrenceStartDate');
     const dueDateGroup = dueDateField ? dueDateField.closest('.form-group') : null;
     
     if (checkbox.checked) {
@@ -1821,11 +1833,16 @@ function toggleCreateTaskRecurrenceFields() {
             dueDateGroup.style.display = 'none';
         }
         
-        // Quitar required y limpiar valor
+        // Quitar required y limpiar valor del campo de fecha límite
         if (dueDateField) {
             dueDateField.required = false;
             dueDateField.removeAttribute('required');
-            dueDateField.value = '';
+            // NO limpiar el valor, mantenerlo para referencia
+        }
+        
+        // Si la fecha de inicio de recurrencia está vacía, copiar la fecha límite
+        if (recurrenceStartField && !recurrenceStartField.value && dueDateField && dueDateField.value) {
+            recurrenceStartField.value = dueDateField.value;
         }
         
         // Hacer requeridos los campos de recurrencia
