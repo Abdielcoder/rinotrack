@@ -4864,6 +4864,16 @@ console.log('🔧 Botón de clonar configurado correctamente');
     transform: scale(1.05);
 }
 
+.btn-action-table.clone {
+    background: rgba(156, 163, 175, 0.1);
+    color: #6b7280;
+}
+
+.btn-action-table.clone:hover {
+    background: rgba(156, 163, 175, 0.2);
+    transform: scale(1.05);
+}
+
 .btn-action-table.disabled {
     background: rgba(156, 163, 175, 0.1);
     color: #9ca3af;
@@ -5174,6 +5184,11 @@ function renderTasksTableFromKanban(tasks, tbodyId) {
                         <button class="btn-action-table delete" onclick="deleteTaskTable(${task.task_id}, '${task.task_name}')" title="Eliminar">
                             <i class="fas fa-trash"></i>
                         </button>
+                        ${!isSubtask ? `<button class="btn-action-table clone" onclick="openCloneTaskModal(${task.task_id})" title="Clonar tarea">
+                            <i class="fas fa-copy"></i>
+                        </button>` : `<span class="btn-action-table clone disabled" title="Las subtareas no se pueden clonar directamente">
+                            <i class="fas fa-copy"></i>
+                        </span>`}
                     </div>
                 </td>
             </tr>
