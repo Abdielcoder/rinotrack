@@ -4093,6 +4093,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // Updated: <?= date('Y-m-d H:i:s') ?>
 // DEBUG MODE: ENABLED
 console.log('🚀 Tasks.php cargado - Versión 6.0 - Debug activo');
+console.log('🔧 Botón de clonar configurado correctamente');
 </script>
 
 <!-- Estilos para el modal de clonación -->
@@ -4138,13 +4139,14 @@ console.log('🚀 Tasks.php cargado - Versión 6.0 - Debug activo');
 }
 
 .btn-clone {
-    background: #f3f4f6;
-    color: #6b7280;
+    background: #f3f4f6 !important;
+    color: #6b7280 !important;
+    border: 1px solid #d1d5db !important;
 }
 
 .btn-clone:hover {
-    background: #e5e7eb;
-    color: #374151;
+    background: #e5e7eb !important;
+    color: #374151 !important;
     transform: translateY(-1px);
 }
 
