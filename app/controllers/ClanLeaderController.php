@@ -3948,6 +3948,7 @@ class ClanLeaderController {
         $startDate = $_POST['start_date'] ?? null;
         $endDate = $_POST['end_date'] ?? null;
         $cloneTasks = ($_POST['clone_tasks'] ?? '0') === '1';
+        $adjustDates = ($_POST['adjust_dates'] ?? '0') === '1';
 
         if ($originalProjectId <= 0 || empty($projectName)) {
             Utils::jsonResponse(['success' => false, 'message' => 'Datos inválidos'], 400);
@@ -3986,15 +3987,37 @@ class ClanLeaderController {
             if ($cloneTasks) {
                 $originalTasks = $this->taskModel->getByProject($originalProjectId);
                 
+                // Calcular factor de proporción para ajustar fechas si es necesario
+                $dateAdjustmentFactor = 1.0;
+                if ($adjustDates && $startDate && $endDate && $originalProject['time_limit']) {
+                    $originalStart = $originalProject['start_date'] ?? $originalProject['created_at'];
+                    $originalEnd = $originalProject['time_limit'];
+                    $originalDuration = strtotime($originalEnd) - strtotime($originalStart);
+                    $newDuration = strtotime($endDate) - strtotime($startDate);
+                    
+                    if ($originalDuration > 0) {
+                        $dateAdjustmentFactor = $newDuration / $originalDuration;
+                    }
+                }
+                
                 foreach ($originalTasks as $task) {
                     if ($task['is_subtask'] == 0) { // Solo tareas principales
+                        // Calcular nueva fecha de vencimiento si se ajustan fechas
+                        $newDueDate = $task['due_date'];
+                        if ($adjustDates && $task['due_date'] && $startDate) {
+                            $originalStart = $originalProject['start_date'] ?? $originalProject['created_at'];
+                            $daysFromStart = (strtotime($task['due_date']) - strtotime($originalStart)) / (24 * 60 * 60);
+                            $newDaysFromStart = $daysFromStart * $dateAdjustmentFactor;
+                            $newDueDate = date('Y-m-d', strtotime($startDate) + ($newDaysFromStart * 24 * 60 * 60));
+                        }
+                        
                         $newTaskId = $this->taskModel->create(
                             $newProjectId,
                             $task['task_name'],
                             $task['description'] ?? '',
                             $this->currentUser['user_id'],
                             $task['priority'] ?? 'medium',
-                            $task['due_date'] ?? null,
+                            $newDueDate,
                             $this->currentUser['user_id']
                         );
 
@@ -4002,13 +4025,22 @@ class ClanLeaderController {
                         if ($newTaskId) {
                             $subtasks = $this->taskModel->getSubtasks($task['task_id']);
                             foreach ($subtasks as $subtask) {
+                                // Calcular nueva fecha de vencimiento para subtarea
+                                $newSubtaskDueDate = $subtask['due_date'];
+                                if ($adjustDates && $subtask['due_date'] && $startDate) {
+                                    $originalStart = $originalProject['start_date'] ?? $originalProject['created_at'];
+                                    $daysFromStart = (strtotime($subtask['due_date']) - strtotime($originalStart)) / (24 * 60 * 60);
+                                    $newDaysFromStart = $daysFromStart * $dateAdjustmentFactor;
+                                    $newSubtaskDueDate = date('Y-m-d', strtotime($startDate) + ($newDaysFromStart * 24 * 60 * 60));
+                                }
+                                
                                 $this->taskModel->createSubtaskAdvanced(
                                     $newTaskId,
                                     $subtask['title'],
                                     $this->currentUser['user_id'],
                                     $subtask['description'] ?? '',
                                     0,
-                                    $subtask['due_date'] ?? null,
+                                    $newSubtaskDueDate,
                                     $subtask['priority'] ?? 'medium',
                                     $this->currentUser['user_id']
                                 );

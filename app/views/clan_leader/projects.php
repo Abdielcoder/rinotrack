@@ -591,31 +591,144 @@ function showToast(message, type = 'info') {
 
 // Función para clonar proyecto
 function openCloneProjectModal(projectId) {
-    if (confirm('¿Deseas clonar este proyecto con todas sus tareas?')) {
-        const formData = new FormData();
-        formData.append('project_id', projectId);
-        
-        fetch('?route=clan_leader/clone-project', {
-            method: 'POST',
-            credentials: 'same-origin',
-            body: formData
-        })
+    // Cargar datos del proyecto para mostrar en el modal
+    fetch('?route=clan_leader/get-project-data&project_id=' + projectId)
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                showToast(data.message || 'Proyecto clonado exitosamente', 'success');
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1500);
+                showCloneProjectModal(data.project);
             } else {
-                showToast(data.message || 'Error al clonar el proyecto', 'error');
+                showToast('Error al cargar los datos del proyecto: ' + data.message, 'error');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            showToast('Error de conexión', 'error');
+            showToast('Error de conexión al cargar los datos del proyecto', 'error');
         });
+}
+
+// Función para mostrar el modal de clonación de proyectos
+function showCloneProjectModal(project) {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal-content clone-project-modal">
+            <div class="modal-header">
+                <h3><i class="fas fa-copy"></i> Clonar Proyecto</h3>
+                <button class="modal-close" onclick="closeCloneProjectModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="cloneProjectForm">
+                    <input type="hidden" id="originalProjectId" value="${project.project_id}">
+                    
+                    <div class="form-group">
+                        <label for="cloneProjectName">Nombre del proyecto</label>
+                        <input type="text" id="cloneProjectName" name="project_name" value="${project.project_name} (Copia)" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="cloneProjectDescription">Descripción</label>
+                        <textarea id="cloneProjectDescription" name="description" rows="3">${project.description || ''}</textarea>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="cloneProjectStartDate">Fecha de inicio</label>
+                            <input type="date" id="cloneProjectStartDate" name="start_date" value="${new Date().toISOString().split('T')[0]}">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="cloneProjectEndDate">Fecha de fin</label>
+                            <input type="date" id="cloneProjectEndDate" name="end_date" value="${project.time_limit || ''}">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="cloneTasks" name="clone_tasks" checked>
+                            Clonar también las tareas y subtareas del proyecto
+                        </label>
+                    </div>
+                    
+                    <div class="form-group" id="adjustDatesGroup" style="display: none;">
+                        <label>
+                            <input type="checkbox" id="adjustDates" name="adjust_dates" checked>
+                            Ajustar fechas de tareas proporcionalmente según la nueva duración del proyecto
+                        </label>
+                        <small class="form-help">Las fechas de las tareas se ajustarán automáticamente para mantener la proporción original del proyecto.</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="closeCloneProjectModal()">Cancelar</button>
+                <button type="button" class="btn-primary" onclick="cloneProject()">
+                    <i class="fas fa-copy"></i> Clonar Proyecto
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    modal.style.display = 'flex';
+    
+    // Mostrar/ocultar opción de ajuste de fechas según si se clonan tareas
+    const cloneTasksCheckbox = document.getElementById('cloneTasks');
+    const adjustDatesGroup = document.getElementById('adjustDatesGroup');
+    
+    cloneTasksCheckbox.addEventListener('change', function() {
+        adjustDatesGroup.style.display = this.checked ? 'block' : 'none';
+    });
+}
+
+// Función para cerrar el modal de clonación de proyectos
+function closeCloneProjectModal() {
+    const modal = document.querySelector('.modal-overlay');
+    if (modal) {
+        modal.remove();
     }
+}
+
+// Función para ejecutar la clonación de proyectos
+function cloneProject() {
+    const form = document.getElementById('cloneProjectForm');
+    const formData = new FormData(form);
+    
+    // Agregar campos adicionales
+    formData.append('originalProjectId', document.getElementById('originalProjectId').value);
+    formData.append('clone_tasks', document.getElementById('cloneTasks').checked ? '1' : '0');
+    formData.append('adjust_dates', document.getElementById('adjustDates').checked ? '1' : '0');
+    
+    // Mostrar loading
+    const submitBtn = document.querySelector('.btn-primary');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Clonando...';
+    submitBtn.disabled = true;
+    
+    fetch('?route=clan_leader/clone-project', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            closeCloneProjectModal();
+            showToast('Proyecto clonado exitosamente', 'success');
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        } else {
+            showToast('Error al clonar el proyecto: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Error de conexión al clonar el proyecto', 'error');
+    })
+    .finally(() => {
+        // Restaurar botón
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    });
 }
 
 // Toggle del menú del proyecto
@@ -1946,6 +2059,114 @@ function toggleProjectDelegation(projectId, isAllowed) {
 .toast-success { background: #27ae60; }
 .toast-error { background: #e74c3c; }
 .toast-info { background: #3498db; }
+
+/* Estilos para el modal de clonación de proyectos */
+.clone-project-modal {
+    max-width: 700px;
+    width: 90%;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #374151;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: border-color 0.2s ease;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-group input[type="checkbox"] {
+    width: auto;
+    margin-right: 0.5rem;
+}
+
+.form-help {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 12px;
+    color: #6b7280;
+    font-style: italic;
+}
+
+.modal-footer {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+.btn-primary {
+    background: #3b82f6;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: #2563eb;
+}
+
+.btn-primary:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+}
+
+.btn-secondary {
+    background: #f3f4f6;
+    color: #374151;
+    border: 1px solid #d1d5db;
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.btn-secondary:hover {
+    background: #e5e7eb;
+}
+
+@media (max-width: 768px) {
+    .clone-project-modal {
+        width: 95%;
+        margin: 1rem;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+}
 </style>
 
 <?php
