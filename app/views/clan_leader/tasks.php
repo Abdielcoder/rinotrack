@@ -4332,7 +4332,7 @@ console.log('🔧 Botón de clonar configurado correctamente');
 
 /* Estilos para el modal de eliminación múltiple */
 .tasks-to-delete-container {
-    max-height: 400px;
+    max-height: 500px;
     overflow-y: auto;
     border: 1px solid #e5e7eb;
     border-radius: 8px;
@@ -4387,18 +4387,12 @@ console.log('🔧 Botón de clonar configurado correctamente');
 }
 
 .task-name {
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 600;
     color: #1f2937;
-    margin-bottom: 4px;
     line-height: 1.4;
     word-wrap: break-word;
-}
-
-.task-id {
-    font-size: 12px;
-    color: #6b7280;
-    font-weight: 500;
+    padding: 4px 0;
 }
 
 .alert {
@@ -5740,30 +5734,49 @@ function showBulkDeleteModal() {
         
         // Obtener el nombre de la tarea de diferentes formas posibles
         let taskName = '';
-        const taskNameElement = taskRow.querySelector('.td-task .task-name') || 
-                               taskRow.querySelector('.td-task .task-title') ||
-                               taskRow.querySelector('.td-task h4') ||
-                               taskRow.querySelector('.td-task');
         
-        if (taskNameElement) {
-            taskName = taskNameElement.textContent.trim();
+        // Buscar en diferentes selectores posibles
+        const selectors = [
+            '.td-task .task-name',
+            '.td-task .task-title', 
+            '.td-task h4',
+            '.td-task h3',
+            '.td-task .task-info .task-name',
+            '.td-task .task-info .task-title'
+        ];
+        
+        for (const selector of selectors) {
+            const element = taskRow.querySelector(selector);
+            if (element && element.textContent.trim()) {
+                taskName = element.textContent.trim();
+                break;
+            }
         }
         
-        // Si no se encuentra el nombre, intentar obtenerlo del texto de la celda
+        // Si no se encuentra con selectores específicos, obtener del texto de la celda
         if (!taskName) {
             const taskCell = taskRow.querySelector('.td-task');
             if (taskCell) {
-                taskName = taskCell.textContent.trim().split('\n')[0]; // Tomar solo la primera línea
+                // Obtener todo el texto y limpiarlo
+                let cellText = taskCell.textContent.trim();
+                // Remover líneas vacías y tomar la primera línea con contenido
+                const lines = cellText.split('\n').filter(line => line.trim());
+                if (lines.length > 0) {
+                    taskName = lines[0].trim();
+                }
             }
         }
         
         // Si aún no se encuentra, usar un nombre genérico
-        if (!taskName) {
-            taskName = `Tarea ID: ${taskId}`;
+        if (!taskName || taskName === '') {
+            taskName = `Tarea ${taskId}`;
         }
         
-        // Limpiar el nombre de la tarea (remover caracteres extra)
+        // Limpiar el nombre de la tarea (remover caracteres extra y espacios)
         taskName = taskName.replace(/\s+/g, ' ').trim();
+        
+        // Remover caracteres especiales que puedan interferir
+        taskName = taskName.replace(/[^\w\s\-\.]/g, '').trim();
         
         tasksHtml += `
             <div class="task-item">
@@ -5772,7 +5785,6 @@ function showBulkDeleteModal() {
                 </div>
                 <div class="task-info">
                     <div class="task-name">${taskName}</div>
-                    <div class="task-id">ID: ${taskId}</div>
                 </div>
             </div>
         `;
