@@ -7506,6 +7506,14 @@ class ClanLeaderController {
      * Eliminar múltiples tareas
      */
     public function bulkDeleteTasks() {
+        // Limpiar cualquier salida previa
+        if (ob_get_level()) {
+            ob_clean();
+        }
+        
+        // Establecer headers para JSON
+        header('Content-Type: application/json; charset=utf-8');
+        
         try {
             // Verificar autenticación
             $this->requireAuth();
@@ -7513,13 +7521,19 @@ class ClanLeaderController {
 
             // Obtener los IDs de las tareas
             $taskIdsJson = $_POST['task_ids'] ?? '';
+            error_log("BulkDelete - task_ids recibido: " . $taskIdsJson);
+            
             if (empty($taskIdsJson)) {
+                error_log("BulkDelete - Error: No se proporcionaron task_ids");
                 Utils::jsonResponse(['success' => false, 'message' => 'No se proporcionaron tareas para eliminar'], 400);
                 return;
             }
 
             $taskIds = json_decode($taskIdsJson, true);
+            error_log("BulkDelete - task_ids decodificados: " . print_r($taskIds, true));
+            
             if (!is_array($taskIds) || empty($taskIds)) {
+                error_log("BulkDelete - Error: Lista de tareas inválida");
                 Utils::jsonResponse(['success' => false, 'message' => 'Lista de tareas inválida'], 400);
                 return;
             }
@@ -7551,20 +7565,16 @@ class ClanLeaderController {
                 // Eliminar la tarea
                 if ($this->taskModel->delete($taskId)) {
                     $deletedCount++;
-                    
-                    // Registrar en el historial
-                    $this->taskModel->addToHistory(
-                        $taskId,
-                        $this->currentUser['user_id'],
-                        'Tarea eliminada',
-                        'Tarea "' . $task['task_name'] . '" eliminada por eliminación múltiple'
-                    );
+                    error_log("BulkDelete - Tarea $taskId eliminada exitosamente");
                 } else {
                     $errors[] = "Error al eliminar la tarea: " . $task['task_name'];
+                    error_log("BulkDelete - Error al eliminar tarea $taskId");
                 }
             }
 
             // Preparar respuesta
+            error_log("BulkDelete - Resultado: deletedCount=$deletedCount, errors=" . print_r($errors, true));
+            
             if ($deletedCount > 0) {
                 $message = "$deletedCount tarea" . ($deletedCount > 1 ? 's' : '') . " eliminada" . ($deletedCount > 1 ? 's' : '') . " exitosamente";
                 
@@ -7572,6 +7582,7 @@ class ClanLeaderController {
                     $message .= ". Errores: " . implode(', ', $errors);
                 }
 
+                error_log("BulkDelete - Enviando respuesta de éxito: " . $message);
                 Utils::jsonResponse([
                     'success' => true,
                     'message' => $message,
@@ -7579,6 +7590,7 @@ class ClanLeaderController {
                     'errors' => $errors
                 ]);
             } else {
+                error_log("BulkDelete - Enviando respuesta de error");
                 Utils::jsonResponse([
                     'success' => false,
                     'message' => 'No se pudo eliminar ninguna tarea. Errores: ' . implode(', ', $errors)
