@@ -169,7 +169,7 @@ ob_start();
                                     </td>
                                     <td class="td-priority">
                                         <span class="priority-badge priority-<?= $priority ?>">
-                                            <?= $priority === 'critical' ? 'Urgente' : $priority === 'high' ? 'Alta' : $priority === 'low' ? 'Baja' : 'Media' ?>
+                                            <?= $priority === 'critical' ? 'Urgente' : ($priority === 'high' ? 'Alta' : ($priority === 'low' ? 'Baja' : 'Media')) ?>
                                         </span>
                                     </td>
                                     <td class="td-task">
@@ -198,7 +198,7 @@ ob_start();
                                     </td>
                                     <td class="td-status">
                                         <span class="status-badge status-<?= $status ?>">
-                                            <?= $status === 'completed' ? 'Completado' : $status === 'in_progress' ? 'En Progreso' : 'Pendiente' ?>
+                                            <?= $status === 'completed' ? 'Completado' : ($status === 'in_progress' ? 'En Progreso' : 'Pendiente') ?>
                                         </span>
                                     </td>
                                     <td class="td-progress">
