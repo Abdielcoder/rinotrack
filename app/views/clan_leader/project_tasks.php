@@ -754,37 +754,40 @@ document.addEventListener('DOMContentLoaded', function() {
     width: 120px;
 }
 
-/* Botones de acción - ESTILOS IDÉNTICOS A tasks.php */
+/* Botones de acción - FORMATO EXACTO DE LA IMAGEN */
 .action-buttons {
     display: flex;
-    gap: 0.5rem;
+    gap: 4px;
     justify-content: center;
+    align-items: center;
 }
 
 .btn-action {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
-    border-radius: 6px;
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
     border: none;
     cursor: pointer;
     transition: all 0.2s ease;
     text-decoration: none;
-    font-size: 0.8rem;
+    font-size: 12px;
 }
 
+/* Botón Ver - Azul claro con icono azul oscuro */
 .btn-action.btn-view {
-    background: #3b82f6;
-    color: white;
+    background: #e0f2fe;
+    color: #0277bd;
 }
 
 .btn-action.btn-view:hover {
-    background: #2563eb;
-    transform: translateY(-1px);
+    background: #b3e5fc;
+    color: #01579b;
 }
 
+/* Botón Editar - Gris claro con icono gris oscuro */
 .btn-action.btn-edit {
     background: #f3f4f6;
     color: #6b7280;
@@ -793,30 +796,28 @@ document.addEventListener('DOMContentLoaded', function() {
 .btn-action.btn-edit:hover {
     background: #e5e7eb;
     color: #374151;
-    transform: translateY(-1px);
 }
 
+/* Botón Eliminar - Rojo claro con icono rojo */
 .btn-action.btn-delete {
-    background: #fee2e2;
-    color: #dc2626;
+    background: #ffebee;
+    color: #c62828;
 }
 
 .btn-action.btn-delete:hover {
-    background: #fecaca;
-    color: #b91c1c;
-    transform: translateY(-1px);
+    background: #ffcdd2;
+    color: #b71c1c;
 }
 
+/* Botón Clonar - Verde claro con icono verde oscuro */
 .btn-clone {
-    background: #f3f4f6 !important;
-    color: #6b7280 !important;
-    border: 1px solid #d1d5db !important;
+    background: #e8f5e9;
+    color: #2e7d32;
 }
 
 .btn-clone:hover {
-    background: #e5e7eb !important;
-    color: #374151 !important;
-    transform: translateY(-1px);
+    background: #c8e6c9;
+    color: #1b5e20;
 }
 
 /* Checkboxes redondos para selección - ESTILO IDÉNTICO A tasks.php */
