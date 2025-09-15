@@ -5754,7 +5754,7 @@ function showBulkDeleteModal() {
         const taskRow = checkbox.closest('tr');
         console.log(`🔍 Debug: Procesando checkbox ${index + 1}, taskId: ${taskId}`);
         
-        // Obtener el nombre de la tarea de forma simple y directa
+        // Obtener el nombre de la tarea de forma específica
         let taskName = '';
         
         // Buscar directamente en la celda de la tarea
@@ -5762,28 +5762,32 @@ function showBulkDeleteModal() {
         console.log(`🔍 Debug: taskCell encontrado:`, taskCell);
         
         if (taskCell) {
-            // Obtener todo el texto de la celda
-            let cellText = taskCell.textContent || taskCell.innerText || '';
-            cellText = cellText.trim();
-            console.log(`🔍 Debug: cellText:`, cellText);
+            // Buscar específicamente el elemento con clase 'task-name'
+            const taskNameElement = taskCell.querySelector('.task-name');
+            console.log(`🔍 Debug: taskNameElement encontrado:`, taskNameElement);
             
-            // Dividir por líneas y buscar la primera línea con contenido significativo
-            const lines = cellText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
-            console.log(`🔍 Debug: lines:`, lines);
-            
-            for (let line of lines) {
-                // Saltar líneas que sean solo números o contengan "ID:"
-                if (!/^\d+$/.test(line) && !line.includes('ID:') && line.length > 2) {
-                    taskName = line;
-                    console.log(`🔍 Debug: taskName encontrado:`, taskName);
-                    break;
+            if (taskNameElement) {
+                taskName = taskNameElement.textContent || taskNameElement.innerText || '';
+                taskName = taskName.trim();
+                console.log(`🔍 Debug: taskName extraído:`, taskName);
+            } else {
+                // Fallback: buscar en todo el texto de la celda
+                let cellText = taskCell.textContent || taskCell.innerText || '';
+                cellText = cellText.trim();
+                console.log(`🔍 Debug: cellText fallback:`, cellText);
+                
+                // Dividir por líneas y buscar la primera línea con contenido significativo
+                const lines = cellText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+                console.log(`🔍 Debug: lines:`, lines);
+                
+                for (let line of lines) {
+                    // Saltar líneas que sean solo números o contengan "ID:"
+                    if (!/^\d+$/.test(line) && !line.includes('ID:') && line.length > 2) {
+                        taskName = line;
+                        console.log(`🔍 Debug: taskName encontrado en fallback:`, taskName);
+                        break;
+                    }
                 }
-            }
-            
-            // Si no encontramos nada, tomar la primera línea que no sea vacía
-            if (!taskName && lines.length > 0) {
-                taskName = lines[0];
-                console.log(`🔍 Debug: taskName fallback:`, taskName);
             }
         }
         
