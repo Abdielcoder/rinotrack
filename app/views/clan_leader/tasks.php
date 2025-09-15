@@ -213,7 +213,7 @@ ob_start();
                         <thead>
                             <tr>
                                 <th class="th-checkbox" style="width: 100px;">
-                                    Seleccionar
+                                    Completar
                                 </th>
                                 <th class="th-priority">Prioridad</th>
                                 <th class="th-task">Tarea</th>
@@ -303,7 +303,7 @@ ob_start();
                         <thead>
                             <tr>
                                 <th class="th-checkbox" style="width: 100px;">
-                                    Seleccionar
+                                    Completar
                                 </th>
                                 <th class="th-priority">Prioridad</th>
                                 <th class="th-task">Tarea</th>
@@ -1519,7 +1519,7 @@ ob_start();
     text-align: center;
 }
 
-/* Estilos para checkbox - CAMBIADO A TEXTO "SELECCIONAR" */
+/* Estilos para checkbox - CAMBIADO A TEXTO "COMPLETAR" */
 .th-checkbox, .td-checkbox {
     width: 100px;
     text-align: center;
@@ -1533,7 +1533,7 @@ ob_start();
 }
 
 .td-checkbox::after {
-    content: "Seleccionar";
+    content: "Completar";
     display: block;
     padding: 4px 8px;
     border-radius: 4px;
