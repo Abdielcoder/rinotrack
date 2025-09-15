@@ -825,6 +825,11 @@ document.addEventListener('DOMContentLoaded', function() {
     border-radius: 50% !important;
     background: transparent !important;
     border: 1px solid #ccc !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    width: 16px !important;
+    height: 16px !important;
 }
 </style>
 
