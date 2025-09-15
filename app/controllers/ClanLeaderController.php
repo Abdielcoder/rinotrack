@@ -7093,10 +7093,10 @@ class ClanLeaderController {
                 $userNames[] = $user['full_name'] ?? $user['username'];
             }
 
-            // Asignar usuarios usando el modelo de asignaciones
-            $result = $this->subtaskAssignmentModel->assignUsers($subtaskId, $userIds, $this->currentUser['user_id']);
+            // Asignar usuarios usando el modelo de asignaciones (AGREGAR, no reemplazar)
+            $newUsersAssigned = $this->subtaskAssignmentModel->assignUsers($subtaskId, $userIds, $this->currentUser['user_id']);
 
-            if ($result) {
+            if ($newUsersAssigned !== false) {
                 // Registrar en el historial de la tarea padre
                 $historyStmt = $this->db->prepare("
                     INSERT INTO Task_History (task_id, user_id, action_type, field_name, old_value, new_value, notes) 
@@ -7106,19 +7106,111 @@ class ClanLeaderController {
                     $subtask['task_id'],
                     $this->currentUser['user_id'],
                     implode(', ', $userNames),
-                    'Subtarea "' . $subtask['title'] . '" asignada a ' . count($userIds) . ' usuario(s): ' . implode(', ', $userNames)
+                    'Subtarea "' . $subtask['title'] . '" - ' . $newUsersAssigned . ' usuario(s) nuevo(s) asignado(s): ' . implode(', ', $userNames)
                 ]);
 
-                Utils::jsonResponse([
-                    'success' => true,
-                    'message' => count($userIds) . ' usuario(s) asignado(s) exitosamente'
-                ]);
+                if ($newUsersAssigned > 0) {
+                    Utils::jsonResponse([
+                        'success' => true,
+                        'message' => $newUsersAssigned . ' usuario(s) nuevo(s) asignado(s) exitosamente. Total de usuarios asignados: ' . (count($userIds) + $newUsersAssigned - $newUsersAssigned)
+                    ]);
+                } else {
+                    Utils::jsonResponse([
+                        'success' => true,
+                        'message' => 'Los usuarios seleccionados ya estaban asignados a esta subtarea'
+                    ]);
+                }
             } else {
                 Utils::jsonResponse(['success' => false, 'message' => 'Error al asignar usuarios'], 500);
             }
 
         } catch (Exception $e) {
             error_log("Error en assignSubtaskUsers: " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor'], 500);
+        }
+    }
+
+    /**
+     * Reemplazar completamente las asignaciones de usuarios a una subtarea
+     */
+    public function replaceSubtaskUsers() {
+        $this->requireAuth();
+        if (!$this->hasClanLeaderAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
+        }
+
+        try {
+            $subtaskId = (int)($_POST['subtask_id'] ?? 0);
+            $userIdsJson = $_POST['user_ids'] ?? '';
+            
+            if ($subtaskId <= 0) {
+                Utils::jsonResponse(['success' => false, 'message' => 'ID de subtarea inválido'], 400);
+            }
+            
+            $userIds = json_decode($userIdsJson, true);
+            if (!is_array($userIds)) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Lista de usuarios inválida'], 400);
+            }
+
+            // Verificar que la subtarea pertenece al clan del líder
+            $stmt = $this->db->prepare("
+                SELECT s.*, t.project_id, p.clan_id
+                FROM Subtasks s
+                JOIN Tasks t ON s.task_id = t.task_id
+                JOIN Projects p ON t.project_id = p.project_id
+                WHERE s.subtask_id = ?
+            ");
+            $stmt->execute([$subtaskId]);
+            $subtask = $stmt->fetch();
+
+            if (!$subtask) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Subtarea no encontrada'], 404);
+            }
+
+            if ((int)$subtask['clan_id'] !== (int)$this->userClan['clan_id']) {
+                Utils::jsonResponse(['success' => false, 'message' => 'No tienes permisos para modificar esta subtarea'], 403);
+            }
+
+            // Verificar que todos los usuarios existen
+            $userNames = [];
+            foreach ($userIds as $userId) {
+                $user = $this->userModel->findById($userId);
+                if (!$user) {
+                    Utils::jsonResponse(['success' => false, 'message' => "Usuario con ID {$userId} no encontrado"], 404);
+                }
+                $userNames[] = $user['full_name'] ?? $user['username'];
+            }
+
+            // Reemplazar usuarios usando el modelo de asignaciones
+            $result = $this->subtaskAssignmentModel->replaceUsers($subtaskId, $userIds, $this->currentUser['user_id']);
+
+            if ($result) {
+                // Registrar en el historial de la tarea padre
+                $historyStmt = $this->db->prepare("
+                    INSERT INTO Task_History (task_id, user_id, action_type, field_name, old_value, new_value, notes) 
+                    VALUES (?, ?, 'replaced', 'subtask_assignment', 'asignaciones anteriores', ?, ?)
+                ");
+                $historyStmt->execute([
+                    $subtask['task_id'],
+                    $this->currentUser['user_id'],
+                    implode(', ', $userNames),
+                    'Subtarea "' . $subtask['title'] . '" - asignaciones reemplazadas por: ' . implode(', ', $userNames)
+                ]);
+
+                Utils::jsonResponse([
+                    'success' => true,
+                    'message' => 'Asignaciones reemplazadas exitosamente. ' . count($userIds) . ' usuario(s) asignado(s): ' . implode(', ', $userNames)
+                ]);
+            } else {
+                Utils::jsonResponse(['success' => false, 'message' => 'Error al reemplazar asignaciones'], 500);
+            }
+
+        } catch (Exception $e) {
+            error_log("Error en replaceSubtaskUsers: " . $e->getMessage());
             Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor'], 500);
         }
     }

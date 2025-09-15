@@ -118,9 +118,61 @@ class SubtaskAssignment {
     }
     
     /**
-     * Asignar múltiples usuarios a una subtarea
+     * Asignar múltiples usuarios a una subtarea (AGREGAR, no reemplazar)
      */
     public function assignUsers($subtaskId, $userIds, $assignedByUserId, $defaultPercentage = 100.00) {
+        try {
+            $this->db->beginTransaction();
+            
+            // Asignar nuevos usuarios (usar INSERT IGNORE para evitar duplicados)
+            $stmt = $this->db->prepare("
+                INSERT IGNORE INTO Subtask_Assignments (subtask_id, user_id, assigned_percentage, assigned_by_user_id) 
+                VALUES (?, ?, ?, ?)
+            ");
+            
+            $newUsersAssigned = 0;
+            foreach ($userIds as $userId) {
+                $result = $stmt->execute([$subtaskId, $userId, $defaultPercentage, $assignedByUserId]);
+                if ($result && $stmt->rowCount() > 0) {
+                    $newUsersAssigned++;
+                }
+            }
+            
+            // Actualizar assigned_to_user_id en Subtasks para compatibilidad (primer usuario asignado)
+            $firstUserStmt = $this->db->prepare("
+                SELECT user_id FROM Subtask_Assignments 
+                WHERE subtask_id = ? 
+                ORDER BY assigned_at ASC 
+                LIMIT 1
+            ");
+            $firstUserStmt->execute([$subtaskId]);
+            $firstUser = $firstUserStmt->fetch();
+            
+            if ($firstUser) {
+                $updateStmt = $this->db->prepare("
+                    UPDATE Subtasks 
+                    SET assigned_to_user_id = ?, updated_at = NOW() 
+                    WHERE subtask_id = ?
+                ");
+                $updateStmt->execute([$firstUser['user_id'], $subtaskId]);
+            }
+            
+            $this->db->commit();
+            return $newUsersAssigned; // Retornar número de usuarios nuevos asignados
+            
+        } catch (Exception $e) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollback();
+            }
+            error_log("Error al asignar usuarios a subtarea: " . $e->getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * Reemplazar completamente las asignaciones de usuarios a una subtarea
+     */
+    public function replaceUsers($subtaskId, $userIds, $assignedByUserId, $defaultPercentage = 100.00) {
         try {
             $this->db->beginTransaction();
             
@@ -162,7 +214,7 @@ class SubtaskAssignment {
             if ($this->db->inTransaction()) {
                 $this->db->rollback();
             }
-            error_log("Error al asignar usuarios a subtarea: " . $e->getMessage());
+            error_log("Error al reemplazar usuarios de subtarea: " . $e->getMessage());
             return false;
         }
     }

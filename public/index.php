@@ -684,6 +684,11 @@ try {
         $controller->assignSubtaskUsers();
         break;
         
+    case 'clan_leader/replace-subtask-users':
+        $controller = new ClanLeaderController();
+        $controller->replaceSubtaskUsers();
+        break;
+        
     case 'clan_leader/unassign-subtask-users':
         $controller = new ClanLeaderController();
         $controller->unassignSubtaskUsers();
