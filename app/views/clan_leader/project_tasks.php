@@ -820,47 +820,45 @@ document.addEventListener('DOMContentLoaded', function() {
     color: #1b5e20;
 }
 
-/* Sobrescribir TODOS los estilos de checkboxes */
-.tasks-table .td-select,
-.tasks-table .th-checkbox,
-.td-select,
-.th-checkbox {
-    background: white !important;
-    background-color: white !important;
-    border: none !important;
-}
-
-/* Checkboxes normales sin estilos personalizados */
-.tasks-table .task-checkbox,
-.task-checkbox,
-input[type="checkbox"].task-checkbox,
-.tasks-table input[type="checkbox"].task-checkbox,
-.tasks-table .td-select input[type="checkbox"],
-.tasks-table tbody td input[type="checkbox"] {
-    /* Usar el checkbox nativo del navegador */
-    all: revert !important;
-    
-    /* Solo aplicar forma redonda */
-    border-radius: 50% !important;
-    accent-color: #667eea !important;
+/* Checkboxes redondos para selección - ESTILO IDÉNTICO A tasks.php */
+.td-select .task-checkbox {
     width: 18px !important;
     height: 18px !important;
+    border-radius: 50% !important;
+    border: 2px solid #d1d5db !important;
+    background: #ffffff !important;
     cursor: pointer !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    position: relative !important;
+    transition: all 0.2s ease !important;
 }
 
-/* Asegurar que no haya fondos amarillos o bordes rojos en ningún estado */
-.tasks-table .task-checkbox:not(:checked),
-.task-checkbox:not(:checked),
-input[type="checkbox"].task-checkbox:not(:checked) {
-    background: transparent !important;
-    background-color: transparent !important;
+.td-select .task-checkbox:hover {
+    border-color: #6b7280 !important;
+    transform: scale(1.05) !important;
 }
 
-/* Eliminar cualquier estilo adicional que pueda venir de otros CSS */
-.tasks-table tbody tr td.td-select,
-.tasks-table tbody tr .td-select {
-    background: inherit !important;
-    background-color: inherit !important;
+.td-select .task-checkbox:checked {
+    background: #ffffff !important;
+    border-color: #6b7280 !important;
+}
+
+.td-select .task-checkbox:checked::after {
+    content: '✓' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    color: #374151 !important;
+    font-size: 12px !important;
+    font-weight: bold !important;
+}
+
+/* Ocultar checkboxes de completar tareas */
+.td-checkbox input[type="checkbox"] {
+    display: none !important;
 }
 </style>
 
