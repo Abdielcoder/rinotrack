@@ -5731,76 +5731,48 @@ function showBulkDeleteModal() {
     
     // Crear lista de tareas a eliminar
     let tasksHtml = '<div class="tasks-to-delete-container">';
-    checkboxes.forEach(checkbox => {
+    console.log('🔍 Debug: checkboxes encontrados:', checkboxes.length);
+    
+    checkboxes.forEach((checkbox, index) => {
         const taskId = checkbox.getAttribute('data-task-id');
         const taskRow = checkbox.closest('tr');
+        console.log(`🔍 Debug: Procesando checkbox ${index + 1}, taskId: ${taskId}`);
         
-        // Obtener el nombre de la tarea de diferentes formas posibles
+        // Obtener el nombre de la tarea de forma simple y directa
         let taskName = '';
         
-        // Buscar en diferentes selectores posibles para obtener el nombre real
-        const selectors = [
-            '.td-task .task-name',
-            '.td-task .task-title', 
-            '.td-task h4',
-            '.td-task h3',
-            '.td-task .task-info .task-name',
-            '.td-task .task-info .task-title',
-            '.td-task strong',
-            '.td-task b'
-        ];
+        // Buscar directamente en la celda de la tarea
+        const taskCell = taskRow.querySelector('.td-task');
+        console.log(`🔍 Debug: taskCell encontrado:`, taskCell);
         
-        for (const selector of selectors) {
-            const element = taskRow.querySelector(selector);
-            if (element && element.textContent.trim()) {
-                let text = element.textContent.trim();
-                // Verificar que no sea solo un número (ID)
-                if (!/^\d+$/.test(text) && text.length > 2) {
-                    taskName = text;
+        if (taskCell) {
+            // Obtener todo el texto de la celda
+            let cellText = taskCell.textContent || taskCell.innerText || '';
+            cellText = cellText.trim();
+            console.log(`🔍 Debug: cellText:`, cellText);
+            
+            // Dividir por líneas y buscar la primera línea con contenido significativo
+            const lines = cellText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+            console.log(`🔍 Debug: lines:`, lines);
+            
+            for (let line of lines) {
+                // Saltar líneas que sean solo números o contengan "ID:"
+                if (!/^\d+$/.test(line) && !line.includes('ID:') && line.length > 2) {
+                    taskName = line;
+                    console.log(`🔍 Debug: taskName encontrado:`, taskName);
                     break;
                 }
             }
-        }
-        
-        // Si no se encuentra con selectores específicos, obtener del texto de la celda
-        if (!taskName) {
-            const taskCell = taskRow.querySelector('.td-task');
-            if (taskCell) {
-                // Obtener todo el texto y limpiarlo
-                let cellText = taskCell.textContent.trim();
-                // Remover líneas vacías y tomar la primera línea con contenido
-                const lines = cellText.split('\n').filter(line => line.trim());
-                for (let line of lines) {
-                    line = line.trim();
-                    // Verificar que no sea solo un número y tenga contenido significativo
-                    if (!/^\d+$/.test(line) && line.length > 2 && !line.includes('ID:')) {
-                        taskName = line;
-                        break;
-                    }
-                }
+            
+            // Si no encontramos nada, tomar la primera línea que no sea vacía
+            if (!taskName && lines.length > 0) {
+                taskName = lines[0];
+                console.log(`🔍 Debug: taskName fallback:`, taskName);
             }
         }
         
-        // Método alternativo: buscar en el atributo title o data-task-name
-        if (!taskName || taskName === '') {
-            const taskRowElement = taskRow.querySelector('.td-task');
-            if (taskRowElement) {
-                // Buscar en el atributo title
-                const title = taskRowElement.getAttribute('title');
-                if (title && title.trim() && !/^\d+$/.test(title.trim())) {
-                    taskName = title.trim();
-                }
-                
-                // Buscar en data-task-name si existe
-                const dataName = taskRowElement.getAttribute('data-task-name');
-                if (dataName && dataName.trim() && !/^\d+$/.test(dataName.trim())) {
-                    taskName = dataName.trim();
-                }
-            }
-        }
-        
-        // Si aún no se encuentra, usar un nombre genérico
-        if (!taskName || taskName === '') {
+        // Si aún no tenemos nombre, usar un nombre genérico
+        if (!taskName || taskName.trim() === '') {
             taskName = `Tarea ${taskId}`;
         }
         
@@ -5809,6 +5781,8 @@ function showBulkDeleteModal() {
         
         // Remover caracteres especiales que puedan interferir
         taskName = taskName.replace(/[^\w\s\-\.]/g, '').trim();
+        
+        console.log(`🔍 Debug: taskName final:`, taskName);
         
         tasksHtml += `
             <div class="task-item">
@@ -5822,6 +5796,9 @@ function showBulkDeleteModal() {
         `;
     });
     tasksHtml += '</div>';
+    
+    console.log('🔍 Debug: HTML generado:', tasksHtml);
+    console.log('🔍 Debug: tasksList element:', tasksList);
     
     tasksList.innerHTML = tasksHtml;
     
