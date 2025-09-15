@@ -53,7 +53,7 @@ ob_start();
                 </div>
                 <div class="stat-content">
                     <div class="stat-value"><?= count($tasks) ?></div>
-                    <div class="stat-label">Total Tareas</div>
+                    <div class="stat-label">TOTAL TAREAS</div>
                 </div>
             </div>
             <div class="stat-card">
@@ -62,7 +62,7 @@ ob_start();
                 </div>
                 <div class="stat-content">
                     <div class="stat-value"><?= count(array_filter($tasks, function($t) { return $t['status'] === 'completed'; })) ?></div>
-                    <div class="stat-label">Completadas</div>
+                    <div class="stat-label">COMPLETADAS</div>
                 </div>
             </div>
             <div class="stat-card">
@@ -71,7 +71,7 @@ ob_start();
                 </div>
                 <div class="stat-content">
                     <div class="stat-value"><?= count(array_filter($tasks, function($t) { return $t['status'] === 'in_progress'; })) ?></div>
-                    <div class="stat-label">En Progreso</div>
+                    <div class="stat-label">EN PROGRESO</div>
                 </div>
             </div>
             <div class="stat-card">
@@ -80,7 +80,7 @@ ob_start();
                 </div>
                 <div class="stat-content">
                     <div class="stat-value"><?= count(array_filter($tasks, function($t) { return $t['status'] === 'pending'; })) ?></div>
-                    <div class="stat-label">Pendientes</div>
+                    <div class="stat-label">PENDIENTES</div>
                 </div>
             </div>
         </div>
@@ -574,6 +574,118 @@ document.addEventListener('DOMContentLoaded', function() {
     updateSelection();
 });
 </script>
+
+<style>
+/* Estilos para las tarjetas de estadísticas del proyecto */
+.project-stats-cards {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+}
+
+.stat-card {
+    flex: 1;
+    min-width: 200px;
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.stat-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: white;
+    background: #3b82f6;
+    flex-shrink: 0;
+}
+
+.stat-icon.completed {
+    background: #10b981;
+}
+
+.stat-icon.in-progress {
+    background: #3b82f6;
+}
+
+.stat-icon.pending {
+    background: #f59e0b;
+}
+
+.stat-content {
+    flex: 1;
+}
+
+.stat-value {
+    font-size: 32px;
+    font-weight: 700;
+    color: #1f2937;
+    line-height: 1;
+    margin-bottom: 4px;
+}
+
+.stat-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Responsive para las tarjetas */
+@media (max-width: 768px) {
+    .project-stats-cards {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .stat-card {
+        min-width: auto;
+    }
+    
+    .stat-value {
+        font-size: 28px;
+    }
+}
+
+@media (max-width: 480px) {
+    .stat-card {
+        padding: 15px;
+        gap: 12px;
+    }
+    
+    .stat-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+    }
+    
+    .stat-value {
+        font-size: 24px;
+    }
+    
+    .stat-label {
+        font-size: 11px;
+    }
+}
+</style>
 
 <?php
 // Guardar el contenido en una variable
