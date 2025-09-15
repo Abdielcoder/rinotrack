@@ -4138,12 +4138,14 @@ console.log('🚀 Tasks.php cargado - Versión 6.0 - Debug activo');
 }
 
 .btn-clone {
-    background-color: #8b5cf6;
-    color: white;
+    background: #f3f4f6;
+    color: #6b7280;
 }
 
 .btn-clone:hover {
-    background-color: #7c3aed;
+    background: #e5e7eb;
+    color: #374151;
+    transform: translateY(-1px);
 }
 
 @media (max-width: 768px) {
