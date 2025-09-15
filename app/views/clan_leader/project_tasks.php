@@ -822,7 +822,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
 /* Estilos para checkboxes redondos */
 .task-checkbox {
-    border-radius: 50%;
+    border-radius: 50% !important;
+    background: transparent !important;
+    border: 1px solid #ccc !important;
 }
 </style>
 
