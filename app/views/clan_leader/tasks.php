@@ -1134,41 +1134,6 @@ ob_start();
     margin-bottom: 1rem;
 }
 
-.task-checkbox {
-    flex-shrink: 0;
-}
-
-.task-checkbox input[type="checkbox"] {
-    display: none;
-}
-
-.task-checkbox label {
-    width: 24px;
-    height: 24px;
-    border: 2px solid #d1d5db;
-    border-radius: 6px;
-    display: block;
-    cursor: pointer;
-    position: relative;
-    transition: all 0.3s ease;
-    background: white;
-}
-
-.task-checkbox input[type="checkbox"]:checked + label {
-    background: #10b981;
-    border-color: #10b981;
-}
-
-.task-checkbox input[type="checkbox"]:checked + label::after {
-    content: '✓';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    color: white;
-    font-size: 14px;
-    font-weight: bold;
-}
 
 .task-title {
     flex: 1;
@@ -4241,62 +4206,62 @@ console.log('🔧 Botón de clonar configurado correctamente');
 
 /* Asegurar que los checkboxes de completar mantengan su estilo cuadrado */
 .td-checkbox input[type="checkbox"] {
-    display: none; /* Ocultar los checkboxes originales */
+    display: none !important; /* Ocultar los checkboxes originales */
 }
 
 .td-checkbox::after {
-    content: "Completar";
-    display: block;
-    padding: 4px 8px;
-    border-radius: 4px;
-    background: #f3f4f6;
-    border: 1px solid #d1d5db;
-    font-size: 12px;
-    font-weight: 600;
-    color: #6b7280;
-    cursor: pointer;
-    transition: all 0.2s ease;
+    content: "Completar" !important;
+    display: block !important;
+    padding: 4px 8px !important;
+    border-radius: 4px !important;
+    background: #f3f4f6 !important;
+    border: 1px solid #d1d5db !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    color: #6b7280 !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
 }
 
 .td-checkbox:hover::after {
-    background: #e5e7eb;
-    border-color: #9ca3af;
+    background: #e5e7eb !important;
+    border-color: #9ca3af !important;
 }
 
-/* Checkboxes redondos para selección */
-.task-checkbox {
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    border: 2px solid #d1d5db;
-    background: #ffffff;
-    cursor: pointer;
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    position: relative;
-    transition: all 0.2s ease;
+/* Checkboxes redondos para selección - ESTILO ESPECÍFICO */
+.td-select .task-checkbox {
+    width: 18px !important;
+    height: 18px !important;
+    border-radius: 50% !important;
+    border: 2px solid #d1d5db !important;
+    background: #ffffff !important;
+    cursor: pointer !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    position: relative !important;
+    transition: all 0.2s ease !important;
 }
 
-.task-checkbox:hover {
-    border-color: #6b7280;
-    transform: scale(1.05);
+.td-select .task-checkbox:hover {
+    border-color: #6b7280 !important;
+    transform: scale(1.05) !important;
 }
 
-.task-checkbox:checked {
-    background: #ffffff;
-    border-color: #6b7280;
+.td-select .task-checkbox:checked {
+    background: #ffffff !important;
+    border-color: #6b7280 !important;
 }
 
-.task-checkbox:checked::after {
-    content: '✓';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    color: #6b7280;
-    font-size: 12px;
-    font-weight: bold;
+.td-select .task-checkbox:checked::after {
+    content: '✓' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    color: #6b7280 !important;
+    font-size: 12px !important;
+    font-weight: bold !important;
 }
 
 /* Área de selección múltiple */
@@ -5789,6 +5754,62 @@ function executeBulkDelete() {
         </div>
     </div>
 </div>
+
+<style>
+/* FORZAR ESTILOS DE CHECKBOXES - ESTILO FINAL */
+.td-checkbox::after {
+    content: "Completar" !important;
+    display: block !important;
+    padding: 4px 8px !important;
+    border-radius: 4px !important;
+    background: #f3f4f6 !important;
+    border: 1px solid #d1d5db !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    color: #6b7280 !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+}
+
+.td-checkbox input[type="checkbox"] {
+    display: none !important;
+}
+
+.td-select input[type="checkbox"].task-checkbox {
+    width: 18px !important;
+    height: 18px !important;
+    border-radius: 50% !important;
+    border: 2px solid #d1d5db !important;
+    background: #ffffff !important;
+    cursor: pointer !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    position: relative !important;
+    transition: all 0.2s ease !important;
+}
+
+.td-select input[type="checkbox"].task-checkbox:hover {
+    border-color: #6b7280 !important;
+    transform: scale(1.05) !important;
+}
+
+.td-select input[type="checkbox"].task-checkbox:checked {
+    background: #ffffff !important;
+    border-color: #6b7280 !important;
+}
+
+.td-select input[type="checkbox"].task-checkbox:checked::after {
+    content: '✓' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    color: #6b7280 !important;
+    font-size: 12px !important;
+    font-weight: bold !important;
+}
+</style>
 
 <?php
 $content = ob_get_clean();
