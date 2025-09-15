@@ -1556,27 +1556,6 @@ ob_start();
     color: #6b7280;
 }
 
-.td-checkbox input[type="checkbox"] {
-    display: none; /* Ocultar los checkboxes */
-}
-
-.td-checkbox::after {
-    content: "Completar";
-    display: block;
-    padding: 4px 8px;
-    border-radius: 4px;
-    background: #f3f4f6;
-    border: 1px solid #d1d5db;
-    font-size: 11px;
-    color: #6b7280;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.td-checkbox:hover::after {
-    background: #e5e7eb;
-    border-color: #9ca3af;
-}
 
 /* Estilos para la barra de progreso */
 .progress-container {
@@ -4260,7 +4239,31 @@ console.log('🔧 Botón de clonar configurado correctamente');
     padding: 8px;
 }
 
-/* Checkboxes redondos */
+/* Asegurar que los checkboxes de completar mantengan su estilo cuadrado */
+.td-checkbox input[type="checkbox"] {
+    display: none; /* Ocultar los checkboxes originales */
+}
+
+.td-checkbox::after {
+    content: "Completar";
+    display: block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    background: #f3f4f6;
+    border: 1px solid #d1d5db;
+    font-size: 12px;
+    font-weight: 600;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.td-checkbox:hover::after {
+    background: #e5e7eb;
+    border-color: #9ca3af;
+}
+
+/* Checkboxes redondos para selección */
 .task-checkbox {
     width: 18px;
     height: 18px;
@@ -4276,13 +4279,13 @@ console.log('🔧 Botón de clonar configurado correctamente');
 }
 
 .task-checkbox:hover {
-    border-color: #3b82f6;
-    transform: scale(1.1);
+    border-color: #6b7280;
+    transform: scale(1.05);
 }
 
 .task-checkbox:checked {
-    background: #3b82f6;
-    border-color: #3b82f6;
+    background: #ffffff;
+    border-color: #6b7280;
 }
 
 .task-checkbox:checked::after {
@@ -4291,7 +4294,7 @@ console.log('🔧 Botón de clonar configurado correctamente');
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    color: white;
+    color: #6b7280;
     font-size: 12px;
     font-weight: bold;
 }
