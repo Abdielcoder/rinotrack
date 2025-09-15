@@ -3237,14 +3237,18 @@ function showToast(message, type = 'info') {
     toast.textContent = message;
     document.body.appendChild(toast);
     
-    setTimeout(() => {
-        toast.style.animation = 'slideOut 0.3s ease';
+    // Auto-remover después de 3 segundos (excepto para info que se remueve manualmente)
+    if (type !== 'info') {
         setTimeout(() => {
             if (toast.parentNode) {
-                toast.parentNode.removeChild(toast);
+                toast.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => toast.parentNode.removeChild(toast), 300);
             }
-        }, 300);
-    }, 3000);
+        }, 3000);
+    }
+    
+    // Devolver el elemento para poder eliminarlo manualmente
+    return toast;
 }
 
 // Estilos para animaciones
@@ -3508,18 +3512,37 @@ function updateTaskProgressFromClick(event, taskId) {
 
 // Función para abrir el modal de clonación
 function openCloneTaskModal(taskId) {
+    console.log('🔄 Iniciando clonación de tarea ID:', taskId);
+    
+    // Mostrar indicador de carga
+    const loadingToast = showToast('Cargando datos de la tarea...', 'info');
+    
     fetch('?route=clan_leader/get-task-data&task_id=' + taskId)
-        .then(response => response.json())
+        .then(response => {
+            console.log('📡 Respuesta recibida, status:', response.status);
+            return response.json();
+        })
         .then(data => {
+            console.log('📦 Datos recibidos:', data);
+            
+            // Ocultar indicador de carga
+            if (loadingToast) loadingToast.remove();
+            
             if (data.success) {
+                console.log('✅ Datos válidos, mostrando modal');
                 showCloneTaskModal(data.task, data.projects);
             } else {
-                alert('Error al cargar los datos de la tarea: ' + data.message);
+                console.error('❌ Error del servidor:', data.message);
+                showToast('Error al cargar los datos de la tarea: ' + data.message, 'error');
             }
         })
         .catch(error => {
-            console.error('Error:', error);
-            alert('Error de conexión al cargar los datos de la tarea');
+            console.error('💥 Error de conexión:', error);
+            
+            // Ocultar indicador de carga
+            if (loadingToast) loadingToast.remove();
+            
+            showToast('Error de conexión al cargar los datos de la tarea', 'error');
         });
 }
 
@@ -3606,30 +3629,70 @@ function closeCloneTaskModal() {
 
 // Función para ejecutar la clonación
 function cloneTask() {
+    console.log('🔄 Iniciando proceso de clonación');
+    
     const form = document.getElementById('cloneTaskForm');
     const formData = new FormData(form);
+    
+    // Validaciones del lado del cliente
+    const taskName = document.getElementById('cloneTaskName').value.trim();
+    const projectId = document.getElementById('cloneTaskProject').value;
+    
+    if (!taskName) {
+        showToast('El nombre de la tarea es requerido', 'error');
+        return;
+    }
+    
+    if (!projectId) {
+        showToast('Debe seleccionar un proyecto', 'error');
+        return;
+    }
     
     // Agregar campos adicionales
     formData.append('originalTaskId', document.getElementById('originalTaskId').value);
     formData.append('clone_subtasks', document.getElementById('cloneSubtasks').checked ? '1' : '0');
     
+    console.log('📤 Enviando datos de clonación');
+    
+    // Deshabilitar el botón para evitar clics múltiples
+    const cloneButton = document.querySelector('.btn-primary');
+    const originalText = cloneButton.innerHTML;
+    cloneButton.disabled = true;
+    cloneButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Clonando...';
+    
     fetch('?route=clan_leader/clone-task', {
         method: 'POST',
         body: formData
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('📡 Respuesta de clonación recibida, status:', response.status);
+        return response.json();
+    })
     .then(data => {
+        console.log('📦 Resultado de clonación:', data);
+        
+        // Rehabilitar el botón
+        cloneButton.disabled = false;
+        cloneButton.innerHTML = originalText;
+        
         if (data.success) {
+            console.log('✅ Tarea clonada exitosamente');
             closeCloneTaskModal();
-            showToast('Tarea clonada exitosamente', 'success');
+            showToast('Tarea clonada exitosamente - ID: ' + (data.new_task_id || 'N/A'), 'success');
             setTimeout(() => location.reload(), 1500); // Recargar para mostrar los cambios
         } else {
-            alert('Error al clonar la tarea: ' + data.message);
+            console.error('❌ Error al clonar:', data.message);
+            showToast('Error al clonar la tarea: ' + data.message, 'error');
         }
     })
     .catch(error => {
-        console.error('Error:', error);
-        alert('Error de conexión al clonar la tarea');
+        console.error('💥 Error de conexión al clonar:', error);
+        
+        // Rehabilitar el botón
+        cloneButton.disabled = false;
+        cloneButton.innerHTML = originalText;
+        
+        showToast('Error de conexión al clonar la tarea', 'error');
     });
 }
 
