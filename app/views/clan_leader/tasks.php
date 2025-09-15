@@ -5838,20 +5838,21 @@ function showBulkDeleteModal() {
             if (taskNameWithTitle && taskNameWithTitle.getAttribute('title')) {
                 taskName = taskNameWithTitle.getAttribute('title');
                 console.log(`🔍 Debug: taskName extraído del title:`, taskName);
-            } else {
-                // Último recurso: usar un nombre genérico
-                taskName = `Tarea ${taskId}`;
-                console.log(`🔍 Debug: usando nombre genérico:`, taskName);
             }
         }
         
         // Limpiar el nombre de la tarea (remover caracteres extra y espacios)
-        taskName = taskName.replace(/\s+/g, ' ').trim();
+        if (taskName) {
+            taskName = taskName.replace(/\s+/g, ' ').trim();
+        }
         
-        // NO remover caracteres especiales para preservar el nombre original
-        // taskName = taskName.replace(/[^\w\s\-\.]/g, '').trim();
+        // Crear el texto final: ID + Nombre (si existe)
+        let displayText = `Tarea ${taskId}`;
+        if (taskName && taskName.trim() !== '') {
+            displayText = `${taskName} (ID: ${taskId})`;
+        }
         
-        console.log(`🔍 Debug: taskName final:`, taskName);
+        console.log(`🔍 Debug: displayText final:`, displayText);
         
         tasksHtml += `
             <div class="task-item">
@@ -5859,7 +5860,7 @@ function showBulkDeleteModal() {
                     <i class="fas fa-tasks text-primary"></i>
                 </div>
                 <div class="task-info">
-                    <div class="task-name">${taskName}</div>
+                    <div class="task-name">${displayText}</div>
                 </div>
             </div>
         `;
