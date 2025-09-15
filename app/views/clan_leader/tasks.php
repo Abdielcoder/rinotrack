@@ -4354,6 +4354,29 @@ console.log('🔧 Botón de clonar configurado correctamente');
     box-shadow: inset 0 2px 4px rgba(0,0,0,0.06);
 }
 
+/* Estilos específicos para los elementos de tarea en el modal de eliminación */
+#bulkDeleteModal .task-item {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    padding: 12px !important;
+    margin-bottom: 8px !important;
+    background: #ffffff !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 6px !important;
+    transition: all 0.2s ease !important;
+}
+
+#bulkDeleteModal .task-item .task-name {
+    flex: 1 !important;
+    color: #1f2937 !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    line-height: 1.4 !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+}
+
 .task-item {
     display: flex;
     align-items: center;
@@ -5762,6 +5785,8 @@ function showBulkDeleteModal() {
         console.log(`🔍 Debug: taskCell encontrado:`, taskCell);
         
         if (taskCell) {
+            console.log(`🔍 Debug: taskCell HTML:`, taskCell.innerHTML);
+            
             // Buscar específicamente el elemento con clase 'task-name'
             const taskNameElement = taskCell.querySelector('.task-name');
             console.log(`🔍 Debug: taskNameElement encontrado:`, taskNameElement);
@@ -5769,38 +5794,62 @@ function showBulkDeleteModal() {
             if (taskNameElement) {
                 taskName = taskNameElement.textContent || taskNameElement.innerText || '';
                 taskName = taskName.trim();
-                console.log(`🔍 Debug: taskName extraído:`, taskName);
+                console.log(`🔍 Debug: taskName extraído del elemento:`, taskName);
             } else {
-                // Fallback: buscar en todo el texto de la celda
-                let cellText = taskCell.textContent || taskCell.innerText || '';
-                cellText = cellText.trim();
-                console.log(`🔍 Debug: cellText fallback:`, cellText);
+                // Buscar en el elemento task-info
+                const taskInfoElement = taskCell.querySelector('.task-info');
+                console.log(`🔍 Debug: taskInfoElement encontrado:`, taskInfoElement);
                 
-                // Dividir por líneas y buscar la primera línea con contenido significativo
-                const lines = cellText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
-                console.log(`🔍 Debug: lines:`, lines);
+                if (taskInfoElement) {
+                    const taskNameFromInfo = taskInfoElement.querySelector('.task-name');
+                    if (taskNameFromInfo) {
+                        taskName = taskNameFromInfo.textContent || taskNameFromInfo.innerText || '';
+                        taskName = taskName.trim();
+                        console.log(`🔍 Debug: taskName extraído de task-info:`, taskName);
+                    }
+                }
                 
-                for (let line of lines) {
-                    // Saltar líneas que sean solo números o contengan "ID:"
-                    if (!/^\d+$/.test(line) && !line.includes('ID:') && line.length > 2) {
-                        taskName = line;
-                        console.log(`🔍 Debug: taskName encontrado en fallback:`, taskName);
-                        break;
+                // Si aún no tenemos nombre, usar fallback
+                if (!taskName || taskName.trim() === '') {
+                    let cellText = taskCell.textContent || taskCell.innerText || '';
+                    cellText = cellText.trim();
+                    console.log(`🔍 Debug: cellText fallback:`, cellText);
+                    
+                    // Dividir por líneas y buscar la primera línea con contenido significativo
+                    const lines = cellText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+                    console.log(`🔍 Debug: lines:`, lines);
+                    
+                    for (let line of lines) {
+                        // Saltar líneas que sean solo números o contengan "ID:"
+                        if (!/^\d+$/.test(line) && !line.includes('ID:') && line.length > 2) {
+                            taskName = line;
+                            console.log(`🔍 Debug: taskName encontrado en fallback:`, taskName);
+                            break;
+                        }
                     }
                 }
             }
         }
         
-        // Si aún no tenemos nombre, usar un nombre genérico
+        // Si aún no tenemos nombre, intentar obtenerlo del atributo data o title
         if (!taskName || taskName.trim() === '') {
-            taskName = `Tarea ${taskId}`;
+            // Buscar en el atributo title del elemento task-name
+            const taskNameWithTitle = taskCell.querySelector('.task-name[title]');
+            if (taskNameWithTitle && taskNameWithTitle.getAttribute('title')) {
+                taskName = taskNameWithTitle.getAttribute('title');
+                console.log(`🔍 Debug: taskName extraído del title:`, taskName);
+            } else {
+                // Último recurso: usar un nombre genérico
+                taskName = `Tarea ${taskId}`;
+                console.log(`🔍 Debug: usando nombre genérico:`, taskName);
+            }
         }
         
         // Limpiar el nombre de la tarea (remover caracteres extra y espacios)
         taskName = taskName.replace(/\s+/g, ' ').trim();
         
-        // Remover caracteres especiales que puedan interferir
-        taskName = taskName.replace(/[^\w\s\-\.]/g, '').trim();
+        // NO remover caracteres especiales para preservar el nombre original
+        // taskName = taskName.replace(/[^\w\s\-\.]/g, '').trim();
         
         console.log(`🔍 Debug: taskName final:`, taskName);
         
