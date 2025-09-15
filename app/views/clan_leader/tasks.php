@@ -5777,77 +5777,37 @@ function showBulkDeleteModal() {
         const taskRow = checkbox.closest('tr');
         console.log(`🔍 Debug: Procesando checkbox ${index + 1}, taskId: ${taskId}`);
         
-        // Obtener el nombre de la tarea de forma específica
+        // Obtener el nombre de la tarea de forma directa y simple
         let taskName = '';
         
-        // Buscar directamente en la celda de la tarea
-        const taskCell = taskRow.querySelector('.td-task');
-        console.log(`🔍 Debug: taskCell encontrado:`, taskCell);
-        console.log(`🔍 Debug: taskRow HTML:`, taskRow.innerHTML);
+        // Buscar directamente el elemento con clase 'task-name' en toda la fila
+        const taskNameElement = taskRow.querySelector('.task-name');
+        console.log(`🔍 Debug: taskNameElement encontrado:`, taskNameElement);
         
-        if (taskCell) {
-            console.log(`🔍 Debug: taskCell HTML:`, taskCell.innerHTML);
+        if (taskNameElement) {
+            // Primero intentar obtener del atributo title (más confiable)
+            taskName = taskNameElement.getAttribute('title') || '';
+            console.log(`🔍 Debug: taskName del title:`, taskName);
             
-            // Buscar específicamente el elemento con clase 'task-name'
-            const taskNameElement = taskCell.querySelector('.task-name');
-            console.log(`🔍 Debug: taskNameElement encontrado:`, taskNameElement);
-            
-            if (taskNameElement) {
+            // Si no hay title, usar el contenido del elemento
+            if (!taskName || taskName.trim() === '') {
                 taskName = taskNameElement.textContent || taskNameElement.innerText || '';
                 taskName = taskName.trim();
-                console.log(`🔍 Debug: taskName extraído del elemento:`, taskName);
-            } else {
-                // Buscar en el elemento task-info
-                const taskInfoElement = taskCell.querySelector('.task-info');
-                console.log(`🔍 Debug: taskInfoElement encontrado:`, taskInfoElement);
-                
-                if (taskInfoElement) {
-                    const taskNameFromInfo = taskInfoElement.querySelector('.task-name');
-                    if (taskNameFromInfo) {
-                        taskName = taskNameFromInfo.textContent || taskNameFromInfo.innerText || '';
-                        taskName = taskName.trim();
-                        console.log(`🔍 Debug: taskName extraído de task-info:`, taskName);
-                    }
-                }
-                
-                // Si aún no tenemos nombre, usar fallback
-                if (!taskName || taskName.trim() === '') {
-                    let cellText = taskCell.textContent || taskCell.innerText || '';
-                    cellText = cellText.trim();
-                    console.log(`🔍 Debug: cellText fallback:`, cellText);
-                    
-                    // Dividir por líneas y buscar la primera línea con contenido significativo
-                    const lines = cellText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
-                    console.log(`🔍 Debug: lines:`, lines);
-                    
-                    for (let line of lines) {
-                        // Saltar líneas que sean solo números o contengan "ID:"
-                        if (!/^\d+$/.test(line) && !line.includes('ID:') && line.length > 2) {
-                            taskName = line;
-                            console.log(`🔍 Debug: taskName encontrado en fallback:`, taskName);
-                            break;
-                        }
-                    }
-                }
+                console.log(`🔍 Debug: taskName del contenido:`, taskName);
             }
-            
-            // Si aún no tenemos nombre, intentar obtenerlo del atributo data o title
-            if (!taskName || taskName.trim() === '') {
-                // Buscar en el atributo title del elemento task-name
-                const taskNameWithTitle = taskCell.querySelector('.task-name[title]');
-                if (taskNameWithTitle && taskNameWithTitle.getAttribute('title')) {
-                    taskName = taskNameWithTitle.getAttribute('title');
-                    console.log(`🔍 Debug: taskName extraído del title:`, taskName);
+        }
+        
+        // Si aún no tenemos nombre, buscar en toda la fila
+        if (!taskName || taskName.trim() === '') {
+            console.log(`🔍 Debug: Buscando en toda la fila...`);
+            const taskCell = taskRow.querySelector('.td-task');
+            if (taskCell) {
+                const taskInfo = taskCell.querySelector('.task-info .task-name');
+                if (taskInfo) {
+                    taskName = taskInfo.getAttribute('title') || taskInfo.textContent || taskInfo.innerText || '';
+                    taskName = taskName.trim();
+                    console.log(`🔍 Debug: taskName de task-info:`, taskName);
                 }
-            }
-        } else {
-            // Si no encontramos taskCell, intentar buscar en toda la fila
-            console.log(`🔍 Debug: No se encontró .td-task, buscando en toda la fila`);
-            const taskNameInRow = taskRow.querySelector('.task-name');
-            if (taskNameInRow) {
-                taskName = taskNameInRow.textContent || taskNameInRow.innerText || '';
-                taskName = taskName.trim();
-                console.log(`🔍 Debug: taskName encontrado en la fila:`, taskName);
             }
         }
         
