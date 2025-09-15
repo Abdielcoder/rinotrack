@@ -5783,6 +5783,7 @@ function showBulkDeleteModal() {
         // Buscar directamente en la celda de la tarea
         const taskCell = taskRow.querySelector('.td-task');
         console.log(`🔍 Debug: taskCell encontrado:`, taskCell);
+        console.log(`🔍 Debug: taskRow HTML:`, taskRow.innerHTML);
         
         if (taskCell) {
             console.log(`🔍 Debug: taskCell HTML:`, taskCell.innerHTML);
@@ -5829,15 +5830,24 @@ function showBulkDeleteModal() {
                     }
                 }
             }
-        }
-        
-        // Si aún no tenemos nombre, intentar obtenerlo del atributo data o title
-        if (!taskName || taskName.trim() === '') {
-            // Buscar en el atributo title del elemento task-name
-            const taskNameWithTitle = taskCell.querySelector('.task-name[title]');
-            if (taskNameWithTitle && taskNameWithTitle.getAttribute('title')) {
-                taskName = taskNameWithTitle.getAttribute('title');
-                console.log(`🔍 Debug: taskName extraído del title:`, taskName);
+            
+            // Si aún no tenemos nombre, intentar obtenerlo del atributo data o title
+            if (!taskName || taskName.trim() === '') {
+                // Buscar en el atributo title del elemento task-name
+                const taskNameWithTitle = taskCell.querySelector('.task-name[title]');
+                if (taskNameWithTitle && taskNameWithTitle.getAttribute('title')) {
+                    taskName = taskNameWithTitle.getAttribute('title');
+                    console.log(`🔍 Debug: taskName extraído del title:`, taskName);
+                }
+            }
+        } else {
+            // Si no encontramos taskCell, intentar buscar en toda la fila
+            console.log(`🔍 Debug: No se encontró .td-task, buscando en toda la fila`);
+            const taskNameInRow = taskRow.querySelector('.task-name');
+            if (taskNameInRow) {
+                taskName = taskNameInRow.textContent || taskNameInRow.innerText || '';
+                taskName = taskName.trim();
+                console.log(`🔍 Debug: taskName encontrado en la fila:`, taskName);
             }
         }
         
