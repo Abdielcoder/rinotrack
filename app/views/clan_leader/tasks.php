@@ -4331,31 +4331,74 @@ console.log('🔧 Botón de clonar configurado correctamente');
 }
 
 /* Estilos para el modal de eliminación múltiple */
-.tasks-to-delete-list {
-    max-height: 200px;
+.tasks-to-delete-container {
+    max-height: 400px;
     overflow-y: auto;
     border: 1px solid #e5e7eb;
-    border-radius: 6px;
-    padding: 12px;
+    border-radius: 8px;
+    padding: 16px;
     background: #f9fafb;
-    margin: 12px 0;
+    margin: 16px 0;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.06);
 }
 
-.tasks-to-delete-list li {
+.task-item {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 6px 0;
-    border-bottom: 1px solid #e5e7eb;
-    font-size: 14px;
+    gap: 12px;
+    padding: 12px;
+    margin-bottom: 8px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    transition: all 0.2s ease;
 }
 
-.tasks-to-delete-list li:last-child {
-    border-bottom: none;
+.task-item:last-child {
+    margin-bottom: 0;
 }
 
-.tasks-to-delete-list .fas {
+.task-item:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.task-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: #eff6ff;
+    border-radius: 8px;
+    flex-shrink: 0;
+}
+
+.task-icon .fas {
+    font-size: 16px;
+    color: #3b82f6;
+}
+
+.task-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.task-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 4px;
+    line-height: 1.4;
+    word-wrap: break-word;
+}
+
+.task-id {
     font-size: 12px;
+    color: #6b7280;
+    font-weight: 500;
 }
 
 .alert {
@@ -4384,6 +4427,45 @@ console.log('🔧 Botón de clonar configurado correctamente');
     margin-top: 20px;
     padding-top: 16px;
     border-top: 1px solid #e5e7eb;
+}
+
+/* Estilos para el modal de eliminación múltiple más grande */
+#bulkDeleteModal .modal-content {
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.modal-description {
+    font-size: 14px;
+    line-height: 1.5;
+    margin: 16px 0;
+    color: #374151;
+}
+
+.modal-description .text-muted {
+    color: #6b7280;
+    font-size: 13px;
+}
+
+/* Scrollbar personalizado para el contenedor de tareas */
+.tasks-to-delete-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.tasks-to-delete-container::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 3px;
+}
+
+.tasks-to-delete-container::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+
+.tasks-to-delete-container::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
 }
 
 @media (max-width: 768px) {
@@ -5651,14 +5733,51 @@ function showBulkDeleteModal() {
     }
     
     // Crear lista de tareas a eliminar
-    let tasksHtml = '<ul class="tasks-to-delete-list">';
+    let tasksHtml = '<div class="tasks-to-delete-container">';
     checkboxes.forEach(checkbox => {
         const taskId = checkbox.getAttribute('data-task-id');
         const taskRow = checkbox.closest('tr');
-        const taskName = taskRow.querySelector('.td-task .task-name')?.textContent || `Tarea ${taskId}`;
-        tasksHtml += `<li><i class="fas fa-trash text-danger"></i> ${taskName}</li>`;
+        
+        // Obtener el nombre de la tarea de diferentes formas posibles
+        let taskName = '';
+        const taskNameElement = taskRow.querySelector('.td-task .task-name') || 
+                               taskRow.querySelector('.td-task .task-title') ||
+                               taskRow.querySelector('.td-task h4') ||
+                               taskRow.querySelector('.td-task');
+        
+        if (taskNameElement) {
+            taskName = taskNameElement.textContent.trim();
+        }
+        
+        // Si no se encuentra el nombre, intentar obtenerlo del texto de la celda
+        if (!taskName) {
+            const taskCell = taskRow.querySelector('.td-task');
+            if (taskCell) {
+                taskName = taskCell.textContent.trim().split('\n')[0]; // Tomar solo la primera línea
+            }
+        }
+        
+        // Si aún no se encuentra, usar un nombre genérico
+        if (!taskName) {
+            taskName = `Tarea ID: ${taskId}`;
+        }
+        
+        // Limpiar el nombre de la tarea (remover caracteres extra)
+        taskName = taskName.replace(/\s+/g, ' ').trim();
+        
+        tasksHtml += `
+            <div class="task-item">
+                <div class="task-icon">
+                    <i class="fas fa-tasks text-primary"></i>
+                </div>
+                <div class="task-info">
+                    <div class="task-name">${taskName}</div>
+                    <div class="task-id">ID: ${taskId}</div>
+                </div>
+            </div>
+        `;
     });
-    tasksHtml += '</ul>';
+    tasksHtml += '</div>';
     
     tasksList.innerHTML = tasksHtml;
     
@@ -5736,10 +5855,13 @@ function executeBulkDelete() {
         </div>
         <div class="modal-body">
             <div class="alert alert-warning">
-                <i class="fas fa-warning"></i>
+                <i class="fas fa-exclamation-triangle"></i>
                 <strong>¡Atención!</strong> Esta acción no se puede deshacer.
             </div>
-            <p>¿Estás seguro de que deseas eliminar las siguientes tareas?</p>
+            <p class="modal-description">
+                <strong>Se eliminarán las siguientes tareas:</strong><br>
+                <span class="text-muted">Revisa cuidadosamente la lista antes de confirmar.</span>
+            </p>
             <div id="tasks-to-delete" class="tasks-list">
                 <!-- Las tareas seleccionadas se mostrarán aquí -->
             </div>
