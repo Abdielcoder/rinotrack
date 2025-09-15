@@ -4332,7 +4332,7 @@ console.log('🔧 Botón de clonar configurado correctamente');
 
 /* Estilos para el modal de eliminación múltiple */
 .tasks-to-delete-container {
-    max-height: 500px;
+    max-height: 850px;
     overflow-y: auto;
     border: 1px solid #e5e7eb;
     border-radius: 8px;
