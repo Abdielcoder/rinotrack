@@ -4342,6 +4342,18 @@ console.log('🔧 Botón de clonar configurado correctamente');
     box-shadow: inset 0 2px 4px rgba(0,0,0,0.06);
 }
 
+/* Estilos específicos para el contenedor de tareas en el modal de eliminación múltiple */
+#bulkDeleteModal #tasks-to-delete {
+    max-height: 850px;
+    overflow-y: auto;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 16px;
+    background: #f9fafb;
+    margin: 16px 0;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.06);
+}
+
 .task-item {
     display: flex;
     align-items: center;
@@ -4447,21 +4459,25 @@ console.log('🔧 Botón de clonar configurado correctamente');
 }
 
 /* Scrollbar personalizado para el contenedor de tareas */
-.tasks-to-delete-container::-webkit-scrollbar {
+.tasks-to-delete-container::-webkit-scrollbar,
+#bulkDeleteModal #tasks-to-delete::-webkit-scrollbar {
     width: 6px;
 }
 
-.tasks-to-delete-container::-webkit-scrollbar-track {
+.tasks-to-delete-container::-webkit-scrollbar-track,
+#bulkDeleteModal #tasks-to-delete::-webkit-scrollbar-track {
     background: #f1f5f9;
     border-radius: 3px;
 }
 
-.tasks-to-delete-container::-webkit-scrollbar-thumb {
+.tasks-to-delete-container::-webkit-scrollbar-thumb,
+#bulkDeleteModal #tasks-to-delete::-webkit-scrollbar-thumb {
     background: #cbd5e1;
     border-radius: 3px;
 }
 
-.tasks-to-delete-container::-webkit-scrollbar-thumb:hover {
+.tasks-to-delete-container::-webkit-scrollbar-thumb:hover,
+#bulkDeleteModal #tasks-to-delete::-webkit-scrollbar-thumb:hover {
     background: #94a3b8;
 }
 
