@@ -134,17 +134,18 @@ ob_start();
                     </div>
                 </div>
 
-                <div class="table-container-minimal">
-                    <table class="tasks-table-minimal">
+                <!-- Tabla de Tareas del Proyecto -->
+                <div class="tasks-table-container">
+                    <table class="tasks-table">
                         <thead>
                             <tr>
-                                <th class="th-checkbox">
-                                    <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()">
+                                <th class="th-checkbox" style="width: 100px;">
+                                    Completar
                                 </th>
                                 <th class="th-priority">Prioridad</th>
                                 <th class="th-task">Tarea</th>
                                 <th class="th-assigned">Asignado</th>
-                                <th class="th-due-date">Fecha</th>
+                                <th class="th-due-date">Fecha Límite</th>
                                 <th class="th-status">Estado</th>
                                 <th class="th-progress">Progreso</th>
                                 <th class="th-actions">Acciones</th>
@@ -160,12 +161,13 @@ ob_start();
                                 $dueDate = $task['due_date'] ?? null;
                                 $isOverdue = $dueDate && strtotime($dueDate) < time() && $status !== 'completed';
                                 ?>
-                                <tr data-status="<?= $status ?>" data-priority="<?= $priority ?>" data-search-text="<?= htmlspecialchars(strtolower($task['task_name'] . ' ' . ($task['description'] ?? '') . ' ' . ($task['assigned_to_fullname'] ?? ''))) ?>" class="<?= $isOverdue ? 'overdue' : '' ?>">
+                                <tr class="task-row priority-<?= $priority ?> <?= $isOverdue ? 'overdue' : '' ?> <?= $status === 'completed' ? 'completed' : '' ?>" data-task-id="<?= $task['task_id'] ?>">
                                     <td class="td-checkbox">
                                         <input type="checkbox" 
-                                               class="task-checkbox" 
+                                               id="task-<?= $task['task_id'] ?>" 
                                                data-task-id="<?= $task['task_id'] ?>"
-                                               onchange="updateSelection()">
+                                               <?= $status === 'completed' ? 'checked' : '' ?>
+                                               onchange="toggleTaskStatus('<?= $task['task_id'] ?>', this.checked)">
                                     </td>
                                     <td class="td-priority">
                                         <span class="priority-badge priority-<?= $priority ?>">
@@ -320,6 +322,364 @@ ob_start();
     opacity: 0.8;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+}
+
+/* Tabla de Tareas - ESTILOS EXACTOS DE LA PÁGINA PRINCIPAL */
+.tasks-table-container {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e5e7eb;
+    overflow: hidden;
+}
+
+.tasks-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.tasks-table thead {
+    background: #f8fafc;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.tasks-table th {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-weight: 600;
+    color: #374151;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.tasks-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #f3f4f6;
+    vertical-align: middle;
+}
+
+.tasks-table tbody tr {
+    transition: all 0.2s ease;
+}
+
+.tasks-table tbody tr:hover {
+    background: #f9fafb;
+}
+
+.tasks-table tbody tr.completed {
+    opacity: 0.7;
+    background: #f9fafb;
+}
+
+.tasks-table tbody tr.completed .task-name {
+    text-decoration: line-through;
+    color: #6b7280;
+}
+
+.tasks-table tbody tr.overdue {
+    background-color: #fef2f2;
+    border-left: 4px solid #dc2626;
+}
+
+.tasks-table tbody tr.overdue:hover {
+    background-color: #fee2e2;
+}
+
+.tasks-table tbody tr.priority-critical {
+    border-left: 4px solid #dc2626;
+}
+
+.tasks-table tbody tr.priority-high {
+    border-left: 4px solid #ea580c;
+}
+
+.tasks-table tbody tr.priority-medium {
+    border-left: 4px solid #d97706;
+}
+
+.tasks-table tbody tr.priority-low {
+    border-left: 4px solid #059669;
+}
+
+/* Columnas específicas */
+.th-priority, .td-priority {
+    width: 100px;
+    text-align: center;
+}
+
+.th-task, .td-task {
+    width: 25%;
+    min-width: 200px;
+}
+
+.th-assigned, .td-assigned {
+    width: 12%;
+    min-width: 100px;
+}
+
+.th-due-date, .td-due-date {
+    width: 15%;
+    min-width: 140px;
+}
+
+.th-status, .td-status {
+    width: 100px;
+    text-align: center;
+}
+
+.th-progress, .td-progress {
+    width: 200px;
+    text-align: center;
+}
+
+.th-checkbox, .td-checkbox {
+    width: 100px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: #6b7280;
+}
+
+.th-actions, .td-actions {
+    width: 100px;
+    text-align: center;
+}
+
+.th-select, .td-select {
+    width: 80px;
+    text-align: center;
+    padding: 8px;
+}
+
+/* Estilos de contenido */
+.task-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.task-name {
+    font-weight: 600;
+    color: #1f2937;
+    font-size: 0.9rem;
+}
+
+.task-description {
+    font-size: 0.8rem;
+    color: #6b7280;
+    line-height: 1.4;
+}
+
+.priority-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.priority-badge.priority-critical {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+.priority-badge.priority-high {
+    background: #fff7ed;
+    color: #ea580c;
+}
+
+.priority-badge.priority-medium {
+    background: #fffbeb;
+    color: #d97706;
+}
+
+.priority-badge.priority-low {
+    background: #f0fdf4;
+    color: #059669;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-badge.status-completed {
+    background: #f0fdf4;
+    color: #059669;
+}
+
+.status-badge.status-in_progress {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+.status-badge.status-pending {
+    background: #fffbeb;
+    color: #d97706;
+}
+
+.progress-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.progress-bar {
+    flex: 1;
+    height: 8px;
+    background: #e5e7eb;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+    transition: width 0.3s ease;
+}
+
+.progress-text {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #374151;
+    min-width: 35px;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+}
+
+.btn-action {
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.btn-action.btn-view {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+.btn-action.btn-edit {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.btn-action.btn-delete {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.btn-action.btn-clone {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+.btn-action:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Checkboxes de selección */
+.task-checkbox {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid #d1d5db;
+    background: #ffffff;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.task-checkbox:hover {
+    border-color: #6b7280;
+    transform: scale(1.05);
+}
+
+.task-checkbox:checked {
+    background: #ffffff;
+    border-color: #6b7280;
+}
+
+.task-checkbox:checked::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #6b7280;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+/* Checkbox de completar - ESTILO ESPECÍFICO */
+.td-checkbox input[type="checkbox"] {
+    display: none !important;
+}
+
+.td-checkbox::after {
+    content: "Completar" !important;
+    display: block !important;
+    padding: 4px 8px !important;
+    border-radius: 4px !important;
+    background: #f3f4f6 !important;
+    border: 1px solid #d1d5db !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    color: #6b7280 !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+}
+
+.td-checkbox:hover::after {
+    background: #e5e7eb !important;
+    border-color: #9ca3af !important;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .tasks-table-container {
+        overflow-x: auto;
+    }
+    
+    .tasks-table {
+        min-width: 900px;
+    }
+}
+
+@media (max-width: 768px) {
+    .tasks-table th,
+    .tasks-table td {
+        padding: 0.75rem 0.5rem;
+        font-size: 0.8rem;
+    }
+    
+    .task-description {
+        display: none;
+    }
 }
 
 /* Estilos para el modal de eliminación múltiple */
@@ -594,6 +954,67 @@ function updateSelection() {
     // Actualizar el estado del checkbox "Seleccionar todas"
     selectAllCheckbox.checked = selectedCount === checkboxes.length;
     selectAllCheckbox.indeterminate = selectedCount > 0 && selectedCount < checkboxes.length;
+}
+
+// Función para cambiar estado de tarea
+function toggleTaskStatus(taskId, isChecked) {
+    const status = isChecked ? 'completed' : 'pending';
+    
+    fetch('?route=clan_leader/simple-toggle-task', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `task_id=${taskId}&status=${status}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Actualizar la fila visualmente
+            const row = document.querySelector(`tr[data-task-id="${taskId}"]`);
+            if (row) {
+                if (isChecked) {
+                    row.classList.add('completed');
+                } else {
+                    row.classList.remove('completed');
+                }
+                
+                // Actualizar el badge de estado
+                const statusBadge = row.querySelector('.status-badge');
+                if (statusBadge) {
+                    statusBadge.textContent = isChecked ? 'Completado' : 'Pendiente';
+                    statusBadge.className = `status-badge status-${status}`;
+                }
+                
+                // Actualizar el progreso
+                const progressFill = row.querySelector('.progress-fill');
+                const progressText = row.querySelector('.progress-text');
+                if (progressFill && progressText) {
+                    const newProgress = isChecked ? 100 : 0;
+                    progressFill.style.width = `${newProgress}%`;
+                    progressText.textContent = `${newProgress}%`;
+                }
+            }
+            
+            showToast(isChecked ? 'Tarea completada' : 'Tarea marcada como pendiente', 'success');
+        } else {
+            showToast('Error al actualizar la tarea: ' + data.message, 'error');
+            // Revertir el checkbox
+            const checkbox = document.querySelector(`#task-${taskId}`);
+            if (checkbox) {
+                checkbox.checked = !isChecked;
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Error de conexión', 'error');
+        // Revertir el checkbox
+        const checkbox = document.querySelector(`#task-${taskId}`);
+        if (checkbox) {
+            checkbox.checked = !isChecked;
+        }
+    });
 }
 
 // Función para eliminar tarea individual
