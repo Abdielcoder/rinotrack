@@ -1214,8 +1214,16 @@ class ClanLeaderController {
             error_log("priority: " . $priority);
             error_log("dueDate: " . ($taskDueDate ?? 'NULL'));
             
-            if ($taskId <= 0 || empty($taskName) || $taskProject <= 0) {
-                Utils::jsonResponse(['success' => false, 'message' => 'Datos inválidos'], 400);
+            if ($taskId <= 0) {
+                Utils::jsonResponse(['success' => false, 'message' => 'ID de tarea inválido'], 400);
+            }
+            
+            if (empty($taskName)) {
+                Utils::jsonResponse(['success' => false, 'message' => 'El título es requerido'], 400);
+            }
+            
+            if ($taskProject <= 0) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Debe seleccionar un proyecto válido'], 400);
             }
             
             // Verificar que la tarea existe y pertenece al clan
@@ -5395,7 +5403,7 @@ class ClanLeaderController {
             
             // Obtener datos del formulario
             $taskId = isset($_POST['task_id']) ? intval($_POST['task_id']) : 0;
-            $taskTitle = trim($_POST['task_title'] ?? '');
+            $taskTitle = trim($_POST['task_name'] ?? '');
             $taskDescription = trim($_POST['task_description'] ?? '');
             $taskProject = isset($_POST['task_project']) ? intval($_POST['task_project']) : null;
             $taskDueDate = $_POST['task_due_date'] ?? null;

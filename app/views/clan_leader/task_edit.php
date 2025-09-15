@@ -55,8 +55,8 @@ function getActiveTasksCount($userId) {
                     
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="task_title">Título de la tarea *</label>
-                            <input type="text" id="task_title" name="task_title" placeholder="Título de la tarea *" required value="<?= htmlspecialchars($task['task_name']) ?>">
+                            <label for="task_name">Título de la tarea *</label>
+                            <input type="text" id="task_name" name="task_name" placeholder="Título de la tarea *" required value="<?= htmlspecialchars($task['task_name']) ?>">
                         </div>
                     </div>
                     
@@ -520,7 +520,7 @@ function updateProgressFromClick(event) {
 function updateTask() {
     // Obtener los valores del formulario
     const taskId = document.getElementById('task_id').value;
-    const taskName = document.getElementById('task_title').value;
+    const taskName = document.getElementById('task_name').value;
     const taskDescription = document.getElementById('task_description').value;
     const taskProject = document.getElementById('task_project').value;
     const taskDueDate = document.getElementById('task_due_date').value;
