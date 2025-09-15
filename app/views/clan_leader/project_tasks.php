@@ -822,43 +822,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 /* Estilos para checkboxes redondos */
 .task-checkbox {
-    width: 18px;
-    height: 18px;
     border-radius: 50%;
-    border: 2px solid #d1d5db;
-    background: white;
-    cursor: pointer;
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    position: relative;
-    transition: all 0.2s ease;
-}
-
-.task-checkbox:hover {
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.task-checkbox:checked {
-    background: #3b82f6;
-    border-color: #3b82f6;
-}
-
-.task-checkbox:checked::after {
-    content: '✓';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    color: white;
-    font-size: 12px;
-    font-weight: bold;
-}
-
-.task-checkbox:focus {
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
 }
 </style>
 
