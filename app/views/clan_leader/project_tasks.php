@@ -754,70 +754,69 @@ document.addEventListener('DOMContentLoaded', function() {
     width: 120px;
 }
 
-/* Botones de acción */
+/* Botones de acción - ESTILOS IDÉNTICOS A tasks.php */
 .action-buttons {
     display: flex;
-    flex-direction: row;
-    gap: 4px;
+    gap: 0.5rem;
     justify-content: center;
-    align-items: center;
-    flex-wrap: nowrap;
 }
 
 .btn-action {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 28px;
-    height: 28px;
-    border: none;
+    width: 32px;
+    height: 32px;
     border-radius: 6px;
-    text-decoration: none;
-    font-size: 12px;
-    transition: all 0.2s ease;
+    border: none;
     cursor: pointer;
-    flex-shrink: 0;
-    margin: 0;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    font-size: 0.8rem;
 }
 
-.btn-view {
-    background: #e0f2fe;
-    color: #0277bd;
+.btn-action.btn-view {
+    background: #3b82f6;
+    color: white;
 }
 
-.btn-view:hover {
-    background: #b3e5fc;
-    color: #01579b;
+.btn-action.btn-view:hover {
+    background: #2563eb;
+    transform: translateY(-1px);
 }
 
-.btn-edit {
-    background: #f3e5f5;
-    color: #7b1fa2;
+.btn-action.btn-edit {
+    background: #f3f4f6;
+    color: #6b7280;
 }
 
-.btn-edit:hover {
-    background: #e1bee7;
-    color: #4a148c;
+.btn-action.btn-edit:hover {
+    background: #e5e7eb;
+    color: #374151;
+    transform: translateY(-1px);
 }
 
-.btn-delete {
-    background: #ffebee;
-    color: #c62828;
+.btn-action.btn-delete {
+    background: #fee2e2;
+    color: #dc2626;
 }
 
-.btn-delete:hover {
-    background: #ffcdd2;
-    color: #b71c1c;
+.btn-action.btn-delete:hover {
+    background: #fecaca;
+    color: #b91c1c;
+    transform: translateY(-1px);
 }
 
 .btn-clone {
-    background: #e8f5e8;
-    color: #2e7d32;
+    background: #f3f4f6 !important;
+    color: #6b7280 !important;
+    border: 1px solid #d1d5db !important;
 }
 
 .btn-clone:hover {
-    background: #c8e6c9;
-    color: #1b5e20;
+    background: #e5e7eb !important;
+    color: #374151 !important;
+    transform: translateY(-1px);
 }
 
 /* Checkboxes redondos para selección - ESTILO IDÉNTICO A tasks.php */
