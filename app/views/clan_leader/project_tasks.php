@@ -685,6 +685,135 @@ document.addEventListener('DOMContentLoaded', function() {
         font-size: 11px;
     }
 }
+
+/* Estilos para la tabla de tareas */
+.tasks-table-container {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    margin-top: 20px;
+}
+
+.tasks-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+}
+
+.tasks-table th {
+    background: #f8fafc;
+    padding: 1rem 0.75rem;
+    text-align: left;
+    font-weight: 600;
+    color: #374151;
+    border-bottom: 2px solid #e5e7eb;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.tasks-table td {
+    padding: 0.875rem 0.75rem;
+    vertical-align: top;
+    border-right: 1px solid #f3f4f6;
+    border-bottom: 1px solid #f3f4f6;
+    background: white;
+}
+
+.tasks-table td:last-child {
+    border-right: none;
+}
+
+/* Columnas específicas */
+.th-actions, .td-actions {
+    width: 100px;
+    text-align: center;
+    background: white !important;
+}
+
+.th-checkbox, .td-select {
+    width: 50px;
+    text-align: center;
+}
+
+.th-priority, .td-priority {
+    width: 100px;
+}
+
+.th-status, .td-status {
+    width: 120px;
+}
+
+.th-progress, .td-progress {
+    width: 120px;
+}
+
+.th-due-date, .td-due-date {
+    width: 120px;
+}
+
+/* Botones de acción */
+.action-buttons {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+    align-items: center;
+}
+
+.btn-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 12px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.btn-view {
+    background: #e0f2fe;
+    color: #0277bd;
+}
+
+.btn-view:hover {
+    background: #b3e5fc;
+    color: #01579b;
+}
+
+.btn-edit {
+    background: #f3e5f5;
+    color: #7b1fa2;
+}
+
+.btn-edit:hover {
+    background: #e1bee7;
+    color: #4a148c;
+}
+
+.btn-delete {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.btn-delete:hover {
+    background: #ffcdd2;
+    color: #b71c1c;
+}
+
+.btn-clone {
+    background: #e8f5e8;
+    color: #2e7d32;
+}
+
+.btn-clone:hover {
+    background: #c8e6c9;
+    color: #1b5e20;
+}
 </style>
 
 <?php
