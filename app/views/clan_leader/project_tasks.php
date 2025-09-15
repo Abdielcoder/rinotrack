@@ -824,17 +824,39 @@ document.addEventListener('DOMContentLoaded', function() {
 .task-checkbox {
     border-radius: 50% !important;
     background: white !important;
+    background-color: white !important;
     border: 1px solid #ccc !important;
+    border-color: #ccc !important;
     appearance: none !important;
     -webkit-appearance: none !important;
     -moz-appearance: none !important;
     width: 16px !important;
     height: 16px !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+.task-checkbox:hover {
+    background: white !important;
+    background-color: white !important;
+    border: 1px solid #999 !important;
+    border-color: #999 !important;
+}
+
+.task-checkbox:focus {
+    background: white !important;
+    background-color: white !important;
+    border: 1px solid #999 !important;
+    border-color: #999 !important;
+    box-shadow: none !important;
+    outline: none !important;
 }
 
 .task-checkbox:checked {
     background: #3b82f6 !important;
+    background-color: #3b82f6 !important;
     border: 1px solid #3b82f6 !important;
+    border-color: #3b82f6 !important;
 }
 
 .task-checkbox:checked::after {
