@@ -820,53 +820,47 @@ document.addEventListener('DOMContentLoaded', function() {
     color: #1b5e20;
 }
 
-/* Estilos para checkboxes redondos */
-.task-checkbox {
+/* Sobrescribir TODOS los estilos de checkboxes */
+.tasks-table .td-select,
+.tasks-table .th-checkbox,
+.td-select,
+.th-checkbox {
+    background: white !important;
+    background-color: white !important;
+    border: none !important;
+}
+
+/* Checkboxes normales sin estilos personalizados */
+.tasks-table .task-checkbox,
+.task-checkbox,
+input[type="checkbox"].task-checkbox,
+.tasks-table input[type="checkbox"].task-checkbox,
+.tasks-table .td-select input[type="checkbox"],
+.tasks-table tbody td input[type="checkbox"] {
+    /* Usar el checkbox nativo del navegador */
+    all: revert !important;
+    
+    /* Solo aplicar forma redonda */
     border-radius: 50% !important;
-    background: white !important;
-    background-color: white !important;
-    border: 1px solid #ccc !important;
-    border-color: #ccc !important;
-    appearance: none !important;
-    -webkit-appearance: none !important;
-    -moz-appearance: none !important;
-    width: 16px !important;
-    height: 16px !important;
-    box-shadow: none !important;
-    outline: none !important;
+    accent-color: #667eea !important;
+    width: 18px !important;
+    height: 18px !important;
+    cursor: pointer !important;
 }
 
-.task-checkbox:hover {
-    background: white !important;
-    background-color: white !important;
-    border: 1px solid #999 !important;
-    border-color: #999 !important;
+/* Asegurar que no haya fondos amarillos o bordes rojos en ningún estado */
+.tasks-table .task-checkbox:not(:checked),
+.task-checkbox:not(:checked),
+input[type="checkbox"].task-checkbox:not(:checked) {
+    background: transparent !important;
+    background-color: transparent !important;
 }
 
-.task-checkbox:focus {
-    background: white !important;
-    background-color: white !important;
-    border: 1px solid #999 !important;
-    border-color: #999 !important;
-    box-shadow: none !important;
-    outline: none !important;
-}
-
-.task-checkbox:checked {
-    background: #3b82f6 !important;
-    background-color: #3b82f6 !important;
-    border: 1px solid #3b82f6 !important;
-    border-color: #3b82f6 !important;
-}
-
-.task-checkbox:checked::after {
-    content: '✓' !important;
-    color: white !important;
-    font-size: 10px !important;
-    font-weight: bold !important;
-    display: block !important;
-    text-align: center !important;
-    line-height: 14px !important;
+/* Eliminar cualquier estilo adicional que pueda venir de otros CSS */
+.tasks-table tbody tr td.td-select,
+.tasks-table tbody tr .td-select {
+    background: inherit !important;
+    background-color: inherit !important;
 }
 </style>
 
