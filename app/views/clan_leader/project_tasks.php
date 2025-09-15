@@ -12,244 +12,271 @@ ob_start();
 <!-- Cargar CSS de rediseño -->
 <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/clan-leader-redesign.css">
 
-<div class="clan-leader-tasks minimal">
-    <!-- Header Minimalista Consistente -->
-    <header class="minimal-header">
-        <div class="header-row">
-            <div class="title-minimal">
-                <div class="clan-icon-large">📋</div>
-                <h1><?= htmlspecialchars($project['project_name']) ?></h1>
-                <span class="subtitle">Tareas del proyecto</span>
+<div class="clan-leader-tasks-container">
+    <!-- Header Mejorado -->
+    <div class="page-header">
+        <div class="header-content">
+            <div class="header-left">
+                <h1 class="page-title"><?= htmlspecialchars($project['project_name']) ?></h1>
+                <p class="page-subtitle">
+                    <?php if (!empty($project['description'])): ?>
+                        <?= htmlspecialchars($project['description']) ?>
+                    <?php else: ?>
+                        Gestión de tareas del proyecto
+                    <?php endif; ?>
+                </p>
             </div>
-            
-            <div class="actions-minimal">
-                <a href="?route=clan_leader/tasks" class="btn-minimal secondary">
+            <div class="header-actions">
+                <a href="?route=clan_leader/tasks" class="btn-back">
                     <i class="fas fa-arrow-left"></i>
                     Todas las Tareas
                 </a>
-                <a href="?route=clan_leader/projects" class="btn-minimal secondary">
+                <a href="?route=clan_leader/projects" class="btn-back">
                     <i class="fas fa-folder"></i>
                     Proyectos
                 </a>
-                <a href="?route=clan_leader/tasks&action=create&project_id=<?= $project['project_id'] ?>" class="btn-minimal primary">
+                <a href="?route=clan_leader/tasks&action=create&project_id=<?= $project['project_id'] ?>" class="btn-create">
                     <i class="fas fa-plus"></i>
                     Nueva Tarea
                 </a>
             </div>
         </div>
-        
-        <!-- Información del proyecto -->
-        <div class="project-info-minimal">
-            <?php if (!empty($project['description'])): ?>
-                <p class="project-description"><?= htmlspecialchars($project['description']) ?></p>
-            <?php endif; ?>
-            
-            <div class="project-stats-minimal">
-                <div class="stat-item-minimal">
-                    <span class="stat-number"><?= count($tasks) ?></span>
-                    <span class="stat-label">Total Tareas</span>
+    </div>
+
+    <!-- Contenido Principal -->
+    <div class="main-content">
+        <!-- Estadísticas del Proyecto -->
+        <div class="project-stats-cards">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-list"></i>
                 </div>
-                <div class="stat-item-minimal">
-                    <span class="stat-number"><?= count(array_filter($tasks, function($t) { return $t['status'] === 'completed'; })) ?></span>
-                    <span class="stat-label">Completadas</span>
+                <div class="stat-content">
+                    <div class="stat-value"><?= count($tasks) ?></div>
+                    <div class="stat-label">Total Tareas</div>
                 </div>
-                <div class="stat-item-minimal">
-                    <span class="stat-number"><?= count(array_filter($tasks, function($t) { return $t['status'] === 'in_progress'; })) ?></span>
-                    <span class="stat-label">En Progreso</span>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon completed">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value"><?= count(array_filter($tasks, function($t) { return $t['status'] === 'completed'; })) ?></div>
+                    <div class="stat-label">Completadas</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon in-progress">
+                    <i class="fas fa-spinner"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value"><?= count(array_filter($tasks, function($t) { return $t['status'] === 'in_progress'; })) ?></div>
+                    <div class="stat-label">En Progreso</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon pending">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value"><?= count(array_filter($tasks, function($t) { return $t['status'] === 'pending'; })) ?></div>
+                    <div class="stat-label">Pendientes</div>
                 </div>
             </div>
         </div>
-    </header>
 
-    <!-- Filtros y búsqueda -->
-    <div class="filters-section-minimal">
-        <form method="GET" action="?route=clan_leader/tasks&project_id=<?= $project['project_id'] ?>" class="filters-form-minimal">
-            <input type="hidden" name="route" value="clan_leader/tasks">
-            <input type="hidden" name="project_id" value="<?= $project['project_id'] ?>">
+        <div class="all-tasks-section">
+            <div class="section-header">
+                <h2 class="section-title">Tareas del Proyecto</h2>
+            </div>
             
-            <div class="filters-row-minimal">
-                <div class="filter-item">
-                    <label for="statusFilter">Estado:</label>
-                    <select name="status_filter" id="statusFilter">
-                        <option value="">Todos</option>
-                        <option value="pending" <?= (($_GET['status_filter'] ?? '') === 'pending') ? 'selected' : '' ?>>Pendiente</option>
-                        <option value="in_progress" <?= (($_GET['status_filter'] ?? '') === 'in_progress') ? 'selected' : '' ?>>En Progreso</option>
-                        <option value="completed" <?= (($_GET['status_filter'] ?? '') === 'completed') ? 'selected' : '' ?>>Completado</option>
-                    </select>
+            <!-- Filtros y búsqueda -->
+            <div class="filters-container">
+                <div class="filters-header">
+                    <form method="GET" action="?route=clan_leader/tasks&project_id=<?= $project['project_id'] ?>" class="filters-form">
+                        <input type="hidden" name="route" value="clan_leader/tasks">
+                        <input type="hidden" name="project_id" value="<?= $project['project_id'] ?>">
+                        
+                        <!-- Filtros -->
+                        <div class="filter-group">
+                            <div class="filter-item">
+                                <label for="statusFilter">Estado:</label>
+                                <select name="status_filter" id="statusFilter">
+                                    <option value="">Todos</option>
+                                    <option value="pending" <?= (($_GET['status_filter'] ?? '') === 'pending') ? 'selected' : '' ?>>Pendiente</option>
+                                    <option value="in_progress" <?= (($_GET['status_filter'] ?? '') === 'in_progress') ? 'selected' : '' ?>>En Progreso</option>
+                                    <option value="completed" <?= (($_GET['status_filter'] ?? '') === 'completed') ? 'selected' : '' ?>>Completado</option>
+                                </select>
+                            </div>
+                            
+                            <div class="filter-item">
+                                <label for="perPage">Mostrar:</label>
+                                <select name="per_page" id="perPage">
+                                    <option value="5" <?= (($_GET['per_page'] ?? '5') === '5') ? 'selected' : '' ?>>5 por página</option>
+                                    <option value="10" <?= (($_GET['per_page'] ?? '5') === '10') ? 'selected' : '' ?>>10 por página</option>
+                                    <option value="25" <?= (($_GET['per_page'] ?? '5') === '25') ? 'selected' : '' ?>>25 por página</option>
+                                    <option value="50" <?= (($_GET['per_page'] ?? '5') === '50') ? 'selected' : '' ?>>50 por página</option>
+                                </select>
+                            </div>
+                            
+                            <div class="search-container">
+                                <div class="search-input-wrapper">
+                                    <i class="fas fa-search search-icon"></i>
+                                    <input type="text" 
+                                           name="search" 
+                                           value="<?= htmlspecialchars($search ?? '') ?>"
+                                           placeholder="Buscar tareas..."
+                                           class="search-input"
+                                           id="searchInput">
+                                </div>
+                            </div>
+                            
+                            <!-- Botones de acción -->
+                            <div class="filter-actions">
+                                <button type="button" class="btn-apply-filters" onclick="applyFilters()">
+                                    <i class="fas fa-filter"></i>
+                                    Aplicar Filtros
+                                </button>
+                                <button type="button" class="btn-reset-filters" onclick="resetFilters()">
+                                    <i class="fas fa-undo"></i>
+                                    Resetear Filtros
+                                </button>
+                            </div>
+                        </div>
+                    </form>
                 </div>
-                
-                <div class="filter-item">
-                    <label for="perPage">Mostrar:</label>
-                    <select name="per_page" id="perPage">
-                        <option value="5" <?= (($_GET['per_page'] ?? '5') === '5') ? 'selected' : '' ?>>5 por página</option>
-                        <option value="10" <?= (($_GET['per_page'] ?? '5') === '10') ? 'selected' : '' ?>>10 por página</option>
-                        <option value="25" <?= (($_GET['per_page'] ?? '5') === '25') ? 'selected' : '' ?>>25 por página</option>
-                        <option value="50" <?= (($_GET['per_page'] ?? '5') === '50') ? 'selected' : '' ?>>50 por página</option>
-                    </select>
-                </div>
-                
-                <div class="search-container">
-                    <div class="search-input-wrapper">
-                        <i class="fas fa-search search-icon"></i>
-                        <input type="text" 
-                               name="search" 
-                               value="<?= htmlspecialchars($search ?? '') ?>"
-                               placeholder="Buscar tareas..."
-                               class="search-input"
-                               id="searchInput">
-                    </div>
-                </div>
-                
-                <!-- Botones de acción -->
-                <div class="filter-actions">
-                    <button type="button" class="btn-apply-filters" onclick="applyFilters()">
-                        <i class="fas fa-filter"></i>
-                        Aplicar Filtros
+            </div>
+            
+            <!-- Área de selección múltiple -->
+            <div id="bulk-actions-area" class="bulk-actions-area" style="display: none;">
+                <div class="bulk-actions-content">
+                    <span id="selected-count" class="selected-count">0 tareas seleccionadas</span>
+                    <button id="bulk-delete-btn" class="btn btn-danger" onclick="showBulkDeleteModal()">
+                        <i class="fas fa-trash"></i> Eliminar Seleccionadas
                     </button>
-                    <button type="button" class="btn-reset-filters" onclick="resetFilters()">
-                        <i class="fas fa-undo"></i>
-                        Resetear Filtros
+                    <button class="btn btn-secondary" onclick="clearSelection()">
+                        <i class="fas fa-times"></i> Limpiar Selección
                     </button>
                 </div>
             </div>
-        </form>
-    </div>
-
-    <!-- Contenido principal -->
-    <div class="content-minimal">
-        <?php if (!empty($tasks)): ?>
-            <!-- Tabla de tareas -->
-            <div class="tasks-section-minimal">
-                <div class="tasks-header-minimal">
-                    <h2>Tareas del Proyecto</h2>
-                    <div class="tasks-actions-minimal">
-                        <button class="btn-minimal secondary" onclick="selectAllTasks()">
-                            <i class="fas fa-check-square"></i>
-                            Seleccionar Todas
-                        </button>
-                        <button class="btn-minimal danger" onclick="bulkDeleteTasks()" id="bulkDeleteBtn" style="display: none;">
-                            <i class="fas fa-trash"></i>
-                            Eliminar Seleccionadas
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Tabla de Tareas del Proyecto -->
-                <div class="tasks-table-container">
-                    <table class="tasks-table">
-                        <thead>
-                            <tr>
-                                <th class="th-checkbox" style="width: 100px;">
-                                    Completar
-                                </th>
-                                <th class="th-priority">Prioridad</th>
-                                <th class="th-task">Tarea</th>
-                                <th class="th-assigned">Asignado</th>
-                                <th class="th-due-date">Fecha Límite</th>
-                                <th class="th-status">Estado</th>
-                                <th class="th-progress">Progreso</th>
-                                <th class="th-actions">Acciones</th>
-                                <th class="th-select">Seleccionar</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tasksTableBody">
-                            <?php foreach ($tasks as $task): ?>
-                                <?php
-                                $status = $task['status'] ?? 'pending';
-                                $priority = $task['priority'] ?? 'medium';
-                                $progress = $task['completion_percentage'] ?? 0;
-                                $dueDate = $task['due_date'] ?? null;
-                                $isOverdue = $dueDate && strtotime($dueDate) < time() && $status !== 'completed';
-                                ?>
-                                <tr class="task-row priority-<?= $priority ?> <?= $isOverdue ? 'overdue' : '' ?> <?= $status === 'completed' ? 'completed' : '' ?>" data-task-id="<?= $task['task_id'] ?>">
-                                    <td class="td-checkbox">
-                                        <input type="checkbox" 
-                                               id="task-<?= $task['task_id'] ?>" 
-                                               data-task-id="<?= $task['task_id'] ?>"
-                                               <?= $status === 'completed' ? 'checked' : '' ?>
-                                               onchange="toggleTaskStatus('<?= $task['task_id'] ?>', this.checked)">
-                                    </td>
-                                    <td class="td-priority">
-                                        <span class="priority-badge priority-<?= $priority ?>">
-                                            <?= $priority === 'critical' ? 'Urgente' : ($priority === 'high' ? 'Alta' : ($priority === 'low' ? 'Baja' : 'Media')) ?>
-                                        </span>
-                                    </td>
-                                    <td class="td-task">
-                                        <div class="task-info">
-                                            <div class="task-name" title="<?= htmlspecialchars($task['task_name']) ?>"><?= htmlspecialchars($task['task_name']) ?></div>
-                                            <?php if (!empty($task['description'])): ?>
-                                                <div class="task-description" title="<?= htmlspecialchars($task['description']) ?>">
-                                                    <?= htmlspecialchars(substr($task['description'], 0, 100)) ?><?= strlen($task['description']) > 100 ? '...' : '' ?>
-                                                </div>
-                                            <?php endif; ?>
-                                        </div>
-                                    </td>
-                                    <td class="td-assigned">
-                                        <span class="assigned-users" title="<?= htmlspecialchars($task['assigned_to_fullname'] ?? $task['all_assigned_users'] ?? '') ?>">
-                                            <?= htmlspecialchars($task['assigned_to_fullname'] ?? $task['all_assigned_users'] ?? 'Sin asignar') ?>
-                                        </span>
-                                    </td>
-                                    <td class="td-due-date">
-                                        <?php if ($dueDate): ?>
-                                            <span class="due-date <?= $isOverdue ? 'overdue' : '' ?>" title="<?= $dueDate ?>">
-                                                <?= date('d/m/Y', strtotime($dueDate)) ?>
-                                            </span>
-                                        <?php else: ?>
-                                            <span class="no-date">Sin fecha</span>
-                                        <?php endif; ?>
-                                    </td>
-                                    <td class="td-status">
-                                        <span class="status-badge status-<?= $status ?>">
-                                            <?= $status === 'completed' ? 'Completado' : ($status === 'in_progress' ? 'En Progreso' : 'Pendiente') ?>
-                                        </span>
-                                    </td>
-                                    <td class="td-progress">
-                                        <div class="progress-container">
-                                            <div class="progress-bar">
-                                                <div class="progress-fill" style="width: <?= $progress ?>%"></div>
+            
+            <!-- Tabla de Tareas -->
+            <?php if (!empty($tasks)): ?>
+            <div class="tasks-table-container">
+                <table class="tasks-table">
+                    <thead>
+                        <tr>
+                            <th class="th-checkbox" style="width: 100px;">
+                                Completar
+                            </th>
+                            <th class="th-priority">Prioridad</th>
+                            <th class="th-task">Tarea</th>
+                            <th class="th-assigned">Asignado</th>
+                            <th class="th-due-date">Fecha Límite</th>
+                            <th class="th-status">Estado</th>
+                            <th class="th-progress">Progreso</th>
+                            <th class="th-actions">Acciones</th>
+                            <th class="th-select">Seleccionar</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tasksTableBody">
+                        <?php foreach ($tasks as $task): ?>
+                            <?php
+                            $status = $task['status'] ?? 'pending';
+                            $priority = $task['priority'] ?? 'medium';
+                            $progress = $status === 'completed' ? 100 : ($task['completion_percentage'] ?? 0);
+                            $dueDate = $task['due_date'] ?? null;
+                            $isOverdue = $dueDate && strtotime($dueDate) < time() && $status !== 'completed';
+                            ?>
+                            <tr class="task-row priority-<?= $priority ?> <?= $isOverdue ? 'overdue' : '' ?> <?= $status === 'completed' ? 'completed' : '' ?>" data-task-id="<?= $task['task_id'] ?>">
+                                <td class="td-checkbox">
+                                    <input type="checkbox" 
+                                           id="task-<?= $task['task_id'] ?>" 
+                                           data-task-id="<?= $task['task_id'] ?>"
+                                           <?= $status === 'completed' ? 'checked' : '' ?>
+                                           onchange="toggleTaskStatus('<?= $task['task_id'] ?>', this.checked)">
+                                </td>
+                                <td class="td-priority">
+                                    <span class="priority-badge priority-<?= $priority ?>">
+                                        <?= $priority === 'critical' ? 'Urgente' : ($priority === 'high' ? 'Alta' : ($priority === 'low' ? 'Baja' : 'Media')) ?>
+                                    </span>
+                                </td>
+                                <td class="td-task">
+                                    <div class="task-info">
+                                        <div class="task-name" title="<?= htmlspecialchars($task['task_name']) ?>"><?= htmlspecialchars($task['task_name']) ?></div>
+                                        <?php if (!empty($task['description'])): ?>
+                                            <div class="task-description" title="<?= htmlspecialchars($task['description']) ?>">
+                                                <?= htmlspecialchars(substr($task['description'], 0, 100)) ?><?= strlen($task['description']) > 100 ? '...' : '' ?>
                                             </div>
-                                            <span class="progress-text"><?= $progress ?>%</span>
+                                        <?php endif; ?>
+                                    </div>
+                                </td>
+                                <td class="td-assigned">
+                                    <span class="assigned-user" title="<?= htmlspecialchars($task['assigned_to_fullname'] ?? $task['all_assigned_users'] ?? '') ?>">
+                                        <?= htmlspecialchars($task['assigned_to_fullname'] ?? $task['all_assigned_users'] ?? 'Sin asignar') ?>
+                                    </span>
+                                </td>
+                                <td class="td-due-date">
+                                    <?php if ($dueDate): ?>
+                                        <span class="due-date <?= $isOverdue ? 'overdue' : '' ?>" title="<?= $dueDate ?>">
+                                            <?= date('d/m/Y', strtotime($dueDate)) ?>
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="no-date">Sin fecha</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td class="td-status">
+                                    <span class="status-badge status-<?= $status ?>">
+                                        <?= $status === 'completed' ? 'Completado' : ($status === 'in_progress' ? 'En Progreso' : 'Pendiente') ?>
+                                    </span>
+                                </td>
+                                <td class="td-progress">
+                                    <div class="progress-container">
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" style="width: <?= $progress ?>%"></div>
                                         </div>
-                                    </td>
-                                    <td class="td-actions">
-                                        <div class="action-buttons">
-                                            <a href="?route=clan_leader/get-task-details&task_id=<?= $task['task_id'] ?>" class="btn-action btn-view" title="Ver detalles">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
-                                            <a href="?route=clan_leader/task_edit&task_id=<?= $task['task_id'] ?>" class="btn-action btn-edit" title="Editar tarea">
-                                                <i class="fas fa-edit"></i>
-                                            </a>
-                                            <button class="btn-action btn-delete" onclick="deleteTask(<?= $task['task_id'] ?>)" title="Eliminar tarea">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                            <button class="btn-action btn-clone" onclick="openCloneTaskModal(<?= $task['task_id'] ?>)" title="Clonar tarea">
-                                                <i class="fas fa-copy"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                    <td class="td-select">
-                                        <input type="checkbox" class="task-checkbox" data-task-id="<?= $task['task_id'] ?>" data-task-name="<?= htmlspecialchars($task['task_name']) ?>" onchange="updateSelection()">
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
+                                        <span class="progress-text"><?= $progress ?>%</span>
+                                    </div>
+                                </td>
+                                <td class="td-actions">
+                                    <div class="action-buttons">
+                                        <a href="?route=clan_leader/get-task-details&task_id=<?= $task['task_id'] ?>" class="btn-action btn-view" title="Ver detalles">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="?route=clan_leader/task_edit&task_id=<?= $task['task_id'] ?>" class="btn-action btn-edit" title="Editar tarea">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <button class="btn-action btn-delete" onclick="deleteTask(<?= $task['task_id'] ?>)" title="Eliminar tarea">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                        <button class="btn-action btn-clone" onclick="openCloneTaskModal(<?= $task['task_id'] ?>)" title="Clonar tarea">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                                <td class="td-select">
+                                    <input type="checkbox" class="task-checkbox" data-task-id="<?= $task['task_id'] ?>" data-task-name="<?= htmlspecialchars($task['task_name']) ?>" onchange="updateSelection()">
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
             </div>
-        <?php else: ?>
+            <?php else: ?>
             <!-- Estado vacío -->
-            <div class="empty-state-minimal">
+            <div class="empty-state">
                 <div class="empty-icon">
                     <i class="fas fa-clipboard-list"></i>
                 </div>
                 <h3>No hay tareas en este proyecto</h3>
                 <p>Crea la primera tarea para comenzar a trabajar en este proyecto.</p>
-                <a href="?route=clan_leader/tasks&action=create&project_id=<?= $project['project_id'] ?>" class="btn-minimal primary">
+                <a href="?route=clan_leader/tasks&action=create&project_id=<?= $project['project_id'] ?>" class="btn-create">
                     <i class="fas fa-plus"></i>
                     Crear Primera Tarea
                 </a>
             </div>
-        <?php endif; ?>
+            <?php endif; ?>
+        </div>
     </div>
 </div>
 
@@ -284,622 +311,10 @@ ob_start();
     </div>
 </div>
 
-<style>
-/* Estilos específicos para la vista de tareas de proyecto */
-.project-info-minimal {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 16px;
-    padding: 24px;
-    margin: 20px 0;
-    color: white;
-}
-
-.project-description {
-    font-size: 16px;
-    margin-bottom: 16px;
-    opacity: 0.9;
-}
-
-.project-stats-minimal {
-    display: flex;
-    gap: 32px;
-    flex-wrap: wrap;
-}
-
-.stat-item-minimal {
-    text-align: center;
-}
-
-.stat-number {
-    display: block;
-    font-size: 28px;
-    font-weight: 700;
-    margin-bottom: 4px;
-}
-
-.stat-label {
-    font-size: 14px;
-    opacity: 0.8;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-/* Tabla de Tareas - ESTILOS EXACTOS DE LA PÁGINA PRINCIPAL */
-.tasks-table-container {
-    background: white;
-    border-radius: 16px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-    border: 1px solid #e5e7eb;
-    overflow: hidden;
-}
-
-.tasks-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.9rem;
-}
-
-.tasks-table thead {
-    background: #f8fafc;
-    border-bottom: 2px solid #e5e7eb;
-}
-
-.tasks-table th {
-    padding: 0.75rem 1rem;
-    text-align: left;
-    font-weight: 600;
-    color: #374151;
-    font-size: 0.8rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.tasks-table td {
-    padding: 0.75rem 1rem;
-    border-bottom: 1px solid #f3f4f6;
-    vertical-align: middle;
-}
-
-.tasks-table tbody tr {
-    transition: all 0.2s ease;
-}
-
-.tasks-table tbody tr:hover {
-    background: #f9fafb;
-}
-
-.tasks-table tbody tr.completed {
-    opacity: 0.7;
-    background: #f9fafb;
-}
-
-.tasks-table tbody tr.completed .task-name {
-    text-decoration: line-through;
-    color: #6b7280;
-}
-
-.tasks-table tbody tr.overdue {
-    background-color: #fef2f2;
-    border-left: 4px solid #dc2626;
-}
-
-.tasks-table tbody tr.overdue:hover {
-    background-color: #fee2e2;
-}
-
-.tasks-table tbody tr.priority-critical {
-    border-left: 4px solid #dc2626;
-}
-
-.tasks-table tbody tr.priority-high {
-    border-left: 4px solid #ea580c;
-}
-
-.tasks-table tbody tr.priority-medium {
-    border-left: 4px solid #d97706;
-}
-
-.tasks-table tbody tr.priority-low {
-    border-left: 4px solid #059669;
-}
-
-/* Columnas específicas */
-.th-priority, .td-priority {
-    width: 100px;
-    text-align: center;
-}
-
-.th-task, .td-task {
-    width: 25%;
-    min-width: 200px;
-}
-
-.th-assigned, .td-assigned {
-    width: 12%;
-    min-width: 100px;
-}
-
-.th-due-date, .td-due-date {
-    width: 15%;
-    min-width: 140px;
-}
-
-.th-status, .td-status {
-    width: 100px;
-    text-align: center;
-}
-
-.th-progress, .td-progress {
-    width: 200px;
-    text-align: center;
-}
-
-.th-checkbox, .td-checkbox {
-    width: 100px;
-    text-align: center;
-    font-size: 12px;
-    font-weight: 600;
-    color: #6b7280;
-}
-
-.th-actions, .td-actions {
-    width: 100px;
-    text-align: center;
-}
-
-.th-select, .td-select {
-    width: 80px;
-    text-align: center;
-    padding: 8px;
-}
-
-/* Estilos de contenido */
-.task-info {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.task-name {
-    font-weight: 600;
-    color: #1f2937;
-    font-size: 0.9rem;
-}
-
-.task-description {
-    font-size: 0.8rem;
-    color: #6b7280;
-    line-height: 1.4;
-}
-
-.priority-badge {
-    display: inline-block;
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.priority-badge.priority-critical {
-    background: #fef2f2;
-    color: #dc2626;
-}
-
-.priority-badge.priority-high {
-    background: #fff7ed;
-    color: #ea580c;
-}
-
-.priority-badge.priority-medium {
-    background: #fffbeb;
-    color: #d97706;
-}
-
-.priority-badge.priority-low {
-    background: #f0fdf4;
-    color: #059669;
-}
-
-.status-badge {
-    display: inline-block;
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.status-badge.status-completed {
-    background: #f0fdf4;
-    color: #059669;
-}
-
-.status-badge.status-in_progress {
-    background: #dbeafe;
-    color: #2563eb;
-}
-
-.status-badge.status-pending {
-    background: #fffbeb;
-    color: #d97706;
-}
-
-.progress-container {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.progress-bar {
-    flex: 1;
-    height: 8px;
-    background: #e5e7eb;
-    border-radius: 4px;
-    overflow: hidden;
-}
-
-.progress-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #3b82f6, #1d4ed8);
-    transition: width 0.3s ease;
-}
-
-.progress-text {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: #374151;
-    min-width: 35px;
-}
-
-.action-buttons {
-    display: flex;
-    gap: 4px;
-    justify-content: center;
-}
-
-.btn-action {
-    width: 28px;
-    height: 28px;
-    border: none;
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.75rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    text-decoration: none;
-}
-
-.btn-action.btn-view {
-    background: #dbeafe;
-    color: #2563eb;
-}
-
-.btn-action.btn-edit {
-    background: #fef3c7;
-    color: #d97706;
-}
-
-.btn-action.btn-delete {
-    background: #fee2e2;
-    color: #dc2626;
-}
-
-.btn-action.btn-clone {
-    background: #f3f4f6;
-    color: #6b7280;
-}
-
-.btn-action:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-/* Checkboxes de selección */
-.task-checkbox {
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    border: 2px solid #d1d5db;
-    background: #ffffff;
-    cursor: pointer;
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    position: relative;
-    transition: all 0.2s ease;
-}
-
-.task-checkbox:hover {
-    border-color: #6b7280;
-    transform: scale(1.05);
-}
-
-.task-checkbox:checked {
-    background: #ffffff;
-    border-color: #6b7280;
-}
-
-.task-checkbox:checked::after {
-    content: '✓';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    color: #6b7280;
-    font-size: 12px;
-    font-weight: bold;
-}
-
-/* Checkbox de completar - ESTILO ESPECÍFICO */
-.td-checkbox input[type="checkbox"] {
-    display: none !important;
-}
-
-.td-checkbox::after {
-    content: "Completar" !important;
-    display: block !important;
-    padding: 4px 8px !important;
-    border-radius: 4px !important;
-    background: #f3f4f6 !important;
-    border: 1px solid #d1d5db !important;
-    font-size: 11px !important;
-    font-weight: 600 !important;
-    color: #6b7280 !important;
-    cursor: pointer !important;
-    transition: all 0.2s ease !important;
-}
-
-.td-checkbox:hover::after {
-    background: #e5e7eb !important;
-    border-color: #9ca3af !important;
-}
-
-/* Responsive */
-@media (max-width: 1024px) {
-    .tasks-table-container {
-        overflow-x: auto;
-    }
-    
-    .tasks-table {
-        min-width: 900px;
-    }
-}
-
-@media (max-width: 768px) {
-    .tasks-table th,
-    .tasks-table td {
-        padding: 0.75rem 0.5rem;
-        font-size: 0.8rem;
-    }
-    
-    .task-description {
-        display: none;
-    }
-}
-
-/* Estilos para el modal de eliminación múltiple */
-.modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 1000;
-    align-items: center;
-    justify-content: center;
-}
-
-.modal-content {
-    background: white;
-    border-radius: 12px;
-    max-width: 600px;
-    width: 90%;
-    max-height: 80vh;
-    overflow-y: auto;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-}
-
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px 24px;
-    border-bottom: 1px solid #e5e7eb;
-}
-
-.modal-header h3 {
-    margin: 0;
-    color: #1f2937;
-    font-size: 18px;
-    font-weight: 600;
-}
-
-.modal-close {
-    background: none;
-    border: none;
-    font-size: 24px;
-    cursor: pointer;
-    color: #6b7280;
-    padding: 0;
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 6px;
-    transition: background-color 0.2s ease;
-}
-
-.modal-close:hover {
-    background: #f3f4f6;
-}
-
-.modal-body {
-    padding: 24px;
-}
-
-.alert {
-    padding: 12px 16px;
-    border-radius: 8px;
-    margin-bottom: 16px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.alert-warning {
-    background: #fef3c7;
-    color: #92400e;
-    border: 1px solid #f59e0b;
-}
-
-.modal-description {
-    font-size: 14px;
-    line-height: 1.5;
-    margin: 16px 0;
-    color: #374151;
-}
-
-.text-muted {
-    color: #6b7280;
-    font-size: 13px;
-}
-
-.modal-footer {
-    display: flex;
-    gap: 12px;
-    justify-content: flex-end;
-    margin-top: 20px;
-    padding-top: 16px;
-    border-top: 1px solid #e5e7eb;
-}
-
-.btn {
-    padding: 10px 20px;
-    border-radius: 6px;
-    font-weight: 600;
-    cursor: pointer;
-    border: none;
-    transition: all 0.2s ease;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.btn-secondary {
-    background: #f3f4f6;
-    color: #374151;
-    border: 1px solid #d1d5db;
-}
-
-.btn-secondary:hover {
-    background: #e5e7eb;
-}
-
-.btn-danger {
-    background: #dc2626;
-    color: white;
-}
-
-.btn-danger:hover {
-    background: #b91c1c;
-}
-
-/* Estilos específicos para el contenedor de tareas en el modal de eliminación múltiple */
-#bulkDeleteModal #tasks-to-delete {
-    max-height: 850px;
-    overflow-y: auto;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    padding: 16px;
-    background: #f9fafb;
-    margin: 16px 0;
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.06);
-}
-
-/* Estilos específicos para los elementos de tarea en el modal de eliminación */
-#bulkDeleteModal .task-item {
-    display: flex !important;
-    align-items: center !important;
-    gap: 12px !important;
-    padding: 12px 16px !important;
-    margin-bottom: 10px !important;
-    background: #ffffff !important;
-    border: 1px solid #e5e7eb !important;
-    border-radius: 8px !important;
-    transition: all 0.2s ease !important;
-}
-
-#bulkDeleteModal .task-item:hover {
-    background: #f9fafb !important;
-    border-color: #d1d5db !important;
-}
-
-#bulkDeleteModal .task-item .task-icon {
-    color: #3b82f6 !important;
-    font-size: 18px !important;
-}
-
-#bulkDeleteModal .task-item .task-info {
-    flex: 1 !important;
-}
-
-#bulkDeleteModal .task-item .task-name {
-    color: #1f2937 !important;
-    font-weight: 600 !important;
-    font-size: 14px !important;
-    line-height: 1.5 !important;
-    word-wrap: break-word !important;
-    overflow-wrap: break-word !important;
-}
-
-/* Scrollbar personalizado para el contenedor de tareas */
-#bulkDeleteModal #tasks-to-delete::-webkit-scrollbar {
-    width: 6px;
-}
-
-#bulkDeleteModal #tasks-to-delete::-webkit-scrollbar-track {
-    background: #f1f5f9;
-    border-radius: 3px;
-}
-
-#bulkDeleteModal #tasks-to-delete::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 3px;
-}
-
-#bulkDeleteModal #tasks-to-delete::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-    .project-stats-minimal {
-        gap: 16px;
-    }
-    
-    .stat-number {
-        font-size: 24px;
-    }
-    
-    .modal-content {
-        width: 95%;
-        margin: 1rem;
-    }
-}
-</style>
-
 <script>
 // Función para aplicar filtros
 function applyFilters() {
-    const form = document.querySelector('.filters-form-minimal');
+    const form = document.querySelector('.filters-form');
     form.submit();
 }
 
@@ -912,48 +327,28 @@ function resetFilters() {
     window.location.href = url.toString();
 }
 
-// Función para seleccionar todas las tareas
-function selectAllTasks() {
-    const checkboxes = document.querySelectorAll('.task-checkbox');
-    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
-    
-    checkboxes.forEach(checkbox => {
-        checkbox.checked = true;
-    });
-    selectAllCheckbox.checked = true;
-    
-    updateSelection();
-}
-
-// Función para toggle de selección de todas las tareas
-function toggleSelectAll() {
-    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
-    const checkboxes = document.querySelectorAll('.task-checkbox');
-    
-    checkboxes.forEach(checkbox => {
-        checkbox.checked = selectAllCheckbox.checked;
-    });
-    
-    updateSelection();
-}
-
 // Función para actualizar la selección
 function updateSelection() {
     const checkboxes = document.querySelectorAll('.task-checkbox');
     const selectedCount = document.querySelectorAll('.task-checkbox:checked').length;
-    const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
-    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    const bulkActionsArea = document.getElementById('bulk-actions-area');
+    const selectedCountSpan = document.getElementById('selected-count');
     
     if (selectedCount > 0) {
-        bulkDeleteBtn.style.display = 'inline-flex';
-        bulkDeleteBtn.innerHTML = `<i class="fas fa-trash"></i> Eliminar ${selectedCount} Tarea${selectedCount !== 1 ? 's' : ''}`;
+        bulkActionsArea.style.display = 'block';
+        selectedCountSpan.textContent = `${selectedCount} tarea${selectedCount !== 1 ? 's' : ''} seleccionada${selectedCount !== 1 ? 's' : ''}`;
     } else {
-        bulkDeleteBtn.style.display = 'none';
+        bulkActionsArea.style.display = 'none';
     }
-    
-    // Actualizar el estado del checkbox "Seleccionar todas"
-    selectAllCheckbox.checked = selectedCount === checkboxes.length;
-    selectAllCheckbox.indeterminate = selectedCount > 0 && selectedCount < checkboxes.length;
+}
+
+// Función para limpiar selección
+function clearSelection() {
+    const checkboxes = document.querySelectorAll('.task-checkbox');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    updateSelection();
 }
 
 // Función para cambiar estado de tarea
@@ -1045,8 +440,8 @@ function deleteTask(taskId) {
     }
 }
 
-// Función para eliminar tareas múltiples
-function bulkDeleteTasks() {
+// Función para mostrar modal de eliminación múltiple
+function showBulkDeleteModal() {
     const checkboxes = document.querySelectorAll('.task-checkbox:checked');
     const tasksList = document.getElementById('tasks-to-delete');
     
@@ -1057,26 +452,17 @@ function bulkDeleteTasks() {
     
     // Crear lista de tareas a eliminar
     let tasksHtml = '<div class="tasks-to-delete-container">';
-    console.log('🔍 Debug: checkboxes encontrados:', checkboxes.length);
     
-    checkboxes.forEach((checkbox, index) => {
+    checkboxes.forEach((checkbox) => {
         const taskId = checkbox.getAttribute('data-task-id');
-        // SOLUCIÓN DEFINITIVA: Obtener el nombre directamente del atributo data-task-name
         const taskName = checkbox.getAttribute('data-task-name') || '';
         
-        console.log(`🔍 Debug: Procesando tarea ${index + 1}`);
-        console.log(`🔍 Debug: taskId:`, taskId);
-        console.log(`🔍 Debug: taskName del atributo:`, taskName);
-        
-        // Crear el texto final: Nombre + ID
         let displayText = '';
         if (taskName && taskName.trim() !== '') {
             displayText = `${taskName} (ID: ${taskId})`;
         } else {
             displayText = `Tarea ${taskId}`;
         }
-        
-        console.log(`🔍 Debug: displayText final:`, displayText);
         
         tasksHtml += `
             <div class="task-item">
@@ -1090,9 +476,6 @@ function bulkDeleteTasks() {
         `;
     });
     tasksHtml += '</div>';
-    
-    console.log('🔍 Debug: HTML generado:', tasksHtml);
-    console.log('🔍 Debug: tasksList element:', tasksList);
     
     tasksList.innerHTML = tasksHtml;
     
