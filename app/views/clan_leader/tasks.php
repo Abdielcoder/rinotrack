@@ -4390,9 +4390,12 @@ console.log('🔧 Botón de clonar configurado correctamente');
     font-size: 16px;
     font-weight: 600;
     color: #1f2937;
-    line-height: 1.4;
+    line-height: 2.8;
     word-wrap: break-word;
-    padding: 4px 0;
+    padding: 8px 0;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
 }
 
 .alert {
@@ -5735,21 +5738,27 @@ function showBulkDeleteModal() {
         // Obtener el nombre de la tarea de diferentes formas posibles
         let taskName = '';
         
-        // Buscar en diferentes selectores posibles
+        // Buscar en diferentes selectores posibles para obtener el nombre real
         const selectors = [
             '.td-task .task-name',
             '.td-task .task-title', 
             '.td-task h4',
             '.td-task h3',
             '.td-task .task-info .task-name',
-            '.td-task .task-info .task-title'
+            '.td-task .task-info .task-title',
+            '.td-task strong',
+            '.td-task b'
         ];
         
         for (const selector of selectors) {
             const element = taskRow.querySelector(selector);
             if (element && element.textContent.trim()) {
-                taskName = element.textContent.trim();
-                break;
+                let text = element.textContent.trim();
+                // Verificar que no sea solo un número (ID)
+                if (!/^\d+$/.test(text) && text.length > 2) {
+                    taskName = text;
+                    break;
+                }
             }
         }
         
@@ -5761,8 +5770,31 @@ function showBulkDeleteModal() {
                 let cellText = taskCell.textContent.trim();
                 // Remover líneas vacías y tomar la primera línea con contenido
                 const lines = cellText.split('\n').filter(line => line.trim());
-                if (lines.length > 0) {
-                    taskName = lines[0].trim();
+                for (let line of lines) {
+                    line = line.trim();
+                    // Verificar que no sea solo un número y tenga contenido significativo
+                    if (!/^\d+$/.test(line) && line.length > 2 && !line.includes('ID:')) {
+                        taskName = line;
+                        break;
+                    }
+                }
+            }
+        }
+        
+        // Método alternativo: buscar en el atributo title o data-task-name
+        if (!taskName || taskName === '') {
+            const taskRowElement = taskRow.querySelector('.td-task');
+            if (taskRowElement) {
+                // Buscar en el atributo title
+                const title = taskRowElement.getAttribute('title');
+                if (title && title.trim() && !/^\d+$/.test(title.trim())) {
+                    taskName = title.trim();
+                }
+                
+                // Buscar en data-task-name si existe
+                const dataName = taskRowElement.getAttribute('data-task-name');
+                if (dataName && dataName.trim() && !/^\d+$/.test(dataName.trim())) {
+                    taskName = dataName.trim();
                 }
             }
         }
