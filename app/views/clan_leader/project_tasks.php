@@ -727,9 +727,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
 /* Columnas específicas */
 .th-actions, .td-actions {
-    width: 100px;
+    width: 140px;
     text-align: center;
     background: white !important;
+    white-space: nowrap;
 }
 
 .th-checkbox, .td-select {
@@ -756,9 +757,11 @@ document.addEventListener('DOMContentLoaded', function() {
 /* Botones de acción */
 .action-buttons {
     display: flex;
+    flex-direction: row;
     gap: 4px;
     justify-content: center;
     align-items: center;
+    flex-wrap: nowrap;
 }
 
 .btn-action {
@@ -773,6 +776,8 @@ document.addEventListener('DOMContentLoaded', function() {
     font-size: 12px;
     transition: all 0.2s ease;
     cursor: pointer;
+    flex-shrink: 0;
+    margin: 0;
 }
 
 .btn-view {
