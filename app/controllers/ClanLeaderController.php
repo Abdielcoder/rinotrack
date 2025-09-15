@@ -3810,8 +3810,10 @@ class ClanLeaderController {
                 return;
             }
 
-            if ((int)($originalTask['created_by_user_id'] ?? 0) !== (int)$this->currentUser['user_id']) {
-                Utils::jsonResponse(['success' => false, 'message' => 'Solo puedes clonar tus propias tareas'], 403);
+            // Verificar que la tarea pertenece al clan del líder
+            $originalProject = $this->projectModel->findById($originalTask['project_id']);
+            if (!$originalProject || (int)$originalProject['clan_id'] !== (int)$this->userClan['clan_id']) {
+                Utils::jsonResponse(['success' => false, 'message' => 'No tienes permisos para clonar esta tarea'], 403);
                 return;
             }
 
