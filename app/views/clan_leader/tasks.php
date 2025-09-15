@@ -4044,7 +4044,7 @@ function renderTeamTasksTable(tasks, tbodyId) {
                         <button class="btn-action btn-delete" onclick="deleteTask(${task.task_id})" title="Eliminar tarea">
                             <i class="fas fa-trash"></i>
                         </button>
-                        <button class="btn-action btn-clone" onclick="openCloneTaskModal(' + task.task_id + ')" title="Clonar tarea"><i class="fas fa-copy"></i></button>
+                        <button class="btn-action btn-clone" onclick="openCloneTaskModal(${task.task_id})" title="Clonar tarea"><i class="fas fa-copy"></i></button>
                     </div>
                 </td>
             </tr>
@@ -4138,7 +4138,7 @@ function renderTasksTable(tasks, tbodyId) {
                         <button class="btn-action btn-delete" onclick="deleteTask(${task.task_id})" title="Eliminar tarea">
                             <i class="fas fa-trash"></i>
                         </button>
-                        <button class="btn-action btn-clone" onclick="openCloneTaskModal(' + task.task_id + ')" title="Clonar tarea"><i class="fas fa-copy"></i></button>
+                        <button class="btn-action btn-clone" onclick="openCloneTaskModal(${task.task_id})" title="Clonar tarea"><i class="fas fa-copy"></i></button>
                     </div>
                 </td>
             </tr>
