@@ -4020,7 +4020,7 @@ function renderTeamTasksTable(tasks, tbodyId) {
                     </div>
                 </td>
                 <td class="td-select">
-                    <input type="checkbox" class="task-checkbox" data-task-id="${task.task_id}" onchange="updateSelection()">
+                    <input type="checkbox" class="task-checkbox" data-task-id="${task.task_id}" data-task-name="${(task.task_name || '').replace(/"/g, '&quot;')}" onchange="updateSelection()">
                 </td>
             </tr>
         `;
@@ -4117,7 +4117,7 @@ function renderTasksTable(tasks, tbodyId) {
                     </div>
                 </td>
                 <td class="td-select">
-                    <input type="checkbox" class="task-checkbox" data-task-id="${task.task_id}" onchange="updateSelection()">
+                    <input type="checkbox" class="task-checkbox" data-task-id="${task.task_id}" data-task-name="${(task.task_name || '').replace(/"/g, '&quot;')}" onchange="updateSelection()">
                 </td>
             </tr>
         `;
@@ -4359,20 +4359,33 @@ console.log('🔧 Botón de clonar configurado correctamente');
     display: flex !important;
     align-items: center !important;
     gap: 12px !important;
-    padding: 12px !important;
-    margin-bottom: 8px !important;
+    padding: 12px 16px !important;
+    margin-bottom: 10px !important;
     background: #ffffff !important;
     border: 1px solid #e5e7eb !important;
-    border-radius: 6px !important;
+    border-radius: 8px !important;
     transition: all 0.2s ease !important;
 }
 
-#bulkDeleteModal .task-item .task-name {
+#bulkDeleteModal .task-item:hover {
+    background: #f9fafb !important;
+    border-color: #d1d5db !important;
+}
+
+#bulkDeleteModal .task-item .task-icon {
+    color: #3b82f6 !important;
+    font-size: 18px !important;
+}
+
+#bulkDeleteModal .task-item .task-info {
     flex: 1 !important;
+}
+
+#bulkDeleteModal .task-item .task-name {
     color: #1f2937 !important;
     font-weight: 600 !important;
     font-size: 14px !important;
-    line-height: 1.4 !important;
+    line-height: 1.5 !important;
     word-wrap: break-word !important;
     overflow-wrap: break-word !important;
 }
@@ -5477,7 +5490,7 @@ function renderTasksTableFromKanban(tasks, tbodyId) {
                     </div>
                 </td>
                 <td class="td-select">
-                    <input type="checkbox" class="task-checkbox" data-task-id="${task.task_id}" onchange="updateSelection()">
+                    <input type="checkbox" class="task-checkbox" data-task-id="${task.task_id}" data-task-name="${(task.task_name || '').replace(/"/g, '&quot;')}" onchange="updateSelection()">
                 </td>
             </tr>
         `;
@@ -5774,52 +5787,19 @@ function showBulkDeleteModal() {
     
     checkboxes.forEach((checkbox, index) => {
         const taskId = checkbox.getAttribute('data-task-id');
-        const taskRow = checkbox.closest('tr');
-        console.log(`🔍 Debug: Procesando checkbox ${index + 1}, taskId: ${taskId}`);
+        // SOLUCIÓN DEFINITIVA: Obtener el nombre directamente del atributo data-task-name
+        const taskName = checkbox.getAttribute('data-task-name') || '';
         
-        // Obtener el nombre de la tarea de forma directa y simple
-        let taskName = '';
+        console.log(`🔍 Debug: Procesando tarea ${index + 1}`);
+        console.log(`🔍 Debug: taskId:`, taskId);
+        console.log(`🔍 Debug: taskName del atributo:`, taskName);
         
-        // Buscar directamente el elemento con clase 'task-name' en toda la fila
-        const taskNameElement = taskRow.querySelector('.task-name');
-        console.log(`🔍 Debug: taskNameElement encontrado:`, taskNameElement);
-        
-        if (taskNameElement) {
-            // Primero intentar obtener del atributo title (más confiable)
-            taskName = taskNameElement.getAttribute('title') || '';
-            console.log(`🔍 Debug: taskName del title:`, taskName);
-            
-            // Si no hay title, usar el contenido del elemento
-            if (!taskName || taskName.trim() === '') {
-                taskName = taskNameElement.textContent || taskNameElement.innerText || '';
-                taskName = taskName.trim();
-                console.log(`🔍 Debug: taskName del contenido:`, taskName);
-            }
-        }
-        
-        // Si aún no tenemos nombre, buscar en toda la fila
-        if (!taskName || taskName.trim() === '') {
-            console.log(`🔍 Debug: Buscando en toda la fila...`);
-            const taskCell = taskRow.querySelector('.td-task');
-            if (taskCell) {
-                const taskInfo = taskCell.querySelector('.task-info .task-name');
-                if (taskInfo) {
-                    taskName = taskInfo.getAttribute('title') || taskInfo.textContent || taskInfo.innerText || '';
-                    taskName = taskName.trim();
-                    console.log(`🔍 Debug: taskName de task-info:`, taskName);
-                }
-            }
-        }
-        
-        // Limpiar el nombre de la tarea (remover caracteres extra y espacios)
-        if (taskName) {
-            taskName = taskName.replace(/\s+/g, ' ').trim();
-        }
-        
-        // Crear el texto final: ID + Nombre (si existe)
-        let displayText = `Tarea ${taskId}`;
+        // Crear el texto final: Nombre + ID
+        let displayText = '';
         if (taskName && taskName.trim() !== '') {
             displayText = `${taskName} (ID: ${taskId})`;
+        } else {
+            displayText = `Tarea ${taskId}`;
         }
         
         console.log(`🔍 Debug: displayText final:`, displayText);
