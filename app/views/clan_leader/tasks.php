@@ -207,6 +207,19 @@ ob_start();
                     </div>
                 </div>
                 
+                <!-- Área de selección múltiple -->
+                <div id="bulk-actions-area" class="bulk-actions-area" style="display: none;">
+                    <div class="bulk-actions-content">
+                        <span id="selected-count" class="selected-count">0 tareas seleccionadas</span>
+                        <button id="bulk-delete-btn" class="btn btn-danger" onclick="showBulkDeleteModal()">
+                            <i class="fas fa-trash"></i> Eliminar Seleccionadas
+                        </button>
+                        <button class="btn btn-secondary" onclick="clearSelection()">
+                            <i class="fas fa-times"></i> Limpiar Selección
+                        </button>
+                    </div>
+                </div>
+                
                 <!-- Tabla de Mis Tareas (cargada por JavaScript) -->
                 <div class="tasks-table-container">
                     <table class="tasks-table">
@@ -222,6 +235,7 @@ ob_start();
                                 <th class="th-status">Estado</th>
                                 <th class="th-progress">Progreso</th>
                                 <th class="th-actions">Acciones</th>
+                                <th class="th-select">Seleccionar</th>
                             </tr>
                         </thead>
                         <tbody id="my-tasks-table-body">
@@ -297,6 +311,19 @@ ob_start();
                     </div>
                 </div>
                 
+                <!-- Área de selección múltiple -->
+                <div id="bulk-actions-area" class="bulk-actions-area" style="display: none;">
+                    <div class="bulk-actions-content">
+                        <span id="selected-count" class="selected-count">0 tareas seleccionadas</span>
+                        <button id="bulk-delete-btn" class="btn btn-danger" onclick="showBulkDeleteModal()">
+                            <i class="fas fa-trash"></i> Eliminar Seleccionadas
+                        </button>
+                        <button class="btn btn-secondary" onclick="clearSelection()">
+                            <i class="fas fa-times"></i> Limpiar Selección
+                        </button>
+                    </div>
+                </div>
+                
                 <!-- Tabla de Tareas del Equipo (cargada por JavaScript) -->
                 <div class="tasks-table-container">
                     <table class="tasks-table">
@@ -313,6 +340,7 @@ ob_start();
                                 <th class="th-status">Estado</th>
                                 <th class="th-progress">Progreso</th>
                                 <th class="th-actions">Acciones</th>
+                                <th class="th-select">Seleccionar</th>
                             </tr>
                         </thead>
                         <tbody id="team-tasks-table-body">
@@ -4047,6 +4075,9 @@ function renderTeamTasksTable(tasks, tbodyId) {
                         <button class="btn-action btn-clone" onclick="openCloneTaskModal(${task.task_id})" title="Clonar tarea"><i class="fas fa-copy"></i></button>
                     </div>
                 </td>
+                <td class="td-select">
+                    <input type="checkbox" class="task-checkbox" data-task-id="${task.task_id}" onchange="updateSelection()">
+                </td>
             </tr>
         `;
     });
@@ -4141,6 +4172,9 @@ function renderTasksTable(tasks, tbodyId) {
                         <button class="btn-action btn-clone" onclick="openCloneTaskModal(${task.task_id})" title="Clonar tarea"><i class="fas fa-copy"></i></button>
                     </div>
                 </td>
+                <td class="td-select">
+                    <input type="checkbox" class="task-checkbox" data-task-id="${task.task_id}" onchange="updateSelection()">
+                </td>
             </tr>
         `;
     });
@@ -4217,6 +4251,171 @@ console.log('🔧 Botón de clonar configurado correctamente');
     background: #e5e7eb !important;
     color: #374151 !important;
     transform: translateY(-1px);
+}
+
+/* Estilos para la columna de selección */
+.th-select, .td-select {
+    width: 80px;
+    text-align: center;
+    padding: 8px;
+}
+
+/* Checkboxes redondos */
+.task-checkbox {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid #d1d5db;
+    background: #ffffff;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.task-checkbox:hover {
+    border-color: #3b82f6;
+    transform: scale(1.1);
+}
+
+.task-checkbox:checked {
+    background: #3b82f6;
+    border-color: #3b82f6;
+}
+
+.task-checkbox:checked::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+/* Área de selección múltiple */
+.bulk-actions-area {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 16px 0;
+    animation: slideDown 0.3s ease;
+}
+
+.bulk-actions-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.selected-count {
+    font-weight: 600;
+    color: #dc2626;
+    font-size: 14px;
+}
+
+.bulk-actions-area .btn {
+    padding: 8px 16px;
+    font-size: 14px;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.bulk-actions-area .btn-danger {
+    background: #dc2626;
+    border-color: #dc2626;
+    color: white;
+}
+
+.bulk-actions-area .btn-danger:hover {
+    background: #b91c1c;
+    border-color: #b91c1c;
+    transform: translateY(-1px);
+}
+
+.bulk-actions-area .btn-secondary {
+    background: #6b7280;
+    border-color: #6b7280;
+    color: white;
+}
+
+.bulk-actions-area .btn-secondary:hover {
+    background: #4b5563;
+    border-color: #4b5563;
+    transform: translateY(-1px);
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Estilos para el modal de eliminación múltiple */
+.tasks-to-delete-list {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 12px;
+    background: #f9fafb;
+    margin: 12px 0;
+}
+
+.tasks-to-delete-list li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 14px;
+}
+
+.tasks-to-delete-list li:last-child {
+    border-bottom: none;
+}
+
+.tasks-to-delete-list .fas {
+    font-size: 12px;
+}
+
+.alert {
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin: 16px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.alert-warning {
+    background: #fef3c7;
+    border: 1px solid #f59e0b;
+    color: #92400e;
+}
+
+.alert .fas {
+    font-size: 16px;
+}
+
+.modal-footer {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid #e5e7eb;
 }
 
 @media (max-width: 768px) {
@@ -5191,6 +5390,9 @@ function renderTasksTableFromKanban(tasks, tbodyId) {
                         </span>`}
                     </div>
                 </td>
+                <td class="td-select">
+                    <input type="checkbox" class="task-checkbox" data-task-id="${task.task_id}" onchange="updateSelection()">
+                </td>
             </tr>
         `;
     });
@@ -5443,7 +5645,147 @@ function debounce(func, wait) {
         timeout = setTimeout(later, wait);
     };
 }
+
+// ========== FUNCIONES DE SELECCIÓN MÚLTIPLE ==========
+
+// Función para actualizar la selección
+function updateSelection() {
+    const checkboxes = document.querySelectorAll('.task-checkbox:checked');
+    const count = checkboxes.length;
+    const bulkArea = document.getElementById('bulk-actions-area');
+    const selectedCount = document.getElementById('selected-count');
+    
+    if (count > 0) {
+        bulkArea.style.display = 'block';
+        selectedCount.textContent = `${count} tarea${count > 1 ? 's' : ''} seleccionada${count > 1 ? 's' : ''}`;
+    } else {
+        bulkArea.style.display = 'none';
+    }
+}
+
+// Función para limpiar la selección
+function clearSelection() {
+    const checkboxes = document.querySelectorAll('.task-checkbox');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    updateSelection();
+}
+
+// Función para mostrar el modal de confirmación
+function showBulkDeleteModal() {
+    const checkboxes = document.querySelectorAll('.task-checkbox:checked');
+    const tasksList = document.getElementById('tasks-to-delete');
+    
+    if (checkboxes.length === 0) {
+        showToast('No hay tareas seleccionadas', 'warning');
+        return;
+    }
+    
+    // Crear lista de tareas a eliminar
+    let tasksHtml = '<ul class="tasks-to-delete-list">';
+    checkboxes.forEach(checkbox => {
+        const taskId = checkbox.getAttribute('data-task-id');
+        const taskRow = checkbox.closest('tr');
+        const taskName = taskRow.querySelector('.td-task .task-name')?.textContent || `Tarea ${taskId}`;
+        tasksHtml += `<li><i class="fas fa-trash text-danger"></i> ${taskName}</li>`;
+    });
+    tasksHtml += '</ul>';
+    
+    tasksList.innerHTML = tasksHtml;
+    
+    // Mostrar modal
+    const modal = document.getElementById('bulkDeleteModal');
+    modal.style.display = 'flex';
+}
+
+// Función para cerrar el modal
+function closeBulkDeleteModal() {
+    const modal = document.getElementById('bulkDeleteModal');
+    modal.style.display = 'none';
+}
+
+// Función para ejecutar la eliminación múltiple
+function executeBulkDelete() {
+    const checkboxes = document.querySelectorAll('.task-checkbox:checked');
+    const taskIds = Array.from(checkboxes).map(checkbox => checkbox.getAttribute('data-task-id'));
+    
+    if (taskIds.length === 0) {
+        showToast('No hay tareas seleccionadas', 'warning');
+        return;
+    }
+    
+    // Mostrar indicador de carga
+    const loadingToast = showToast('Eliminando tareas...', 'info');
+    
+    // Crear FormData con los IDs de las tareas
+    const formData = new FormData();
+    formData.append('task_ids', JSON.stringify(taskIds));
+    
+    fetch('?route=clan_leader/bulk-delete-tasks', {
+        method: 'POST',
+        credentials: 'same-origin',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Ocultar indicador de carga
+        if (loadingToast) loadingToast.remove();
+        
+        if (data.success) {
+            showToast(data.message || `${taskIds.length} tareas eliminadas exitosamente`, 'success');
+            closeBulkDeleteModal();
+            clearSelection();
+            
+            // Recargar el tab actual
+            const activeTab = document.querySelector('.tab-minimal.active');
+            if (activeTab) {
+                const tabId = activeTab.id.replace('-tab', '');
+                if (tabId === 'my-tasks') {
+                    loadMyTasksTable();
+                } else {
+                    loadTeamTasksTable();
+                }
+            }
+        } else {
+            showToast(data.message || 'Error al eliminar las tareas', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        if (loadingToast) loadingToast.remove();
+        showToast('Error de conexión al eliminar las tareas', 'error');
+    });
+}
 </script>
+
+<!-- Modal de confirmación para eliminación múltiple -->
+<div id="bulkDeleteModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-exclamation-triangle text-danger"></i> Confirmar Eliminación Múltiple</h3>
+            <button class="modal-close" onclick="closeBulkDeleteModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="alert alert-warning">
+                <i class="fas fa-warning"></i>
+                <strong>¡Atención!</strong> Esta acción no se puede deshacer.
+            </div>
+            <p>¿Estás seguro de que deseas eliminar las siguientes tareas?</p>
+            <div id="tasks-to-delete" class="tasks-list">
+                <!-- Las tareas seleccionadas se mostrarán aquí -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeBulkDeleteModal()">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+                <button type="button" class="btn btn-danger" onclick="executeBulkDelete()">
+                    <i class="fas fa-trash"></i> Eliminar Tareas
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <?php
 $content = ob_get_clean();

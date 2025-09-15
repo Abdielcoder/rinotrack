@@ -7502,4 +7502,93 @@ class ClanLeaderController {
         Utils::jsonResponse(['success'=>false,'message'=>'No se pudo actualizar avatar']);
     }
 
+    /**
+     * Eliminar múltiples tareas
+     */
+    public function bulkDeleteTasks() {
+        try {
+            // Verificar autenticación
+            $this->requireAuth();
+            $this->hasClanLeaderAccess();
+
+            // Obtener los IDs de las tareas
+            $taskIdsJson = $_POST['task_ids'] ?? '';
+            if (empty($taskIdsJson)) {
+                Utils::jsonResponse(['success' => false, 'message' => 'No se proporcionaron tareas para eliminar'], 400);
+                return;
+            }
+
+            $taskIds = json_decode($taskIdsJson, true);
+            if (!is_array($taskIds) || empty($taskIds)) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Lista de tareas inválida'], 400);
+                return;
+            }
+
+            // Validar que todas las tareas pertenezcan al clan del líder
+            $deletedCount = 0;
+            $errors = [];
+
+            foreach ($taskIds as $taskId) {
+                $taskId = (int)$taskId;
+                if ($taskId <= 0) {
+                    $errors[] = "ID de tarea inválido: $taskId";
+                    continue;
+                }
+
+                // Verificar que la tarea existe y pertenece al clan
+                $task = $this->taskModel->findById($taskId);
+                if (!$task) {
+                    $errors[] = "Tarea con ID $taskId no encontrada";
+                    continue;
+                }
+
+                $project = $this->projectModel->findById($task['project_id']);
+                if (!$project || (int)$project['clan_id'] !== (int)$this->userClan['clan_id']) {
+                    $errors[] = "No tienes permisos para eliminar la tarea: " . $task['task_name'];
+                    continue;
+                }
+
+                // Eliminar la tarea
+                if ($this->taskModel->delete($taskId)) {
+                    $deletedCount++;
+                    
+                    // Registrar en el historial
+                    $this->taskModel->addToHistory(
+                        $taskId,
+                        $this->currentUser['user_id'],
+                        'Tarea eliminada',
+                        'Tarea "' . $task['task_name'] . '" eliminada por eliminación múltiple'
+                    );
+                } else {
+                    $errors[] = "Error al eliminar la tarea: " . $task['task_name'];
+                }
+            }
+
+            // Preparar respuesta
+            if ($deletedCount > 0) {
+                $message = "$deletedCount tarea" . ($deletedCount > 1 ? 's' : '') . " eliminada" . ($deletedCount > 1 ? 's' : '') . " exitosamente";
+                
+                if (!empty($errors)) {
+                    $message .= ". Errores: " . implode(', ', $errors);
+                }
+
+                Utils::jsonResponse([
+                    'success' => true,
+                    'message' => $message,
+                    'deleted_count' => $deletedCount,
+                    'errors' => $errors
+                ]);
+            } else {
+                Utils::jsonResponse([
+                    'success' => false,
+                    'message' => 'No se pudo eliminar ninguna tarea. Errores: ' . implode(', ', $errors)
+                ], 400);
+            }
+
+        } catch (Exception $e) {
+            error_log("Error en bulkDeleteTasks: " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor'], 500);
+        }
+    }
+
 } 
