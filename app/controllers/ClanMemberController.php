@@ -3219,9 +3219,21 @@ class ClanMemberController {
 
         try {
             $subtaskId = (int)($_POST['subtask_id'] ?? 0);
-            $userIds = $_POST['user_ids'] ?? [];
+            $userIdsRaw = $_POST['user_ids'] ?? [];
+            
+            // Log para debug
+            error_log("DEBUG assignSubtaskUsers - subtaskId: $subtaskId, userIdsRaw: " . print_r($userIdsRaw, true));
+            
+            // Si user_ids viene como JSON string, decodificarlo
+            if (is_string($userIdsRaw)) {
+                $userIds = json_decode($userIdsRaw, true);
+                error_log("DEBUG assignSubtaskUsers - userIds después de json_decode: " . print_r($userIds, true));
+            } else {
+                $userIds = $userIdsRaw;
+            }
 
             if ($subtaskId <= 0 || empty($userIds) || !is_array($userIds)) {
+                error_log("DEBUG assignSubtaskUsers - Datos inválidos: subtaskId=$subtaskId, userIds=" . print_r($userIds, true));
                 Utils::jsonResponse(['success' => false, 'message' => 'Datos inválidos'], 400);
             }
 
@@ -3243,6 +3255,11 @@ class ClanMemberController {
             // Verificar permisos: el usuario debe estar asignado a la tarea padre o ser del mismo clan
             $isAssignedToTask = $this->isTaskAssignedToUser($subtask['task_id'], $this->currentUser['user_id']);
             $isSameClan = $this->userClan && ((int)$subtask['clan_id'] === (int)$this->userClan['clan_id']);
+
+            error_log("DEBUG assignSubtaskUsers - Permisos: isAssignedToTask=" . ($isAssignedToTask ? 'true' : 'false') . 
+                     ", isSameClan=" . ($isSameClan ? 'true' : 'false') . 
+                     ", userClan=" . print_r($this->userClan, true) . 
+                     ", subtask_clan_id=" . $subtask['clan_id']);
 
             if (!$isAssignedToTask && !$isSameClan) {
                 Utils::jsonResponse(['success' => false, 'message' => 'No tienes permisos para asignar usuarios a esta subtarea'], 403);
@@ -3271,7 +3288,9 @@ class ClanMemberController {
             }
 
             // Asignar usuarios usando el modelo de asignaciones
+            error_log("DEBUG assignSubtaskUsers - Antes de asignar: subtaskId=$subtaskId, userIds=" . print_r($userIds, true));
             $newUsersAssigned = $this->subtaskAssignmentModel->assignUsers($subtaskId, $userIds, $this->currentUser['user_id']);
+            error_log("DEBUG assignSubtaskUsers - Resultado asignación: " . print_r($newUsersAssigned, true));
 
             if ($newUsersAssigned !== false) {
                 // Registrar en el historial de la tarea padre

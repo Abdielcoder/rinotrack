@@ -3013,8 +3013,26 @@ function assignUsersToSubtask(subtaskId) {
         method: 'POST',
         body: formData
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('Response status:', response.status);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        return response.text().then(text => {
+            console.log('Raw response:', text);
+            try {
+                return JSON.parse(text);
+            } catch (e) {
+                console.error('JSON parse error:', e);
+                console.error('Response text:', text);
+                throw new Error('Invalid JSON response: ' + text.substring(0, 100));
+            }
+        });
+    })
     .then(data => {
+        console.log('Parsed data:', data);
         if (data.success) {
             showNotification(data.message, 'success');
             closeSubtaskAssignmentModal();
@@ -3027,8 +3045,8 @@ function assignUsersToSubtask(subtaskId) {
         }
     })
     .catch(error => {
-        console.error('Error:', error);
-        showNotification('Error de conexión al asignar usuarios', 'error');
+        console.error('Error completo:', error);
+        showNotification('Error: ' + error.message, 'error');
     })
     .finally(() => {
         assignBtn.innerHTML = originalText;
