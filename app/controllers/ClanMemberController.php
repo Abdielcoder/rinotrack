@@ -1488,6 +1488,7 @@ class ClanMemberController {
                         s.subtask_id as task_id,
                         s.task_id as parent_task_id,
                         s.title as task_name,
+                        t.task_name as parent_task_name,
                         s.description,
                         s.due_date,
                         'medium' as priority,
