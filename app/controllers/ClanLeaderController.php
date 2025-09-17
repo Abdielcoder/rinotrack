@@ -5610,8 +5610,46 @@ class ClanLeaderController {
                 exit();
             }
             
+            // Obtener proyectos del clan para el selector
+            $projects = [];
+            $members = [];
+            
+            if ($this->userClan) {
+                // Inicializar modelo de clan si no existe
+                if (!$this->clanModel) {
+                    $this->clanModel = new Clan();
+                }
+                
+                // Si es proyecto del clan, mostrar todos los proyectos del clan
+                if ($project['clan_id'] == $this->userClan['clan_id']) {
+                    $projects = $this->projectModel->getByClan($this->userClan['clan_id']);
+                    
+                    // Filtrar proyectos activos
+                    $projects = array_filter($projects, function($p) {
+                        return true; // Mantener todos por ahora, se puede filtrar por estado si es necesario
+                    });
+                    
+                    // Reindexar el array después del filtro
+                    $projects = array_values($projects);
+                    
+                    $members = $this->clanModel->getMembers($this->userClan['clan_id']);
+                } else {
+                    // Proyecto externo: solo mostrar el proyecto actual
+                    $projects = [$project];
+                    $members = [];
+                }
+            }
+            
+            // Obtener usuarios asignados a la tarea
+            $assignedUsers = $this->taskModel->getAssignedUsers($taskId);
+            
             $this->loadView('clan_leader/task_edit', [
                 'task' => $task,
+                'project' => $project,
+                'projects' => $projects,
+                'members' => $members,
+                'assignedUsers' => $assignedUsers,
+                'currentPage' => 'clan_leader',
                 'user' => $this->currentUser,
                 'userClan' => $this->userClan,
                 'clan' => $this->userClan ?: ['clan_name' => 'Sin clan asignado', 'clan_id' => null]
