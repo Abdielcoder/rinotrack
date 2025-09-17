@@ -3345,6 +3345,19 @@ class ClanMemberController {
         try {
             $subtaskId = (int)($_POST['subtask_id'] ?? 0);
             $userId = (int)($_POST['user_id'] ?? 0);
+            $userName = $_POST['user_name'] ?? '';
+
+            // Si no se proporciona user_id pero sí user_name, buscar el ID por nombre
+            if ($userId <= 0 && !empty($userName)) {
+                $stmt = $this->db->prepare("SELECT user_id FROM Users WHERE full_name = ? OR username = ? LIMIT 1");
+                $stmt->execute([$userName, $userName]);
+                $user = $stmt->fetch(PDO::FETCH_ASSOC);
+                if ($user) {
+                    $userId = (int)$user['user_id'];
+                } else {
+                    Utils::jsonResponse(['success' => false, 'message' => 'Usuario no encontrado'], 404);
+                }
+            }
 
             if ($subtaskId <= 0 || $userId <= 0) {
                 Utils::jsonResponse(['success' => false, 'message' => 'Datos inválidos'], 400);

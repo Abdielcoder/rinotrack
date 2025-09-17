@@ -89,7 +89,7 @@ $additionalJS[] = 'https://cdn.quilljs.com/1.3.6/quill.min.js';
             <div class="subtask-item" data-subtask-id="<?php echo $subtask['subtask_id']; ?>">
               <div class="subtask-info">
                 <div class="subtask-header">
-                  <div class="subtask-title"><?php echo htmlspecialchars($subtask['title']); ?></div>
+                  <div class="subtask-title" title="<?php echo htmlspecialchars($subtask['title']); ?>"><?php echo htmlspecialchars($subtask['title']); ?></div>
                   <div class="subtask-actions">
                     <button class="btn-icon-small btn-with-badge" id="comments-btn-<?php echo $subtask['subtask_id']; ?>" onclick="showSubtaskComments(<?php echo $subtask['subtask_id']; ?>)" title="Ver comentarios">
                       <i class="fas fa-comments"></i>
@@ -116,7 +116,23 @@ $additionalJS[] = 'https://cdn.quilljs.com/1.3.6/quill.min.js';
                   <span>Asignado: <?php echo htmlspecialchars($subtask['assigned_user_name']); ?></span>
                   <?php endif; ?>
                   <?php if (!empty($subtask['all_assigned_users'])): ?>
-                  <span>Colaboradores: <?php echo htmlspecialchars($subtask['all_assigned_users']); ?></span>
+                  <?php 
+                  // Convertir la cadena de usuarios en un array
+                  $assignedUsers = explode(', ', $subtask['all_assigned_users']);
+                  ?>
+                  <div class="subtask-collaborators">
+                    <span style="font-size: 12px; color: #6b7280;">Colaboradores:</span>
+                    <div class="collaborators-chips">
+                      <?php foreach ($assignedUsers as $userName): ?>
+                      <div class="collaborator-chip">
+                        <span><?php echo htmlspecialchars(trim($userName)); ?></span>
+                        <button class="remove-collaborator" onclick="removeCollaboratorFromSubtask(<?php echo $subtask['subtask_id']; ?>, '<?php echo htmlspecialchars(trim($userName), ENT_QUOTES); ?>')" title="Remover colaborador">
+                          <i class="fas fa-times"></i>
+                        </button>
+                      </div>
+                      <?php endforeach; ?>
+                    </div>
+                  </div>
                   <?php endif; ?>
                   <?php if ($subtask['due_date']): ?>
                   <span>Vence: <?php echo Utils::formatDate($subtask['due_date']); ?></span>
@@ -697,11 +713,72 @@ function noPermissionModal(){
   font-weight: 600;
   color: #1f2937;
   font-size: 14px;
+  max-width: 400px; /* Limitar ancho máximo */
+  white-space: nowrap; /* No permitir saltos de línea */
+  overflow: hidden; /* Ocultar texto que sobresale */
+  text-overflow: ellipsis; /* Mostrar ... cuando el texto es muy largo */
+  display: inline-block; /* Para que respete el max-width */
 }
 
 .subtask-actions {
   display: flex;
   gap: 5px;
+}
+
+/* Estilos para los colaboradores en chips */
+.subtask-collaborators {
+  margin-top: 8px;
+}
+
+.collaborators-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.collaborator-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: #e0e7ff;
+  border: 1px solid #c7d2fe;
+  border-radius: 12px;
+  font-size: 12px;
+  color: #4338ca;
+}
+
+.collaborator-chip span {
+  max-width: 150px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.remove-collaborator {
+  background: none;
+  border: none;
+  color: #6366f1;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.remove-collaborator:hover {
+  background: #4338ca;
+  color: white;
+}
+
+.remove-collaborator i {
+  font-size: 10px;
 }
 
 .btn-icon-small {
@@ -2988,6 +3065,45 @@ function loadClanMembers(subtaskId) {
         console.error('Error:', error);
         const loadingDiv = document.getElementById('assignment-loading');
         loadingDiv.innerHTML = '<div style="color: #ef4444;"><i class="fas fa-exclamation-triangle"></i> Error de conexión</div>';
+    });
+}
+
+// Función para remover un colaborador de una subtarea
+function removeCollaboratorFromSubtask(subtaskId, userName) {
+    if (!confirm(`¿Estás seguro de que deseas remover a ${userName} de esta subtarea?`)) {
+        return;
+    }
+    
+    // Primero necesitamos obtener el user_id basado en el nombre
+    // Por ahora, enviamos el nombre y lo resolvemos en el backend
+    const formData = new FormData();
+    formData.append('subtask_id', subtaskId);
+    formData.append('user_name', userName);
+    
+    fetch('?route=clan_member/unassign-subtask-user', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            showNotification(data.message || 'Usuario removido exitosamente', 'success');
+            // Recargar la página para mostrar los cambios
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        } else {
+            showNotification(data.message || 'Error al remover usuario', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error de conexión al remover usuario', 'error');
     });
 }
 
