@@ -240,7 +240,7 @@ ob_start();
                         </thead>
                         <tbody id="my-tasks-table-body">
                             <!-- Las tareas del líder se cargarán por JavaScript -->
-                            <tr><td colspan="8" class="text-center">Cargando mis tareas...</td></tr>
+                            <tr><td colspan="9" class="text-center">Cargando mis tareas...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -345,7 +345,7 @@ ob_start();
                         </thead>
                         <tbody id="team-tasks-table-body">
                             <!-- Las tareas del equipo se cargarán por JavaScript -->
-                            <tr><td colspan="9" class="text-center">Cargando tareas del equipo...</td></tr>
+                            <tr><td colspan="10" class="text-center">Cargando tareas del equipo...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -3160,7 +3160,7 @@ function deleteTask(taskId) {
                     const tbody = document.querySelector('.tasks-table tbody');
                     if (tbody) {
                         const emptyRow = document.createElement('tr');
-                        emptyRow.innerHTML = '<td colspan="9">No hay tareas disponibles</td>';
+                        emptyRow.innerHTML = '<td colspan="10">No hay tareas disponibles</td>';
                         tbody.appendChild(emptyRow);
                     }
                 }
@@ -3853,7 +3853,7 @@ function loadMyTasks() {
     }
     
     console.log('✅ tbody encontrado, cargando...');
-    tbody.innerHTML = '<tr class="loading"><td colspan="8" class="text-center"><i class="fas fa-spinner fa-spin"></i> Cargando mis tareas...</td></tr>';
+    tbody.innerHTML = '<tr class="loading"><td colspan="9" class="text-center"><i class="fas fa-spinner fa-spin"></i> Cargando mis tareas...</td></tr>';
     
     // Agregar timestamp para evitar cache
     const timestamp = new Date().getTime();
@@ -3881,12 +3881,12 @@ function loadMyTasks() {
                 console.log('=== END loadMyTasks FRONTEND ===');
             } else {
                 console.error('Error loading my tasks:', data.message);
-                tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Error al cargar tareas: ' + data.message + '</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="9" class="text-center text-danger">Error al cargar tareas: ' + data.message + '</td></tr>';
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No se pudieron cargar las tareas</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted">No se pudieron cargar las tareas</td></tr>';
         });
 }
 
@@ -3900,7 +3900,7 @@ function loadTeamTasks() {
     }
     console.log('✅ tbody del equipo encontrado, cargando...');
     
-    tbody.innerHTML = '<tr class="loading"><td colspan="9" class="text-center"><i class="fas fa-spinner fa-spin"></i> Cargando tareas del equipo...</td></tr>';
+    tbody.innerHTML = '<tr class="loading"><td colspan="10" class="text-center"><i class="fas fa-spinner fa-spin"></i> Cargando tareas del equipo...</td></tr>';
     
     // Agregar timestamp para evitar cache
     const timestamp = new Date().getTime();
@@ -3928,12 +3928,12 @@ function loadTeamTasks() {
                 console.log('=== END loadTeamTasks FRONTEND ===');
             } else {
                 console.error('Error loading team tasks:', data.message);
-                tbody.innerHTML = '<tr><td colspan="9" class="text-center text-danger">Error al cargar tareas del equipo: ' + data.message + '</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="10" class="text-center text-danger">Error al cargar tareas del equipo: ' + data.message + '</td></tr>';
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted">No se pudieron cargar las tareas del equipo</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="10" class="text-center text-muted">No se pudieron cargar las tareas del equipo</td></tr>';
         });
 }
 
@@ -3944,7 +3944,7 @@ function renderTeamTasksTable(tasks, tbodyId) {
     if (!tbody) return;
     
     if (tasks.length === 0) {
-        tbody.innerHTML = '<tr class="empty"><td colspan="9" class="text-center"><i class="fas fa-users-slash"></i><br>No hay tareas del equipo disponibles</td></tr>';
+        tbody.innerHTML = '<tr class="empty"><td colspan="10" class="text-center"><i class="fas fa-users-slash"></i><br>No hay tareas del equipo disponibles</td></tr>';
         return;
     }
     
@@ -4044,7 +4044,7 @@ function renderTasksTable(tasks, tbodyId) {
     
     if (tasks.length === 0) {
         console.log('No tasks to render, showing empty message');
-        tbody.innerHTML = '<tr class="empty"><td colspan="8" class="text-center"><i class="fas fa-inbox"></i><br>No hay tareas disponibles</td></tr>';
+        tbody.innerHTML = '<tr class="empty"><td colspan="9" class="text-center"><i class="fas fa-inbox"></i><br>No hay tareas disponibles</td></tr>';
         return;
     }
     
@@ -5264,7 +5264,7 @@ function loadMyTasksTable() {
         return;
     }
     
-    tbody.innerHTML = '<tr class="loading"><td colspan="8" class="text-center"><i class="fas fa-spinner fa-spin"></i> Cargando mis tareas...</td></tr>';
+    tbody.innerHTML = '<tr class="loading"><td colspan="9" class="text-center"><i class="fas fa-spinner fa-spin"></i> Cargando mis tareas...</td></tr>';
     
     // Obtener filtros actuales
     const statusFilter = document.getElementById('statusFilter');
