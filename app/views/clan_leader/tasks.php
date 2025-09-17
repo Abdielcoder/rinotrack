@@ -3988,7 +3988,7 @@ function renderTeamTasksTable(tasks, tbodyId) {
                     <span class="project-name" title="${task.project_name || ''}">${task.project_name || 'Sin proyecto'}</span>
                 </td>
                 <td class="td-assigned">
-                    <span class="assigned-users" title="${task.assigned_user_name || task.all_assigned_users || ''}">${task.assigned_user_name || task.all_assigned_users || 'Sin asignar'}</span>
+                    <span class="assigned-users" title="${task.assigned_user_name || task.all_assigned_users || ''}">${task.assigned_user_name || task.all_assigned_users || 'Pendiente'}</span>
                 </td>
                 <td class="td-due-date">
                     ${task.due_date ? '<span class="due-date" title="' + task.due_date + '\">' + task.due_date + '</span>' : '<span class="no-date">Sin fecha</span>'}
