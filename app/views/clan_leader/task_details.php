@@ -173,8 +173,12 @@ ob_start();
         <form id="tdCommentForm" class="comment-form" enctype="multipart/form-data" style="margin-bottom: 20px;">
             <input type="hidden" name="task_id" value="<?php echo (int)$task['task_id']; ?>" />
             <input type="hidden" name="comment_text" id="task-comment-content" />
-            <div class="rich-editor-container">
+            <div class="rich-editor-container" style="position: relative;">
                 <div id="task-comment-editor" style="margin-bottom: 10px;"></div>
+                <button type="button" class="emoji-picker-btn" onclick="toggleEmojiPicker('task-comment')" title="Agregar emoji">
+                    <i class="fas fa-smile"></i>
+                </button>
+                <div id="task-comment-emoji-picker" class="emoji-picker-container" style="display: none;"></div>
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <input type="file" name="attachments[]" multiple style="font-size: 14px;" />
@@ -1292,8 +1296,12 @@ function showCommentsModal(subtaskId, comments) {
                 <div class="comments-section">
                     <div class="add-comment-section" style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
                         <h4 style="margin: 0 0 10px 0;">Agregar Comentario</h4>
-                        <div class="rich-editor-container">
+                        <div class="rich-editor-container" style="position: relative;">
                             <div id="subtask-comment-editor-${subtaskId}"></div>
+                            <button type="button" class="emoji-picker-btn" onclick="toggleEmojiPicker('subtask-comment-${subtaskId}')" title="Agregar emoji">
+                                <i class="fas fa-smile"></i>
+                            </button>
+                            <div id="subtask-comment-${subtaskId}-emoji-picker" class="emoji-picker-container" style="display: none;"></div>
                         </div>
                         <div style="display: flex; gap: 10px; justify-content: flex-end;">
                             <button onclick="addSubtaskComment(${subtaskId})" class="btn btn-primary" style="padding: 8px 16px;">Agregar Comentario</button>
@@ -2537,6 +2545,202 @@ window.onclick = function(event) {
   if (event.target === modal) {
     closeAddCollaboratorModal();
   }
+}
+    // Selector de Emojis
+const emojis = [
+    '😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '😊', '😇', '🥰', '😍', '🤩', '😘',
+    '😗', '😚', '😙', '😋', '😛', '😜', '🤪', '😝', '🤑', '🤗', '🤭', '🤫', '🤔', '🤐', '🤨',
+    '😐', '😑', '😶', '😏', '😒', '🙄', '😬', '🤥', '😌', '😔', '😪', '🤤', '😴', '😷', '🤒',
+    '🤕', '🤢', '🤮', '🤧', '🥵', '🥶', '🥴', '😵', '🤯', '🤠', '🥳', '😎', '🤓', '🧐', '😕',
+    '😟', '🙁', '☹️', '😮', '😯', '😲', '😳', '🥺', '😦', '😧', '😨', '😰', '😥', '😢', '😭',
+    '😱', '😖', '😣', '😞', '😓', '😩', '😫', '🥱', '😤', '😡', '😠', '🤬', '😈', '👿', '💀',
+    '☠️', '💩', '🤡', '👹', '👺', '👻', '👽', '👾', '🤖', '😺', '😸', '😹', '😻', '😼', '😽',
+    '🙀', '😿', '😾', '👋', '🤚', '🖐️', '✋', '🖖', '👌', '🤏', '✌️', '🤞', '🤟', '🤘', '🤙',
+    '👈', '👉', '👆', '👇', '☝️', '👍', '👎', '✊', '👊', '🤛', '🤜', '👏', '🙌', '👐',
+    '🤲', '🤝', '🙏', '✍️', '💅', '🤳', '💪', '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤',
+    '🤍', '🤎', '💔', '❣️', '💕', '💞', '💓', '💗', '💖', '💘', '💝', '💟'
+];
+
+function initializeEmojiPicker(containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    container.innerHTML = '';
+    const emojiGrid = document.createElement('div');
+    emojiGrid.className = 'emoji-grid';
+    
+    emojis.forEach(emoji => {
+        const emojiBtn = document.createElement('button');
+        emojiBtn.type = 'button';
+        emojiBtn.className = 'emoji-item';
+        emojiBtn.textContent = emoji;
+        emojiBtn.onclick = () => insertEmoji(emoji, containerId.replace('-emoji-picker', ''));
+        emojiGrid.appendChild(emojiBtn);
+    });
+    
+    container.appendChild(emojiGrid);
+}
+
+function toggleEmojiPicker(editorId) {
+    const pickerId = editorId + '-emoji-picker';
+    const picker = document.getElementById(pickerId);
+    
+    if (!picker) {
+        console.error('No se encontró el picker:', pickerId);
+        return;
+    }
+    
+    if (picker.style.display === 'none') {
+        initializeEmojiPicker(pickerId);
+        picker.style.display = 'block';
+        
+        document.querySelectorAll('.emoji-picker-container').forEach(p => {
+            if (p.id !== pickerId) {
+                p.style.display = 'none';
+            }
+        });
+        
+        setTimeout(() => {
+            document.addEventListener('click', function closeEmoji(e) {
+                if (!e.target.closest('.emoji-picker-container') && !e.target.closest('.emoji-picker-btn')) {
+                    picker.style.display = 'none';
+                    document.removeEventListener('click', closeEmoji);
+                }
+            });
+        }, 100);
+    } else {
+        picker.style.display = 'none';
+    }
+}
+
+function insertEmoji(emoji, editorId) {
+    console.log('Insertando emoji:', emoji, 'en editor:', editorId);
+    
+    let editor = null;
+    
+    if (editorId === 'task-comment') {
+        editor = window.taskEditor;
+    } else if (editorId.startsWith('subtask-comment-')) {
+        const subtaskId = editorId.replace('subtask-comment-', '');
+        editor = window.subtaskEditors?.[subtaskId];
+    }
+    
+    if (editor && typeof editor.insertText === 'function') {
+        const range = editor.getSelection() || { index: editor.getLength() };
+        editor.insertText(range.index, emoji);
+        editor.setSelection(range.index + emoji.length);
+    } else {
+        const textarea = document.querySelector(`#${editorId}-editor textarea`) || 
+                         document.querySelector(`textarea[id*="${editorId}"]`);
+        if (textarea) {
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const text = textarea.value;
+            textarea.value = text.substring(0, start) + emoji + text.substring(end);
+            textarea.selectionStart = textarea.selectionEnd = start + emoji.length;
+            textarea.focus();
+        }
+    }
+    
+    const pickerId = editorId + '-emoji-picker';
+    const picker = document.getElementById(pickerId);
+    if (picker) {
+        picker.style.display = 'none';
+    }
+}
+
+// CSS para el selector de emojis
+if (!document.getElementById('emoji-picker-styles')) {
+    const style = document.createElement('style');
+    style.id = 'emoji-picker-styles';
+    style.textContent = `
+        .emoji-picker-btn {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 6px 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            z-index: 10;
+        }
+        
+        .emoji-picker-btn:hover {
+            background: #e5e7eb;
+            transform: scale(1.05);
+        }
+        
+        .emoji-picker-btn i {
+            font-size: 18px;
+            color: #6b7280;
+        }
+        
+        .emoji-picker-container {
+            position: absolute;
+            bottom: 50px;
+            right: 10px;
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 10px;
+            width: 320px;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+        
+        .emoji-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 4px;
+        }
+        
+        .emoji-item {
+            background: none;
+            border: none;
+            padding: 6px;
+            font-size: 20px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s;
+            line-height: 1;
+        }
+        
+        .emoji-item:hover {
+            background: #f3f4f6;
+            transform: scale(1.2);
+        }
+        
+        .rich-editor-container .ql-container {
+            padding-bottom: 40px;
+        }
+        
+        .rich-editor-container textarea {
+            padding-bottom: 40px !important;
+        }
+        
+        .emoji-picker-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .emoji-picker-container::-webkit-scrollbar-track {
+            background: #f3f4f6;
+            border-radius: 4px;
+        }
+        
+        .emoji-picker-container::-webkit-scrollbar-thumb {
+            background: #9ca3af;
+            border-radius: 4px;
+        }
+        
+        .emoji-picker-container::-webkit-scrollbar-thumb:hover {
+            background: #6b7280;
+        }
+    `;
+    document.head.appendChild(style);
 }
     </script>
 
