@@ -242,7 +242,7 @@ ob_start();
                                 <button class="btn-list-action secondary" onclick="openCreateTaskModal(<?= $project['project_id'] ?>)" title="Nueva Tarea">
                                     <i class="fas fa-plus"></i>
                                 </button>
-                                <button class="btn-list-action menu" onclick="toggleProjectMenu(<?= $project['project_id'] ?>)" title="Más opciones">
+                                <button class="btn-list-action menu" onclick="alert('Botón de 3 puntos clickeado para proyecto <?= $project['project_id'] ?>'); toggleProjectMenu(<?= $project['project_id'] ?>);" title="Más opciones" style="border: 2px solid red !important; background: yellow !important;">
                                     <i class="fas fa-ellipsis-v"></i>
                                 </button>
                                 <!-- Botón de prueba temporal -->
@@ -768,7 +768,8 @@ function toggleProjectMenu(projectId) {
 
 // Cerrar menús al hacer clic fuera
 document.addEventListener('click', function(e) {
-    if (!e.target.closest('.project-menu-minimal') && !e.target.closest('.actions-list') && !e.target.closest('.btn-menu-minimal') && !e.target.closest('.btn-list-action')) {
+    // Solo cerrar si no se hizo clic en ningún botón de menú
+    if (!e.target.closest('.btn-menu-minimal') && !e.target.closest('.btn-list-action.menu')) {
         document.querySelectorAll('.dropdown-menu-minimal, .dropdown-menu-list').forEach(menu => {
             menu.classList.remove('show');
         });
@@ -1593,6 +1594,9 @@ function toggleProjectDelegation(projectId, isAllowed) {
 .btn-list-action.menu {
     background: rgba(116, 75, 162, 0.1);
     color: #764ba2;
+    position: relative;
+    z-index: 10;
+    pointer-events: auto;
 }
 
 .btn-list-action.menu:hover {
