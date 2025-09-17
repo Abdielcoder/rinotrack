@@ -3407,68 +3407,115 @@ function toggleEmojiPicker(editorId) {
 }
 
 function insertEmoji(emoji, editorId) {
-    console.log('Insertando emoji:', emoji, 'en editor:', editorId);
+    console.log('=== INSERTAR EMOJI ===');
+    console.log('Emoji:', emoji);
+    console.log('Editor ID:', editorId);
     
-    let editor = null;
-    let editorElement = null;
+    // Método 1: Insertar directamente en el div contenteditable de Quill
+    let editorContainer = null;
     
-    // Buscar el editor Quill con los nombres correctos
     if (editorId === 'task-comment') {
-        // El editor principal se llama taskCommentEditor
-        editor = window.taskCommentEditor;
-        editorElement = document.getElementById('task-comment-editor');
+        editorContainer = document.querySelector('#task-comment-editor .ql-editor');
     } else if (editorId.startsWith('subtask-comment-')) {
         const subtaskId = editorId.replace('subtask-comment-', '');
-        // Los editores de subtareas se llaman subtaskCommentEditor_${subtaskId}
-        editor = window[`subtaskCommentEditor_${subtaskId}`];
-        editorElement = document.getElementById(`subtask-comment-editor-${subtaskId}`);
+        editorContainer = document.querySelector(`#subtask-comment-editor-${subtaskId} .ql-editor`);
     }
     
-    console.log('Editor encontrado:', editor);
-    console.log('Elemento editor:', editorElement);
+    console.log('Editor container encontrado:', editorContainer);
     
-    if (editor && typeof editor.insertText === 'function') {
-        // Insertar en Quill
-        // Asegurar que el editor esté enfocado
-        editor.focus();
+    if (editorContainer) {
+        // Método directo: insertar en el contenido HTML
+        editorContainer.focus();
         
-        const range = editor.getSelection() || { index: editor.getLength() };
-        console.log('Rango de selección:', range);
+        // Obtener la selección actual o crear una nueva
+        const selection = window.getSelection();
+        let range;
         
-        // Si no hay selección, insertar al final
-        if (!range || range.index === null) {
-            const length = editor.getLength();
-            editor.insertText(length - 1, emoji);
-            editor.setSelection(length + emoji.length - 1);
-        } else {
-            editor.insertText(range.index, emoji);
-            editor.setSelection(range.index + emoji.length);
+        try {
+            range = selection.getRangeAt(0);
+        } catch(e) {
+            // Si no hay selección, crear un rango al final del contenido
+            range = document.createRange();
+            range.selectNodeContents(editorContainer);
+            range.collapse(false); // false = colapsar al final
         }
         
-        console.log('Emoji insertado en Quill');
+        // Crear un nodo de texto con el emoji
+        const emojiNode = document.createTextNode(emoji);
+        
+        // Insertar el emoji en la posición del cursor
+        range.deleteContents();
+        range.insertNode(emojiNode);
+        
+        // Mover el cursor después del emoji
+        range.setStartAfter(emojiNode);
+        range.setEndAfter(emojiNode);
+        selection.removeAllRanges();
+        selection.addRange(range);
+        
+        // Enfocar el editor
+        editorContainer.focus();
+        
+        console.log('✅ Emoji insertado directamente en el editor');
+        
+        // Disparar evento input para que Quill detecte el cambio
+        editorContainer.dispatchEvent(new Event('input', { bubbles: true }));
+        
+        // Método 2: Si tenemos acceso al objeto Quill, sincronizar
+        let quillEditor = null;
+        
+        if (editorId === 'task-comment') {
+            quillEditor = window.taskCommentEditor;
+        } else if (editorId.startsWith('subtask-comment-')) {
+            const subtaskId = editorId.replace('subtask-comment-', '');
+            quillEditor = window[`subtaskCommentEditor_${subtaskId}`];
+        }
+        
+        if (quillEditor) {
+            // Sincronizar el contenido HTML con Quill
+            const html = editorContainer.innerHTML;
+            const delta = quillEditor.clipboard.convert(html);
+            quillEditor.setContents(delta, 'silent');
+            console.log('✅ Contenido sincronizado con Quill');
+        }
     } else {
-        // Fallback para textarea normal
-        console.log('Usando fallback textarea');
-        const textarea = editorElement?.querySelector('textarea') || 
-                         document.querySelector(`#${editorId}-editor textarea`) || 
-                         document.querySelector(`textarea[id*="${editorId}"]`) ||
-                         document.querySelector(`textarea[name="comment_text"]`);
+        // Fallback: buscar cualquier textarea
+        console.log('Buscando textarea como fallback...');
+        
+        let textarea = null;
+        
+        if (editorId === 'task-comment') {
+            textarea = document.querySelector('#task-comment-editor textarea') ||
+                      document.querySelector('textarea[name="comment_text"]');
+        } else if (editorId.startsWith('subtask-comment-')) {
+            const subtaskId = editorId.replace('subtask-comment-', '');
+            textarea = document.querySelector(`#subtask-comment-editor-${subtaskId} textarea`) ||
+                      document.querySelector(`#subtask-comment-text`);
+        }
         
         console.log('Textarea encontrado:', textarea);
         
         if (textarea) {
-            const start = textarea.selectionStart;
-            const end = textarea.selectionEnd;
-            const text = textarea.value;
+            const start = textarea.selectionStart || 0;
+            const end = textarea.selectionEnd || 0;
+            const text = textarea.value || '';
+            
             textarea.value = text.substring(0, start) + emoji + text.substring(end);
             textarea.selectionStart = textarea.selectionEnd = start + emoji.length;
             textarea.focus();
             
-            // Disparar evento de cambio para que se actualice el contenido
+            // Disparar eventos para actualizar
             textarea.dispatchEvent(new Event('input', { bubbles: true }));
-            console.log('Emoji insertado en textarea');
+            textarea.dispatchEvent(new Event('change', { bubbles: true }));
+            
+            console.log('✅ Emoji insertado en textarea');
         } else {
-            console.error('No se encontró ningún editor o textarea para insertar el emoji');
+            console.error('❌ No se encontró ningún editor para insertar el emoji');
+            
+            // Último intento: copiar al portapapeles
+            navigator.clipboard.writeText(emoji).then(() => {
+                alert(`El emoji ${emoji} se copió al portapapeles. Pégalo con Ctrl+V o Cmd+V`);
+            });
         }
     }
     
