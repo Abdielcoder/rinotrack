@@ -5299,6 +5299,7 @@ function loadMyTasksTable() {
     // Obtener filtros actuales
     const statusFilter = document.getElementById('statusFilter');
     const searchInput = document.getElementById('searchInputMyTasks');
+    const perPage = document.getElementById('perPage');
     
     // Construir URL con filtros
     let url = '?route=clan_leader/get-my-kanban-tasks';
@@ -5313,6 +5314,10 @@ function loadMyTasksTable() {
         params.append('search', searchInput.value.trim());
         console.log('🔵 Aplicando búsqueda:', searchInput.value.trim());
     }
+    
+    // Obtener el número de registros por página
+    const itemsPerPage = perPage ? parseInt(perPage.value) : 5;
+    console.log('🔵 Items por página:', itemsPerPage);
     
     if (params.toString()) {
         url += '&' + params.toString();
@@ -5337,7 +5342,12 @@ function loadMyTasksTable() {
                     });
                 });
                 
-                renderTasksTableFromKanban(allTasks, 'my-tasks-table-body');
+                // Aplicar paginación
+                const itemsPerPage = perPage ? parseInt(perPage.value) : 5;
+                const paginatedTasks = allTasks.slice(0, itemsPerPage);
+                console.log(`🔵 Mostrando ${paginatedTasks.length} de ${allTasks.length} tareas (límite: ${itemsPerPage})`);
+                
+                renderTasksTableFromKanban(paginatedTasks, 'my-tasks-table-body');
             } else {
                 tbody.innerHTML = '<tr><td colspan="9" class="text-center text-danger">Error: ' + (data.message || 'Error desconocido') + '</td></tr>';
             }
@@ -5362,6 +5372,7 @@ function loadTeamTasksTable() {
     // Obtener filtros actuales
     const statusFilterTeam = document.getElementById('statusFilterTeam');
     const searchInputTeam = document.getElementById('searchInputTeam');
+    const perPageTeam = document.getElementById('perPageTeam');
     
     // Construir URL con filtros
     let url = '?route=clan_leader/get-team-kanban-tasks';
@@ -5376,6 +5387,10 @@ function loadTeamTasksTable() {
         params.append('search', searchInputTeam.value.trim());
         console.log('🟡 Aplicando búsqueda del equipo:', searchInputTeam.value.trim());
     }
+    
+    // Obtener el número de registros por página
+    const itemsPerPage = perPageTeam ? parseInt(perPageTeam.value) : 5;
+    console.log('🟡 Items por página del equipo:', itemsPerPage);
     
     if (params.toString()) {
         url += '&' + params.toString();
@@ -5400,7 +5415,12 @@ function loadTeamTasksTable() {
                     });
                 });
                 
-                renderTasksTableFromKanban(allTasks, 'team-tasks-table-body');
+                // Aplicar paginación
+                const itemsPerPage = perPageTeam ? parseInt(perPageTeam.value) : 5;
+                const paginatedTasks = allTasks.slice(0, itemsPerPage);
+                console.log(`🟡 Mostrando ${paginatedTasks.length} de ${allTasks.length} tareas (límite: ${itemsPerPage})`);
+                
+                renderTasksTableFromKanban(paginatedTasks, 'team-tasks-table-body');
             } else {
                 tbody.innerHTML = '<tr><td colspan="10" class="text-center text-danger">Error: ' + (data.message || 'Error desconocido') + '</td></tr>';
             }
@@ -5757,6 +5777,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const statusFilterTeam = document.getElementById('statusFilterTeam');
     const searchInputMyTasks = document.getElementById('searchInputMyTasks');
     const searchInputTeam = document.getElementById('searchInputTeam');
+    const perPage = document.getElementById('perPage');
+    const perPageTeam = document.getElementById('perPageTeam');
     
     if (statusFilter) {
         statusFilter.addEventListener('change', applyFilters);
@@ -5769,6 +5791,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     if (searchInputTeam) {
         searchInputTeam.addEventListener('input', debounce(applyFilters, 500));
+    }
+    if (perPage) {
+        perPage.addEventListener('change', applyFilters);
+    }
+    if (perPageTeam) {
+        perPageTeam.addEventListener('change', applyFilters);
     }
     
     // Inicializar con "Mis Tareas"
