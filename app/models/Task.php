@@ -1721,15 +1721,24 @@ class Task {
                     t.completion_percentage,
                     t.automatic_points,
                     t.created_by_user_id,
+                    t.assigned_to_user_id,
+                    u.full_name as assigned_to_fullname,
+                    u.username as assigned_to_username,
                     p.project_name,
                     p.project_id,
-                    DATEDIFF(t.due_date, CURDATE()) as days_until_due
+                    DATEDIFF(t.due_date, CURDATE()) as days_until_due,
+                    GROUP_CONCAT(DISTINCT ta_users.full_name ORDER BY ta_users.full_name SEPARATOR ', ') as all_assigned_users,
+                    GROUP_CONCAT(DISTINCT ta_users.user_id ORDER BY ta_users.full_name SEPARATOR ',') as all_assigned_user_ids
                 FROM Tasks t
                 JOIN Projects p ON t.project_id = p.project_id
+                LEFT JOIN Users u ON t.assigned_to_user_id = u.user_id
                 LEFT JOIN Task_Assignments ta ON ta.task_id = t.task_id
+                LEFT JOIN Users ta_users ON ta.user_id = ta_users.user_id
                 WHERE t.is_subtask = 0
                   AND t.project_id = ?
                   AND (t.assigned_to_user_id = ? OR ta.user_id = ?)
+                GROUP BY t.task_id
+                ORDER BY t.due_date ASC, t.created_at DESC
             ";
             $stmt = $this->db->prepare($sql);
             $stmt->execute([$projectId, $userId, $userId]);
