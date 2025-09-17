@@ -811,8 +811,9 @@ ob_start();
                     Prioridad
                 </label>
                 <select id="priority" name="priority" class="form-control">
+                    <option value="">Seleccionar prioridad...</option>
                     <option value="low">Baja</option>
-                    <option value="medium" selected>Media</option>
+                    <option value="medium">Media</option>
                     <option value="high">Alta</option>
                 </select>
             </div>

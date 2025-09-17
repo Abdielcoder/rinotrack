@@ -1194,7 +1194,12 @@ class ClanLeaderController {
                 $taskDueDate = null;
             }
             
-            $priority = Utils::sanitizeInput($_POST['priority'] ?? 'medium');
+            $priority = Utils::sanitizeInput($_POST['priority'] ?? '');
+            
+            // Si no se seleccionó prioridad, usar medium por defecto
+            if (empty($priority)) {
+                $priority = 'medium';
+            }
             
             // Corregir valor de prioridad si es 'urgent' por 'critical'
             if ($priority === 'urgent') {
@@ -1560,7 +1565,12 @@ class ClanLeaderController {
             error_log('createTask - ❌ subtasks es array: ' . (is_array($subtasks) ? 'SÍ' : 'NO'));
         }
         
-        $priority = Utils::sanitizeInput($_POST['priority'] ?? 'medium');
+        $priority = Utils::sanitizeInput($_POST['priority'] ?? '');
+        
+        // Si no se seleccionó prioridad, usar medium por defecto
+        if (empty($priority)) {
+            $priority = 'medium';
+        }
         
         // Corregir valor de prioridad al enum de Tasks
         if (!in_array($priority, ['low','medium','high','critical'], true)) {
