@@ -851,6 +851,7 @@ ob_start();
     width: 100%;
     border-collapse: collapse;
     font-size: 0.9rem;
+    table-layout: fixed; /* Forzar anchos de columna fijos */
 }
 
 .tasks-table thead {
@@ -1095,7 +1096,7 @@ ob_start();
     }
     
     .tasks-table {
-        min-width: 1400px; /* Aumentar aún más el ancho mínimo de la tabla */
+        min-width: 1600px; /* Aumentar el ancho mínimo para acomodar todas las columnas */
     }
 }
 
@@ -1376,6 +1377,7 @@ ob_start();
     width: 100%;
     border-collapse: collapse;
     font-size: 0.9rem;
+    table-layout: fixed; /* Forzar anchos de columna fijos */
 }
 
 .tasks-table thead {
@@ -1508,10 +1510,13 @@ ob_start();
 }
 
 .th-progress, .td-progress {
-    width: 200px; /* Aumentar aún más el ancho de columna progreso */
+    width: 150px; /* Ancho fijo para columna progreso */
+    min-width: 150px;
+    max-width: 150px;
     text-align: center;
-    padding: 0.875rem 1.5rem; /* Más padding para mejor separación */
+    padding: 0.875rem 1rem; /* Padding ajustado */
     border-right: 2px solid #e5e7eb; /* Borde más visible para separación */
+    box-sizing: border-box;
 }
 
 /* Estilos para checkbox - CAMBIADO A TEXTO "COMPLETAR" */
@@ -1554,10 +1559,13 @@ ob_start();
 }
 
 .th-actions, .td-actions {
-    width: 180px; /* Aumentar aún más el ancho de columna acciones */
+    width: 200px; /* Ancho fijo para columna acciones */
+    min-width: 200px;
+    max-width: 200px;
     text-align: center;
-    padding: 0.875rem 1.5rem; /* Más padding para mejor separación */
-    border-right: 2px solid #e5e7eb; /* Borde más visible para separación */
+    padding: 0.875rem 1rem; /* Padding ajustado */
+    border-right: none; /* Sin borde en la última columna visible */
+    box-sizing: border-box;
 }
 
 /* Estilos de contenido */
@@ -1773,7 +1781,7 @@ ob_start();
     }
     
     .tasks-table {
-        min-width: 1400px; /* Aumentar aún más el ancho mínimo de la tabla */
+        min-width: 1600px; /* Aumentar el ancho mínimo para acomodar todas las columnas */
     }
 }
 
@@ -5090,18 +5098,21 @@ console.log('🔧 Botón de clonar configurado correctamente');
 .progress-container-table {
     display: flex;
     align-items: center;
-    gap: 15px; /* Aumentar aún más el espacio entre barra y texto */
-    padding: 0 12px; /* Más padding interno */
+    gap: 8px; /* Espacio reducido entre barra y texto */
+    padding: 0 4px; /* Padding reducido */
     justify-content: center; /* Centrar el contenido */
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .progress-bar-table {
     flex: 1;
-    height: 10px; /* Hacer la barra más alta */
+    height: 8px; /* Altura ajustada */
     background: #f1f3f4;
-    border-radius: 5px; /* Bordes más redondeados */
+    border-radius: 4px; /* Bordes redondeados */
     overflow: hidden;
-    min-width: 100px; /* Ancho mínimo mayor para la barra */
+    min-width: 60px; /* Ancho mínimo reducido */
+    max-width: 80px; /* Ancho máximo para no ocupar mucho espacio */
     box-shadow: inset 0 1px 3px rgba(0,0,0,0.1); /* Sombra interna */
 }
 
@@ -5113,36 +5124,38 @@ console.log('🔧 Botón de clonar configurado correctamente');
 }
 
 .progress-text-table {
-    font-size: 12px; /* Texto un poco más grande */
-    font-weight: 700; /* Texto más bold */
+    font-size: 11px; /* Texto más pequeño */
+    font-weight: 600; /* Peso medio */
     color: #2c3e50;
-    min-width: 45px; /* Más ancho para el texto */
+    min-width: 35px; /* Ancho mínimo para el texto */
     text-align: center; /* Centrar el texto */
+    white-space: nowrap; /* No permitir saltos de línea */
 }
 
 /* Acciones en tabla */
 .actions-group {
     display: flex;
-    gap: 12px; /* Aumentar aún más el espacio entre botones */
+    gap: 6px; /* Espacio reducido entre botones */
     justify-content: center;
-    padding: 0 12px; /* Más padding interno */
+    padding: 0 4px; /* Padding reducido */
     align-items: center; /* Centrar verticalmente */
+    flex-wrap: nowrap; /* No permitir que los botones se envuelvan */
 }
 
 .btn-action-table {
-    padding: 10px; /* Aumentar aún más el padding de botones */
+    padding: 6px; /* Padding reducido */
     border: none;
-    border-radius: 8px; /* Bordes más redondeados */
+    border-radius: 6px; /* Bordes redondeados */
     cursor: pointer;
-    font-size: 13px; /* Texto más grande */
-    transition: all 0.3s ease; /* Transición más suave */
+    font-size: 12px; /* Texto más pequeño */
+    transition: all 0.2s ease; /* Transición rápida */
     text-decoration: none;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 40px; /* Botones aún más grandes */
-    height: 40px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Sombra sutil */
+    width: 32px; /* Botones más pequeños */
+    height: 32px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05); /* Sombra más sutil */
 }
 
 .btn-action-table.view {
