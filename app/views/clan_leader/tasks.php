@@ -5309,12 +5309,12 @@ function loadMyTasksTable() {
                 
                 renderTasksTableFromKanban(allTasks, 'my-tasks-table-body');
             } else {
-                tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Error: ' + (data.message || 'Error desconocido') + '</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="9" class="text-center text-danger">Error: ' + (data.message || 'Error desconocido') + '</td></tr>';
             }
         })
         .catch(error => {
             console.error('🔴 Error:', error);
-            tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Error de conexión</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="10" class="text-center text-danger">Error de conexión</td></tr>';
         });
 }
 
@@ -5327,7 +5327,7 @@ function loadTeamTasksTable() {
         return;
     }
     
-    tbody.innerHTML = '<tr class="loading"><td colspan="8" class="text-center"><i class="fas fa-spinner fa-spin"></i> Cargando tareas del equipo...</td></tr>';
+    tbody.innerHTML = '<tr class="loading"><td colspan="10" class="text-center"><i class="fas fa-spinner fa-spin"></i> Cargando tareas del equipo...</td></tr>';
     
     // Obtener filtros actuales
     const statusFilterTeam = document.getElementById('statusFilterTeam');
@@ -5372,12 +5372,12 @@ function loadTeamTasksTable() {
                 
                 renderTasksTableFromKanban(allTasks, 'team-tasks-table-body');
             } else {
-                tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Error: ' + (data.message || 'Error desconocido') + '</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="10" class="text-center text-danger">Error: ' + (data.message || 'Error desconocido') + '</td></tr>';
             }
         })
         .catch(error => {
             console.error('🔴 Error:', error);
-            tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Error de conexión</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="10" class="text-center text-danger">Error de conexión</td></tr>';
         });
 }
 
@@ -5386,8 +5386,13 @@ function renderTasksTableFromKanban(tasks, tbodyId) {
     const tbody = document.getElementById(tbodyId);
     if (!tbody) return;
     
+    // Determinar si es tabla de "Mis Tareas" o "Equipo" basado en el tbodyId
+    const isMyTasksTable = tbodyId === 'my-tasks-table-body';
+    const isTeamTasksTable = tbodyId === 'team-tasks-table-body';
+    const colspan = isMyTasksTable ? 9 : 10; // Mis Tareas: 9 columnas, Equipo: 10 columnas
+    
     if (!tasks || tasks.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No hay tareas disponibles</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="${colspan}" class="text-center text-muted">No hay tareas disponibles</td></tr>`;
         return;
     }
     
@@ -5395,7 +5400,7 @@ function renderTasksTableFromKanban(tasks, tbodyId) {
     const filteredTasks = applyCurrentFilters(tasks);
     
     if (filteredTasks.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No hay tareas que coincidan con los filtros</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="${colspan}" class="text-center text-muted">No hay tareas que coincidan con los filtros</td></tr>`;
         return;
     }
     
@@ -5431,16 +5436,22 @@ function renderTasksTableFromKanban(tasks, tbodyId) {
             }
         }
         
+        // Generar columna "Asignado" solo para tabla del equipo
+        const assignedColumn = isTeamTasksTable ? `
+                <td class="td-assigned">
+                    <span class="assigned-users" title="${task.assigned_user_name || task.all_assigned_users || ''}">${task.assigned_user_name || task.all_assigned_users || 'Pendiente'}</span>
+                </td>` : '';
+
         html += `
             <tr class="task-row ${isSubtask ? 'subtask-row' : ''}" data-task-id="${task.task_id}">
-                <td class="checkbox-cell">
+                <td class="td-checkbox">
                     <input type="checkbox" class="task-checkbox" ${task.status === 'completed' ? 'checked' : ''} 
                            onchange="toggleTaskStatus(${task.task_id}, this.checked, '${isSubtask ? 'subtask' : 'task'}')">
                 </td>
-                <td class="priority-cell">
+                <td class="td-priority">
                     <span class="priority-badge priority-${task.priority || 'medium'}">${(task.priority || 'medium').toUpperCase()}</span>
                 </td>
-                <td class="task-cell">
+                <td class="td-task">
                     <div class="task-name-table">
                         ${isSubtask ? '<i class="fas fa-arrow-right subtask-icon-table"></i>' : ''}
                         ${isRecurrent ? '<i class="fas fa-sync-alt recurrent-icon" title="Tarea Recurrente"></i>' : 
@@ -5452,18 +5463,18 @@ function renderTasksTableFromKanban(tasks, tbodyId) {
                     </div>
                     ${task.description ? `<div class="task-description-table">${task.description}</div>` : ''}
                 </td>
-                <td class="project-cell">
+                <td class="td-project">
                     <span class="project-badge ${isRecurrent ? 'recurrent' : isEventual ? 'eventual' : isPersonal ? 'personal' : 'clan'}">
                         ${isRecurrent ? 'Recurrente' : isEventual ? 'Eventual' : (task.project_name || 'Sin proyecto')}
                     </span>
-                </td>
-                <td class="due-date-cell">
+                </td>${assignedColumn}
+                <td class="td-due-date">
                     ${task.due_date ? `<span class="due-date-badge ${urgencyClass}">${urgencyText}</span>` : '<span class="no-due-date">Sin fecha</span>'}
                 </td>
-                <td class="status-cell">
+                <td class="td-status">
                     <span class="status-badge status-${task.status}">${task.status}</span>
                 </td>
-                <td class="progress-cell">
+                <td class="td-progress">
                     <div class="progress-container-table">
                         <div class="progress-bar-table">
                             <div class="progress-fill-table" style="width: ${task.completion_percentage || 0}%"></div>
@@ -5471,7 +5482,7 @@ function renderTasksTableFromKanban(tasks, tbodyId) {
                         <span class="progress-text-table">${task.completion_percentage || 0}%</span>
                     </div>
                 </td>
-                <td class="actions-cell">
+                <td class="td-actions">
                     <div class="actions-group">
                         <a href="?route=clan_leader/get-task-details&task_id=${isSubtask ? (task.parent_task_id || task.task_id) : task.task_id}${isSubtask ? '&type=subtask' : ''}" class="btn-action-table view" title="Ver Detalles">
                             <i class="fas fa-eye"></i>
