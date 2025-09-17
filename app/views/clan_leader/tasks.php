@@ -193,13 +193,10 @@ ob_start();
                                 
                                 <!-- Botones de acción -->
                                 <div class="filter-actions">
-                                    <!-- Botón Aplicar Filtros ocultado - Los filtros se aplican automáticamente -->
-                                    <!--
                                     <button type="button" class="btn-apply-filters" onclick="applyFilters()">
                                         <i class="fas fa-filter"></i>
                                         Aplicar Filtros
                                     </button>
-                                    -->
                                     <button type="button" class="btn-reset-filters" onclick="resetFilters('my-tasks')">
                                         <i class="fas fa-undo"></i>
                                         Limpiar Filtros
@@ -300,13 +297,10 @@ ob_start();
                                 
                                 <!-- Botones de acción -->
                                 <div class="filter-actions">
-                                    <!-- Botón Aplicar Filtros ocultado - Los filtros se aplican automáticamente -->
-                                    <!--
                                     <button type="button" class="btn-apply-filters" onclick="applyFilters()">
                                         <i class="fas fa-filter"></i>
                                         Aplicar Filtros
                                     </button>
-                                    -->
                                     <button type="button" class="btn-reset-filters" onclick="resetFilters('team-tasks')">
                                         <i class="fas fa-undo"></i>
                                         Limpiar Filtros
@@ -378,6 +372,11 @@ ob_start();
 </div>
 
 <style>
+/* Ocultar botón Aplicar Filtros - Los filtros se aplican automáticamente */
+.btn-apply-filters {
+    display: none !important;
+}
+
 /* Reset y Base */
 .clan-leader-tasks-container {
     min-height: 100vh;
