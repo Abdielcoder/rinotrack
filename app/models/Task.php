@@ -1839,6 +1839,7 @@ class Task {
                         t.assigned_to_user_id = ?
                     )
                     AND (t.is_subtask = 0 OR t.is_subtask IS NULL)
+                    AND t.status != 'completed'
                 ORDER BY 
                     t.task_id DESC
             ";
