@@ -4259,57 +4259,78 @@ console.log('🔧 Botón de clonar configurado correctamente');
 
 /* Área de selección múltiple */
 .bulk-actions-area {
-    background: #fef2f2;
-    border: 1px solid #fecaca;
-    border-radius: 8px;
-    padding: 12px 16px;
-    margin: 16px 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: 1px solid #667eea;
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin: 20px 0;
     animation: slideDown 0.3s ease;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.25);
 }
 
 .bulk-actions-content {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 20px;
     flex-wrap: wrap;
 }
 
 .selected-count {
-    font-weight: 600;
-    color: #dc2626;
-    font-size: 14px;
+    font-weight: 700;
+    color: #ffffff;
+    font-size: 16px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.selected-count::before {
+    content: '✓';
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    text-align: center;
+    line-height: 24px;
 }
 
 .bulk-actions-area .btn {
-    padding: 8px 16px;
+    padding: 10px 20px;
     font-size: 14px;
-    border-radius: 6px;
-    font-weight: 500;
+    border-radius: 8px;
+    font-weight: 600;
     transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .bulk-actions-area .btn-danger {
-    background: #dc2626;
-    border-color: #dc2626;
+    background: #ef4444;
     color: white;
+    box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
 }
 
 .bulk-actions-area .btn-danger:hover {
-    background: #b91c1c;
-    border-color: #b91c1c;
-    transform: translateY(-1px);
+    background: #dc2626;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(239, 68, 68, 0.4);
 }
 
 .bulk-actions-area .btn-secondary {
-    background: #6b7280;
-    border-color: #6b7280;
-    color: white;
+    background: rgba(255, 255, 255, 0.95);
+    color: #374151;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .bulk-actions-area .btn-secondary:hover {
-    background: #4b5563;
-    border-color: #4b5563;
-    transform: translateY(-1px);
+    background: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 @keyframes slideDown {
@@ -5771,22 +5792,48 @@ function debounce(func, wait) {
 
 // Función para actualizar la selección
 function updateSelection() {
-    const checkboxes = document.querySelectorAll('.task-checkbox:checked');
-    const count = checkboxes.length;
-    const bulkArea = document.getElementById('bulk-actions-area');
-    const selectedCount = document.getElementById('selected-count');
+    // Determinar qué tab está activo
+    const activeTab = document.querySelector('.tab-minimal.active');
+    const isMyTasksTab = activeTab && activeTab.id === 'my-tasks-tab';
     
-    if (count > 0) {
-        bulkArea.style.display = 'block';
-        selectedCount.textContent = `${count} tarea${count > 1 ? 's' : ''} seleccionada${count > 1 ? 's' : ''}`;
-    } else {
-        bulkArea.style.display = 'none';
+    // Obtener los checkboxes del tab activo
+    const tabContent = isMyTasksTab ? 
+        document.getElementById('my-tasks-content') : 
+        document.getElementById('team-tasks-content');
+    
+    if (!tabContent) return;
+    
+    const checkboxes = tabContent.querySelectorAll('.task-checkbox:checked');
+    const count = checkboxes.length;
+    
+    // Obtener el área de acciones masivas del tab activo
+    const bulkArea = tabContent.querySelector('.bulk-actions-area');
+    const selectedCount = tabContent.querySelector('.selected-count');
+    
+    if (bulkArea && selectedCount) {
+        if (count > 0) {
+            bulkArea.style.display = 'block';
+            selectedCount.textContent = `${count} tarea${count > 1 ? 's' : ''} seleccionada${count > 1 ? 's' : ''}`;
+        } else {
+            bulkArea.style.display = 'none';
+        }
     }
 }
 
 // Función para limpiar la selección
 function clearSelection() {
-    const checkboxes = document.querySelectorAll('.task-checkbox');
+    // Determinar qué tab está activo
+    const activeTab = document.querySelector('.tab-minimal.active');
+    const isMyTasksTab = activeTab && activeTab.id === 'my-tasks-tab';
+    
+    // Obtener los checkboxes del tab activo
+    const tabContent = isMyTasksTab ? 
+        document.getElementById('my-tasks-content') : 
+        document.getElementById('team-tasks-content');
+    
+    if (!tabContent) return;
+    
+    const checkboxes = tabContent.querySelectorAll('.task-checkbox');
     checkboxes.forEach(checkbox => {
         checkbox.checked = false;
     });
@@ -5795,7 +5842,18 @@ function clearSelection() {
 
 // Función para mostrar el modal de confirmación
 function showBulkDeleteModal() {
-    const checkboxes = document.querySelectorAll('.task-checkbox:checked');
+    // Determinar qué tab está activo
+    const activeTab = document.querySelector('.tab-minimal.active');
+    const isMyTasksTab = activeTab && activeTab.id === 'my-tasks-tab';
+    
+    // Obtener los checkboxes del tab activo
+    const tabContent = isMyTasksTab ? 
+        document.getElementById('my-tasks-content') : 
+        document.getElementById('team-tasks-content');
+    
+    if (!tabContent) return;
+    
+    const checkboxes = tabContent.querySelectorAll('.task-checkbox:checked');
     const tasksList = document.getElementById('tasks-to-delete');
     
     if (checkboxes.length === 0) {
@@ -5857,7 +5915,18 @@ function closeBulkDeleteModal() {
 
 // Función para ejecutar la eliminación múltiple
 function executeBulkDelete() {
-    const checkboxes = document.querySelectorAll('.task-checkbox:checked');
+    // Determinar qué tab está activo
+    const activeTab = document.querySelector('.tab-minimal.active');
+    const isMyTasksTab = activeTab && activeTab.id === 'my-tasks-tab';
+    
+    // Obtener los checkboxes del tab activo
+    const tabContent = isMyTasksTab ? 
+        document.getElementById('my-tasks-content') : 
+        document.getElementById('team-tasks-content');
+    
+    if (!tabContent) return;
+    
+    const checkboxes = tabContent.querySelectorAll('.task-checkbox:checked');
     const taskIds = Array.from(checkboxes).map(checkbox => checkbox.getAttribute('data-task-id'));
     
     if (taskIds.length === 0) {
