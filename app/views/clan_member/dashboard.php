@@ -157,7 +157,7 @@ ob_start();
                 <!-- Columna: Vencidas -->
                 <div class="kanban-column">
                     <div class="column-header overdue">
-                        <h3>Vencidas</h3>
+                        <h3>⚠️ VENCIDAS</h3>
                         <span class="task-count"><?php echo count($kanbanTasks['vencidas'] ?? []); ?></span>
                     </div>
                     <div class="column-content">
@@ -183,7 +183,7 @@ ob_start();
                                     </a>
                                 </div>
                                 <div class="task-content">
-                                    <h4 class="task-title"><?php echo htmlspecialchars($task['task_name']); ?></h4>
+                                    <h4 class="task-name"><?php echo htmlspecialchars($task['task_name']); ?></h4>
 
                                     <div class="task-project-info">
                                         <?php if (in_array($task['project_name'], ['Tareas Recurrentes', 'Tareas Eventuales', 'Tareas Personales', 'Personal'])): ?>
@@ -216,7 +216,7 @@ ob_start();
                 <!-- Columna: Hoy -->
                 <div class="kanban-column">
                     <div class="column-header today">
-                        <h3>Hoy</h3>
+                        <h3>📅 HOY</h3>
                         <span class="task-count"><?php echo count($kanbanTasks['hoy'] ?? []); ?></span>
                     </div>
                     <div class="column-content">
@@ -242,7 +242,7 @@ ob_start();
                                     </a>
                                 </div>
                                 <div class="task-content">
-                                    <h4 class="task-title"><?php echo htmlspecialchars($task['task_name']); ?></h4>
+                                    <h4 class="task-name"><?php echo htmlspecialchars($task['task_name']); ?></h4>
 
                                     <div class="task-project-info">
                                         <?php if (in_array($task['project_name'], ['Tareas Recurrentes', 'Tareas Eventuales', 'Tareas Personales', 'Personal'])): ?>
@@ -275,7 +275,7 @@ ob_start();
                 <!-- Columna: 1 Semana -->
                 <div class="kanban-column">
                     <div class="column-header week1">
-                        <h3>1 Semana</h3>
+                        <h3>📆 1 SEMANA</h3>
                         <span class="task-count"><?php echo count($kanbanTasks['1_semana'] ?? []); ?></span>
                     </div>
                     <div class="column-content">
@@ -297,7 +297,7 @@ ob_start();
                                     </a>
                                 </div>
                                 <div class="task-content">
-                                    <h4 class="task-title"><?php echo htmlspecialchars($task['task_name']); ?></h4>
+                                    <h4 class="task-name"><?php echo htmlspecialchars($task['task_name']); ?></h4>
 
                                     <div class="task-project-info">
                                         <?php if (in_array($task['project_name'], ['Tareas Recurrentes', 'Tareas Eventuales', 'Tareas Personales', 'Personal'])): ?>
@@ -330,7 +330,7 @@ ob_start();
                 <!-- Columna: 2 Semanas -->
                 <div class="kanban-column">
                     <div class="column-header week2">
-                        <h3>2 Semanas</h3>
+                        <h3>🚀 2 SEMANAS</h3>
                         <span class="task-count"><?php echo count($kanbanTasks['2_semanas'] ?? []); ?></span>
                     </div>
                     <div class="column-content">
@@ -352,7 +352,7 @@ ob_start();
                                     </a>
                                 </div>
                                 <div class="task-content">
-                                    <h4 class="task-title"><?php echo htmlspecialchars($task['task_name']); ?></h4>
+                                    <h4 class="task-name"><?php echo htmlspecialchars($task['task_name']); ?></h4>
 
                                     <div class="task-project-info">
                                         <?php if (in_array($task['project_name'], ['Tareas Recurrentes', 'Tareas Eventuales', 'Tareas Personales', 'Personal'])): ?>
@@ -750,99 +750,105 @@ ob_start();
 .kanban-board {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 15px;
+    gap: 20px;
     margin: 0 auto;
     max-width: 100%;
 }
 
 .kanban-column {
-    background: #ffffff;
-    border-radius: 10px;
-    box-shadow: var(--shadow-md);
-    border: 1px solid #e5e7eb;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.2);
     min-height: 300px;
     max-width: 100%;
     flex: 1;
 }
 
 .column-header {
-    padding: 12px 16px;
-    border-bottom: 1px solid #e5e7eb;
+    padding: 20px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: white;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    position: relative;
 }
 
 .column-header h3 {
     margin: 0;
-    font-size: 0.95rem;
-    font-weight: var(--font-weight-semibold);
-    color: #1e3a8a;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.column-header.overdue {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+}
+
+.column-header.today {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
+}
+
+.column-header.week1 {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+}
+
+.column-header.week2 {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
 }
 
 .task-count {
-    background: #1e3a8a;
-    color: #ffffff;
-    padding: 6px 10px;
-    border-radius: var(--radius-full);
-    font-size: 0.8rem;
-    font-weight: var(--font-weight-bold);
+    background: rgba(255, 255, 255, 0.3);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    backdrop-filter: blur(10px);
+    color: white;
     min-width: 24px;
     text-align: center;
     display: inline-block;
 }
 
-.column-header.overdue h3 { color: #1e3a8a; }
-.column-header.today h3 { color: #1e3a8a; }
-.column-header.week1 h3 { color: #1e3a8a; }
-.column-header.week2 h3 { color: #1e3a8a; }
-
 .column-content {
-    padding: var(--spacing-md);
-    min-height: 300px;
+    padding: 8px;
+    max-height: 500px;
+    overflow-y: auto;
 }
 
 .task-card {
     background: #ffffff;
     border: 1px solid #e5e7eb;
-    border-radius: 6px;
-    padding: 8px;
+    border-radius: 8px;
+    padding: 8px 10px;
     margin-bottom: 6px;
-    box-shadow: var(--shadow-sm);
-    transition: all var(--transition-normal);
-    min-height: 50px;
-    max-height: 90px;
-    overflow: visible;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    font-size: 0.85rem;
+    gap: 4px;
+    min-height: 50px;
 }
 
 .task-card:hover {
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    transform: translateY(-1px);
 }
 
 .task-card.overdue {
     border-left: 4px solid #ef4444;
-    min-height: 60px;
-    padding: calc(var(--spacing-xs) + 2px);
-    margin-bottom: calc(var(--spacing-xs) - 2px);
-}
-
-.task-card.overdue .task-title {
-    font-size: 0.85rem;
-    margin-bottom: calc(var(--spacing-xs) - 2px);
-}
-
-.task-card.overdue .task-project {
-    font-size: 0.7rem;
-    margin-bottom: calc(var(--spacing-xs) - 2px);
-}
-
-.task-card.overdue .task-due-date {
-    font-size: 0.7rem;
-    margin-bottom: calc(var(--spacing-xs) - 2px);
 }
 
 .task-card.today {
@@ -859,46 +865,20 @@ ob_start();
 
 .task-header {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: var(--spacing-xs);
+    align-items: flex-start;
+    gap: 6px;
 }
 
 .task-checkbox {
-    display: flex;
-    align-items: center;
-    cursor: pointer;
+    flex-shrink: 0;
 }
 
 .task-checkbox input[type="checkbox"] {
-    display: none;
-}
-
-.checkmark {
-    width: 18px;
-    height: 18px;
-    border: 2px solid #e5e7eb;
-    border-radius: var(--radius-sm);
-    background: #ffffff;
-    position: relative;
-    transition: all var(--transition-normal);
-}
-
-.task-checkbox input[type="checkbox"]:checked + .checkmark {
-    background: var(--primary-color);
-    border-color: var(--primary-color);
-}
-
-.task-checkbox input[type="checkbox"]:checked + .checkmark::after {
-    content: '✓';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    color: white;
-    font-size: 12px;
-    font-weight: bold;
+    width: 14px;
+    height: 14px;
+    cursor: pointer;
+    accent-color: #10b981;
+    margin: 0;
 }
 
 .task-priority {
@@ -913,38 +893,51 @@ ob_start();
 .task-priority.medium { background: #eff6ff; color: #2563eb; }
 .task-priority.low { background: #f0fdf4; color: #059669; }
 
-.task-title {
-    font-weight: var(--font-weight-semibold);
-    color: #1e3a8a;
-    margin-bottom: 4px;
-    font-size: 0.85rem;
+.task-name {
+    color: #1e40af;
+    font-weight: 600;
+    font-size: 0.8rem;
     line-height: 1.2;
+    white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    display: -webkit-box;
-    -webkit-line-clamp: 1;
-    -webkit-box-orient: vertical;
-    white-space: normal;
+    margin: 0;
+    padding: 0;
 }
 
 .task-project {
-    color: #6b7280;
-    font-size: 0.75rem;
-    margin-bottom: var(--spacing-xs);
+    color: #4b5563;
+    font-size: 0.7rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-left: 20px;
+}
+
+.task-project-name {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
 }
 
 .task-due-date {
-    font-size: 0.75rem;
-    margin-bottom: var(--spacing-xs);
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-xs);
+    color: #6b7280;
+    font-size: 0.65rem;
+    font-weight: 400;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
-.task-due-date.overdue { color: #ef4444; }
-.task-due-date.today { color: #f59e0b; }
-.task-due-date.week1 { color: #3b82f6; }
-.task-due-date.week2 { color: #10b981; }
+.task-project-name::before {
+    content: '📁';
+    font-size: 0.7rem;
+}
 
 .task-actions {
     display: flex;
@@ -1413,9 +1406,52 @@ ob_start();
 
 /* Estilos para subtareas */
 .subtask-card {
-    border-left-style: dashed !important;
-    opacity: 0.9;
-    background: rgba(255, 255, 255, 0.95) !important;
+    background: linear-gradient(135deg, #fef7ff 0%, #f3e8ff 100%);
+    border: 1px solid #e9d5ff;
+    border-radius: 8px;
+    padding: 8px 10px;
+    margin-bottom: 6px;
+    box-shadow: 0 1px 3px rgba(139, 92, 246, 0.1);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    border-left: 4px solid #a855f7;
+}
+
+.subtask-card:hover {
+    box-shadow: 0 2px 8px rgba(139, 92, 246, 0.2);
+    transform: translateY(-1px);
+    background: linear-gradient(135deg, #fdf4ff 0%, #f1e8ff 100%);
+}
+
+.subtask-card::before {
+    content: "📋";
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 12px;
+    opacity: 0.7;
+}
+
+/* Colores de borde por columna para subtareas */
+.subtask-card.overdue {
+    border-left-color: #ef4444;
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+}
+
+.subtask-card.today {
+    border-left-color: #f59e0b;
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+}
+
+.subtask-card.week1 {
+    border-left-color: #3b82f6;
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+}
+
+.subtask-card.week2 {
+    border-left-color: #10b981;
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
 }
 
 .subtask-indicator {
@@ -1434,7 +1470,7 @@ ob_start();
     font-size: 0.65rem;
 }
 
-.subtask-card .task-title {
+.subtask-card .task-name {
     font-size: 0.85rem !important;
     color: #4b5563 !important;
 }
