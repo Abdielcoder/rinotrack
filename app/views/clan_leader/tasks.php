@@ -1095,7 +1095,7 @@ ob_start();
     }
     
     .tasks-table {
-        min-width: 1200px; /* Aumentar ancho mínimo de la tabla */
+        min-width: 1400px; /* Aumentar aún más el ancho mínimo de la tabla */
     }
 }
 
@@ -1508,9 +1508,10 @@ ob_start();
 }
 
 .th-progress, .td-progress {
-    width: 180px; /* Aumentar ancho de columna progreso */
+    width: 200px; /* Aumentar aún más el ancho de columna progreso */
     text-align: center;
-    padding: 0.875rem 1.25rem; /* Más padding para mejor separación */
+    padding: 0.875rem 1.5rem; /* Más padding para mejor separación */
+    border-right: 2px solid #e5e7eb; /* Borde más visible para separación */
 }
 
 /* Estilos para checkbox - CAMBIADO A TEXTO "COMPLETAR" */
@@ -1553,9 +1554,10 @@ ob_start();
 }
 
 .th-actions, .td-actions {
-    width: 160px; /* Aumentar ancho de columna acciones */
+    width: 180px; /* Aumentar aún más el ancho de columna acciones */
     text-align: center;
-    padding: 0.875rem 1.25rem; /* Más padding para mejor separación */
+    padding: 0.875rem 1.5rem; /* Más padding para mejor separación */
+    border-right: 2px solid #e5e7eb; /* Borde más visible para separación */
 }
 
 /* Estilos de contenido */
@@ -1771,7 +1773,7 @@ ob_start();
     }
     
     .tasks-table {
-        min-width: 1200px; /* Aumentar ancho mínimo de la tabla */
+        min-width: 1400px; /* Aumentar aún más el ancho mínimo de la tabla */
     }
 }
 
@@ -4002,25 +4004,25 @@ function renderTeamTasksTable(tasks, tbodyId) {
                     </span>
                 </td>
                 <td class="td-progress">
-                    <div class="progress-container">
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: ${progress}%"></div>
+                    <div class="progress-container-table">
+                        <div class="progress-bar-table">
+                            <div class="progress-fill-table" style="width: ${progress}%"></div>
                         </div>
-                        <span class="progress-text">${progress}%</span>
+                        <span class="progress-text-table">${progress}%</span>
                     </div>
                 </td>
                 <td class="td-actions">
-                    <div class="action-buttons">
-                        <a href="?route=clan_leader/get-task-details&task_id=${task.task_id}" class="btn-action btn-view" title="Ver detalles">
+                    <div class="actions-group">
+                        <a href="?route=clan_leader/get-task-details&task_id=${task.task_id}" class="btn-action-table view" title="Ver detalles">
                             <i class="fas fa-eye"></i>
                         </a>
-                        <a href="?route=clan_leader/task_edit&task_id=${task.task_id}" class="btn-action btn-edit" title="Editar tarea">
+                        <a href="?route=clan_leader/task_edit&task_id=${task.task_id}" class="btn-action-table edit" title="Editar tarea">
                             <i class="fas fa-edit"></i>
                         </a>
-                        <button class="btn-action btn-delete" onclick="deleteTask(${task.task_id})" title="Eliminar tarea">
+                        <button class="btn-action-table delete" onclick="deleteTask(${task.task_id})" title="Eliminar tarea">
                             <i class="fas fa-trash"></i>
                         </button>
-                        <button class="btn-action btn-clone" onclick="openCloneTaskModal(${task.task_id})" title="Clonar tarea"><i class="fas fa-copy"></i></button>
+                        <button class="btn-action-table clone" onclick="openCloneTaskModal(${task.task_id})" title="Clonar tarea"><i class="fas fa-copy"></i></button>
                     </div>
                 </td>
                 <td class="td-select">
@@ -4099,25 +4101,25 @@ function renderTasksTable(tasks, tbodyId) {
                     </span>
                 </td>
                 <td class="td-progress">
-                    <div class="progress-container">
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: ${progress}%"></div>
+                    <div class="progress-container-table">
+                        <div class="progress-bar-table">
+                            <div class="progress-fill-table" style="width: ${progress}%"></div>
                         </div>
-                        <span class="progress-text">${progress}%</span>
+                        <span class="progress-text-table">${progress}%</span>
                     </div>
                 </td>
                 <td class="td-actions">
-                    <div class="action-buttons">
-                        <a href="?route=clan_leader/get-task-details&task_id=${task.task_id}" class="btn-action btn-view" title="Ver detalles">
+                    <div class="actions-group">
+                        <a href="?route=clan_leader/get-task-details&task_id=${task.task_id}" class="btn-action-table view" title="Ver detalles">
                             <i class="fas fa-eye"></i>
                         </a>
-                        <a href="?route=clan_leader/task_edit&task_id=${task.task_id}" class="btn-action btn-edit" title="Editar tarea">
+                        <a href="?route=clan_leader/task_edit&task_id=${task.task_id}" class="btn-action-table edit" title="Editar tarea">
                             <i class="fas fa-edit"></i>
                         </a>
-                        <button class="btn-action btn-delete" onclick="deleteTask(${task.task_id})" title="Eliminar tarea">
+                        <button class="btn-action-table delete" onclick="deleteTask(${task.task_id})" title="Eliminar tarea">
                             <i class="fas fa-trash"></i>
                         </button>
-                        <button class="btn-action btn-clone" onclick="openCloneTaskModal(${task.task_id})" title="Clonar tarea"><i class="fas fa-copy"></i></button>
+                        <button class="btn-action-table clone" onclick="openCloneTaskModal(${task.task_id})" title="Clonar tarea"><i class="fas fa-copy"></i></button>
                     </div>
                 </td>
                 <td class="td-select">
@@ -5088,17 +5090,19 @@ console.log('🔧 Botón de clonar configurado correctamente');
 .progress-container-table {
     display: flex;
     align-items: center;
-    gap: 12px; /* Aumentar espacio entre barra y texto */
-    padding: 0 8px; /* Agregar padding interno */
+    gap: 15px; /* Aumentar aún más el espacio entre barra y texto */
+    padding: 0 12px; /* Más padding interno */
+    justify-content: center; /* Centrar el contenido */
 }
 
 .progress-bar-table {
     flex: 1;
-    height: 8px; /* Hacer la barra un poco más alta */
-    background: #ecf0f1;
-    border-radius: 4px; /* Bordes más redondeados */
+    height: 10px; /* Hacer la barra más alta */
+    background: #f1f3f4;
+    border-radius: 5px; /* Bordes más redondeados */
     overflow: hidden;
-    min-width: 80px; /* Ancho mínimo para la barra */
+    min-width: 100px; /* Ancho mínimo mayor para la barra */
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.1); /* Sombra interna */
 }
 
 .progress-fill-table {
@@ -5109,33 +5113,36 @@ console.log('🔧 Botón de clonar configurado correctamente');
 }
 
 .progress-text-table {
-    font-size: 11px;
-    font-weight: 600;
+    font-size: 12px; /* Texto un poco más grande */
+    font-weight: 700; /* Texto más bold */
     color: #2c3e50;
-    min-width: 35px;
+    min-width: 45px; /* Más ancho para el texto */
+    text-align: center; /* Centrar el texto */
 }
 
 /* Acciones en tabla */
 .actions-group {
     display: flex;
-    gap: 8px; /* Aumentar espacio entre botones */
+    gap: 12px; /* Aumentar aún más el espacio entre botones */
     justify-content: center;
-    padding: 0 8px; /* Agregar padding interno */
+    padding: 0 12px; /* Más padding interno */
+    align-items: center; /* Centrar verticalmente */
 }
 
 .btn-action-table {
-    padding: 8px; /* Aumentar padding de botones */
+    padding: 10px; /* Aumentar aún más el padding de botones */
     border: none;
-    border-radius: 6px; /* Bordes más redondeados */
+    border-radius: 8px; /* Bordes más redondeados */
     cursor: pointer;
-    font-size: 12px; /* Texto un poco más grande */
-    transition: all 0.2s ease;
+    font-size: 13px; /* Texto más grande */
+    transition: all 0.3s ease; /* Transición más suave */
     text-decoration: none;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 36px; /* Botones más grandes */
-    height: 36px;
+    width: 40px; /* Botones aún más grandes */
+    height: 40px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Sombra sutil */
 }
 
 .btn-action-table.view {
@@ -5145,7 +5152,8 @@ console.log('🔧 Botón de clonar configurado correctamente');
 
 .btn-action-table.view:hover {
     background: rgba(52, 152, 219, 0.2);
-    transform: scale(1.05);
+    transform: scale(1.1); /* Efecto hover más pronunciado */
+    box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3); /* Sombra con color */
 }
 
 .btn-action-table.edit {
@@ -5157,7 +5165,8 @@ console.log('🔧 Botón de clonar configurado correctamente');
 
 .btn-action-table.edit:hover {
     background: rgba(243, 156, 18, 0.2);
-    transform: scale(1.05);
+    transform: scale(1.1); /* Efecto hover más pronunciado */
+    box-shadow: 0 4px 8px rgba(243, 156, 18, 0.3); /* Sombra con color */
 }
 
 .btn-action-table.delete {
@@ -5167,7 +5176,8 @@ console.log('🔧 Botón de clonar configurado correctamente');
 
 .btn-action-table.delete:hover {
     background: rgba(231, 76, 60, 0.2);
-    transform: scale(1.05);
+    transform: scale(1.1); /* Efecto hover más pronunciado */
+    box-shadow: 0 4px 8px rgba(231, 76, 60, 0.3); /* Sombra con color */
 }
 
 .btn-action-table.clone {
@@ -5177,7 +5187,8 @@ console.log('🔧 Botón de clonar configurado correctamente');
 
 .btn-action-table.clone:hover {
     background: rgba(156, 163, 175, 0.2);
-    transform: scale(1.05);
+    transform: scale(1.1); /* Efecto hover más pronunciado */
+    box-shadow: 0 4px 8px rgba(156, 163, 175, 0.3); /* Sombra con color */
 }
 
 .btn-action-table.disabled {
