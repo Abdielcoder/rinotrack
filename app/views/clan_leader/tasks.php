@@ -2628,12 +2628,12 @@ ob_start();
                         <div class="form-group">
                             <label for="edit_priority">Prioridad</label>
                             <div class="select-wrapper">
-                                <select id="edit_priority" name="priority" class="form-control">
-                                    <option value="low">Baja</option>
-                                    <option value="medium">Media</option>
-                                    <option value="high">Alta</option>
-                                    <option value="urgent">Urgente</option>
-                                </select>
+                            <select id="edit_priority" name="priority" class="form-control">
+                                <option value="low">Baja</option>
+                                <option value="medium">Media</option>
+                                <option value="high">Alta</option>
+                                <option value="critical">Crítica</option>
+                            </select>
                                 <i class="fas fa-chevron-down"></i>
                             </div>
                         </div>
@@ -3561,6 +3561,7 @@ function showCloneTaskModal(task, projects) {
                                 <option value="low" ${task.priority === 'low' ? 'selected' : ''}>Baja</option>
                                 <option value="medium" ${task.priority === 'medium' ? 'selected' : ''}>Media</option>
                                 <option value="high" ${task.priority === 'high' ? 'selected' : ''}>Alta</option>
+                                <option value="critical" ${task.priority === 'critical' ? 'selected' : ''}>Crítica</option>
                             </select>
                         </div>
                         

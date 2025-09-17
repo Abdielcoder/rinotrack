@@ -805,8 +805,18 @@ ob_start();
                 <input type="date" id="due_date" name="due_date" required class="form-control">
             </div>
             
-            <!-- Campo oculto para prioridad por defecto -->
-            <input type="hidden" name="priority" value="medium">
+            <div class="form-group">
+                <label for="priority">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Prioridad
+                </label>
+                <select id="priority" name="priority" class="form-control">
+                    <option value="low">Baja</option>
+                    <option value="medium" selected>Media</option>
+                    <option value="high">Alta</option>
+                </select>
+            </div>
+            
             <!-- Campo oculto para status por defecto -->
             <input type="hidden" name="status" value="pending">
         </form>

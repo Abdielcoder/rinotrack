@@ -88,6 +88,18 @@ function getActiveTasksCount($userId) {
                                 <i class="fas fa-chevron-down"></i>
                             </div>
                         </div>
+                        
+                        <div class="form-group">
+                            <label for="priority">Prioridad</label>
+                            <div class="select-wrapper">
+                                <select id="priority" name="priority">
+                                    <option value="low">Baja</option>
+                                    <option value="medium" selected>Media</option>
+                                    <option value="high">Alta</option>
+                                </select>
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                        </div>
                     </div>
                     
                     <div class="form-row">
