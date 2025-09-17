@@ -133,6 +133,7 @@ function getActiveTasksCount($userId) {
                                         <option value="daily">Diaria</option>
                                         <option value="weekly">Semanal</option>
                                         <option value="monthly">Mensual</option>
+                                        <option value="quarterly">Trimestral</option>
                                     </select>
                                     <i class="fas fa-chevron-down"></i>
                                 </div>

@@ -2764,6 +2764,10 @@ class Task {
                 case 'monthly':
                     $current->add(new DateInterval('P1M'));
                     break;
+                case 'quarterly':
+                    // Trimestral = cada 3 meses
+                    $current->add(new DateInterval('P3M'));
+                    break;
                 default:
                     error_log("ERROR: Tipo de recurrencia desconocido: $type");
                     return [];

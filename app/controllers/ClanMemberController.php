@@ -1885,7 +1885,7 @@ class ClanMemberController {
                     return;
                 }
                 
-                $validRecurrenceTypes = ['daily', 'weekly', 'monthly'];
+                $validRecurrenceTypes = ['daily', 'weekly', 'monthly', 'quarterly'];
                 if (!in_array($recurrenceType, $validRecurrenceTypes)) {
                     echo json_encode(['success' => false, 'message' => 'Tipo de recurrencia inválido']);
                     return;
@@ -2016,7 +2016,7 @@ class ClanMemberController {
                     return;
                 }
                 
-                $validRecurrenceTypes = ['daily', 'weekly', 'monthly'];
+                $validRecurrenceTypes = ['daily', 'weekly', 'monthly', 'quarterly'];
                 if (!in_array($recurrenceType, $validRecurrenceTypes)) {
                     echo json_encode(['success' => false, 'message' => 'Tipo de recurrencia inválido']);
                     return;
