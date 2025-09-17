@@ -155,7 +155,7 @@ function saveTask() {
             const percentage = percentageInput.value;
             const description = descriptionInput ? descriptionInput.value : '';
             const dueDate = dueDateInput ? dueDateInput.value : null;
-            const priority = priorityInput ? priorityInput.value : 'medium';
+            const priority = priorityInput ? priorityInput.value : '';
             const assignedUserId = assignedUserInput ? (assignedUserInput.value || null) : null;
             
             console.log(`📋 Valores de subtarea ${index + 1}:`, { 

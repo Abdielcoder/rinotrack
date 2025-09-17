@@ -1703,10 +1703,11 @@ function createTaskModalHTML() {
                             <label for="createTaskPriority">Prioridad</label>
                             <div class="select-wrapper">
                                 <select id="createTaskPriority" name="priority">
+                                    <option value="">Seleccionar prioridad...</option>
                                     <option value="low">Baja</option>
-                                    <option value="medium" selected>Media</option>
+                                    <option value="medium">Media</option>
                                     <option value="high">Alta</option>
-                                    <option value="critical">Urgente</option>
+                                    <option value="critical">Crítica</option>
                                 </select>
                                 <i class="fas fa-chevron-down"></i>
                             </div>

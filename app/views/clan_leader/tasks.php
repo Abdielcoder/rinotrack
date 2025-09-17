@@ -5437,7 +5437,7 @@ function renderTasksTableFromKanban(tasks, tbodyId) {
                            onchange="toggleTaskStatus(${task.task_id}, this.checked, '${isSubtask ? 'subtask' : 'task'}')">
                 </td>
                 <td class="priority-cell">
-                    <span class="priority-badge priority-${task.priority || 'medium'}">${task.priority || 'medium'}</span>
+                    <span class="priority-badge priority-${task.priority || 'medium'}">${(task.priority || 'medium').toUpperCase()}</span>
                 </td>
                 <td class="task-cell">
                     <div class="task-name-table">

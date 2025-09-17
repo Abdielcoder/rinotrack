@@ -5865,7 +5865,7 @@ class ClanLeaderController {
                     s.title as task_name,
                     s.description,
                     s.due_date,
-                    'medium' as priority,
+                    s.priority,
                     s.status,
                     s.completion_percentage,
                     0 as automatic_points,
