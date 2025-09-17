@@ -193,13 +193,16 @@ ob_start();
                                 
                                 <!-- Botones de acción -->
                                 <div class="filter-actions">
+                                    <!-- Botón Aplicar Filtros ocultado - Los filtros se aplican automáticamente -->
+                                    <!--
                                     <button type="button" class="btn-apply-filters" onclick="applyFilters()">
                                         <i class="fas fa-filter"></i>
                                         Aplicar Filtros
                                     </button>
+                                    -->
                                     <button type="button" class="btn-reset-filters" onclick="resetFilters('my-tasks')">
                                         <i class="fas fa-undo"></i>
-                                        Resetear Filtros
+                                        Limpiar Filtros
                                     </button>
                                 </div>
                             </div>
@@ -297,13 +300,16 @@ ob_start();
                                 
                                 <!-- Botones de acción -->
                                 <div class="filter-actions">
+                                    <!-- Botón Aplicar Filtros ocultado - Los filtros se aplican automáticamente -->
+                                    <!--
                                     <button type="button" class="btn-apply-filters" onclick="applyFilters()">
                                         <i class="fas fa-filter"></i>
                                         Aplicar Filtros
                                     </button>
+                                    -->
                                     <button type="button" class="btn-reset-filters" onclick="resetFilters('team-tasks')">
                                         <i class="fas fa-undo"></i>
-                                        Resetear Filtros
+                                        Limpiar Filtros
                                     </button>
                                 </div>
                             </div>
@@ -3281,8 +3287,8 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// Las funciones de búsqueda automática fueron removidas
-// Ahora se usan los botones "Aplicar Filtros" para mejor control
+// Los filtros se aplican automáticamente al cambiar cualquier valor
+// El botón "Aplicar Filtros" ha sido ocultado ya que no es necesario
 // Función para cambiar el estado de una tarea - VERSIÓN CORREGIDA
 function toggleTaskStatus(taskId, isChecked) {
     console.log('=== toggleTaskStatus Debug V3.0 ===');
