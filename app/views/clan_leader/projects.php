@@ -242,27 +242,24 @@ ob_start();
                                 <button class="btn-list-action secondary" onclick="openCreateTaskModal(<?= $project['project_id'] ?>)" title="Nueva Tarea">
                                     <i class="fas fa-plus"></i>
                                 </button>
-                                <button class="btn-list-action menu" onclick="toggleProjectMenu(<?= $project['project_id'] ?>)" title="Más opciones">
-                                    <i class="fas fa-ellipsis-v"></i>
-                                </button>
-                                <!-- Botón de prueba temporal -->
-                                <button class="btn-list-action" onclick="alert('Test botón para proyecto <?= $project['project_id'] ?>'); toggleProjectMenu(<?= $project['project_id'] ?>);" title="Test" style="background: red; color: white; font-size: 10px;">
-                                    T
-                                </button>
-                                <!-- Menú contextual -->
-                                <div class="dropdown-menu-list" id="projectMenu<?= $project['project_id'] ?>" style="display: none;">
-                                    <button class="menu-item-list" onclick="openEditProjectModal(<?= $project['project_id'] ?>, '<?= htmlspecialchars($project['project_name']) ?>', '<?= htmlspecialchars($project['description']) ?>', '<?= $project['time_limit'] ?? '' ?>')">
-                                        <i class="fas fa-edit"></i>
-                                        Editar
+                                <div class="dropdown-container">
+                                    <button class="btn-list-action menu" onclick="toggleListMenu(<?= $project['project_id'] ?>)" title="Más opciones">
+                                        <i class="fas fa-ellipsis-v"></i>
                                     </button>
-                                    <button class="menu-item-list" onclick="openCloneProjectModal(<?= $project['project_id'] ?>)">
-                                        <i class="fas fa-copy"></i>
-                                        Clonar
-                                    </button>
-                                    <button class="menu-item-list danger" onclick="deleteProject(<?= $project['project_id'] ?>, '<?= htmlspecialchars($project['project_name']) ?>')">
-                                        <i class="fas fa-trash"></i>
-                                        Eliminar
-                                    </button>
+                                    <div class="dropdown-menu-list" id="listMenu<?= $project['project_id'] ?>">
+                                        <button class="menu-item-list" onclick="openEditProjectModal(<?= $project['project_id'] ?>, '<?= htmlspecialchars($project['project_name']) ?>', '<?= htmlspecialchars($project['description']) ?>', '<?= $project['time_limit'] ?? '' ?>')">
+                                            <i class="fas fa-edit"></i>
+                                            Editar
+                                        </button>
+                                        <button class="menu-item-list" onclick="openCloneProjectModal(<?= $project['project_id'] ?>)">
+                                            <i class="fas fa-copy"></i>
+                                            Clonar
+                                        </button>
+                                        <button class="menu-item-list danger" onclick="deleteProject(<?= $project['project_id'] ?>, '<?= htmlspecialchars($project['project_name']) ?>')">
+                                            <i class="fas fa-trash"></i>
+                                            Eliminar
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -735,55 +732,61 @@ function cloneProject() {
     });
 }
 
-// Toggle del menú del proyecto
-function toggleProjectMenu(projectId) {
-    console.log('toggleProjectMenu llamado con ID:', projectId);
+// Función específica para el menú de la vista lista
+function toggleListMenu(projectId) {
+    const menu = document.getElementById(`listMenu${projectId}`);
     
+    if (!menu) {
+        console.error(`No se encontró el menú con ID: listMenu${projectId}`);
+        return;
+    }
+    
+    // Cerrar todos los otros menús de lista
+    const allListMenus = document.querySelectorAll('.dropdown-menu-list');
+    allListMenus.forEach(m => {
+        if (m !== menu) {
+            m.style.display = 'none';
+        }
+    });
+    
+    // Toggle del menú actual
+    if (menu.style.display === 'block') {
+        menu.style.display = 'none';
+    } else {
+        menu.style.display = 'block';
+    }
+}
+
+// Función para el menú de la vista cards (mantener compatibilidad)
+function toggleProjectMenu(projectId) {
     const menu = document.getElementById(`projectMenu${projectId}`);
-    console.log('Menú encontrado:', menu);
     
     if (!menu) {
         console.error(`No se encontró el menú con ID: projectMenu${projectId}`);
         return;
     }
     
-    // Cerrar todos los otros menús
-    const allMenus = document.querySelectorAll('.dropdown-menu-minimal, .dropdown-menu-list');
-    console.log('Total de menús encontrados:', allMenus.length);
-    
-    allMenus.forEach(m => {
+    // Cerrar todos los otros menús de cards
+    const allCardMenus = document.querySelectorAll('.dropdown-menu-minimal');
+    allCardMenus.forEach(m => {
         if (m !== menu) {
-            m.classList.remove('show');
             m.style.display = 'none';
         }
     });
     
-    // Verificar si el menú actual está visible
-    const isCurrentlyVisible = menu.classList.contains('show') || menu.style.display === 'block';
-    console.log('Menú actualmente visible:', isCurrentlyVisible);
-    
-    if (isCurrentlyVisible) {
-        // Ocultar el menú
-        menu.classList.remove('show');
+    // Toggle del menú actual
+    if (menu.style.display === 'block') {
         menu.style.display = 'none';
-        console.log('Menú ocultado');
     } else {
-        // Mostrar el menú
-        menu.classList.add('show');
         menu.style.display = 'block';
-        console.log('Menú mostrado');
     }
-    
-    console.log('Clases finales del menú:', menu.className);
-    console.log('Display final del menú:', menu.style.display);
 }
 
 // Cerrar menús al hacer clic fuera
 document.addEventListener('click', function(e) {
-    // Solo cerrar si no se hizo clic en ningún botón de menú
-    if (!e.target.closest('.btn-menu-minimal') && !e.target.closest('.btn-list-action.menu')) {
+    // Solo cerrar si no se hizo clic en ningún botón de menú o contenedor
+    if (!e.target.closest('.dropdown-container') && !e.target.closest('.btn-menu-minimal') && !e.target.closest('.btn-list-action.menu')) {
         document.querySelectorAll('.dropdown-menu-minimal, .dropdown-menu-list').forEach(menu => {
-            menu.classList.remove('show');
             menu.style.display = 'none';
         });
     }
@@ -1614,6 +1617,12 @@ function toggleProjectDelegation(projectId, isAllowed) {
     transform: scale(1.05);
 }
 
+/* Contenedor del dropdown para lista */
+.dropdown-container {
+    position: relative;
+    display: inline-block;
+}
+
 /* Menú contextual para lista */
 .dropdown-menu-list {
     position: absolute;
@@ -1628,12 +1637,6 @@ function toggleProjectDelegation(projectId, isAllowed) {
     border: 1px solid rgba(0, 0, 0, 0.05);
     display: none;
     margin-top: 4px;
-}
-
-.dropdown-menu-list.show {
-    display: block !important;
-    background: yellow !important;
-    border: 2px solid red !important;
 }
 
 .menu-item-list {
