@@ -964,6 +964,9 @@ function saveTaskWithSubtasks() {
         }
     });
     
+    // Inicializar validationErrors aquí
+    const validationErrors = [];
+    
     // Validación adicional de subtareas
     if (subtasks.length === 0) {
         validationErrors.push('Al menos una subtarea');
