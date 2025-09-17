@@ -1096,7 +1096,7 @@ ob_start();
     }
     
     .tasks-table {
-        min-width: 1600px; /* Aumentar el ancho mínimo para acomodar todas las columnas */
+        min-width: 1800px; /* Tabla más ancha para mejor visualización */
     }
 }
 
@@ -1510,11 +1510,11 @@ ob_start();
 }
 
 .th-progress, .td-progress {
-    width: 150px; /* Ancho fijo para columna progreso */
-    min-width: 150px;
-    max-width: 150px;
+    width: 180px; /* Ancho aumentado para columna progreso */
+    min-width: 180px;
+    max-width: 180px;
     text-align: center;
-    padding: 0.875rem 1rem; /* Padding ajustado */
+    padding: 0.875rem 1.25rem; /* Padding aumentado */
     border-right: 2px solid #e5e7eb; /* Borde más visible para separación */
     box-sizing: border-box;
 }
@@ -1559,11 +1559,11 @@ ob_start();
 }
 
 .th-actions, .td-actions {
-    width: 200px; /* Ancho fijo para columna acciones */
-    min-width: 200px;
-    max-width: 200px;
+    width: 220px; /* Ancho aumentado para columna acciones */
+    min-width: 220px;
+    max-width: 220px;
     text-align: center;
-    padding: 0.875rem 1rem; /* Padding ajustado */
+    padding: 0.875rem 1.25rem; /* Padding aumentado */
     border-right: none; /* Sin borde en la última columna visible */
     box-sizing: border-box;
 }
@@ -1781,7 +1781,7 @@ ob_start();
     }
     
     .tasks-table {
-        min-width: 1600px; /* Aumentar el ancho mínimo para acomodar todas las columnas */
+        min-width: 1800px; /* Tabla más ancha para mejor visualización */
     }
 }
 
@@ -4218,29 +4218,8 @@ console.log('🔧 Botón de clonar configurado correctamente');
     padding: 8px;
 }
 
-/* Asegurar que los checkboxes de completar mantengan su estilo cuadrado */
-.td-checkbox input[type="checkbox"] {
-    display: none !important; /* Ocultar los checkboxes originales */
-}
-
-.td-checkbox::after {
-    content: "Completar" !important;
-    display: block !important;
-    padding: 4px 8px !important;
-    border-radius: 4px !important;
-    background: #f3f4f6 !important;
-    border: 1px solid #d1d5db !important;
-    font-size: 12px !important;
-    font-weight: 600 !important;
-    color: #6b7280 !important;
-    cursor: pointer !important;
-    transition: all 0.2s ease !important;
-}
-
-.td-checkbox:hover::after {
-    background: #e5e7eb !important;
-    border-color: #9ca3af !important;
-}
+/* Checkboxes cuadrados para completar tareas */
+/* Los estilos principales están al final del archivo para mayor prioridad */
 
 /* Checkboxes redondos para selección - ESTILO ESPECÍFICO */
 .td-select .task-checkbox {
@@ -5962,23 +5941,48 @@ function executeBulkDelete() {
 </div>
 
 <style>
-/* FORZAR ESTILOS DE CHECKBOXES - ESTILO FINAL */
-.td-checkbox::after {
-    content: "Completar" !important;
-    display: block !important;
-    padding: 4px 8px !important;
-    border-radius: 4px !important;
-    background: #f3f4f6 !important;
-    border: 1px solid #d1d5db !important;
-    font-size: 12px !important;
-    font-weight: 600 !important;
-    color: #6b7280 !important;
-    cursor: pointer !important;
-    transition: all 0.2s ease !important;
+/* CHECKBOXES CUADRADOS PARA COMPLETAR TAREAS - ESTILO FINAL */
+.td-checkbox {
+    text-align: center !important;
 }
 
 .td-checkbox input[type="checkbox"] {
-    display: none !important;
+    width: 24px !important;
+    height: 24px !important;
+    border-radius: 4px !important; /* Checkboxes cuadrados con bordes ligeramente redondeados */
+    border: 2px solid #d1d5db !important;
+    background: #ffffff !important;
+    cursor: pointer !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    position: relative !important;
+    display: inline-block !important;
+    vertical-align: middle !important;
+    transition: all 0.2s ease !important;
+}
+
+.td-checkbox input[type="checkbox"]:hover {
+    border-color: #6b7280 !important;
+    transform: scale(1.1) !important;
+    box-shadow: 0 0 0 3px rgba(107, 114, 128, 0.1) !important;
+}
+
+.td-checkbox input[type="checkbox"]:checked {
+    background: #10b981 !important;
+    border-color: #10b981 !important;
+}
+
+.td-checkbox input[type="checkbox"]:checked::after {
+    content: '✓' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    color: white !important;
+    font-size: 16px !important;
+    font-weight: bold !important;
+    line-height: 1 !important;
 }
 
 .td-select input[type="checkbox"].task-checkbox {
