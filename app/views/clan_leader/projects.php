@@ -242,12 +242,8 @@ ob_start();
                                 <button class="btn-list-action secondary" onclick="openCreateTaskModal(<?= $project['project_id'] ?>)" title="Nueva Tarea">
                                     <i class="fas fa-plus"></i>
                                 </button>
-                                <button class="btn-list-action menu" onclick="alert('Botón de 3 puntos clickeado para proyecto <?= $project['project_id'] ?>'); toggleProjectMenu(<?= $project['project_id'] ?>);" title="Más opciones" style="border: 2px solid red !important; background: yellow !important;">
+                                <button class="btn-list-action menu" onclick="toggleProjectMenu(<?= $project['project_id'] ?>)" title="Más opciones">
                                     <i class="fas fa-ellipsis-v"></i>
-                                </button>
-                                <!-- Botón de prueba temporal -->
-                                <button class="btn-list-action" onclick="testMenu(<?= $project['project_id'] ?>)" title="Test" style="background: red; color: white;">
-                                    T
                                 </button>
                                 <!-- Menú contextual -->
                                 <div class="dropdown-menu-list" id="projectMenu<?= $project['project_id'] ?>">
@@ -735,18 +731,9 @@ function cloneProject() {
     });
 }
 
-// Función de prueba temporal
-function testMenu(projectId) {
-    alert('Botón de prueba funcionando para proyecto ID: ' + projectId);
-    toggleProjectMenu(projectId);
-}
-
 // Toggle del menú del proyecto
 function toggleProjectMenu(projectId) {
-    console.log('toggleProjectMenu llamado con ID:', projectId);
-    
     const menu = document.getElementById(`projectMenu${projectId}`);
-    console.log('Menú encontrado:', menu);
     
     if (!menu) {
         console.error(`No se encontró el menú con ID: projectMenu${projectId}`);
@@ -763,7 +750,6 @@ function toggleProjectMenu(projectId) {
     
     // Toggle del menú actual
     menu.classList.toggle('show');
-    console.log('Menú toggled, clase show:', menu.classList.contains('show'));
 }
 
 // Cerrar menús al hacer clic fuera
@@ -1594,9 +1580,6 @@ function toggleProjectDelegation(projectId, isAllowed) {
 .btn-list-action.menu {
     background: rgba(116, 75, 162, 0.1);
     color: #764ba2;
-    position: relative;
-    z-index: 10;
-    pointer-events: auto;
 }
 
 .btn-list-action.menu:hover {
