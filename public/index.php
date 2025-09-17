@@ -1101,6 +1101,22 @@ try {
             $controller->updateTaskProgress();
             break;
             
+        // Rutas para asignación de subtareas por clan members
+        case 'clan_member/get-clan-members':
+            $controller = new ClanMemberController();
+            $controller->getClanMembers();
+            break;
+            
+        case 'clan_member/assign-subtask-users':
+            $controller = new ClanMemberController();
+            $controller->assignSubtaskUsers();
+            break;
+            
+        case 'clan_member/unassign-subtask-user':
+            $controller = new ClanMemberController();
+            $controller->unassignSubtaskUser();
+            break;
+            
         default:
             // Verificar si es un asset
             if (strpos($route, 'assets/') === 0) {
