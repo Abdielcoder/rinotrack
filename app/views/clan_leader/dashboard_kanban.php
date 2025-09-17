@@ -2300,20 +2300,107 @@ function createPersonalTask() {
             console.log('✅ Tarea personal creada exitosamente');
             closeCreateTaskModal();
             
-            // Mostrar mensaje de éxito
-            alert('Tarea personal creada exitosamente');
+            // Mostrar mensaje de éxito con el sistema de notificaciones
+            showToast('Tarea personal creada exitosamente', 'success');
             
-            // Recargar la página para mostrar la nueva tarea
-            window.location.reload();
+            // Recargar la página después de un breve delay para mostrar la notificación
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
         } else {
             console.error('❌ Error:', data.message);
-            alert('Error al crear tarea personal: ' + (data.message || 'Error desconocido'));
+            showToast('Error al crear tarea personal: ' + (data.message || 'Error desconocido'), 'error');
         }
     })
     .catch(error => {
         console.error('❌ Error:', error);
-        alert('Error de conexión al crear tarea personal');
+        showToast('Error de conexión al crear tarea personal', 'error');
     });
+}
+
+// Función para mostrar notificaciones tipo toast
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    
+    // Estilos del toast
+    toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 10000;
+        animation: slideIn 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 300px;
+        max-width: 500px;
+        font-size: 14px;
+        font-weight: 500;
+    `;
+    
+    // Colores según el tipo
+    const colors = {
+        success: { bg: '#10b981', text: '#ffffff', icon: '✓' },
+        error: { bg: '#ef4444', text: '#ffffff', icon: '✕' },
+        warning: { bg: '#f59e0b', text: '#ffffff', icon: '⚠' },
+        info: { bg: '#3b82f6', text: '#ffffff', icon: 'ℹ' }
+    };
+    
+    const color = colors[type] || colors.info;
+    toast.style.backgroundColor = color.bg;
+    toast.style.color = color.text;
+    
+    // Agregar icono y mensaje
+    toast.innerHTML = `
+        <span style="font-size: 20px;">${color.icon}</span>
+        <span>${message}</span>
+    `;
+    
+    // Agregar al body
+    document.body.appendChild(toast);
+    
+    // Animación de entrada
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+    `;
+    if (!document.querySelector('style[data-toast-animations]')) {
+        style.setAttribute('data-toast-animations', 'true');
+        document.head.appendChild(style);
+    }
+    
+    // Remover después de 3 segundos
+    setTimeout(() => {
+        toast.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => {
+            toast.remove();
+        }, 300);
+    }, 3000);
+    
+    return toast;
 }
 
 // Inicializar con "Mis Tareas" activo
