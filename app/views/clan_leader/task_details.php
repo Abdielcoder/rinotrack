@@ -2617,21 +2617,50 @@ function insertEmoji(emoji, editorId) {
     console.log('Insertando emoji:', emoji, 'en editor:', editorId);
     
     let editor = null;
+    let editorElement = null;
     
+    // Buscar el editor Quill
     if (editorId === 'task-comment') {
         editor = window.taskEditor;
+        editorElement = document.getElementById('task-comment-editor');
     } else if (editorId.startsWith('subtask-comment-')) {
         const subtaskId = editorId.replace('subtask-comment-', '');
         editor = window.subtaskEditors?.[subtaskId];
+        editorElement = document.getElementById(`subtask-comment-editor-${subtaskId}`);
     }
     
+    console.log('Editor encontrado:', editor);
+    console.log('Elemento editor:', editorElement);
+    
     if (editor && typeof editor.insertText === 'function') {
+        // Insertar en Quill
+        // Asegurar que el editor esté enfocado
+        editor.focus();
+        
         const range = editor.getSelection() || { index: editor.getLength() };
-        editor.insertText(range.index, emoji);
-        editor.setSelection(range.index + emoji.length);
+        console.log('Rango de selección:', range);
+        
+        // Si no hay selección, insertar al final
+        if (!range || range.index === null) {
+            const length = editor.getLength();
+            editor.insertText(length - 1, emoji);
+            editor.setSelection(length + emoji.length - 1);
+        } else {
+            editor.insertText(range.index, emoji);
+            editor.setSelection(range.index + emoji.length);
+        }
+        
+        console.log('Emoji insertado en Quill');
     } else {
-        const textarea = document.querySelector(`#${editorId}-editor textarea`) || 
-                         document.querySelector(`textarea[id*="${editorId}"]`);
+        // Fallback para textarea normal
+        console.log('Usando fallback textarea');
+        const textarea = editorElement?.querySelector('textarea') || 
+                         document.querySelector(`#${editorId}-editor textarea`) || 
+                         document.querySelector(`textarea[id*="${editorId}"]`) ||
+                         document.querySelector(`textarea[name="comment_text"]`);
+        
+        console.log('Textarea encontrado:', textarea);
+        
         if (textarea) {
             const start = textarea.selectionStart;
             const end = textarea.selectionEnd;
@@ -2639,9 +2668,16 @@ function insertEmoji(emoji, editorId) {
             textarea.value = text.substring(0, start) + emoji + text.substring(end);
             textarea.selectionStart = textarea.selectionEnd = start + emoji.length;
             textarea.focus();
+            
+            // Disparar evento de cambio para que se actualice el contenido
+            textarea.dispatchEvent(new Event('input', { bubbles: true }));
+            console.log('Emoji insertado en textarea');
+        } else {
+            console.error('No se encontró ningún editor o textarea para insertar el emoji');
         }
     }
     
+    // Cerrar el picker
     const pickerId = editorId + '-emoji-picker';
     const picker = document.getElementById(pickerId);
     if (picker) {
