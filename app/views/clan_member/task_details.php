@@ -1199,9 +1199,17 @@ function saveSubtaskChanges(subtaskId) {
 
 // Función simple de notificación para el clan member
 function showNotification(message, type = 'info') {
-  // Crear notificación si no existe
-  let notification = document.getElementById('cm-notification');
-  if (!notification) {
+  // Prevenir recursión infinita
+  if (window._showingNotification) {
+    console.warn('showNotification: Evitando recursión infinita');
+    return;
+  }
+  window._showingNotification = true;
+  
+  try {
+    // Crear notificación si no existe
+    let notification = document.getElementById('cm-notification');
+    if (!notification) {
     const notificationHTML = `
       <div id="cm-notification" style="
         position: fixed;
@@ -1242,12 +1250,16 @@ function showNotification(message, type = 'info') {
     notification.style.backgroundColor = '#3b82f6';
   }
   
-  notification.style.display = 'block';
-  
-  // Auto-ocultar después de 3 segundos
-  setTimeout(() => {
-    notification.style.display = 'none';
-  }, 3000);
+    notification.style.display = 'block';
+    
+    // Auto-ocultar después de 3 segundos
+    setTimeout(() => {
+      notification.style.display = 'none';
+    }, 3000);
+  } finally {
+    // Resetear la bandera para permitir futuras notificaciones
+    window._showingNotification = false;
+  }
 }
 
 function closeCMNotification() {
@@ -2796,15 +2808,8 @@ function detectCommentType(commentElement) {
     return 'task'; // Por defecto
 }
 
-// Función para mostrar notificaciones (si no existe)
-function showNotification(message, type) {
-    if (typeof window.showNotification === 'function') {
-        window.showNotification(message, type);
-    } else {
-        console.log(`${type.toUpperCase()}: ${message}`);
-        alert(message); // Fallback simple
-    }
-}
+// Función para mostrar notificaciones ya está definida anteriormente
+// No redefinir para evitar recursión infinita
 
 // Función para configurar mejoras de scroll en el modal de comentarios
 function setupScrollEnhancements(container, commentsCount) {
