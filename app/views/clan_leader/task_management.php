@@ -689,13 +689,23 @@ function openSubtasksModal() {
     const taskDueDate = document.getElementById('task_due_date').value;
     const assignedMembers = document.querySelectorAll('input[name="assigned_members[]"]:checked');
     
-    if (!taskTitle || !taskDueDate) {
-        showToast('Por favor completa el título y fecha límite antes de agregar subtareas', 'error');
-        return;
+    // Validar antes de agregar subtareas
+    const validationErrors = [];
+    
+    if (!taskTitle) {
+        validationErrors.push('Título de la tarea');
+    }
+    
+    if (!taskDueDate) {
+        validationErrors.push('Fecha límite');
     }
     
     if (assignedMembers.length === 0) {
-        showToast('Debes asignar al menos un colaborador antes de agregar subtareas', 'error');
+        validationErrors.push('Al menos un colaborador asignado');
+    }
+    
+    if (validationErrors.length > 0) {
+        showValidationModal(validationErrors);
         return;
     }
     
@@ -806,27 +816,44 @@ function saveTaskWithoutSubtasks() {
     const recurrenceStart = document.getElementById('recurrence_start_date') ? document.getElementById('recurrence_start_date').value : '';
     const assignedMembers = document.querySelectorAll('input[name="assigned_members[]"]:checked');
     
+    // Validación con modal de errores
+    const validationErrors = [];
+    
     // Validación de título
     if (!taskTitle) {
-        showToast('Por favor ingresa el título de la tarea', 'error');
-        return;
+        validationErrors.push('Título de la tarea');
     }
     
     // Validación de fecha según tipo de tarea
     if (isRecurrent) {
         if (!recurrenceStart) {
-            showToast('Por favor ingresa la fecha de inicio de recurrencia', 'error');
-            return;
+            validationErrors.push('Fecha de inicio de recurrencia');
+        }
+        // Validar tipo de recurrencia si está marcado como recurrente
+        const recurrenceType = document.getElementById('recurrence_type').value;
+        if (!recurrenceType) {
+            validationErrors.push('Tipo de recurrencia');
         }
     } else {
         if (!taskDueDate) {
-            showToast('Por favor ingresa la fecha límite', 'error');
-            return;
+            validationErrors.push('Fecha límite');
         }
     }
     
+    // Validación de proyecto
+    const projectId = document.getElementById('task_project').value;
+    if (!projectId) {
+        validationErrors.push('Proyecto/Concepto');
+    }
+    
+    // Validación de colaboradores
     if (assignedMembers.length === 0) {
-        showToast('Debes asignar al menos un colaborador', 'error');
+        validationErrors.push('Al menos un colaborador asignado');
+    }
+    
+    // Si hay errores, mostrar modal
+    if (validationErrors.length > 0) {
+        showValidationModal(validationErrors);
         return;
     }
     
@@ -936,8 +963,14 @@ function saveTaskWithSubtasks() {
         }
     });
     
+    // Validación adicional de subtareas
     if (subtasks.length === 0) {
-        showToast('Debes agregar al menos una subtarea', 'error');
+        validationErrors.push('Al menos una subtarea');
+    }
+    
+    // Si hay errores después de todas las validaciones, mostrar modal
+    if (validationErrors.length > 0) {
+        showValidationModal(validationErrors);
         return;
     }
     
@@ -953,27 +986,44 @@ function createTaskWithSubtasks(subtasks) {
     const recurrenceStart = document.getElementById('recurrence_start_date') ? document.getElementById('recurrence_start_date').value : '';
     const assignedMembers = document.querySelectorAll('input[name="assigned_members[]"]:checked');
     
+    // Validación con modal de errores
+    const validationErrors = [];
+    
     // Validación de título
     if (!taskTitle) {
-        showToast('Por favor ingresa el título de la tarea', 'error');
-        return;
+        validationErrors.push('Título de la tarea');
     }
     
     // Validación de fecha según tipo de tarea
     if (isRecurrent) {
         if (!recurrenceStart) {
-            showToast('Por favor ingresa la fecha de inicio de recurrencia', 'error');
-            return;
+            validationErrors.push('Fecha de inicio de recurrencia');
+        }
+        // Validar tipo de recurrencia si está marcado como recurrente
+        const recurrenceType = document.getElementById('recurrence_type').value;
+        if (!recurrenceType) {
+            validationErrors.push('Tipo de recurrencia');
         }
     } else {
         if (!taskDueDate) {
-            showToast('Por favor ingresa la fecha límite', 'error');
-            return;
+            validationErrors.push('Fecha límite');
         }
     }
     
+    // Validación de proyecto
+    const projectId = document.getElementById('task_project').value;
+    if (!projectId) {
+        validationErrors.push('Proyecto/Concepto');
+    }
+    
+    // Validación de colaboradores
     if (assignedMembers.length === 0) {
-        showToast('Debes asignar al menos un colaborador', 'error');
+        validationErrors.push('Al menos un colaborador asignado');
+    }
+    
+    // Si hay errores, mostrar modal
+    if (validationErrors.length > 0) {
+        showValidationModal(validationErrors);
         return;
     }
     
@@ -1122,5 +1172,166 @@ function showToast(message, type = 'info') {
             }
         }, 300);
     }, 5000);
+}
+
+// Función para mostrar modal de validación con campos faltantes
+function showValidationModal(errors) {
+    // Crear overlay del modal
+    const modalOverlay = document.createElement('div');
+    modalOverlay.className = 'validation-modal-overlay';
+    modalOverlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+        animation: fadeIn 0.3s ease;
+    `;
+    
+    // Crear contenido del modal
+    const modal = document.createElement('div');
+    modal.className = 'validation-modal';
+    modal.style.cssText = `
+        background: white;
+        border-radius: 16px;
+        padding: 0;
+        width: 90%;
+        max-width: 450px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        animation: slideUp 0.3s ease;
+        overflow: hidden;
+    `;
+    
+    // Header del modal
+    const header = document.createElement('div');
+    header.style.cssText = `
+        background: #ef4444;
+        color: white;
+        padding: 20px;
+        text-align: center;
+    `;
+    header.innerHTML = `
+        <h3 style="margin: 0; font-size: 20px; font-weight: 600;">
+            <i class="fas fa-exclamation-triangle" style="margin-right: 10px;"></i>
+            Campos Requeridos
+        </h3>
+    `;
+    
+    // Body del modal
+    const body = document.createElement('div');
+    body.style.cssText = `
+        padding: 24px;
+        background: white;
+    `;
+    
+    const message = document.createElement('p');
+    message.style.cssText = `
+        color: #4b5563;
+        margin: 0 0 16px 0;
+        font-size: 15px;
+    `;
+    message.textContent = 'Por favor completa los siguientes campos antes de continuar:';
+    
+    // Lista de errores
+    const errorList = document.createElement('ul');
+    errorList.style.cssText = `
+        list-style: none;
+        padding: 0;
+        margin: 0 0 20px 0;
+    `;
+    
+    errors.forEach(error => {
+        const li = document.createElement('li');
+        li.style.cssText = `
+            padding: 10px;
+            margin-bottom: 8px;
+            background: #fef2f2;
+            border-left: 4px solid #ef4444;
+            color: #991b1b;
+            border-radius: 4px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+        `;
+        li.innerHTML = `
+            <i class="fas fa-times-circle" style="margin-right: 10px; color: #ef4444;"></i>
+            <span style="font-weight: 500;">${error}</span>
+        `;
+        errorList.appendChild(li);
+    });
+    
+    // Botón de cerrar
+    const closeButton = document.createElement('button');
+    closeButton.style.cssText = `
+        width: 100%;
+        padding: 12px;
+        background: #ef4444;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s;
+    `;
+    closeButton.textContent = 'Entendido';
+    closeButton.onmouseover = () => closeButton.style.background = '#dc2626';
+    closeButton.onmouseout = () => closeButton.style.background = '#ef4444';
+    closeButton.onclick = () => {
+        modalOverlay.style.animation = 'fadeOut 0.3s ease';
+        modal.style.animation = 'slideDown 0.3s ease';
+        setTimeout(() => modalOverlay.remove(), 300);
+    };
+    
+    // Ensamblar modal
+    body.appendChild(message);
+    body.appendChild(errorList);
+    body.appendChild(closeButton);
+    modal.appendChild(header);
+    modal.appendChild(body);
+    modalOverlay.appendChild(modal);
+    document.body.appendChild(modalOverlay);
+    
+    // Agregar animaciones CSS si no existen
+    if (!document.querySelector('style[data-validation-modal]')) {
+        const style = document.createElement('style');
+        style.setAttribute('data-validation-modal', 'true');
+        style.textContent = `
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            @keyframes fadeOut {
+                from { opacity: 1; }
+                to { opacity: 0; }
+            }
+            @keyframes slideUp {
+                from {
+                    transform: translateY(50px);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateY(0);
+                    opacity: 1;
+                }
+            }
+            @keyframes slideDown {
+                from {
+                    transform: translateY(0);
+                    opacity: 1;
+                }
+                to {
+                    transform: translateY(50px);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    }
 }
 </script> 
