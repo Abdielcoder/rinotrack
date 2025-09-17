@@ -245,6 +245,10 @@ ob_start();
                                 <button class="btn-list-action menu" onclick="toggleProjectMenu(<?= $project['project_id'] ?>)" title="Más opciones">
                                     <i class="fas fa-ellipsis-v"></i>
                                 </button>
+                                <!-- Botón de prueba temporal -->
+                                <button class="btn-list-action" onclick="alert('Test botón para proyecto <?= $project['project_id'] ?>'); toggleProjectMenu(<?= $project['project_id'] ?>);" title="Test" style="background: red; color: white; font-size: 10px;">
+                                    T
+                                </button>
                                 <!-- Menú contextual -->
                                 <div class="dropdown-menu-list" id="projectMenu<?= $project['project_id'] ?>">
                                     <button class="menu-item-list" onclick="openEditProjectModal(<?= $project['project_id'] ?>, '<?= htmlspecialchars($project['project_name']) ?>', '<?= htmlspecialchars($project['description']) ?>', '<?= $project['time_limit'] ?? '' ?>')">
@@ -733,7 +737,10 @@ function cloneProject() {
 
 // Toggle del menú del proyecto
 function toggleProjectMenu(projectId) {
+    console.log('toggleProjectMenu llamado con ID:', projectId);
+    
     const menu = document.getElementById(`projectMenu${projectId}`);
+    console.log('Menú encontrado:', menu);
     
     if (!menu) {
         console.error(`No se encontró el menú con ID: projectMenu${projectId}`);
@@ -742,6 +749,8 @@ function toggleProjectMenu(projectId) {
     
     // Cerrar todos los otros menús
     const allMenus = document.querySelectorAll('.dropdown-menu-minimal, .dropdown-menu-list');
+    console.log('Total de menús encontrados:', allMenus.length);
+    
     allMenus.forEach(m => {
         if (m !== menu) {
             m.classList.remove('show');
@@ -749,7 +758,12 @@ function toggleProjectMenu(projectId) {
     });
     
     // Toggle del menú actual
+    const wasVisible = menu.classList.contains('show');
     menu.classList.toggle('show');
+    const isVisible = menu.classList.contains('show');
+    
+    console.log('Menú antes:', wasVisible, 'Menú después:', isVisible);
+    console.log('Clases del menú:', menu.className);
 }
 
 // Cerrar menús al hacer clic fuera
@@ -1605,6 +1619,8 @@ function toggleProjectDelegation(projectId, isAllowed) {
 
 .dropdown-menu-list.show {
     display: block !important;
+    background: yellow !important;
+    border: 2px solid red !important;
 }
 
 .menu-item-list {
