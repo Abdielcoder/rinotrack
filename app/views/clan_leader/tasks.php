@@ -1095,7 +1095,7 @@ ob_start();
     }
     
     .tasks-table {
-        min-width: 900px;
+        min-width: 1200px; /* Aumentar ancho mínimo de la tabla */
     }
 }
 
@@ -1384,7 +1384,7 @@ ob_start();
 }
 
 .tasks-table th {
-    padding: 1rem 0.75rem;
+    padding: 1rem 1rem; /* Aumentar padding horizontal */
     text-align: left;
     font-weight: 600;
     color: #374151;
@@ -1467,7 +1467,7 @@ ob_start();
 }
 
 .tasks-table td {
-    padding: 0.875rem 0.75rem;
+    padding: 0.875rem 1rem; /* Aumentar padding horizontal */
     vertical-align: top;
     border-right: 1px solid #f3f4f6;
 }
@@ -1508,8 +1508,9 @@ ob_start();
 }
 
 .th-progress, .td-progress {
-    width: 200px;
+    width: 180px; /* Aumentar ancho de columna progreso */
     text-align: center;
+    padding: 0.875rem 1.25rem; /* Más padding para mejor separación */
 }
 
 /* Estilos para checkbox - CAMBIADO A TEXTO "COMPLETAR" */
@@ -1552,8 +1553,9 @@ ob_start();
 }
 
 .th-actions, .td-actions {
-    width: 100px;
+    width: 160px; /* Aumentar ancho de columna acciones */
     text-align: center;
+    padding: 0.875rem 1.25rem; /* Más padding para mejor separación */
 }
 
 /* Estilos de contenido */
@@ -1769,7 +1771,7 @@ ob_start();
     }
     
     .tasks-table {
-        min-width: 900px;
+        min-width: 1200px; /* Aumentar ancho mínimo de la tabla */
     }
 }
 
@@ -5086,15 +5088,17 @@ console.log('🔧 Botón de clonar configurado correctamente');
 .progress-container-table {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 12px; /* Aumentar espacio entre barra y texto */
+    padding: 0 8px; /* Agregar padding interno */
 }
 
 .progress-bar-table {
     flex: 1;
-    height: 6px;
+    height: 8px; /* Hacer la barra un poco más alta */
     background: #ecf0f1;
-    border-radius: 3px;
+    border-radius: 4px; /* Bordes más redondeados */
     overflow: hidden;
+    min-width: 80px; /* Ancho mínimo para la barra */
 }
 
 .progress-fill-table {
@@ -5114,22 +5118,24 @@ console.log('🔧 Botón de clonar configurado correctamente');
 /* Acciones en tabla */
 .actions-group {
     display: flex;
-    gap: 4px;
+    gap: 8px; /* Aumentar espacio entre botones */
+    justify-content: center;
+    padding: 0 8px; /* Agregar padding interno */
 }
 
 .btn-action-table {
-    padding: 6px;
+    padding: 8px; /* Aumentar padding de botones */
     border: none;
-    border-radius: 4px;
+    border-radius: 6px; /* Bordes más redondeados */
     cursor: pointer;
-    font-size: 11px;
+    font-size: 12px; /* Texto un poco más grande */
     transition: all 0.2s ease;
     text-decoration: none;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 28px;
-    height: 28px;
+    width: 36px; /* Botones más grandes */
+    height: 36px;
 }
 
 .btn-action-table.view {
