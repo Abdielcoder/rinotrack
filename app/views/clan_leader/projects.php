@@ -586,7 +586,7 @@ function showToast(message, type = 'info') {
     // Ocultar después de 3 segundos
     setTimeout(() => {
         toast.classList.remove('show');
-    }, 3000);
+    }, 5000);
 }
 
 // Función para clonar proyecto

@@ -1332,7 +1332,7 @@ function showNotification(message, type = 'info') {
     // Auto-ocultar después de 3 segundos
     setTimeout(() => {
       notification.style.display = 'none';
-    }, 3000);
+    }, 5000);
   } finally {
     // Resetear la bandera para permitir futuras notificaciones
     window._showingNotification = false;

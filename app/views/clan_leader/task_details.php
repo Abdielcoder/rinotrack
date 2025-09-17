@@ -2521,7 +2521,7 @@ function showNotification(message, type = 'info') {
     
     setTimeout(() => {
         notification.style.display = 'none';
-    }, 3000);
+    }, 5000);
 }
         
 function closeCLNotification() {

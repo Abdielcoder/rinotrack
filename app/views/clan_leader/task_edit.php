@@ -616,7 +616,7 @@ function showToast(message, type = 'info') {
                 toast.parentNode.removeChild(toast);
             }
         }, 300);
-    }, 3000);
+    }, 5000);
 }
 
 // Estilos para animaciones

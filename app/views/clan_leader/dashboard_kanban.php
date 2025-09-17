@@ -2392,13 +2392,13 @@ function showToast(message, type = 'info') {
         document.head.appendChild(style);
     }
     
-    // Remover después de 3 segundos
+    // Remover después de 5 segundos para dar más tiempo de lectura
     setTimeout(() => {
         toast.style.animation = 'slideOut 0.3s ease';
         setTimeout(() => {
             toast.remove();
         }, 300);
-    }, 3000);
+    }, 5000);
     
     return toast;
 }

@@ -249,7 +249,7 @@ function showNotification(message, type = 'info') {
                 notification.parentNode.removeChild(notification);
             }
         }, 300);
-    }, 3000);
+    }, 5000);
 }
 
 // Cargar contadores de comentarios y adjuntos al cargar la página

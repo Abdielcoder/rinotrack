@@ -3077,13 +3077,13 @@ function showNotification(message, type = 'info') {
     
     document.body.appendChild(notification);
     
-    // Remover después de 3 segundos
+    // Remover después de 5 segundos para dar más tiempo de lectura
     setTimeout(() => {
         notification.style.animation = 'slideOut 0.3s ease';
         setTimeout(() => {
             notification.remove();
         }, 300);
-    }, 3000);
+    }, 5000);
 }
 
 // Agregar animaciones CSS
@@ -3226,14 +3226,14 @@ function showToast(message, type = 'info') {
     toast.textContent = message;
     document.body.appendChild(toast);
     
-    // Auto-remover después de 3 segundos (excepto para info que se remueve manualmente)
+    // Auto-remover después de 5 segundos (excepto para info que se remueve manualmente)
     if (type !== 'info') {
         setTimeout(() => {
             if (toast.parentNode) {
                 toast.style.animation = 'slideOut 0.3s ease';
                 setTimeout(() => toast.parentNode.removeChild(toast), 300);
             }
-        }, 3000);
+        }, 5000);
     }
     
     // Devolver el elemento para poder eliminarlo manualmente
@@ -5770,7 +5770,7 @@ function showTaskToast(message, type = 'info') {
     
     setTimeout(() => {
         toast.classList.remove('show');
-    }, 3000);
+    }, 5000);
 }
 
 // Inicializar cuando el DOM esté listo
