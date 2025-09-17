@@ -174,7 +174,7 @@ ob_start();
                                             <span>Subtarea</span>
                                         </div>
                                     <?php endif; ?>
-                                    <input type="checkbox" class="task-checkbox" <?php echo ($task['status'] === 'completed' || ($task['is_completed'] ?? 0) == 1) ? 'checked' : ''; ?> onchange="toggleTaskStatus(<?php echo $task['task_id']; ?>, this.checked)">
+                                    <input type="checkbox" id="vencidas-<?php echo $task['task_id']; ?>" class="task-checkbox" <?php echo ($task['status'] === 'completed' || ($task['is_completed'] ?? 0) == 1) ? 'checked' : ''; ?> onclick="event.stopPropagation()" onchange="handleTaskCheck('vencidas-<?php echo $task['task_id']; ?>', <?php echo $task['task_id']; ?>, this.checked, '<?php echo $task['item_type'] ?? 'task'; ?>')">
                                     <?php 
                                     $linkTaskId = ($task['item_type'] ?? 'task') === 'subtask' ? $task['parent_task_id'] : $task['task_id'];
                                     ?>
@@ -233,7 +233,7 @@ ob_start();
                                             <span>Subtarea</span>
                                         </div>
                                     <?php endif; ?>
-                                    <input type="checkbox" class="task-checkbox" <?php echo ($task['status'] === 'completed' || ($task['is_completed'] ?? 0) == 1) ? 'checked' : ''; ?> onchange="toggleTaskStatus(<?php echo $task['task_id']; ?>, this.checked)">
+                                    <input type="checkbox" id="hoy-<?php echo $task['task_id']; ?>" class="task-checkbox" <?php echo ($task['status'] === 'completed' || ($task['is_completed'] ?? 0) == 1) ? 'checked' : ''; ?> onclick="event.stopPropagation()" onchange="handleTaskCheck('hoy-<?php echo $task['task_id']; ?>', <?php echo $task['task_id']; ?>, this.checked, '<?php echo $task['item_type'] ?? 'task'; ?>')">
                                     <?php 
                                     $linkTaskId = ($task['item_type'] ?? 'task') === 'subtask' ? $task['parent_task_id'] : $task['task_id'];
                                     ?>
@@ -288,7 +288,7 @@ ob_start();
                                             <span>Subtarea</span>
                                         </div>
                                     <?php endif; ?>
-                                    <input type="checkbox" class="task-checkbox" <?php echo ($task['status'] === 'completed' || ($task['is_completed'] ?? 0) == 1) ? 'checked' : ''; ?> onchange="toggleTaskStatus(<?php echo $task['task_id']; ?>, this.checked)">
+                                    <input type="checkbox" id="semana1-<?php echo $task['task_id']; ?>" class="task-checkbox" <?php echo ($task['status'] === 'completed' || ($task['is_completed'] ?? 0) == 1) ? 'checked' : ''; ?> onclick="event.stopPropagation()" onchange="handleTaskCheck('semana1-<?php echo $task['task_id']; ?>', <?php echo $task['task_id']; ?>, this.checked, '<?php echo $task['item_type'] ?? 'task'; ?>')">
                                     <?php 
                                     $linkTaskId = ($task['item_type'] ?? 'task') === 'subtask' ? $task['parent_task_id'] : $task['task_id'];
                                     ?>
@@ -343,7 +343,7 @@ ob_start();
                                             <span>Subtarea</span>
                                         </div>
                                     <?php endif; ?>
-                                    <input type="checkbox" class="task-checkbox" <?php echo ($task['status'] === 'completed' || ($task['is_completed'] ?? 0) == 1) ? 'checked' : ''; ?> onchange="toggleTaskStatus(<?php echo $task['task_id']; ?>, this.checked)">
+                                    <input type="checkbox" id="semana2-<?php echo $task['task_id']; ?>" class="task-checkbox" <?php echo ($task['status'] === 'completed' || ($task['is_completed'] ?? 0) == 1) ? 'checked' : ''; ?> onclick="event.stopPropagation()" onchange="handleTaskCheck('semana2-<?php echo $task['task_id']; ?>', <?php echo $task['task_id']; ?>, this.checked, '<?php echo $task['item_type'] ?? 'task'; ?>')">
                                     <?php 
                                     $linkTaskId = ($task['item_type'] ?? 'task') === 'subtask' ? $task['parent_task_id'] : $task['task_id'];
                                     ?>
@@ -1503,113 +1503,106 @@ ob_start();
 
 
 
-// Función para cambiar el estado de las tareas
-function toggleTaskStatus(taskId, isCompleted) {
-  console.log('Cambiando estado de tarea/subtarea:', taskId, 'a:', isCompleted);
-  
-  // Detectar si es una tarea o subtarea basándose en la clase CSS
-  const taskCard = document.querySelector(`[data-task-id="${taskId}"]`);
-  const isSubtask = taskCard && taskCard.classList.contains('subtask-card');
-  const route = isSubtask ? 'clan_member/simple-toggle-subtask' : 'clan_member/toggle-task-status';
-  
-  console.log('Tipo detectado:', isSubtask ? 'Subtarea' : 'Tarea', '- Ruta:', route);
-  
-  let requestBody;
-  if (isSubtask) {
-    // Para subtareas usar el nuevo formato
-    requestBody = `subtask_id=${taskId}&status=${isCompleted ? 'completed' : 'pending'}`;
-  } else {
-    // Para tareas usar el formato original
-    requestBody = `task_id=${taskId}&is_completed=${isCompleted}`;
-  }
-  
-  fetch('?route=' + route, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: requestBody
-  })
-  .then(response => {
-    console.log('Response status:', response.status);
+// Función para cambiar el estado de las tareas (igual que clan_leader)
+function handleTaskCheck(uniqueTaskId, taskId, isChecked, itemType = 'task') {
+    const itemLabel = itemType === 'subtask' ? 'Subtarea' : 'Tarea';
+    console.log(`📝 ${itemLabel}`, taskId, isChecked ? 'marcada' : 'desmarcada');
+    console.log('📝 UniqueTaskId:', uniqueTaskId);
+    console.log('📝 ItemType:', itemType);
     
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    const checkbox = document.getElementById(uniqueTaskId);
+    const card = checkbox ? checkbox.closest('.task-card, .subtask-card') : null;
+    
+    if (!card || !checkbox) {
+        console.error('No se encontró el checkbox o el card');
+        return;
     }
     
-    return response.text().then(text => {
-      console.log('Response text:', text);
-      try {
-        return JSON.parse(text);
-      } catch (e) {
-        console.error('JSON Parse Error:', e);
-        console.error('Response text that failed to parse:', text);
-        throw new Error('La respuesta del servidor no es JSON válido: ' + text.substring(0, 100));
-      }
-    });
-  })
-  .then(data => {
-    if (data.success) {
-      // Si la tarea se completó, removerla del tablero Kanban
-      if (isCompleted) {
-        const taskCard = document.querySelector(`[data-task-id="${taskId}"]`);
-        if (taskCard) {
-          console.log('Removiendo tarea del tablero Kanban:', taskId);
-          taskCard.style.transition = 'all 0.5s ease-out';
-          taskCard.style.opacity = '0';
-          taskCard.style.transform = 'scale(0.8)';
-          taskCard.style.background = '#d1fae5'; // Verde suave para indicar completada
-          
-          setTimeout(() => {
-            taskCard.remove();
-            // Actualizar contadores
-            updateTaskCounts();
-            console.log('Tarea removida del tablero y contadores actualizados');
-          }, 500);
+    // Solo procesar si se está marcando como completada
+    if (!isChecked) {
+        // Si se desmarca, volver a marcar (no permitir desmarcar)
+        checkbox.checked = true;
+        return;
+    }
+    
+    // Deshabilitar checkbox temporalmente
+    checkbox.disabled = true;
+    card.style.opacity = '0.6';
+    
+    // Hacer llamada AJAX para completar tarea o subtarea
+    const formData = new FormData();
+    formData.append('task_id', taskId);
+    
+    console.log(`Enviando AJAX para completar ${itemType}:`, taskId);
+    
+    fetch('<?= APP_URL ?>simple-complete-task.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        console.log('Respuesta recibida:', response);
+        if (!response.ok) {
+            // Si hay un error HTTP, intentar obtener el mensaje de error
+            return response.text().then(text => {
+                console.error('Error del servidor:', text);
+                throw new Error('Error del servidor: ' + response.status);
+            });
         }
-      } else {
-        // Si se desmarca, mostrar mensaje
-        console.log('Tarea desmarcada:', taskId, '- se requiere recarga para ver en el tablero');
-        showNotification('Tarea desmarcada. Recarga la página para ver los cambios.', 'info');
+        return response.json();
+    })
+    .then(data => {
+        console.log('Data recibida:', data);
+        if (data.success) {
+            // Animar y remover la tarea del DOM
+            card.style.transition = 'all 0.3s ease';
+            card.style.transform = 'translateX(100%)';
+            card.style.opacity = '0';
+            
+            setTimeout(() => {
+                card.remove();
+                updateTaskCounts();
+                console.log('✅ Tarea removida del DOM');
+            }, 300);
+        } else {
+            // Error: revertir checkbox
+            console.error('Error al actualizar tarea:', data.message);
+            checkbox.checked = false;
+            card.style.opacity = '1';
+            checkbox.disabled = false;
+            alert('Error al actualizar la tarea: ' + (data.message || 'Error desconocido'));
+        }
+    })
+    .catch(error => {
+        // Error de red: revertir checkbox
+        console.error('Error de red:', error);
+        console.error('Error completo:', error.stack);
+        checkbox.checked = false;
+        card.style.opacity = '1';
+        checkbox.disabled = false;
         
-        // Restaurar el estilo normal
-        const taskCard = document.querySelector(`[data-task-id="${taskId}"]`);
-        if (taskCard) {
-          taskCard.style.opacity = '1';
-          taskCard.style.transform = 'scale(1)';
-        }
-      }
-      // Mostrar notificación
-      showNotification(data.message, 'success');
-    } else {
-      showNotification(data.message, 'error');
-      // Revertir checkbox si falló
-      const checkbox = document.querySelector(`[data-task-id="${taskId}"] input[type="checkbox"]`);
-      if (checkbox) checkbox.checked = !isCompleted;
-    }
-  })
-  .catch(error => {
-    console.error('Error:', error);
-    showNotification('Error al actualizar la tarea', 'error');
-    // Revertir checkbox si falló
-    const checkbox = document.querySelector(`[data-task-id="${taskId}"] input[type="checkbox"]`);
-    if (checkbox) checkbox.checked = !isCompleted;
-  });
+        // Mostrar error más descriptivo
+        const errorMsg = `Error de conexión: ${error.message}. 
+Task ID: ${taskId}. 
+URL: <?= APP_URL ?>simple-complete-task.php
+Revisa la consola para más detalles.`;
+        
+        alert(errorMsg);
+    });
 }
 
 // Función para actualizar contadores de tareas
 function updateTaskCounts() {
-  const columns = ['vencidas', 'hoy', '1_semana', '2_semanas'];
-  columns.forEach(columnType => {
-    const column = document.querySelector(`.kanban-column:has(.column-header.${columnType})`);
-    if (column) {
-      const taskCount = column.querySelectorAll('.task-card').length;
-      const countElement = column.querySelector('.task-count');
-      if (countElement) {
-        countElement.textContent = taskCount;
-      }
-    }
-  });
+    const columns = ['overdue', 'today', 'week1', 'week2'];
+    
+    columns.forEach(column => {
+        const columnElement = document.querySelector(`.column-header.${column}`);
+        const tasksInColumn = document.querySelectorAll(`.task-card.${column}, .subtask-card.${column}`).length;
+        const countElement = columnElement ? columnElement.querySelector('.task-count') : null;
+        
+        if (countElement) {
+            countElement.textContent = tasksInColumn;
+        }
+    });
 }
 
 // Función para mostrar notificaciones
