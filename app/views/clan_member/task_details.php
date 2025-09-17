@@ -115,9 +115,19 @@ $additionalJS[] = 'https://cdn.quilljs.com/1.3.6/quill.min.js';
                   <?php if (!empty($subtask['assigned_user_name'])): ?>
                   <span>Asignado: <?php echo htmlspecialchars($subtask['assigned_user_name']); ?></span>
                   <?php endif; ?>
+                  <?php if (!empty($subtask['all_assigned_users'])): ?>
+                  <span>Colaboradores: <?php echo htmlspecialchars($subtask['all_assigned_users']); ?></span>
+                  <?php endif; ?>
                   <?php if ($subtask['due_date']): ?>
                   <span>Vence: <?php echo Utils::formatDate($subtask['due_date']); ?></span>
                   <?php endif; ?>
+                  <!-- Botón para asignar usuarios a subtarea (disponible para clan members) -->
+                  <div class="subtask-assignment-controls" style="margin-top: 8px;">
+                    <button class="btn-icon-small" onclick="showSubtaskAssignmentModal(<?php echo $subtask['subtask_id']; ?>)" title="Asignar usuarios a subtarea">
+                      <i class="fas fa-user-plus"></i>
+                      Asignar
+                    </button>
+                  </div>
                 </div>
                 <?php if (!empty($subtask['description'])): ?>
                 <div class="subtask-description">
@@ -2854,6 +2864,176 @@ function setupScrollEnhancements(container, commentsCount) {
         container.style.setProperty('--scroll-top-opacity', '0.2');
         container.style.setProperty('--scroll-bottom-opacity', '0.8');
     }
+}
+
+// Función para mostrar modal de asignación de usuarios a subtarea
+function showSubtaskAssignmentModal(subtaskId) {
+    // Crear modal dinámicamente
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+    `;
+    
+    modal.innerHTML = `
+        <div class="modal-content" style="background: white; padding: 24px; border-radius: 12px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="margin: 0;">Asignar usuarios a subtarea</h3>
+                <button onclick="closeSubtaskAssignmentModal()" style="background: none; border: none; font-size: 24px; cursor: pointer;">&times;</button>
+            </div>
+            <div id="assignment-loading" style="text-align: center; padding: 20px;">
+                <i class="fas fa-spinner fa-spin"></i> Cargando miembros del clan...
+            </div>
+            <div id="assignment-content" style="display: none;">
+                <div style="margin-bottom: 16px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600;">Seleccionar usuarios:</label>
+                    <div id="users-list" style="max-height: 200px; overflow-y: auto; border: 1px solid #d1d5db; border-radius: 8px; padding: 8px;">
+                        <!-- Se llenará dinámicamente -->
+                    </div>
+                </div>
+                <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                    <button onclick="closeSubtaskAssignmentModal()" style="background: #f3f4f6; color: #374151; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">
+                        Cancelar
+                    </button>
+                    <button onclick="assignUsersToSubtask(${subtaskId})" style="background: #3b82f6; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">
+                        <i class="fas fa-user-plus"></i> Asignar
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Cargar lista de miembros del clan
+    loadClanMembers(subtaskId);
+    
+    // Cerrar modal al hacer clic fuera
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            closeSubtaskAssignmentModal();
+        }
+    });
+}
+
+function closeSubtaskAssignmentModal() {
+    const modal = document.querySelector('.modal-overlay');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+function loadClanMembers(subtaskId) {
+    fetch('?route=clan_member/get-clan-members', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        const loadingDiv = document.getElementById('assignment-loading');
+        const contentDiv = document.getElementById('assignment-content');
+        
+        if (data.success) {
+            const usersList = document.getElementById('users-list');
+            usersList.innerHTML = '';
+            
+            data.members.forEach(member => {
+                const userDiv = document.createElement('div');
+                userDiv.style.cssText = `
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    padding: 8px;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    transition: background-color 0.2s;
+                `;
+                userDiv.onmouseover = () => userDiv.style.backgroundColor = '#f3f4f6';
+                userDiv.onmouseout = () => userDiv.style.backgroundColor = 'transparent';
+                
+                userDiv.innerHTML = `
+                    <input type="checkbox" id="user-${member.user_id}" value="${member.user_id}" style="margin-right: 8px;">
+                    <label for="user-${member.user_id}" style="cursor: pointer; flex: 1;">
+                        <strong>${member.full_name}</strong>
+                        <div style="font-size: 12px; color: #6b7280;">${member.username}</div>
+                    </label>
+                `;
+                
+                usersList.appendChild(userDiv);
+            });
+            
+            loadingDiv.style.display = 'none';
+            contentDiv.style.display = 'block';
+        } else {
+            loadingDiv.innerHTML = '<div style="color: #ef4444;"><i class="fas fa-exclamation-triangle"></i> Error al cargar miembros</div>';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        const loadingDiv = document.getElementById('assignment-loading');
+        loadingDiv.innerHTML = '<div style="color: #ef4444;"><i class="fas fa-exclamation-triangle"></i> Error de conexión</div>';
+    });
+}
+
+function assignUsersToSubtask(subtaskId) {
+    const selectedUsers = [];
+    const checkboxes = document.querySelectorAll('#users-list input[type="checkbox"]:checked');
+    
+    checkboxes.forEach(checkbox => {
+        selectedUsers.push(parseInt(checkbox.value));
+    });
+    
+    if (selectedUsers.length === 0) {
+        showNotification('Debes seleccionar al menos un usuario', 'error');
+        return;
+    }
+    
+    // Mostrar loading
+    const assignBtn = event.target;
+    const originalText = assignBtn.innerHTML;
+    assignBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Asignando...';
+    assignBtn.disabled = true;
+    
+    const formData = new FormData();
+    formData.append('subtask_id', subtaskId);
+    formData.append('user_ids', JSON.stringify(selectedUsers));
+    
+    fetch('?route=clan_member/assign-subtask-users', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(data.message, 'success');
+            closeSubtaskAssignmentModal();
+            // Recargar la página para mostrar los cambios
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        } else {
+            showNotification(data.message || 'Error al asignar usuarios', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error de conexión al asignar usuarios', 'error');
+    })
+    .finally(() => {
+        assignBtn.innerHTML = originalText;
+        assignBtn.disabled = false;
+    });
 }
 </script>
 

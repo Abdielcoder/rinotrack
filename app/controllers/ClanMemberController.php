@@ -3203,6 +3203,231 @@ class ClanMemberController {
             Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor'], 500);
         }
     }
+
+    /**
+     * Asignar múltiples usuarios a una subtarea (para clan members)
+     */
+    public function assignSubtaskUsers() {
+        $this->requireAuth();
+        if (!$this->hasMemberAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
+        }
+
+        try {
+            $subtaskId = (int)($_POST['subtask_id'] ?? 0);
+            $userIds = $_POST['user_ids'] ?? [];
+
+            if ($subtaskId <= 0 || empty($userIds) || !is_array($userIds)) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Datos inválidos'], 400);
+            }
+
+            // Verificar que la subtarea existe y obtener información del proyecto/clan
+            $stmt = $this->db->prepare("
+                SELECT s.*, t.task_id, t.project_id, p.clan_id, t.task_name as parent_task_name
+                FROM Subtasks s
+                JOIN Tasks t ON s.task_id = t.task_id
+                JOIN Projects p ON t.project_id = p.project_id
+                WHERE s.subtask_id = ?
+            ");
+            $stmt->execute([$subtaskId]);
+            $subtask = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$subtask) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Subtarea no encontrada'], 404);
+            }
+
+            // Verificar permisos: el usuario debe estar asignado a la tarea padre o ser del mismo clan
+            $isAssignedToTask = $this->isTaskAssignedToUser($subtask['task_id'], $this->currentUser['user_id']);
+            $isSameClan = $this->userClan && ((int)$subtask['clan_id'] === (int)$this->userClan['clan_id']);
+
+            if (!$isAssignedToTask && !$isSameClan) {
+                Utils::jsonResponse(['success' => false, 'message' => 'No tienes permisos para asignar usuarios a esta subtarea'], 403);
+            }
+
+            // Inicializar modelo de asignaciones de subtareas
+            if (!isset($this->subtaskAssignmentModel)) {
+                require_once __DIR__ . '/../models/SubtaskAssignment.php';
+                $this->subtaskAssignmentModel = new SubtaskAssignment();
+            }
+
+            // Validar que todos los usuarios existen y pertenecen al clan
+            $userNames = [];
+            foreach ($userIds as $userId) {
+                $user = $this->userModel->findById($userId);
+                if (!$user) {
+                    Utils::jsonResponse(['success' => false, 'message' => "Usuario con ID $userId no encontrado"], 400);
+                }
+                
+                // Verificar que el usuario pertenece al mismo clan
+                $userClan = $this->userModel->getUserClan($userId);
+                if (!$userClan || (int)$userClan['clan_id'] !== (int)$this->userClan['clan_id']) {
+                    Utils::jsonResponse(['success' => false, 'message' => "El usuario {$user['full_name']} no pertenece al mismo clan"], 400);
+                }
+                $userNames[] = $user['full_name'] ?? $user['username'];
+            }
+
+            // Asignar usuarios usando el modelo de asignaciones
+            $newUsersAssigned = $this->subtaskAssignmentModel->assignUsers($subtaskId, $userIds, $this->currentUser['user_id']);
+
+            if ($newUsersAssigned !== false) {
+                // Registrar en el historial de la tarea padre
+                $historyStmt = $this->db->prepare("
+                    INSERT INTO Task_History (task_id, user_id, action_type, field_name, old_value, new_value, notes) 
+                    VALUES (?, ?, 'assigned', 'subtask_assignment', 'múltiples usuarios', ?, ?)
+                ");
+                $historyStmt->execute([
+                    $subtask['task_id'],
+                    $this->currentUser['user_id'],
+                    implode(', ', $userNames),
+                    'Subtarea "' . $subtask['title'] . '" - ' . $newUsersAssigned . ' usuario(s) nuevo(s) asignado(s): ' . implode(', ', $userNames)
+                ]);
+
+                if ($newUsersAssigned > 0) {
+                    Utils::jsonResponse([
+                        'success' => true,
+                        'message' => $newUsersAssigned . ' usuario(s) asignado(s) exitosamente',
+                        'new_assignments' => $newUsersAssigned,
+                        'assigned_users' => $userNames
+                    ]);
+                } else {
+                    Utils::jsonResponse([
+                        'success' => true,
+                        'message' => 'Todos los usuarios ya estaban asignados',
+                        'new_assignments' => 0
+                    ]);
+                }
+            } else {
+                Utils::jsonResponse(['success' => false, 'message' => 'Error al asignar usuarios'], 500);
+            }
+
+        } catch (Exception $e) {
+            error_log("Error en assignSubtaskUsers (ClanMember): " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor'], 500);
+        }
+    }
+
+    /**
+     * Desasignar un usuario específico de una subtarea
+     */
+    public function unassignSubtaskUser() {
+        $this->requireAuth();
+        if (!$this->hasMemberAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
+        }
+
+        try {
+            $subtaskId = (int)($_POST['subtask_id'] ?? 0);
+            $userId = (int)($_POST['user_id'] ?? 0);
+
+            if ($subtaskId <= 0 || $userId <= 0) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Datos inválidos'], 400);
+            }
+
+            // Verificar que la subtarea existe y obtener información del proyecto/clan
+            $stmt = $this->db->prepare("
+                SELECT s.*, t.task_id, t.project_id, p.clan_id, t.task_name as parent_task_name
+                FROM Subtasks s
+                JOIN Tasks t ON s.task_id = t.task_id
+                JOIN Projects p ON t.project_id = p.project_id
+                WHERE s.subtask_id = ?
+            ");
+            $stmt->execute([$subtaskId]);
+            $subtask = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$subtask) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Subtarea no encontrada'], 404);
+            }
+
+            // Verificar permisos: el usuario debe estar asignado a la tarea padre o ser del mismo clan
+            $isAssignedToTask = $this->isTaskAssignedToUser($subtask['task_id'], $this->currentUser['user_id']);
+            $isSameClan = $this->userClan && ((int)$subtask['clan_id'] === (int)$this->userClan['clan_id']);
+
+            if (!$isAssignedToTask && !$isSameClan) {
+                Utils::jsonResponse(['success' => false, 'message' => 'No tienes permisos para desasignar usuarios de esta subtarea'], 403);
+            }
+
+            // Inicializar modelo de asignaciones de subtareas
+            if (!isset($this->subtaskAssignmentModel)) {
+                require_once __DIR__ . '/../models/SubtaskAssignment.php';
+                $this->subtaskAssignmentModel = new SubtaskAssignment();
+            }
+
+            // Obtener información del usuario para el historial
+            $user = $this->userModel->findById($userId);
+            if (!$user) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Usuario no encontrado'], 404);
+            }
+
+            // Desasignar usuario
+            $result = $this->subtaskAssignmentModel->removeUser($subtaskId, $userId);
+
+            if ($result) {
+                // Registrar en el historial de la tarea padre
+                $historyStmt = $this->db->prepare("
+                    INSERT INTO Task_History (task_id, user_id, action_type, field_name, old_value, new_value, notes) 
+                    VALUES (?, ?, 'unassigned', 'subtask_assignment', ?, '', ?)
+                ");
+                $historyStmt->execute([
+                    $subtask['task_id'],
+                    $this->currentUser['user_id'],
+                    $user['full_name'] ?? $user['username'],
+                    'Subtarea "' . $subtask['title'] . '" - usuario desasignado: ' . ($user['full_name'] ?? $user['username'])
+                ]);
+
+                Utils::jsonResponse([
+                    'success' => true,
+                    'message' => 'Usuario desasignado exitosamente'
+                ]);
+            } else {
+                Utils::jsonResponse(['success' => false, 'message' => 'Error al desasignar usuario'], 500);
+            }
+
+        } catch (Exception $e) {
+            error_log("Error en unassignSubtaskUser (ClanMember): " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor'], 500);
+        }
+    }
+
+    /**
+     * Obtener miembros del clan para asignación de subtareas
+     */
+    public function getClanMembers() {
+        $this->requireAuth();
+        if (!$this->hasMemberAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+        }
+
+        try {
+            if (!$this->userClan) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Usuario no pertenece a ningún clan'], 400);
+            }
+
+            // Inicializar modelo de clan si no existe
+            if (!isset($this->clanModel)) {
+                require_once __DIR__ . '/../models/Clan.php';
+                $this->clanModel = new Clan();
+            }
+
+            $members = $this->clanModel->getMembers($this->userClan['clan_id']);
+
+            Utils::jsonResponse([
+                'success' => true,
+                'members' => $members
+            ]);
+
+        } catch (Exception $e) {
+            error_log("Error en getClanMembers (ClanMember): " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor'], 500);
+        }
+    }
 }
 
 ?>

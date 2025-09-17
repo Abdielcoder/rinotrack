@@ -529,12 +529,13 @@ class Task {
     
     /**
      * Obtener subtareas de una tarea filtradas por usuario asignado
+     * Incluye subtareas asignadas directamente y a través de Subtask_Assignments
      */
     public function getSubtasksForUser($taskId, $userId) {
         try {
-            // Usar directamente la tabla Subtasks con LEFT JOINs y filtrar por usuario asignado
+            // Incluir subtareas asignadas directamente Y a través de Subtask_Assignments
             $stmt = $this->db->prepare("
-                SELECT 
+                SELECT DISTINCT
                     s.subtask_id,
                     s.task_id,
                     t.task_name as parent_task_name,
@@ -554,16 +555,28 @@ class Task {
                     u_assigned.full_name as assigned_to_fullname,
                     u_assigned.username as assigned_to_username,
                     u_created.full_name as created_by_fullname,
-                    u_created.username as created_by_username
+                    u_created.username as created_by_username,
+                    sa.assigned_percentage,
+                    GROUP_CONCAT(DISTINCT u_all_assigned.full_name ORDER BY u_all_assigned.full_name SEPARATOR ', ') as all_assigned_users
                 FROM Subtasks s
                 LEFT JOIN Tasks t ON s.task_id = t.task_id
                 LEFT JOIN Users u_assigned ON s.assigned_to_user_id = u_assigned.user_id
                 LEFT JOIN Users u_created ON s.created_by_user_id = u_created.user_id
+                LEFT JOIN Subtask_Assignments sa ON s.subtask_id = sa.subtask_id
+                LEFT JOIN Users u_all_assigned ON sa.user_id = u_all_assigned.user_id
                 WHERE s.task_id = ? 
-                  AND (s.assigned_to_user_id = ? OR s.created_by_user_id = ?)
+                  AND (
+                    s.assigned_to_user_id = ? 
+                    OR s.created_by_user_id = ?
+                    OR EXISTS (
+                        SELECT 1 FROM Subtask_Assignments sa2 
+                        WHERE sa2.subtask_id = s.subtask_id AND sa2.user_id = ?
+                    )
+                  )
+                GROUP BY s.subtask_id
                 ORDER BY s.subtask_order ASC
             ");
-            $stmt->execute([$taskId, $userId, $userId]);
+            $stmt->execute([$taskId, $userId, $userId, $userId]);
             return $stmt->fetchAll();
         } catch (Exception $e) {
             error_log("Error al obtener subtareas para usuario: " . $e->getMessage());
