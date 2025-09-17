@@ -245,6 +245,10 @@ ob_start();
                                 <button class="btn-list-action menu" onclick="toggleProjectMenu(<?= $project['project_id'] ?>)" title="Más opciones">
                                     <i class="fas fa-ellipsis-v"></i>
                                 </button>
+                                <!-- Botón de prueba temporal -->
+                                <button class="btn-list-action" onclick="testMenu(<?= $project['project_id'] ?>)" title="Test" style="background: red; color: white;">
+                                    T
+                                </button>
                                 <!-- Menú contextual -->
                                 <div class="dropdown-menu-list" id="projectMenu<?= $project['project_id'] ?>">
                                     <button class="menu-item-list" onclick="openEditProjectModal(<?= $project['project_id'] ?>, '<?= htmlspecialchars($project['project_name']) ?>', '<?= htmlspecialchars($project['description']) ?>', '<?= $project['time_limit'] ?? '' ?>')">
@@ -731,33 +735,35 @@ function cloneProject() {
     });
 }
 
+// Función de prueba temporal
+function testMenu(projectId) {
+    alert('Botón de prueba funcionando para proyecto ID: ' + projectId);
+    toggleProjectMenu(projectId);
+}
+
 // Toggle del menú del proyecto
 function toggleProjectMenu(projectId) {
+    console.log('toggleProjectMenu llamado con ID:', projectId);
+    
     const menu = document.getElementById(`projectMenu${projectId}`);
+    console.log('Menú encontrado:', menu);
     
     if (!menu) {
         console.error(`No se encontró el menú con ID: projectMenu${projectId}`);
         return;
     }
     
-    const allMenus = document.querySelectorAll('.dropdown-menu-minimal, .dropdown-menu-list');
-    
     // Cerrar todos los otros menús
+    const allMenus = document.querySelectorAll('.dropdown-menu-minimal, .dropdown-menu-list');
     allMenus.forEach(m => {
         if (m !== menu) {
             m.classList.remove('show');
-            m.style.display = 'none';
         }
     });
     
     // Toggle del menú actual
-    if (menu.classList.contains('show')) {
-        menu.classList.remove('show');
-        menu.style.display = 'none';
-    } else {
-        menu.classList.add('show');
-        menu.style.display = 'block';
-    }
+    menu.classList.toggle('show');
+    console.log('Menú toggled, clase show:', menu.classList.contains('show'));
 }
 
 // Cerrar menús al hacer clic fuera
@@ -765,7 +771,6 @@ document.addEventListener('click', function(e) {
     if (!e.target.closest('.project-menu-minimal') && !e.target.closest('.actions-list') && !e.target.closest('.btn-menu-minimal') && !e.target.closest('.btn-list-action')) {
         document.querySelectorAll('.dropdown-menu-minimal, .dropdown-menu-list').forEach(menu => {
             menu.classList.remove('show');
-            menu.style.display = 'none';
         });
     }
 });
@@ -1080,18 +1085,11 @@ function toggleProjectDelegation(projectId, isAllowed) {
     padding: 8px 0;
     min-width: 160px;
     z-index: 1000;
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(-10px);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     border: 1px solid rgba(0, 0, 0, 0.05);
     display: none;
 }
 
 .dropdown-menu-minimal.show {
-    opacity: 1 !important;
-    visibility: visible !important;
-    transform: translateY(0) !important;
     display: block !important;
 }
 
@@ -1548,6 +1546,7 @@ function toggleProjectDelegation(projectId, isAllowed) {
 .cell-actions {
     display: flex;
     justify-content: center;
+    position: relative;
 }
 
 .actions-list {
@@ -1611,19 +1610,13 @@ function toggleProjectDelegation(projectId, isAllowed) {
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
     padding: 6px 0;
     min-width: 140px;
-    z-index: 1000;
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(-10px);
-    transition: all 0.3s ease;
+    z-index: 9999;
     border: 1px solid rgba(0, 0, 0, 0.05);
     display: none;
+    margin-top: 4px;
 }
 
 .dropdown-menu-list.show {
-    opacity: 1 !important;
-    visibility: visible !important;
-    transform: translateY(0) !important;
     display: block !important;
 }
 
