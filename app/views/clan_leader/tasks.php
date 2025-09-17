@@ -3939,6 +3939,7 @@ function loadTeamTasks() {
 
 // Función para renderizar tabla de tareas del equipo
 function renderTeamTasksTable(tasks, tbodyId) {
+    console.log('🔧 renderTeamTasksTable ejecutándose - versión actualizada con Pendiente');
     const tbody = document.getElementById(tbodyId);
     if (!tbody) return;
     
