@@ -250,7 +250,7 @@ ob_start();
                                     T
                                 </button>
                                 <!-- Menú contextual -->
-                                <div class="dropdown-menu-list" id="projectMenu<?= $project['project_id'] ?>">
+                                <div class="dropdown-menu-list" id="projectMenu<?= $project['project_id'] ?>" style="display: none;">
                                     <button class="menu-item-list" onclick="openEditProjectModal(<?= $project['project_id'] ?>, '<?= htmlspecialchars($project['project_name']) ?>', '<?= htmlspecialchars($project['description']) ?>', '<?= $project['time_limit'] ?? '' ?>')">
                                         <i class="fas fa-edit"></i>
                                         Editar
@@ -754,16 +754,28 @@ function toggleProjectMenu(projectId) {
     allMenus.forEach(m => {
         if (m !== menu) {
             m.classList.remove('show');
+            m.style.display = 'none';
         }
     });
     
-    // Toggle del menú actual
-    const wasVisible = menu.classList.contains('show');
-    menu.classList.toggle('show');
-    const isVisible = menu.classList.contains('show');
+    // Verificar si el menú actual está visible
+    const isCurrentlyVisible = menu.classList.contains('show') || menu.style.display === 'block';
+    console.log('Menú actualmente visible:', isCurrentlyVisible);
     
-    console.log('Menú antes:', wasVisible, 'Menú después:', isVisible);
-    console.log('Clases del menú:', menu.className);
+    if (isCurrentlyVisible) {
+        // Ocultar el menú
+        menu.classList.remove('show');
+        menu.style.display = 'none';
+        console.log('Menú ocultado');
+    } else {
+        // Mostrar el menú
+        menu.classList.add('show');
+        menu.style.display = 'block';
+        console.log('Menú mostrado');
+    }
+    
+    console.log('Clases finales del menú:', menu.className);
+    console.log('Display final del menú:', menu.style.display);
 }
 
 // Cerrar menús al hacer clic fuera
@@ -772,6 +784,7 @@ document.addEventListener('click', function(e) {
     if (!e.target.closest('.btn-menu-minimal') && !e.target.closest('.btn-list-action.menu')) {
         document.querySelectorAll('.dropdown-menu-minimal, .dropdown-menu-list').forEach(menu => {
             menu.classList.remove('show');
+            menu.style.display = 'none';
         });
     }
 });
