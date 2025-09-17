@@ -734,24 +734,38 @@ function cloneProject() {
 // Toggle del menú del proyecto
 function toggleProjectMenu(projectId) {
     const menu = document.getElementById(`projectMenu${projectId}`);
+    
+    if (!menu) {
+        console.error(`No se encontró el menú con ID: projectMenu${projectId}`);
+        return;
+    }
+    
     const allMenus = document.querySelectorAll('.dropdown-menu-minimal, .dropdown-menu-list');
     
     // Cerrar todos los otros menús
     allMenus.forEach(m => {
         if (m !== menu) {
             m.classList.remove('show');
+            m.style.display = 'none';
         }
     });
     
     // Toggle del menú actual
-    menu.classList.toggle('show');
+    if (menu.classList.contains('show')) {
+        menu.classList.remove('show');
+        menu.style.display = 'none';
+    } else {
+        menu.classList.add('show');
+        menu.style.display = 'block';
+    }
 }
 
 // Cerrar menús al hacer clic fuera
 document.addEventListener('click', function(e) {
-    if (!e.target.closest('.project-menu-minimal') && !e.target.closest('.actions-list')) {
+    if (!e.target.closest('.project-menu-minimal') && !e.target.closest('.actions-list') && !e.target.closest('.btn-menu-minimal') && !e.target.closest('.btn-list-action')) {
         document.querySelectorAll('.dropdown-menu-minimal, .dropdown-menu-list').forEach(menu => {
             menu.classList.remove('show');
+            menu.style.display = 'none';
         });
     }
 });
@@ -1071,12 +1085,14 @@ function toggleProjectDelegation(projectId, isAllowed) {
     transform: translateY(-10px);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     border: 1px solid rgba(0, 0, 0, 0.05);
+    display: none;
 }
 
 .dropdown-menu-minimal.show {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: translateY(0) !important;
+    display: block !important;
 }
 
 .menu-item-minimal {
@@ -1601,12 +1617,14 @@ function toggleProjectDelegation(projectId, isAllowed) {
     transform: translateY(-10px);
     transition: all 0.3s ease;
     border: 1px solid rgba(0, 0, 0, 0.05);
+    display: none;
 }
 
 .dropdown-menu-list.show {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: translateY(0) !important;
+    display: block !important;
 }
 
 .menu-item-list {
