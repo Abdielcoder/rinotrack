@@ -4551,10 +4551,15 @@ class ClanLeaderController {
             $searchTaskFilter = '';
             $searchSubtaskFilter = '';
             if (!empty($searchFilter)) {
-                $searchTaskFilter = "AND (t.task_name LIKE :search OR t.description LIKE :search OR p.project_name LIKE :search)";
-                $searchSubtaskFilter = "AND (s.title LIKE :search2 OR s.description LIKE :search2 OR p.project_name LIKE :search2)";
-                $params[':search'] = '%' . $searchFilter . '%';
-                $params[':search2'] = '%' . $searchFilter . '%';
+                $searchTaskFilter = "AND (t.task_name LIKE :search_task_name OR t.description LIKE :search_task_desc OR p.project_name LIKE :search_project)";
+                $searchSubtaskFilter = "AND (s.title LIKE :search_sub_title OR s.description LIKE :search_sub_desc OR p.project_name LIKE :search_sub_project)";
+                $searchValue = '%' . $searchFilter . '%';
+                $params[':search_task_name'] = $searchValue;
+                $params[':search_task_desc'] = $searchValue;
+                $params[':search_project'] = $searchValue;
+                $params[':search_sub_title'] = $searchValue;
+                $params[':search_sub_desc'] = $searchValue;
+                $params[':search_sub_project'] = $searchValue;
             }
             
             // CONSULTA MEJORADA - MIS TAREAS Y SUBTAREAS CON FILTROS
@@ -4835,10 +4840,17 @@ class ClanLeaderController {
             $searchTaskFilter = '';
             $searchSubtaskFilter = '';
             if (!empty($searchFilter)) {
-                $searchTaskFilter = "AND (t.task_name LIKE :search OR t.description LIKE :search OR p.project_name LIKE :search OR u.full_name LIKE :search)";
-                $searchSubtaskFilter = "AND (s.title LIKE :search2 OR s.description LIKE :search2 OR p.project_name LIKE :search2 OR u.full_name LIKE :search2)";
-                $params[':search'] = '%' . $searchFilter . '%';
-                $params[':search2'] = '%' . $searchFilter . '%';
+                $searchTaskFilter = "AND (t.task_name LIKE :search_team_task_name OR t.description LIKE :search_team_task_desc OR p.project_name LIKE :search_team_project OR u.full_name LIKE :search_team_user)";
+                $searchSubtaskFilter = "AND (s.title LIKE :search_team_sub_title OR s.description LIKE :search_team_sub_desc OR p.project_name LIKE :search_team_sub_project OR u.full_name LIKE :search_team_sub_user)";
+                $searchValue = '%' . $searchFilter . '%';
+                $params[':search_team_task_name'] = $searchValue;
+                $params[':search_team_task_desc'] = $searchValue;
+                $params[':search_team_project'] = $searchValue;
+                $params[':search_team_user'] = $searchValue;
+                $params[':search_team_sub_title'] = $searchValue;
+                $params[':search_team_sub_desc'] = $searchValue;
+                $params[':search_team_sub_project'] = $searchValue;
+                $params[':search_team_sub_user'] = $searchValue;
             }
             
             // CONSULTA MEJORADA - TAREAS DEL EQUIPO Y SUBTAREAS (NO MÍAS) CON FILTROS
