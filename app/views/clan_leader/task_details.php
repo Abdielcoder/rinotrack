@@ -2619,13 +2619,15 @@ function insertEmoji(emoji, editorId) {
     let editor = null;
     let editorElement = null;
     
-    // Buscar el editor Quill
+    // Buscar el editor Quill con los nombres correctos
     if (editorId === 'task-comment') {
-        editor = window.taskEditor;
+        // El editor principal se llama taskCommentEditor
+        editor = window.taskCommentEditor;
         editorElement = document.getElementById('task-comment-editor');
     } else if (editorId.startsWith('subtask-comment-')) {
         const subtaskId = editorId.replace('subtask-comment-', '');
-        editor = window.subtaskEditors?.[subtaskId];
+        // Los editores de subtareas se llaman subtaskCommentEditor_${subtaskId}
+        editor = window[`subtaskCommentEditor_${subtaskId}`];
         editorElement = document.getElementById(`subtask-comment-editor-${subtaskId}`);
     }
     
