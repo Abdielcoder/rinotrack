@@ -357,13 +357,17 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Funciones para el calendario de tareas
-let tasksData = [];
-let currentDate = new Date();
+if (typeof window.clanLeaderTasksData === 'undefined') {
+    window.clanLeaderTasksData = [];
+}
+if (typeof window.clanLeaderCurrentDate === 'undefined') {
+    window.clanLeaderCurrentDate = new Date();
+}
 
 // Generar calendario
 function generateCalendar() {
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
+    const year = window.clanLeaderCurrentDate.getFullYear();
+    const month = window.clanLeaderCurrentDate.getMonth();
     
     // Actualizar título del mes
     const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
@@ -456,7 +460,7 @@ function generateCalendar() {
 function getTasksForDate(date) {
     const dateStr = date.toISOString().split('T')[0];
     
-    const filteredTasks = tasksData.filter(taskData => {
+    const filteredTasks = window.clanLeaderTasksData.filter(taskData => {
         const taskDate = taskData.task.due_date;
         return taskDate === dateStr;
     });
@@ -552,12 +556,12 @@ function closeTaskModal() {
 
 // Navegación del calendario
 function previousMonth() {
-    currentDate.setMonth(currentDate.getMonth() - 1);
+    window.clanLeaderCurrentDate.setMonth(window.clanLeaderCurrentDate.getMonth() - 1);
     generateCalendar();
 }
 
 function nextMonth() {
-    currentDate.setMonth(currentDate.getMonth() + 1);
+    window.clanLeaderCurrentDate.setMonth(window.clanLeaderCurrentDate.getMonth() + 1);
     generateCalendar();
 }
 
@@ -583,7 +587,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Función para establecer los datos de tareas (llamada desde PHP)
 function setTasksData(data) {
-    tasksData = data;
+    window.clanLeaderTasksData = data;
     if (document.getElementById('calendarDays')) {
         generateCalendar();
     }

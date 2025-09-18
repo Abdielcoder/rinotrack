@@ -390,4 +390,36 @@ class User {
             return [];
         }
     }
+    
+    /**
+     * Obtener todos los usuarios del sistema
+     */
+    public function getAllUsers() {
+        try {
+            $stmt = $this->db->prepare("
+                SELECT 
+                    u.user_id,
+                    u.username,
+                    u.full_name,
+                    u.email,
+                    u.is_active,
+                    u.last_login,
+                    u.created_at,
+                    r.role_name,
+                    c.clan_name
+                FROM Users u
+                LEFT JOIN User_Roles ur ON u.user_id = ur.user_id
+                LEFT JOIN Roles r ON ur.role_id = r.role_id
+                LEFT JOIN Clan_Members cm ON u.user_id = cm.user_id
+                LEFT JOIN Clans c ON cm.clan_id = c.clan_id
+                WHERE u.is_active = 1
+                ORDER BY u.full_name
+            ");
+            $stmt->execute();
+            return $stmt->fetchAll();
+        } catch (PDOException $e) {
+            error_log("Error al obtener todos los usuarios: " . $e->getMessage());
+            return [];
+        }
+    }
 }

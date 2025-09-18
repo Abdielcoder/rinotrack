@@ -203,6 +203,78 @@ function getActiveTasksCount($userId) {
                             </div>
                         <?php endforeach; ?>
                     </div>
+                    
+                    <!-- Toggle para mostrar usuarios externos -->
+                    <div class="external-users-toggle">
+                        <div class="toggle-container">
+                            <input type="checkbox" id="show_external_users" name="show_external_users" onchange="toggleExternalUsers()">
+                            <label for="show_external_users" class="toggle-label">
+                                <i class="fas fa-users"></i>
+                                Asignar a usuarios fuera del clan
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Sección de usuarios externos (oculta por defecto) -->
+                    <div id="external-users-section" class="external-users-section" style="display: none;">
+                        <h4>Usuarios del sistema:</h4>
+                        
+                        <!-- Checkbox para seleccionar todos los usuarios externos -->
+                        <div class="select-all-container">
+                            <div class="select-all-checkbox">
+                                <input type="checkbox" id="select_all_external" name="select_all_external">
+                                <label for="select_all_external">
+                                    <i class="fas fa-check"></i>
+                                    Seleccionar todos los usuarios externos
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="external-users-grid">
+                            <?php foreach ($allUsers as $user): ?>
+                                <?php 
+                                // Verificar si el usuario no está en el clan actual
+                                $isInCurrentClan = false;
+                                foreach ($members as $member) {
+                                    if ($member['user_id'] == $user['user_id']) {
+                                        $isInCurrentClan = true;
+                                        break;
+                                    }
+                                }
+                                ?>
+                                <?php if (!$isInCurrentClan): ?>
+                                    <div class="collaborator-card external-user" data-user-id="<?php echo $user['user_id']; ?>">
+                                        <div class="collaborator-checkbox">
+                                            <input type="checkbox" 
+                                                   class="external-user-checkbox"
+                                                   id="external_user_<?php echo $user['user_id']; ?>" 
+                                                   name="assigned_members[]" 
+                                                   value="<?php echo $user['user_id']; ?>">
+                                            <label for="external_user_<?php echo $user['user_id']; ?>"></label>
+                                        </div>
+                                        
+                                        <div class="collaborator-avatar">
+                                            <div class="avatar-initial" style="background-color: <?php echo getMemberColor($user['user_id']); ?>">
+                                                <?php echo strtoupper(substr($user['full_name'], 0, 1)); ?>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="collaborator-info">
+                                            <div class="collaborator-name"><?php echo htmlspecialchars($user['full_name']); ?></div>
+                                            <div class="collaborator-details">
+                                                <span class="user-role"><?php echo htmlspecialchars($user['role_name'] ?? 'Sin rol'); ?></span>
+                                                <?php if ($user['clan_name']): ?>
+                                                    <span class="user-clan">Clan: <?php echo htmlspecialchars($user['clan_name']); ?></span>
+                                                <?php else: ?>
+                                                    <span class="user-clan">Sin clan</span>
+                                                <?php endif; ?>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
                 </div>
 
                 
@@ -584,6 +656,140 @@ require_once __DIR__ . '/../admin/layout.php';
     margin-top: 0.25rem;
     font-style: italic;
 }
+
+/* Estilos para el toggle de usuarios externos */
+.external-users-toggle {
+    margin: 1.5rem 0;
+    padding: 1rem;
+    background: #f8fafc;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.external-users-toggle:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+}
+
+.toggle-container {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.toggle-container input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    accent-color: #3b82f6;
+}
+
+.toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    color: #374151;
+    cursor: pointer;
+    margin: 0;
+    font-size: 1rem;
+}
+
+.toggle-label i {
+    color: #3b82f6;
+    font-size: 1.1rem;
+}
+
+/* Estilos para la sección de usuarios externos */
+.external-users-section {
+    margin-top: 1.5rem;
+    padding: 1.5rem;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    animation: slideDown 0.3s ease;
+}
+
+.external-users-section h4 {
+    margin: 0 0 1rem 0;
+    color: #1f2937;
+    font-size: 1.1rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.external-users-section h4::before {
+    content: "👥";
+    font-size: 1.2rem;
+}
+
+.external-users-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.external-user {
+    border: 2px solid #e5e7eb;
+    background: white;
+    transition: all 0.3s ease;
+}
+
+.external-user:hover {
+    border-color: #3b82f6;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+    transform: translateY(-2px);
+}
+
+.collaborator-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin-top: 0.5rem;
+}
+
+.user-role {
+    font-size: 0.8rem;
+    color: #6b7280;
+    background: #f3f4f6;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    display: inline-block;
+    width: fit-content;
+}
+
+.user-clan {
+    font-size: 0.8rem;
+    color: #9ca3af;
+    font-style: italic;
+}
+
+/* Animaciones */
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+}
 </style>
 
 <!-- JavaScript inline para asegurar que funcione -->
@@ -658,6 +864,17 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    // Función para seleccionar/deseleccionar todos los usuarios externos
+    function selectAllExternalUsers(selectAll) {
+        const externalUserCheckboxes = document.querySelectorAll('.external-user-checkbox');
+        console.log('👥 Encontrados', externalUserCheckboxes.length, 'checkboxes de usuarios externos');
+        
+        externalUserCheckboxes.forEach((checkbox, index) => {
+            checkbox.checked = selectAll;
+            console.log(`✅ Checkbox externo ${index + 1} establecido a:`, selectAll);
+        });
+    }
+    
     // Buscar el checkbox principal
     const selectAllCheckbox = document.getElementById('select_all_members');
     console.log('📋 Checkbox principal encontrado:', selectAllCheckbox);
@@ -676,6 +893,21 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('✅ Evento click agregado al checkbox principal');
     } else {
         console.error('❌ No se encontró el checkbox principal');
+    }
+    
+    // Buscar el checkbox para usuarios externos
+    const selectAllExternalCheckbox = document.getElementById('select_all_external');
+    if (selectAllExternalCheckbox) {
+        selectAllExternalCheckbox.addEventListener('click', function() {
+            console.log('🖱️ Checkbox usuarios externos clickeado');
+            const isChecked = this.checked;
+            console.log('🔄 Estado del checkbox externo:', isChecked);
+            
+            // Seleccionar/deseleccionar todos los usuarios externos
+            selectAllExternalUsers(isChecked);
+        });
+        
+        console.log('✅ Evento click agregado al checkbox de usuarios externos');
     }
     
     console.log('✅ Script inline ejecutado correctamente');
@@ -1336,6 +1568,41 @@ function showValidationModal(errors) {
             }
         `;
         document.head.appendChild(style);
+    }
+}
+
+// Función para mostrar/ocultar usuarios externos
+function toggleExternalUsers() {
+    const toggle = document.getElementById('show_external_users');
+    const externalSection = document.getElementById('external-users-section');
+    
+    console.log('🔄 Toggle usuarios externos:', toggle.checked);
+    
+    if (toggle.checked) {
+        // Mostrar sección de usuarios externos
+        externalSection.style.display = 'block';
+        externalSection.style.animation = 'slideDown 0.3s ease';
+        console.log('✅ Mostrando usuarios externos');
+    } else {
+        // Ocultar sección de usuarios externos
+        externalSection.style.animation = 'slideUp 0.3s ease';
+        setTimeout(() => {
+            externalSection.style.display = 'none';
+        }, 300);
+        
+        // Deseleccionar todos los usuarios externos
+        const externalCheckboxes = document.querySelectorAll('.external-user-checkbox');
+        externalCheckboxes.forEach(checkbox => {
+            checkbox.checked = false;
+        });
+        
+        // Deseleccionar el checkbox "Seleccionar todos los usuarios externos"
+        const selectAllExternal = document.getElementById('select_all_external');
+        if (selectAllExternal) {
+            selectAllExternal.checked = false;
+        }
+        
+        console.log('❌ Ocultando usuarios externos');
     }
 }
 </script> 

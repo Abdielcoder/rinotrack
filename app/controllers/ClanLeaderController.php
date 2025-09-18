@@ -938,6 +938,9 @@ class ClanLeaderController {
             
             $members = $this->clanModel->getMembers($this->userClan['clan_id']);
             
+            // Obtener todos los usuarios del sistema para asignación externa
+            $allUsers = $this->userModel->getAllUsers();
+            
             // Obtener tareas del trimestre actual sin completar
             $currentQuarterTasks = $this->taskModel->getCurrentQuarterTasksByClan($this->userClan['clan_id']);
             
@@ -947,6 +950,7 @@ class ClanLeaderController {
             $data = [
                 'projects' => $projects,
                 'members' => $members,
+                'allUsers' => $allUsers,
                 'currentQuarterTasks' => $currentQuarterTasks,
                 'selectedProjectId' => $selectedProjectId,
                 'currentPage' => 'clan_leader',
