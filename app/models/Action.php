@@ -1,9 +1,14 @@
 <?php
 
+// Asegurar que Database esté disponible
+require_once __DIR__ . '/../../config/database.php';
+
 class Action extends Project {
     
     public function __construct() {
         parent::__construct();
+        // Asegurar que $db esté inicializada
+        $this->db = Database::getConnection();
     }
     
     /**

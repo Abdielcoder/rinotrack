@@ -10,6 +10,7 @@ class ClanLeaderController {
     private $taskModel;
     private $subtaskModel;
     private $subtaskAssignmentModel;
+    private $actionModel;
     private $currentUser;
     private $userClan;
     private $db;
@@ -41,6 +42,10 @@ class ClanLeaderController {
             require_once __DIR__ . '/../models/SubtaskAssignment.php';
             $this->subtaskAssignmentModel = new SubtaskAssignment();
         }
+        
+        // Cargar modelo Action
+        require_once __DIR__ . '/../models/Action.php';
+        $this->actionModel = new Action();
         
         $this->db = Database::getConnection();
         
@@ -7735,16 +7740,12 @@ class ClanLeaderController {
             exit;
         }
 
-        // Incluir el modelo Action
-        require_once __DIR__ . '/../models/Action.php';
-        $actionModel = new Action();
-        
         $search = $_GET['search'] ?? '';
         
         if (!empty($search)) {
-            $actions = $actionModel->searchByClan($this->userClan['clan_id'], $search);
+            $actions = $this->actionModel->searchByClan($this->userClan['clan_id'], $search);
         } else {
-            $actions = $actionModel->getByClan($this->userClan['clan_id']);
+            $actions = $this->actionModel->getByClan($this->userClan['clan_id']);
         }
         
         // Obtener icono del clan
@@ -7819,12 +7820,8 @@ class ClanLeaderController {
                 return;
             }
             
-            // Incluir el modelo Action
-            require_once __DIR__ . '/../models/Action.php';
-            $actionModel = new Action();
-            
             // Crear la acción
-            $actionId = $actionModel->create(
+            $actionId = $this->actionModel->create(
                 $actionName,
                 $description,
                 $this->userClan['clan_id'],
@@ -7871,11 +7868,7 @@ class ClanLeaderController {
             return;
         }
         
-        // Incluir el modelo Action
-        require_once __DIR__ . '/../models/Action.php';
-        $actionModel = new Action();
-        
-        $result = $actionModel->update($actionId, $actionName, $description, $this->userClan['clan_id'], null, $timeLimit);
+        $result = $this->actionModel->update($actionId, $actionName, $description, $this->userClan['clan_id'], null, $timeLimit);
         
         if ($result) {
             Utils::jsonResponse(['success' => true, 'message' => 'Acción actualizada exitosamente']);
@@ -7899,11 +7892,7 @@ class ClanLeaderController {
             return;
         }
         
-        // Incluir el modelo Action
-        require_once __DIR__ . '/../models/Action.php';
-        $actionModel = new Action();
-        
-        $result = $actionModel->delete($actionId);
+        $result = $this->actionModel->delete($actionId);
         
         if ($result) {
             Utils::jsonResponse(['success' => true, 'message' => 'Acción eliminada exitosamente']);
@@ -7935,11 +7924,7 @@ class ClanLeaderController {
             return;
         }
 
-        // Incluir el modelo Action
-        require_once __DIR__ . '/../models/Action.php';
-        $actionModel = new Action();
-
-        $result = $actionModel->toggleDelegation($actionId, $allowDelegation);
+        $result = $this->actionModel->toggleDelegation($actionId, $allowDelegation);
 
         if ($result) {
             $message = $allowDelegation ? 
@@ -7976,11 +7961,7 @@ class ClanLeaderController {
             return;
         }
         
-        // Incluir el modelo Action
-        require_once __DIR__ . '/../models/Action.php';
-        $actionModel = new Action();
-        
-        $action = $actionModel->findById($actionId);
+        $action = $this->actionModel->findById($actionId);
         
         if ($action) {
             Utils::jsonResponse([
@@ -8026,10 +8007,6 @@ class ClanLeaderController {
                 return;
             }
             
-            // Incluir el modelo Action
-            require_once __DIR__ . '/../models/Action.php';
-            $actionModel = new Action();
-            
             $cloneData = [
                 'action_name' => $actionName,
                 'description' => $description,
@@ -8038,7 +8015,7 @@ class ClanLeaderController {
                 'adjust_dates' => $adjustDates
             ];
             
-            $newActionId = $actionModel->cloneAction($originalActionId, $cloneData);
+            $newActionId = $this->actionModel->cloneAction($originalActionId, $cloneData);
             
             Utils::jsonResponse([
                 'success' => true,
