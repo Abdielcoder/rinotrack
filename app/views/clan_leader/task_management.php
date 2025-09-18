@@ -219,6 +219,20 @@ function getActiveTasksCount($userId) {
                     <div id="external-users-section" class="external-users-section" style="display: none;">
                         <h4>Usuarios del sistema:</h4>
                         
+                        <!-- Buscador de usuarios -->
+                        <div class="user-search-container">
+                            <div class="search-input-wrapper">
+                                <input type="text" 
+                                       id="external-users-search" 
+                                       placeholder="Buscar usuarios por nombre, email o rol..." 
+                                       class="user-search-input">
+                                <i class="fas fa-search search-icon"></i>
+                            </div>
+                            <div class="search-results-info">
+                                <span id="search-results-count">Mostrando todos los usuarios</span>
+                            </div>
+                        </div>
+                        
                         <!-- Checkbox para seleccionar todos los usuarios externos -->
                         <div class="select-all-container">
                             <div class="select-all-checkbox">
@@ -787,6 +801,68 @@ require_once __DIR__ . '/../admin/layout.php';
     border: 1px dashed #d1d5db;
 }
 
+/* Estilos para el buscador de usuarios */
+.user-search-container {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+}
+
+.search-input-wrapper {
+    position: relative;
+    margin-bottom: 0.75rem;
+}
+
+.user-search-input {
+    width: 100%;
+    padding: 0.75rem 1rem 0.75rem 2.5rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    background: white;
+    transition: all 0.3s ease;
+}
+
+.user-search-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.search-icon {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    font-size: 0.9rem;
+}
+
+.search-results-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    color: #6b7280;
+}
+
+.search-results-info i {
+    color: #3b82f6;
+}
+
+/* Estilos para usuarios filtrados */
+.external-user.hidden {
+    display: none;
+}
+
+.external-user.highlighted {
+    border-color: #3b82f6;
+    background: #eff6ff;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
+}
+
 /* Animaciones */
 @keyframes slideDown {
     from {
@@ -885,13 +961,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Función para seleccionar/deseleccionar todos los usuarios externos
     function selectAllExternalUsers(selectAll) {
-        const externalUserCheckboxes = document.querySelectorAll('.external-user-checkbox');
-        console.log('👥 Encontrados', externalUserCheckboxes.length, 'checkboxes de usuarios externos');
-        
-        externalUserCheckboxes.forEach((checkbox, index) => {
-            checkbox.checked = selectAll;
-            console.log(`✅ Checkbox externo ${index + 1} establecido a:`, selectAll);
-        });
+        // Usar la nueva función que solo selecciona usuarios visibles
+        selectAllVisibleExternalUsers(selectAll);
     }
     
     // Buscar el checkbox principal
@@ -927,6 +998,27 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         console.log('✅ Evento click agregado al checkbox de usuarios externos');
+    }
+    
+    // Buscar el input de búsqueda de usuarios externos
+    const searchInput = document.getElementById('external-users-search');
+    if (searchInput) {
+        // Evento para búsqueda en tiempo real
+        searchInput.addEventListener('input', function() {
+            console.log('🔍 Buscando usuarios:', this.value);
+            searchExternalUsers();
+        });
+        
+        // Evento para limpiar búsqueda con Escape
+        searchInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                this.value = '';
+                searchExternalUsers();
+                this.blur();
+            }
+        });
+        
+        console.log('✅ Event listeners agregados al buscador de usuarios');
     }
     
     console.log('✅ Script inline ejecutado correctamente');
@@ -1623,5 +1715,83 @@ function toggleExternalUsers() {
         
         console.log('❌ Ocultando usuarios externos');
     }
+}
+
+// Función para buscar usuarios externos
+function searchExternalUsers() {
+    const searchInput = document.getElementById('external-users-search');
+    const searchTerm = searchInput.value.toLowerCase().trim();
+    const userCards = document.querySelectorAll('.external-user');
+    const resultsCount = document.getElementById('search-results-count');
+    const selectAllExternal = document.getElementById('select_all_external');
+    
+    let visibleCount = 0;
+    let selectedCount = 0;
+    
+    userCards.forEach(card => {
+        const userName = card.querySelector('.collaborator-name').textContent.toLowerCase();
+        const userRole = card.querySelector('.user-role').textContent.toLowerCase();
+        const userClan = card.querySelector('.user-clan').textContent.toLowerCase();
+        
+        // Buscar en nombre, rol y clan
+        const matches = userName.includes(searchTerm) || 
+                       userRole.includes(searchTerm) || 
+                       userClan.includes(searchTerm);
+        
+        if (matches || searchTerm === '') {
+            card.classList.remove('hidden');
+            card.classList.add('highlighted');
+            visibleCount++;
+            
+            // Contar usuarios seleccionados visibles
+            const checkbox = card.querySelector('.external-user-checkbox');
+            if (checkbox && checkbox.checked) {
+                selectedCount++;
+            }
+        } else {
+            card.classList.add('hidden');
+            card.classList.remove('highlighted');
+        }
+    });
+    
+    // Actualizar contador de resultados
+    if (searchTerm === '') {
+        resultsCount.innerHTML = '<i class="fas fa-users"></i> Mostrando todos los usuarios';
+    } else {
+        resultsCount.innerHTML = `<i class="fas fa-search"></i> ${visibleCount} usuario(s) encontrado(s)`;
+    }
+    
+    // Actualizar estado del checkbox "Seleccionar todos"
+    if (visibleCount === 0) {
+        selectAllExternal.checked = false;
+        selectAllExternal.indeterminate = false;
+    } else if (selectedCount === visibleCount) {
+        selectAllExternal.checked = true;
+        selectAllExternal.indeterminate = false;
+    } else if (selectedCount > 0) {
+        selectAllExternal.checked = false;
+        selectAllExternal.indeterminate = true;
+    } else {
+        selectAllExternal.checked = false;
+        selectAllExternal.indeterminate = false;
+    }
+    
+    console.log(`🔍 Búsqueda: "${searchTerm}" - ${visibleCount} usuarios visibles, ${selectedCount} seleccionados`);
+}
+
+// Función para seleccionar todos los usuarios visibles
+function selectAllVisibleExternalUsers(selectAll) {
+    const userCards = document.querySelectorAll('.external-user:not(.hidden)');
+    console.log('👥 Seleccionando usuarios visibles:', userCards.length);
+    
+    userCards.forEach(card => {
+        const checkbox = card.querySelector('.external-user-checkbox');
+        if (checkbox) {
+            checkbox.checked = selectAll;
+        }
+    });
+    
+    // Actualizar contador
+    searchExternalUsers();
 }
 </script> 
