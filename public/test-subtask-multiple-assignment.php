@@ -40,6 +40,12 @@ try {
     // Usuarios que se asignarán a la tarea principal
     $assignedUsers = [2, 4, 5]; // Cambiar según los IDs de usuarios en tu sistema
     
+    echo "<h2>0. Verificando configuración...</h2>";
+    echo "<p><strong>Proyecto ID:</strong> {$projectId}</p>";
+    echo "<p><strong>Clan ID:</strong> {$clanId}</p>";
+    echo "<p><strong>Usuario creador ID:</strong> {$userId}</p>";
+    echo "<p><strong>Usuarios a asignar:</strong> " . implode(', ', $assignedUsers) . "</p>";
+    
     // Subtareas de prueba
     $subtasks = [
         [

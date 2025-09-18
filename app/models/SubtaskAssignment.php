@@ -122,7 +122,12 @@ class SubtaskAssignment {
      */
     public function assignUsers($subtaskId, $userIds, $assignedByUserId, $defaultPercentage = 100.00) {
         try {
-            $this->db->beginTransaction();
+            // Solo iniciar transacción si no hay una activa
+            $transactionStarted = false;
+            if (!$this->db->inTransaction()) {
+                $this->db->beginTransaction();
+                $transactionStarted = true;
+            }
             
             // Asignar nuevos usuarios (usar INSERT IGNORE para evitar duplicados)
             $stmt = $this->db->prepare("
@@ -157,11 +162,15 @@ class SubtaskAssignment {
                 $updateStmt->execute([$firstUser['user_id'], $subtaskId]);
             }
             
-            $this->db->commit();
+            // Solo hacer commit si iniciamos la transacción
+            if ($transactionStarted) {
+                $this->db->commit();
+            }
             return $newUsersAssigned; // Retornar número de usuarios nuevos asignados
             
         } catch (Exception $e) {
-            if ($this->db->inTransaction()) {
+            // Solo hacer rollback si iniciamos la transacción
+            if ($transactionStarted && $this->db->inTransaction()) {
                 $this->db->rollback();
             }
             error_log("Error al asignar usuarios a subtarea: " . $e->getMessage());
@@ -174,7 +183,12 @@ class SubtaskAssignment {
      */
     public function replaceUsers($subtaskId, $userIds, $assignedByUserId, $defaultPercentage = 100.00) {
         try {
-            $this->db->beginTransaction();
+            // Solo iniciar transacción si no hay una activa
+            $transactionStarted = false;
+            if (!$this->db->inTransaction()) {
+                $this->db->beginTransaction();
+                $transactionStarted = true;
+            }
             
             // Eliminar asignaciones existentes
             $stmt = $this->db->prepare("DELETE FROM Subtask_Assignments WHERE subtask_id = ?");
@@ -207,11 +221,15 @@ class SubtaskAssignment {
                 $updateStmt->execute([$subtaskId]);
             }
             
-            $this->db->commit();
+            // Solo hacer commit si iniciamos la transacción
+            if ($transactionStarted) {
+                $this->db->commit();
+            }
             return true;
             
         } catch (Exception $e) {
-            if ($this->db->inTransaction()) {
+            // Solo hacer rollback si iniciamos la transacción
+            if ($transactionStarted && $this->db->inTransaction()) {
                 $this->db->rollback();
             }
             error_log("Error al reemplazar usuarios de subtarea: " . $e->getMessage());
@@ -224,7 +242,12 @@ class SubtaskAssignment {
      */
     public function unassignAllUsers($subtaskId) {
         try {
-            $this->db->beginTransaction();
+            // Solo iniciar transacción si no hay una activa
+            $transactionStarted = false;
+            if (!$this->db->inTransaction()) {
+                $this->db->beginTransaction();
+                $transactionStarted = true;
+            }
             
             // Eliminar todas las asignaciones
             $stmt = $this->db->prepare("DELETE FROM Subtask_Assignments WHERE subtask_id = ?");
@@ -238,11 +261,15 @@ class SubtaskAssignment {
             ");
             $updateStmt->execute([$subtaskId]);
             
-            $this->db->commit();
+            // Solo hacer commit si iniciamos la transacción
+            if ($transactionStarted) {
+                $this->db->commit();
+            }
             return true;
             
         } catch (Exception $e) {
-            if ($this->db->inTransaction()) {
+            // Solo hacer rollback si iniciamos la transacción
+            if ($transactionStarted && $this->db->inTransaction()) {
                 $this->db->rollback();
             }
             error_log("Error al desasignar usuarios de subtarea: " . $e->getMessage());
