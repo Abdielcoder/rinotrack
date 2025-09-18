@@ -231,48 +231,56 @@ function getActiveTasksCount($userId) {
                         </div>
                         
                         <div class="external-users-grid">
-                            <?php foreach ($allUsers as $user): ?>
-                                <?php 
-                                // Verificar si el usuario no está en el clan actual
-                                $isInCurrentClan = false;
-                                foreach ($members as $member) {
-                                    if ($member['user_id'] == $user['user_id']) {
-                                        $isInCurrentClan = true;
-                                        break;
+                            <?php 
+                            // Verificar que $allUsers esté definido y sea un array
+                            $allUsers = $allUsers ?? [];
+                            if (is_array($allUsers) && !empty($allUsers)): 
+                                foreach ($allUsers as $user): 
+                                    // Verificar si el usuario no está en el clan actual
+                                    $isInCurrentClan = false;
+                                    foreach ($members as $member) {
+                                        if ($member['user_id'] == $user['user_id']) {
+                                            $isInCurrentClan = true;
+                                            break;
+                                        }
                                     }
-                                }
-                                ?>
-                                <?php if (!$isInCurrentClan): ?>
-                                    <div class="collaborator-card external-user" data-user-id="<?php echo $user['user_id']; ?>">
-                                        <div class="collaborator-checkbox">
-                                            <input type="checkbox" 
-                                                   class="external-user-checkbox"
-                                                   id="external_user_<?php echo $user['user_id']; ?>" 
-                                                   name="assigned_members[]" 
-                                                   value="<?php echo $user['user_id']; ?>">
-                                            <label for="external_user_<?php echo $user['user_id']; ?>"></label>
-                                        </div>
-                                        
-                                        <div class="collaborator-avatar">
-                                            <div class="avatar-initial" style="background-color: <?php echo getMemberColor($user['user_id']); ?>">
-                                                <?php echo strtoupper(substr($user['full_name'], 0, 1)); ?>
+                                    ?>
+                                    <?php if (!$isInCurrentClan): ?>
+                                        <div class="collaborator-card external-user" data-user-id="<?php echo $user['user_id']; ?>">
+                                            <div class="collaborator-checkbox">
+                                                <input type="checkbox" 
+                                                       class="external-user-checkbox"
+                                                       id="external_user_<?php echo $user['user_id']; ?>" 
+                                                       name="assigned_members[]" 
+                                                       value="<?php echo $user['user_id']; ?>">
+                                                <label for="external_user_<?php echo $user['user_id']; ?>"></label>
+                                            </div>
+                                            
+                                            <div class="collaborator-avatar">
+                                                <div class="avatar-initial" style="background-color: <?php echo getMemberColor($user['user_id']); ?>">
+                                                    <?php echo strtoupper(substr($user['full_name'], 0, 1)); ?>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="collaborator-info">
+                                                <div class="collaborator-name"><?php echo htmlspecialchars($user['full_name']); ?></div>
+                                                <div class="collaborator-details">
+                                                    <span class="user-role"><?php echo htmlspecialchars($user['role_name'] ?? 'Sin rol'); ?></span>
+                                                    <?php if ($user['clan_name']): ?>
+                                                        <span class="user-clan">Clan: <?php echo htmlspecialchars($user['clan_name']); ?></span>
+                                                    <?php else: ?>
+                                                        <span class="user-clan">Sin clan</span>
+                                                    <?php endif; ?>
+                                                </div>
                                             </div>
                                         </div>
-                                        
-                                        <div class="collaborator-info">
-                                            <div class="collaborator-name"><?php echo htmlspecialchars($user['full_name']); ?></div>
-                                            <div class="collaborator-details">
-                                                <span class="user-role"><?php echo htmlspecialchars($user['role_name'] ?? 'Sin rol'); ?></span>
-                                                <?php if ($user['clan_name']): ?>
-                                                    <span class="user-clan">Clan: <?php echo htmlspecialchars($user['clan_name']); ?></span>
-                                                <?php else: ?>
-                                                    <span class="user-clan">Sin clan</span>
-                                                <?php endif; ?>
-                                            </div>
-                                        </div>
-                                    </div>
-                                <?php endif; ?>
-                            <?php endforeach; ?>
+                                    <?php endif; ?>
+                                <?php endforeach; 
+                            else: ?>
+                                <div class="no-external-users">
+                                    <p>No hay usuarios externos disponibles en este momento.</p>
+                                </div>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
@@ -766,6 +774,17 @@ require_once __DIR__ . '/../admin/layout.php';
     font-size: 0.8rem;
     color: #9ca3af;
     font-style: italic;
+}
+
+.no-external-users {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 2rem;
+    color: #6b7280;
+    font-style: italic;
+    background: #f9fafb;
+    border-radius: 8px;
+    border: 1px dashed #d1d5db;
 }
 
 /* Animaciones */

@@ -396,6 +396,7 @@ class User {
      */
     public function getAllUsers() {
         try {
+            // Primero obtener usuarios básicos
             $stmt = $this->db->prepare("
                 SELECT 
                     u.user_id,
@@ -404,19 +405,40 @@ class User {
                     u.email,
                     u.is_active,
                     u.last_login,
-                    u.created_at,
-                    r.role_name,
-                    c.clan_name
+                    u.created_at
                 FROM Users u
-                LEFT JOIN User_Roles ur ON u.user_id = ur.user_id
-                LEFT JOIN Roles r ON ur.role_id = r.role_id
-                LEFT JOIN Clan_Members cm ON u.user_id = cm.user_id
-                LEFT JOIN Clans c ON cm.clan_id = c.clan_id
                 WHERE u.is_active = 1
                 ORDER BY u.full_name
             ");
             $stmt->execute();
-            return $stmt->fetchAll();
+            $users = $stmt->fetchAll();
+            
+            // Luego obtener roles y clanes para cada usuario
+            foreach ($users as &$user) {
+                // Obtener rol
+                $roleStmt = $this->db->prepare("
+                    SELECT r.role_name 
+                    FROM User_Roles ur 
+                    JOIN Roles r ON ur.role_id = r.role_id 
+                    WHERE ur.user_id = ?
+                ");
+                $roleStmt->execute([$user['user_id']]);
+                $role = $roleStmt->fetch();
+                $user['role_name'] = $role ? $role['role_name'] : null;
+                
+                // Obtener clan
+                $clanStmt = $this->db->prepare("
+                    SELECT c.clan_name 
+                    FROM Clan_Members cm 
+                    JOIN Clans c ON cm.clan_id = c.clan_id 
+                    WHERE cm.user_id = ?
+                ");
+                $clanStmt->execute([$user['user_id']]);
+                $clan = $clanStmt->fetch();
+                $user['clan_name'] = $clan ? $clan['clan_name'] : null;
+            }
+            
+            return $users;
         } catch (PDOException $e) {
             error_log("Error al obtener todos los usuarios: " . $e->getMessage());
             return [];

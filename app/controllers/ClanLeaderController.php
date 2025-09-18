@@ -941,6 +941,12 @@ class ClanLeaderController {
             // Obtener todos los usuarios del sistema para asignación externa
             $allUsers = $this->userModel->getAllUsers();
             
+            // Verificar que la consulta fue exitosa
+            if (!is_array($allUsers)) {
+                error_log("Error: getAllUsers() no retornó un array. Valor: " . print_r($allUsers, true));
+                $allUsers = []; // Valor por defecto
+            }
+            
             // Obtener tareas del trimestre actual sin completar
             $currentQuarterTasks = $this->taskModel->getCurrentQuarterTasksByClan($this->userClan['clan_id']);
             
