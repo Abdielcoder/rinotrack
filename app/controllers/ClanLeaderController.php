@@ -1271,11 +1271,15 @@ class ClanLeaderController {
                     Utils::jsonResponse(['success' => false, 'message' => 'Usuario asignado no encontrado'], 404);
                 }
                 
+                // Comentado: Ya no validamos que el usuario pertenezca al clan
+                // Esto permite asignar tareas a usuarios externos
+                /*
                 $userClan = $this->userModel->getUserClan($assignedToUserId);
                 if (!$userClan || $userClan['clan_id'] != $this->userClan['clan_id']) {
                     error_log("Usuario no pertenece al clan: " . $assignedToUserId);
                     Utils::jsonResponse(['success' => false, 'message' => 'El usuario asignado no pertenece al clan'], 400);
                 }
+                */
             }
             
             // Actualizar tarea
@@ -1652,7 +1656,7 @@ class ClanLeaderController {
             $taskProject = $projects[0]['project_id'];
         }
         
-        // Verificar que todos los usuarios asignados pertenecen al clan
+        // Verificar que todos los usuarios asignados existen (permitir usuarios externos al clan)
         error_log('createTask - Verificando usuarios asignados...');
         foreach ($assignedMembers as $userId) {
             error_log('  Verificando usuario ID: ' . $userId);
@@ -1662,11 +1666,17 @@ class ClanLeaderController {
                 Utils::jsonResponse(['success' => false, 'message' => 'Usuario no encontrado'], 404);
             }
             
+            // Comentado: Ya no validamos que el usuario pertenezca al clan
+            // Esto permite asignar tareas a usuarios externos
+            /*
             $userClan = $this->userModel->getUserClan($userId);
             if (!$userClan || $userClan['clan_id'] != $this->userClan['clan_id']) {
                 error_log('  Error: Usuario ' . $userId . ' no pertenece al clan');
                 Utils::jsonResponse(['success' => false, 'message' => 'Usuario no pertenece al clan'], 400);
             }
+            */
+            
+            error_log('  Usuario ' . $userId . ' verificado correctamente (puede ser externo al clan)');
         }
         
         try {
