@@ -1,0 +1,90 @@
+=== PASOS PARA REVERTIR COMPLETAMENTE LOS CAMBIOS DE ACCIONES ===
+
+1. EJECUTAR EL SQL DE REVERSIÓN:
+   - Ejecuta el archivo: revert_actions_changes.sql
+   - Esto eliminará la columna is_action y todos los registros de acciones
+
+2. REVERTIR CAMBIOS EN EL ARCHIVO DE RUTAS:
+   Editar: public/index.php
+   
+   ELIMINAR estas líneas (aproximadamente líneas 475-519):
+   
+   case 'clan_leader/get-project-data':
+       $controller = new ClanLeaderController();
+       $controller->getProjectData();
+       break;
+       
+   case 'clan_leader/clone-project':
+       $controller = new ClanLeaderController();
+       $controller->cloneProject();
+       break;
+       
+   // Rutas de Acciones - Nueva funcionalidad
+   case 'clan_leader/actions':
+       $controller = new ClanLeaderController();
+       $controller->actions();
+       break;
+       
+   case 'clan_leader/create-action':
+       $controller = new ClanLeaderController();
+       $controller->createAction();
+       break;
+       
+   case 'clan_leader/update-action':
+       $controller = new ClanLeaderController();
+       $controller->updateAction();
+       break;
+       
+   case 'clan_leader/delete-action':
+       $controller = new ClanLeaderController();
+       $controller->deleteAction();
+       break;
+       
+   case 'clan_leader/update-action-delegation':
+       $controller = new ClanLeaderController();
+       $controller->updateActionDelegation();
+       break;
+       
+   case 'clan_leader/get-action-data':
+       $controller = new ClanLeaderController();
+       $controller->getActionData();
+       break;
+       
+   case 'clan_leader/clone-action':
+       $controller = new ClanLeaderController();
+       $controller->cloneAction();
+       break;
+
+3. REVERTIR CAMBIOS EN LA NAVEGACIÓN:
+   Editar: app/views/layout.php
+   
+   CAMBIAR esta línea:
+   <a href="?route=clan_leader/projects" class="leader-nav__link <?php echo ($route === 'clan_leader/projects') ? 'active' : ''; ?>"><i class="fas fa-folder"></i><span>Proyectos</span></a>
+   <a href="?route=clan_leader/actions" class="leader-nav__link <?php echo ($route === 'clan_leader/actions') ? 'active' : ''; ?>"><i class="fas fa-bolt"></i><span>Acciones</span></a>
+   <a href="?route=clan_leader/tasks" class="leader-nav__link <?php echo (strpos($route, 'clan_leader/tasks') === 0 || $route === 'clan_leader/get-task-details') ? 'active' : ''; ?>"><i class="fas fa-tasks"></i><span>Tareas</span></a>
+   
+   POR esta línea:
+   <a href="?route=clan_leader/projects" class="leader-nav__link <?php echo ($route === 'clan_leader/projects') ? 'active' : ''; ?>"><i class="fas fa-folder"></i><span>Proyectos</span></a>
+   <a href="?route=clan_leader/tasks" class="leader-nav__link <?php echo (strpos($route, 'clan_leader/tasks') === 0 || $route === 'clan_leader/get-task-details') ? 'active' : ''; ?>"><i class="fas fa-tasks"></i><span>Tareas</span></a>
+
+4. ARCHIVOS YA ELIMINADOS (no requieren acción):
+   - app/models/Action.php (ya eliminado)
+   - app/views/clan_leader/actions.php (ya eliminado)
+   - create_actions_table.sql (ya eliminado)
+   - add_actions_to_projects.sql (ya eliminado)
+
+5. CONTROLADOR YA REVERTIDO:
+   - app/controllers/ClanLeaderController.php (ya revertido por el usuario)
+
+=== ORDEN DE EJECUCIÓN ===
+1. Ejecutar: revert_actions_changes.sql
+2. Editar: public/index.php (eliminar rutas de acciones)
+3. Editar: app/views/layout.php (eliminar enlace de acciones)
+4. Probar que el sistema funciona normalmente
+
+=== VERIFICACIÓN ===
+Después de completar todos los pasos:
+- La navegación no debe mostrar "Acciones"
+- No debe haber errores 404 al navegar
+- La tabla Projects no debe tener columna is_action
+- No debe haber registros de acciones en la base de datos

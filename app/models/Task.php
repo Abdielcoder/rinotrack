@@ -162,7 +162,8 @@ class Task {
                         $subtask['completion_percentage'] ?? 0,
                         $subtask['due_date'] ?? null,
                         $subtaskPriority,
-                        $subtask['assigned_to_user_id'] ?? null
+                        $subtask['assigned_to_user_id'] ?? null,
+                        $assignedUsers // Pasar todos los usuarios asignados a la tarea principal
                     );
                     
                     if (!$subId) {
@@ -367,7 +368,7 @@ class Task {
     /**
      * Crear subtarea avanzada
      */
-    public function createSubtaskAdvanced($taskId, $title, $createdByUserId, $description = '', $percentage = 0, $dueDate = null, $priority = self::PRIORITY_MEDIUM, $assignedUserId = null) {
+    public function createSubtaskAdvanced($taskId, $title, $createdByUserId, $description = '', $percentage = 0, $dueDate = null, $priority = self::PRIORITY_MEDIUM, $assignedUserId = null, $assignedUsers = []) {
         try {
             error_log('=== Task::createSubtaskAdvanced - INICIO ===');
             error_log('Task::createSubtaskAdvanced - Parámetros recibidos:');
@@ -379,6 +380,7 @@ class Task {
             error_log('  dueDate: ' . ($dueDate ?? 'NULL'));
             error_log('  priority: ' . $priority);
             error_log('  assignedUserId: ' . ($assignedUserId ?? 'NULL'));
+            error_log('  assignedUsers (de tarea principal): ' . print_r($assignedUsers, true));
             
             error_log('Task::createSubtaskAdvanced - 🔄 Preparando INSERT en tabla Subtasks...');
             $stmt = $this->db->prepare("
@@ -400,6 +402,26 @@ class Task {
             if ($result) {
                 $subtaskId = $this->db->lastInsertId();
                 error_log('Task::createSubtaskAdvanced - ✅ Subtarea creada exitosamente con ID: ' . $subtaskId);
+                
+                // Asignar la subtarea a múltiples usuarios si se proporcionaron
+                if (!empty($assignedUsers) && is_array($assignedUsers)) {
+                    error_log('Task::createSubtaskAdvanced - 🔄 Asignando subtarea a ' . count($assignedUsers) . ' usuarios...');
+                    
+                    // Incluir el modelo de SubtaskAssignment
+                    require_once __DIR__ . '/SubtaskAssignment.php';
+                    $subtaskAssignmentModel = new SubtaskAssignment();
+                    
+                    // Asignar la subtarea a todos los usuarios de la tarea principal
+                    $assignmentResult = $subtaskAssignmentModel->assignUsers($subtaskId, $assignedUsers, $createdByUserId);
+                    
+                    if ($assignmentResult !== false) {
+                        error_log('Task::createSubtaskAdvanced - ✅ Subtarea asignada exitosamente a ' . $assignmentResult . ' usuarios');
+                    } else {
+                        error_log('Task::createSubtaskAdvanced - ⚠️ Error al asignar usuarios a la subtarea');
+                    }
+                } else {
+                    error_log('Task::createSubtaskAdvanced - ℹ️ No se proporcionaron usuarios adicionales para asignar');
+                }
                 
                 // Registrar en el historial
                 error_log('Task::createSubtaskAdvanced - 🔄 Registrando en historial...');
