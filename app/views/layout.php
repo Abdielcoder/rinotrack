@@ -74,6 +74,7 @@
                 <a href="?route=clan_leader" class="leader-nav__link <?php echo ($route === 'clan_leader' || $route === 'clan_leader/dashboard') ? 'active' : ''; ?>"><i class="fas fa-home"></i><span>Dashboard</span></a>
                 <a href="?route=clan_leader/members" class="leader-nav__link <?php echo ($route === 'clan_leader/members') ? 'active' : ''; ?>"><i class="fas fa-users"></i><span>Miembros</span></a>
                 <a href="?route=clan_leader/projects" class="leader-nav__link <?php echo ($route === 'clan_leader/projects') ? 'active' : ''; ?>"><i class="fas fa-folder"></i><span>Proyectos</span></a>
+                <a href="?route=clan_leader/actions" class="leader-nav__link <?php echo ($route === 'clan_leader/actions') ? 'active' : ''; ?>"><i class="fas fa-bolt"></i><span>Acciones</span></a>
                 <a href="?route=clan_leader/tasks" class="leader-nav__link <?php echo (strpos($route, 'clan_leader/tasks') === 0 || $route === 'clan_leader/get-task-details') ? 'active' : ''; ?>"><i class="fas fa-tasks"></i><span>Tareas</span></a>
                 <a href="?route=clan_leader/kpi-dashboard" class="leader-nav__link <?php echo ($route === 'clan_leader/kpi-dashboard') ? 'active' : ''; ?>"><i class="fas fa-chart-line"></i><span>KPI</span></a>
                 <a href="?route=clan_leader/collaborator-availability" class="leader-nav__link <?php echo ($route === 'clan_leader/collaborator-availability') ? 'active' : ''; ?>"><i class="fas fa-calendar-alt"></i><span>Disponibilidad</span></a>

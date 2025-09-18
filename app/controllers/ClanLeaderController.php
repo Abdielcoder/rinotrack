@@ -7715,4 +7715,344 @@ class ClanLeaderController {
         }
     }
 
+    // =====================================================
+    // MÉTODOS DE ACCIONES - Clonados de los métodos de proyectos
+    // =====================================================
+    
+    /**
+     * Mostrar lista de acciones
+     */
+    public function actions() {
+        $this->requireAuth();
+        
+        if (!$this->hasClanLeaderAccess()) {
+            Utils::redirect('dashboard');
+            exit;
+        }
+
+        if (!$this->userClan) {
+            Utils::redirect('dashboard');
+            exit;
+        }
+
+        // Incluir el modelo Action
+        require_once __DIR__ . '/../models/Action.php';
+        $actionModel = new Action();
+        
+        $search = $_GET['search'] ?? '';
+        
+        if (!empty($search)) {
+            $actions = $actionModel->searchByClan($this->userClan['clan_id'], $search);
+        } else {
+            $actions = $actionModel->getByClan($this->userClan['clan_id']);
+        }
+        
+        // Obtener icono del clan
+        $clanIcon = $this->getClanIcon($this->userClan['clan_name'] ?? '');
+        
+        // Asegurar que actions sea un array
+        $actions = is_array($actions) ? $actions : [];
+        
+        // Reindexar el array para evitar problemas con índices
+        $actions = array_values($actions);
+        
+        $data = [
+            'actions' => $actions,
+            'search' => $search,
+            'currentPage' => 'clan_leader',
+            'user' => $this->currentUser,
+            'clan' => $this->userClan,
+            'clanIcon' => $clanIcon
+        ];
+        
+        $this->loadView('clan_leader/actions', $data);
+    }
+    
+    /**
+     * Crear nueva acción
+     */
+    public function createAction() {
+        error_log("=== CREATE ACTION DEBUG ===");
+        error_log("REQUEST_METHOD: " . $_SERVER['REQUEST_METHOD']);
+        error_log("POST data: " . print_r($_POST, true));
+        
+        try {
+            // Verificar autenticación
+            if (!$this->auth->isLoggedIn()) {
+                error_log("ERROR: User not authenticated");
+                Utils::jsonResponse(['success' => false, 'message' => 'No autenticado'], 401);
+                return;
+            }
+            
+            // Verificar permisos de líder de clan
+            if (!$this->hasClanLeaderAccess()) {
+                error_log("ERROR: User doesn't have clan leader access");
+                Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos de líder de clan'], 403);
+                return;
+            }
+            
+            // Verificar que el usuario tiene clan asignado
+            if (!$this->userClan) {
+                error_log("ERROR: User has no clan assigned");
+                Utils::jsonResponse(['success' => false, 'message' => 'No tienes un clan asignado'], 403);
+                return;
+            }
+            
+            // Verificar método HTTP
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
+                return;
+            }
+            
+            // Validar datos requeridos
+            $actionName = trim($_POST['actionName'] ?? '');
+            $description = trim($_POST['description'] ?? '');
+            $timeLimit = $_POST['timeLimit'] ?? null;
+            
+            if (empty($actionName)) {
+                Utils::jsonResponse(['success' => false, 'message' => 'El nombre de la acción es requerido'], 400);
+                return;
+            }
+            
+            if (empty($description)) {
+                Utils::jsonResponse(['success' => false, 'message' => 'La descripción es requerida'], 400);
+                return;
+            }
+            
+            // Incluir el modelo Action
+            require_once __DIR__ . '/../models/Action.php';
+            $actionModel = new Action();
+            
+            // Crear la acción
+            $actionId = $actionModel->create(
+                $actionName,
+                $description,
+                $this->userClan['clan_id'],
+                $this->currentUser['user_id'],
+                null, // kpiQuarterId
+                0,    // kpiPoints
+                'automatic', // taskDistributionMode
+                $timeLimit
+            );
+            
+            if ($actionId) {
+                error_log("SUCCESS: Action created with ID: $actionId");
+                Utils::jsonResponse([
+                    'success' => true,
+                    'message' => 'Acción creada exitosamente',
+                    'action_id' => $actionId
+                ]);
+            } else {
+                error_log("ERROR: Failed to create action");
+                Utils::jsonResponse(['success' => false, 'message' => 'Error al crear la acción'], 500);
+            }
+            
+        } catch (Exception $e) {
+            error_log("EXCEPTION in createAction: " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor'], 500);
+        }
+    }
+    
+    /**
+     * Actualizar acción
+     */
+    public function updateAction() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Utils::redirect('clan_leader/actions');
+        }
+        
+        $actionId = (int)($_POST['actionId'] ?? 0);
+        $actionName = trim($_POST['actionName'] ?? '');
+        $description = trim($_POST['description'] ?? '');
+        $timeLimit = $_POST['timeLimit'] ?? null;
+        
+        if ($actionId <= 0 || empty($actionName) || empty($description)) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Datos inválidos'], 400);
+            return;
+        }
+        
+        // Incluir el modelo Action
+        require_once __DIR__ . '/../models/Action.php';
+        $actionModel = new Action();
+        
+        $result = $actionModel->update($actionId, $actionName, $description, $this->userClan['clan_id'], null, $timeLimit);
+        
+        if ($result) {
+            Utils::jsonResponse(['success' => true, 'message' => 'Acción actualizada exitosamente']);
+        } else {
+            Utils::jsonResponse(['success' => false, 'message' => 'Error al actualizar la acción'], 500);
+        }
+    }
+    
+    /**
+     * Eliminar acción
+     */
+    public function deleteAction() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Utils::redirect('clan_leader/actions');
+        }
+        
+        $actionId = (int)($_POST['actionId'] ?? 0);
+        
+        if ($actionId <= 0) {
+            Utils::jsonResponse(['success' => false, 'message' => 'ID de acción inválido'], 400);
+            return;
+        }
+        
+        // Incluir el modelo Action
+        require_once __DIR__ . '/../models/Action.php';
+        $actionModel = new Action();
+        
+        $result = $actionModel->delete($actionId);
+        
+        if ($result) {
+            Utils::jsonResponse(['success' => true, 'message' => 'Acción eliminada exitosamente']);
+        } else {
+            Utils::jsonResponse(['success' => false, 'message' => 'Error al eliminar la acción'], 500);
+        }
+    }
+    
+    /**
+     * Actualizar estado de delegación de una acción
+     */
+    public function updateActionDelegation() {
+        $this->requireAuth();
+        if (!$this->hasClanLeaderAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos'], 403);
+            return;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
+            return;
+        }
+
+        $actionId = (int)($_POST['action_id'] ?? 0);
+        $allowDelegation = ($_POST['allow_delegation'] ?? '0') === '1';
+
+        if ($actionId <= 0) {
+            Utils::jsonResponse(['success' => false, 'message' => 'ID de acción inválido'], 400);
+            return;
+        }
+
+        // Incluir el modelo Action
+        require_once __DIR__ . '/../models/Action.php';
+        $actionModel = new Action();
+
+        $result = $actionModel->toggleDelegation($actionId, $allowDelegation);
+
+        if ($result) {
+            $message = $allowDelegation ? 
+                'Delegación habilitada para la acción' : 
+                'Delegación deshabilitada para la acción';
+            
+            Utils::jsonResponse([
+                'success' => true, 
+                'message' => $message
+            ]);
+        } else {
+            Utils::jsonResponse([
+                'success' => false, 
+                'message' => 'Error al actualizar la configuración de delegación'
+            ], 500);
+        }
+    }
+    
+    /**
+     * Obtener datos de acción para clonación
+     */
+    public function getActionData() {
+        $this->requireAuth();
+        
+        if (!$this->hasClanLeaderAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+            return;
+        }
+        
+        $actionId = (int)($_GET['action_id'] ?? 0);
+        
+        if ($actionId <= 0) {
+            Utils::jsonResponse(['success' => false, 'message' => 'ID de acción inválido'], 400);
+            return;
+        }
+        
+        // Incluir el modelo Action
+        require_once __DIR__ . '/../models/Action.php';
+        $actionModel = new Action();
+        
+        $action = $actionModel->findById($actionId);
+        
+        if ($action) {
+            Utils::jsonResponse([
+                'success' => true,
+                'action' => $action
+            ]);
+        } else {
+            Utils::jsonResponse(['success' => false, 'message' => 'Acción no encontrada'], 404);
+        }
+    }
+    
+    /**
+     * Clonar acción
+     */
+    public function cloneAction() {
+        $this->requireAuth();
+        
+        if (!$this->hasClanLeaderAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+            return;
+        }
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
+            return;
+        }
+        
+        try {
+            $originalActionId = (int)($_POST['originalActionId'] ?? 0);
+            $actionName = trim($_POST['action_name'] ?? '');
+            $description = trim($_POST['description'] ?? '');
+            $endDate = $_POST['end_date'] ?? null;
+            $cloneTasks = $_POST['clone_tasks'] ?? '0';
+            $adjustDates = $_POST['adjust_dates'] ?? '0';
+            
+            if ($originalActionId <= 0) {
+                Utils::jsonResponse(['success' => false, 'message' => 'ID de acción original inválido'], 400);
+                return;
+            }
+            
+            if (empty($actionName)) {
+                Utils::jsonResponse(['success' => false, 'message' => 'El nombre de la acción es requerido'], 400);
+                return;
+            }
+            
+            // Incluir el modelo Action
+            require_once __DIR__ . '/../models/Action.php';
+            $actionModel = new Action();
+            
+            $cloneData = [
+                'action_name' => $actionName,
+                'description' => $description,
+                'end_date' => $endDate,
+                'clone_tasks' => $cloneTasks,
+                'adjust_dates' => $adjustDates
+            ];
+            
+            $newActionId = $actionModel->cloneAction($originalActionId, $cloneData);
+            
+            Utils::jsonResponse([
+                'success' => true,
+                'message' => 'Acción clonada exitosamente',
+                'action_id' => $newActionId
+            ]);
+            
+        } catch (Exception $e) {
+            error_log("Error al clonar acción: " . $e->getMessage());
+            Utils::jsonResponse([
+                'success' => false,
+                'message' => 'Error al clonar la acción: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
 } 
