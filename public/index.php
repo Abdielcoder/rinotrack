@@ -472,6 +472,52 @@ try {
         $controller->deleteProject();
         break;
         
+    case 'clan_leader/get-project-data':
+        $controller = new ClanLeaderController();
+        $controller->getProjectData();
+        break;
+        
+    case 'clan_leader/clone-project':
+        $controller = new ClanLeaderController();
+        $controller->cloneProject();
+        break;
+        
+    // Rutas de Acciones - Nueva funcionalidad
+    case 'clan_leader/actions':
+        $controller = new ClanLeaderController();
+        $controller->actions();
+        break;
+        
+    case 'clan_leader/create-action':
+        $controller = new ClanLeaderController();
+        $controller->createAction();
+        break;
+        
+    case 'clan_leader/update-action':
+        $controller = new ClanLeaderController();
+        $controller->updateAction();
+        break;
+        
+    case 'clan_leader/delete-action':
+        $controller = new ClanLeaderController();
+        $controller->deleteAction();
+        break;
+        
+    case 'clan_leader/update-action-delegation':
+        $controller = new ClanLeaderController();
+        $controller->updateActionDelegation();
+        break;
+        
+    case 'clan_leader/get-action-data':
+        $controller = new ClanLeaderController();
+        $controller->getActionData();
+        break;
+        
+    case 'clan_leader/clone-action':
+        $controller = new ClanLeaderController();
+        $controller->cloneAction();
+        break;
+        
     case 'clan_leader/kpi-dashboard':
         $controller = new ClanLeaderController();
         $controller->kpiDashboard();
