@@ -165,8 +165,7 @@ ob_start();
                 </div>
                 <?php endif; ?>
                 
-        <!-- Comentarios de la Tarea (solo si NO hay subtareas) -->
-    <?php if (empty($subtasks)): ?>
+        <!-- Comentarios de la Tarea -->
     <div class="comments-section" style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
         <h3 style="margin: 0 0 20px 0; color: #1f2937; font-size: 18px; font-weight: 600;">Comentarios (<?php echo count($comments); ?>)</h3>
         
@@ -204,7 +203,6 @@ ob_start();
             <?php endif; ?>
         </div>
     </div>
-    <?php endif; ?>
 
         </div>
             
