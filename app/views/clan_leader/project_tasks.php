@@ -147,13 +147,22 @@ ob_start();
             <!-- Área de selección múltiple -->
             <div id="bulk-actions-area" class="bulk-actions-area" style="display: none;">
                 <div class="bulk-actions-content">
-                    <span id="selected-count" class="selected-count">0 tareas seleccionadas</span>
-                    <button id="bulk-delete-btn" class="btn btn-danger" onclick="showBulkDeleteModal()">
-                        <i class="fas fa-trash"></i> Eliminar Seleccionadas
-                    </button>
-                    <button class="btn btn-secondary" onclick="clearSelection()">
-                        <i class="fas fa-times"></i> Limpiar Selección
-                    </button>
+                    <div class="selection-indicator">
+                        <div class="selection-icon">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <span id="selected-count" class="selected-count">0 tareas seleccionadas</span>
+                    </div>
+                    <div class="bulk-actions-buttons">
+                        <button id="bulk-delete-btn" class="btn-delete-selected" onclick="showBulkDeleteModal()">
+                            <i class="fas fa-trash"></i>
+                            <span>Eliminar Seleccionadas</span>
+                        </button>
+                        <button class="btn-clear-selection" onclick="clearSelection()">
+                            <i class="fas fa-times"></i>
+                            <span>Limpiar Selección</span>
+                        </button>
+                    </div>
                 </div>
             </div>
             
@@ -963,6 +972,164 @@ document.addEventListener('DOMContentLoaded', function() {
 
 .btn-reset-filters:hover {
     background: #4b5563;
+}
+
+/* Estilos para la barra de selección múltiple */
+.bulk-actions-area {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    padding: 12px 20px;
+    box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    min-width: 400px;
+    max-width: 90vw;
+}
+
+.bulk-actions-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.selection-indicator {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.selection-icon {
+    width: 32px;
+    height: 32px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.selection-icon i {
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.selected-count {
+    color: white;
+    font-weight: 600;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.bulk-actions-buttons {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.btn-delete-selected {
+    background: #dc2626;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+}
+
+.btn-delete-selected:hover {
+    background: #b91c1c;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+}
+
+.btn-delete-selected i {
+    font-size: 14px;
+}
+
+.btn-clear-selection {
+    background: white;
+    color: #374151;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn-clear-selection:hover {
+    background: #f9fafb;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-clear-selection i {
+    font-size: 14px;
+    color: #6b7280;
+}
+
+/* Animación de entrada */
+.bulk-actions-area {
+    animation: slideUpIn 0.3s ease-out;
+}
+
+@keyframes slideUpIn {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .bulk-actions-area {
+        bottom: 10px;
+        left: 10px;
+        right: 10px;
+        transform: none;
+        min-width: auto;
+        max-width: none;
+    }
+    
+    .bulk-actions-content {
+        flex-direction: column;
+        gap: 12px;
+        text-align: center;
+    }
+    
+    .bulk-actions-buttons {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .btn-delete-selected,
+    .btn-clear-selection {
+        flex: 1;
+        justify-content: center;
+    }
 }
 </style>
 
