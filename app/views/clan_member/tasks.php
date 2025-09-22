@@ -1099,28 +1099,33 @@ function openCloneTaskModal(taskId) {
 // Función para mostrar el modal de clonación
 function showCloneTaskModal(task, projects) {
     const modal = document.createElement('div');
-    modal.className = 'modal-overlay';
+    modal.className = 'clone-modal-overlay';
     modal.innerHTML = `
-        <div class="modal-content clone-task-modal">
-            <div class="modal-header">
-                <h3><i class="fas fa-copy"></i> Clonar Tarea</h3>
-                <button class="modal-close" onclick="closeCloneTaskModal()">&times;</button>
+        <div class="clone-modal-content">
+            <div class="clone-modal-header">
+                <div class="clone-modal-title">
+                    <i class="fas fa-copy"></i>
+                    <h3>Clonar Tarea</h3>
+                </div>
+                <button class="clone-modal-close" onclick="closeCloneTaskModal()">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
-            <div class="modal-body">
+            <div class="clone-modal-body">
                 <form id="cloneTaskForm">
                     <input type="hidden" id="originalTaskId" value="${task.task_id}">
                     
-                    <div class="form-group">
+                    <div class="clone-form-group">
                         <label for="cloneTaskName">Nombre de la tarea</label>
                         <input type="text" id="cloneTaskName" name="task_name" value="${task.task_name}" required>
                     </div>
                     
-                    <div class="form-group">
+                    <div class="clone-form-group">
                         <label for="cloneTaskDescription">Descripción</label>
                         <textarea id="cloneTaskDescription" name="description" rows="4">${task.description || ''}</textarea>
                     </div>
                     
-                    <div class="form-group">
+                    <div class="clone-form-group">
                         <label for="cloneTaskProject">Proyecto destino</label>
                         <select id="cloneTaskProject" name="project_id" required>
                             <option value="">Seleccionar proyecto...</option>
@@ -1132,8 +1137,8 @@ function showCloneTaskModal(task, projects) {
                         </select>
                     </div>
                     
-                    <div class="form-row">
-                        <div class="form-group">
+                    <div class="clone-form-row">
+                        <div class="clone-form-group">
                             <label for="cloneTaskPriority">Prioridad</label>
                             <select id="cloneTaskPriority" name="priority">
                                 <option value="low" ${task.priority === 'low' ? 'selected' : ''}>Baja</option>
@@ -1142,24 +1147,29 @@ function showCloneTaskModal(task, projects) {
                             </select>
                         </div>
                         
-                        <div class="form-group">
+                        <div class="clone-form-group">
                             <label for="cloneTaskDueDate">Fecha límite</label>
                             <input type="date" id="cloneTaskDueDate" name="due_date" value="${task.due_date || ''}">
                         </div>
                     </div>
                     
-                    <div class="form-group">
-                        <label>
+                    <div class="clone-form-group">
+                        <label class="clone-checkbox-label">
                             <input type="checkbox" id="cloneSubtasks" name="clone_subtasks" checked>
+                            <span class="clone-checkmark"></span>
                             Clonar también las subtareas
                         </label>
                     </div>
                 </form>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn-secondary" onclick="closeCloneTaskModal()">Cancelar</button>
-                <button type="button" class="btn-primary" onclick="cloneTask()">
-                    <i class="fas fa-copy"></i> Clonar Tarea
+            <div class="clone-modal-footer">
+                <button type="button" class="clone-btn-secondary" onclick="closeCloneTaskModal()">
+                    <i class="fas fa-times"></i>
+                    Cancelar
+                </button>
+                <button type="button" class="clone-btn-primary" onclick="cloneTask()">
+                    <i class="fas fa-copy"></i>
+                    Clonar Tarea
                 </button>
             </div>
         </div>
@@ -1167,13 +1177,35 @@ function showCloneTaskModal(task, projects) {
     
     document.body.appendChild(modal);
     modal.style.display = 'flex';
+    
+    // Agregar animación de entrada
+    setTimeout(() => {
+        modal.classList.add('show');
+    }, 10);
+    
+    // Cerrar modal al hacer clic fuera
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            closeCloneTaskModal();
+        }
+    });
+    
+    // Cerrar modal con tecla Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeCloneTaskModal();
+        }
+    });
 }
 
 // Función para cerrar el modal de clonación
 function closeCloneTaskModal() {
-    const modal = document.querySelector('.modal-overlay');
+    const modal = document.querySelector('.clone-modal-overlay');
     if (modal) {
-        modal.remove();
+        modal.classList.remove('show');
+        setTimeout(() => {
+            modal.remove();
+        }, 300);
     }
 }
 
@@ -1209,63 +1241,288 @@ function cloneTask() {
 
 <!-- Estilos para el modal de clonación -->
 <style>
-.clone-task-modal {
+/* Modal Overlay */
+.clone-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.clone-modal-overlay.show {
+    opacity: 1;
+}
+
+/* Modal Content */
+.clone-modal-content {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
     max-width: 600px;
     width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    transform: scale(0.9) translateY(20px);
+    transition: transform 0.3s ease;
 }
 
-.form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
+.clone-modal-overlay.show .clone-modal-content {
+    transform: scale(1) translateY(0);
 }
 
-.form-group {
-    margin-bottom: 1rem;
+/* Modal Header */
+.clone-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 24px 0 24px;
+    border-bottom: 1px solid #e5e7eb;
+    margin-bottom: 24px;
 }
 
-.form-group label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 500;
+.clone-modal-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.clone-modal-title i {
+    font-size: 24px;
+    color: #8b5cf6;
+}
+
+.clone-modal-title h3 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.clone-modal-close {
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+}
+
+.clone-modal-close:hover {
+    background: #f3f4f6;
     color: #374151;
 }
 
-.form-group input,
-.form-group select,
-.form-group textarea {
+/* Modal Body */
+.clone-modal-body {
+    padding: 0 24px 24px 24px;
+}
+
+/* Form Styles */
+.clone-form-group {
+    margin-bottom: 20px;
+}
+
+.clone-form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #374151;
+    font-size: 14px;
+}
+
+.clone-form-group input,
+.clone-form-group select,
+.clone-form-group textarea {
     width: 100%;
-    padding: 0.75rem;
-    border: 1px solid #d1d5db;
-    border-radius: 0.375rem;
-    font-size: 0.875rem;
+    padding: 12px 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    font-size: 14px;
+    color: #374151;
+    background: white;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
 }
 
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus {
+.clone-form-group input:focus,
+.clone-form-group select:focus,
+.clone-form-group textarea:focus {
     outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    border-color: #8b5cf6;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
 }
 
-.btn-clone {
-    background-color: #8b5cf6;
+.clone-form-group textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.clone-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+/* Checkbox Styles */
+.clone-checkbox-label {
+    display: flex !important;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    font-weight: 500 !important;
+    margin-bottom: 0 !important;
+}
+
+.clone-checkbox-label input[type="checkbox"] {
+    width: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.clone-checkmark {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #d1d5db;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    background: white;
+}
+
+.clone-checkbox-label input[type="checkbox"]:checked + .clone-checkmark {
+    background: #8b5cf6;
+    border-color: #8b5cf6;
+}
+
+.clone-checkbox-label input[type="checkbox"]:checked + .clone-checkmark::after {
+    content: '✓';
     color: white;
+    font-size: 12px;
+    font-weight: bold;
 }
 
-.btn-clone:hover {
-    background-color: #7c3aed;
+/* Modal Footer */
+.clone-modal-footer {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    padding: 24px;
+    border-top: 1px solid #e5e7eb;
+    background: #f9fafb;
+    border-radius: 0 0 16px 16px;
 }
 
+.clone-btn-secondary,
+.clone-btn-primary {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 120px;
+    justify-content: center;
+}
+
+.clone-btn-secondary {
+    background: #f3f4f6;
+    color: #374151;
+    border: 2px solid #e5e7eb;
+}
+
+.clone-btn-secondary:hover {
+    background: #e5e7eb;
+    transform: translateY(-1px);
+}
+
+.clone-btn-primary {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.clone-btn-primary:hover {
+    background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(139, 92, 246, 0.4);
+}
+
+/* Responsive */
 @media (max-width: 768px) {
-    .form-row {
+    .clone-modal-content {
+        width: 95%;
+        margin: 20px;
+        max-height: 95vh;
+    }
+    
+    .clone-form-row {
         grid-template-columns: 1fr;
     }
     
-    .clone-task-modal {
-        width: 95%;
-        margin: 1rem;
+    .clone-modal-footer {
+        flex-direction: column;
+    }
+    
+    .clone-btn-secondary,
+    .clone-btn-primary {
+        width: 100%;
+    }
+    
+    .clone-modal-header {
+        padding: 20px 20px 0 20px;
+    }
+    
+    .clone-modal-body {
+        padding: 0 20px 20px 20px;
+    }
+    
+    .clone-modal-footer {
+        padding: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .clone-modal-content {
+        width: 100%;
+        height: 100%;
+        border-radius: 0;
+        max-height: 100vh;
+    }
+    
+    .clone-modal-header {
+        padding: 16px 16px 0 16px;
+    }
+    
+    .clone-modal-body {
+        padding: 0 16px 16px 16px;
+    }
+    
+    .clone-modal-footer {
+        padding: 16px;
     }
 }
 </style>
