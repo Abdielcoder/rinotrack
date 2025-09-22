@@ -819,6 +819,15 @@ document.addEventListener('DOMContentLoaded', function() {
     background: #c8e6c9;
     color: #1b5e20;
 }
+
+/* Estilos específicos para el botón Nueva Tarea */
+.btn-create {
+    color: #ffffff !important;
+}
+
+.btn-create:hover {
+    color: #ffffff !important;
+}
 </style>
 
 <?php
