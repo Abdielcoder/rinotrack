@@ -1297,7 +1297,7 @@ function cloneTask() {
 
 .clone-modal-title i {
     font-size: 24px;
-    color: #8b5cf6;
+    color: #1e3a8a;
 }
 
 .clone-modal-title h3 {
@@ -1364,8 +1364,8 @@ function cloneTask() {
 .clone-form-group select:focus,
 .clone-form-group textarea:focus {
     outline: none;
-    border-color: #8b5cf6;
-    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+    border-color: #1e3a8a;
+    box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
 }
 
 .clone-form-group textarea {
@@ -1410,8 +1410,8 @@ function cloneTask() {
 }
 
 .clone-checkbox-label input[type="checkbox"]:checked + .clone-checkmark {
-    background: #8b5cf6;
-    border-color: #8b5cf6;
+    background: #1e3a8a;
+    border-color: #1e3a8a;
 }
 
 .clone-checkbox-label input[type="checkbox"]:checked + .clone-checkmark::after {
@@ -1460,15 +1460,15 @@ function cloneTask() {
 }
 
 .clone-btn-primary {
-    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
     color: white;
-    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+    box-shadow: 0 4px 12px rgba(30, 58, 138, 0.3);
 }
 
 .clone-btn-primary:hover {
-    background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+    background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%);
     transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(139, 92, 246, 0.4);
+    box-shadow: 0 6px 16px rgba(30, 58, 138, 0.4);
 }
 
 /* Responsive */
