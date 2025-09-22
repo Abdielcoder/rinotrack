@@ -197,7 +197,26 @@ ob_start();
                         <span style="font-weight: 600; color: #374151;"><?php echo htmlspecialchars($c['full_name'] ?? $c['username'] ?? ''); ?></span>
                         <span style="font-size: 12px; color: #6b7280;"><?php echo htmlspecialchars($c['created_at'] ?? ''); ?></span>
                     </div>
-                    <div class="comment-content" style="color: #374151; line-height: 1.5;"><?php echo $c['comment_text'] ?? ''; ?></div>
+                    <div class="comment-content" style="color: #374151; line-height: 1.5; margin-bottom: 10px;"><?php echo $c['comment_text'] ?? ''; ?></div>
+                    
+                    <!-- Adjuntos del comentario -->
+                    <?php if (!empty($c['attachments']) && is_array($c['attachments'])): ?>
+                    <div class="comment-attachments" style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #f3f4f6;">
+                        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                            <?php foreach ($c['attachments'] as $attachment): ?>
+                            <div class="attachment-item" style="display: flex; align-items: center; gap: 8px; background: #f8f9fa; border: 1px solid #e5e7eb; border-radius: 6px; padding: 8px 12px; font-size: 14px;">
+                                <i class="fas fa-paperclip" style="color: #6b7280; font-size: 12px;"></i>
+                                <a href="<?php echo htmlspecialchars($attachment['file_path']); ?>" target="_blank" style="color: #1e3a8a; text-decoration: none; font-weight: 500;">
+                                    <?php echo htmlspecialchars($attachment['file_name']); ?>
+                                </a>
+                                <a href="<?php echo htmlspecialchars($attachment['file_path']); ?>" download="<?php echo htmlspecialchars($attachment['file_name']); ?>" style="color: #10b981; text-decoration: none; margin-left: 4px;" title="Descargar">
+                                    <i class="fas fa-download" style="font-size: 12px;"></i>
+                                </a>
+                            </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                    <?php endif; ?>
                 </div>
                 <?php endforeach; ?>
             <?php endif; ?>
