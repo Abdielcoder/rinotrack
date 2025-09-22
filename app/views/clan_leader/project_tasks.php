@@ -161,7 +161,6 @@ ob_start();
             </div>
             
             <!-- Tabla de Tareas -->
-            <?php if (!empty($tasks)): ?>
             <div class="tasks-table-container">
                 <table class="tasks-table">
                     <thead>
@@ -180,102 +179,106 @@ ob_start();
                         </tr>
                     </thead>
                     <tbody id="tasksTableBody">
-                        <?php foreach ($tasks as $task): ?>
-                            <?php
-                            $status = $task['status'] ?? 'pending';
-                            $priority = $task['priority'] ?? 'medium';
-                            $progress = $status === 'completed' ? 100 : ($task['completion_percentage'] ?? 0);
-                            $dueDate = $task['due_date'] ?? null;
-                            $isOverdue = $dueDate && strtotime($dueDate) < time() && $status !== 'completed';
-                            ?>
-                            <tr class="task-row priority-<?= $priority ?> <?= $isOverdue ? 'overdue' : '' ?> <?= $status === 'completed' ? 'completed' : '' ?>" data-task-id="<?= $task['task_id'] ?>">
-                                <td class="td-checkbox">
-                                    <input type="checkbox" 
-                                           id="task-<?= $task['task_id'] ?>" 
-                                           data-task-id="<?= $task['task_id'] ?>"
-                                           <?= $status === 'completed' ? 'checked' : '' ?>
-                                           onchange="toggleTaskStatus('<?= $task['task_id'] ?>', this.checked)">
-                                </td>
-                                <td class="td-priority">
-                                    <span class="priority-badge priority-<?= $priority ?>">
-                                        <?= $priority === 'critical' ? 'Urgente' : ($priority === 'high' ? 'Alta' : ($priority === 'low' ? 'Baja' : 'Media')) ?>
-                                    </span>
-                                </td>
-                                <td class="td-task">
-                                    <div class="task-info">
-                                        <div class="task-name" title="<?= htmlspecialchars($task['task_name']) ?>"><?= htmlspecialchars($task['task_name']) ?></div>
-                                        <?php if (!empty($task['description'])): ?>
-                                            <div class="task-description" title="<?= htmlspecialchars($task['description']) ?>">
-                                                <?= htmlspecialchars(substr($task['description'], 0, 100)) ?><?= strlen($task['description']) > 100 ? '...' : '' ?>
-                                            </div>
-                                        <?php endif; ?>
-                                    </div>
-                                </td>
-                                <td class="td-assigned">
-                                    <span class="assigned-user" title="<?= htmlspecialchars($task['assigned_to_fullname'] ?? $task['all_assigned_users'] ?? '') ?>">
-                                        <?= htmlspecialchars($task['assigned_to_fullname'] ?? $task['all_assigned_users'] ?? 'Sin asignar') ?>
-                                    </span>
-                                </td>
-                                <td class="td-due-date">
-                                    <?php if ($dueDate): ?>
-                                        <span class="due-date <?= $isOverdue ? 'overdue' : '' ?>" title="<?= $dueDate ?>">
-                                            <?= date('d/m/Y', strtotime($dueDate)) ?>
+                        <?php if (!empty($tasks)): ?>
+                            <?php foreach ($tasks as $task): ?>
+                                <?php
+                                $status = $task['status'] ?? 'pending';
+                                $priority = $task['priority'] ?? 'medium';
+                                $progress = $status === 'completed' ? 100 : ($task['completion_percentage'] ?? 0);
+                                $dueDate = $task['due_date'] ?? null;
+                                $isOverdue = $dueDate && strtotime($dueDate) < time() && $status !== 'completed';
+                                ?>
+                                <tr class="task-row priority-<?= $priority ?> <?= $isOverdue ? 'overdue' : '' ?> <?= $status === 'completed' ? 'completed' : '' ?>" data-task-id="<?= $task['task_id'] ?>">
+                                    <td class="td-checkbox">
+                                        <input type="checkbox" 
+                                               id="task-<?= $task['task_id'] ?>" 
+                                               data-task-id="<?= $task['task_id'] ?>"
+                                               <?= $status === 'completed' ? 'checked' : '' ?>
+                                               onchange="toggleTaskStatus('<?= $task['task_id'] ?>', this.checked)">
+                                    </td>
+                                    <td class="td-priority">
+                                        <span class="priority-badge priority-<?= $priority ?>">
+                                            <?= $priority === 'critical' ? 'Urgente' : ($priority === 'high' ? 'Alta' : ($priority === 'low' ? 'Baja' : 'Media')) ?>
                                         </span>
-                                    <?php else: ?>
-                                        <span class="no-date">Sin fecha</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td class="td-status">
-                                    <span class="status-badge status-<?= $status ?>">
-                                        <?= $status === 'completed' ? 'Completado' : ($status === 'in_progress' ? 'En Progreso' : 'Pendiente') ?>
-                                    </span>
-                                </td>
-                                <td class="td-progress">
-                                    <div class="progress-container">
-                                        <div class="progress-bar">
-                                            <div class="progress-fill" style="width: <?= $progress ?>%"></div>
+                                    </td>
+                                    <td class="td-task">
+                                        <div class="task-info">
+                                            <div class="task-name" title="<?= htmlspecialchars($task['task_name']) ?>"><?= htmlspecialchars($task['task_name']) ?></div>
+                                            <?php if (!empty($task['description'])): ?>
+                                                <div class="task-description" title="<?= htmlspecialchars($task['description']) ?>">
+                                                    <?= htmlspecialchars(substr($task['description'], 0, 100)) ?><?= strlen($task['description']) > 100 ? '...' : '' ?>
+                                                </div>
+                                            <?php endif; ?>
                                         </div>
-                                        <span class="progress-text"><?= $progress ?>%</span>
-                                    </div>
-                                </td>
-                                <td class="td-actions">
-                                    <div class="action-buttons">
-                                        <a href="?route=clan_leader/get-task-details&task_id=<?= $task['task_id'] ?>" class="btn-action btn-view" title="Ver detalles">
-                                            <i class="fas fa-eye"></i>
+                                    </td>
+                                    <td class="td-assigned">
+                                        <span class="assigned-user" title="<?= htmlspecialchars($task['assigned_to_fullname'] ?? $task['all_assigned_users'] ?? '') ?>">
+                                            <?= htmlspecialchars($task['assigned_to_fullname'] ?? $task['all_assigned_users'] ?? 'Sin asignar') ?>
+                                        </span>
+                                    </td>
+                                    <td class="td-due-date">
+                                        <?php if ($dueDate): ?>
+                                            <span class="due-date <?= $isOverdue ? 'overdue' : '' ?>" title="<?= $dueDate ?>">
+                                                <?= date('d/m/Y', strtotime($dueDate)) ?>
+                                            </span>
+                                        <?php else: ?>
+                                            <span class="no-date">Sin fecha</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td class="td-status">
+                                        <span class="status-badge status-<?= $status ?>">
+                                            <?= $status === 'completed' ? 'Completado' : ($status === 'in_progress' ? 'En Progreso' : 'Pendiente') ?>
+                                        </span>
+                                    </td>
+                                    <td class="td-progress">
+                                        <div class="progress-container">
+                                            <div class="progress-bar">
+                                                <div class="progress-fill" style="width: <?= $progress ?>%"></div>
+                                            </div>
+                                            <span class="progress-text"><?= $progress ?>%</span>
+                                        </div>
+                                    </td>
+                                    <td class="td-actions">
+                                        <div class="action-buttons">
+                                            <a href="?route=clan_leader/get-task-details&task_id=<?= $task['task_id'] ?>" class="btn-action btn-view" title="Ver detalles">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="?route=clan_leader/task_edit&task_id=<?= $task['task_id'] ?>" class="btn-action btn-edit" title="Editar tarea">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <button class="btn-action btn-delete" onclick="deleteTask(<?= $task['task_id'] ?>)" title="Eliminar tarea">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                            <button class="btn-action btn-clone" onclick="openCloneTaskModal(<?= $task['task_id'] ?>)" title="Clonar tarea">
+                                                <i class="fas fa-copy"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                    <td class="td-select">
+                                        <input type="checkbox" class="task-checkbox" data-task-id="<?= $task['task_id'] ?>" data-task-name="<?= htmlspecialchars($task['task_name']) ?>" onchange="updateSelection()">
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <tr>
+                                <td colspan="9" class="text-center">
+                                    <div class="empty-state">
+                                        <div class="empty-icon">
+                                            <i class="fas fa-clipboard-list"></i>
+                                        </div>
+                                        <h3>No hay tareas en este proyecto</h3>
+                                        <p>Crea la primera tarea para comenzar a trabajar en este proyecto.</p>
+                                        <a href="?route=clan_leader/tasks&action=create&project_id=<?= $project['project_id'] ?>" class="btn-create">
+                                            <i class="fas fa-plus"></i>
+                                            Crear Primera Tarea
                                         </a>
-                                        <a href="?route=clan_leader/task_edit&task_id=<?= $task['task_id'] ?>" class="btn-action btn-edit" title="Editar tarea">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <button class="btn-action btn-delete" onclick="deleteTask(<?= $task['task_id'] ?>)" title="Eliminar tarea">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                        <button class="btn-action btn-clone" onclick="openCloneTaskModal(<?= $task['task_id'] ?>)" title="Clonar tarea">
-                                            <i class="fas fa-copy"></i>
-                                        </button>
                                     </div>
-                                </td>
-                                <td class="td-select">
-                                    <input type="checkbox" class="task-checkbox" data-task-id="<?= $task['task_id'] ?>" data-task-name="<?= htmlspecialchars($task['task_name']) ?>" onchange="updateSelection()">
                                 </td>
                             </tr>
-                        <?php endforeach; ?>
+                        <?php endif; ?>
                     </tbody>
                 </table>
             </div>
-            <?php else: ?>
-            <!-- Estado vacío -->
-            <div class="empty-state">
-                <div class="empty-icon">
-                    <i class="fas fa-clipboard-list"></i>
-                </div>
-                <h3>No hay tareas en este proyecto</h3>
-                <p>Crea la primera tarea para comenzar a trabajar en este proyecto.</p>
-                <a href="?route=clan_leader/tasks&action=create&project_id=<?= $project['project_id'] ?>" class="btn-create">
-                    <i class="fas fa-plus"></i>
-                    Crear Primera Tarea
-                </a>
-            </div>
-            <?php endif; ?>
         </div>
     </div>
 </div>
@@ -827,6 +830,288 @@ document.addEventListener('DOMContentLoaded', function() {
 
 .btn-create:hover {
     color: #ffffff !important;
+}
+
+/* Estilos de filtros mejorados */
+.filters-container {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e5e7eb;
+}
+
+.filters-header {
+    width: 100%;
+}
+
+.filters-form {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.filter-group {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    flex: 1;
+}
+
+.filter-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.filter-item label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #374151;
+    white-space: nowrap;
+}
+
+.filter-item select {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background: white;
+    font-size: 0.9rem;
+    color: #374151;
+    min-width: 120px;
+}
+
+.search-container {
+    flex: 1;
+    min-width: 200px;
+}
+
+.search-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-icon {
+    position: absolute;
+    left: 12px;
+    color: #6b7280;
+    font-size: 0.9rem;
+    z-index: 1;
+}
+
+.search-input {
+    width: 100%;
+    padding: 0.5rem 0.75rem 0.5rem 2.5rem;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    color: #374151;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.filter-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-apply-filters,
+.btn-reset-filters {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-apply-filters {
+    background: #3b82f6;
+    color: white;
+}
+
+.btn-apply-filters:hover {
+    background: #2563eb;
+}
+
+.btn-reset-filters {
+    background: #6b7280;
+    color: white;
+}
+
+.btn-reset-filters:hover {
+    background: #4b5563;
+}
+
+/* Estilos de tabla mejorados */
+.tasks-table-container {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    margin-top: 1.5rem;
+}
+
+.tasks-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    table-layout: fixed;
+}
+
+.tasks-table thead {
+    background: #f8fafc;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.tasks-table th {
+    padding: 1rem 1rem;
+    text-align: left;
+    font-weight: 600;
+    color: #374151;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-right: 1px solid #e5e7eb;
+}
+
+.tasks-table th:last-child {
+    border-right: none;
+}
+
+.tasks-table tbody tr {
+    border-bottom: 1px solid #f3f4f6;
+    transition: background-color 0.2s ease;
+}
+
+.tasks-table tbody tr:hover {
+    background-color: #f9fafb;
+}
+
+.tasks-table tbody tr.overdue {
+    background-color: #fef2f2;
+    border-left: 4px solid #dc2626;
+}
+
+.tasks-table tbody tr.overdue:hover {
+    background-color: #fee2e2;
+}
+
+.tasks-table tbody tr.priority-critical {
+    border-left: 4px solid #dc2626;
+}
+
+.tasks-table tbody tr.priority-high {
+    border-left: 4px solid #ea580c;
+}
+
+.tasks-table tbody tr.priority-medium {
+    border-left: 4px solid #d97706;
+}
+
+.tasks-table tbody tr.priority-low {
+    border-left: 4px solid #059669;
+}
+
+.tasks-table tbody tr.completed {
+    opacity: 0.7;
+    background-color: #f8fafc;
+}
+
+.tasks-table tbody tr.completed:hover {
+    opacity: 0.9;
+    background-color: #f1f5f9;
+}
+
+.tasks-table td {
+    padding: 0.875rem 1rem;
+    vertical-align: top;
+    border-right: 1px solid #f3f4f6;
+}
+
+.tasks-table td:last-child {
+    border-right: none;
+}
+
+/* Columnas específicas */
+.th-priority, .td-priority {
+    width: 100px;
+    text-align: center;
+}
+
+.th-task, .td-task {
+    width: 300px;
+}
+
+.th-assigned, .td-assigned {
+    width: 150px;
+}
+
+.th-due-date, .td-due-date {
+    width: 120px;
+}
+
+.th-status, .td-status {
+    width: 120px;
+}
+
+.th-progress, .td-progress {
+    width: 120px;
+}
+
+.th-actions, .td-actions {
+    width: 140px;
+    text-align: center;
+}
+
+.th-select, .td-select {
+    width: 50px;
+    text-align: center;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .tasks-table-container {
+        overflow-x: auto;
+    }
+    
+    .tasks-table {
+        min-width: 1200px;
+    }
+}
+
+@media (max-width: 768px) {
+    .filters-form {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+    }
+    
+    .filter-group {
+        justify-content: space-between;
+    }
+    
+    .search-container {
+        width: 100%;
+    }
+    
+    .tasks-table th,
+    .tasks-table td {
+        padding: 0.75rem 0.5rem;
+        font-size: 0.8rem;
+    }
 }
 </style>
 
