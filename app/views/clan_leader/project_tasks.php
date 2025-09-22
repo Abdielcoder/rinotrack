@@ -101,7 +101,7 @@ ob_start();
                         <div class="filter-group">
                             <div class="filter-item">
                                 <label for="statusFilter">Estado:</label>
-                                <select name="status_filter" id="statusFilter">
+                                <select name="status_filter" id="statusFilter" onchange="filterTasks()">
                                     <option value="">Todos</option>
                                     <option value="pending" <?= (($_GET['status_filter'] ?? '') === 'pending') ? 'selected' : '' ?>>Pendiente</option>
                                     <option value="in_progress" <?= (($_GET['status_filter'] ?? '') === 'in_progress') ? 'selected' : '' ?>>En Progreso</option>
@@ -111,7 +111,7 @@ ob_start();
                             
                             <div class="filter-item">
                                 <label for="perPage">Mostrar:</label>
-                                <select name="per_page" id="perPage">
+                                <select name="per_page" id="perPage" onchange="filterTasks()">
                                     <option value="5" <?= (($_GET['per_page'] ?? '5') === '5') ? 'selected' : '' ?>>5 por página</option>
                                     <option value="10" <?= (($_GET['per_page'] ?? '5') === '10') ? 'selected' : '' ?>>10 por página</option>
                                     <option value="25" <?= (($_GET['per_page'] ?? '5') === '25') ? 'selected' : '' ?>>25 por página</option>
@@ -127,16 +127,13 @@ ob_start();
                                            value="<?= htmlspecialchars($search ?? '') ?>"
                                            placeholder="Buscar tareas..."
                                            class="search-input"
-                                           id="searchInput">
+                                           id="searchInput"
+                                           onkeyup="filterTasks()">
                                 </div>
                             </div>
                             
-                            <!-- Botones de acción -->
+                            <!-- Botón de resetear -->
                             <div class="filter-actions">
-                                <button type="button" class="btn-apply-filters" onclick="applyFilters()">
-                                    <i class="fas fa-filter"></i>
-                                    Aplicar Filtros
-                                </button>
                                 <button type="button" class="btn-reset-filters" onclick="resetFilters()">
                                     <i class="fas fa-undo"></i>
                                     Resetear Filtros
@@ -315,19 +312,60 @@ ob_start();
 </div>
 
 <script>
-// Función para aplicar filtros
-function applyFilters() {
-    const form = document.querySelector('.filters-form');
-    form.submit();
+// Función para filtrar tareas en tiempo real
+function filterTasks() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const statusFilter = document.getElementById('statusFilter').value;
+    const perPage = parseInt(document.getElementById('perPage').value);
+    
+    const rows = document.querySelectorAll('.task-row');
+    let visibleCount = 0;
+    let currentPage = 1;
+    let startIndex = 0;
+    let endIndex = perPage;
+    
+    rows.forEach((row, index) => {
+        const taskName = row.querySelector('.task-name').textContent.toLowerCase();
+        const taskDescription = row.querySelector('.task-description') ? row.querySelector('.task-description').textContent.toLowerCase() : '';
+        const status = row.querySelector('.status-badge').textContent.toLowerCase();
+        
+        // Aplicar filtros
+        const matchesSearch = taskName.includes(searchTerm) || taskDescription.includes(searchTerm);
+        const matchesStatus = !statusFilter || status.includes(statusFilter.toLowerCase());
+        
+        if (matchesSearch && matchesStatus) {
+            visibleCount++;
+            
+            // Mostrar/ocultar según paginación
+            if (visibleCount > startIndex && visibleCount <= endIndex) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        } else {
+            row.style.display = 'none';
+        }
+    });
+    
+    // Actualizar contador de tareas visibles
+    updateTaskCount(visibleCount);
+}
+
+// Función para actualizar el contador de tareas
+function updateTaskCount(count) {
+    // Actualizar las estadísticas en las tarjetas
+    const totalCard = document.querySelector('.stat-card .stat-value');
+    if (totalCard) {
+        totalCard.textContent = count;
+    }
 }
 
 // Función para resetear filtros
 function resetFilters() {
-    const url = new URL(window.location);
-    url.searchParams.delete('search');
-    url.searchParams.delete('status_filter');
-    url.searchParams.delete('per_page');
-    window.location.href = url.toString();
+    document.getElementById('searchInput').value = '';
+    document.getElementById('statusFilter').value = '';
+    document.getElementById('perPage').value = '5';
+    filterTasks();
 }
 
 // Función para actualizar la selección
@@ -575,6 +613,7 @@ document.addEventListener('click', function(e) {
 // Inicializar al cargar la página
 document.addEventListener('DOMContentLoaded', function() {
     updateSelection();
+    filterTasks(); // Aplicar filtros iniciales
 });
 </script>
 
@@ -832,33 +871,17 @@ document.addEventListener('DOMContentLoaded', function() {
     color: #ffffff !important;
 }
 
-/* Estilos de filtros mejorados */
+/* Filtros */
 .filters-container {
-    background: white;
-    border-radius: 12px;
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    border: 1px solid #e5e7eb;
-}
-
-.filters-header {
-    width: 100%;
-}
-
-.filters-form {
     display: flex;
+    gap: 1.5rem;
     align-items: center;
-    gap: 1rem;
-    flex-wrap: wrap;
 }
 
 .filter-group {
     display: flex;
     align-items: center;
     gap: 1rem;
-    flex-wrap: wrap;
-    flex: 1;
 }
 
 .filter-item {
@@ -923,7 +946,6 @@ document.addEventListener('DOMContentLoaded', function() {
     gap: 0.5rem;
 }
 
-.btn-apply-filters,
 .btn-reset-filters {
     padding: 0.5rem 1rem;
     border: none;
@@ -935,183 +957,12 @@ document.addEventListener('DOMContentLoaded', function() {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-}
-
-.btn-apply-filters {
-    background: #3b82f6;
-    color: white;
-}
-
-.btn-apply-filters:hover {
-    background: #2563eb;
-}
-
-.btn-reset-filters {
     background: #6b7280;
     color: white;
 }
 
 .btn-reset-filters:hover {
     background: #4b5563;
-}
-
-/* Estilos de tabla mejorados */
-.tasks-table-container {
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
-    margin-top: 1.5rem;
-}
-
-.tasks-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.9rem;
-    table-layout: fixed;
-}
-
-.tasks-table thead {
-    background: #f8fafc;
-    border-bottom: 2px solid #e2e8f0;
-}
-
-.tasks-table th {
-    padding: 1rem 1rem;
-    text-align: left;
-    font-weight: 600;
-    color: #374151;
-    font-size: 0.85rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    border-right: 1px solid #e5e7eb;
-}
-
-.tasks-table th:last-child {
-    border-right: none;
-}
-
-.tasks-table tbody tr {
-    border-bottom: 1px solid #f3f4f6;
-    transition: background-color 0.2s ease;
-}
-
-.tasks-table tbody tr:hover {
-    background-color: #f9fafb;
-}
-
-.tasks-table tbody tr.overdue {
-    background-color: #fef2f2;
-    border-left: 4px solid #dc2626;
-}
-
-.tasks-table tbody tr.overdue:hover {
-    background-color: #fee2e2;
-}
-
-.tasks-table tbody tr.priority-critical {
-    border-left: 4px solid #dc2626;
-}
-
-.tasks-table tbody tr.priority-high {
-    border-left: 4px solid #ea580c;
-}
-
-.tasks-table tbody tr.priority-medium {
-    border-left: 4px solid #d97706;
-}
-
-.tasks-table tbody tr.priority-low {
-    border-left: 4px solid #059669;
-}
-
-.tasks-table tbody tr.completed {
-    opacity: 0.7;
-    background-color: #f8fafc;
-}
-
-.tasks-table tbody tr.completed:hover {
-    opacity: 0.9;
-    background-color: #f1f5f9;
-}
-
-.tasks-table td {
-    padding: 0.875rem 1rem;
-    vertical-align: top;
-    border-right: 1px solid #f3f4f6;
-}
-
-.tasks-table td:last-child {
-    border-right: none;
-}
-
-/* Columnas específicas */
-.th-priority, .td-priority {
-    width: 100px;
-    text-align: center;
-}
-
-.th-task, .td-task {
-    width: 300px;
-}
-
-.th-assigned, .td-assigned {
-    width: 150px;
-}
-
-.th-due-date, .td-due-date {
-    width: 120px;
-}
-
-.th-status, .td-status {
-    width: 120px;
-}
-
-.th-progress, .td-progress {
-    width: 120px;
-}
-
-.th-actions, .td-actions {
-    width: 140px;
-    text-align: center;
-}
-
-.th-select, .td-select {
-    width: 50px;
-    text-align: center;
-}
-
-/* Responsive */
-@media (max-width: 1200px) {
-    .tasks-table-container {
-        overflow-x: auto;
-    }
-    
-    .tasks-table {
-        min-width: 1200px;
-    }
-}
-
-@media (max-width: 768px) {
-    .filters-form {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 1rem;
-    }
-    
-    .filter-group {
-        justify-content: space-between;
-    }
-    
-    .search-container {
-        width: 100%;
-    }
-    
-    .tasks-table th,
-    .tasks-table td {
-        padding: 0.75rem 0.5rem;
-        font-size: 0.8rem;
-    }
 }
 </style>
 
