@@ -497,7 +497,17 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     
     window.closeCustomNotification = function() {
-        document.getElementById('customNotificationModal').style.display = 'none';
+        const modal = document.getElementById('customNotificationModal');
+        const title = document.getElementById('notificationTitle').textContent;
+        
+        // Si es un mensaje de éxito, cerrar también el modal de agregar miembro y recargar
+        if (title === '¡Éxito!') {
+            closeAddMemberModal();
+            // Recargar la página para mostrar el nuevo miembro
+            window.location.reload();
+        }
+        
+        modal.style.display = 'none';
     };
     
     // Cerrar modal de notificación con tecla Escape
@@ -590,11 +600,7 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Datos recibidos:', data);
             if (data.success) {
                 showCustomNotification('Usuario agregado al clan exitosamente', 'success', '¡Éxito!');
-                setTimeout(() => {
-                    closeAddMemberModal();
-                    // Recargar la página para mostrar el nuevo miembro
-                    window.location.reload();
-                }, 1500); // Esperar 1.5 segundos para que el usuario vea el mensaje
+                // El modal se cerrará manualmente cuando el usuario haga clic en Aceptar
             } else {
                 showCustomNotification('Error al agregar usuario: ' + (data.message || 'Error desconocido'), 'error', 'Error');
             }
@@ -970,7 +976,7 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 .custom-notification-icon.success {
-    background: linear-gradient(135deg, #10b981, #059669);
+    background: linear-gradient(135deg, #1e3a8a, #1e40af);
 }
 
 .custom-notification-icon.error {
