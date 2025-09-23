@@ -947,7 +947,7 @@ document.addEventListener('DOMContentLoaded', function() {
 .dropdown-user-avatar {
     width: 545px;
     height: 5545px;
-    border-radius: 50%;
+    
     overflow: hidden;
     display: flex;
     align-items: center;
@@ -958,8 +958,8 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 .dropdown-avatar-image {
-    width: 110%;
-    height: 110%;
+    width: 310%;
+    height:310%;
     object-fit: cover;
     border-radius: 50%;
     display: block;
