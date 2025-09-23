@@ -52,12 +52,12 @@ ob_start();
                                              alt="<?php echo htmlspecialchars($member['full_name']); ?>" 
                                              class="avatar-image"
                                              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                        <div class="avatar-initials" style="display: none;">
-                                            <?php echo strtoupper(substr($member['full_name'], 0, 1) . substr(explode(' ', $member['full_name'])[1] ?? '', 0, 1)); ?>
+                                        <div class="avatar-initials" style="display: none;" data-user-id="<?php echo $member['user_id']; ?>">
+                                            <?php echo strtoupper(substr($member['full_name'], 0, 1)); ?>
                                         </div>
                                     <?php else: ?>
-                                        <div class="avatar-initials">
-                                            <?php echo strtoupper(substr($member['full_name'], 0, 1) . substr(explode(' ', $member['full_name'])[1] ?? '', 0, 1)); ?>
+                                        <div class="avatar-initials" data-user-id="<?php echo $member['user_id']; ?>">
+                                            <?php echo strtoupper(substr($member['full_name'], 0, 1)); ?>
                                         </div>
                                     <?php endif; ?>
                                 </div>
@@ -308,27 +308,26 @@ document.addEventListener('DOMContentLoaded', function() {
             item.className = 'dropdown-item';
             item.dataset.userId = user.user_id;
             
-            // Generar iniciales
+            // Generar inicial (solo primera letra)
             const fullName = user.full_name || 'Sin nombre';
-            const nameParts = fullName.split(' ');
-            const initials = (nameParts[0] ? nameParts[0][0] : '') + (nameParts[1] ? nameParts[1][0] : '');
+            const initial = fullName.charAt(0).toUpperCase();
             
             // Crear avatar
             let avatarHtml = '';
             if (user.avatar_path && user.avatar_path !== '') {
                 avatarHtml = `
-                    <img src="${APP_URL}${user.avatar_path}" 
-                         alt="${fullName}" 
+                    <img src="${APP_URL}${user.avatar_path}"
+                         alt="${fullName}"
                          class="dropdown-avatar-image"
                          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                    <div class="dropdown-avatar-initials" style="display: none;">
-                        ${initials.toUpperCase()}
+                    <div class="dropdown-avatar-initials" style="display: none;" data-user-id="${user.user_id}">
+                        ${initial}
                     </div>
                 `;
             } else {
                 avatarHtml = `
-                    <div class="dropdown-avatar-initials">
-                        ${initials.toUpperCase()}
+                    <div class="dropdown-avatar-initials" data-user-id="${user.user_id}">
+                        ${initial}
                     </div>
                 `;
             }
@@ -946,8 +945,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 /* Estilos para avatares en el dropdown */
 .dropdown-user-avatar {
-    width: 32px;
-    height: 32px;
+    width: 45px;
+    height: 45px;
     border-radius: 50%;
     overflow: hidden;
     display: flex;
@@ -956,6 +955,7 @@ document.addEventListener('DOMContentLoaded', function() {
     background: linear-gradient(135deg, #e5e7eb, #d1d5db);
     position: relative;
     flex-shrink: 0;
+    border: 2px solid #f3f4f6;
 }
 
 .dropdown-avatar-image {
@@ -973,12 +973,41 @@ document.addEventListener('DOMContentLoaded', function() {
     justify-content: center;
     background: linear-gradient(135deg, #3b82f6, #2563eb);
     color: white;
-    font-weight: 600;
-    font-size: 12px;
+    font-weight: 700;
+    font-size: 18px;
     border-radius: 50%;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0;
 }
+
+/* Colores específicos por user_id para las iniciales del dropdown (mismos que los avatares principales) */
+.dropdown-avatar-initials[data-user-id="1"] { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+.dropdown-avatar-initials[data-user-id="2"] { background: linear-gradient(135deg, #10b981, #059669); }
+.dropdown-avatar-initials[data-user-id="4"] { background: linear-gradient(135deg, #f59e0b, #d97706); }
+.dropdown-avatar-initials[data-user-id="5"] { background: linear-gradient(135deg, #ef4444, #dc2626); }
+.dropdown-avatar-initials[data-user-id="6"] { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+.dropdown-avatar-initials[data-user-id="9"] { background: linear-gradient(135deg, #06b6d4, #0891b2); }
+.dropdown-avatar-initials[data-user-id="10"] { background: linear-gradient(135deg, #84cc16, #65a30d); }
+.dropdown-avatar-initials[data-user-id="11"] { background: linear-gradient(135deg, #f97316, #ea580c); }
+.dropdown-avatar-initials[data-user-id="12"] { background: linear-gradient(135deg, #ec4899, #db2777); }
+.dropdown-avatar-initials[data-user-id="13"] { background: linear-gradient(135deg, #14b8a6, #0d9488); }
+.dropdown-avatar-initials[data-user-id="14"] { background: linear-gradient(135deg, #a855f7, #9333ea); }
+.dropdown-avatar-initials[data-user-id="15"] { background: linear-gradient(135deg, #f59e0b, #d97706); }
+.dropdown-avatar-initials[data-user-id="16"] { background: linear-gradient(135deg, #ef4444, #dc2626); }
+.dropdown-avatar-initials[data-user-id="17"] { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+.dropdown-avatar-initials[data-user-id="18"] { background: linear-gradient(135deg, #10b981, #059669); }
+.dropdown-avatar-initials[data-user-id="19"] { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+.dropdown-avatar-initials[data-user-id="20"] { background: linear-gradient(135deg, #06b6d4, #0891b2); }
+.dropdown-avatar-initials[data-user-id="21"] { background: linear-gradient(135deg, #84cc16, #65a30d); }
+.dropdown-avatar-initials[data-user-id="22"] { background: linear-gradient(135deg, #f97316, #ea580c); }
+.dropdown-avatar-initials[data-user-id="23"] { background: linear-gradient(135deg, #ec4899, #db2777); }
+.dropdown-avatar-initials[data-user-id="24"] { background: linear-gradient(135deg, #14b8a6, #0d9488); }
+.dropdown-avatar-initials[data-user-id="25"] { background: linear-gradient(135deg, #a855f7, #9333ea); }
+.dropdown-avatar-initials[data-user-id="26"] { background: linear-gradient(135deg, #f59e0b, #d97706); }
+.dropdown-avatar-initials[data-user-id="27"] { background: linear-gradient(135deg, #ef4444, #dc2626); }
+.dropdown-avatar-initials[data-user-id="28"] { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+.dropdown-avatar-initials[data-user-id="29"] { background: linear-gradient(135deg, #10b981, #059669); }
+.dropdown-avatar-initials[data-user-id="30"] { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
 
 /* Estilos para el spinner de carga */
 .fa-spinner {
@@ -1121,8 +1150,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 /* Estilos para avatares */
 .member-avatar {
-    width: 50px;
-    height: 50px;
+    width: 60px;
+    height: 60px;
     border-radius: 50%;
     overflow: hidden;
     display: flex;
@@ -1130,6 +1159,7 @@ document.addEventListener('DOMContentLoaded', function() {
     justify-content: center;
     background: linear-gradient(135deg, #e5e7eb, #d1d5db);
     position: relative;
+    border: 2px solid #f3f4f6;
 }
 
 .avatar-image {
@@ -1147,22 +1177,43 @@ document.addEventListener('DOMContentLoaded', function() {
     justify-content: center;
     background: linear-gradient(135deg, #3b82f6, #2563eb);
     color: white;
-    font-weight: 600;
-    font-size: 16px;
+    font-weight: 700;
+    font-size: 20px;
     border-radius: 50%;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0;
 }
 
-/* Colores alternativos para las iniciales */
-.avatar-initials:nth-child(1) { background: linear-gradient(135deg, #3b82f6, #2563eb); }
-.avatar-initials:nth-child(2) { background: linear-gradient(135deg, #10b981, #059669); }
-.avatar-initials:nth-child(3) { background: linear-gradient(135deg, #f59e0b, #d97706); }
-.avatar-initials:nth-child(4) { background: linear-gradient(135deg, #ef4444, #dc2626); }
-.avatar-initials:nth-child(5) { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
-.avatar-initials:nth-child(6) { background: linear-gradient(135deg, #06b6d4, #0891b2); }
-.avatar-initials:nth-child(7) { background: linear-gradient(135deg, #84cc16, #65a30d); }
-.avatar-initials:nth-child(8) { background: linear-gradient(135deg, #f97316, #ea580c); }
+/* Colores específicos por user_id para las iniciales */
+.avatar-initials[data-user-id="1"] { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+.avatar-initials[data-user-id="2"] { background: linear-gradient(135deg, #10b981, #059669); }
+.avatar-initials[data-user-id="4"] { background: linear-gradient(135deg, #f59e0b, #d97706); }
+.avatar-initials[data-user-id="5"] { background: linear-gradient(135deg, #ef4444, #dc2626); }
+.avatar-initials[data-user-id="6"] { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+.avatar-initials[data-user-id="9"] { background: linear-gradient(135deg, #06b6d4, #0891b2); }
+.avatar-initials[data-user-id="10"] { background: linear-gradient(135deg, #84cc16, #65a30d); }
+.avatar-initials[data-user-id="11"] { background: linear-gradient(135deg, #f97316, #ea580c); }
+.avatar-initials[data-user-id="12"] { background: linear-gradient(135deg, #ec4899, #db2777); }
+.avatar-initials[data-user-id="13"] { background: linear-gradient(135deg, #14b8a6, #0d9488); }
+.avatar-initials[data-user-id="14"] { background: linear-gradient(135deg, #a855f7, #9333ea); }
+.avatar-initials[data-user-id="15"] { background: linear-gradient(135deg, #f59e0b, #d97706); }
+.avatar-initials[data-user-id="16"] { background: linear-gradient(135deg, #ef4444, #dc2626); }
+.avatar-initials[data-user-id="17"] { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+.avatar-initials[data-user-id="18"] { background: linear-gradient(135deg, #10b981, #059669); }
+.avatar-initials[data-user-id="19"] { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+.avatar-initials[data-user-id="20"] { background: linear-gradient(135deg, #06b6d4, #0891b2); }
+
+/* Colores adicionales para más usuarios */
+.avatar-initials[data-user-id="21"] { background: linear-gradient(135deg, #84cc16, #65a30d); }
+.avatar-initials[data-user-id="22"] { background: linear-gradient(135deg, #f97316, #ea580c); }
+.avatar-initials[data-user-id="23"] { background: linear-gradient(135deg, #ec4899, #db2777); }
+.avatar-initials[data-user-id="24"] { background: linear-gradient(135deg, #14b8a6, #0d9488); }
+.avatar-initials[data-user-id="25"] { background: linear-gradient(135deg, #a855f7, #9333ea); }
+.avatar-initials[data-user-id="26"] { background: linear-gradient(135deg, #f59e0b, #d97706); }
+.avatar-initials[data-user-id="27"] { background: linear-gradient(135deg, #ef4444, #dc2626); }
+.avatar-initials[data-user-id="28"] { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+.avatar-initials[data-user-id="29"] { background: linear-gradient(135deg, #10b981, #059669); }
+.avatar-initials[data-user-id="30"] { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
 
 /* Responsive para Modal */
 @media (max-width: 768px) {
@@ -1184,12 +1235,21 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     .member-avatar {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .avatar-initials {
+        font-size: 18px;
+    }
+    
+    .dropdown-user-avatar {
         width: 40px;
         height: 40px;
     }
     
-    .avatar-initials {
-        font-size: 14px;
+    .dropdown-avatar-initials {
+        font-size: 16px;
     }
 }
 </style>
