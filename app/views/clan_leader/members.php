@@ -945,8 +945,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 /* Estilos para avatares en el dropdown */
 .dropdown-user-avatar {
-    width: 45px;
-    height: 45px;
+    width: 545px;
+    height: 5545px;
     border-radius: 50%;
     overflow: hidden;
     display: flex;
