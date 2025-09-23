@@ -433,30 +433,142 @@ function closeEditProjectModal() {
 // Eliminar proyecto
 function deleteProject(projectId, projectName) {
     console.log('deleteProject llamado con:', projectId, projectName);
-    if (confirm(`¿Estás seguro de que quieres eliminar el proyecto "${projectName}"?`)) {
-        const formData = new FormData();
-        formData.append('projectId', projectId);
-        
-        fetch('?route=clan_leader/delete-project', {
-            method: 'POST',
-            credentials: 'same-origin',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showToast(data.message, 'success');
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1500);
-            } else {
-                showToast(data.message, 'error');
+    
+    showConfirmationModal({
+        title: 'Eliminar Proyecto',
+        message: `¿Estás seguro de que quieres eliminar el proyecto "${projectName}"?\n\nEsta acción no se puede deshacer.`,
+        type: 'danger',
+        confirmText: 'Eliminar',
+        cancelText: 'Cancelar',
+        onConfirm: () => {
+            const formData = new FormData();
+            formData.append('projectId', projectId);
+            
+            fetch('?route=clan_leader/delete-project', {
+                method: 'POST',
+                credentials: 'same-origin',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    showToast(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Error de conexión', 'error');
+            });
+        }
+    });
+}
+
+// Función para mostrar modal de confirmación personalizado
+function showConfirmationModal(options) {
+    const {
+        title = 'Confirmar Acción',
+        message = '¿Estás seguro de que quieres realizar esta acción?',
+        type = 'warning',
+        confirmText = 'Confirmar',
+        cancelText = 'Cancelar',
+        onConfirm = null,
+        onCancel = null
+    } = options;
+
+    // Crear el HTML del modal
+    const modalHTML = `
+        <div class="confirmation-modal-overlay" id="confirmationModalOverlay">
+            <div class="confirmation-modal" id="confirmationModal">
+                <div class="confirmation-modal-header">
+                    <h3 class="confirmation-modal-title">
+                        <i class="fas fa-${getIconForType(type)}"></i>
+                        ${title}
+                    </h3>
+                </div>
+                <div class="confirmation-modal-body">
+                    <i class="fas fa-${getIconForType(type)} confirmation-modal-icon ${type}"></i>
+                    <p class="confirmation-modal-message">${message}</p>
+                    <div class="confirmation-modal-actions">
+                        <button class="confirmation-modal-btn cancel" id="confirmationCancelBtn">
+                            <i class="fas fa-times"></i>
+                            ${cancelText}
+                        </button>
+                        <button class="confirmation-modal-btn confirm" id="confirmationConfirmBtn">
+                            <i class="fas fa-trash"></i>
+                            ${confirmText}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Agregar el modal al DOM
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+    const overlay = document.getElementById('confirmationModalOverlay');
+    const modal = document.getElementById('confirmationModal');
+    const confirmBtn = document.getElementById('confirmationConfirmBtn');
+    const cancelBtn = document.getElementById('confirmationCancelBtn');
+
+    // Mostrar el modal con animación
+    setTimeout(() => {
+        overlay.classList.add('show');
+    }, 10);
+
+    // Función para cerrar el modal
+    const closeModal = (result) => {
+        overlay.classList.remove('show');
+        setTimeout(() => {
+            document.body.removeChild(overlay);
+            if (result && onConfirm) {
+                onConfirm();
+            } else if (!result && onCancel) {
+                onCancel();
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showToast('Error de conexión', 'error');
-        });
+        }, 300);
+    };
+
+    // Event listeners
+    confirmBtn.addEventListener('click', () => closeModal(true));
+    cancelBtn.addEventListener('click', () => closeModal(false));
+    
+    // Cerrar al hacer clic en el overlay
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+            closeModal(false);
+        }
+    });
+
+    // Cerrar con Escape
+    const handleEscape = (e) => {
+        if (e.key === 'Escape') {
+            closeModal(false);
+            document.removeEventListener('keydown', handleEscape);
+        }
+    };
+    
+    document.addEventListener('keydown', handleEscape);
+}
+
+// Función auxiliar para obtener el icono según el tipo
+function getIconForType(type) {
+    switch (type) {
+        case 'danger':
+            return 'exclamation-triangle';
+        case 'warning':
+            return 'exclamation-triangle';
+        case 'info':
+            return 'info-circle';
+        case 'success':
+            return 'check-circle';
+        default:
+            return 'question-circle';
     }
 }
 
@@ -2826,6 +2938,136 @@ document.addEventListener('DOMContentLoaded', function() {
     
     .btn-primary, .btn-secondary {
         justify-content: center;
+        width: 100%;
+    }
+}
+
+/* Estilos para modal de confirmación personalizado */
+.confirmation-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    backdrop-filter: blur(4px);
+}
+
+.confirmation-modal-overlay.show {
+    opacity: 1;
+}
+
+.confirmation-modal {
+    background: white;
+    border-radius: 12px;
+    padding: 0;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    transform: scale(0.9);
+    transition: transform 0.3s ease;
+}
+
+.confirmation-modal-overlay.show .confirmation-modal {
+    transform: scale(1);
+}
+
+.confirmation-modal-header {
+    padding: 20px 24px 0;
+}
+
+.confirmation-modal-title {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1f2937;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.confirmation-modal-body {
+    padding: 20px 24px 24px;
+    text-align: center;
+}
+
+.confirmation-modal-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.confirmation-modal-icon.warning {
+    color: #f59e0b;
+}
+
+.confirmation-modal-icon.danger {
+    color: #ef4444;
+}
+
+.confirmation-modal-message {
+    margin: 0 0 1.5rem 0;
+    color: #6b7280;
+    line-height: 1.5;
+    white-space: pre-line;
+}
+
+.confirmation-modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.confirmation-modal-btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.confirmation-modal-btn.cancel {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.confirmation-modal-btn.cancel:hover {
+    background: #e5e7eb;
+    transform: translateY(-1px);
+}
+
+.confirmation-modal-btn.confirm {
+    background: #ef4444;
+    color: white;
+}
+
+.confirmation-modal-btn.confirm:hover {
+    background: #dc2626;
+    transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+    .confirmation-modal {
+        width: 95%;
+        margin: 20px;
+    }
+    
+    .confirmation-modal-actions {
+        flex-direction: column;
+    }
+    
+    .confirmation-modal-btn {
         width: 100%;
     }
 }
