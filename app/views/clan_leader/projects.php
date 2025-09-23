@@ -36,19 +36,21 @@ ob_start();
             </div>
         </div>
         
-        <!-- Búsqueda consistente -->
+        <!-- Búsqueda en tiempo real -->
         <div class="search-minimal">
-            <form method="GET" action="?route=clan_leader/projects" class="search-form">
+            <div class="search-form">
                 <div class="search-input">
                     <i class="fas fa-search"></i>
-                    <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" 
-                           placeholder="Buscar proyectos...">
+                    <input type="text" id="searchInput" value="<?php echo htmlspecialchars($search); ?>" 
+                           placeholder="Buscar proyectos..." autocomplete="off">
+                    <button type="button" id="clearSearch" class="btn-clear" style="display: none;">
+                        <i class="fas fa-times"></i>
+                    </button>
                 </div>
-                <button type="submit" class="btn-minimal">Buscar</button>
-                <?php if (!empty($search)): ?>
-                    <a href="?route=clan_leader/projects" class="btn-minimal secondary">Limpiar</a>
-                <?php endif; ?>
-            </form>
+                <div class="search-loading" id="searchLoading" style="display: none;">
+                    <i class="fas fa-spinner fa-spin"></i>
+                </div>
+            </div>
         </div>
     </header>
 
@@ -838,6 +840,396 @@ function toggleProjectDelegation(projectId, isAllowed) {
         }
     });
 }
+
+// ========== BÚSQUEDA EN TIEMPO REAL ==========
+
+let searchTimeout;
+let isSearching = false;
+
+// Función para realizar búsqueda con debounce
+function performSearch(searchTerm) {
+    // Limpiar timeout anterior
+    if (searchTimeout) {
+        clearTimeout(searchTimeout);
+    }
+    
+    // Si el término está vacío, mostrar todos los proyectos
+    if (!searchTerm.trim()) {
+        clearSearch();
+        return;
+    }
+    
+    // Mostrar loading
+    showSearchLoading(true);
+    
+    // Configurar timeout para evitar demasiadas peticiones
+    searchTimeout = setTimeout(() => {
+        fetch('?route=clan_leader/search-projects', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            credentials: 'same-origin',
+            body: `search=${encodeURIComponent(searchTerm)}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                updateProjectsDisplay(data.projects);
+                updateURL(searchTerm);
+            } else {
+                showToast('Error en la búsqueda: ' + data.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error en búsqueda:', error);
+            showToast('Error de conexión en la búsqueda', 'error');
+        })
+        .finally(() => {
+            showSearchLoading(false);
+        });
+    }, 300); // 300ms de debounce
+}
+
+// Función para limpiar búsqueda
+function clearSearch() {
+    const searchInput = document.getElementById('searchInput');
+    const clearBtn = document.getElementById('clearSearch');
+    
+    searchInput.value = '';
+    clearBtn.style.display = 'none';
+    
+    // Recargar la página sin parámetros de búsqueda
+    window.location.href = '?route=clan_leader/projects';
+}
+
+// Función para mostrar/ocultar loading
+function showSearchLoading(show) {
+    const loading = document.getElementById('searchLoading');
+    const searchInput = document.getElementById('searchInput');
+    
+    if (show) {
+        loading.style.display = 'block';
+        searchInput.style.paddingRight = '60px';
+        isSearching = true;
+    } else {
+        loading.style.display = 'none';
+        searchInput.style.paddingRight = '40px';
+        isSearching = false;
+    }
+}
+
+// Función para actualizar la URL sin recargar la página
+function updateURL(searchTerm) {
+    const url = new URL(window.location);
+    if (searchTerm.trim()) {
+        url.searchParams.set('search', searchTerm);
+    } else {
+        url.searchParams.delete('search');
+    }
+    window.history.pushState({}, '', url);
+}
+
+// Función para actualizar la visualización de proyectos
+function updateProjectsDisplay(projects) {
+    const contentMinimal = document.querySelector('.content-minimal');
+    
+    if (projects.length === 0) {
+        // Mostrar estado vacío
+        contentMinimal.innerHTML = `
+            <div class="empty-minimal">
+                <div class="empty-icon-minimal">
+                    🔍
+                </div>
+                <h3>No se encontraron proyectos</h3>
+                <p>No hay proyectos que coincidan con tu búsqueda.</p>
+                <button class="btn-minimal secondary" onclick="clearSearch()">
+                    <i class="fas fa-times"></i>
+                    Limpiar búsqueda
+                </button>
+            </div>
+        `;
+        return;
+    }
+    
+    // Determinar qué vista está activa
+    const cardsView = document.getElementById('cardsView');
+    const listView = document.getElementById('listView');
+    const isListView = listView.style.display !== 'none';
+    
+    if (isListView) {
+        updateListView(projects);
+    } else {
+        updateCardsView(projects);
+    }
+}
+
+// Función para actualizar vista de cards
+function updateCardsView(projects) {
+    const cardsView = document.getElementById('cardsView');
+    const projectsGrid = cardsView.querySelector('.projects-grid-minimal');
+    
+    projectsGrid.innerHTML = projects.map(project => `
+        <div class="project-item-enhanced">
+            <!-- Header del Proyecto -->
+            <div class="project-info-header">
+                <div class="project-icon-minimal">
+                    <i class="fas fa-project-diagram icon-gradient"></i>
+                </div>
+                <div class="project-details-minimal">
+                    <div class="project-name-minimal">${escapeHtml(project.project_name)}</div>
+                    ${project.description ? `<div class="project-description-minimal">${escapeHtml(project.description)}</div>` : ''}
+                    <div class="project-meta-minimal">
+                        <span class="project-status-minimal status-${project.status}">
+                            ${capitalizeFirst(project.status)}
+                        </span>
+                        ${project.kpi_points && project.kpi_points > 0 ? `
+                        <span class="project-kpi-minimal">
+                            <i class="fas fa-star"></i>
+                            ${formatNumber(project.kpi_points)} KPI
+                        </span>
+                        ` : ''}
+                    </div>
+                </div>
+                <div class="project-menu-minimal">
+                    <button class="btn-menu-minimal" onclick="toggleProjectMenu(${project.project_id})">
+                        <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                    <div class="dropdown-menu-minimal" id="projectMenu${project.project_id}">
+                        <button class="menu-item-minimal" onclick="openEditProjectModal(${project.project_id}, ${JSON.stringify(project.project_name)}, ${JSON.stringify(project.description)}, ${JSON.stringify(project.time_limit || '')})">
+                            <i class="fas fa-edit"></i>
+                            Editar
+                        </button>
+                        <button class="menu-item-minimal" onclick="openCloneProjectModal(${project.project_id})">
+                            <i class="fas fa-copy"></i>
+                            Clonar
+                        </button>
+                        <button class="menu-item-minimal danger" onclick="deleteProject(${project.project_id}, ${JSON.stringify(project.project_name)})">
+                            <i class="fas fa-trash"></i>
+                            Eliminar
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            ${project.description ? `<div class="project-description">${escapeHtml(project.description)}</div>` : ''}
+            
+            <!-- Estadísticas del Proyecto -->
+            <div class="project-stats-minimal">
+                <div class="stat-item-minimal">
+                    <div class="stat-icon-minimal">
+                        <i class="fas fa-tasks"></i>
+                    </div>
+                    <div class="stat-content-minimal">
+                        <div class="stat-number-minimal">${project.total_tasks || 0}</div>
+                        <div class="stat-label-minimal">Total</div>
+                    </div>
+                </div>
+                <div class="stat-item-minimal completed">
+                    <div class="stat-icon-minimal">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-content-minimal">
+                        <div class="stat-number-minimal">${project.completed_tasks || 0}</div>
+                        <div class="stat-label-minimal">Completadas</div>
+                    </div>
+                </div>
+                <div class="stat-item-minimal progress">
+                    <div class="stat-icon-minimal">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="stat-content-minimal">
+                        <div class="stat-number-minimal">${project.progress_percentage || 0}%</div>
+                        <div class="stat-label-minimal">Progreso</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Barra de Progreso -->
+            <div class="progress-bar-minimal">
+                <div class="progress-fill-minimal" style="width: ${project.progress_percentage || 0}%"></div>
+            </div>
+            
+            <!-- Delegación -->
+            <div class="delegation-section-minimal">
+                <label class="checkbox-label-minimal">
+                    <input type="checkbox" 
+                           class="delegation-toggle-hidden" 
+                           data-project-id="${project.project_id}"
+                           ${project.allow_delegation ? 'checked' : ''}
+                           onchange="toggleProjectDelegation(${project.project_id}, this.checked)"
+                           style="display: none !important; position: absolute !important; left: -9999px !important;">
+                    <span class="checkmark-custom"></span>
+                    <span class="checkbox-text">
+                        <i class="fas fa-user-plus"></i>
+                        Permitir delegación de tareas
+                    </span>
+                </label>
+            </div>
+            
+            <!-- Acciones del Proyecto -->
+            <div class="project-actions-minimal">
+                <a href="?route=clan_leader/tasks&project_id=${project.project_id}" class="btn-minimal primary">
+                    <i class="fas fa-eye"></i>
+                    Ver Tareas
+                </a>
+                <button class="btn-minimal secondary" onclick="openCreateTaskModal(${project.project_id})">
+                    <i class="fas fa-plus"></i>
+                    Nueva Tarea
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Función para actualizar vista de lista
+function updateListView(projects) {
+    const listView = document.getElementById('listView');
+    const projectsTable = listView.querySelector('.projects-table-minimal');
+    const headerRow = projectsTable.querySelector('.table-header-minimal');
+    
+    const rowsHtml = projects.map(project => `
+        <div class="table-row-minimal">
+            <div class="cell-project">
+                <div class="project-icon-list">
+                    <i class="fas fa-project-diagram"></i>
+                </div>
+                <div class="project-info-list">
+                    <div class="project-name-list">${escapeHtml(project.project_name)}</div>
+                    ${project.description ? `<div class="project-description-list">${escapeHtml(project.description)}</div>` : ''}
+                    ${project.kpi_points && project.kpi_points > 0 ? `
+                    <div class="project-kpi-list">
+                        <i class="fas fa-star"></i>
+                        ${formatNumber(project.kpi_points)} KPI
+                    </div>
+                    ` : ''}
+                </div>
+            </div>
+            
+            <div class="cell-status">
+                <span class="status-badge-list status-${project.status}">
+                    ${capitalizeFirst(project.status)}
+                </span>
+            </div>
+            
+            <div class="cell-progress">
+                <div class="progress-container-list">
+                    <div class="progress-bar-list">
+                        <div class="progress-fill-list" style="width: ${project.progress_percentage || 0}%"></div>
+                    </div>
+                    <span class="progress-text-list">${project.progress_percentage || 0}%</span>
+                </div>
+            </div>
+            
+            <div class="cell-tasks">
+                <div class="tasks-summary-list">
+                    <span class="tasks-total">${project.total_tasks || 0}</span>
+                    <span class="tasks-separator">/</span>
+                    <span class="tasks-completed">${project.completed_tasks || 0}</span>
+                </div>
+            </div>
+            
+            <div class="cell-actions">
+                <div class="actions-list">
+                    <a href="?route=clan_leader/tasks&project_id=${project.project_id}" class="btn-list-action primary" title="Ver Tareas">
+                        <i class="fas fa-eye"></i>
+                    </a>
+                    <button class="btn-list-action secondary" onclick="openCreateTaskModal(${project.project_id})" title="Nueva Tarea">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                    <div class="dropdown-container">
+                        <button class="btn-list-action menu" onclick="toggleListMenu(${project.project_id})" title="Más opciones">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                        <div class="dropdown-menu-list" id="listMenu${project.project_id}">
+                            <button class="menu-item-list" onclick="openEditProjectModal(${project.project_id}, ${JSON.stringify(project.project_name)}, ${JSON.stringify(project.description)}, ${JSON.stringify(project.time_limit || '')})">
+                                <i class="fas fa-edit"></i>
+                                Editar
+                            </button>
+                            <button class="menu-item-list" onclick="openCloneProjectModal(${project.project_id})">
+                                <i class="fas fa-copy"></i>
+                                Clonar
+                            </button>
+                            <button class="menu-item-list danger" onclick="deleteProject(${project.project_id}, ${JSON.stringify(project.project_name)})">
+                                <i class="fas fa-trash"></i>
+                                Eliminar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+    
+    // Reemplazar todas las filas excepto el header
+    const allRows = projectsTable.querySelectorAll('.table-row-minimal');
+    allRows.forEach(row => row.remove());
+    
+    // Insertar las nuevas filas después del header
+    headerRow.insertAdjacentHTML('afterend', rowsHtml);
+}
+
+// Funciones auxiliares
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function capitalizeFirst(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+function formatNumber(num) {
+    return new Intl.NumberFormat().format(num);
+}
+
+// Inicializar eventos de búsqueda
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    const clearBtn = document.getElementById('clearSearch');
+    
+    // Evento para búsqueda en tiempo real
+    searchInput.addEventListener('input', function(e) {
+        const searchTerm = e.target.value;
+        
+        // Mostrar/ocultar botón limpiar
+        if (searchTerm.trim()) {
+            clearBtn.style.display = 'block';
+        } else {
+            clearBtn.style.display = 'none';
+        }
+        
+        // Realizar búsqueda
+        performSearch(searchTerm);
+    });
+    
+    // Evento para botón limpiar
+    clearBtn.addEventListener('click', function() {
+        clearSearch();
+    });
+    
+    // Mostrar botón limpiar si hay búsqueda inicial
+    if (searchInput.value.trim()) {
+        clearBtn.style.display = 'block';
+    }
+    
+    // Manejar navegación del navegador (atrás/adelante)
+    window.addEventListener('popstate', function(e) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const searchParam = urlParams.get('search') || '';
+        searchInput.value = searchParam;
+        
+        if (searchParam.trim()) {
+            clearBtn.style.display = 'block';
+            performSearch(searchParam);
+        } else {
+            clearBtn.style.display = 'none';
+            // Recargar página para mostrar todos los proyectos
+            window.location.reload();
+        }
+    });
+});
 </script>
 
 <style>
@@ -1665,6 +2057,91 @@ function toggleProjectDelegation(projectId, isAllowed) {
 
 .menu-item-list.danger:hover {
     background: rgba(231, 76, 60, 0.05);
+}
+
+/* Estilos para búsqueda en tiempo real */
+.search-input {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-input input {
+    padding-right: 40px;
+    transition: padding-right 0.3s ease;
+}
+
+.search-input .btn-clear {
+    position: absolute;
+    right: 10px;
+    background: none;
+    border: none;
+    color: #7f8c8d;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+}
+
+.search-input .btn-clear:hover {
+    background: rgba(231, 76, 60, 0.1);
+    color: #e74c3c;
+}
+
+.search-loading {
+    position: absolute;
+    right: 45px;
+    color: #667eea;
+    font-size: 14px;
+}
+
+/* Animación para el loading */
+.search-loading i {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Mejorar el estilo del campo de búsqueda */
+.search-minimal .search-input {
+    position: relative;
+    flex: 1;
+    max-width: 400px;
+}
+
+.search-minimal .search-input input {
+    width: 100%;
+    padding: 12px 16px;
+    padding-right: 40px;
+    border: 2px solid rgba(102, 126, 234, 0.2);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.9);
+    font-size: 14px;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.search-minimal .search-input input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    background: white;
+}
+
+.search-minimal .search-input i.fa-search {
+    position: absolute;
+    left: 12px;
+    color: #7f8c8d;
+    font-size: 14px;
+    pointer-events: none;
 }
 
 /* Responsive design */

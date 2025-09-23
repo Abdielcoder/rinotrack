@@ -542,6 +542,50 @@ class ClanLeaderController {
     }
     
     /**
+     * Búsqueda AJAX de proyectos
+     */
+    public function searchProjects() {
+        // Verificar autenticación
+        $this->requireAuth();
+        
+        // Verificar permisos de líder de clan
+        if (!$this->hasClanLeaderAccess()) {
+            echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
+            return;
+        }
+        
+        // Obtener término de búsqueda
+        $search = $_POST['search'] ?? '';
+        
+        try {
+            // Verificar que el usuario tiene clan asignado
+            if (!$this->userClan || !isset($this->userClan['clan_id'])) {
+                echo json_encode(['success' => true, 'projects' => []]);
+                return;
+            }
+            
+            // Realizar búsqueda
+            $projects = empty($search) ? 
+                $this->projectModel->getByClan($this->userClan['clan_id']) : 
+                $this->searchProjects($search);
+            
+            // Reindexar array
+            $projects = array_values($projects);
+            
+            echo json_encode([
+                'success' => true, 
+                'projects' => $projects,
+                'search_term' => $search,
+                'total_found' => count($projects)
+            ]);
+            
+        } catch (Exception $e) {
+            error_log('Error en búsqueda de proyectos: ' . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'Error interno del servidor']);
+        }
+    }
+    
+    /**
      * Crear nuevo proyecto
      */
     public function createProject() {
