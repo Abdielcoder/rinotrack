@@ -47,7 +47,19 @@ ob_start();
                         <div class="member-item">
                             <div class="member-info">
                                 <div class="member-avatar">
-                                    <i class="fas fa-user"></i>
+                                    <?php if (!empty($member['avatar_path']) && $member['avatar_path'] !== ''): ?>
+                                        <img src="<?php echo APP_URL . htmlspecialchars($member['avatar_path']); ?>" 
+                                             alt="<?php echo htmlspecialchars($member['full_name']); ?>" 
+                                             class="avatar-image"
+                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <div class="avatar-initials" style="display: none;">
+                                            <?php echo strtoupper(substr($member['full_name'], 0, 1) . substr(explode(' ', $member['full_name'])[1] ?? '', 0, 1)); ?>
+                                        </div>
+                                    <?php else: ?>
+                                        <div class="avatar-initials">
+                                            <?php echo strtoupper(substr($member['full_name'], 0, 1) . substr(explode(' ', $member['full_name'])[1] ?? '', 0, 1)); ?>
+                                        </div>
+                                    <?php endif; ?>
                                 </div>
                                 <div class="member-details">
                                     <div class="member-name"><?php echo htmlspecialchars($member['full_name']); ?></div>
@@ -163,6 +175,8 @@ ob_start();
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Variable global para la URL de la aplicación
+    const APP_URL = '<?php echo APP_URL; ?>';
     const searchInput = document.getElementById('memberSearch');
     const clearButton = document.getElementById('clearSearch');
     const memberItems = document.querySelectorAll('.member-item');
@@ -293,9 +307,38 @@ document.addEventListener('DOMContentLoaded', function() {
             const item = document.createElement('div');
             item.className = 'dropdown-item';
             item.dataset.userId = user.user_id;
+            
+            // Generar iniciales
+            const fullName = user.full_name || 'Sin nombre';
+            const nameParts = fullName.split(' ');
+            const initials = (nameParts[0] ? nameParts[0][0] : '') + (nameParts[1] ? nameParts[1][0] : '');
+            
+            // Crear avatar
+            let avatarHtml = '';
+            if (user.avatar_path && user.avatar_path !== '') {
+                avatarHtml = `
+                    <img src="${APP_URL}${user.avatar_path}" 
+                         alt="${fullName}" 
+                         class="dropdown-avatar-image"
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="dropdown-avatar-initials" style="display: none;">
+                        ${initials.toUpperCase()}
+                    </div>
+                `;
+            } else {
+                avatarHtml = `
+                    <div class="dropdown-avatar-initials">
+                        ${initials.toUpperCase()}
+                    </div>
+                `;
+            }
+            
             item.innerHTML = `
+                <div class="dropdown-user-avatar">
+                    ${avatarHtml}
+                </div>
                 <div class="user-info">
-                    <div class="user-name">${user.full_name || 'Sin nombre'}</div>
+                    <div class="user-name">${fullName}</div>
                     <div class="user-email">${user.email || 'Sin email'}</div>
                 </div>
             `;
@@ -863,6 +906,9 @@ document.addEventListener('DOMContentLoaded', function() {
     cursor: pointer;
     border-bottom: 1px solid #f3f4f6;
     transition: background-color 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
 .dropdown-item:hover {
@@ -896,6 +942,42 @@ document.addEventListener('DOMContentLoaded', function() {
 
 .dropdown-item.selected .user-email {
     color: #e5e7eb;
+}
+
+/* Estilos para avatares en el dropdown */
+.dropdown-user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #e5e7eb, #d1d5db);
+    position: relative;
+    flex-shrink: 0;
+}
+
+.dropdown-avatar-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+.dropdown-avatar-initials {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+    font-weight: 600;
+    font-size: 12px;
+    border-radius: 50%;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 /* Estilos para el spinner de carga */
@@ -1037,6 +1119,51 @@ document.addEventListener('DOMContentLoaded', function() {
     transform: translateY(-1px);
 }
 
+/* Estilos para avatares */
+.member-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #e5e7eb, #d1d5db);
+    position: relative;
+}
+
+.avatar-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+.avatar-initials {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+    font-weight: 600;
+    font-size: 16px;
+    border-radius: 50%;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Colores alternativos para las iniciales */
+.avatar-initials:nth-child(1) { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+.avatar-initials:nth-child(2) { background: linear-gradient(135deg, #10b981, #059669); }
+.avatar-initials:nth-child(3) { background: linear-gradient(135deg, #f59e0b, #d97706); }
+.avatar-initials:nth-child(4) { background: linear-gradient(135deg, #ef4444, #dc2626); }
+.avatar-initials:nth-child(5) { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+.avatar-initials:nth-child(6) { background: linear-gradient(135deg, #06b6d4, #0891b2); }
+.avatar-initials:nth-child(7) { background: linear-gradient(135deg, #84cc16, #65a30d); }
+.avatar-initials:nth-child(8) { background: linear-gradient(135deg, #f97316, #ea580c); }
+
 /* Responsive para Modal */
 @media (max-width: 768px) {
     .modal-content {
@@ -1054,6 +1181,15 @@ document.addEventListener('DOMContentLoaded', function() {
     
     .action-btn {
         justify-content: center;
+    }
+    
+    .member-avatar {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .avatar-initials {
+        font-size: 14px;
     }
 }
 </style>

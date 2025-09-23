@@ -382,6 +382,7 @@ class ClanLeaderController {
                     u.full_name,
                     u.email,
                     u.is_active,
+                    u.avatar_path,
                     COALESCE(r.role_name, 'usuario_normal') as role,
                     CASE 
                         WHEN cm.user_id IS NOT NULL THEN 'Miembro del clan'

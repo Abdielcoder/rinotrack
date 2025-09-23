@@ -190,6 +190,7 @@ class Clan {
                     u.email,
                     u.is_active,
                     u.last_login,
+                    u.avatar_path,
                     r.role_name
                 FROM Clan_Members cm
                 JOIN Users u ON cm.user_id = u.user_id
