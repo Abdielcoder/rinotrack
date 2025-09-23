@@ -111,23 +111,29 @@ ob_start();
                         <i class="fas fa-user"></i>
                         Seleccionar Usuario *
                     </label>
-                    <select id="userId" name="userId" required>
-                        <option value="">Seleccionar usuario...</option>
-                        <!-- Se llenará dinámicamente -->
-                    </select>
-                    <small class="form-help">Selecciona un usuario para agregar al clan</small>
+                    <div class="select-search-container">
+                        <input type="text" id="userSearch" placeholder="Buscar usuario..." class="select-search-input">
+                        <select id="userId" name="userId" required style="display: none;">
+                            <option value="">Seleccionar usuario...</option>
+                            <!-- Se llenará dinámicamente -->
+                        </select>
+                        <div id="userDropdown" class="select-dropdown">
+                            <!-- Se llenará dinámicamente -->
+                        </div>
+                    </div>
+                    <small class="form-help">Escribe para buscar y selecciona un usuario para agregar al clan</small>
                 </div>
             </form>
         </div>
         
         <div class="modal-footer">
-            <button type="button" class="action-btn secondary" onclick="closeAddMemberModal()">
+            <button type="button" class="btn-secondary" onclick="closeAddMemberModal()">
                 <i class="fas fa-times"></i>
-                <span>Cancelar</span>
+                Cancelar
             </button>
-            <button type="submit" form="addMemberForm" class="action-btn primary">
+            <button type="submit" form="addMemberForm" class="btn-primary">
                 <i class="fas fa-plus"></i>
-                <span>Agregar Miembro</span>
+                Agregar Miembro
             </button>
         </div>
     </div>
@@ -207,6 +213,127 @@ document.addEventListener('DOMContentLoaded', function() {
     if (searchInput.value) {
         filterMembers(searchInput.value);
     }
+    
+    // Funcionalidad del buscador de usuarios en el modal
+    const userSearchInput = document.getElementById('userSearch');
+    const userDropdown = document.getElementById('userDropdown');
+    const userIdSelect = document.getElementById('userId');
+    let allUsers = [];
+    let selectedUserId = null;
+    
+    // Función para cargar usuarios disponibles
+    function loadAvailableUsers() {
+        fetch('?route=clan_leader/getAvailableUsers')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    allUsers = data.users;
+                    renderUserDropdown(allUsers);
+                } else {
+                    console.error('Error al cargar usuarios:', data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error de red:', error);
+            });
+    }
+    
+    // Función para renderizar el dropdown de usuarios
+    function renderUserDropdown(users) {
+        userDropdown.innerHTML = '';
+        
+        if (users.length === 0) {
+            userDropdown.innerHTML = '<div class="dropdown-item" style="color: #6b7280; cursor: default;">No hay usuarios disponibles</div>';
+            return;
+        }
+        
+        users.forEach(user => {
+            const item = document.createElement('div');
+            item.className = 'dropdown-item';
+            item.dataset.userId = user.user_id;
+            item.innerHTML = `
+                <div class="user-info">
+                    <div class="user-name">${user.full_name}</div>
+                    <div class="user-email">${user.email}</div>
+                </div>
+            `;
+            
+            item.addEventListener('click', function() {
+                selectUser(user);
+            });
+            
+            userDropdown.appendChild(item);
+        });
+    }
+    
+    // Función para seleccionar un usuario
+    function selectUser(user) {
+        selectedUserId = user.user_id;
+        userSearchInput.value = `${user.full_name} (${user.email})`;
+        userDropdown.classList.remove('show');
+        
+        // Actualizar el select oculto
+        userIdSelect.value = user.user_id;
+        
+        // Marcar como seleccionado en el dropdown
+        document.querySelectorAll('.dropdown-item').forEach(item => {
+            item.classList.remove('selected');
+            if (item.dataset.userId == user.user_id) {
+                item.classList.add('selected');
+            }
+        });
+    }
+    
+    // Event listeners para el buscador de usuarios
+    userSearchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        
+        if (searchTerm.length === 0) {
+            renderUserDropdown(allUsers);
+            selectedUserId = null;
+            userIdSelect.value = '';
+        } else if (selectedUserId && this.value.includes('(')) {
+            // Si el usuario ya está seleccionado, no filtrar
+            return;
+        } else {
+            // Filtrar usuarios
+            const filteredUsers = allUsers.filter(user => 
+                user.full_name.toLowerCase().includes(searchTerm) ||
+                user.email.toLowerCase().includes(searchTerm) ||
+                user.username.toLowerCase().includes(searchTerm)
+            );
+            renderUserDropdown(filteredUsers);
+        }
+        
+        userDropdown.classList.add('show');
+    });
+    
+    userSearchInput.addEventListener('focus', function() {
+        if (allUsers.length > 0) {
+            userDropdown.classList.add('show');
+        }
+    });
+    
+    // Cerrar dropdown al hacer clic fuera
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.select-search-container')) {
+            userDropdown.classList.remove('show');
+        }
+    });
+    
+    // Cargar usuarios cuando se abre el modal
+    window.openAddMemberModal = function() {
+        document.getElementById('addMemberModal').style.display = 'flex';
+        loadAvailableUsers();
+    };
+    
+    window.closeAddMemberModal = function() {
+        document.getElementById('addMemberModal').style.display = 'none';
+        userSearchInput.value = '';
+        userIdSelect.value = '';
+        selectedUserId = null;
+        userDropdown.classList.remove('show');
+    };
 });
 </script>
 
@@ -376,40 +503,123 @@ document.addEventListener('DOMContentLoaded', function() {
     background: #f9fafb;
 }
 
-.action-btn {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 20px;
+/* Estilos de botones iguales al dashboard principal */
+.btn-primary,
+.btn-secondary {
+    padding: 12px 24px;
     border-radius: 8px;
-    font-size: 14px;
-    font-weight: 500;
+    font-weight: 600;
+    font-size: 1rem;
     cursor: pointer;
     transition: all 0.2s ease;
     border: none;
-    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
-.action-btn.secondary {
-    background: #f3f4f6;
-    color: #6b7280;
-    border: 1px solid #d1d5db;
-}
-
-.action-btn.secondary:hover {
-    background: #e5e7eb;
-    color: #374151;
-}
-
-.action-btn.primary {
-    background: #3b82f6;
+.btn-primary {
+    background: #1e3a8a;
     color: white;
 }
 
-.action-btn.primary:hover {
-    background: #2563eb;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+.btn-primary:hover {
+    background: #1e3a8a;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(30, 58, 138, 0.3);
+}
+
+.btn-secondary {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.btn-secondary:hover {
+    background: #e5e7eb;
+    transform: translateY(-2px);
+}
+
+/* Estilos para el buscador de usuarios */
+.select-search-container {
+    position: relative;
+    width: 100%;
+}
+
+.select-search-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    background: white;
+    box-sizing: border-box;
+}
+
+.select-search-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.select-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 2px solid #e5e7eb;
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    display: none;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.select-dropdown.show {
+    display: block;
+}
+
+.dropdown-item {
+    padding: 12px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid #f3f4f6;
+    transition: background-color 0.2s ease;
+}
+
+.dropdown-item:hover {
+    background-color: #f8fafc;
+}
+
+.dropdown-item:last-child {
+    border-bottom: none;
+}
+
+.dropdown-item.selected {
+    background-color: #3b82f6;
+    color: white;
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.user-name {
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.user-email {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.dropdown-item.selected .user-email {
+    color: #e5e7eb;
 }
 
 /* Responsive para Modal */
