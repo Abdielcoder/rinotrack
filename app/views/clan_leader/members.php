@@ -955,16 +955,14 @@ document.addEventListener('DOMContentLoaded', function() {
     background: transparent;
     position: relative;
     flex-shrink: 0;
-    border: 2px solid #f3f4f6;
 }
 
 .dropdown-avatar-image {
-    width: calc(100% + 14px);
-    height: calc(100% + 14px);
+    width: 100%;
+    height: 100%;
     object-fit: cover;
     border-radius: 50%;
     display: block;
-    margin: -7px;
 }
 
 .dropdown-avatar-initials {
@@ -1161,16 +1159,14 @@ document.addEventListener('DOMContentLoaded', function() {
     justify-content: center;
     background: transparent;
     position: relative;
-    border: 2px solid #f3f4f6;
 }
 
 .avatar-image {
-    width: calc(100% + 14px);
-    height: calc(100% + 14px);
+    width: 100%;
+    height: 100%;
     object-fit: cover;
     border-radius: 50%;
     display: block;
-    margin: -7px;
 }
 
 .avatar-initials {
