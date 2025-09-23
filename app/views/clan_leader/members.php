@@ -20,19 +20,19 @@ ob_start();
             </div>
         </div>
         
-        <!-- Búsqueda -->
+        <!-- Búsqueda en tiempo real -->
         <div class="search-minimal">
-            <form method="GET" action="?route=clan_leader/members">
-                <div class="search-input">
-                    <i class="fas fa-search"></i>
-                    <input type="text" name="search" value="<?php echo htmlspecialchars($search ?? ''); ?>" 
-                           placeholder="Buscar miembros...">
-                </div>
-                <button type="submit" class="btn-minimal">Buscar</button>
-                <?php if (!empty($search)): ?>
-                    <a href="?route=clan_leader/members" class="btn-minimal secondary">Limpiar</a>
-                <?php endif; ?>
-            </form>
+            <div class="search-input">
+                <i class="fas fa-search"></i>
+                <input type="text" id="memberSearch" 
+                       value="<?php echo htmlspecialchars($search ?? ''); ?>" 
+                       placeholder="Buscar miembros...">
+                <button type="button" id="clearSearch" class="btn-minimal secondary" 
+                        style="<?php echo empty($search) ? 'display: none;' : ''; ?>">
+                    <i class="fas fa-times"></i>
+                    Limpiar
+                </button>
+            </div>
         </div>
     </header>
 
@@ -127,7 +127,82 @@ ob_start();
     </div>
 </div>
 
-
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('memberSearch');
+    const clearButton = document.getElementById('clearSearch');
+    const memberItems = document.querySelectorAll('.member-item');
+    const membersList = document.querySelector('.members-list');
+    const emptyState = document.querySelector('.empty-minimal');
+    
+    // Función para filtrar miembros
+    function filterMembers(searchTerm) {
+        const term = searchTerm.toLowerCase().trim();
+        let visibleCount = 0;
+        
+        memberItems.forEach(function(item) {
+            const name = item.querySelector('.member-name').textContent.toLowerCase();
+            const username = item.querySelector('.member-username').textContent.toLowerCase();
+            const email = item.querySelector('.member-email').textContent.toLowerCase();
+            
+            if (term === '' || 
+                name.includes(term) || 
+                username.includes(term) || 
+                email.includes(term)) {
+                item.style.display = 'flex';
+                visibleCount++;
+            } else {
+                item.style.display = 'none';
+            }
+        });
+        
+        // Mostrar/ocultar estado vacío si no hay resultados
+        if (visibleCount === 0 && term !== '') {
+            if (emptyState) {
+                emptyState.style.display = 'block';
+                emptyState.innerHTML = `
+                    <span>🔍 No se encontraron miembros que coincidan con "${searchTerm}"</span>
+                    <button class="btn-minimal primary" onclick="clearSearch()">Limpiar búsqueda</button>
+                `;
+            }
+            if (membersList) membersList.style.display = 'none';
+        } else {
+            if (emptyState) emptyState.style.display = 'none';
+            if (membersList) membersList.style.display = 'block';
+        }
+        
+        // Mostrar/ocultar botón limpiar
+        if (clearButton) {
+            clearButton.style.display = term !== '' ? 'block' : 'none';
+        }
+    }
+    
+    // Función para limpiar búsqueda
+    function clearSearch() {
+        searchInput.value = '';
+        filterMembers('');
+        searchInput.focus();
+    }
+    
+    // Event listener para búsqueda en tiempo real
+    searchInput.addEventListener('input', function() {
+        filterMembers(this.value);
+    });
+    
+    // Event listener para botón limpiar
+    if (clearButton) {
+        clearButton.addEventListener('click', clearSearch);
+    }
+    
+    // Hacer la función clearSearch global para el botón del estado vacío
+    window.clearSearch = clearSearch;
+    
+    // Aplicar filtro inicial si hay búsqueda previa
+    if (searchInput.value) {
+        filterMembers(searchInput.value);
+    }
+});
+</script>
 
 <?php
 // Guardar el contenido en una variable
