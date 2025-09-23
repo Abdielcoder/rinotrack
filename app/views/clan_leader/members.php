@@ -223,27 +223,47 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Función para cargar usuarios disponibles
     function loadAvailableUsers() {
+        console.log('Cargando usuarios disponibles...');
+        
+        // Mostrar estado de carga
+        userDropdown.innerHTML = '<div class="dropdown-item" style="color: #6b7280; cursor: default;"><i class="fas fa-spinner fa-spin"></i> Cargando usuarios...</div>';
+        userDropdown.classList.add('show');
+        
         fetch('?route=clan_leader/getAvailableUsers')
-            .then(response => response.json())
+            .then(response => {
+                console.log('Respuesta del servidor:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
+                console.log('Datos recibidos:', data);
                 if (data.success) {
                     allUsers = data.users;
+                    console.log('Usuarios cargados:', allUsers.length);
                     renderUserDropdown(allUsers);
                 } else {
                     console.error('Error al cargar usuarios:', data.message);
+                    userDropdown.innerHTML = '<div class="dropdown-item" style="color: #ef4444; cursor: default;"><i class="fas fa-exclamation-triangle"></i> ' + (data.message || 'Error al cargar usuarios') + '</div>';
+                    userDropdown.classList.add('show');
                 }
             })
             .catch(error => {
                 console.error('Error de red:', error);
+                userDropdown.innerHTML = '<div class="dropdown-item" style="color: #ef4444; cursor: default;"><i class="fas fa-wifi"></i> Error de conexión</div>';
+                userDropdown.classList.add('show');
             });
     }
     
     // Función para renderizar el dropdown de usuarios
     function renderUserDropdown(users) {
+        console.log('Renderizando dropdown con', users.length, 'usuarios');
         userDropdown.innerHTML = '';
         
-        if (users.length === 0) {
+        if (!users || users.length === 0) {
             userDropdown.innerHTML = '<div class="dropdown-item" style="color: #6b7280; cursor: default;">No hay usuarios disponibles</div>';
+            userDropdown.classList.add('show');
             return;
         }
         
@@ -253,8 +273,8 @@ document.addEventListener('DOMContentLoaded', function() {
             item.dataset.userId = user.user_id;
             item.innerHTML = `
                 <div class="user-info">
-                    <div class="user-name">${user.full_name}</div>
-                    <div class="user-email">${user.email}</div>
+                    <div class="user-name">${user.full_name || 'Sin nombre'}</div>
+                    <div class="user-email">${user.email || 'Sin email'}</div>
                 </div>
             `;
             
@@ -264,6 +284,8 @@ document.addEventListener('DOMContentLoaded', function() {
             
             userDropdown.appendChild(item);
         });
+        
+        userDropdown.classList.add('show');
     }
     
     // Función para seleccionar un usuario
@@ -286,7 +308,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Event listeners para el buscador de usuarios
     userSearchInput.addEventListener('input', function() {
-        const searchTerm = this.value.toLowerCase();
+        const searchTerm = this.value.toLowerCase().trim();
+        console.log('Buscando:', searchTerm);
         
         if (searchTerm.length === 0) {
             renderUserDropdown(allUsers);
@@ -297,19 +320,27 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         } else {
             // Filtrar usuarios
-            const filteredUsers = allUsers.filter(user => 
-                user.full_name.toLowerCase().includes(searchTerm) ||
-                user.email.toLowerCase().includes(searchTerm) ||
-                user.username.toLowerCase().includes(searchTerm)
-            );
+            const filteredUsers = allUsers.filter(user => {
+                const fullName = (user.full_name || '').toLowerCase();
+                const email = (user.email || '').toLowerCase();
+                const username = (user.username || '').toLowerCase();
+                
+                return fullName.includes(searchTerm) ||
+                       email.includes(searchTerm) ||
+                       username.includes(searchTerm);
+            });
+            
+            console.log('Usuarios filtrados:', filteredUsers.length);
             renderUserDropdown(filteredUsers);
         }
-        
-        userDropdown.classList.add('show');
     });
     
     userSearchInput.addEventListener('focus', function() {
         if (allUsers.length > 0) {
+            userDropdown.classList.add('show');
+        } else {
+            // Mostrar estado de carga si aún no se han cargado los usuarios
+            userDropdown.innerHTML = '<div class="dropdown-item" style="color: #6b7280; cursor: default;">Cargando usuarios...</div>';
             userDropdown.classList.add('show');
         }
     });
@@ -323,7 +354,18 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Cargar usuarios cuando se abre el modal
     window.openAddMemberModal = function() {
+        console.log('Abriendo modal de agregar miembro...');
         document.getElementById('addMemberModal').style.display = 'flex';
+        
+        // Resetear el estado
+        userSearchInput.value = '';
+        userIdSelect.value = '';
+        selectedUserId = null;
+        allUsers = [];
+        userDropdown.innerHTML = '';
+        userDropdown.classList.remove('show');
+        
+        // Cargar usuarios
         loadAvailableUsers();
     };
     
@@ -620,6 +662,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
 .dropdown-item.selected .user-email {
     color: #e5e7eb;
+}
+
+/* Estilos para el spinner de carga */
+.fa-spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 /* Responsive para Modal */
