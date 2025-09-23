@@ -113,7 +113,7 @@ ob_start();
                     </label>
                     <div class="select-search-container">
                         <input type="text" id="userSearch" placeholder="Buscar usuario..." class="select-search-input">
-                        <select id="userId" name="userId" required style="display: none;">
+                        <select id="userId" name="userId" style="display: none;">
                             <option value="">Seleccionar usuario...</option>
                             <!-- Se llenará dinámicamente -->
                         </select>
@@ -376,6 +376,41 @@ document.addEventListener('DOMContentLoaded', function() {
         selectedUserId = null;
         userDropdown.classList.remove('show');
     };
+    
+    // Validación personalizada del formulario
+    document.getElementById('addMemberForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Validar que se haya seleccionado un usuario
+        if (!selectedUserId || userIdSelect.value === '') {
+            alert('Por favor selecciona un usuario para agregar al clan');
+            userSearchInput.focus();
+            return false;
+        }
+        
+        // Si la validación pasa, enviar el formulario
+        const formData = new FormData(this);
+        
+        fetch('?route=clan_leader/add-member', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Usuario agregado al clan exitosamente');
+                closeAddMemberModal();
+                // Recargar la página para mostrar el nuevo miembro
+                window.location.reload();
+            } else {
+                alert('Error al agregar usuario: ' + (data.message || 'Error desconocido'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error de conexión al agregar usuario');
+        });
+    });
 });
 </script>
 
