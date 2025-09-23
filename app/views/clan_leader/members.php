@@ -121,7 +121,7 @@ ob_start();
                             <!-- Se llenará dinámicamente -->
                         </div>
                     </div>
-                    <small class="form-help">Escribe para buscar y selecciona un usuario para agregar al clan</small>
+                    <small class="form-help">Escribe para buscar, haz clic en un usuario o presiona Enter para seleccionar</small>
                 </div>
             </form>
         </div>
@@ -331,6 +331,22 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             
             console.log('Usuarios filtrados:', filteredUsers.length);
+            
+            // Si hay exactamente un usuario que coincide perfectamente, seleccionarlo automáticamente
+            if (filteredUsers.length === 1) {
+                const user = filteredUsers[0];
+                const fullName = (user.full_name || '').toLowerCase();
+                const email = (user.email || '').toLowerCase();
+                
+                // Verificar si el término de búsqueda coincide exactamente con el nombre o email
+                if (fullName === searchTerm || email === searchTerm || 
+                    fullName.includes(searchTerm) && searchTerm.length >= 3) {
+                    console.log('Selección automática de usuario:', user.full_name);
+                    selectUser(user);
+                    return;
+                }
+            }
+            
             renderUserDropdown(filteredUsers);
         }
     });
@@ -342,6 +358,46 @@ document.addEventListener('DOMContentLoaded', function() {
             // Mostrar estado de carga si aún no se han cargado los usuarios
             userDropdown.innerHTML = '<div class="dropdown-item" style="color: #6b7280; cursor: default;">Cargando usuarios...</div>';
             userDropdown.classList.add('show');
+        }
+    });
+    
+    // Manejar la tecla Enter para seleccionar el primer usuario disponible
+    userSearchInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            
+            // Buscar usuarios que coincidan con el término actual
+            const searchTerm = this.value.toLowerCase().trim();
+            const filteredUsers = allUsers.filter(user => {
+                const fullName = (user.full_name || '').toLowerCase();
+                const email = (user.email || '').toLowerCase();
+                const username = (user.username || '').toLowerCase();
+                
+                return fullName.includes(searchTerm) ||
+                       email.includes(searchTerm) ||
+                       username.includes(searchTerm);
+            });
+            
+            // Si hay usuarios filtrados, seleccionar el primero
+            if (filteredUsers.length > 0) {
+                selectUser(filteredUsers[0]);
+            } else if (searchTerm.length >= 3) {
+                // Si no hay coincidencias pero el término es largo, buscar coincidencias parciales
+                const partialMatches = allUsers.filter(user => {
+                    const fullName = (user.full_name || '').toLowerCase();
+                    const email = (user.email || '').toLowerCase();
+                    
+                    return fullName.startsWith(searchTerm) || email.startsWith(searchTerm);
+                });
+                
+                if (partialMatches.length > 0) {
+                    selectUser(partialMatches[0]);
+                } else {
+                    alert('No se encontró un usuario que coincida con "' + searchTerm + '"');
+                }
+            } else {
+                alert('Escribe al menos 3 caracteres para buscar usuarios');
+            }
         }
     });
     
@@ -381,11 +437,41 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('addMemberForm').addEventListener('submit', function(e) {
         e.preventDefault();
         
+        console.log('Validando formulario de agregar miembro...');
+        console.log('selectedUserId:', selectedUserId);
+        console.log('userIdSelect.value:', userIdSelect.value);
+        console.log('userSearchInput.value:', userSearchInput.value);
+        
         // Validar que se haya seleccionado un usuario
         if (!selectedUserId || userIdSelect.value === '') {
-            alert('Por favor selecciona un usuario para agregar al clan');
-            userSearchInput.focus();
-            return false;
+            // Intentar encontrar el usuario basado en el texto del input
+            const searchTerm = userSearchInput.value.trim();
+            if (searchTerm.length >= 3) {
+                const foundUser = allUsers.find(user => {
+                    const fullName = (user.full_name || '').toLowerCase();
+                    const email = (user.email || '').toLowerCase();
+                    const displayText = `${user.full_name} (${user.email})`.toLowerCase();
+                    
+                    return fullName === searchTerm.toLowerCase() ||
+                           email === searchTerm.toLowerCase() ||
+                           displayText === searchTerm.toLowerCase() ||
+                           fullName.includes(searchTerm.toLowerCase());
+                });
+                
+                if (foundUser) {
+                    console.log('Usuario encontrado automáticamente:', foundUser.full_name);
+                    selectUser(foundUser);
+                    // Continuar con el envío del formulario
+                } else {
+                    alert('Por favor selecciona un usuario válido de la lista o escribe al menos 3 caracteres y presiona Enter');
+                    userSearchInput.focus();
+                    return false;
+                }
+            } else {
+                alert('Por favor selecciona un usuario para agregar al clan o escribe al menos 3 caracteres y presiona Enter');
+                userSearchInput.focus();
+                return false;
+            }
         }
         
         console.log('Enviando formulario con userId:', selectedUserId);
