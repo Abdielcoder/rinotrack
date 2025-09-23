@@ -22,12 +22,14 @@ ob_start();
         
         <!-- Búsqueda en tiempo real -->
         <div class="search-minimal">
-            <div class="search-input">
-                <i class="fas fa-search"></i>
-                <input type="text" id="memberSearch" 
-                       value="<?php echo htmlspecialchars($search ?? ''); ?>" 
-                       placeholder="Buscar miembros...">
-                <button type="button" id="clearSearch" class="btn-minimal secondary" 
+            <div class="search-container">
+                <div class="search-input">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="memberSearch" 
+                           value="<?php echo htmlspecialchars($search ?? ''); ?>" 
+                           placeholder="Buscar miembros...">
+                </div>
+                <button type="button" id="clearSearch" class="btn-minimal secondary clear-btn" 
                         style="<?php echo empty($search) ? 'display: none;' : ''; ?>">
                     <i class="fas fa-times"></i>
                     Limpiar
@@ -203,6 +205,44 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+
+<style>
+/* Estilos para la búsqueda en tiempo real */
+.search-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+}
+
+.search-input {
+    flex: 1;
+    position: relative;
+}
+
+.clear-btn {
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* Asegurar que el input ocupe el espacio disponible */
+.search-input input {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Responsive: en pantallas pequeñas, apilar verticalmente */
+@media (max-width: 768px) {
+    .search-container {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .clear-btn {
+        align-self: flex-start;
+    }
+}
+</style>
 
 <?php
 // Guardar el contenido en una variable
