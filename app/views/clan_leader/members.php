@@ -710,7 +710,8 @@ document.addEventListener('DOMContentLoaded', function() {
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
     width: 90%;
     max-width: 600px;
-    max-height: 90vh;
+    max-height: 80vh;
+    min-height: 400px;
     overflow: hidden;
     animation: modalFadeIn 0.3s ease-out;
 }
@@ -764,7 +765,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 .modal-body {
     padding: 24px;
-    max-height: 60vh;
+    max-height: 50vh;
+    min-height: 250px;
     overflow-y: auto;
 }
 
@@ -886,7 +888,7 @@ document.addEventListener('DOMContentLoaded', function() {
     border: 2px solid #e5e7eb;
     border-top: none;
     border-radius: 0 0 8px 8px;
-    max-height: 200px;
+    max-height: 300px;
     overflow-y: auto;
     z-index: 1000;
     display: none;
