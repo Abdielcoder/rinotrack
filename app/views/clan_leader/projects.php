@@ -89,7 +89,7 @@ ob_start();
                                     <i class="fas fa-ellipsis-v"></i>
                                 </button>
                                 <div class="dropdown-menu-minimal" id="projectMenu<?= $project['project_id'] ?>">
-                                    <button class="menu-item-minimal" onclick="openEditProjectModal(<?= $project['project_id'] ?>, <?= json_encode($project['project_name']) ?>, <?= json_encode($project['description']) ?>, <?= json_encode($project['time_limit'] ?? '') ?>)">
+                                    <button class="menu-item-minimal" onclick="openEditProjectModal(<?= $project['project_id'] ?>, '<?= htmlspecialchars($project['project_name'], ENT_QUOTES, 'UTF-8') ?>', '<?= htmlspecialchars($project['description'], ENT_QUOTES, 'UTF-8') ?>', '<?= htmlspecialchars($project['time_limit'] ?? '', ENT_QUOTES, 'UTF-8') ?>')">
                                         <i class="fas fa-edit"></i>
                                         Editar
                                     </button>
@@ -97,7 +97,7 @@ ob_start();
                                         <i class="fas fa-copy"></i>
                                         Clonar
                                     </button>
-                                    <button class="menu-item-minimal danger" onclick="deleteProject(<?= $project['project_id'] ?>, <?= json_encode($project['project_name']) ?>)">
+                                    <button class="menu-item-minimal danger" onclick="deleteProject(<?= $project['project_id'] ?>, '<?= htmlspecialchars($project['project_name'], ENT_QUOTES, 'UTF-8') ?>')">
                                         <i class="fas fa-trash"></i>
                                         Eliminar
                                     </button>
@@ -249,7 +249,7 @@ ob_start();
                                         <i class="fas fa-ellipsis-v"></i>
                                     </button>
                                     <div class="dropdown-menu-list" id="listMenu<?= $project['project_id'] ?>">
-                                        <button class="menu-item-list" onclick="openEditProjectModal(<?= $project['project_id'] ?>, <?= json_encode($project['project_name']) ?>, <?= json_encode($project['description']) ?>, <?= json_encode($project['time_limit'] ?? '') ?>)">
+                                        <button class="menu-item-list" onclick="openEditProjectModal(<?= $project['project_id'] ?>, '<?= htmlspecialchars($project['project_name'], ENT_QUOTES, 'UTF-8') ?>', '<?= htmlspecialchars($project['description'], ENT_QUOTES, 'UTF-8') ?>', '<?= htmlspecialchars($project['time_limit'] ?? '', ENT_QUOTES, 'UTF-8') ?>')">
                                             <i class="fas fa-edit"></i>
                                             Editar
                                         </button>
@@ -257,7 +257,7 @@ ob_start();
                                             <i class="fas fa-copy"></i>
                                             Clonar
                                         </button>
-                                        <button class="menu-item-list danger" onclick="deleteProject(<?= $project['project_id'] ?>, <?= json_encode($project['project_name']) ?>)">
+                                        <button class="menu-item-list danger" onclick="deleteProject(<?= $project['project_id'] ?>, '<?= htmlspecialchars($project['project_name'], ENT_QUOTES, 'UTF-8') ?>')">
                                             <i class="fas fa-trash"></i>
                                             Eliminar
                                         </button>
