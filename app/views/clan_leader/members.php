@@ -964,7 +964,7 @@ document.addEventListener('DOMContentLoaded', function() {
     object-fit: cover;
     border-radius: 50%;
     display: block;
-    margin: -2px;
+    margin: -7px;
 }
 
 .dropdown-avatar-initials {
@@ -1170,7 +1170,7 @@ document.addEventListener('DOMContentLoaded', function() {
     object-fit: cover;
     border-radius: 50%;
     display: block;
-    margin: -2px;
+    margin: -7px;
 }
 
 .avatar-initials {
