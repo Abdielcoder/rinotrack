@@ -959,11 +959,12 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 .dropdown-avatar-image {
-    width: 100%;
-    height: 100%;
+    width: calc(100% + 4px);
+    height: calc(100% + 4px);
     object-fit: cover;
     border-radius: 50%;
     display: block;
+    margin: -2px;
 }
 
 .dropdown-avatar-initials {
@@ -1164,11 +1165,12 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 .avatar-image {
-    width: 100%;
-    height: 100%;
+    width: calc(100% + 4px);
+    height: calc(100% + 4px);
     object-fit: cover;
     border-radius: 50%;
     display: block;
+    margin: -2px;
 }
 
 .avatar-initials {
