@@ -545,39 +545,52 @@ class ClanLeaderController {
      * Búsqueda AJAX de proyectos
      */
     public function searchProjectsAjax() {
+        // Log de debug
+        error_log('searchProjectsAjax llamado');
+        
         // Verificar autenticación
         $this->requireAuth();
         
         // Verificar permisos de líder de clan
         if (!$this->hasClanLeaderAccess()) {
+            error_log('Acceso denegado en searchProjectsAjax');
             echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
             return;
         }
         
         // Obtener término de búsqueda
         $search = $_POST['search'] ?? '';
+        error_log('Término de búsqueda recibido: ' . $search);
         
         try {
             // Verificar que el usuario tiene clan asignado
             if (!$this->userClan || !isset($this->userClan['clan_id'])) {
+                error_log('Usuario sin clan asignado');
                 echo json_encode(['success' => true, 'projects' => []]);
                 return;
             }
+            
+            error_log('Clan ID: ' . $this->userClan['clan_id']);
             
             // Realizar búsqueda
             $projects = empty($search) ? 
                 $this->projectModel->getByClan($this->userClan['clan_id']) : 
                 $this->searchProjects($search);
             
+            error_log('Proyectos encontrados: ' . count($projects));
+            
             // Reindexar array
             $projects = array_values($projects);
             
-            echo json_encode([
+            $response = [
                 'success' => true, 
                 'projects' => $projects,
                 'search_term' => $search,
                 'total_found' => count($projects)
-            ]);
+            ];
+            
+            error_log('Respuesta JSON: ' . json_encode($response));
+            echo json_encode($response);
             
         } catch (Exception $e) {
             error_log('Error en búsqueda de proyectos: ' . $e->getMessage());

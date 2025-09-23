@@ -833,6 +833,11 @@ try {
         $controller->updateTaskStatus();
         break;
         
+    case 'clan_leader/search-projects-ajax':
+        $controller = new ClanLeaderController();
+        $controller->searchProjectsAjax();
+        break;
+        
         // Rutas de Gamificación
         case 'gamification':
             $controller = new GamificationController();

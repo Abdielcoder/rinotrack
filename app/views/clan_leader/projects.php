@@ -848,6 +848,8 @@ let isSearching = false;
 
 // Función para realizar búsqueda con debounce
 function performSearch(searchTerm) {
+    console.log('performSearch llamado con:', searchTerm);
+    
     // Limpiar timeout anterior
     if (searchTimeout) {
         clearTimeout(searchTimeout);
@@ -855,15 +857,20 @@ function performSearch(searchTerm) {
     
     // Si el término está vacío, mostrar todos los proyectos
     if (!searchTerm.trim()) {
+        console.log('Término vacío, limpiando búsqueda');
         clearSearch();
         return;
     }
+    
+    console.log('Iniciando búsqueda para:', searchTerm);
     
     // Mostrar loading
     showSearchLoading(true);
     
     // Configurar timeout para evitar demasiadas peticiones
     searchTimeout = setTimeout(() => {
+        console.log('Enviando petición AJAX...');
+        
         fetch('?route=clan_leader/search-projects-ajax', {
             method: 'POST',
             headers: {
@@ -872,12 +879,17 @@ function performSearch(searchTerm) {
             credentials: 'same-origin',
             body: `search=${encodeURIComponent(searchTerm)}`
         })
-        .then(response => response.json())
+        .then(response => {
+            console.log('Respuesta recibida:', response.status, response.statusText);
+            return response.json();
+        })
         .then(data => {
+            console.log('Datos recibidos:', data);
             if (data.success) {
                 updateProjectsDisplay(data.projects);
                 updateURL(searchTerm);
             } else {
+                console.error('Error en respuesta:', data.message);
                 showToast('Error en la búsqueda: ' + data.message, 'error');
             }
         })
@@ -1192,6 +1204,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Evento para búsqueda en tiempo real
     searchInput.addEventListener('input', function(e) {
         const searchTerm = e.target.value;
+        console.log('Input event disparado:', searchTerm);
         
         // Mostrar/ocultar botón limpiar
         if (searchTerm.trim()) {
