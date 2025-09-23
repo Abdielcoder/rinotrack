@@ -65,9 +65,6 @@ ob_start();
                                     <div class="member-name"><?php echo htmlspecialchars($member['full_name']); ?></div>
                                     <div class="member-username">@<?php echo htmlspecialchars($member['username']); ?></div>
                                     <div class="member-email"><?php echo htmlspecialchars($member['email']); ?></div>
-                                    <div class="member-role">
-                                        <span class="role-badge"><?php echo htmlspecialchars($member['role_name'] ?? 'Sin rol'); ?></span>
-                                    </div>
                                 </div>
                             </div>
                             
