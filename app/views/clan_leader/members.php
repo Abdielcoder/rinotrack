@@ -882,7 +882,7 @@ document.addEventListener('DOMContentLoaded', function() {
     top: 100%;
     left: 0;
     right: 0;
-    background: white;
+    background: white !important;
     border: 2px solid #e5e7eb;
     border-top: none;
     border-radius: 0 0 8px 8px;
@@ -891,6 +891,7 @@ document.addEventListener('DOMContentLoaded', function() {
     z-index: 1000;
     display: none;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    min-height: 40px;
 }
 
 .select-dropdown.show {
@@ -905,6 +906,9 @@ document.addEventListener('DOMContentLoaded', function() {
     display: flex;
     align-items: center;
     gap: 12px;
+    background: white !important;
+    color: #374151 !important;
+    min-height: 50px;
 }
 
 .dropdown-item:hover {
@@ -940,10 +944,27 @@ document.addEventListener('DOMContentLoaded', function() {
     color: #e5e7eb;
 }
 
+.user-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.user-name {
+    font-weight: 600;
+    color: #1f2937;
+    font-size: 14px;
+}
+
+.user-email {
+    color: #6b7280;
+    font-size: 12px;
+}
+
 /* Estilos para avatares en el dropdown */
 .dropdown-user-avatar {
-    width: 545px;
-    height: 5545px;
+    width: 45px;
+    height: 45px;
     
     overflow: hidden;
     display: flex;
