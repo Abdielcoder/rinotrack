@@ -388,17 +388,37 @@ ob_start();
                     <input type="date" id="editTimeLimit" name="timeLimit" 
                            placeholder="Seleccione la fecha límite del proyecto">
                 </div>
+                
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="editCloneTasks" name="clone_tasks" value="1">
+                        <span class="checkmark"></span>
+                        <i class="fas fa-copy"></i>
+                        Clonar tareas y subtareas del proyecto original
+                    </label>
+                    <small class="form-help">Si está marcado, se copiarán todas las tareas y subtareas del proyecto original al crear esta versión editada</small>
+                </div>
+                
+                <div class="form-group" id="adjustDatesGroup" style="display: none;">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="editAdjustDates" name="adjust_dates" value="1">
+                        <span class="checkmark"></span>
+                        <i class="fas fa-calendar-check"></i>
+                        Ajustar fechas de tareas proporcionalmente
+                    </label>
+                    <small class="form-help">Las fechas de las tareas se ajustarán automáticamente para mantener la proporción original del proyecto</small>
+                </div>
             </form>
         </div>
         
         <div class="modal-footer">
-            <button type="button" class="action-btn secondary" onclick="closeEditProjectModal()">
+            <button type="button" class="btn-secondary" onclick="closeEditProjectModal()">
                 <i class="fas fa-times"></i>
-                <span>Cancelar</span>
+                Cancelar
             </button>
-            <button type="submit" form="editProjectForm" class="action-btn primary">
+            <button type="submit" form="editProjectForm" class="btn-primary">
                 <i class="fas fa-save"></i>
-                <span>Guardar Cambios</span>
+                Guardar Cambios
             </button>
         </div>
     </div>
@@ -428,6 +448,8 @@ function openEditProjectModal(projectId, projectName, description, timeLimit) {
 function closeEditProjectModal() {
     document.getElementById('editProjectModal').style.display = 'none';
     document.getElementById('editProjectForm').reset();
+    // Ocultar el grupo de ajuste de fechas
+    document.getElementById('adjustDatesGroup').style.display = 'none';
 }
 
 // Eliminar proyecto
@@ -528,6 +550,18 @@ document.getElementById('createProjectModal').addEventListener('click', function
 document.getElementById('editProjectModal').addEventListener('click', function(e) {
     if (e.target === this) {
         closeEditProjectModal();
+    }
+});
+
+// Event listener para el checkbox de clonar tareas
+document.addEventListener('DOMContentLoaded', function() {
+    const cloneTasksCheckbox = document.getElementById('editCloneTasks');
+    const adjustDatesGroup = document.getElementById('adjustDatesGroup');
+    
+    if (cloneTasksCheckbox && adjustDatesGroup) {
+        cloneTasksCheckbox.addEventListener('change', function() {
+            adjustDatesGroup.style.display = this.checked ? 'block' : 'none';
+        });
     }
 });
 

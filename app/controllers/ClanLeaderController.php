@@ -711,6 +711,8 @@ class ClanLeaderController {
         $projectName = Utils::sanitizeInput($_POST['projectName'] ?? '');
         $description = Utils::sanitizeInput($_POST['description'] ?? '');
         $timeLimit = !empty($_POST['timeLimit']) ? $_POST['timeLimit'] : null;
+        $cloneTasks = isset($_POST['clone_tasks']) && $_POST['clone_tasks'] == '1';
+        $adjustDates = isset($_POST['adjust_dates']) && $_POST['adjust_dates'] == '1';
         
         if ($projectId <= 0) {
             Utils::jsonResponse(['success' => false, 'message' => 'ID de proyecto inválido'], 400);
@@ -728,13 +730,143 @@ class ClanLeaderController {
             Utils::jsonResponse(['success' => false, 'message' => 'Proyecto no encontrado'], 404);
         }
         
-        // Actualizar proyecto con fecha límite
-        $result = $this->projectModel->update($projectId, $projectName, $description, $this->userClan['clan_id'], null, $timeLimit);
-        
-        if ($result) {
-            Utils::jsonResponse(['success' => true, 'message' => 'Proyecto actualizado exitosamente']);
-        } else {
-            Utils::jsonResponse(['success' => false, 'message' => 'Error al actualizar proyecto'], 500);
+        try {
+            // Iniciar transacción
+            $this->db->beginTransaction();
+            
+            // Actualizar proyecto con fecha límite
+            $result = $this->projectModel->update($projectId, $projectName, $description, $this->userClan['clan_id'], null, $timeLimit);
+            
+            if (!$result) {
+                throw new Exception('Error al actualizar proyecto');
+            }
+            
+            // Si se solicita clonar tareas, hacerlo
+            if ($cloneTasks) {
+                $this->cloneProjectTasks($projectId, $adjustDates, $timeLimit);
+            }
+            
+            // Confirmar transacción
+            $this->db->commit();
+            
+            $message = 'Proyecto actualizado exitosamente';
+            if ($cloneTasks) {
+                $message .= ' y tareas clonadas';
+            }
+            
+            Utils::jsonResponse(['success' => true, 'message' => $message]);
+            
+        } catch (Exception $e) {
+            // Revertir transacción en caso de error
+            $this->db->rollback();
+            error_log('Error al actualizar proyecto: ' . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error al actualizar proyecto: ' . $e->getMessage()], 500);
+        }
+    }
+    
+    /**
+     * Clonar tareas y subtareas de un proyecto
+     */
+    private function cloneProjectTasks($projectId, $adjustDates = false, $newTimeLimit = null) {
+        try {
+            // Obtener todas las tareas del proyecto
+            $tasks = $this->taskModel->getByProject($projectId);
+            
+            if (empty($tasks)) {
+                return; // No hay tareas que clonar
+            }
+            
+            // Calcular factor de ajuste de fechas si es necesario
+            $dateAdjustmentFactor = 1;
+            if ($adjustDates && $newTimeLimit) {
+                // Obtener el proyecto original para calcular la duración
+                $originalProject = $this->projectModel->findById($projectId);
+                if ($originalProject && $originalProject['time_limit']) {
+                    $originalDuration = strtotime($originalProject['time_limit']) - strtotime($originalProject['created_at']);
+                    $newDuration = strtotime($newTimeLimit) - time(); // Desde ahora hasta la nueva fecha límite
+                    
+                    if ($originalDuration > 0) {
+                        $dateAdjustmentFactor = $newDuration / $originalDuration;
+                    }
+                }
+            }
+            
+            // Clonar cada tarea
+            foreach ($tasks as $task) {
+                $newTaskData = [
+                    'task_name' => $task['task_name'],
+                    'description' => $task['description'],
+                    'priority' => $task['priority'],
+                    'status' => 'pending', // Resetear estado
+                    'project_id' => $projectId,
+                    'created_by' => $this->currentUser['user_id'],
+                    'assigned_to' => $task['assigned_to'],
+                    'estimated_hours' => $task['estimated_hours'],
+                    'kpi_points' => $task['kpi_points']
+                ];
+                
+                // Ajustar fechas si es necesario
+                if ($adjustDates && $dateAdjustmentFactor != 1) {
+                    if ($task['start_date']) {
+                        $originalStart = strtotime($task['start_date']);
+                        $adjustedStart = time() + (($originalStart - strtotime($task['created_at'])) * $dateAdjustmentFactor);
+                        $newTaskData['start_date'] = date('Y-m-d', $adjustedStart);
+                    }
+                    
+                    if ($task['end_date']) {
+                        $originalEnd = strtotime($task['end_date']);
+                        $adjustedEnd = time() + (($originalEnd - strtotime($task['created_at'])) * $dateAdjustmentFactor);
+                        $newTaskData['end_date'] = date('Y-m-d', $adjustedEnd);
+                    }
+                } else {
+                    $newTaskData['start_date'] = $task['start_date'];
+                    $newTaskData['end_date'] = $task['end_date'];
+                }
+                
+                // Crear la nueva tarea
+                $newTaskId = $this->taskModel->create($newTaskData);
+                
+                if ($newTaskId) {
+                    // Clonar subtareas si existen
+                    $subtasks = $this->subtaskModel->getByTask($task['task_id']);
+                    
+                    foreach ($subtasks as $subtask) {
+                        $newSubtaskData = [
+                            'subtask_name' => $subtask['subtask_name'],
+                            'description' => $subtask['description'],
+                            'status' => 'pending', // Resetear estado
+                            'task_id' => $newTaskId,
+                            'created_by' => $this->currentUser['user_id'],
+                            'assigned_to' => $subtask['assigned_to'],
+                            'estimated_hours' => $subtask['estimated_hours']
+                        ];
+                        
+                        // Ajustar fechas de subtareas si es necesario
+                        if ($adjustDates && $dateAdjustmentFactor != 1) {
+                            if ($subtask['start_date']) {
+                                $originalStart = strtotime($subtask['start_date']);
+                                $adjustedStart = time() + (($originalStart - strtotime($subtask['created_at'])) * $dateAdjustmentFactor);
+                                $newSubtaskData['start_date'] = date('Y-m-d', $adjustedStart);
+                            }
+                            
+                            if ($subtask['end_date']) {
+                                $originalEnd = strtotime($subtask['end_date']);
+                                $adjustedEnd = time() + (($originalEnd - strtotime($subtask['created_at'])) * $dateAdjustmentFactor);
+                                $newSubtaskData['end_date'] = date('Y-m-d', $adjustedEnd);
+                            }
+                        } else {
+                            $newSubtaskData['start_date'] = $subtask['start_date'];
+                            $newSubtaskData['end_date'] = $subtask['end_date'];
+                        }
+                        
+                        $this->subtaskModel->create($newSubtaskData);
+                    }
+                }
+            }
+            
+        } catch (Exception $e) {
+            error_log('Error al clonar tareas: ' . $e->getMessage());
+            throw new Exception('Error al clonar tareas y subtareas: ' . $e->getMessage());
         }
     }
     
