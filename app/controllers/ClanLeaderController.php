@@ -544,7 +544,7 @@ class ClanLeaderController {
     /**
      * Búsqueda AJAX de proyectos
      */
-    public function searchProjects() {
+    public function searchProjectsAjax() {
         // Verificar autenticación
         $this->requireAuth();
         

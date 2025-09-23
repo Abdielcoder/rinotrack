@@ -864,7 +864,7 @@ function performSearch(searchTerm) {
     
     // Configurar timeout para evitar demasiadas peticiones
     searchTimeout = setTimeout(() => {
-        fetch('?route=clan_leader/search-projects', {
+        fetch('?route=clan_leader/search-projects-ajax', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
