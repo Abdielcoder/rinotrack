@@ -952,7 +952,7 @@ document.addEventListener('DOMContentLoaded', function() {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #e5e7eb, #d1d5db);
+    background: transparent;
     position: relative;
     flex-shrink: 0;
     border: 2px solid #f3f4f6;
@@ -963,6 +963,7 @@ document.addEventListener('DOMContentLoaded', function() {
     height: 100%;
     object-fit: cover;
     border-radius: 50%;
+    display: block;
 }
 
 .dropdown-avatar-initials {
@@ -1157,7 +1158,7 @@ document.addEventListener('DOMContentLoaded', function() {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #e5e7eb, #d1d5db);
+    background: transparent;
     position: relative;
     border: 2px solid #f3f4f6;
 }
@@ -1167,6 +1168,7 @@ document.addEventListener('DOMContentLoaded', function() {
     height: 100%;
     object-fit: cover;
     border-radius: 50%;
+    display: block;
 }
 
 .avatar-initials {
