@@ -139,6 +139,28 @@ ob_start();
     </div>
 </div>
 
+<!-- Modal de Notificación Personalizado -->
+<div id="customNotificationModal" class="custom-notification-overlay" style="display: none;">
+    <div class="custom-notification-content">
+        <div class="custom-notification-header">
+            <span id="notificationTitle">Notificación</span>
+        </div>
+        <div class="custom-notification-body">
+            <div class="custom-notification-icon">
+                <i id="notificationIcon" class="fas fa-info-circle"></i>
+            </div>
+            <div class="custom-notification-message">
+                <span id="notificationMessage">Mensaje</span>
+            </div>
+        </div>
+        <div class="custom-notification-footer">
+            <button type="button" class="custom-notification-btn custom-notification-btn-primary" onclick="closeCustomNotification()">
+                Aceptar
+            </button>
+        </div>
+    </div>
+</div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('memberSearch');
@@ -393,10 +415,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (partialMatches.length > 0) {
                     selectUser(partialMatches[0]);
                 } else {
-                    alert('No se encontró un usuario que coincida con "' + searchTerm + '"');
+                    showCustomNotification('No se encontró un usuario que coincida con "' + searchTerm + '"', 'warning', 'Usuario no encontrado');
                 }
             } else {
-                alert('Escribe al menos 3 caracteres para buscar usuarios');
+                showCustomNotification('Escribe al menos 3 caracteres para buscar usuarios', 'info', 'Búsqueda requerida');
             }
         }
     });
@@ -433,6 +455,61 @@ document.addEventListener('DOMContentLoaded', function() {
         userDropdown.classList.remove('show');
     };
     
+    // Funciones para el modal de notificación personalizado
+    window.showCustomNotification = function(message, type = 'info', title = 'Notificación') {
+        const modal = document.getElementById('customNotificationModal');
+        const titleElement = document.getElementById('notificationTitle');
+        const messageElement = document.getElementById('notificationMessage');
+        const iconElement = document.getElementById('notificationIcon');
+        
+        // Configurar el título
+        titleElement.textContent = title;
+        
+        // Configurar el mensaje
+        messageElement.textContent = message;
+        
+        // Configurar el icono según el tipo
+        const iconContainer = iconElement.parentElement;
+        iconContainer.className = 'custom-notification-icon ' + type;
+        
+        switch(type) {
+            case 'success':
+                iconElement.className = 'fas fa-check-circle';
+                titleElement.textContent = '¡Éxito!';
+                break;
+            case 'error':
+                iconElement.className = 'fas fa-exclamation-circle';
+                titleElement.textContent = 'Error';
+                break;
+            case 'warning':
+                iconElement.className = 'fas fa-exclamation-triangle';
+                titleElement.textContent = 'Advertencia';
+                break;
+            case 'info':
+            default:
+                iconElement.className = 'fas fa-info-circle';
+                titleElement.textContent = 'Información';
+                break;
+        }
+        
+        // Mostrar el modal
+        modal.style.display = 'flex';
+    };
+    
+    window.closeCustomNotification = function() {
+        document.getElementById('customNotificationModal').style.display = 'none';
+    };
+    
+    // Cerrar modal de notificación con tecla Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const notificationModal = document.getElementById('customNotificationModal');
+            if (notificationModal.style.display === 'flex') {
+                closeCustomNotification();
+            }
+        }
+    });
+    
     // Validación personalizada del formulario
     document.getElementById('addMemberForm').addEventListener('submit', function(e) {
         e.preventDefault();
@@ -463,12 +540,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     selectUser(foundUser);
                     // Continuar con el envío del formulario
                 } else {
-                    alert('Por favor selecciona un usuario válido de la lista o escribe al menos 3 caracteres y presiona Enter');
+                    showCustomNotification('Por favor selecciona un usuario válido de la lista o escribe al menos 3 caracteres y presiona Enter', 'warning', 'Usuario requerido');
                     userSearchInput.focus();
                     return false;
                 }
             } else {
-                alert('Por favor selecciona un usuario para agregar al clan o escribe al menos 3 caracteres y presiona Enter');
+                showCustomNotification('Por favor selecciona un usuario para agregar al clan o escribe al menos 3 caracteres y presiona Enter', 'warning', 'Usuario requerido');
                 userSearchInput.focus();
                 return false;
             }
@@ -512,17 +589,19 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             console.log('Datos recibidos:', data);
             if (data.success) {
-                alert('Usuario agregado al clan exitosamente');
-                closeAddMemberModal();
-                // Recargar la página para mostrar el nuevo miembro
-                window.location.reload();
+                showCustomNotification('Usuario agregado al clan exitosamente', 'success', '¡Éxito!');
+                setTimeout(() => {
+                    closeAddMemberModal();
+                    // Recargar la página para mostrar el nuevo miembro
+                    window.location.reload();
+                }, 1500); // Esperar 1.5 segundos para que el usuario vea el mensaje
             } else {
-                alert('Error al agregar usuario: ' + (data.message || 'Error desconocido'));
+                showCustomNotification('Error al agregar usuario: ' + (data.message || 'Error desconocido'), 'error', 'Error');
             }
         })
         .catch(error => {
             console.error('Error completo:', error);
-            alert('Error de conexión al agregar usuario: ' + error.message);
+            showCustomNotification('Error de conexión al agregar usuario: ' + error.message, 'error', 'Error de conexión');
         });
     });
 });
@@ -821,6 +900,135 @@ document.addEventListener('DOMContentLoaded', function() {
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+/* Estilos para el Modal de Notificación Personalizado */
+.custom-notification-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    backdrop-filter: blur(4px);
+}
+
+.custom-notification-content {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    width: 90%;
+    max-width: 400px;
+    overflow: hidden;
+    animation: notificationFadeIn 0.3s ease-out;
+}
+
+@keyframes notificationFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.custom-notification-header {
+    padding: 20px 24px 0;
+    text-align: center;
+}
+
+.custom-notification-header span {
+    font-size: 18px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.custom-notification-body {
+    padding: 20px 24px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+.custom-notification-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: white;
+}
+
+.custom-notification-icon.success {
+    background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.custom-notification-icon.error {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+.custom-notification-icon.warning {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+.custom-notification-icon.info {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+}
+
+.custom-notification-message {
+    color: #374151;
+    font-size: 16px;
+    line-height: 1.5;
+    font-weight: 500;
+}
+
+.custom-notification-footer {
+    padding: 0 24px 24px;
+    display: flex;
+    justify-content: center;
+}
+
+.custom-notification-btn {
+    padding: 12px 32px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    min-width: 120px;
+}
+
+.custom-notification-btn-primary {
+    background: #3b82f6;
+    color: white;
+}
+
+.custom-notification-btn-primary:hover {
+    background: #2563eb;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+}
+
+.custom-notification-btn-secondary {
+    background: #f3f4f6;
+    color: #374151;
+    border: 1px solid #d1d5db;
+}
+
+.custom-notification-btn-secondary:hover {
+    background: #e5e7eb;
+    transform: translateY(-1px);
 }
 
 /* Responsive para Modal */
