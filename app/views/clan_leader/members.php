@@ -959,8 +959,8 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 .dropdown-avatar-image {
-    width: calc(100% + 4px);
-    height: calc(100% + 4px);
+    width: calc(100% + 14px);
+    height: calc(100% + 14px);
     object-fit: cover;
     border-radius: 50%;
     display: block;
