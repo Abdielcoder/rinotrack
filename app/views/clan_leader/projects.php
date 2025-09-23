@@ -417,6 +417,7 @@ function closeCreateProjectModal() {
 
 // Funciones para el modal de editar proyecto
 function openEditProjectModal(projectId, projectName, description, timeLimit) {
+    console.log('openEditProjectModal llamado con:', projectId, projectName, description, timeLimit);
     document.getElementById('editProjectId').value = projectId;
     document.getElementById('editProjectName').value = projectName;
     document.getElementById('editDescription').value = description;
@@ -431,7 +432,8 @@ function closeEditProjectModal() {
 
 // Eliminar proyecto
 function deleteProject(projectId, projectName) {
-            confirmDelete(`¿Estás seguro de que quieres eliminar el proyecto "${projectName}"?`, () => {
+    console.log('deleteProject llamado con:', projectId, projectName);
+    if (confirm(`¿Estás seguro de que quieres eliminar el proyecto "${projectName}"?`)) {
         const formData = new FormData();
         formData.append('projectId', projectId);
         
@@ -455,7 +457,7 @@ function deleteProject(projectId, projectName) {
             console.error('Error:', error);
             showToast('Error de conexión', 'error');
         });
-    });
+    }
 }
 
 // Manejar envío del formulario de crear proyecto
@@ -761,6 +763,7 @@ function toggleListMenu(projectId) {
 
 // Función para el menú de la vista cards (mantener compatibilidad)
 function toggleProjectMenu(projectId) {
+    console.log('toggleProjectMenu llamado con:', projectId);
     const menu = document.getElementById(`projectMenu${projectId}`);
     
     if (!menu) {
