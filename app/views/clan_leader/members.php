@@ -114,9 +114,9 @@ ob_start();
                     <div class="select-search-container">
                         <input type="text" id="userSearch" placeholder="Buscar usuario..." class="select-search-input">
                         <select id="userId" name="userId" style="display: none;">
-                            <option value="">Seleccionar usuario...</option>
-                            <!-- Se llenará dinámicamente -->
-                        </select>
+                        <option value="">Seleccionar usuario...</option>
+                        <!-- Se llenará dinámicamente -->
+                    </select>
                         <div id="userDropdown" class="select-dropdown">
                             <!-- Se llenará dinámicamente -->
                         </div>
@@ -976,7 +976,7 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 .custom-notification-icon.success {
-    background: linear-gradient(135deg, #1e3a8a, #1e40af);
+    background: linear-gradient(135deg, #10b981, #059669);
 }
 
 .custom-notification-icon.error {
@@ -1016,14 +1016,14 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 .custom-notification-btn-primary {
-    background: #3b82f6;
+    background: #1e3a8a;
     color: white;
 }
 
 .custom-notification-btn-primary:hover {
-    background: #2563eb;
+    background: #1e40af;
     transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+    box-shadow: 0 4px 8px rgba(30, 58, 138, 0.3);
 }
 
 .custom-notification-btn-secondary {
