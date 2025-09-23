@@ -229,7 +229,7 @@ document.addEventListener('DOMContentLoaded', function() {
         userDropdown.innerHTML = '<div class="dropdown-item" style="color: #6b7280; cursor: default;"><i class="fas fa-spinner fa-spin"></i> Cargando usuarios...</div>';
         userDropdown.classList.add('show');
         
-        fetch('?route=clan_leader/getAvailableUsers')
+        fetch('?route=clan_leader/get-available-users')
             .then(response => {
                 console.log('Respuesta del servidor:', response.status);
                 if (!response.ok) {
