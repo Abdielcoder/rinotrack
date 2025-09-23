@@ -329,24 +329,61 @@ function filterTasks() {
     
     const rows = document.querySelectorAll('.task-row');
     let visibleCount = 0;
-    let currentPage = 1;
-    let startIndex = 0;
-    let endIndex = perPage;
+    let completedCount = 0;
+    let inProgressCount = 0;
+    let pendingCount = 0;
     
-    rows.forEach((row, index) => {
+    // Primero, filtrar todas las tareas
+    const filteredRows = [];
+    
+    rows.forEach((row) => {
         const taskName = row.querySelector('.task-name').textContent.toLowerCase();
         const taskDescription = row.querySelector('.task-description') ? row.querySelector('.task-description').textContent.toLowerCase() : '';
-        const status = row.querySelector('.status-badge').textContent.toLowerCase();
+        const statusBadge = row.querySelector('.status-badge');
+        const status = statusBadge ? statusBadge.textContent.toLowerCase() : '';
         
         // Aplicar filtros
-        const matchesSearch = taskName.includes(searchTerm) || taskDescription.includes(searchTerm);
-        const matchesStatus = !statusFilter || status.includes(statusFilter.toLowerCase());
+        const matchesSearch = !searchTerm || taskName.includes(searchTerm) || taskDescription.includes(searchTerm);
+        
+        let matchesStatus = true;
+        if (statusFilter) {
+            switch (statusFilter) {
+                case 'pending':
+                    matchesStatus = status.includes('pendiente');
+                    break;
+                case 'in_progress':
+                    matchesStatus = status.includes('progreso');
+                    break;
+                case 'completed':
+                    matchesStatus = status.includes('completado');
+                    break;
+            }
+        }
         
         if (matchesSearch && matchesStatus) {
+            filteredRows.push(row);
             visibleCount++;
             
-            // Mostrar/ocultar según paginación
-            if (visibleCount > startIndex && visibleCount <= endIndex) {
+            // Contar por estado para las estadísticas
+            if (status.includes('completado')) {
+                completedCount++;
+            } else if (status.includes('progreso')) {
+                inProgressCount++;
+            } else {
+                pendingCount++;
+            }
+        }
+    });
+    
+    // Aplicar paginación
+    const currentPage = 1; // Por ahora siempre página 1, se puede expandir después
+    const startIndex = (currentPage - 1) * perPage;
+    const endIndex = startIndex + perPage;
+    
+    rows.forEach((row, index) => {
+        if (filteredRows.includes(row)) {
+            const filteredIndex = filteredRows.indexOf(row);
+            if (filteredIndex >= startIndex && filteredIndex < endIndex) {
                 row.style.display = '';
             } else {
                 row.style.display = 'none';
@@ -356,16 +393,60 @@ function filterTasks() {
         }
     });
     
-    // Actualizar contador de tareas visibles
-    updateTaskCount(visibleCount);
+    // Actualizar información de paginación (si existe)
+    updatePaginationInfo(filteredRows.length, perPage, currentPage);
+    
+    // Actualizar contadores de tareas
+    updateTaskCounts(visibleCount, completedCount, inProgressCount, pendingCount);
 }
 
-// Función para actualizar el contador de tareas
-function updateTaskCount(count) {
-    // Actualizar las estadísticas en las tarjetas
-    const totalCard = document.querySelector('.stat-card .stat-value');
-    if (totalCard) {
-        totalCard.textContent = count;
+// Función para actualizar información de paginación
+function updatePaginationInfo(totalFiltered, perPage, currentPage) {
+    // Crear o actualizar indicador de resultados
+    let paginationInfo = document.getElementById('pagination-info');
+    if (!paginationInfo) {
+        paginationInfo = document.createElement('div');
+        paginationInfo.id = 'pagination-info';
+        paginationInfo.className = 'pagination-info';
+        
+        // Insertar después de los filtros
+        const filtersContainer = document.querySelector('.filters-container');
+        if (filtersContainer) {
+            filtersContainer.insertAdjacentElement('afterend', paginationInfo);
+        }
+    }
+    
+    const startItem = (currentPage - 1) * perPage + 1;
+    const endItem = Math.min(currentPage * perPage, totalFiltered);
+    
+    if (totalFiltered > 0) {
+        paginationInfo.innerHTML = `
+            <div class="pagination-info-content">
+                <span class="pagination-text">
+                    Mostrando ${startItem}-${endItem} de ${totalFiltered} tareas
+                </span>
+            </div>
+        `;
+        paginationInfo.style.display = 'block';
+    } else {
+        paginationInfo.style.display = 'none';
+    }
+}
+
+// Función para actualizar los contadores de tareas
+function updateTaskCounts(total, completed, inProgress, pending) {
+    // Actualizar todas las estadísticas en las tarjetas
+    const statCards = document.querySelectorAll('.stat-card .stat-value');
+    
+    if (statCards.length >= 4) {
+        // Total tareas (primera tarjeta)
+        statCards[0].textContent = total;
+        // Completadas (segunda tarjeta)
+        statCards[1].textContent = completed;
+        // En progreso (tercera tarjeta)
+        statCards[2].textContent = inProgress;
+        // Pendientes (cuarta tarjeta)
+        statCards[3].textContent = pending;
     }
 }
 
@@ -374,7 +455,33 @@ function resetFilters() {
     document.getElementById('searchInput').value = '';
     document.getElementById('statusFilter').value = '';
     document.getElementById('perPage').value = '5';
-    filterTasks();
+    
+    // Mostrar todas las tareas
+    const rows = document.querySelectorAll('.task-row');
+    let completedCount = 0;
+    let inProgressCount = 0;
+    let pendingCount = 0;
+    
+    rows.forEach((row) => {
+        row.style.display = '';
+        const statusBadge = row.querySelector('.status-badge');
+        const status = statusBadge ? statusBadge.textContent.toLowerCase() : '';
+        
+        if (status.includes('completado')) {
+            completedCount++;
+        } else if (status.includes('progreso')) {
+            inProgressCount++;
+        } else {
+            pendingCount++;
+        }
+    });
+    
+    // Actualizar contadores con todos los datos
+    updateTaskCounts(rows.length, completedCount, inProgressCount, pendingCount);
+    
+    // Actualizar información de paginación
+    const perPage = parseInt(document.getElementById('perPage').value);
+    updatePaginationInfo(rows.length, perPage, 1);
 }
 
 // Función para actualizar la selección
@@ -464,30 +571,37 @@ function toggleTaskStatus(taskId, isChecked) {
 
 // Función para eliminar tarea individual
 function deleteTask(taskId) {
-    if (confirm('¿Estás seguro de que quieres eliminar esta tarea?')) {
-        fetch('?route=clan_leader/delete-task', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: 'task_id=' + taskId
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showToast('Tarea eliminada exitosamente', 'success');
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1000);
-            } else {
-                showToast('Error al eliminar la tarea: ' + data.message, 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showToast('Error de conexión', 'error');
-        });
-    }
+    showConfirmationModal({
+        title: 'Eliminar Tarea',
+        message: '¿Estás seguro de que quieres eliminar esta tarea?\n\nEsta acción no se puede deshacer.',
+        type: 'danger',
+        confirmText: 'Eliminar',
+        cancelText: 'Cancelar',
+        onConfirm: () => {
+            fetch('?route=clan_leader/delete-task', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'task_id=' + taskId
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('Tarea eliminada exitosamente', 'success');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    showToast('Error al eliminar la tarea: ' + data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Error de conexión', 'error');
+            });
+        }
+    });
 }
 
 // Función para mostrar modal de eliminación múltiple
@@ -584,6 +698,110 @@ function executeBulkDelete() {
         submitBtn.innerHTML = originalText;
         submitBtn.disabled = false;
     });
+}
+
+// Función para mostrar modal de confirmación personalizado
+function showConfirmationModal(options) {
+    const {
+        title = 'Confirmar Acción',
+        message = '¿Estás seguro de que quieres realizar esta acción?',
+        type = 'warning',
+        confirmText = 'Confirmar',
+        cancelText = 'Cancelar',
+        onConfirm = null,
+        onCancel = null
+    } = options;
+
+    // Crear el HTML del modal
+    const modalHTML = `
+        <div class="confirmation-modal-overlay" id="confirmationModalOverlay">
+            <div class="confirmation-modal" id="confirmationModal">
+                <div class="confirmation-modal-header">
+                    <h3 class="confirmation-modal-title">
+                        <i class="fas fa-${getIconForType(type)}"></i>
+                        ${title}
+                    </h3>
+                </div>
+                <div class="confirmation-modal-body">
+                    <i class="fas fa-${getIconForType(type)} confirmation-modal-icon ${type}"></i>
+                    <p class="confirmation-modal-message">${message}</p>
+                    <div class="confirmation-modal-actions">
+                        <button class="confirmation-modal-btn cancel" id="confirmationCancelBtn">
+                            <i class="fas fa-times"></i>
+                            ${cancelText}
+                        </button>
+                        <button class="confirmation-modal-btn confirm" id="confirmationConfirmBtn">
+                            <i class="fas fa-trash"></i>
+                            ${confirmText}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Agregar el modal al DOM
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+    const overlay = document.getElementById('confirmationModalOverlay');
+    const modal = document.getElementById('confirmationModal');
+    const confirmBtn = document.getElementById('confirmationConfirmBtn');
+    const cancelBtn = document.getElementById('confirmationCancelBtn');
+
+    // Mostrar el modal con animación
+    setTimeout(() => {
+        overlay.classList.add('show');
+    }, 10);
+
+    // Función para cerrar el modal
+    const closeModal = (result) => {
+        overlay.classList.remove('show');
+        setTimeout(() => {
+            document.body.removeChild(overlay);
+            if (result && onConfirm) {
+                onConfirm();
+            } else if (!result && onCancel) {
+                onCancel();
+            }
+        }, 300);
+    };
+
+    // Event listeners
+    confirmBtn.addEventListener('click', () => closeModal(true));
+    cancelBtn.addEventListener('click', () => closeModal(false));
+    
+    // Cerrar al hacer clic en el overlay
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+            closeModal(false);
+        }
+    });
+
+    // Cerrar con Escape
+    const handleEscape = (e) => {
+        if (e.key === 'Escape') {
+            closeModal(false);
+            document.removeEventListener('keydown', handleEscape);
+        }
+    };
+    
+    document.addEventListener('keydown', handleEscape);
+}
+
+// Función auxiliar para obtener el icono según el tipo
+function getIconForType(type) {
+    switch (type) {
+        case 'danger':
+            return 'exclamation-triangle';
+        case 'warning':
+            return 'exclamation-triangle';
+        case 'info':
+            return 'info-circle';
+        case 'success':
+            return 'check-circle';
+        default:
+            return 'question-circle';
+    }
 }
 
 // Función para mostrar notificaciones toast
@@ -974,6 +1192,28 @@ document.addEventListener('DOMContentLoaded', function() {
     background: #4b5563;
 }
 
+/* Estilos para información de paginación */
+.pagination-info {
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 16px 0;
+    display: none;
+}
+
+.pagination-info-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.pagination-text {
+    font-size: 14px;
+    color: #6b7280;
+    font-weight: 500;
+}
+
 /* Estilos para la barra de selección múltiple */
 .bulk-actions-area {
     position: fixed;
@@ -1129,6 +1369,173 @@ document.addEventListener('DOMContentLoaded', function() {
     .btn-clear-selection {
         flex: 1;
         justify-content: center;
+    }
+}
+
+/* Estilos para el modal de confirmación personalizado */
+.confirmation-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.confirmation-modal-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.confirmation-modal-overlay.show .confirmation-modal {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+}
+
+.confirmation-modal {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    max-width: 480px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    transform: translateY(20px) scale(0.95);
+    opacity: 0;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.confirmation-modal-header {
+    padding: 24px 24px 16px 24px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.confirmation-modal-title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+    color: #1f2937;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.confirmation-modal-title i {
+    font-size: 20px;
+    color: #dc2626;
+}
+
+.confirmation-modal-body {
+    padding: 24px;
+    text-align: center;
+}
+
+.confirmation-modal-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    display: block;
+}
+
+.confirmation-modal-icon.danger {
+    color: #dc2626;
+}
+
+.confirmation-modal-icon.warning {
+    color: #f59e0b;
+}
+
+.confirmation-modal-icon.info {
+    color: #3b82f6;
+}
+
+.confirmation-modal-icon.success {
+    color: #10b981;
+}
+
+.confirmation-modal-message {
+    font-size: 16px;
+    color: #374151;
+    line-height: 1.5;
+    margin: 0 0 24px 0;
+    white-space: pre-line;
+}
+
+.confirmation-modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.confirmation-modal-btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 120px;
+    justify-content: center;
+}
+
+.confirmation-modal-btn.cancel {
+    background: #f3f4f6;
+    color: #374151;
+    border: 1px solid #d1d5db;
+}
+
+.confirmation-modal-btn.cancel:hover {
+    background: #e5e7eb;
+    transform: translateY(-1px);
+}
+
+.confirmation-modal-btn.confirm {
+    background: #dc2626;
+    color: white;
+    box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+}
+
+.confirmation-modal-btn.confirm:hover {
+    background: #b91c1c;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+}
+
+.confirmation-modal-btn i {
+    font-size: 14px;
+}
+
+/* Responsive para el modal */
+@media (max-width: 480px) {
+    .confirmation-modal {
+        width: 95%;
+        margin: 20px;
+    }
+    
+    .confirmation-modal-header,
+    .confirmation-modal-body {
+        padding: 20px;
+    }
+    
+    .confirmation-modal-actions {
+        flex-direction: column;
+    }
+    
+    .confirmation-modal-btn {
+        width: 100%;
+        min-width: auto;
     }
 }
 </style>
