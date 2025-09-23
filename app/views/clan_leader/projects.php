@@ -65,7 +65,7 @@ ob_start();
                         <!-- Header del Proyecto -->
                         <div class="project-info-header">
                             <div class="project-icon-minimal">
-                                <i class="fas fa-project-diagram icon-gradient"></i>
+                                <i class="fas fa-project-diagram"></i>
                             </div>
                             <div class="project-details-minimal">
                                 <div class="project-name-minimal"><?= htmlspecialchars($project['project_name']) ?></div>
@@ -986,7 +986,7 @@ function updateCardsView(projects) {
             <!-- Header del Proyecto -->
             <div class="project-info-header">
                 <div class="project-icon-minimal">
-                    <i class="fas fa-project-diagram icon-gradient"></i>
+                    <i class="fas fa-project-diagram"></i>
                 </div>
                 <div class="project-details-minimal">
                     <div class="project-name-minimal">${escapeHtml(project.project_name)}</div>
