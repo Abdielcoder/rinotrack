@@ -388,15 +388,43 @@ document.addEventListener('DOMContentLoaded', function() {
             return false;
         }
         
-        // Si la validación pasa, enviar el formulario
-        const formData = new FormData(this);
+        console.log('Enviando formulario con userId:', selectedUserId);
+        console.log('userIdSelect.value:', userIdSelect.value);
+        
+        // Preparar los datos del formulario
+        const formData = new FormData();
+        formData.append('userId', selectedUserId);
+        
+        // También asegurar que el select oculto tenga el valor correcto
+        userIdSelect.value = selectedUserId;
+        
+        console.log('Datos a enviar:', {
+            userId: selectedUserId,
+            userIdSelectValue: userIdSelect.value,
+            url: '?route=clan_leader/add-member'
+        });
+        
+        // Verificar que los datos se están enviando correctamente
+        for (let pair of formData.entries()) {
+            console.log('FormData:', pair[0] + ': ' + pair[1]);
+        }
         
         fetch('?route=clan_leader/add-member', {
             method: 'POST',
-            body: formData
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
         })
-        .then(response => response.json())
+        .then(response => {
+            console.log('Respuesta del servidor:', response.status, response.statusText);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
+            console.log('Datos recibidos:', data);
             if (data.success) {
                 alert('Usuario agregado al clan exitosamente');
                 closeAddMemberModal();
@@ -407,8 +435,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         })
         .catch(error => {
-            console.error('Error:', error);
-            alert('Error de conexión al agregar usuario');
+            console.error('Error completo:', error);
+            alert('Error de conexión al agregar usuario: ' + error.message);
         });
     });
 });
