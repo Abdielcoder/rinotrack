@@ -193,6 +193,8 @@ class ClanMemberController {
             'history' => $history,
             'assignedUsers' => $assignedUsers,
             'canEdit' => $canEdit
+            // IMPORTANTE: Los miembros de clan NO deben ver etiquetas
+            // 'labels' => [] // Esta línea está comentada intencionalmente
         ];
         $this->loadView('clan_member/task_details', $data);
     }

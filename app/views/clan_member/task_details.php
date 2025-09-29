@@ -208,6 +208,18 @@ $additionalJS[] = 'https://cdn.quilljs.com/1.3.6/quill.min.js';
         </div>
         <?php endif; ?>
 
+        <!-- Código defensivo: Asegurar que no se muestren etiquetas en vista de miembro de clan -->
+        <?php 
+        // IMPORTANTE: Los miembros de clan NO deben ver etiquetas de tareas
+        // Esta sección está comentada intencionalmente para prevenir bugs
+        /*
+        if (!empty($labels)): 
+            // Esta sección está deshabilitada para miembros de clan
+            // Solo los líderes de clan pueden ver etiquetas
+        endif; 
+        */
+        ?>
+
         <div class="summary-card">
           <h3>Comentarios (<?php echo count($comments); ?>)</h3>
           <?php if ($canEdit): ?>
@@ -440,6 +452,15 @@ function noPermissionModal(){
     alert('No tienes permisos para modificar esta tarea.');
   }
 }
+
+// Ejecutar función preventiva cuando la página se carga
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Vista de miembro de clan cargada - ejecutando función preventiva');
+    preventIncorrectLabels();
+    
+    // También ejecutar cada 5 segundos como medida adicional
+    setInterval(preventIncorrectLabels, 5000);
+});
 </script>
 
 <style>
@@ -2282,6 +2303,28 @@ function downloadTaskHistory(taskId) {
 </style>
 
 <script>
+// Función preventiva para evitar etiquetas incorrectas en vista de miembro de clan
+function preventIncorrectLabels() {
+    // Remover cualquier elemento con clase 'labels-list' o 'label' que pueda aparecer incorrectamente
+    const labelElements = document.querySelectorAll('.labels-list, .label, [class*="label"], [class*="etiqueta"]');
+    labelElements.forEach(element => {
+        // Solo remover si contiene la palabra "Dirección" o similar
+        if (element.textContent && element.textContent.includes('Dirección')) {
+            console.warn('Removiendo etiqueta incorrecta:', element.textContent);
+            element.remove();
+        }
+    });
+    
+    // Remover cualquier sección de etiquetas que pueda aparecer
+    const labelSections = document.querySelectorAll('h3');
+    labelSections.forEach(section => {
+        if (section.textContent && (section.textContent.includes('Etiquetas') || section.textContent.includes('Tags'))) {
+            console.warn('Removiendo sección de etiquetas incorrecta');
+            section.closest('.summary-card')?.remove();
+        }
+    });
+}
+
 // Función para mostrar modal de agregar subtarea
 function showAddSubtaskModal() {
     closeExistingModals();
@@ -2327,6 +2370,9 @@ function showAddSubtaskModal() {
                         <input type="date" id="new-subtask-due-date" style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 6px; font-size: 14px; outline: none;">
                     </div>
                     
+                    <!-- NOTA: Las etiquetas NO están disponibles para miembros de clan -->
+                    <!-- Solo los líderes de clan pueden gestionar etiquetas -->
+                    
                     <div style="display: flex; gap: 10px; justify-content: flex-end;">
                         <button type="button" onclick="closeExistingModals()" style="background: #6b7280; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600;">
                             Cancelar
@@ -2346,6 +2392,9 @@ function showAddSubtaskModal() {
     setTimeout(() => {
         document.getElementById('new-subtask-title').focus();
     }, 100);
+    
+    // Ejecutar función preventiva
+    preventIncorrectLabels();
 }
 
 // Función para guardar nueva subtarea (específica para miembros de clan)
@@ -2380,6 +2429,8 @@ function saveNewSubtaskForMember() {
         if (data.success) {
             closeExistingModals();
             alert('Subtarea creada exitosamente');
+            // Ejecutar función preventiva antes de recargar
+            preventIncorrectLabels();
             // Recargar la página para mostrar la nueva subtarea
             setTimeout(() => {
                 location.reload();
