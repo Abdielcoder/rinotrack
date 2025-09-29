@@ -1143,7 +1143,10 @@ class ClanMemberController {
                     t.created_at,
                     p.project_name,
                     p.clan_id,
-                    c.clan_name,
+                    CASE 
+                        WHEN c.clan_name LIKE '%Dirección%' THEN 'Clan'
+                        ELSE c.clan_name
+                    END as clan_name,
                     CASE 
                         WHEN p.clan_id = ? THEN 1
                         ELSE 0
@@ -1500,7 +1503,10 @@ class ClanMemberController {
                         CONCAT('Subtarea de: ', t.task_name) as project_name,
                         t.project_id,
                         p.clan_id,
-                        c.clan_name,
+                        CASE 
+                            WHEN c.clan_name LIKE '%Dirección%' THEN 'Clan'
+                            ELSE c.clan_name
+                        END as clan_name,
                         CASE 
                             WHEN s.due_date IS NULL THEN 999
                             ELSE DATEDIFF(s.due_date, CURDATE())

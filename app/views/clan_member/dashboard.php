@@ -200,7 +200,7 @@ ob_start();
                                         <?php else: ?>
                                             <!-- Mostrar project-name para tareas normales -->
                                             <span class="project-name"><?php echo htmlspecialchars($task['project_name']); ?></span>
-                                            <?php if (isset($task['clan_name']) && $task['clan_name'] !== ($clan['clan_name'] ?? '')): ?>
+                                            <?php if (isset($task['clan_name']) && $task['clan_name'] !== ($clan['clan_name'] ?? '') && !str_contains($task['clan_name'], 'Dirección')): ?>
                                                 <span class="external-clan-badge" title="Proyecto de otro clan: <?php echo htmlspecialchars($task['clan_name']); ?>">
                                                     <i class="fas fa-external-link-alt"></i> <?php echo htmlspecialchars($task['clan_name']); ?>
                                                 </span>
@@ -259,7 +259,7 @@ ob_start();
                                         <?php else: ?>
                                             <!-- Mostrar project-name para tareas normales -->
                                             <span class="project-name"><?php echo htmlspecialchars($task['project_name']); ?></span>
-                                            <?php if (isset($task['clan_name']) && $task['clan_name'] !== ($clan['clan_name'] ?? '')): ?>
+                                            <?php if (isset($task['clan_name']) && $task['clan_name'] !== ($clan['clan_name'] ?? '') && !str_contains($task['clan_name'], 'Dirección')): ?>
                                                 <span class="external-clan-badge" title="Proyecto de otro clan: <?php echo htmlspecialchars($task['clan_name']); ?>">
                                                     <i class="fas fa-external-link-alt"></i> <?php echo htmlspecialchars($task['clan_name']); ?>
                                                 </span>
@@ -314,7 +314,7 @@ ob_start();
                                         <?php else: ?>
                                             <!-- Mostrar project-name para tareas normales -->
                                             <span class="project-name"><?php echo htmlspecialchars($task['project_name']); ?></span>
-                                            <?php if (isset($task['clan_name']) && $task['clan_name'] !== ($clan['clan_name'] ?? '')): ?>
+                                            <?php if (isset($task['clan_name']) && $task['clan_name'] !== ($clan['clan_name'] ?? '') && !str_contains($task['clan_name'], 'Dirección')): ?>
                                                 <span class="external-clan-badge" title="Proyecto de otro clan: <?php echo htmlspecialchars($task['clan_name']); ?>">
                                                     <i class="fas fa-external-link-alt"></i> <?php echo htmlspecialchars($task['clan_name']); ?>
                                                 </span>
@@ -369,7 +369,7 @@ ob_start();
                                         <?php else: ?>
                                             <!-- Mostrar project-name para tareas normales -->
                                             <span class="project-name"><?php echo htmlspecialchars($task['project_name']); ?></span>
-                                            <?php if (isset($task['clan_name']) && $task['clan_name'] !== ($clan['clan_name'] ?? '')): ?>
+                                            <?php if (isset($task['clan_name']) && $task['clan_name'] !== ($clan['clan_name'] ?? '') && !str_contains($task['clan_name'], 'Dirección')): ?>
                                                 <span class="external-clan-badge" title="Proyecto de otro clan: <?php echo htmlspecialchars($task['clan_name']); ?>">
                                                     <i class="fas fa-external-link-alt"></i> <?php echo htmlspecialchars($task['clan_name']); ?>
                                                 </span>
@@ -2067,9 +2067,36 @@ function insertPriorityBadges() {
 }
 
 // Ejecutar cuando el DOM esté listo
+// Función preventiva para eliminar etiquetas "Dirección" del dashboard
+function removeDireccionLabels() {
+    // Buscar todos los badges de clan externo
+    const externalBadges = document.querySelectorAll('.external-clan-badge');
+    externalBadges.forEach(badge => {
+        if (badge.textContent && badge.textContent.includes('Dirección')) {
+            console.warn('Removiendo badge de clan incorrecto:', badge.textContent);
+            badge.remove();
+        }
+    });
+    
+    // Buscar cualquier elemento que contenga "Dirección Rinorisk"
+    const allElements = document.querySelectorAll('span, .project-name, .external-clan-badge');
+    allElements.forEach(element => {
+        if (element.textContent && element.textContent.includes('Dirección')) {
+            console.warn('Removiendo elemento con Dirección:', element.textContent);
+            element.remove();
+        }
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // Insertar etiquetas de prioridad
     insertPriorityBadges();
+    
+    // Ejecutar función preventiva para eliminar etiquetas incorrectas
+    removeDireccionLabels();
+    
+    // Ejecutar la función preventiva cada 2 segundos como medida adicional
+    setInterval(removeDireccionLabels, 2000);
     
     // Verificar si se debe abrir el modal para editar una tarea
     <?php if (isset($editTaskId) && $editTaskId > 0): ?>
@@ -2082,7 +2109,10 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // También ejecutar después de recargar el dashboard
     if (typeof window.addEventListener === 'function') {
-        window.addEventListener('load', insertPriorityBadges);
+        window.addEventListener('load', function() {
+            insertPriorityBadges();
+            removeDireccionLabels(); // También ejecutar después de load
+        });
     }
 });
 
