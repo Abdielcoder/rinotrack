@@ -152,9 +152,9 @@ class ClanLeaderController {
                 AND t.is_completed = 0
                 AND (
                     -- Excluir tareas personales de otros usuarios
-                    (COALESCE(p.is_personal, t.is_personal, 0) = 0) -- Tareas no personales
+                    COALESCE(p.is_personal, t.is_personal, 0) = 0 
                     OR 
-                    (COALESCE(p.is_personal, t.is_personal, 0) = 1 AND t.created_by_user_id = ?) -- Tareas personales propias
+                    (COALESCE(p.is_personal, t.is_personal, 0) = 1 AND t.created_by_user_id = ?)
                 ))
             
             UNION ALL
@@ -193,9 +193,9 @@ class ClanLeaderController {
                 AND s.due_date IS NOT NULL
                 AND (
                     -- Excluir subtareas de tareas personales de otros usuarios
-                    (COALESCE(p.is_personal, t.is_personal, 0) = 0) -- Subtareas de tareas no personales
+                    COALESCE(p.is_personal, t.is_personal, 0) = 0 
                     OR 
-                    (COALESCE(p.is_personal, t.is_personal, 0) = 1 AND t.created_by_user_id = ?) -- Subtareas de tareas personales propias
+                    (COALESCE(p.is_personal, t.is_personal, 0) = 1 AND t.created_by_user_id = ?)
                 ))
             
             ORDER BY due_date ASC
@@ -4357,11 +4357,10 @@ class ClanLeaderController {
                     (t.is_subtask = 0 OR t.is_subtask IS NULL)
                     AND t.assigned_to_user_id = :user_id
                     AND (
-                        -- Para tareas personales, SOLO mostrar si el usuario es TANTO creador COMO asignado (tareas propias)
-                        (COALESCE(p.is_personal, t.is_personal, 0) = 1 AND t.created_by_user_id = t.assigned_to_user_id AND t.assigned_to_user_id = :user_id2)
+                        -- Excluir tareas personales de otros usuarios
+                        COALESCE(p.is_personal, t.is_personal, 0) = 0 
                         OR 
-                        -- Para tareas no personales, mostrar normalmente
-                        COALESCE(p.is_personal, t.is_personal, 0) = 0
+                        (COALESCE(p.is_personal, t.is_personal, 0) = 1 AND t.created_by_user_id = :user_id2)
                     )
                 ORDER BY t.due_date ASC
                 LIMIT 200
@@ -4734,9 +4733,9 @@ class ClanLeaderController {
                     $searchSubtaskFilter
                     AND (
                         -- Excluir subtareas de tareas personales de otros usuarios
-                        (COALESCE(p.is_personal, t.is_personal, 0) = 0) -- Subtareas de tareas no personales
+                        COALESCE(p.is_personal, t.is_personal, 0) = 0 
                         OR 
-                        (COALESCE(p.is_personal, t.is_personal, 0) = 1 AND t.created_by_user_id = :user_id3) -- Subtareas de tareas personales propias
+                        (COALESCE(p.is_personal, t.is_personal, 0) = 1 AND t.created_by_user_id = :user_id3)
                     ))
                 ORDER BY item_type, task_id
             ");
@@ -4848,11 +4847,10 @@ class ClanLeaderController {
                     AND p.clan_id = :clan_id
                     AND t.is_subtask = 0
                     AND (
-                        -- Para tareas personales, SOLO mostrar si el usuario es TANTO creador COMO asignado (tareas propias)
-                        (COALESCE(p.is_personal, t.is_personal, 0) = 1 AND t.created_by_user_id = t.assigned_to_user_id AND t.assigned_to_user_id = :user_id3)
+                        -- Excluir tareas personales de otros usuarios
+                        COALESCE(p.is_personal, t.is_personal, 0) = 0 
                         OR 
-                        -- Para tareas no personales, mostrar normalmente
-                        COALESCE(p.is_personal, t.is_personal, 0) = 0
+                        (COALESCE(p.is_personal, t.is_personal, 0) = 1 AND t.created_by_user_id = :user_id3)
                     ))
                 UNION ALL
                 (SELECT 
@@ -4877,11 +4875,10 @@ class ClanLeaderController {
                 LEFT JOIN Users u ON s.assigned_to_user_id = u.user_id
                 WHERE s.assigned_to_user_id = :user_id2
                     AND (
-                        -- Para subtareas de tareas personales, SOLO mostrar si el usuario es el creador de la tarea padre Y es el asignado de la subtarea
-                        (COALESCE(p.is_personal, t.is_personal, 0) = 1 AND t.created_by_user_id = t.assigned_to_user_id AND t.created_by_user_id = s.assigned_to_user_id)
+                        -- Excluir subtareas de tareas personales de otros usuarios
+                        COALESCE(p.is_personal, t.is_personal, 0) = 0 
                         OR 
-                        -- Para subtareas de tareas no personales, mostrar normalmente
-                        COALESCE(p.is_personal, t.is_personal, 0) = 0
+                        (COALESCE(p.is_personal, t.is_personal, 0) = 1 AND t.created_by_user_id = :user_id4)
                     ))
                 ORDER BY created_at DESC
             ");
@@ -4890,7 +4887,8 @@ class ClanLeaderController {
                 ':user_id' => $userId,
                 ':clan_id' => $clanId,
                 ':user_id2' => $userId,
-                ':user_id3' => $userId
+                ':user_id3' => $userId,
+                ':user_id4' => $userId
             ]);
             
             $allTasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -6074,9 +6072,9 @@ class ClanLeaderController {
                   AND s.assigned_to_user_id = ?
                   AND (
                       -- Excluir subtareas de tareas personales de otros usuarios
-                      (COALESCE(p.is_personal, t.is_personal, 0) = 0) -- Subtareas de tareas no personales
+                      COALESCE(p.is_personal, t.is_personal, 0) = 0 
                       OR 
-                      (COALESCE(p.is_personal, t.is_personal, 0) = 1 AND t.created_by_user_id = ?) -- Subtareas de tareas personales propias
+                      (COALESCE(p.is_personal, t.is_personal, 0) = 1 AND t.created_by_user_id = ?)
                   )
                 ORDER BY s.due_date ASC
             ");

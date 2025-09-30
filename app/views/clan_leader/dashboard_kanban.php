@@ -989,7 +989,7 @@
                             </div>
                             <div class="task-project">
                                 <div class="task-project-name"><?= isset($task['project_name']) ? htmlspecialchars($task['project_name']) : 'Tareas Personales' ?></div>
-                                <div class="task-due-date"><?= date('d/m/Y', strtotime($task['due_date'])) ?></div>
+                                <div class="task-due-date"><?= !empty($task['due_date']) ? date('d/m/Y', strtotime($task['due_date'])) : 'Sin fecha' ?></div>
                             </div>
                         </div>
                     <?php endforeach; ?>
@@ -1029,7 +1029,7 @@
                             </div>
                             <div class="task-project">
                                 <div class="task-project-name"><?= isset($task['project_name']) ? htmlspecialchars($task['project_name']) : 'Tareas Personales' ?></div>
-                                <div class="task-due-date"><?= date('d/m/Y', strtotime($task['due_date'])) ?></div>
+                                <div class="task-due-date"><?= !empty($task['due_date']) ? date('d/m/Y', strtotime($task['due_date'])) : 'Sin fecha' ?></div>
                             </div>
                         </div>
                     <?php endforeach; ?>
@@ -1069,7 +1069,7 @@
                             </div>
                             <div class="task-project">
                                 <div class="task-project-name"><?= isset($task['project_name']) ? htmlspecialchars($task['project_name']) : 'Tareas Personales' ?></div>
-                                <div class="task-due-date"><?= date('d/m/Y', strtotime($task['due_date'])) ?></div>
+                                <div class="task-due-date"><?= !empty($task['due_date']) ? date('d/m/Y', strtotime($task['due_date'])) : 'Sin fecha' ?></div>
                             </div>
                         </div>
                     <?php endforeach; ?>
@@ -1109,7 +1109,7 @@
                             </div>
                             <div class="task-project">
                                 <div class="task-project-name"><?= isset($task['project_name']) ? htmlspecialchars($task['project_name']) : 'Tareas Personales' ?></div>
-                                <div class="task-due-date"><?= date('d/m/Y', strtotime($task['due_date'])) ?></div>
+                                <div class="task-due-date"><?= !empty($task['due_date']) ? date('d/m/Y', strtotime($task['due_date'])) : 'Sin fecha' ?></div>
                             </div>
                         </div>
                     <?php endforeach; ?>
