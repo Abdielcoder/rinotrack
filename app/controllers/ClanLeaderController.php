@@ -145,7 +145,14 @@ class ClanLeaderController {
             WHERE t.assigned_to_user_id = ?
                 AND (t.is_subtask = 0 OR t.is_subtask IS NULL)
                 AND t.status != 'completed'
-                AND t.is_completed = 0)
+                AND t.is_completed = 0
+                AND (
+                    -- Para tareas personales, solo mostrar si el usuario es creador Y asignado
+                    (COALESCE(p.is_personal, t.is_personal, 0) = 1 AND t.created_by_user_id = ? AND t.assigned_to_user_id = ?)
+                    OR 
+                    -- Para tareas no personales, mostrar normalmente
+                    COALESCE(p.is_personal, t.is_personal, 0) = 0
+                ))
             
             UNION ALL
             
@@ -176,13 +183,20 @@ class ClanLeaderController {
             LEFT JOIN Projects p ON p.project_id = t.project_id
             WHERE s.assigned_to_user_id = ?
                 AND s.status != 'completed'
-                AND s.due_date IS NOT NULL)
+                AND s.due_date IS NOT NULL
+                AND (
+                    -- Para subtareas de tareas personales, solo mostrar si el usuario es creador Y asignado de la tarea padre
+                    (COALESCE(p.is_personal, t.is_personal, 0) = 1 AND t.created_by_user_id = ? AND s.assigned_to_user_id = ?)
+                    OR 
+                    -- Para subtareas de tareas no personales, mostrar normalmente
+                    COALESCE(p.is_personal, t.is_personal, 0) = 0
+                ))
             
             ORDER BY due_date ASC
         ";
         
         $stmt = $this->db->prepare($sql);
-        $stmt->execute([$userId, $userId]); // Pasar userId dos veces: una para tareas, otra para subtareas
+        $stmt->execute([$userId, $userId, $userId, $userId, $userId, $userId]); // Pasar userId 6 veces: 3 para tareas (assigned, created, assigned), 3 para subtareas (assigned, created, assigned)
         $myTasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         // Organizar por fecha
