@@ -126,13 +126,15 @@ class ClanLeaderController {
                 t.due_date,
                 t.assigned_to_user_id,
                 t.project_id,
-                COALESCE(p.project_name, 'Tareas Personales') AS project_name,
+                CASE 
+                    WHEN COALESCE(p.is_personal, t.is_personal, 0) = 1 AND t.created_by_user_id = t.assigned_to_user_id THEN 'Tareas Personales'
+                    ELSE COALESCE(p.project_name, 'Sin Proyecto')
+                END AS project_name,
                 CASE 
                     WHEN p.project_type IS NOT NULL THEN p.project_type
-                    WHEN t.is_personal = 1 THEN 'personal'
+                    WHEN t.is_personal = 1 AND t.created_by_user_id = t.assigned_to_user_id THEN 'personal'
                     WHEN p.project_name LIKE '%Recurrente%' OR p.project_name LIKE '%recurrente%' THEN 'recurrent'
                     WHEN p.project_name LIKE '%Eventual%' OR p.project_name LIKE '%eventual%' THEN 'eventual'
-                    WHEN p.project_name = 'Tareas Personales' OR t.project_id IS NULL THEN 'personal'
                     ELSE 'normal'
                 END AS project_type,
                 COALESCE(p.is_personal, t.is_personal, 0) AS is_personal,
@@ -164,13 +166,15 @@ class ClanLeaderController {
                 s.due_date,
                 s.assigned_to_user_id,
                 t.project_id,
-                COALESCE(p.project_name, 'Tareas Personales') AS project_name,
+                CASE 
+                    WHEN COALESCE(p.is_personal, t.is_personal, 0) = 1 AND t.created_by_user_id = t.assigned_to_user_id THEN 'Tareas Personales'
+                    ELSE COALESCE(p.project_name, 'Sin Proyecto')
+                END AS project_name,
                 CASE 
                     WHEN p.project_type IS NOT NULL THEN p.project_type
-                    WHEN t.is_personal = 1 THEN 'personal'
+                    WHEN t.is_personal = 1 AND t.created_by_user_id = t.assigned_to_user_id THEN 'personal'
                     WHEN p.project_name LIKE '%Recurrente%' OR p.project_name LIKE '%recurrente%' THEN 'recurrent'
                     WHEN p.project_name LIKE '%Eventual%' OR p.project_name LIKE '%eventual%' THEN 'eventual'
-                    WHEN p.project_name = 'Tareas Personales' OR t.project_id IS NULL THEN 'personal'
                     ELSE 'normal'
                 END AS project_type,
                 COALESCE(p.is_personal, t.is_personal, 0) AS is_personal,
@@ -4350,12 +4354,20 @@ class ClanLeaderController {
                 WHERE 
                     (t.is_subtask = 0 OR t.is_subtask IS NULL)
                     AND t.assigned_to_user_id = :user_id
+                    AND (
+                        -- Para tareas personales, SOLO mostrar si el usuario es TANTO creador COMO asignado (tareas propias)
+                        (COALESCE(p.is_personal, t.is_personal, 0) = 1 AND t.created_by_user_id = t.assigned_to_user_id AND t.assigned_to_user_id = :user_id2)
+                        OR 
+                        -- Para tareas no personales, mostrar normalmente
+                        COALESCE(p.is_personal, t.is_personal, 0) = 0
+                    )
                 ORDER BY t.due_date ASC
                 LIMIT 200
             ";
 
             $stmt = $db->prepare($query);
             $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
+            $stmt->bindParam(':user_id2', $userId, PDO::PARAM_INT);
             
             if (!$stmt->execute()) {
                 throw new Exception("Error ejecutando consulta de tareas");
@@ -4825,7 +4837,14 @@ class ClanLeaderController {
                 LEFT JOIN Users u ON t.assigned_to_user_id = u.user_id
                 WHERE t.assigned_to_user_id = :user_id
                     AND p.clan_id = :clan_id
-                    AND t.is_subtask = 0)
+                    AND t.is_subtask = 0
+                    AND (
+                        -- Para tareas personales, SOLO mostrar si el usuario es TANTO creador COMO asignado (tareas propias)
+                        (COALESCE(p.is_personal, t.is_personal, 0) = 1 AND t.created_by_user_id = t.assigned_to_user_id AND t.assigned_to_user_id = :user_id3)
+                        OR 
+                        -- Para tareas no personales, mostrar normalmente
+                        COALESCE(p.is_personal, t.is_personal, 0) = 0
+                    ))
                 UNION ALL
                 (SELECT 
                     s.subtask_id as task_id,
@@ -4847,14 +4866,22 @@ class ClanLeaderController {
                 JOIN Tasks t ON s.task_id = t.task_id
                 JOIN Projects p ON t.project_id = p.project_id
                 LEFT JOIN Users u ON s.assigned_to_user_id = u.user_id
-                WHERE s.assigned_to_user_id = :user_id2)
+                WHERE s.assigned_to_user_id = :user_id2
+                    AND (
+                        -- Para subtareas de tareas personales, SOLO mostrar si el usuario es el creador de la tarea padre Y es el asignado de la subtarea
+                        (COALESCE(p.is_personal, t.is_personal, 0) = 1 AND t.created_by_user_id = t.assigned_to_user_id AND t.created_by_user_id = s.assigned_to_user_id)
+                        OR 
+                        -- Para subtareas de tareas no personales, mostrar normalmente
+                        COALESCE(p.is_personal, t.is_personal, 0) = 0
+                    ))
                 ORDER BY created_at DESC
             ");
             
             $stmt->execute([
                 ':user_id' => $userId,
                 ':clan_id' => $clanId,
-                ':user_id2' => $userId
+                ':user_id2' => $userId,
+                ':user_id3' => $userId
             ]);
             
             $allTasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
