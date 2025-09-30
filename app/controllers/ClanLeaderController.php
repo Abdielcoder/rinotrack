@@ -126,11 +126,12 @@ class ClanLeaderController {
                 t.due_date,
                 t.assigned_to_user_id,
                 t.project_id,
-                CASE 
-                    WHEN COALESCE(p.is_personal, t.is_personal, 0) = 1 AND t.created_by_user_id = t.assigned_to_user_id THEN 'Tareas Personales'
-                    WHEN COALESCE(p.is_personal, t.is_personal, 0) = 0 OR p.is_personal IS NULL THEN COALESCE(p.project_name, 'Sin Proyecto')
-                    ELSE 'Sin Proyecto'
-                END AS project_name,
+                COALESCE(p.project_name, 
+                    CASE 
+                        WHEN COALESCE(p.is_personal, t.is_personal, 0) = 1 THEN 'Tareas Personales'
+                        ELSE 'Sin Proyecto'
+                    END
+                ) AS project_name,
                 CASE 
                     WHEN p.project_type IS NOT NULL THEN p.project_type
                     WHEN t.is_personal = 1 AND t.created_by_user_id = t.assigned_to_user_id THEN 'personal'
@@ -150,11 +151,10 @@ class ClanLeaderController {
                 AND t.status != 'completed'
                 AND t.is_completed = 0
                 AND (
-                    -- Para tareas personales, SOLO mostrar si el usuario es TANTO creador COMO asignado (tareas propias)
-                    (COALESCE(p.is_personal, t.is_personal, 0) = 1 AND t.created_by_user_id = t.assigned_to_user_id AND t.assigned_to_user_id = ?)
+                    -- Excluir tareas personales de otros usuarios
+                    (COALESCE(p.is_personal, t.is_personal, 0) = 0) -- Tareas no personales
                     OR 
-                    -- Para tareas no personales, mostrar normalmente
-                    COALESCE(p.is_personal, t.is_personal, 0) = 0
+                    (COALESCE(p.is_personal, t.is_personal, 0) = 1 AND t.created_by_user_id = ?) -- Tareas personales propias
                 ))
             
             UNION ALL
@@ -167,11 +167,12 @@ class ClanLeaderController {
                 s.due_date,
                 s.assigned_to_user_id,
                 t.project_id,
-                CASE 
-                    WHEN COALESCE(p.is_personal, t.is_personal, 0) = 1 AND t.created_by_user_id = t.assigned_to_user_id THEN 'Tareas Personales'
-                    WHEN COALESCE(p.is_personal, t.is_personal, 0) = 0 OR p.is_personal IS NULL THEN COALESCE(p.project_name, 'Sin Proyecto')
-                    ELSE 'Sin Proyecto'
-                END AS project_name,
+                COALESCE(p.project_name, 
+                    CASE 
+                        WHEN COALESCE(p.is_personal, t.is_personal, 0) = 1 THEN 'Tareas Personales'
+                        ELSE 'Sin Proyecto'
+                    END
+                ) AS project_name,
                 CASE 
                     WHEN p.project_type IS NOT NULL THEN p.project_type
                     WHEN t.is_personal = 1 AND t.created_by_user_id = t.assigned_to_user_id THEN 'personal'
@@ -191,11 +192,10 @@ class ClanLeaderController {
                 AND s.status != 'completed'
                 AND s.due_date IS NOT NULL
                 AND (
-                    -- Para subtareas de tareas personales, SOLO mostrar si el usuario es el creador de la tarea padre Y es el asignado de la subtarea
-                    (COALESCE(p.is_personal, t.is_personal, 0) = 1 AND t.created_by_user_id = t.assigned_to_user_id AND t.created_by_user_id = s.assigned_to_user_id)
+                    -- Excluir subtareas de tareas personales de otros usuarios
+                    (COALESCE(p.is_personal, t.is_personal, 0) = 0) -- Subtareas de tareas no personales
                     OR 
-                    -- Para subtareas de tareas no personales, mostrar normalmente
-                    COALESCE(p.is_personal, t.is_personal, 0) = 0
+                    (COALESCE(p.is_personal, t.is_personal, 0) = 1 AND t.created_by_user_id = ?) -- Subtareas de tareas personales propias
                 ))
             
             ORDER BY due_date ASC
