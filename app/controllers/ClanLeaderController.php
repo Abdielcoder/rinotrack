@@ -147,8 +147,8 @@ class ClanLeaderController {
                 AND t.status != 'completed'
                 AND t.is_completed = 0
                 AND (
-                    -- Para tareas personales, solo mostrar si el usuario es creador Y asignado
-                    (COALESCE(p.is_personal, t.is_personal, 0) = 1 AND t.created_by_user_id = ? AND t.assigned_to_user_id = ?)
+                    -- Para tareas personales, SOLO mostrar si el usuario es TANTO creador COMO asignado (tareas propias)
+                    (COALESCE(p.is_personal, t.is_personal, 0) = 1 AND t.created_by_user_id = t.assigned_to_user_id AND t.assigned_to_user_id = ?)
                     OR 
                     -- Para tareas no personales, mostrar normalmente
                     COALESCE(p.is_personal, t.is_personal, 0) = 0
@@ -185,8 +185,8 @@ class ClanLeaderController {
                 AND s.status != 'completed'
                 AND s.due_date IS NOT NULL
                 AND (
-                    -- Para subtareas de tareas personales, solo mostrar si el usuario es creador Y asignado de la tarea padre
-                    (COALESCE(p.is_personal, t.is_personal, 0) = 1 AND t.created_by_user_id = ? AND s.assigned_to_user_id = ?)
+                    -- Para subtareas de tareas personales, SOLO mostrar si el usuario es el creador de la tarea padre Y es el asignado de la subtarea
+                    (COALESCE(p.is_personal, t.is_personal, 0) = 1 AND t.created_by_user_id = t.assigned_to_user_id AND t.created_by_user_id = s.assigned_to_user_id)
                     OR 
                     -- Para subtareas de tareas no personales, mostrar normalmente
                     COALESCE(p.is_personal, t.is_personal, 0) = 0
@@ -196,7 +196,7 @@ class ClanLeaderController {
         ";
         
         $stmt = $this->db->prepare($sql);
-        $stmt->execute([$userId, $userId, $userId, $userId, $userId, $userId]); // Pasar userId 6 veces: 3 para tareas (assigned, created, assigned), 3 para subtareas (assigned, created, assigned)
+        $stmt->execute([$userId, $userId, $userId]); // Pasar userId 3 veces: 1 para tareas assigned, 1 para verificar que es tarea propia, 1 para subtareas assigned
         $myTasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         // Organizar por fecha
