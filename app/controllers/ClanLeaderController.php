@@ -128,7 +128,8 @@ class ClanLeaderController {
                 t.project_id,
                 CASE 
                     WHEN COALESCE(p.is_personal, t.is_personal, 0) = 1 AND t.created_by_user_id = t.assigned_to_user_id THEN 'Tareas Personales'
-                    ELSE COALESCE(p.project_name, 'Sin Proyecto')
+                    WHEN COALESCE(p.is_personal, t.is_personal, 0) = 0 THEN COALESCE(p.project_name, 'Proyecto No Encontrado')
+                    ELSE 'Proyecto No Encontrado'
                 END AS project_name,
                 CASE 
                     WHEN p.project_type IS NOT NULL THEN p.project_type
@@ -168,7 +169,8 @@ class ClanLeaderController {
                 t.project_id,
                 CASE 
                     WHEN COALESCE(p.is_personal, t.is_personal, 0) = 1 AND t.created_by_user_id = t.assigned_to_user_id THEN 'Tareas Personales'
-                    ELSE COALESCE(p.project_name, 'Sin Proyecto')
+                    WHEN COALESCE(p.is_personal, t.is_personal, 0) = 0 THEN COALESCE(p.project_name, 'Proyecto No Encontrado')
+                    ELSE 'Proyecto No Encontrado'
                 END AS project_name,
                 CASE 
                     WHEN p.project_type IS NOT NULL THEN p.project_type
