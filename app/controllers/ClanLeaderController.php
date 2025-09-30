@@ -4979,7 +4979,8 @@ class ClanLeaderController {
                     AND t.is_subtask = 0
                     $taskStatusFilter
                     $searchTaskFilter
-                    AND (p.is_personal = 0 OR p.is_personal IS NULL))
+                    AND (p.is_personal = 0 OR p.is_personal IS NULL)
+                    AND (t.is_personal = 0 OR t.is_personal IS NULL))
                 UNION ALL
                 (SELECT 
                     s.subtask_id as task_id,
@@ -5012,7 +5013,8 @@ class ClanLeaderController {
                     AND (s.assigned_to_user_id != :user_id2 OR s.assigned_to_user_id IS NULL)
                     $subtaskStatusFilter
                     $searchSubtaskFilter
-                    AND (p.is_personal = 0 OR p.is_personal IS NULL))
+                    AND (p.is_personal = 0 OR p.is_personal IS NULL)
+                    AND (t.is_personal = 0 OR t.is_personal IS NULL))
                 ORDER BY item_type, task_id
             ");
             
@@ -5123,7 +5125,8 @@ class ClanLeaderController {
                     AND t.assigned_to_user_id != :user_id
                     AND t.assigned_to_user_id IS NOT NULL
                     AND t.is_subtask = 0
-                    AND (p.is_personal = 0 OR p.is_personal IS NULL))
+                    AND (p.is_personal = 0 OR p.is_personal IS NULL)
+                    AND (t.is_personal = 0 OR t.is_personal IS NULL))
                 UNION ALL
                 (SELECT 
                     s.subtask_id as task_id,
@@ -5148,7 +5151,8 @@ class ClanLeaderController {
                 LEFT JOIN Clan_Members cm ON u.user_id = cm.user_id
                 WHERE cm.clan_id = :clan_id2
                     AND (s.assigned_to_user_id != :user_id2 OR s.assigned_to_user_id IS NULL)
-                    AND (p.is_personal = 0 OR p.is_personal IS NULL))
+                    AND (p.is_personal = 0 OR p.is_personal IS NULL)
+                    AND (t.is_personal = 0 OR t.is_personal IS NULL))
                 ORDER BY created_at DESC
             ");
             

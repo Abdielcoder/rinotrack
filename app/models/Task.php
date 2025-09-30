@@ -925,10 +925,11 @@ class Task {
                 AND t.status IN ('pending', 'in_progress')
                 AND (t.due_date IS NULL OR t.due_date >= CURDATE())
                 AND (p.is_personal IS NULL OR p.is_personal != 1 OR (p.is_personal = 1 AND p.created_by_user_id = ?))
+                AND (t.is_personal IS NULL OR t.is_personal != 1 OR (t.is_personal = 1 AND t.created_by_user_id = ?))
                 ORDER BY t.due_date ASC
             ");
             
-            $stmt->execute([$userId, $userId, $userId, $userId]);
+            $stmt->execute([$userId, $userId, $userId, $userId, $userId]);
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
             
         } catch (Exception $e) {
@@ -1510,6 +1511,7 @@ class Task {
                 )
                 AND t.is_subtask = 0
                 AND (p.is_personal IS NULL OR p.is_personal != 1)
+                AND (t.is_personal IS NULL OR t.is_personal != 1)
             ";
             
             // Agregar filtro de búsqueda si se proporciona
@@ -1616,6 +1618,7 @@ class Task {
                 WHERE p.clan_id = ? 
                 AND t.is_subtask = 0
                 AND (p.is_personal IS NULL OR p.is_personal != 1)
+                AND (t.is_personal IS NULL OR t.is_personal != 1)
             ";
 
             $params = [$clanId];
@@ -2106,6 +2109,7 @@ class Task {
                 )
                 AND t.status IN ('pending', 'in_progress')
                 AND (p.is_personal IS NULL OR p.is_personal != 1)
+                AND (t.is_personal IS NULL OR t.is_personal != 1)
             ";
             
             // Agregar filtro de búsqueda si se proporciona
@@ -2232,6 +2236,7 @@ class Task {
                 AND t.is_subtask = 0
                 AND t.status != 'completed'
                 AND (p.is_personal IS NULL OR p.is_personal != 1)
+                AND (t.is_personal IS NULL OR t.is_personal != 1)
                 AND p.kpi_quarter_id IN (
                     SELECT kpi_id 
                     FROM Clan_KPIs 
