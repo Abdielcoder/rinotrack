@@ -4638,7 +4638,8 @@ class ClanLeaderController {
                 ':user_id' => $userId,
                 ':clan_id' => $clanId,
                 ':user_id2' => $userId,
-                ':clan_id2' => $clanId
+                ':clan_id2' => $clanId,
+                ':user_id3' => $userId
             ];
             
             // Aplicar filtro de estado si está presente
@@ -4730,7 +4731,13 @@ class ClanLeaderController {
                 WHERE s.assigned_to_user_id = :user_id2
                     AND p.clan_id = :clan_id2
                     $subtaskStatusFilter
-                    $searchSubtaskFilter)
+                    $searchSubtaskFilter
+                    AND (
+                        -- Excluir subtareas de tareas personales de otros usuarios
+                        (COALESCE(p.is_personal, t.is_personal, 0) = 0) -- Subtareas de tareas no personales
+                        OR 
+                        (COALESCE(p.is_personal, t.is_personal, 0) = 1 AND t.created_by_user_id = :user_id3) -- Subtareas de tareas personales propias
+                    ))
                 ORDER BY item_type, task_id
             ");
             
@@ -6065,10 +6072,16 @@ class ClanLeaderController {
                 WHERE s.status != 'completed' 
                   AND s.completion_percentage < 100
                   AND s.assigned_to_user_id = ?
+                  AND (
+                      -- Excluir subtareas de tareas personales de otros usuarios
+                      (COALESCE(p.is_personal, t.is_personal, 0) = 0) -- Subtareas de tareas no personales
+                      OR 
+                      (COALESCE(p.is_personal, t.is_personal, 0) = 1 AND t.created_by_user_id = ?) -- Subtareas de tareas personales propias
+                  )
                 ORDER BY s.due_date ASC
             ");
             
-            $subtaskStmt->execute([$userId]);
+            $subtaskStmt->execute([$userId, $userId]);
             $allSubtasks = $subtaskStmt->fetchAll(PDO::FETCH_ASSOC);
             
             // Combinar tareas y subtareas
