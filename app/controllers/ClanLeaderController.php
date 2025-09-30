@@ -202,7 +202,7 @@ class ClanLeaderController {
         ";
         
         $stmt = $this->db->prepare($sql);
-        $stmt->execute([$userId, $userId, $userId]); // Pasar userId 3 veces: 1 para tareas assigned, 1 para verificar que es tarea propia, 1 para subtareas assigned
+        $stmt->execute([$userId, $userId, $userId, $userId]); // Pasar userId 4 veces: 1 para tareas assigned, 2 para created_by en tareas, 3 para subtareas assigned, 4 para created_by en subtareas
         $myTasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         // Organizar por fecha
