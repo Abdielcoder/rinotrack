@@ -32,8 +32,10 @@ try {
         // No fallar por esto en testing
     }
 
+    // Incluir configuración de la aplicación
+    require_once '../config/app.php';
+    
     // Conexión a BD
-    require_once '../config/database.php';
     $db = Database::getConnection();
     
     error_log("Conexión establecida para task_id: $taskId");

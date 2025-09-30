@@ -1304,7 +1304,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 
 <?php
 $content = ob_get_clean();
-$additionalCSS = [APP_URL . 'assets/css/clan-member.css'];
+$additionalCSS = ['assets/css/clan-member.css'];
 require_once __DIR__ . '/../layout.php';
 ?>
 

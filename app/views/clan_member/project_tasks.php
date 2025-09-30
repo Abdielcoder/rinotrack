@@ -229,7 +229,7 @@ if (!isset($user)) {
                             </td>
                             <td class="td-actions">
                                 <div class="action-buttons">
-                                    <a href="<?= APP_URL ?>?route=clan_member/task-details&task_id=<?= $task['task_id'] ?>" class="btn-action btn-view" title="Ver detalles">
+                                    <a href="?route=clan_member/task-details&task_id=<?= $task['task_id'] ?>" class="btn-action btn-view" title="Ver detalles">
                                         <i class="fas fa-eye"></i>
                                     </a>
                                 </div>

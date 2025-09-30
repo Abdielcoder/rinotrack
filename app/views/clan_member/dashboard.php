@@ -1535,7 +1535,7 @@ function handleTaskCheck(uniqueTaskId, taskId, isChecked, itemType = 'task') {
     
     console.log(`Enviando AJAX para completar ${itemType}:`, taskId);
     
-    fetch('<?= APP_URL ?>simple-complete-task.php', {
+    fetch('simple-complete-task.php', {
         method: 'POST',
         body: formData
     })
@@ -1583,7 +1583,7 @@ function handleTaskCheck(uniqueTaskId, taskId, isChecked, itemType = 'task') {
         // Mostrar error más descriptivo
         const errorMsg = `Error de conexión: ${error.message}. 
 Task ID: ${taskId}. 
-URL: <?= APP_URL ?>simple-complete-task.php
+URL: simple-complete-task.php
 Revisa la consola para más detalles.`;
         
         alert(errorMsg);
@@ -2121,7 +2121,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <?php
 $content = ob_get_clean();
-$additionalCSS = [APP_URL . 'assets/css/clan-member.css'];
+$additionalCSS = ['assets/css/clan-member.css'];
 $additionalJS = [];
 require_once __DIR__ . '/../layout.php';
 ?>

@@ -145,7 +145,7 @@ ob_start();
                     </div>
                     
                     <div class="project-actions">
-                        <a href="<?= APP_URL ?>?route=clan_member/project-tasks&project_id=<?= $project['project_id'] ?>" class="btn-minimal primary">
+                        <a href="?route=clan_member/project-tasks&project_id=<?= $project['project_id'] ?>" class="btn-minimal primary">
                             <i class="fas fa-eye"></i> Ver Tareas
                         </a>
                     </div>
@@ -1529,7 +1529,7 @@ function cloneTask() {
 
 <?php
 $content = ob_get_clean();
-$additionalCSS = [APP_URL . 'assets/css/clan-member.css'];
+$additionalCSS = ['assets/css/clan-member.css'];
 require_once __DIR__ . '/../layout.php';
 ?>
 

@@ -3582,7 +3582,7 @@ function insertEmoji(emoji, editorId) {
 <?php
 $content = ob_get_clean();
 $additionalCSS = [
-    APP_URL . 'assets/css/clan-member.css',
+    'assets/css/clan-member.css',
     'https://cdn.quilljs.com/1.3.6/quill.snow.css'
 ];
 $additionalJS = [

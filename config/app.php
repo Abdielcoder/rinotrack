@@ -5,7 +5,7 @@
 
 // Configuración de la aplicación
 define('APP_NAME', 'Polaris');
-define('APP_URL', 'https://rinotrack.rinorisk.com/desarrollo/rinotrack/public/');
+define('APP_URL', 'http://localhost:8888/RinoTrack/public/');
 define('APP_DEBUG', true);
 
 // Configuración de zona horaria
