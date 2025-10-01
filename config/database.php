@@ -9,7 +9,7 @@ define('DB_PASSWORD', '/VFwtcC6Xj18'); // Cambia esto por tu contraseña de MySQ
 define('DB_NAME', 'rinotrack');
 // se agregan comentarios 
 /**
- * Clase para manejar la conexión a la base de datos
+ * Clase para manejar la conexión a la base de datos otirimsdnfsdl
  */
 class Database {
     private static $connection = null;
