@@ -243,9 +243,9 @@ $additionalJS[] = 'https://cdn.quilljs.com/1.3.6/quill.min.js';
             <?php if (empty($comments)): ?>
               <div class="empty-minimal">Sin comentarios</div>
             <?php else: foreach ($comments as $c): ?>
-              <div class="comment-item" data-comment-id="<?php echo (int)($c['comment_id'] ?? 0); ?>">
+              <div class="comment-item" data-comment-id="<?php echo (int)($c['comment_id'] ?? 0); ?>" data-comment-type="task">
                 <div class="comment-meta"><span class="author"><?php echo htmlspecialchars($c['full_name'] ?? $c['username'] ?? ''); ?></span><span class="date"><?php echo htmlspecialchars($c['created_at'] ?? ''); ?></span></div>
-                <div class="comment-content comment-text"><?php echo Utils::sanitizeHtml($c['comment_text'] ?? ''); ?></div>
+                <div class="comment-content comment-text" data-comment-id="<?php echo (int)($c['comment_id'] ?? 0); ?>" data-comment-type="task"><?php echo Utils::sanitizeHtml($c['comment_text'] ?? ''); ?></div>
                 <?php if (!empty($c['attachments'])): ?>
                 <div class="comment-atts">
                   <?php foreach (($c['attachments'] ?? []) as $a): $url = Utils::asset($a['file_path'] ?? ''); $name = htmlspecialchars($a['file_name'] ?? 'archivo'); $type = strtolower($a['file_type'] ?? ''); ?>
@@ -1586,7 +1586,7 @@ function loadSubtaskComments(subtaskId) {
                     container.innerHTML = '<p class="no-data">No hay comentarios aún. ¡Sé el primero en comentar!</p>';
                 } else {
                     container.innerHTML = data.comments.map(comment => `
-                        <div class="comment-item" data-comment-id="${comment.comment_id}">
+                        <div class="comment-item" data-comment-id="${comment.comment_id}" data-comment-type="subtask">
                             ${comment.is_attachment_only ? `
                                 <div class="comment-header">
                                     <strong><i class="fas fa-paperclip"></i> ${comment.full_name}</strong>
@@ -1596,7 +1596,7 @@ function loadSubtaskComments(subtaskId) {
                                     <strong>${comment.full_name}</strong>
                                     <span class="comment-date">${new Date(comment.created_at).toLocaleString()}</span>
                                 </div>
-                                <div class="comment-content comment-text">${comment.comment_text}</div>
+                                <div class="comment-content comment-text" data-comment-id="${comment.comment_id}" data-comment-type="subtask">${comment.comment_text}</div>
                             `}
                             ${comment.attachments && comment.attachments.length > 0 ? `
                                 <div class="comment-attachments">
@@ -2703,17 +2703,25 @@ function makeChecklistInteractive(element) {
     console.log('=== PROCESANDO CHECKLISTS ===');
     console.log('Elemento:', element);
     
-    // Obtener información del comentario
-    const commentContent = element.closest('.comment-item');
-    let commentId = 'unknown';
-    let commentType = 'task'; // Por defecto task
+    // Primero intentar obtener del propio elemento (método más confiable)
+    let commentId = element.getAttribute('data-comment-id');
+    let commentType = element.getAttribute('data-comment-type');
     
-    console.log('Elemento padre .comment-item:', commentContent);
-    
-    if (commentContent) {
-        // Intentar extraer ID del comentario del elemento padre
-        commentId = extractCommentId(commentContent);
-        commentType = detectCommentType(commentContent);
+    // Si no está en el elemento, buscar en el elemento padre
+    if (!commentId || commentId === 'null' || commentId === '0') {
+        const commentContent = element.closest('.comment-item');
+        console.log('Elemento padre .comment-item:', commentContent);
+        
+        if (commentContent) {
+            commentId = commentContent.getAttribute('data-comment-id');
+            commentType = commentContent.getAttribute('data-comment-type') || 'task';
+        }
+        
+        // Si aún no tenemos ID, intentar extraerlo del DOM
+        if (!commentId || commentId === 'null' || commentId === '0') {
+            commentId = extractCommentId(commentContent || element);
+            commentType = detectCommentType(commentContent || element);
+        }
     }
     
     console.log('CommentID detectado:', commentId, 'Tipo:', commentType);
