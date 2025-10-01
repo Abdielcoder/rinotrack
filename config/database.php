@@ -3,11 +3,11 @@
  * Configuración de base de datos
  */
 
-define('DB_HOST', 'localhost:8888');
+define('DB_HOST', 'localhost');
 define('DB_USERNAME', 'root');
-define('DB_PASSWORD', 'root'); // Contraseña por defecto de MAMP
+define('DB_PASSWORD', '/VFwtcC6Xj18'); // Cambia esto por tu contraseña de MySQL en MAMP
 define('DB_NAME', 'rinotrack');
-
+// se agregan comentarios 
 /**
  * Clase para manejar la conexión a la base de datos
  */
