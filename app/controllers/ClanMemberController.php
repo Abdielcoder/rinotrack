@@ -1009,6 +1009,27 @@ class ClanMemberController {
             return false;
         }
     }
+    
+    /**
+     * Verificar si una subtarea está asignada a un usuario
+     */
+    private function isSubtaskAssignedToUser($subtaskId, $userId) {
+        try {
+            // Verificar asignación principal o en Subtask_Assignments
+            $stmt = $this->db->prepare("SELECT COUNT(*) AS c FROM Subtasks WHERE subtask_id = ? AND assigned_to_user_id = ?");
+            $stmt->execute([$subtaskId, $userId]);
+            $row = $stmt->fetch();
+            if ((int)($row['c'] ?? 0) > 0) { return true; }
+
+            $stmt = $this->db->prepare("SELECT COUNT(*) AS c FROM Subtask_Assignments WHERE subtask_id = ? AND user_id = ?");
+            $stmt->execute([$subtaskId, $userId]);
+            $row = $stmt->fetch();
+            return (int)($row['c'] ?? 0) > 0;
+        } catch (Exception $e) {
+            error_log('Error isSubtaskAssignedToUser: ' . $e->getMessage());
+            return false;
+        }
+    }
 
     private function getTeamProgress($clanId) {
         try {
@@ -3070,7 +3091,8 @@ class ClanMemberController {
         }
         
         $rawInput = file_get_contents('php://input');
-        error_log("=== CHECKBOX BACKEND DEBUG ===");
+        error_log("=== CHECKBOX BACKEND DEBUG (ClanMember) ===");
+        error_log("User ID: " . $this->currentUser['user_id']);
         error_log("Raw input: " . $rawInput);
         
         $input = json_decode($rawInput, true);
@@ -3085,6 +3107,7 @@ class ClanMemberController {
         error_log("Processed data: commentId=$commentId, commentType=$commentType, checkboxIndex=$checkboxIndex, isChecked=" . ($isChecked ? 'true' : 'false'));
         
         if ($commentId <= 0 || !in_array($commentType, ['task', 'subtask']) || empty($checkboxText)) {
+            error_log("ERROR: Datos inválidos - commentId=$commentId, commentType=$commentType, checkboxText=" . (empty($checkboxText) ? 'empty' : 'ok'));
             Utils::jsonResponse(['success' => false, 'message' => 'Datos inválidos'], 400);
         }
         
@@ -3093,9 +3116,10 @@ class ClanMemberController {
             if ($commentType === 'task') {
                 // Verificar que el comentario pertenece a una tarea accesible
                 $stmt = $this->db->prepare("
-                    SELECT tc.*, t.project_id, t.created_by_user_id, t.assigned_to_user_id
+                    SELECT tc.*, t.project_id, t.created_by_user_id, t.assigned_to_user_id, p.clan_id
                     FROM Task_Comments tc
                     JOIN Tasks t ON tc.task_id = t.task_id
+                    JOIN Projects p ON t.project_id = p.project_id
                     WHERE tc.comment_id = ?
                 ");
                 $stmt->execute([$commentId]);
@@ -3109,14 +3133,27 @@ class ClanMemberController {
                 $isCreator = (int)$comment['created_by_user_id'] === (int)$this->currentUser['user_id'];
                 $isAssigned = (int)$comment['assigned_to_user_id'] === (int)$this->currentUser['user_id'];
                 
-                if (!$isCreator && !$isAssigned) {
+                // Verificar si es asignado a la tarea (no solo el asignado principal)
+                $taskIdFromComment = $comment['task_id'] ?? 0;
+                $isTaskAssigned = $taskIdFromComment > 0 ? $this->isTaskAssignedToUser($taskIdFromComment, $this->currentUser['user_id']) : false;
+                
+                // Verificar si pertenece al clan de la tarea
+                $isClanMember = false;
+                if ($this->userClan && $comment['clan_id'] && (int)$this->userClan['clan_id'] === (int)$comment['clan_id']) {
+                    $isClanMember = true;
+                }
+                
+                error_log("Task Comment Permissions - isCreator: " . ($isCreator ? 'yes' : 'no') . ", isAssigned: " . ($isAssigned ? 'yes' : 'no') . ", isTaskAssigned: " . ($isTaskAssigned ? 'yes' : 'no') . ", isClanMember: " . ($isClanMember ? 'yes' : 'no'));
+                
+                if (!$isCreator && !$isAssigned && !$isTaskAssigned && !$isClanMember) {
+                    error_log("ERROR: Sin permisos para modificar comentario de tarea $commentId - Usuario: " . $this->currentUser['user_id']);
                     Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos para modificar este comentario'], 403);
                 }
                 
             } else { // subtask
                 // Verificar que el comentario pertenece a una subtarea accesible
                 $stmt = $this->db->prepare("
-                    SELECT sc.*, s.task_id, t.created_by_user_id, t.assigned_to_user_id, p.clan_id
+                    SELECT sc.*, s.task_id, s.subtask_id, t.created_by_user_id, t.assigned_to_user_id, p.clan_id
                     FROM Subtask_Comments sc
                     JOIN Subtasks s ON sc.subtask_id = s.subtask_id
                     JOIN Tasks t ON s.task_id = t.task_id
@@ -3130,13 +3167,26 @@ class ClanMemberController {
                     Utils::jsonResponse(['success' => false, 'message' => 'Comentario no encontrado'], 404);
                 }
                 
-                // Para subtareas: permitir a cualquier miembro del clan marcar checkboxes
-                // Solo verificar que el usuario tenga acceso general a la tarea (creador, asignado, o miembro del clan)
+                // Para subtareas: permitir a cualquier miembro del clan o usuario asignado marcar checkboxes
                 $isCreator = (int)$comment['created_by_user_id'] === (int)$this->currentUser['user_id'];
                 $isAssigned = (int)$comment['assigned_to_user_id'] === (int)$this->currentUser['user_id'];
-                $isClanMember = $this->hasMemberAccess(); // Verificar si es miembro del clan
                 
-                if (!$isCreator && !$isAssigned && !$isClanMember) {
+                // Verificar si es asignado a la tarea o subtarea
+                $taskIdFromComment = $comment['task_id'] ?? 0;
+                $subtaskIdFromComment = $comment['subtask_id'] ?? 0;
+                $isTaskAssigned = $taskIdFromComment > 0 ? $this->isTaskAssignedToUser($taskIdFromComment, $this->currentUser['user_id']) : false;
+                $isSubtaskAssigned = $subtaskIdFromComment > 0 ? $this->isSubtaskAssignedToUser($subtaskIdFromComment, $this->currentUser['user_id']) : false;
+                
+                // Verificar si pertenece al clan de la tarea
+                $isClanMember = false;
+                if ($this->userClan && $comment['clan_id'] && (int)$this->userClan['clan_id'] === (int)$comment['clan_id']) {
+                    $isClanMember = true;
+                }
+                
+                error_log("Subtask Comment Permissions - isCreator: " . ($isCreator ? 'yes' : 'no') . ", isAssigned: " . ($isAssigned ? 'yes' : 'no') . ", isTaskAssigned: " . ($isTaskAssigned ? 'yes' : 'no') . ", isSubtaskAssigned: " . ($isSubtaskAssigned ? 'yes' : 'no') . ", isClanMember: " . ($isClanMember ? 'yes' : 'no'));
+                
+                if (!$isCreator && !$isAssigned && !$isTaskAssigned && !$isSubtaskAssigned && !$isClanMember) {
+                    error_log("ERROR: Sin permisos para modificar comentario de subtarea $commentId - Usuario: " . $this->currentUser['user_id']);
                     Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos para modificar este comentario'], 403);
                 }
             }
@@ -3160,14 +3210,17 @@ class ClanMemberController {
             );
             
             if ($result) {
+                error_log("✅ Checkbox guardado exitosamente - commentId: $commentId, commentType: $commentType, index: $checkboxIndex, checked: " . ($isChecked ? 'true' : 'false'));
                 Utils::jsonResponse(['success' => true, 'message' => 'Estado guardado correctamente']);
             } else {
+                error_log("❌ Error al guardar checkbox - commentId: $commentId, commentType: $commentType");
                 Utils::jsonResponse(['success' => false, 'message' => 'Error al guardar estado'], 500);
             }
             
         } catch (Exception $e) {
-            error_log("Error al guardar estado de checkbox (member): " . $e->getMessage());
-            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor'], 500);
+            error_log("❌ Excepción al guardar estado de checkbox (member): " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor: ' . $e->getMessage()], 500);
         }
     }
     
