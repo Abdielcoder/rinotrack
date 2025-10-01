@@ -3082,6 +3082,7 @@ class ClanMemberController {
 
     /**
      * Guardar estado de checkbox en comentario
+     * Actualizado en alfa6: mejorada validación de permisos para clan members
      */
     public function saveCheckboxState() {
         $this->requireAuth();
