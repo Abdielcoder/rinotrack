@@ -2737,20 +2737,41 @@ function makeChecklistInteractive(element) {
     
     html = html.replace(checkboxPattern, function(match, checkbox, text) {
         const isChecked = checkbox === '☑';
-        const taskText = text.trim();
+        let taskText = text.trim();
+        
+        // Limpiar el texto de etiquetas HTML y entidades
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = taskText;
+        taskText = (tempDiv.textContent || tempDiv.innerText || taskText).trim();
+        
+        // Validar que el texto no esté vacío
+        if (!taskText || taskText.length === 0) {
+            console.warn('⚠️ Checkbox sin texto, omitiendo');
+            return match; // Devolver el match original sin procesar
+        }
         
         console.log('Encontrado checkbox:', checkbox, 'texto:', taskText, 'marcado:', isChecked);
+        console.log('  - commentId:', commentId, 'commentType:', commentType);
+        
+        // Validar que tenemos los datos necesarios
+        if (!commentId || commentId === 'unknown' || commentId === 'null' || commentId === '0') {
+            console.error('❌ No se puede crear checkbox: commentId inválido:', commentId);
+            return match; // Devolver el match original sin procesar
+        }
         
         // Crear ID único para cada checkbox
         const checkboxId = 'checkbox_' + Math.random().toString(36).substr(2, 9);
         const currentIndex = checkboxIndex++;
+        
+        // Escapar el texto para evitar problemas con comillas
+        const escapedText = taskText.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
         
         return `<span class="checkbox-container" style="display: inline-flex; align-items: center; gap: 8px; margin: 4px 0; user-select: none;">
             <input type="checkbox" id="${checkboxId}" ${isChecked ? 'checked' : ''} 
                    data-comment-id="${commentId}" 
                    data-comment-type="${commentType}" 
                    data-checkbox-index="${currentIndex}"
-                   data-checkbox-text="${taskText}"
+                   data-checkbox-text="${escapedText}"
                    style="width: 16px; height: 16px; cursor: pointer; accent-color: #10b981; margin: 0; flex-shrink: 0;" 
                    onchange="saveCheckboxState(this)" />
             <span onclick="toggleCheckbox('${checkboxId}')" 
@@ -2805,7 +2826,7 @@ function saveCheckboxState(checkbox) {
     const commentId = checkbox.dataset.commentId;
     const commentType = checkbox.dataset.commentType;
     const checkboxIndex = checkbox.dataset.checkboxIndex;
-    const checkboxText = checkbox.dataset.checkboxText;
+    let checkboxText = checkbox.dataset.checkboxText;
     const isChecked = checkbox.checked;
     
     console.log('=== CHECKBOX STATE DEBUG ===');
@@ -2818,8 +2839,29 @@ function saveCheckboxState(checkbox) {
     console.log('isChecked:', isChecked, 'tipo:', typeof isChecked);
     console.log('Elemento padre más cercano con data-comment-id:', checkbox.closest('[data-comment-id]'));
     
-    if (!commentId || !commentType || commentId === 'null' || commentId === 'undefined' || commentId === 'unknown') {
-        console.error('❌ No se puede guardar: faltan datos del comentario');
+    // Validaciones mejoradas
+    if (!commentId || commentId === 'null' || commentId === 'undefined' || commentId === 'unknown' || commentId === '0') {
+        console.error('❌ No se puede guardar: commentId inválido:', commentId);
+        showNotification('Error: ID de comentario inválido', 'error');
+        return;
+    }
+    
+    if (!commentType || commentType === 'null' || commentType === 'undefined' || commentType === 'unknown') {
+        console.error('❌ No se puede guardar: commentType inválido:', commentType);
+        showNotification('Error: Tipo de comentario inválido', 'error');
+        return;
+    }
+    
+    // Decodificar entidades HTML en el texto
+    if (checkboxText) {
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = checkboxText;
+        checkboxText = (tempDiv.textContent || tempDiv.innerText || checkboxText).trim();
+    }
+    
+    if (!checkboxText || checkboxText.length === 0) {
+        console.error('❌ No se puede guardar: checkboxText vacío');
+        showNotification('Error: Texto del checkbox vacío', 'error');
         return;
     }
     
