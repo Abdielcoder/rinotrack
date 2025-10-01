@@ -2750,13 +2750,15 @@ function makeChecklistInteractive(element) {
             return match; // Devolver el match original sin procesar
         }
         
-        console.log('Encontrado checkbox:', checkbox, 'texto:', taskText, 'marcado:', isChecked);
+        console.log('✅ Encontrado checkbox:', checkbox, 'texto:', taskText, 'marcado:', isChecked);
         console.log('  - commentId:', commentId, 'commentType:', commentType);
         
-        // Validar que tenemos los datos necesarios
-        if (!commentId || commentId === 'unknown' || commentId === 'null' || commentId === '0') {
-            console.error('❌ No se puede crear checkbox: commentId inválido:', commentId);
-            return match; // Devolver el match original sin procesar
+        // IMPORTANTE: Siempre crear el checkbox HTML interactivo
+        // La validación de datos se hará al momento de guardar en saveCheckboxState
+        const hasValidData = commentId && commentId !== 'unknown' && commentId !== 'null' && commentId !== '0';
+        
+        if (!hasValidData) {
+            console.warn('⚠️ CommentID no válido, el checkbox será interactivo pero no guardará estado:', commentId);
         }
         
         // Crear ID único para cada checkbox
@@ -2766,10 +2768,14 @@ function makeChecklistInteractive(element) {
         // Escapar el texto para evitar problemas con comillas
         const escapedText = taskText.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
         
+        // Usar valores seguros por defecto si no hay commentId válido
+        const safeCommentId = commentId || 'pending';
+        const safeCommentType = commentType || 'task';
+        
         return `<span class="checkbox-container" style="display: inline-flex; align-items: center; gap: 8px; margin: 4px 0; user-select: none;">
             <input type="checkbox" id="${checkboxId}" ${isChecked ? 'checked' : ''} 
-                   data-comment-id="${commentId}" 
-                   data-comment-type="${commentType}" 
+                   data-comment-id="${safeCommentId}" 
+                   data-comment-type="${safeCommentType}" 
                    data-checkbox-index="${currentIndex}"
                    data-checkbox-text="${escapedText}"
                    style="width: 16px; height: 16px; cursor: pointer; accent-color: #10b981; margin: 0; flex-shrink: 0;" 
@@ -2840,15 +2846,19 @@ function saveCheckboxState(checkbox) {
     console.log('Elemento padre más cercano con data-comment-id:', checkbox.closest('[data-comment-id]'));
     
     // Validaciones mejoradas
-    if (!commentId || commentId === 'null' || commentId === 'undefined' || commentId === 'unknown' || commentId === '0') {
-        console.error('❌ No se puede guardar: commentId inválido:', commentId);
-        showNotification('Error: ID de comentario inválido', 'error');
+    if (!commentId || commentId === 'null' || commentId === 'undefined' || commentId === 'unknown' || commentId === '0' || commentId === 'pending') {
+        console.error('❌ No se puede guardar: commentId inválido o pendiente:', commentId);
+        console.warn('ℹ️ El checkbox es interactivo pero el estado no se guardará hasta que el comentario tenga un ID válido');
+        // No mostrar notificación de error, solo aplicar el cambio visual
+        toggleTaskText(checkbox);
         return;
     }
     
     if (!commentType || commentType === 'null' || commentType === 'undefined' || commentType === 'unknown') {
         console.error('❌ No se puede guardar: commentType inválido:', commentType);
-        showNotification('Error: Tipo de comentario inválido', 'error');
+        console.warn('ℹ️ El checkbox es interactivo pero el estado no se guardará');
+        // No mostrar notificación de error, solo aplicar el cambio visual
+        toggleTaskText(checkbox);
         return;
     }
     
@@ -2861,9 +2871,13 @@ function saveCheckboxState(checkbox) {
     
     if (!checkboxText || checkboxText.length === 0) {
         console.error('❌ No se puede guardar: checkboxText vacío');
-        showNotification('Error: Texto del checkbox vacío', 'error');
+        console.warn('ℹ️ El checkbox es interactivo pero el estado no se guardará sin texto');
+        // No mostrar notificación de error, solo aplicar el cambio visual
+        toggleTaskText(checkbox);
         return;
     }
+    
+    console.log('✅ Todos los datos son válidos, procediendo a guardar...');
     
     // Preparar datos para enviar
     const payload = {
