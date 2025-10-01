@@ -3105,11 +3105,30 @@ class ClanMemberController {
         $checkboxText = trim($input['checkbox_text'] ?? '');
         $isChecked = (bool)($input['is_checked'] ?? false);
         
-        error_log("Processed data: commentId=$commentId, commentType=$commentType, checkboxIndex=$checkboxIndex, isChecked=" . ($isChecked ? 'true' : 'false'));
+        error_log("Processed data: commentId=$commentId, commentType=$commentType, checkboxIndex=$checkboxIndex, checkboxText='$checkboxText', isChecked=" . ($isChecked ? 'true' : 'false'));
         
-        if ($commentId <= 0 || !in_array($commentType, ['task', 'subtask']) || empty($checkboxText)) {
-            error_log("ERROR: Datos inválidos - commentId=$commentId, commentType=$commentType, checkboxText=" . (empty($checkboxText) ? 'empty' : 'ok'));
-            Utils::jsonResponse(['success' => false, 'message' => 'Datos inválidos'], 400);
+        // Validación detallada con mensajes específicos
+        $errors = [];
+        if ($commentId <= 0) {
+            $errors[] = "commentId inválido ($commentId)";
+        }
+        if (!in_array($commentType, ['task', 'subtask'])) {
+            $errors[] = "commentType inválido ('$commentType')";
+        }
+        if (empty($checkboxText)) {
+            $errors[] = "checkboxText vacío";
+        }
+        
+        if (!empty($errors)) {
+            $errorMsg = 'Datos inválidos: ' . implode(', ', $errors);
+            error_log("ERROR: $errorMsg");
+            Utils::jsonResponse(['success' => false, 'message' => $errorMsg, 'debug' => [
+                'comment_id' => $commentId,
+                'comment_type' => $commentType,
+                'checkbox_index' => $checkboxIndex,
+                'checkbox_text' => $checkboxText,
+                'is_checked' => $isChecked
+            ]], 400);
         }
         
         try {
