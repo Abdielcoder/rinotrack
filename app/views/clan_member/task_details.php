@@ -2043,9 +2043,41 @@ class SimpleFileViewer {
             document.getElementById('simple-file-loading').style.display = 'block';
             document.getElementById('simple-file-body').innerHTML = '';
 
-            // Obtener información del archivo
-            const response = await fetch(`file-viewer.php?id=${attachmentId}&action=info`);
-            const fileInfo = await response.json();
+            // Obtener información del archivo usando el endpoint de subtask attachments
+            const response = await fetch(`?route=clan_member/get-subtask-attachments&subtask_id=0&attachment_id=${attachmentId}`);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const text = await response.text();
+            console.log('Response text:', text); // Debug
+            
+            let data;
+            try {
+                data = JSON.parse(text);
+            } catch (parseError) {
+                console.error('JSON Parse Error:', parseError);
+                console.error('Response text:', text);
+                throw new Error('Respuesta inválida del servidor');
+            }
+
+            if (!data.success) {
+                throw new Error(data.message || 'Error del servidor');
+            }
+
+            // Buscar el attachment específico
+            const attachment = data.attachments.find(att => att.attachment_id == attachmentId);
+            if (!attachment) {
+                throw new Error('Archivo no encontrado');
+            }
+
+            const fileInfo = {
+                name: attachment.file_name,
+                type: attachment.file_type,
+                is_image: attachment.file_type && attachment.file_type.startsWith('image/'),
+                is_pdf: attachment.file_type === 'application/pdf'
+            };
 
             document.getElementById('simple-file-title').textContent = fileInfo.name;
             document.getElementById('simple-download-btn').onclick = () => {
@@ -2057,28 +2089,37 @@ class SimpleFileViewer {
             // Mostrar el archivo según su tipo
             if (fileInfo.is_image) {
                 document.getElementById('simple-file-body').innerHTML = `
-                    <img src="file-viewer.php?id=${attachmentId}" class="simple-file-image" alt="${fileInfo.name}">
+                    <img src="file-viewer.php?id=${attachmentId}" class="simple-file-image" alt="${fileInfo.name}" 
+                         onerror="this.parentElement.innerHTML='<div style=\\'text-align: center; padding: 40px;\\'>Error al cargar la imagen</div>'">
                 `;
             } else if (fileInfo.is_pdf) {
                 document.getElementById('simple-file-body').innerHTML = `
-                    <iframe src="file-viewer.php?id=${attachmentId}" class="simple-file-pdf"></iframe>
+                    <iframe src="file-viewer.php?id=${attachmentId}" class="simple-file-pdf"
+                            onerror="this.parentElement.innerHTML='<div style=\\'text-align: center; padding: 40px;\\'>Error al cargar el PDF</div>'"></iframe>
                 `;
             } else {
                 document.getElementById('simple-file-body').innerHTML = `
                     <div style="text-align: center; padding: 40px;">
                         <i class="fas fa-file" style="font-size: 4rem; color: #d1d5db; margin-bottom: 20px;"></i>
                         <h3>Vista previa no disponible</h3>
+                        <p><strong>${fileInfo.name}</strong></p>
+                        <p>Tipo: ${fileInfo.type || 'Desconocido'}</p>
                         <p>Haz clic en "Descargar" para obtener el archivo.</p>
                     </div>
                 `;
             }
 
         } catch (error) {
-            console.error('Error:', error);
+            console.error('Error completo:', error);
+            document.getElementById('simple-file-loading').style.display = 'none';
             document.getElementById('simple-file-body').innerHTML = `
                 <div style="text-align: center; padding: 40px; color: #ef4444;">
                     <i class="fas fa-exclamation-triangle" style="font-size: 4rem; margin-bottom: 20px;"></i>
                     <h3>Error al cargar el archivo</h3>
+                    <p>${error.message}</p>
+                    <button onclick="downloadFile(${attachmentId}, 'archivo')" class="simple-btn" style="margin-top: 15px;">
+                        <i class="fas fa-download"></i> Descargar archivo
+                    </button>
                 </div>
             `;
         }

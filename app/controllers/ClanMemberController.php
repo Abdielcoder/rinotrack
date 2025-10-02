@@ -2630,6 +2630,28 @@ class ClanMemberController {
 
         try {
             $subtaskId = $_GET['subtask_id'] ?? null;
+            $attachmentId = $_GET['attachment_id'] ?? null;
+
+            // Si se solicita un attachment específico
+            if ($attachmentId) {
+                $attachment = $this->subtaskModel->getAttachmentById($attachmentId);
+                if (!$attachment) {
+                    http_response_code(404);
+                    echo json_encode(['success' => false, 'message' => 'Archivo no encontrado']);
+                    return;
+                }
+                
+                // Verificar permisos en la subtarea del attachment
+                $permissions = $this->subtaskModel->checkUserPermissions($attachment['subtask_id'], $this->currentUser['user_id']);
+                if (!$permissions['can_view']) {
+                    http_response_code(403);
+                    echo json_encode(['success' => false, 'message' => 'No tienes permisos para ver este archivo']);
+                    return;
+                }
+                
+                echo json_encode(['success' => true, 'attachments' => [$attachment]]);
+                return;
+            }
 
             if (!$subtaskId) {
                 http_response_code(400);

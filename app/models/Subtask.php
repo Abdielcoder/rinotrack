@@ -208,6 +208,30 @@ class Subtask {
     }
     
     /**
+     * Obtener un adjunto específico por ID
+     */
+    public function getAttachmentById($attachmentId) {
+        try {
+            $stmt = $this->db->prepare("
+                SELECT 
+                    sa.*,
+                    u.full_name as uploaded_by_name,
+                    u.username as uploaded_by_username,
+                    sc.comment_text
+                FROM Subtask_Attachments sa
+                JOIN Users u ON sa.user_id = u.user_id
+                LEFT JOIN Subtask_Comments sc ON sa.comment_id = sc.comment_id
+                WHERE sa.attachment_id = ?
+            ");
+            $stmt->execute([$attachmentId]);
+            return $stmt->fetch();
+        } catch (Exception $e) {
+            error_log("Error al obtener adjunto por ID: " . $e->getMessage());
+            return false;
+        }
+    }
+    
+    /**
      * Agregar documento adjunto a una subtarea
      */
     public function addAttachment($subtaskId, $userId, $fileName, $filePath, $fileSize = null, $fileType = null, $description = null, $commentId = null) {
