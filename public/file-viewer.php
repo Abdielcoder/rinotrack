@@ -43,25 +43,42 @@ try {
     }
     
     // Buscar el archivo en diferentes ubicaciones posibles
+    $filename = basename($attachment['file_path']);
     $possiblePaths = [
-        __DIR__ . '/' . $attachment['file_path'], // Ruta relativa desde public
-        $attachment['file_path'], // Ruta absoluta
-        __DIR__ . '/uploads/task_attachments/' . basename($attachment['file_path']),
-        __DIR__ . '/uploads/' . basename($attachment['file_path']),
-        sys_get_temp_dir() . '/rinotrack_uploads/' . basename($attachment['file_path'])
+        // Rutas desde el directorio public
+        __DIR__ . '/uploads/task_attachments/' . $filename,
+        __DIR__ . '/uploads/' . $filename,
+        __DIR__ . '/uploads/subtask_attachments/' . $filename,
+        
+        // Rutas temporales
+        sys_get_temp_dir() . '/rinotrack_uploads/' . $filename,
+        '/tmp/rinotrack_uploads/' . $filename,
+        
+        // Rutas absolutas del file_path
+        $attachment['file_path'],
+        
+        // Rutas relativas desde public
+        __DIR__ . '/' . ltrim($attachment['file_path'], '/'),
+        
+        // Buscar en subdirectorios de uploads
+        __DIR__ . '/uploads/' . dirname($filename) . '/' . $filename
     ];
     
     $filePath = null;
     foreach ($possiblePaths as $path) {
-        if (file_exists($path)) {
+        error_log("Buscando archivo en: " . $path);
+        if (file_exists($path) && is_readable($path)) {
             $filePath = $path;
+            error_log("Archivo encontrado en: " . $path);
             break;
         }
     }
     
     if (!$filePath) {
+        error_log("Archivo no encontrado. File_path en DB: " . $attachment['file_path']);
+        error_log("Filename extraído: " . $filename);
         http_response_code(404);
-        die('Archivo físico no encontrado');
+        die('Archivo físico no encontrado en el servidor');
     }
     
     $filesize = filesize($filePath);
