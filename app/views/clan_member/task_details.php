@@ -4,6 +4,7 @@ ob_start();
 // Agregar dependencias de Quill.js al layout
 $additionalCSS[] = 'https://cdn.quilljs.com/1.3.6/quill.snow.css';
 $additionalJS[] = 'https://cdn.quilljs.com/1.3.6/quill.min.js';
+$additionalJS[] = APP_URL . 'assets/js/file-viewer.js';
 ?>
 
 <div class="cm-task-details minimal">
@@ -1655,21 +1656,43 @@ function loadSubtaskAttachments(subtaskId) {
                 if (data.attachments.length === 0) {
                     container.innerHTML = '<p class="no-data">No hay archivos adjuntos aún.</p>';
                 } else {
-                    container.innerHTML = data.attachments.map(att => `
-                        <div class="attachment-item">
-                            <div class="attachment-info">
-                                <a href="${att.file_path}" target="_blank" class="attachment-link">
-                                    <i class="fas fa-file"></i> ${att.file_name}
-                                </a>
-                                <div class="attachment-meta">
-                                    <span>Subido por: ${att.uploaded_by_name}</span>
-                                    <span>Fecha: ${new Date(att.uploaded_at).toLocaleString()}</span>
-                                    ${att.file_size ? `<span>Tamaño: ${formatFileSize(att.file_size)}</span>` : ''}
+                    container.innerHTML = data.attachments.map(att => {
+                        const isImage = att.file_type && att.file_type.startsWith('image/');
+                        const isPdf = att.file_type === 'application/pdf';
+                        const isViewable = isImage || isPdf || (att.file_type && att.file_type.startsWith('text/'));
+                        
+                        return `
+                            <div class="attachment-item">
+                                <div class="attachment-info">
+                                    <div class="attachment-header">
+                                        <div class="attachment-icon">
+                                            ${isImage ? '<i class="fas fa-image" style="color: #10b981;"></i>' : 
+                                              isPdf ? '<i class="fas fa-file-pdf" style="color: #ef4444;"></i>' : 
+                                              '<i class="fas fa-file" style="color: #6b7280;"></i>'}
+                                        </div>
+                                        <div class="attachment-name">
+                                            <strong>${att.file_name}</strong>
+                                            ${isViewable ? '<span class="viewable-badge">Vista previa disponible</span>' : ''}
+                                        </div>
+                                    </div>
+                                    <div class="attachment-meta">
+                                        <span>Subido por: ${att.uploaded_by_name}</span>
+                                        <span>Fecha: ${new Date(att.uploaded_at).toLocaleString()}</span>
+                                        ${att.file_size ? `<span>Tamaño: ${formatFileSize(att.file_size)}</span>` : ''}
+                                    </div>
+                                    ${att.description ? `<div class="attachment-description">${att.description}</div>` : ''}
+                                    <div class="attachment-actions">
+                                        <button onclick="openFileViewer(${att.attachment_id})" class="btn-view">
+                                            <i class="fas fa-eye"></i> ${isViewable ? 'Ver' : 'Descargar'}
+                                        </button>
+                                        <button onclick="downloadFile(${att.attachment_id}, '${att.file_name}')" class="btn-download">
+                                            <i class="fas fa-download"></i> Descargar
+                                        </button>
+                                    </div>
                                 </div>
-                                ${att.description ? `<div class="attachment-description">${att.description}</div>` : ''}
                             </div>
-                        </div>
-                    `).join('');
+                        `;
+                    }).join('');
                 }
             } else {
                 container.innerHTML = '<p class="error">Error al cargar adjuntos: ' + data.message + '</p>';
@@ -1869,6 +1892,14 @@ function uploadSubtaskAttachment(subtaskId) {
     .catch(error => {
         alert('Error de conexión');
     });
+}
+
+// Función para descargar archivos
+function downloadFile(attachmentId, filename) {
+    const link = document.createElement('a');
+    link.href = `file-viewer.php?id=${attachmentId}&action=download`;
+    link.download = filename;
+    link.click();
 }
 
 function formatFileSize(bytes) {
@@ -2202,6 +2233,140 @@ function downloadTaskHistory(taskId) {
     color: #9ca3af;
     font-size: 10px;
     margin-left: 4px;
+}
+
+/* Estilos para adjuntos mejorados */
+.attachment-item {
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    background: white;
+    transition: all 0.2s ease;
+}
+
+.attachment-item:hover {
+    border-color: #1e3a8a;
+    box-shadow: 0 4px 12px rgba(30, 58, 138, 0.1);
+}
+
+.attachment-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.attachment-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f3f4f6;
+    border-radius: 8px;
+    font-size: 1.2rem;
+}
+
+.attachment-name {
+    flex: 1;
+}
+
+.attachment-name strong {
+    display: block;
+    color: #1f2937;
+    font-size: 1rem;
+    margin-bottom: 2px;
+}
+
+.viewable-badge {
+    display: inline-block;
+    background: #d1fae5;
+    color: #065f46;
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+.attachment-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    font-size: 0.8rem;
+    color: #6b7280;
+    margin-bottom: 8px;
+}
+
+.attachment-description {
+    background: #f8fafc;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    color: #374151;
+    margin-bottom: 8px;
+    border-left: 3px solid #1e3a8a;
+}
+
+.attachment-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-view, .btn-download {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+}
+
+.btn-view {
+    background: #1e3a8a;
+    color: white;
+}
+
+.btn-view:hover {
+    background: #1e40af;
+    transform: translateY(-1px);
+}
+
+.btn-download {
+    background: #f3f4f6;
+    color: #374151;
+    border: 1px solid #d1d5db;
+}
+
+.btn-download:hover {
+    background: #e5e7eb;
+    transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+    .attachment-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .attachment-meta {
+        flex-direction: column;
+        gap: 4px;
+    }
+    
+    .attachment-actions {
+        width: 100%;
+    }
+    
+    .btn-view, .btn-download {
+        flex: 1;
+        justify-content: center;
+    }
 }
 
 /* Estilos para la barra de progreso de la tarea principal */
