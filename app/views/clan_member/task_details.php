@@ -2104,6 +2104,10 @@ class SimpleFileViewer {
                 uploaded_at: attachment.uploaded_at
             };
 
+            console.log('🖼️ FileInfo:', fileInfo);
+            console.log('📁 Is Image:', fileInfo.is_image);
+            console.log('📄 File Type:', fileInfo.type);
+
             document.getElementById('simple-file-title').textContent = fileInfo.name;
             document.getElementById('simple-download-btn').onclick = () => {
                 downloadFile(attachmentId, fileInfo.name);
@@ -2111,14 +2115,19 @@ class SimpleFileViewer {
 
             document.getElementById('simple-file-loading').style.display = 'none';
 
-                // Mostrar el archivo según su tipo
-                if (fileInfo.is_image) {
-                    // Usar SOLO file-viewer.php para servidores remotos
-                    document.getElementById('simple-file-body').innerHTML = `
-                        <img src="file-viewer.php?id=${attachmentId}" class="simple-file-image" alt="${fileInfo.name}" 
-                             onerror="this.parentElement.innerHTML='<div style=\\'text-align: center; padding: 40px;\\'>Error al cargar la imagen</div>'">
-                    `;
-                } else if (fileInfo.is_pdf) {
+            // Mostrar el archivo según su tipo
+            if (fileInfo.is_image) {
+                console.log('✅ Mostrando imagen con ID:', attachmentId);
+                // Usar SOLO file-viewer.php para servidores remotos
+                const imgUrl = `file-viewer.php?id=${attachmentId}`;
+                console.log('🔗 URL de imagen:', imgUrl);
+                
+                document.getElementById('simple-file-body').innerHTML = `
+                    <img src="${imgUrl}" class="simple-file-image" alt="${fileInfo.name}" 
+                         onload="console.log('✅ Imagen cargada exitosamente')"
+                         onerror="console.error('❌ Error al cargar imagen'); this.parentElement.innerHTML='<div style=\\'text-align: center; padding: 40px;\\'>Error al cargar la imagen. <br><a href=\\'${imgUrl}\\' target=\\'_blank\\'>Abrir en nueva pestaña</a></div>'">
+                `;
+            } else if (fileInfo.is_pdf) {
                     // Usar file-viewer.php para PDFs
                     document.getElementById('simple-file-body').innerHTML = `
                         <iframe src="file-viewer.php?id=${attachmentId}" class="simple-file-pdf"

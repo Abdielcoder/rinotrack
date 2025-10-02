@@ -128,10 +128,16 @@ try {
     
     // Visualización en línea
     if ($isImage) {
+        error_log("📸 Sirviendo imagen: " . $filename . " (" . $mimetype . ")");
+        error_log("📂 Desde: " . $filePath);
+        error_log("📦 Tamaño: " . $filesize . " bytes");
+        
         header('Content-Type: ' . $mimetype);
         header('Content-Disposition: inline; filename="' . $filename . '"');
         header('Content-Length: ' . $filesize);
         header('Cache-Control: public, max-age=3600');
+        header('Access-Control-Allow-Origin: *');
+        
         readfile($filePath);
         exit;
     }
