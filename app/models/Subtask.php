@@ -387,7 +387,16 @@ class Subtask {
             
             // Crear directorio si no existe
             if (!file_exists($uploadsDir)) {
-                mkdir($uploadsDir, 0755, true);
+                if (!mkdir($uploadsDir, 0755, true)) {
+                    error_log("Error: No se pudo crear el directorio de uploads: " . $uploadsDir);
+                    return false;
+                }
+            }
+            
+            // Verificar que el directorio sea escribible
+            if (!is_writable($uploadsDir)) {
+                error_log("Error: El directorio de uploads no es escribible: " . $uploadsDir);
+                return false;
             }
             
             // Generar nombre único para el archivo
@@ -397,20 +406,25 @@ class Subtask {
             
             // Mover archivo subido
             if (move_uploaded_file($file['tmp_name'], $filepath)) {
+                // Construir la ruta pública usando APP_URL
+                $publicPath = APP_URL . 'uploads/' . $filename;
+                
                 return [
                     'original_name' => $file['name'],
                     'saved_name' => $filename,
                     'file_path' => $filepath,
-                    'public_path' => '/desarrollo/rinotrack/public/uploads/' . $filename,
+                    'public_path' => $publicPath,
                     'file_size' => $file['size'],
                     'file_type' => $file['type']
                 ];
+            } else {
+                error_log("Error: No se pudo mover el archivo subido. tmp_name: " . ($file['tmp_name'] ?? 'N/A') . ", destino: " . $filepath);
+                return false;
             }
-            
-            return false;
             
         } catch (Exception $e) {
             error_log("Error al guardar archivo de subtarea: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
             return false;
         }
     }
