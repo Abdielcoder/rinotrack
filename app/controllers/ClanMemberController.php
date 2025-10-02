@@ -2506,19 +2506,33 @@ class ClanMemberController {
         }
 
         try {
+            error_log("=== INICIO uploadSubtaskAttachment (ClanMember) ===");
+            error_log("POST data: " . print_r($_POST, true));
+            error_log("FILES data: " . print_r($_FILES, true));
+
             $subtaskId = $_POST['subtask_id'] ?? null;
             $commentId = $_POST['comment_id'] ?? null;
             $description = trim($_POST['description'] ?? '');
 
             if (!$subtaskId || !isset($_FILES['file'])) {
+                error_log("Error: Faltan datos requeridos - subtaskId: " . ($subtaskId ?? 'NULL') . ", file: " . (isset($_FILES['file']) ? 'OK' : 'NULL'));
                 http_response_code(400);
                 echo json_encode(['success' => false, 'message' => 'Subtarea ID y archivo son requeridos']);
                 return;
             }
 
+            // Verificar que la subtarea existe
+            if (!$this->subtaskModel) {
+                error_log("Error: subtaskModel no está inicializado");
+                throw new Exception("Modelo de subtarea no disponible");
+            }
+
             // Verificar permisos
             $permissions = $this->subtaskModel->checkUserPermissions($subtaskId, $this->currentUser['user_id']);
+            error_log("Permisos obtenidos: " . print_r($permissions, true));
+            
             if (!$permissions['can_attach']) {
+                error_log("Error: Usuario no tiene permisos para adjuntar archivos");
                 http_response_code(403);
                 echo json_encode(['success' => false, 'message' => 'No tienes permisos para adjuntar archivos en esta subtarea']);
                 return;
@@ -2526,23 +2540,47 @@ class ClanMemberController {
 
             $file = $_FILES['file'];
             
-            // Validar archivo
+            // Verificar errores del archivo
+            if ($file['error'] !== UPLOAD_ERR_OK) {
+                $errorMessages = [
+                    UPLOAD_ERR_INI_SIZE => 'El archivo excede upload_max_filesize',
+                    UPLOAD_ERR_FORM_SIZE => 'El archivo excede MAX_FILE_SIZE',
+                    UPLOAD_ERR_PARTIAL => 'El archivo se subió parcialmente',
+                    UPLOAD_ERR_NO_FILE => 'No se subió ningún archivo',
+                    UPLOAD_ERR_NO_TMP_DIR => 'Falta directorio temporal',
+                    UPLOAD_ERR_CANT_WRITE => 'Error escribiendo archivo al disco',
+                    UPLOAD_ERR_EXTENSION => 'Extensión PHP detuvo la subida'
+                ];
+                $errorMsg = $errorMessages[$file['error']] ?? 'Error desconocido en upload';
+                error_log("Error en upload de archivo: " . $errorMsg);
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => $errorMsg]);
+                return;
+            }
+            
+            // Validar tamaño de archivo
             $maxSize = 50 * 1024 * 1024; // 50MB
             if ($file['size'] > $maxSize) {
+                error_log("Error: Archivo demasiado grande - " . $file['size'] . " bytes");
                 http_response_code(400);
                 echo json_encode(['success' => false, 'message' => 'El archivo es demasiado grande (máximo 50MB)']);
                 return;
             }
 
             // Guardar archivo
+            error_log("Intentando guardar archivo...");
             $fileInfo = $this->subtaskModel->saveUploadedFile($file, $subtaskId, $this->currentUser['user_id']);
             if (!$fileInfo) {
+                error_log("Error: saveUploadedFile retornó false");
                 http_response_code(500);
-                echo json_encode(['success' => false, 'message' => 'Error al guardar el archivo']);
+                echo json_encode(['success' => false, 'message' => 'Error al guardar el archivo en el servidor']);
                 return;
             }
+            
+            error_log("Archivo guardado exitosamente: " . print_r($fileInfo, true));
 
             // Guardar en base de datos
+            error_log("Intentando guardar en base de datos...");
             $attachmentId = $this->subtaskModel->addAttachment(
                 $subtaskId,
                 $this->currentUser['user_id'],
@@ -2555,6 +2593,7 @@ class ClanMemberController {
             );
 
             if ($attachmentId) {
+                error_log("✅ Adjunto guardado exitosamente con ID: " . $attachmentId);
                 echo json_encode([
                     'success' => true, 
                     'message' => 'Archivo adjuntado exitosamente',
@@ -2562,13 +2601,19 @@ class ClanMemberController {
                     'file_info' => $fileInfo
                 ]);
             } else {
+                error_log("Error: addAttachment retornó false");
                 echo json_encode(['success' => false, 'message' => 'Error al guardar el adjunto en la base de datos']);
             }
 
         } catch (Exception $e) {
-            error_log("Error en uploadSubtaskAttachment (member): " . $e->getMessage());
+            error_log("❌ Error en uploadSubtaskAttachment (member): " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
             http_response_code(500);
-            echo json_encode(['success' => false, 'message' => 'Error interno del servidor']);
+            echo json_encode([
+                'success' => false, 
+                'message' => 'Error interno del servidor: ' . $e->getMessage(),
+                'debug' => APP_DEBUG ? $e->getTraceAsString() : null
+            ]);
         }
     }
 
