@@ -44,25 +44,31 @@ try {
     
     // Buscar el archivo en diferentes ubicaciones posibles
     $filename = basename($attachment['file_path']);
+    
+    // Si el file_path es una URL completa, extraer solo el nombre del archivo
+    if (strpos($attachment['file_path'], 'http') === 0) {
+        $filename = basename(parse_url($attachment['file_path'], PHP_URL_PATH));
+    }
+    
     $possiblePaths = [
-        // Rutas desde el directorio public
+        // Rutas desde el directorio public (más comunes)
         __DIR__ . '/uploads/task_attachments/' . $filename,
         __DIR__ . '/uploads/' . $filename,
-        __DIR__ . '/uploads/subtask_attachments/' . $filename,
         
         // Rutas temporales
         sys_get_temp_dir() . '/rinotrack_uploads/' . $filename,
         '/tmp/rinotrack_uploads/' . $filename,
         
-        // Rutas absolutas del file_path
-        $attachment['file_path'],
+        // Rutas absolutas del file_path (si no es URL)
+        strpos($attachment['file_path'], 'http') !== 0 ? $attachment['file_path'] : null,
         
-        // Rutas relativas desde public
-        __DIR__ . '/' . ltrim($attachment['file_path'], '/'),
-        
-        // Buscar en subdirectorios de uploads
-        __DIR__ . '/uploads/' . dirname($filename) . '/' . $filename
+        // Buscar en subdirectorios comunes
+        __DIR__ . '/uploads/subtask_attachments/' . $filename,
+        __DIR__ . '/uploads/files/' . $filename
     ];
+    
+    // Filtrar rutas nulas
+    $possiblePaths = array_filter($possiblePaths);
     
     $filePath = null;
     foreach ($possiblePaths as $path) {
