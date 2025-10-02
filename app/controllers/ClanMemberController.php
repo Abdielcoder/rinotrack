@@ -2581,11 +2581,18 @@ class ClanMemberController {
 
             // Guardar en base de datos
             error_log("Intentando guardar en base de datos...");
+            
+            // Usar el nombre guardado (saved_name) como file_path para que file-viewer.php lo encuentre
+            $dbFilePath = $fileInfo['saved_name'];
+            
+            error_log("📁 Guardando en BD - file_name: " . $fileInfo['original_name']);
+            error_log("📁 Guardando en BD - file_path: " . $dbFilePath);
+            
             $attachmentId = $this->subtaskModel->addAttachment(
                 $subtaskId,
                 $this->currentUser['user_id'],
                 $fileInfo['original_name'],
-                $fileInfo['public_path'],
+                $dbFilePath,  // Usar el nombre del archivo físico, no la URL
                 $fileInfo['file_size'],
                 $fileInfo['file_type'],
                 $description,
