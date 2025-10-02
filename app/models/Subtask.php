@@ -383,19 +383,53 @@ class Subtask {
      */
     public function saveUploadedFile($file, $subtaskId, $userId) {
         try {
-            $uploadsDir = __DIR__ . '/../../public/uploads/';
+            // Lista de directorios a intentar en orden de preferencia
+            $possibleDirs = [
+                __DIR__ . '/../../public/uploads/task_attachments/',
+                __DIR__ . '/../../public/uploads/',
+                sys_get_temp_dir() . '/rinotrack_uploads/',
+                '/tmp/rinotrack_uploads/',
+                __DIR__ . '/../../uploads/',
+                __DIR__ . '/../uploads/'
+            ];
             
-            // Crear directorio si no existe
-            if (!file_exists($uploadsDir)) {
-                if (!mkdir($uploadsDir, 0755, true)) {
-                    error_log("Error: No se pudo crear el directorio de uploads: " . $uploadsDir);
-                    return false;
+            $uploadsDir = null;
+            
+            // Buscar un directorio escribible
+            foreach ($possibleDirs as $dir) {
+                error_log("Probando directorio: " . $dir);
+                
+                // Crear directorio si no existe
+                if (!file_exists($dir)) {
+                    if (@mkdir($dir, 0777, true)) {
+                        error_log("Directorio creado: " . $dir);
+                    } else {
+                        error_log("No se pudo crear directorio: " . $dir);
+                        continue;
+                    }
+                }
+                
+                // Verificar si es escribible
+                if (is_writable($dir)) {
+                    $uploadsDir = $dir;
+                    error_log("Directorio escribible encontrado: " . $dir);
+                    break;
+                } else {
+                    error_log("Directorio no escribible: " . $dir);
+                    
+                    // Intentar cambiar permisos
+                    if (@chmod($dir, 0777)) {
+                        if (is_writable($dir)) {
+                            $uploadsDir = $dir;
+                            error_log("Permisos cambiados exitosamente: " . $dir);
+                            break;
+                        }
+                    }
                 }
             }
             
-            // Verificar que el directorio sea escribible
-            if (!is_writable($uploadsDir)) {
-                error_log("Error: El directorio de uploads no es escribible: " . $uploadsDir);
+            if (!$uploadsDir) {
+                error_log("Error: No se encontró ningún directorio escribible para uploads");
                 return false;
             }
             
@@ -406,8 +440,29 @@ class Subtask {
             
             // Mover archivo subido
             if (move_uploaded_file($file['tmp_name'], $filepath)) {
-                // Construir la ruta pública usando APP_URL
-                $publicPath = APP_URL . 'uploads/' . $filename;
+                // Construir la ruta pública basada en el directorio usado
+                $publicUploadsDir = __DIR__ . '/../../public/uploads/';
+                
+                if ($uploadsDir === $publicUploadsDir) {
+                    // Directorio público normal
+                    $publicPath = APP_URL . 'uploads/' . $filename;
+                    error_log("Archivo guardado en directorio público: " . $filepath);
+                } else {
+                    // Directorio alternativo - intentar copiar al público o usar servicio de archivos
+                    if (file_exists($publicUploadsDir) && is_writable($publicUploadsDir)) {
+                        $publicFilepath = $publicUploadsDir . $filename;
+                        if (copy($filepath, $publicFilepath)) {
+                            $publicPath = APP_URL . 'uploads/' . $filename;
+                            error_log("Archivo copiado al directorio público: " . $publicFilepath);
+                        } else {
+                            $publicPath = APP_URL . 'serve-temp-file.php?file=' . urlencode($filename) . '&dir=' . urlencode(basename($uploadsDir));
+                            error_log("Usando servicio de archivos temporales: " . $publicPath);
+                        }
+                    } else {
+                        $publicPath = APP_URL . 'serve-temp-file.php?file=' . urlencode($filename) . '&dir=' . urlencode(basename($uploadsDir));
+                        error_log("Directorio público no disponible, usando servicio de archivos: " . $publicPath);
+                    }
+                }
                 
                 return [
                     'original_name' => $file['name'],
@@ -415,7 +470,8 @@ class Subtask {
                     'file_path' => $filepath,
                     'public_path' => $publicPath,
                     'file_size' => $file['size'],
-                    'file_type' => $file['type']
+                    'file_type' => $file['type'],
+                    'storage_dir' => $uploadsDir
                 ];
             } else {
                 error_log("Error: No se pudo mover el archivo subido. tmp_name: " . ($file['tmp_name'] ?? 'N/A') . ", destino: " . $filepath);
