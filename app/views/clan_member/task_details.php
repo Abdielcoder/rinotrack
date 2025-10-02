@@ -4,7 +4,6 @@ ob_start();
 // Agregar dependencias de Quill.js al layout
 $additionalCSS[] = 'https://cdn.quilljs.com/1.3.6/quill.snow.css';
 $additionalJS[] = 'https://cdn.quilljs.com/1.3.6/quill.min.js';
-$additionalJS[] = APP_URL . 'assets/js/file-viewer.js';
 ?>
 
 <div class="cm-task-details minimal">
@@ -1901,6 +1900,206 @@ function downloadFile(attachmentId, filename) {
     link.download = filename;
     link.click();
 }
+
+// Función para abrir el visor de archivos (fallback si no se carga el JS externo)
+if (typeof openFileViewer === 'undefined') {
+    window.openFileViewer = function(attachmentId) {
+        // Si el visor completo no está disponible, abrir en nueva ventana
+        if (typeof window.fileViewer === 'undefined') {
+            window.open(`file-viewer.php?id=${attachmentId}`, '_blank');
+        } else {
+            window.fileViewer.open(attachmentId);
+        }
+    };
+}
+
+// Visor de archivos simplificado integrado
+class SimpleFileViewer {
+    constructor() {
+        this.modal = null;
+        this.createModal();
+    }
+
+    createModal() {
+        if (document.getElementById('simple-file-viewer')) return;
+
+        const modalHTML = `
+            <div id="simple-file-viewer" class="simple-file-modal" style="display: none;">
+                <div class="simple-file-overlay" onclick="simpleFileViewer.close()"></div>
+                <div class="simple-file-container">
+                    <div class="simple-file-header">
+                        <h3 id="simple-file-title">Archivo</h3>
+                        <button onclick="simpleFileViewer.close()" class="simple-close-btn">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="simple-file-content">
+                        <div id="simple-file-loading">Cargando...</div>
+                        <div id="simple-file-body"></div>
+                    </div>
+                    <div class="simple-file-actions">
+                        <button id="simple-download-btn" class="simple-btn">
+                            <i class="fas fa-download"></i> Descargar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        this.modal = document.getElementById('simple-file-viewer');
+        this.addStyles();
+    }
+
+    addStyles() {
+        if (document.getElementById('simple-file-styles')) return;
+
+        const styles = `
+            <style id="simple-file-styles">
+                .simple-file-modal {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    z-index: 10000;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+                .simple-file-overlay {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0, 0, 0, 0.8);
+                }
+                .simple-file-container {
+                    position: relative;
+                    background: white;
+                    border-radius: 12px;
+                    max-width: 90vw;
+                    max-height: 90vh;
+                    width: 800px;
+                    height: 600px;
+                    display: flex;
+                    flex-direction: column;
+                }
+                .simple-file-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 20px;
+                    border-bottom: 1px solid #e5e7eb;
+                }
+                .simple-close-btn {
+                    background: none;
+                    border: none;
+                    font-size: 1.5rem;
+                    cursor: pointer;
+                    color: #6b7280;
+                }
+                .simple-file-content {
+                    flex: 1;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    overflow: hidden;
+                }
+                .simple-file-actions {
+                    padding: 20px;
+                    border-top: 1px solid #e5e7eb;
+                    text-align: center;
+                }
+                .simple-btn {
+                    padding: 12px 24px;
+                    background: #1e3a8a;
+                    color: white;
+                    border: none;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    font-weight: 600;
+                }
+                .simple-file-image {
+                    max-width: 100%;
+                    max-height: 100%;
+                    object-fit: contain;
+                }
+                .simple-file-pdf {
+                    width: 100%;
+                    height: 100%;
+                    border: none;
+                }
+            </style>
+        `;
+
+        document.head.insertAdjacentHTML('beforeend', styles);
+    }
+
+    async open(attachmentId) {
+        try {
+            this.modal.style.display = 'flex';
+            document.getElementById('simple-file-loading').style.display = 'block';
+            document.getElementById('simple-file-body').innerHTML = '';
+
+            // Obtener información del archivo
+            const response = await fetch(`file-viewer.php?id=${attachmentId}&action=info`);
+            const fileInfo = await response.json();
+
+            document.getElementById('simple-file-title').textContent = fileInfo.name;
+            document.getElementById('simple-download-btn').onclick = () => {
+                downloadFile(attachmentId, fileInfo.name);
+            };
+
+            document.getElementById('simple-file-loading').style.display = 'none';
+
+            // Mostrar el archivo según su tipo
+            if (fileInfo.is_image) {
+                document.getElementById('simple-file-body').innerHTML = `
+                    <img src="file-viewer.php?id=${attachmentId}" class="simple-file-image" alt="${fileInfo.name}">
+                `;
+            } else if (fileInfo.is_pdf) {
+                document.getElementById('simple-file-body').innerHTML = `
+                    <iframe src="file-viewer.php?id=${attachmentId}" class="simple-file-pdf"></iframe>
+                `;
+            } else {
+                document.getElementById('simple-file-body').innerHTML = `
+                    <div style="text-align: center; padding: 40px;">
+                        <i class="fas fa-file" style="font-size: 4rem; color: #d1d5db; margin-bottom: 20px;"></i>
+                        <h3>Vista previa no disponible</h3>
+                        <p>Haz clic en "Descargar" para obtener el archivo.</p>
+                    </div>
+                `;
+            }
+
+        } catch (error) {
+            console.error('Error:', error);
+            document.getElementById('simple-file-body').innerHTML = `
+                <div style="text-align: center; padding: 40px; color: #ef4444;">
+                    <i class="fas fa-exclamation-triangle" style="font-size: 4rem; margin-bottom: 20px;"></i>
+                    <h3>Error al cargar el archivo</h3>
+                </div>
+            `;
+        }
+    }
+
+    close() {
+        this.modal.style.display = 'none';
+    }
+}
+
+// Inicializar el visor simplificado
+document.addEventListener('DOMContentLoaded', function() {
+    window.simpleFileViewer = new SimpleFileViewer();
+    
+    // Definir la función global openFileViewer
+    window.openFileViewer = function(attachmentId) {
+        window.simpleFileViewer.open(attachmentId);
+    };
+    
+    console.log('Simple file viewer inicializado');
+});
 
 function formatFileSize(bytes) {
     if (bytes === 0) return '0 Bytes';
