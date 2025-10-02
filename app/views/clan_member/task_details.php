@@ -1684,7 +1684,7 @@ function loadSubtaskAttachments(subtaskId) {
                                         <button onclick="openFileViewer(${att.attachment_id})" class="btn-view">
                                             <i class="fas fa-eye"></i> ${isViewable ? 'Ver' : 'Descargar'}
                                         </button>
-                                        <button onclick="downloadFile(${att.attachment_id}, '${att.file_name}')" class="btn-download">
+                                        <button onclick="downloadFile(${att.attachment_id}, '${att.file_name}', '${att.file_path}')" class="btn-download">
                                             <i class="fas fa-download"></i> Descargar
                                         </button>
                                     </div>
@@ -1894,9 +1894,17 @@ function uploadSubtaskAttachment(subtaskId) {
 }
 
 // Función para descargar archivos
-function downloadFile(attachmentId, filename) {
+function downloadFile(attachmentId, filename, directPath = null) {
     const link = document.createElement('a');
-    link.href = `file-viewer.php?id=${attachmentId}&action=download`;
+    
+    if (directPath) {
+        // Usar ruta directa si está disponible
+        link.href = directPath;
+    } else {
+        // Usar file-viewer.php como fallback
+        link.href = `file-viewer.php?id=${attachmentId}&action=download`;
+    }
+    
     link.download = filename;
     link.click();
 }
@@ -2076,23 +2084,30 @@ class SimpleFileViewer {
                 name: attachment.file_name,
                 type: attachment.file_type,
                 is_image: attachment.file_type && attachment.file_type.startsWith('image/'),
-                is_pdf: attachment.file_type === 'application/pdf'
+                is_pdf: attachment.file_type === 'application/pdf',
+                path: attachment.file_path,
+                size: attachment.file_size,
+                uploaded_by: attachment.uploaded_by_name,
+                uploaded_at: attachment.uploaded_at
             };
 
             document.getElementById('simple-file-title').textContent = fileInfo.name;
             document.getElementById('simple-download-btn').onclick = () => {
-                downloadFile(attachmentId, fileInfo.name);
+                downloadFile(attachmentId, fileInfo.name, attachment.file_path);
             };
 
             document.getElementById('simple-file-loading').style.display = 'none';
 
             // Mostrar el archivo según su tipo
             if (fileInfo.is_image) {
+                // Usar la ruta directa del archivo para imágenes
+                const imageSrc = attachment.file_path || `file-viewer.php?id=${attachmentId}`;
                 document.getElementById('simple-file-body').innerHTML = `
-                    <img src="file-viewer.php?id=${attachmentId}" class="simple-file-image" alt="${fileInfo.name}" 
-                         onerror="this.parentElement.innerHTML='<div style=\\'text-align: center; padding: 40px;\\'>Error al cargar la imagen</div>'">
+                    <img src="${imageSrc}" class="simple-file-image" alt="${fileInfo.name}" 
+                         onerror="this.src='file-viewer.php?id=${attachmentId}'; this.onerror=function(){this.parentElement.innerHTML='<div style=\\'text-align: center; padding: 40px;\\'>Error al cargar la imagen</div>'}">
                 `;
             } else if (fileInfo.is_pdf) {
+                // Usar file-viewer.php para PDFs para mejor compatibilidad
                 document.getElementById('simple-file-body').innerHTML = `
                     <iframe src="file-viewer.php?id=${attachmentId}" class="simple-file-pdf"
                             onerror="this.parentElement.innerHTML='<div style=\\'text-align: center; padding: 40px;\\'>Error al cargar el PDF</div>'"></iframe>
@@ -2117,7 +2132,7 @@ class SimpleFileViewer {
                     <i class="fas fa-exclamation-triangle" style="font-size: 4rem; margin-bottom: 20px;"></i>
                     <h3>Error al cargar el archivo</h3>
                     <p>${error.message}</p>
-                    <button onclick="downloadFile(${attachmentId}, 'archivo')" class="simple-btn" style="margin-top: 15px;">
+                    <button onclick="downloadFile(${attachmentId}, 'archivo', null)" class="simple-btn" style="margin-top: 15px;">
                         <i class="fas fa-download"></i> Descargar archivo
                     </button>
                 </div>
