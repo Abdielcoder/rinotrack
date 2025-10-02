@@ -1684,7 +1684,7 @@ function loadSubtaskAttachments(subtaskId) {
                                         <button onclick="openFileViewer(${att.attachment_id})" class="btn-view">
                                             <i class="fas fa-eye"></i> ${isViewable ? 'Ver' : 'Descargar'}
                                         </button>
-                                        <button onclick="downloadFile(${att.attachment_id}, '${att.file_name}', '${att.file_path}')" class="btn-download">
+                                        <button onclick="downloadFile(${att.attachment_id}, '${att.file_name}')" class="btn-download">
                                             <i class="fas fa-download"></i> Descargar
                                         </button>
                                     </div>
@@ -1893,21 +1893,13 @@ function uploadSubtaskAttachment(subtaskId) {
     });
 }
 
-// Función para descargar archivos
-function downloadFile(attachmentId, filename, directPath = null) {
-    const link = document.createElement('a');
-    
-    if (directPath) {
-        // Usar ruta directa si está disponible
-        link.href = directPath;
-    } else {
-        // Usar file-viewer.php como fallback
+    // Función para descargar archivos
+    function downloadFile(attachmentId, filename) {
+        const link = document.createElement('a');
         link.href = `file-viewer.php?id=${attachmentId}&action=download`;
+        link.download = filename;
+        link.click();
     }
-    
-    link.download = filename;
-    link.click();
-}
 
 // Función para abrir el visor de archivos (fallback si no se carga el JS externo)
 if (typeof openFileViewer === 'undefined') {
@@ -2093,26 +2085,25 @@ class SimpleFileViewer {
 
             document.getElementById('simple-file-title').textContent = fileInfo.name;
             document.getElementById('simple-download-btn').onclick = () => {
-                downloadFile(attachmentId, fileInfo.name, attachment.file_path);
+                downloadFile(attachmentId, fileInfo.name);
             };
 
             document.getElementById('simple-file-loading').style.display = 'none';
 
-            // Mostrar el archivo según su tipo
-            if (fileInfo.is_image) {
-                // Usar la ruta directa del archivo para imágenes
-                const imageSrc = attachment.file_path || `file-viewer.php?id=${attachmentId}`;
-                document.getElementById('simple-file-body').innerHTML = `
-                    <img src="${imageSrc}" class="simple-file-image" alt="${fileInfo.name}" 
-                         onerror="this.src='file-viewer.php?id=${attachmentId}'; this.onerror=function(){this.parentElement.innerHTML='<div style=\\'text-align: center; padding: 40px;\\'>Error al cargar la imagen</div>'}">
-                `;
-            } else if (fileInfo.is_pdf) {
-                // Usar file-viewer.php para PDFs para mejor compatibilidad
-                document.getElementById('simple-file-body').innerHTML = `
-                    <iframe src="file-viewer.php?id=${attachmentId}" class="simple-file-pdf"
-                            onerror="this.parentElement.innerHTML='<div style=\\'text-align: center; padding: 40px;\\'>Error al cargar el PDF</div>'"></iframe>
-                `;
-            } else {
+                // Mostrar el archivo según su tipo
+                if (fileInfo.is_image) {
+                    // Usar SOLO file-viewer.php para servidores remotos
+                    document.getElementById('simple-file-body').innerHTML = `
+                        <img src="file-viewer.php?id=${attachmentId}" class="simple-file-image" alt="${fileInfo.name}" 
+                             onerror="this.parentElement.innerHTML='<div style=\\'text-align: center; padding: 40px;\\'>Error al cargar la imagen</div>'">
+                    `;
+                } else if (fileInfo.is_pdf) {
+                    // Usar file-viewer.php para PDFs
+                    document.getElementById('simple-file-body').innerHTML = `
+                        <iframe src="file-viewer.php?id=${attachmentId}" class="simple-file-pdf"
+                                onerror="this.parentElement.innerHTML='<div style=\\'text-align: center; padding: 40px;\\'>Error al cargar el PDF</div>'"></iframe>
+                    `;
+                } else {
                 document.getElementById('simple-file-body').innerHTML = `
                     <div style="text-align: center; padding: 40px;">
                         <i class="fas fa-file" style="font-size: 4rem; color: #d1d5db; margin-bottom: 20px;"></i>
