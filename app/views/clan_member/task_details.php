@@ -1873,22 +1873,43 @@ function uploadSubtaskAttachment(subtaskId) {
     formData.append('file', fileInput.files[0]);
     formData.append('description', description);
     
+    // Mostrar indicador de carga
+    const uploadBtn = event.target;
+    const originalText = uploadBtn.innerHTML;
+    uploadBtn.disabled = true;
+    uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Subiendo...';
+    
     fetch('?route=clan_member/upload-subtask-attachment', {
         method: 'POST',
         body: formData
     })
     .then(response => response.json())
-            .then(data => {
-            if (data.success) {
-                fileInput.value = '';
-                document.getElementById('subtask-attachment-description').value = '';
-                loadSubtaskAttachments(subtaskId);
-                loadSubtaskCounts(subtaskId); // Actualizar conteos
-            } else {
-                alert('Error al subir archivo: ' + data.message);
+    .then(data => {
+        // Restaurar botón
+        uploadBtn.disabled = false;
+        uploadBtn.innerHTML = originalText;
+        
+        if (data.success) {
+            // ABRIR VISTA PREVIA INMEDIATAMENTE
+            if (data.attachment_id) {
+                openFileViewer(data.attachment_id);
             }
-        })
+            
+            // Limpiar formulario
+            fileInput.value = '';
+            document.getElementById('subtask-attachment-description').value = '';
+            
+            // Actualizar lista de adjuntos en background
+            loadSubtaskAttachments(subtaskId);
+            loadSubtaskCounts(subtaskId);
+        } else {
+            alert('Error al subir archivo: ' + data.message);
+        }
+    })
     .catch(error => {
+        // Restaurar botón en caso de error
+        uploadBtn.disabled = false;
+        uploadBtn.innerHTML = originalText;
         alert('Error de conexión');
     });
 }
