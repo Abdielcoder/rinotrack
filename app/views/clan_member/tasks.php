@@ -102,9 +102,9 @@ ob_start();
                 ?>
                 <div class="project-card">
                     <div class="project-header">
-                        <h3 class="project-name"><?= htmlspecialchars($project['project_name']) ?></h3>
-                        <div class="project-status status-<?= $project['status'] ?>">
-                            <?= ucfirst($project['status']) ?>
+                        <h3 class="project-name"><?= htmlspecialchars($project['project_name'] ?? '') ?></h3>
+                        <div class="project-status status-<?= $project['status'] ?? 'pending' ?>">
+                            <?= ucfirst($project['status'] ?? 'pending') ?>
                         </div>
                     </div>
                     
@@ -174,9 +174,9 @@ ob_start();
                         <option value="">Todos los proyectos</option>
                         <?php if (!empty($projectsSummary)): ?>
                             <?php foreach ($projectsSummary as $project): ?>
-                                <option value="<?php echo htmlspecialchars($project['project_name']); ?>" 
-                                        <?php echo ($projectFilter === $project['project_name']) ? 'selected' : ''; ?>>
-                                    <?php echo htmlspecialchars($project['project_name']); ?>
+                                <option value="<?php echo htmlspecialchars($project['project_name'] ?? ''); ?>" 
+                                        <?php echo ($projectFilter === ($project['project_name'] ?? '')) ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($project['project_name'] ?? ''); ?>
                                 </option>
                             <?php endforeach; ?>
                         <?php endif; ?>

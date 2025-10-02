@@ -74,8 +74,8 @@ ob_start();
 											<?php echo Utils::escape($p['project_name']); ?>
 										</a>
 										<?php if (isset($p['clan_name']) && $p['clan_name'] !== ($clan['clan_name'] ?? '')): ?>
-											<span class="external-clan-badge" title="Proyecto de otro clan: <?php echo htmlspecialchars($p['clan_name']); ?>" style="margin-left: 8px;">
-												<i class="fas fa-external-link-alt"></i> <?php echo htmlspecialchars($p['clan_name']); ?>
+											<span class="external-clan-badge" title="Proyecto de otro clan: <?php echo htmlspecialchars($p['clan_name'] ?? ''); ?>" style="margin-left: 8px;">
+												<i class="fas fa-external-link-alt"></i> <?php echo htmlspecialchars($p['clan_name'] ?? ''); ?>
 											</span>
 										<?php endif; ?>
 									</td>
