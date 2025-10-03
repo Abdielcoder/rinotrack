@@ -50,39 +50,85 @@ try {
         $filename = basename(parse_url($attachment['file_path'], PHP_URL_PATH));
     }
     
-    $possiblePaths = [
-        // Rutas desde el directorio public (más comunes)
-        __DIR__ . '/uploads/task_attachments/' . $filename,
-        __DIR__ . '/uploads/' . $filename,
+    // Generar variaciones del nombre del archivo para buscar
+    $filenameVariations = [$filename];
+    
+    // Si el filename no tiene extensión, intentar agregar extensiones comunes
+    if (!pathinfo($filename, PATHINFO_EXTENSION)) {
+        $originalName = $attachment['file_name'];
+        $originalExt = pathinfo($originalName, PATHINFO_EXTENSION);
+        if ($originalExt) {
+            $filenameVariations[] = $filename . '.' . $originalExt;
+            // También intentar con el formato nuevo (extensión al final)
+            $filenameVariations[] = $filename . '_' . $originalExt;
+        }
         
-        // Rutas temporales
-        sys_get_temp_dir() . '/rinotrack_uploads/' . $filename,
-        '/tmp/rinotrack_uploads/' . $filename,
-        
-        // Rutas absolutas del file_path (si no es URL)
-        strpos($attachment['file_path'], 'http') !== 0 ? $attachment['file_path'] : null,
-        
-        // Buscar en subdirectorios comunes
-        __DIR__ . '/uploads/subtask_attachments/' . $filename,
-        __DIR__ . '/uploads/files/' . $filename
-    ];
+        // Intentar extensiones comunes de imagen
+        $imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'];
+        foreach ($imageExtensions as $ext) {
+            $filenameVariations[] = $filename . '.' . $ext;
+            $filenameVariations[] = $filename . '_' . $ext;
+        }
+    } else {
+        // Si ya tiene extensión, también intentar el formato con _ al final
+        $baseName = pathinfo($filename, PATHINFO_FILENAME);
+        $ext = pathinfo($filename, PATHINFO_EXTENSION);
+        $filenameVariations[] = $baseName . '_' . $ext;
+    }
+    
+    $possiblePaths = [];
+    
+    // Generar rutas para cada variación del nombre
+    foreach ($filenameVariations as $variation) {
+        $possiblePaths = array_merge($possiblePaths, [
+            // Rutas desde el directorio public (más comunes)
+            __DIR__ . '/uploads/task_attachments/' . $variation,
+            __DIR__ . '/uploads/' . $variation,
+            
+            // Rutas temporales
+            sys_get_temp_dir() . '/rinotrack_uploads/' . $variation,
+            '/tmp/rinotrack_uploads/' . $variation,
+            
+            // Buscar en subdirectorios comunes
+            __DIR__ . '/uploads/subtask_attachments/' . $variation,
+            __DIR__ . '/uploads/files/' . $variation
+        ]);
+    }
+    
+    // Agregar rutas absolutas del file_path (si no es URL)
+    if (strpos($attachment['file_path'], 'http') !== 0) {
+        $possiblePaths[] = $attachment['file_path'];
+    }
     
     // Filtrar rutas nulas
     $possiblePaths = array_filter($possiblePaths);
     
     $filePath = null;
+    $foundPaths = [];
+    $notFoundPaths = [];
+    
     foreach ($possiblePaths as $path) {
-        error_log("Buscando archivo en: " . $path);
-        if (file_exists($path) && is_readable($path)) {
-            $filePath = $path;
-            error_log("Archivo encontrado en: " . $path);
-            break;
+        error_log("🔍 Buscando archivo en: " . $path);
+        if (file_exists($path)) {
+            if (is_readable($path)) {
+                $filePath = $path;
+                error_log("✅ Archivo encontrado y legible en: " . $path);
+                break;
+            } else {
+                $notFoundPaths[] = $path . " (existe pero no es legible)";
+                error_log("⚠️ Archivo existe pero no es legible: " . $path);
+            }
+        } else {
+            $notFoundPaths[] = $path . " (no existe)";
         }
     }
     
     if (!$filePath) {
-        error_log("Archivo no encontrado. File_path en DB: " . $attachment['file_path']);
-        error_log("Filename extraído: " . $filename);
+        error_log("❌ Archivo no encontrado. Detalles:");
+        error_log("📁 File_path en DB: " . $attachment['file_path']);
+        error_log("📄 Filename extraído: " . $filename);
+        error_log("🔄 Variaciones probadas: " . implode(', ', $filenameVariations));
+        error_log("📂 Rutas no encontradas: " . implode(', ', $notFoundPaths));
         http_response_code(404);
         die('Archivo físico no encontrado en el servidor');
     }

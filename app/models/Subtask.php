@@ -461,7 +461,7 @@ class Subtask {
             $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
             $timestamp = date('Ymd_His');
             $random = substr(md5(uniqid()), 0, 8);
-            $filename = 'subtask_' . $subtaskId . '_' . $timestamp . '_' . $random . '.' . $extension;
+            $filename = 'subtask_' . $subtaskId . '_' . $timestamp . '_' . $random . '_' . $extension;
             $filepath = $uploadsDir . $filename;
             
             // Mover archivo subido
