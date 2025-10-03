@@ -1950,6 +1950,7 @@ function loadSubtaskCounts(subtaskId) {
     fetch('?route=clan_member/get-subtask-counts&subtask_id=' + subtaskId)
         .then(response => response.json())
         .then(data => {
+            console.log('Counts for subtask ' + subtaskId + ':', data);
             if (data.success) {
                 updateBadges(subtaskId, data.counts);
             }
@@ -1964,18 +1965,22 @@ function updateBadges(subtaskId, counts) {
     const attachmentsBadge = document.getElementById('attachments-badge-' + subtaskId);
     
     if (commentsBadge) {
-        if (counts.comments_count > 0) {
-            commentsBadge.textContent = counts.comments_count;
-            commentsBadge.style.display = 'inline-block';
+        // Usar comment_count (sin s) que es lo que devuelve el modelo
+        const commentCount = counts.comment_count || counts.comments_count || 0;
+        if (commentCount > 0) {
+            commentsBadge.textContent = commentCount;
+            commentsBadge.style.display = 'flex';
         } else {
             commentsBadge.style.display = 'none';
         }
     }
     
     if (attachmentsBadge) {
-        if (counts.attachments_count > 0) {
-            attachmentsBadge.textContent = counts.attachments_count;
-            attachmentsBadge.style.display = 'inline-block';
+        // Usar attachment_count (sin s) que es lo que devuelve el modelo
+        const attachmentCount = counts.attachment_count || counts.attachments_count || 0;
+        if (attachmentCount > 0) {
+            attachmentsBadge.textContent = attachmentCount;
+            attachmentsBadge.style.display = 'flex';
         } else {
             attachmentsBadge.style.display = 'none';
         }
@@ -2222,18 +2227,42 @@ function downloadTaskHistory(taskId) {
     right: -8px;
     background: #ef4444;
     color: white;
-    border-radius: 50%;
-    width: 18px;
-    height: 18px;
-    font-size: 11px;
+    border-radius: 10px;
+    min-width: 20px;
+    height: 20px;
+    font-size: 12px;
     font-weight: bold;
     display: flex;
     align-items: center;
     justify-content: center;
     line-height: 1;
-    min-width: 18px;
-    padding: 0 4px;
+    padding: 0 6px;
     box-sizing: border-box;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    animation: badgePulse 0.3s ease-out;
+}
+
+@keyframes badgePulse {
+    0% {
+        transform: scale(0.5);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Colores específicos para cada tipo de badge */
+.btn-with-badge[id*="comments-btn"] .badge {
+    background: #3b82f6;
+}
+
+.btn-with-badge[id*="attachments-btn"] .badge {
+    background: #10b981;
 }
 
 .badge:empty {
