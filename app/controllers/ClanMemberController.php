@@ -2452,12 +2452,8 @@ class ClanMemberController {
      * Obtener comentarios de una subtarea
      */
     public function getSubtaskComments() {
-        $this->requireAuth();
-        if (!$this->hasMemberAccess()) {
-            http_response_code(403);
-            echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
-            return;
-        }
+        // SIN RESTRICCIONES - TODOS PUEDEN VER COMENTARIOS
+        // QUITADO - Sin verificación de acceso
 
         try {
             $subtaskId = $_GET['subtask_id'] ?? null;
@@ -2468,13 +2464,8 @@ class ClanMemberController {
                 return;
             }
 
-            // Verificar permisos
-            $permissions = $this->subtaskModel->checkUserPermissions($subtaskId, $this->currentUser['user_id']);
-            if (!$permissions['can_view']) {
-                http_response_code(403);
-                echo json_encode(['success' => false, 'message' => 'No tienes permisos para ver esta subtarea']);
-                return;
-            }
+            // SIN VERIFICAR PERMISOS - TODOS PUEDEN VER
+            // QUITADO - Sin restricciones
 
             $comments = $this->subtaskModel->getComments($subtaskId);
             
@@ -2618,12 +2609,9 @@ class ClanMemberController {
      * Obtener adjuntos de una subtarea
      */
     public function getSubtaskAttachments() {
-        $this->requireAuth();
-        if (!$this->hasMemberAccess()) {
-            http_response_code(403);
-            echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
-            return;
-        }
+        // SIN RESTRICCIONES - TODOS PUEDEN VER ARCHIVOS
+        // $this->requireAuth();
+        // QUITADO - Sin verificación de acceso
 
         try {
             $subtaskId = $_GET['subtask_id'] ?? null;
@@ -2638,13 +2626,8 @@ class ClanMemberController {
                     return;
                 }
                 
-                // Verificar permisos en la subtarea del attachment
-                $permissions = $this->subtaskModel->checkUserPermissions($attachment['subtask_id'], $this->currentUser['user_id']);
-                if (!$permissions['can_view']) {
-                    http_response_code(403);
-                    echo json_encode(['success' => false, 'message' => 'No tienes permisos para ver este archivo']);
-                    return;
-                }
+                // SIN VERIFICAR PERMISOS - TODOS PUEDEN VER
+                // QUITADO - Sin restricciones
                 
                 echo json_encode(['success' => true, 'attachments' => [$attachment]]);
                 return;
@@ -2656,13 +2639,8 @@ class ClanMemberController {
                 return;
             }
 
-            // Verificar permisos
-            $permissions = $this->subtaskModel->checkUserPermissions($subtaskId, $this->currentUser['user_id']);
-            if (!$permissions['can_view']) {
-                http_response_code(403);
-                echo json_encode(['success' => false, 'message' => 'No tienes permisos para ver esta subtarea']);
-                return;
-            }
+            // SIN VERIFICAR PERMISOS - TODOS PUEDEN VER
+            // QUITADO - Sin restricciones
 
             $attachments = $this->subtaskModel->getAttachments($subtaskId);
             echo json_encode(['success' => true, 'attachments' => $attachments]);
@@ -2750,12 +2728,8 @@ class ClanMemberController {
      * Obtener conteos de comentarios y adjuntos de una subtarea
      */
     public function getSubtaskCounts() {
-        $this->requireAuth();
-        if (!$this->hasMemberAccess()) {
-            http_response_code(403);
-            echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
-            return;
-        }
+        // SIN RESTRICCIONES - TODOS PUEDEN VER CONTEOS
+        // QUITADO - Sin verificación de acceso
 
         try {
             $subtaskId = $_GET['subtask_id'] ?? null;
