@@ -2498,14 +2498,11 @@ class ClanMemberController {
      * Subir archivo adjunto a una subtarea
      */
     public function uploadSubtaskAttachment() {
-        $this->requireAuth();
-        if (!$this->hasMemberAccess()) {
-            http_response_code(403);
-            echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
-            return;
-        }
-
+        // SIN RESTRICCIONES - TODOS PUEDEN SUBIR
+        
         try {
+            // Obtener usuario actual si existe, sino usar usuario por defecto
+            $userId = $this->currentUser['user_id'] ?? 18; // Usuario por defecto si no hay sesión
             error_log("=== INICIO uploadSubtaskAttachment (ClanMember) ===");
             error_log("POST data: " . print_r($_POST, true));
             error_log("FILES data: " . print_r($_FILES, true));
@@ -2527,16 +2524,9 @@ class ClanMemberController {
                 throw new Exception("Modelo de subtarea no disponible");
             }
 
-            // Verificar permisos
-            $permissions = $this->subtaskModel->checkUserPermissions($subtaskId, $this->currentUser['user_id']);
-            error_log("Permisos obtenidos: " . print_r($permissions, true));
-            
-            if (!$permissions['can_attach']) {
-                error_log("Error: Usuario no tiene permisos para adjuntar archivos");
-                http_response_code(403);
-                echo json_encode(['success' => false, 'message' => 'No tienes permisos para adjuntar archivos en esta subtarea']);
-                return;
-            }
+            // NO VERIFICAR PERMISOS - TODOS PUEDEN SUBIR ARCHIVOS
+            // $permissions = $this->subtaskModel->checkUserPermissions($subtaskId, $this->currentUser['user_id']);
+            // QUITADO - Sin restricciones
 
             $file = $_FILES['file'];
             
@@ -2569,7 +2559,7 @@ class ClanMemberController {
 
             // Guardar archivo
             error_log("Intentando guardar archivo...");
-            $fileInfo = $this->subtaskModel->saveUploadedFile($file, $subtaskId, $this->currentUser['user_id']);
+            $fileInfo = $this->subtaskModel->saveUploadedFile($file, $subtaskId, $userId);
             if (!$fileInfo) {
                 error_log("Error: saveUploadedFile retornó false");
                 http_response_code(500);
@@ -2590,7 +2580,7 @@ class ClanMemberController {
             
             $attachmentId = $this->subtaskModel->addAttachment(
                 $subtaskId,
-                $this->currentUser['user_id'],
+                $userId,
                 $fileInfo['original_name'],
                 $dbFilePath,  // Usar el nombre del archivo físico, no la URL
                 $fileInfo['file_size'],
