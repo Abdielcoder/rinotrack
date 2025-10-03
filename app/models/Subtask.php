@@ -404,108 +404,82 @@ class Subtask {
     
     /**
      * Guardar archivo adjunto y retornar información del archivo
+     * SISTEMA COMPLETAMENTE RENOVADO
      */
     public function saveUploadedFile($file, $subtaskId, $userId) {
         try {
-            // Lista de directorios a intentar en orden de preferencia
-            $possibleDirs = [
-                __DIR__ . '/../../public/uploads/task_attachments/',
-                __DIR__ . '/../../public/uploads/',
-                sys_get_temp_dir() . '/rinotrack_uploads/',
-                '/tmp/rinotrack_uploads/',
-                __DIR__ . '/../../uploads/',
-                __DIR__ . '/../uploads/'
-            ];
+            error_log("🚀 INICIO saveUploadedFile - Archivo: " . $file['name']);
             
-            $uploadsDir = null;
+            // Directorio principal de uploads
+            $mainUploadsDir = __DIR__ . '/../../public/uploads/';
+            $taskAttachmentsDir = $mainUploadsDir . 'task_attachments/';
             
-            // Buscar un directorio escribible
-            foreach ($possibleDirs as $dir) {
-                error_log("Probando directorio: " . $dir);
-                
-                // Crear directorio si no existe
-                if (!file_exists($dir)) {
-                    if (@mkdir($dir, 0777, true)) {
-                        error_log("Directorio creado: " . $dir);
-                    } else {
-                        error_log("No se pudo crear directorio: " . $dir);
-                        continue;
-                    }
+            // Crear directorios si no existen
+            if (!file_exists($mainUploadsDir)) {
+                if (!@mkdir($mainUploadsDir, 0755, true)) {
+                    error_log("❌ No se pudo crear directorio principal: " . $mainUploadsDir);
+                    return false;
                 }
-                
-                // Verificar si es escribible
-                if (is_writable($dir)) {
-                    $uploadsDir = $dir;
-                    error_log("Directorio escribible encontrado: " . $dir);
-                    break;
-                } else {
-                    error_log("Directorio no escribible: " . $dir);
-                    
-                    // Intentar cambiar permisos
-                    if (@chmod($dir, 0777)) {
-                        if (is_writable($dir)) {
-                            $uploadsDir = $dir;
-                            error_log("Permisos cambiados exitosamente: " . $dir);
-                            break;
-                        }
-                    }
-                }
+                error_log("✅ Directorio principal creado: " . $mainUploadsDir);
             }
             
-            if (!$uploadsDir) {
-                error_log("Error: No se encontró ningún directorio escribible para uploads");
+            if (!file_exists($taskAttachmentsDir)) {
+                if (!@mkdir($taskAttachmentsDir, 0755, true)) {
+                    error_log("❌ No se pudo crear directorio de adjuntos: " . $taskAttachmentsDir);
+                    return false;
+                }
+                error_log("✅ Directorio de adjuntos creado: " . $taskAttachmentsDir);
+            }
+            
+            // Verificar permisos
+            if (!is_writable($taskAttachmentsDir)) {
+                error_log("❌ Directorio no escribible: " . $taskAttachmentsDir);
                 return false;
             }
             
-            // Generar nombre único para el archivo (simplificado)
-            $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+            // Generar nombre único para el archivo
+            $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
             $timestamp = date('Ymd_His');
-            $random = substr(md5(uniqid()), 0, 8);
-            $filename = 'subtask_' . $subtaskId . '_' . $timestamp . '_' . $random . '_' . $extension;
-            $filepath = $uploadsDir . $filename;
+            $random = substr(md5(uniqid(rand(), true)), 0, 8);
+            
+            // Nombre del archivo: subtask_ID_timestamp_random.extension
+            $filename = 'subtask_' . $subtaskId . '_' . $timestamp . '_' . $random . '.' . $extension;
+            $filepath = $taskAttachmentsDir . $filename;
+            
+            error_log("📁 Guardando archivo como: " . $filename);
+            error_log("📂 Ruta completa: " . $filepath);
             
             // Mover archivo subido
             if (move_uploaded_file($file['tmp_name'], $filepath)) {
-                // Construir la ruta pública basada en el directorio usado
-                $publicUploadsDir = __DIR__ . '/../../public/uploads/';
-                
-                if ($uploadsDir === $publicUploadsDir) {
-                    // Directorio público normal
-                    $publicPath = APP_URL . 'uploads/' . $filename;
-                    error_log("Archivo guardado en directorio público: " . $filepath);
+                // Verificar que el archivo se guardó correctamente
+                if (file_exists($filepath) && filesize($filepath) > 0) {
+                    error_log("✅ Archivo guardado exitosamente");
+                    error_log("📊 Tamaño del archivo: " . filesize($filepath) . " bytes");
+                    
+                    // Retornar información del archivo
+                    return [
+                        'original_name' => $file['name'],
+                        'saved_name' => $filename,
+                        'file_path' => $filename, // Solo el nombre del archivo, no la ruta completa
+                        'full_path' => $filepath, // Ruta completa para referencia
+                        'public_path' => 'uploads/task_attachments/' . $filename,
+                        'file_size' => $file['size'],
+                        'file_type' => $file['type'],
+                        'storage_dir' => $taskAttachmentsDir
+                    ];
                 } else {
-                    // Directorio alternativo - intentar copiar al público o usar servicio de archivos
-                    if (file_exists($publicUploadsDir) && is_writable($publicUploadsDir)) {
-                        $publicFilepath = $publicUploadsDir . $filename;
-                        if (copy($filepath, $publicFilepath)) {
-                            $publicPath = APP_URL . 'uploads/' . $filename;
-                            error_log("Archivo copiado al directorio público: " . $publicFilepath);
-                        } else {
-                            $publicPath = APP_URL . 'serve-temp-file.php?file=' . urlencode($filename) . '&dir=' . urlencode(basename($uploadsDir));
-                            error_log("Usando servicio de archivos temporales: " . $publicPath);
-                        }
-                    } else {
-                        $publicPath = APP_URL . 'serve-temp-file.php?file=' . urlencode($filename) . '&dir=' . urlencode(basename($uploadsDir));
-                        error_log("Directorio público no disponible, usando servicio de archivos: " . $publicPath);
-                    }
+                    error_log("❌ Archivo no se guardó correctamente o está vacío");
+                    return false;
                 }
-                
-                return [
-                    'original_name' => $file['name'],
-                    'saved_name' => $filename,
-                    'file_path' => $filepath,
-                    'public_path' => $publicPath,
-                    'file_size' => $file['size'],
-                    'file_type' => $file['type'],
-                    'storage_dir' => $uploadsDir
-                ];
             } else {
-                error_log("Error: No se pudo mover el archivo subido. tmp_name: " . ($file['tmp_name'] ?? 'N/A') . ", destino: " . $filepath);
+                error_log("❌ Error al mover archivo subido");
+                error_log("   tmp_name: " . ($file['tmp_name'] ?? 'N/A'));
+                error_log("   destino: " . $filepath);
                 return false;
             }
             
         } catch (Exception $e) {
-            error_log("Error al guardar archivo de subtarea: " . $e->getMessage());
+            error_log("❌ Error en saveUploadedFile: " . $e->getMessage());
             error_log("Stack trace: " . $e->getTraceAsString());
             return false;
         }

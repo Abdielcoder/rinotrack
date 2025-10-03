@@ -1,6 +1,7 @@
 <?php
 /**
- * Visor universal de archivos con popup
+ * Visor universal de archivos - SISTEMA COMPLETAMENTE RENOVADO
+ * Versión 2.0 - Simplificado y robusto
  */
 
 // Configuración de seguridad
@@ -25,6 +26,8 @@ if (empty($attachmentId)) {
 }
 
 try {
+    error_log("🔍 file-viewer.php - Buscando attachment ID: $attachmentId");
+    
     // Obtener información del adjunto desde la base de datos
     $db = Database::getConnection();
     $stmt = $db->prepare("
@@ -38,110 +41,71 @@ try {
     $attachment = $stmt->fetch();
     
     if (!$attachment) {
+        error_log("❌ Attachment no encontrado en BD: $attachmentId");
         http_response_code(404);
-        die('Archivo no encontrado');
+        die('Archivo no encontrado en la base de datos');
     }
     
-    // Buscar el archivo en diferentes ubicaciones posibles
-    $filename = basename($attachment['file_path']);
+    error_log("✅ Attachment encontrado: " . $attachment['file_name']);
+    error_log("📁 File path en BD: " . $attachment['file_path']);
+    
+    // Determinar la ruta del archivo
+    $filename = $attachment['file_path'];
     
     // Si el file_path es una URL completa, extraer solo el nombre del archivo
-    if (strpos($attachment['file_path'], 'http') === 0) {
-        $filename = basename(parse_url($attachment['file_path'], PHP_URL_PATH));
+    if (strpos($filename, 'http') === 0) {
+        $filename = basename(parse_url($filename, PHP_URL_PATH));
+        error_log("🌐 URL detectada, filename extraído: $filename");
     }
     
-    // Generar variaciones del nombre del archivo para buscar
-    $filenameVariations = [$filename];
+    // Directorio principal de archivos
+    $uploadsDir = __DIR__ . '/uploads/task_attachments/';
     
-    // Si el filename no tiene extensión, intentar agregar extensiones comunes
-    if (!pathinfo($filename, PATHINFO_EXTENSION)) {
-        $originalName = $attachment['file_name'];
-        $originalExt = pathinfo($originalName, PATHINFO_EXTENSION);
-        if ($originalExt) {
-            $filenameVariations[] = $filename . '.' . $originalExt;
-            // También intentar con el formato nuevo (extensión al final)
-            $filenameVariations[] = $filename . '_' . $originalExt;
-        }
+    // Ruta completa del archivo
+    $filePath = $uploadsDir . $filename;
+    
+    error_log("🔍 Buscando archivo en: $filePath");
+    
+    // Verificar si el archivo existe
+    if (!file_exists($filePath)) {
+        error_log("❌ Archivo no encontrado en: $filePath");
         
-        // Intentar extensiones comunes de imagen
-        $imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'];
-        foreach ($imageExtensions as $ext) {
-            $filenameVariations[] = $filename . '.' . $ext;
-            $filenameVariations[] = $filename . '_' . $ext;
+        // Intentar en el directorio uploads principal
+        $altPath = __DIR__ . '/uploads/' . $filename;
+        error_log("🔍 Intentando en directorio alternativo: $altPath");
+        
+        if (file_exists($altPath)) {
+            $filePath = $altPath;
+            error_log("✅ Archivo encontrado en directorio alternativo");
+        } else {
+            error_log("❌ Archivo no encontrado en ningún directorio");
+            http_response_code(404);
+            die('Archivo físico no encontrado en el servidor');
         }
     } else {
-        // Si ya tiene extensión, también intentar el formato con _ al final
-        $baseName = pathinfo($filename, PATHINFO_FILENAME);
-        $ext = pathinfo($filename, PATHINFO_EXTENSION);
-        $filenameVariations[] = $baseName . '_' . $ext;
+        error_log("✅ Archivo encontrado en ubicación principal");
     }
     
-    $possiblePaths = [];
-    
-    // Generar rutas para cada variación del nombre
-    foreach ($filenameVariations as $variation) {
-        $possiblePaths = array_merge($possiblePaths, [
-            // Rutas desde el directorio public (más comunes)
-            __DIR__ . '/uploads/task_attachments/' . $variation,
-            __DIR__ . '/uploads/' . $variation,
-            
-            // Rutas temporales
-            sys_get_temp_dir() . '/rinotrack_uploads/' . $variation,
-            '/tmp/rinotrack_uploads/' . $variation,
-            
-            // Buscar en subdirectorios comunes
-            __DIR__ . '/uploads/subtask_attachments/' . $variation,
-            __DIR__ . '/uploads/files/' . $variation
-        ]);
-    }
-    
-    // Agregar rutas absolutas del file_path (si no es URL)
-    if (strpos($attachment['file_path'], 'http') !== 0) {
-        $possiblePaths[] = $attachment['file_path'];
-    }
-    
-    // Filtrar rutas nulas
-    $possiblePaths = array_filter($possiblePaths);
-    
-    $filePath = null;
-    $foundPaths = [];
-    $notFoundPaths = [];
-    
-    foreach ($possiblePaths as $path) {
-        error_log("🔍 Buscando archivo en: " . $path);
-        if (file_exists($path)) {
-            if (is_readable($path)) {
-                $filePath = $path;
-                error_log("✅ Archivo encontrado y legible en: " . $path);
-                break;
-            } else {
-                $notFoundPaths[] = $path . " (existe pero no es legible)";
-                error_log("⚠️ Archivo existe pero no es legible: " . $path);
-            }
-        } else {
-            $notFoundPaths[] = $path . " (no existe)";
-        }
-    }
-    
-    if (!$filePath) {
-        error_log("❌ Archivo no encontrado. Detalles:");
-        error_log("📁 File_path en DB: " . $attachment['file_path']);
-        error_log("📄 Filename extraído: " . $filename);
-        error_log("🔄 Variaciones probadas: " . implode(', ', $filenameVariations));
-        error_log("📂 Rutas no encontradas: " . implode(', ', $notFoundPaths));
-        http_response_code(404);
-        die('Archivo físico no encontrado en el servidor');
+    // Verificar que el archivo es legible
+    if (!is_readable($filePath)) {
+        error_log("❌ Archivo no es legible: $filePath");
+        http_response_code(403);
+        die('Archivo no accesible');
     }
     
     $filesize = filesize($filePath);
     $mimetype = $attachment['file_type'] ?: mime_content_type($filePath) ?: 'application/octet-stream';
     $filename = $attachment['file_name'];
     
+    error_log("📊 Archivo info - Tamaño: $filesize bytes, Tipo: $mimetype");
+    
     // Determinar si es visualizable
     $isImage = strpos($mimetype, 'image/') === 0;
     $isPdf = $mimetype === 'application/pdf';
     $isText = strpos($mimetype, 'text/') === 0;
     $isViewable = $isImage || $isPdf || $isText;
+    
+    error_log("🎯 Tipo de archivo - Imagen: " . ($isImage ? 'Sí' : 'No') . ", PDF: " . ($isPdf ? 'Sí' : 'No') . ", Texto: " . ($isText ? 'Sí' : 'No'));
     
     if ($action === 'info') {
         // Retornar información del archivo como JSON
@@ -164,6 +128,7 @@ try {
     
     if ($action === 'download' || !$isViewable) {
         // Forzar descarga
+        error_log("📥 Forzando descarga del archivo");
         header('Content-Type: application/octet-stream');
         header('Content-Disposition: attachment; filename="' . $filename . '"');
         header('Content-Length: ' . $filesize);
@@ -174,10 +139,7 @@ try {
     
     // Visualización en línea
     if ($isImage) {
-        error_log("📸 Sirviendo imagen: " . $filename . " (" . $mimetype . ")");
-        error_log("📂 Desde: " . $filePath);
-        error_log("📦 Tamaño: " . $filesize . " bytes");
-        
+        error_log("🖼️ Sirviendo imagen: $filename ($mimetype)");
         header('Content-Type: ' . $mimetype);
         header('Content-Disposition: inline; filename="' . $filename . '"');
         header('Content-Length: ' . $filesize);
@@ -189,6 +151,7 @@ try {
     }
     
     if ($isPdf) {
+        error_log("📄 Sirviendo PDF: $filename");
         header('Content-Type: application/pdf');
         header('Content-Disposition: inline; filename="' . $filename . '"');
         header('Content-Length: ' . $filesize);
@@ -198,6 +161,7 @@ try {
     }
     
     if ($isText && $filesize < 1024 * 1024) { // Máximo 1MB para texto
+        error_log("📝 Sirviendo texto: $filename");
         header('Content-Type: text/plain; charset=utf-8');
         header('Content-Disposition: inline; filename="' . $filename . '"');
         header('Content-Length: ' . $filesize);
@@ -206,13 +170,15 @@ try {
     }
     
     // Si llegamos aquí, forzar descarga
+    error_log("📥 Forzando descarga (fallback)");
     header('Content-Type: application/octet-stream');
     header('Content-Disposition: attachment; filename="' . $filename . '"');
     header('Content-Length: ' . $filesize);
     readfile($filePath);
     
 } catch (Exception $e) {
-    error_log("Error en file-viewer: " . $e->getMessage());
+    error_log("❌ Error en file-viewer: " . $e->getMessage());
+    error_log("Stack trace: " . $e->getTraceAsString());
     http_response_code(500);
     die('Error interno del servidor');
 }
