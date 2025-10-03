@@ -51,23 +51,16 @@ class Subtask {
      */
     public function getSubtaskCounts($subtaskId) {
         try {
-            // Contar comentarios
-            $stmt = $this->db->prepare("SELECT COUNT(*) as count FROM Subtask_Comments WHERE subtask_id = ?");
-            $stmt->execute([$subtaskId]);
-            $commentsCount = $stmt->fetchColumn();
-            
-            // Contar adjuntos
-            $stmt = $this->db->prepare("SELECT COUNT(*) as count FROM Subtask_Attachments WHERE subtask_id = ?");
-            $stmt->execute([$subtaskId]);
-            $attachmentsCount = $stmt->fetchColumn();
-            
-            return [
-                'comments_count' => (int)$commentsCount,
-                'attachments_count' => (int)$attachmentsCount
-            ];
+            $stmt = $this->db->prepare("
+                SELECT 
+                    (SELECT COUNT(*) FROM Subtask_Comments WHERE subtask_id = ?) as comment_count,
+                    (SELECT COUNT(*) FROM Subtask_Attachments WHERE subtask_id = ?) as attachment_count
+            ");
+            $stmt->execute([$subtaskId, $subtaskId]);
+            return $stmt->fetch();
         } catch (Exception $e) {
             error_log("Error al obtener conteos de subtarea: " . $e->getMessage());
-            return ['comments_count' => 0, 'attachments_count' => 0];
+            return ['comment_count' => 0, 'attachment_count' => 0];
         }
     }
     
@@ -115,7 +108,10 @@ class Subtask {
                 
                 // También buscar adjuntos independientes (sin comment_id) para esta subtarea
                 $stmtB = $this->db->prepare("
-                    SELECT sa.*, u.full_name as uploaded_by_name
+                    SELECT 
+                        sa.*,
+                        u.full_name as uploaded_by_name,
+                        u.username as uploaded_by_username
                     FROM Subtask_Attachments sa
                     JOIN Users u ON sa.user_id = u.user_id
                     WHERE sa.subtask_id = ? AND (sa.comment_id IS NULL OR sa.comment_id = 0)
@@ -163,19 +159,18 @@ class Subtask {
             $result = $stmt->execute([$subtaskId, $userId, $commentText, $commentType, $relatedUserId, $oldValue, $newValue]);
             
             if ($result) {
-                $commentId = (int)$this->db->lastInsertId();
+                $commentId = $this->db->lastInsertId();
                 
                 // Registrar en el historial de la tarea padre
                 $subtask = $this->findById($subtaskId);
                 if ($subtask) {
-                    $this->logSubtaskAction($subtask['task_id'], $userId, 'commented', 'subtask_comment', null, $commentText, 'Comentario agregado en subtarea: ' . $subtask['title']);
+                    $this->logSubtaskAction($subtask['task_id'], $userId, 'commented', 'subtask_comment', null, $commentText, 'Comentario en subtarea: ' . $subtask['title']);
                 }
                 
-                return $commentId > 0 ? $commentId : true;
+                return $commentId;
             }
-
-            return false;
             
+            return false;
         } catch (Exception $e) {
             error_log("Error al agregar comentario a subtarea: " . $e->getMessage());
             return false;
@@ -264,121 +259,84 @@ class Subtask {
     }
     
     /**
-     * Eliminar comentario de subtarea
+     * Actualizar subtarea
      */
-    public function deleteComment($commentId, $userId) {
+    public function update($subtaskId, $title, $description = null, $assignedUserId = null, $priority = null, $dueDate = null, $completionPercentage = null, $status = null) {
         try {
-            // Verificar que el usuario puede eliminar el comentario (autor o admin)
-            $stmt = $this->db->prepare("
-                SELECT sc.*, s.task_id, s.title 
-                FROM Subtask_Comments sc
-                JOIN Subtasks s ON sc.subtask_id = s.subtask_id
-                WHERE sc.comment_id = ?
-            ");
-            $stmt->execute([$commentId]);
-            $comment = $stmt->fetch();
+            // Construir query dinámicamente
+            $updates = [];
+            $params = [];
             
-            if (!$comment) {
+            if ($title !== null) {
+                $updates[] = 'title = ?';
+                $params[] = $title;
+            }
+            
+            if ($description !== null) {
+                $updates[] = 'description = ?';
+                $params[] = $description;
+            }
+            
+            if ($assignedUserId !== null) {
+                $updates[] = 'assigned_to_user_id = ?';
+                $params[] = $assignedUserId;
+            }
+            
+            if ($priority !== null) {
+                $updates[] = 'priority = ?';
+                $params[] = $priority;
+            }
+            
+            if ($dueDate !== null) {
+                $updates[] = 'due_date = ?';
+                $params[] = $dueDate;
+            }
+            
+            if ($completionPercentage !== null) {
+                $updates[] = 'completion_percentage = ?';
+                $params[] = $completionPercentage;
+            }
+            
+            if ($status !== null) {
+                $updates[] = 'status = ?';
+                $params[] = $status;
+            }
+            
+            if (empty($updates)) {
                 return false;
             }
             
-            // Solo el autor del comentario puede eliminarlo (o se puede agregar lógica para admin)
-            if ($comment['user_id'] != $userId) {
-                return false;
-            }
+            $updates[] = 'updated_at = NOW()';
+            $params[] = $subtaskId;
             
-            $this->db->beginTransaction();
+            $sql = "UPDATE Subtasks SET " . implode(', ', $updates) . " WHERE subtask_id = ?";
+            $stmt = $this->db->prepare($sql);
             
-            // Eliminar adjuntos asociados al comentario
-            $stmt = $this->db->prepare("DELETE FROM Subtask_Attachments WHERE comment_id = ?");
-            $stmt->execute([$commentId]);
-            
-            // Eliminar el comentario
-            $stmt = $this->db->prepare("DELETE FROM Subtask_Comments WHERE comment_id = ?");
-            $result = $stmt->execute([$commentId]);
-            
-            if ($result) {
-                // Registrar en el historial
-                $this->logSubtaskAction($comment['task_id'], $userId, 'deleted', 'subtask_comment', $comment['comment_text'], null, 'Comentario eliminado de subtarea: ' . $comment['title']);
-                
-                $this->db->commit();
-                return true;
-            }
-            
-            $this->db->rollback();
-            return false;
+            return $stmt->execute($params);
             
         } catch (Exception $e) {
-            if ($this->db->inTransaction()) {
-                $this->db->rollback();
-            }
-            error_log("Error al eliminar comentario de subtarea: " . $e->getMessage());
+            error_log("Error al actualizar subtarea: " . $e->getMessage());
             return false;
         }
     }
     
     /**
-     * Eliminar adjunto de subtarea
-     */
-    public function deleteAttachment($attachmentId, $userId) {
-        try {
-            // Verificar que el usuario puede eliminar el adjunto
-            $stmt = $this->db->prepare("
-                SELECT sa.*, s.task_id, s.title 
-                FROM Subtask_Attachments sa
-                JOIN Subtasks s ON sa.subtask_id = s.subtask_id
-                WHERE sa.attachment_id = ?
-            ");
-            $stmt->execute([$attachmentId]);
-            $attachment = $stmt->fetch();
-            
-            if (!$attachment) {
-                return false;
-            }
-            
-            // Solo el autor del adjunto puede eliminarlo (o se puede agregar lógica para admin)
-            if ($attachment['user_id'] != $userId) {
-                return false;
-            }
-            
-            // Eliminar el archivo físico si existe
-            $filePath = $attachment['file_path'];
-            if (file_exists($filePath)) {
-                unlink($filePath);
-            }
-            
-            // Eliminar el registro de la base de datos
-            $stmt = $this->db->prepare("DELETE FROM Subtask_Attachments WHERE attachment_id = ?");
-            $result = $stmt->execute([$attachmentId]);
-            
-            if ($result) {
-                // Registrar en el historial
-                $this->logSubtaskAction($attachment['task_id'], $userId, 'deleted', 'subtask_attachment', $attachment['file_name'], null, 'Adjunto eliminado de subtarea: ' . $attachment['title']);
-                
-                return true;
-            }
-            
-            return false;
-            
-        } catch (Exception $e) {
-            error_log("Error al eliminar adjunto de subtarea: " . $e->getMessage());
-            return false;
-        }
-    }
-    
-    /**
-     * Verificar permisos de usuario en una subtarea (sin restricciones)
+     * Verificar permisos de usuario en una subtarea
      */
     public function checkUserPermissions($subtaskId, $userId) {
         try {
+            // Obtener información de la subtarea y su tarea padre
             $stmt = $this->db->prepare("
                 SELECT 
                     s.*,
                     t.project_id,
-                    p.clan_id
+                    t.assigned_to_user_id as task_assigned_to,
+                    t.created_by_user_id as task_created_by,
+                    p.clan_id,
+                    p.project_manager_id
                 FROM Subtasks s
                 JOIN Tasks t ON s.task_id = t.task_id
-                JOIN Projects p ON t.project_id = p.project_id
+                LEFT JOIN Projects p ON t.project_id = p.project_id
                 WHERE s.subtask_id = ?
             ");
             $stmt->execute([$subtaskId]);
@@ -403,84 +361,38 @@ class Subtask {
     }
     
     /**
-     * Guardar archivo adjunto y retornar información del archivo
-     * SISTEMA COMPLETAMENTE RENOVADO
+     * SISTEMA ULTRA SIMPLE DE GUARDAR ARCHIVOS
      */
     public function saveUploadedFile($file, $subtaskId, $userId) {
         try {
-            error_log("🚀 INICIO saveUploadedFile - Archivo: " . $file['name']);
+            // Directorio donde se guardan los archivos
+            $uploadDir = dirname(__DIR__, 2) . '/public/uploads/';
             
-            // Directorio principal de uploads
-            $mainUploadsDir = __DIR__ . '/../../public/uploads/';
-            $taskAttachmentsDir = $mainUploadsDir . 'task_attachments/';
-            
-            // Crear directorios si no existen
-            if (!file_exists($mainUploadsDir)) {
-                if (!@mkdir($mainUploadsDir, 0755, true)) {
-                    error_log("❌ No se pudo crear directorio principal: " . $mainUploadsDir);
-                    return false;
-                }
-                error_log("✅ Directorio principal creado: " . $mainUploadsDir);
+            // Crear directorio si no existe
+            if (!file_exists($uploadDir)) {
+                mkdir($uploadDir, 0777, true);
             }
             
-            if (!file_exists($taskAttachmentsDir)) {
-                if (!@mkdir($taskAttachmentsDir, 0755, true)) {
-                    error_log("❌ No se pudo crear directorio de adjuntos: " . $taskAttachmentsDir);
-                    return false;
-                }
-                error_log("✅ Directorio de adjuntos creado: " . $taskAttachmentsDir);
+            // Generar nombre único
+            $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+            $uniqueName = 'file_' . time() . '_' . rand(1000, 9999) . '.' . $extension;
+            $targetPath = $uploadDir . $uniqueName;
+            
+            // Mover archivo
+            if (move_uploaded_file($file['tmp_name'], $targetPath)) {
+                return [
+                    'original_name' => $file['name'],
+                    'saved_name' => $uniqueName,
+                    'file_path' => $uniqueName,
+                    'file_size' => $file['size'],
+                    'file_type' => $file['type']
+                ];
             }
             
-            // Verificar permisos
-            if (!is_writable($taskAttachmentsDir)) {
-                error_log("❌ Directorio no escribible: " . $taskAttachmentsDir);
-                return false;
-            }
-            
-            // Generar nombre único para el archivo
-            $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-            $timestamp = date('Ymd_His');
-            $random = substr(md5(uniqid(rand(), true)), 0, 8);
-            
-            // Nombre del archivo: subtask_ID_timestamp_random.extension
-            $filename = 'subtask_' . $subtaskId . '_' . $timestamp . '_' . $random . '.' . $extension;
-            $filepath = $taskAttachmentsDir . $filename;
-            
-            error_log("📁 Guardando archivo como: " . $filename);
-            error_log("📂 Ruta completa: " . $filepath);
-            
-            // Mover archivo subido
-            if (move_uploaded_file($file['tmp_name'], $filepath)) {
-                // Verificar que el archivo se guardó correctamente
-                if (file_exists($filepath) && filesize($filepath) > 0) {
-                    error_log("✅ Archivo guardado exitosamente");
-                    error_log("📊 Tamaño del archivo: " . filesize($filepath) . " bytes");
-                    
-                    // Retornar información del archivo
-                    return [
-                        'original_name' => $file['name'],
-                        'saved_name' => $filename,
-                        'file_path' => $filename, // Solo el nombre del archivo, no la ruta completa
-                        'full_path' => $filepath, // Ruta completa para referencia
-                        'public_path' => 'uploads/task_attachments/' . $filename,
-                        'file_size' => $file['size'],
-                        'file_type' => $file['type'],
-                        'storage_dir' => $taskAttachmentsDir
-                    ];
-                } else {
-                    error_log("❌ Archivo no se guardó correctamente o está vacío");
-                    return false;
-                }
-            } else {
-                error_log("❌ Error al mover archivo subido");
-                error_log("   tmp_name: " . ($file['tmp_name'] ?? 'N/A'));
-                error_log("   destino: " . $filepath);
-                return false;
-            }
+            return false;
             
         } catch (Exception $e) {
-            error_log("❌ Error en saveUploadedFile: " . $e->getMessage());
-            error_log("Stack trace: " . $e->getTraceAsString());
+            error_log("Error saving file: " . $e->getMessage());
             return false;
         }
     }
@@ -496,10 +408,9 @@ class Subtask {
             ");
             return $stmt->execute([$taskId, $userId, $actionType, $fieldName, $oldValue, $newValue, $notes]);
         } catch (Exception $e) {
-            error_log("Error al registrar acción de subtarea en historial: " . $e->getMessage());
+            error_log("Error al registrar acción en historial: " . $e->getMessage());
             return false;
         }
     }
 }
-
 ?>
