@@ -2270,6 +2270,9 @@ class ClanMemberController {
             Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
         }
         
+        // Obtener usuario actual si existe, sino usar usuario por defecto
+        $userId = $this->currentUser['user_id'] ?? 18; // Usuario por defecto si no hay sesión
+        
         $subtaskId = (int)($_POST['subtask_id'] ?? 0);
         $completionPercentage = isset($_POST['completion_percentage']) ? (float)$_POST['completion_percentage'] : null;
         
@@ -2278,32 +2281,15 @@ class ClanMemberController {
         }
         
         try {
-            // Verificar que la subtarea pertenece a una tarea del clan del usuario
-            $stmt = $this->db->prepare("
-                SELECT s.*, t.project_id, p.clan_id
-                FROM Subtasks s
-                JOIN Tasks t ON s.task_id = t.task_id
-                JOIN Projects p ON t.project_id = p.project_id
-                WHERE s.subtask_id = ?
-            ");
-            $stmt->execute([$subtaskId]);
-            $subtask = $stmt->fetch();
-            
-            if (!$subtask) {
-                Utils::jsonResponse(['success' => false, 'message' => 'Subtarea no encontrada'], 404);
-            }
-            
-            // Verificar que el usuario pertenece al clan
-            if ($subtask['clan_id'] != $this->userClan['clan_id']) {
-                Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado - no perteneces a este clan'], 403);
-            }
+            // SIN RESTRICCIONES - TODOS PUEDEN ACTUALIZAR PROGRESO
+            // QUITADO - Sin verificación de clan
             
             // Actualizar solo el progreso
             $result = $this->taskModel->updateSubtaskStatus(
                 $subtaskId, 
                 null, // no cambiar estado
                 $completionPercentage, 
-                $this->currentUser['user_id']
+                $userId
             );
             
             if ($result) {
@@ -2322,6 +2308,9 @@ class ClanMemberController {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
         }
+        
+        // Obtener usuario actual si existe, sino usar usuario por defecto
+        $userId = $this->currentUser['user_id'] ?? 18; // Usuario por defecto si no hay sesión
         
         $subtaskId = (int)($_POST['subtask_id'] ?? 0);
         $status = Utils::sanitizeInput($_POST['status'] ?? '');
@@ -2353,34 +2342,15 @@ class ClanMemberController {
                 Utils::jsonResponse(['success' => false, 'message' => 'Subtarea no encontrada'], 404);
             }
             
-            // Verificar que el usuario pertenece al clan
-            if ($subtask['clan_id'] != $this->userClan['clan_id']) {
-                Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado - no perteneces a este clan'], 403);
-            }
-            
-            // Verificar permisos especiales para cambiar estado a "completed"
-            if (!empty($status) && $status === 'completed') {
-                $isTaskCreator = (int)$subtask['created_by_user_id'] === (int)$this->currentUser['user_id'];
-                $isTaskAssigned = (int)$subtask['assigned_to_user_id'] === (int)$this->currentUser['user_id'];
-                $isRecurrentTask = (bool)$subtask['is_recurrent'];
-                $isRecurrentProject = in_array($subtask['project_type'], ['recurrent', 'eventual']);
-                
-                // Permitir completar si:
-                // 1. Es creador o asignado de la tarea (regla original)
-                // 2. Es tarea recurrente o proyecto recurrente/eventual (nueva regla)
-                $canComplete = $isTaskCreator || $isTaskAssigned || $isRecurrentTask || $isRecurrentProject;
-                
-                if (!$canComplete) {
-                    Utils::jsonResponse(['success' => false, 'message' => 'Solo el creador, asignado de la tarea, o miembros en tareas recurrentes/eventuales pueden marcar subtareas como completadas'], 403);
-                }
-            }
+            // SIN RESTRICCIONES - TODOS PUEDEN CAMBIAR ESTADOS
+            // QUITADO - Sin verificación de clan ni permisos
             
             // Actualizar estado
             $result = $this->taskModel->updateSubtaskStatus(
                 $subtaskId, 
                 $status, 
                 $completionPercentage, 
-                $this->currentUser['user_id']
+                $userId
             );
             
             if ($result) {
