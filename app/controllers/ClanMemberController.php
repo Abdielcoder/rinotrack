@@ -2399,14 +2399,12 @@ class ClanMemberController {
      * Agregar comentario a una subtarea
      */
     public function addSubtaskComment() {
-        $this->requireAuth();
-        if (!$this->hasMemberAccess()) {
-            http_response_code(403);
-            echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
-            return;
-        }
-
+        // SIN RESTRICCIONES - TODOS PUEDEN COMENTAR
+        
         try {
+            // Obtener usuario actual si existe, sino usar usuario por defecto
+            $userId = $this->currentUser['user_id'] ?? 18; // Usuario por defecto si no hay sesión
+            
             $input = json_decode(file_get_contents('php://input'), true);
             $subtaskId = $input['subtask_id'] ?? null;
             $commentText = trim($input['comment_text'] ?? '');
@@ -2417,17 +2415,12 @@ class ClanMemberController {
                 return;
             }
 
-            // Verificar permisos
-            $permissions = $this->subtaskModel->checkUserPermissions($subtaskId, $this->currentUser['user_id']);
-            if (!$permissions['can_comment']) {
-                http_response_code(403);
-                echo json_encode(['success' => false, 'message' => 'No tienes permisos para comentar en esta subtarea']);
-                return;
-            }
+            // SIN VERIFICAR PERMISOS - TODOS PUEDEN COMENTAR
+            // QUITADO - Sin restricciones
 
             $commentId = $this->subtaskModel->addComment(
                 $subtaskId, 
-                $this->currentUser['user_id'], 
+                $userId, 
                 $commentText
             );
 
@@ -2656,12 +2649,8 @@ class ClanMemberController {
      * Eliminar comentario de subtarea
      */
     public function deleteSubtaskComment() {
-        $this->requireAuth();
-        if (!$this->hasMemberAccess()) {
-            http_response_code(403);
-            echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
-            return;
-        }
+        // SIN RESTRICCIONES - TODOS PUEDEN ELIMINAR COMENTARIOS
+        // QUITADO - Sin verificación de acceso
 
         try {
             $input = json_decode(file_get_contents('php://input'), true);
