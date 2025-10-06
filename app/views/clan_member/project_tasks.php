@@ -173,6 +173,7 @@ if (!isset($user)) {
                                 <span class="priority-badge priority-<?= $task['priority'] ?>">
                                     <?php 
                                     switch($task['priority']) {
+                                        case 'critical': // La BD usa 'critical' para urgente
                                         case 'urgent': echo 'Urgente'; break;
                                         case 'high': echo 'Alta'; break;
                                         case 'low': echo 'Baja'; break;
@@ -759,7 +760,8 @@ if (!isset($user)) {
     letter-spacing: 0.05em;
 }
 
-.priority-badge.priority-urgent {
+.priority-badge.priority-urgent,
+.priority-badge.priority-critical {
     background: #dc2626;
     color: white;
 }
