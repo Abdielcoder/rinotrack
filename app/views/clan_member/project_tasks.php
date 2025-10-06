@@ -1327,8 +1327,6 @@ function updateTaskStatus(taskId, newStatus, event) {
     const selectElement = event ? event.target : document.querySelector(`select[onchange*="${taskId}"]`);
     const taskRow = selectElement.closest('.task-row');
     const originalStatus = taskRow.dataset.status;
-    const taskNameElement = taskRow.querySelector('.task-title');
-    const taskName = taskNameElement ? taskNameElement.textContent : '';
     
     // Deshabilitar el select mientras se procesa
     selectElement.disabled = true;
@@ -1336,105 +1334,92 @@ function updateTaskStatus(taskId, newStatus, event) {
     const fd = new FormData();
     fd.append('task_id', taskId);
     
+    // Determinar qué endpoint usar según el estado
+    let endpoint;
     if (newStatus === 'completed' || newStatus === 'pending') {
         fd.append('is_completed', newStatus === 'completed' ? 'true' : 'false');
-        fetch('?route=clan_member/toggle-task-status', { method:'POST', body: fd, credentials:'same-origin' })
-            .then(async r=>{ 
-                const t = await r.text(); 
-                try{ 
-                    return JSON.parse(t); 
-                } catch(e){ 
-                    console.error('Error parsing response:', t); 
-                    return {success:false, message:'Respuesta inválida'}; 
-                } 
-            })
-            .then(d=>{ 
-                if(!d.success){ 
-                    alert(d.message||'Error al actualizar el estado'); 
-                    // Restaurar el valor original si hay error
-                    selectElement.value = originalStatus;
-                    selectElement.disabled = false;
-                } else {
-                    // Actualizar el DOM sin recargar la página
-                    taskRow.dataset.status = newStatus;
-                    
-                    // Actualizar clases visuales
-                    if (newStatus === 'completed') {
-                        taskRow.classList.add('completed');
-                    } else {
-                        taskRow.classList.remove('completed');
-                    }
-                    
-                    // Verificar que el nombre de la tarea se mantiene
-                    if (taskNameElement && taskNameElement.textContent !== taskName) {
-                        console.warn('El nombre de la tarea cambió inesperadamente. Restaurando...');
-                        taskNameElement.textContent = taskName;
-                    }
-                    
-                    // Habilitar el select de nuevo
-                    selectElement.disabled = false;
-                    
-                    // Mostrar mensaje de éxito (opcional)
-                    console.log('Estado actualizado correctamente');
-                    
-                    // Opcionalmente, recargar después de un breve delay para sincronizar con el servidor
-                    setTimeout(() => {
-                        location.reload();
-                    }, 500);
-                }
-            })
-            .catch(error => {
-                console.error('Error en la petición:', error);
-                alert('Error de conexión al actualizar el estado');
-                selectElement.value = originalStatus;
-                selectElement.disabled = false;
-            });
+        endpoint = '?route=clan_member/toggle-task-status';
     } else {
+        // Para "in_progress" solo enviamos el status, NO el task_name
         fd.append('status', newStatus);
-        fetch('?route=clan_member/update-task', { method:'POST', body: fd, credentials:'same-origin' })
-            .then(async r=>{ 
-                const t = await r.text(); 
-                try{ 
-                    return JSON.parse(t); 
-                } catch(e){ 
-                    console.error('Error parsing response:', t); 
-                    return {success:false, message:'Respuesta inválida'}; 
-                } 
-            })
-            .then(d=>{ 
-                if(!d.success){ 
-                    alert(d.message||'Error al actualizar el estado'); 
-                    // Restaurar el valor original si hay error
-                    selectElement.value = originalStatus;
-                    selectElement.disabled = false;
-                } else {
-                    // Actualizar el DOM sin recargar la página
-                    taskRow.dataset.status = newStatus;
-                    
-                    // Verificar que el nombre de la tarea se mantiene
-                    if (taskNameElement && taskNameElement.textContent !== taskName) {
-                        console.warn('El nombre de la tarea cambió inesperadamente. Restaurando...');
-                        taskNameElement.textContent = taskName;
-                    }
-                    
-                    // Habilitar el select de nuevo
-                    selectElement.disabled = false;
-                    
-                    // Mostrar mensaje de éxito (opcional)
-                    console.log('Estado actualizado correctamente');
-                    
-                    // Opcionalmente, recargar después de un breve delay para sincronizar con el servidor
-                    setTimeout(() => {
-                        location.reload();
-                    }, 500);
-                }
-            })
-            .catch(error => {
-                console.error('Error en la petición:', error);
-                alert('Error de conexión al actualizar el estado');
-                selectElement.value = originalStatus;
-                selectElement.disabled = false;
-            });
+        endpoint = '?route=clan_member/update-task';
+    }
+    
+    // Hacer la petición
+    fetch(endpoint, { 
+        method: 'POST', 
+        body: fd, 
+        credentials: 'same-origin' 
+    })
+    .then(async response => { 
+        const text = await response.text(); 
+        try { 
+            return JSON.parse(text); 
+        } catch(e) { 
+            console.error('Error parsing response:', text); 
+            return { success: false, message: 'Respuesta inválida del servidor' }; 
+        } 
+    })
+    .then(data => { 
+        if (!data.success) { 
+            alert(data.message || 'Error al actualizar el estado'); 
+            // Restaurar el valor original si hay error
+            selectElement.value = originalStatus;
+        } else {
+            // Actualizar el DOM localmente
+            taskRow.dataset.status = newStatus;
+            
+            // Actualizar clases visuales
+            if (newStatus === 'completed') {
+                taskRow.classList.add('completed');
+            } else {
+                taskRow.classList.remove('completed');
+            }
+            
+            // Mostrar feedback visual temporal
+            taskRow.style.backgroundColor = '#d4edda';
+            setTimeout(() => {
+                taskRow.style.backgroundColor = '';
+            }, 1000);
+            
+            // Actualizar las estadísticas del proyecto si están visibles
+            updateProjectStats();
+        }
+    })
+    .catch(error => {
+        console.error('Error en la petición:', error);
+        alert('Error de conexión al actualizar el estado');
+        selectElement.value = originalStatus;
+    })
+    .finally(() => {
+        // Siempre habilitar el select de nuevo
+        selectElement.disabled = false;
+    });
+}
+
+// Función auxiliar para actualizar las estadísticas del proyecto
+function updateProjectStats() {
+    // Contar tareas por estado
+    const allTasks = document.querySelectorAll('.task-row');
+    const completedTasks = document.querySelectorAll('.task-row.completed');
+    const pendingTasks = document.querySelectorAll('.task-row[data-status="pending"]');
+    
+    // Actualizar contadores si existen
+    const totalElement = document.querySelector('.stat-number');
+    const completedElement = document.querySelectorAll('.stat-number')[1];
+    const pendingElement = document.querySelectorAll('.stat-number')[2];
+    
+    if (totalElement) totalElement.textContent = allTasks.length;
+    if (completedElement) completedElement.textContent = completedTasks.length;
+    if (pendingElement) pendingElement.textContent = pendingTasks.length;
+    
+    // Actualizar barra de progreso
+    const progressFill = document.querySelector('.progress-fill');
+    const progressText = document.querySelector('.progress-text');
+    if (progressFill && allTasks.length > 0) {
+        const percentage = Math.round((completedTasks.length / allTasks.length) * 100);
+        progressFill.style.width = percentage + '%';
+        if (progressText) progressText.textContent = percentage + '% completado';
     }
 }
 </script>

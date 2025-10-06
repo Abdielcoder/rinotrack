@@ -570,11 +570,13 @@ class ClanMemberController {
                 error_log("Personal task - permissions already verified above");
             }
 
-            $taskName = Utils::sanitizeInput($_POST['task_name'] ?? null);
-            $description = Utils::sanitizeInput($_POST['description'] ?? null);
-            $priority = $_POST['priority'] ?? null;
-            $dueDate = $_POST['due_date'] ?? null;
-            $status = $_POST['status'] ?? null;
+            // Solo procesar campos que realmente se enviaron en el POST
+            // Si no se envía un campo, mantenerlo como null para no actualizarlo
+            $taskName = isset($_POST['task_name']) ? Utils::sanitizeInput($_POST['task_name']) : null;
+            $description = isset($_POST['description']) ? Utils::sanitizeInput($_POST['description']) : null;
+            $priority = isset($_POST['priority']) ? $_POST['priority'] : null;
+            $dueDate = isset($_POST['due_date']) ? $_POST['due_date'] : null;
+            $status = isset($_POST['status']) ? $_POST['status'] : null;
 
             // Mapear 'urgent' a 'critical' para compatibilidad con el enum de la BD
             if ($priority === 'urgent') {
