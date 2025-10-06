@@ -211,6 +211,13 @@ class ClanMemberController {
         $taskName = trim($_POST['task_name'] ?? '');
         $description = trim($_POST['description'] ?? '');
         $priority = $_POST['priority'] ?? Task::PRIORITY_MEDIUM;
+        
+        // Mapear 'urgent' a 'critical' para compatibilidad con el enum de la BD
+        if ($priority === 'urgent') {
+            $priority = 'critical';
+            error_log("createTask - Priority mapped from 'urgent' to 'critical' for DB compatibility");
+        }
+        
         $dueDate = $_POST['due_date'] ?? null;
         if ($projectId <= 0 || $taskName === '') {
             Utils::jsonResponse(['success' => false, 'message' => 'Datos inválidos'], 400);
@@ -1838,6 +1845,13 @@ class ClanMemberController {
             $taskName = trim($_POST['task_name'] ?? '');
             $description = trim($_POST['description'] ?? '');
             $priority = $_POST['priority'] ?? 'medium';
+            
+            // Mapear 'urgent' a 'critical' para compatibilidad con el enum de la BD
+            if ($priority === 'urgent') {
+                $priority = 'critical';
+                error_log("createProjectTask - Priority mapped from 'urgent' to 'critical' for DB compatibility");
+            }
+            
             $dueDate = $_POST['due_date'] ?? '';
             $userId = $this->currentUser['user_id'];
             

@@ -9,7 +9,7 @@ class Task {
     const PRIORITY_LOW = 'low';
     const PRIORITY_MEDIUM = 'medium';
     const PRIORITY_HIGH = 'high';
-    const PRIORITY_URGENT = 'urgent';
+    const PRIORITY_URGENT = 'critical'; // Se usa 'critical' en la BD pero 'urgent' en la UI
     
     // Constantes de estado
     const STATUS_PENDING = 'pending';
