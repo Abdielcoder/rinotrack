@@ -210,7 +210,7 @@ if (!isset($user)) {
                             </td>
                             <td class="td-status">
                                 <?php if ($canEditTask): ?>
-                                <select class="status-select" onchange="updateTaskStatus(<?= $task['task_id'] ?>, this.value)">
+                                <select class="status-select" onchange="updateTaskStatus(<?= $task['task_id'] ?>, this.value, event)">
                                     <option value="pending" <?= ($task['status']==='pending')?'selected':'' ?>>Pendiente</option>
                                     <option value="in_progress" <?= ($task['status']==='in_progress')?'selected':'' ?>>En Progreso</option>
                                     <option value="completed" <?= ($task['status']==='completed')?'selected':'' ?>>Completada</option>
@@ -1322,20 +1322,119 @@ function filterTasks() {
     });
 }
 
-function updateTaskStatus(taskId, newStatus) {
+function updateTaskStatus(taskId, newStatus, event) {
+    // Guardar referencia al select y la fila antes de hacer la petición
+    const selectElement = event ? event.target : document.querySelector(`select[onchange*="${taskId}"]`);
+    const taskRow = selectElement.closest('.task-row');
+    const originalStatus = taskRow.dataset.status;
+    const taskNameElement = taskRow.querySelector('.task-title');
+    const taskName = taskNameElement ? taskNameElement.textContent : '';
+    
+    // Deshabilitar el select mientras se procesa
+    selectElement.disabled = true;
+    
     const fd = new FormData();
     fd.append('task_id', taskId);
     
     if (newStatus === 'completed' || newStatus === 'pending') {
         fd.append('is_completed', newStatus === 'completed' ? 'true' : 'false');
         fetch('?route=clan_member/toggle-task-status', { method:'POST', body: fd, credentials:'same-origin' })
-            .then(async r=>{ const t = await r.text(); try{ return JSON.parse(t); } catch(e){ console.error(t); return {success:false, message:'Respuesta inválida'}; } })
-            .then(d=>{ if(!d.success){ alert(d.message||'Error'); } location.reload(); });
+            .then(async r=>{ 
+                const t = await r.text(); 
+                try{ 
+                    return JSON.parse(t); 
+                } catch(e){ 
+                    console.error('Error parsing response:', t); 
+                    return {success:false, message:'Respuesta inválida'}; 
+                } 
+            })
+            .then(d=>{ 
+                if(!d.success){ 
+                    alert(d.message||'Error al actualizar el estado'); 
+                    // Restaurar el valor original si hay error
+                    selectElement.value = originalStatus;
+                    selectElement.disabled = false;
+                } else {
+                    // Actualizar el DOM sin recargar la página
+                    taskRow.dataset.status = newStatus;
+                    
+                    // Actualizar clases visuales
+                    if (newStatus === 'completed') {
+                        taskRow.classList.add('completed');
+                    } else {
+                        taskRow.classList.remove('completed');
+                    }
+                    
+                    // Verificar que el nombre de la tarea se mantiene
+                    if (taskNameElement && taskNameElement.textContent !== taskName) {
+                        console.warn('El nombre de la tarea cambió inesperadamente. Restaurando...');
+                        taskNameElement.textContent = taskName;
+                    }
+                    
+                    // Habilitar el select de nuevo
+                    selectElement.disabled = false;
+                    
+                    // Mostrar mensaje de éxito (opcional)
+                    console.log('Estado actualizado correctamente');
+                    
+                    // Opcionalmente, recargar después de un breve delay para sincronizar con el servidor
+                    setTimeout(() => {
+                        location.reload();
+                    }, 500);
+                }
+            })
+            .catch(error => {
+                console.error('Error en la petición:', error);
+                alert('Error de conexión al actualizar el estado');
+                selectElement.value = originalStatus;
+                selectElement.disabled = false;
+            });
     } else {
         fd.append('status', newStatus);
         fetch('?route=clan_member/update-task', { method:'POST', body: fd, credentials:'same-origin' })
-            .then(async r=>{ const t = await r.text(); try{ return JSON.parse(t); } catch(e){ console.error(t); return {success:false, message:'Respuesta inválida'}; } })
-            .then(d=>{ if(!d.success){ alert(d.message||'Error'); } location.reload(); });
+            .then(async r=>{ 
+                const t = await r.text(); 
+                try{ 
+                    return JSON.parse(t); 
+                } catch(e){ 
+                    console.error('Error parsing response:', t); 
+                    return {success:false, message:'Respuesta inválida'}; 
+                } 
+            })
+            .then(d=>{ 
+                if(!d.success){ 
+                    alert(d.message||'Error al actualizar el estado'); 
+                    // Restaurar el valor original si hay error
+                    selectElement.value = originalStatus;
+                    selectElement.disabled = false;
+                } else {
+                    // Actualizar el DOM sin recargar la página
+                    taskRow.dataset.status = newStatus;
+                    
+                    // Verificar que el nombre de la tarea se mantiene
+                    if (taskNameElement && taskNameElement.textContent !== taskName) {
+                        console.warn('El nombre de la tarea cambió inesperadamente. Restaurando...');
+                        taskNameElement.textContent = taskName;
+                    }
+                    
+                    // Habilitar el select de nuevo
+                    selectElement.disabled = false;
+                    
+                    // Mostrar mensaje de éxito (opcional)
+                    console.log('Estado actualizado correctamente');
+                    
+                    // Opcionalmente, recargar después de un breve delay para sincronizar con el servidor
+                    setTimeout(() => {
+                        location.reload();
+                    }, 500);
+                }
+            })
+            .catch(error => {
+                console.error('Error en la petición:', error);
+                alert('Error de conexión al actualizar el estado');
+                selectElement.value = originalStatus;
+                selectElement.disabled = false;
+            });
     }
 }
 </script>
