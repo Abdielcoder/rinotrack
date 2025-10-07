@@ -433,8 +433,22 @@ class AdminController {
         $recurrentProject = $this->ensureProjectForClan($olympo['clan_id'], 'Tareas Recurrentes', $currentUser['user_id'] ?? 1);
         $eventualProject = $this->ensureProjectForClan($olympo['clan_id'], 'Tareas Eventuales', $currentUser['user_id'] ?? 1);
 
-        // Miembros del clan Olympo
-        $members = $this->clanModel->getMembers((int)$olympo['clan_id']);
+        // Obtener TODOS los usuarios activos del sistema para poder asignar tareas
+        // En lugar de solo los miembros del clan Olympo
+        $userModel = new User();
+        $allUsers = $userModel->getAll();
+        
+        // Filtrar solo usuarios activos y reindexar el array
+        $activeUsers = array_filter($allUsers, function($user) {
+            return ($user['is_active'] ?? 1) == 1;
+        });
+        
+        // Reindexar array para evitar problemas con foreach en la vista
+        $members = array_values($activeUsers);
+        
+        // Log para debugging
+        error_log("AdminController::tasks - Total usuarios: " . count($allUsers));
+        error_log("AdminController::tasks - Usuarios activos: " . count($members));
 
         // Obtener filtros desde la URL
         $search = trim($_GET['search'] ?? '');

@@ -149,16 +149,27 @@ ob_start();
                         <div class="form-group">
                             <label>Asignar a miembros (múltiple)</label>
                             <input type="text" id="memberSearch" class="filter-select" placeholder="Buscar colaborador..." style="width:100%;max-width:420px">
-                            <div id="memberList" class="checkbox-list" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(240px, 1fr));gap:10px;margin-top:10px;max-height:260px;overflow-y:auto;padding-right:6px">
-                                <?php foreach ($members as $m): ?>
-                                    <?php $n = trim(($m['full_name'] ?: $m['username'] ?: '')); ?>
-                                    <label class="member-item" data-name="<?php echo strtolower(Utils::escape($n)); ?>" style="display:flex;align-items:center;gap:8px;border:1px solid var(--admin-border);padding:10px;border-radius:10px;background:var(--admin-bg-primary)">
-                                        <input type="checkbox" class="member-checkbox" name="assignedUsers[]" value="<?php echo (int)$m['user_id']; ?>">
-                                        <span><?php echo Utils::escape($n); ?></span>
-                                    </label>
-                                <?php endforeach; ?>
-                                <?php if (empty($members)): ?>
-                                    <div class="empty">No hay miembros en el clan</div>
+                            <div id="memberList" class="checkbox-list" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(240px, 1fr));gap:10px;margin-top:10px;max-height:260px;overflow-y:auto;padding-right:6px;min-height:50px;border:1px solid var(--admin-border);border-radius:10px;padding:10px;">
+                                <?php if (!empty($members) && is_array($members)): ?>
+                                    <?php foreach ($members as $m): ?>
+                                        <?php 
+                                        $userId = isset($m['user_id']) ? (int)$m['user_id'] : 0;
+                                        $fullName = isset($m['full_name']) ? trim($m['full_name']) : '';
+                                        $username = isset($m['username']) ? trim($m['username']) : '';
+                                        $displayName = $fullName ?: $username ?: 'Usuario ' . $userId;
+                                        ?>
+                                        <?php if ($userId > 0): ?>
+                                            <label class="member-item" data-name="<?php echo strtolower(Utils::escape($displayName)); ?>" style="display:flex;align-items:center;gap:8px;border:1px solid var(--admin-border);padding:10px;border-radius:10px;background:var(--admin-bg-primary);cursor:pointer;">
+                                                <input type="checkbox" class="member-checkbox" name="assignedUsers[]" value="<?php echo $userId; ?>">
+                                                <span><?php echo Utils::escape($displayName); ?></span>
+                                            </label>
+                                        <?php endif; ?>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <div class="empty" style="text-align:center;color:var(--admin-text-secondary);padding:20px;">
+                                        <i class="fas fa-users" style="font-size:2em;margin-bottom:10px;opacity:0.3;"></i>
+                                        <p>No hay usuarios disponibles para asignar</p>
+                                    </div>
                                 <?php endif; ?>
                             </div>
                         </div>

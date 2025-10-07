@@ -44,6 +44,24 @@ class User {
     }
     
     /**
+     * Obtener todos los usuarios del sistema
+     */
+    public function getAll() {
+        try {
+            $stmt = $this->db->prepare("
+                SELECT user_id, username, email, full_name, is_active, last_login, created_at, avatar_path 
+                FROM Users 
+                ORDER BY full_name ASC, username ASC
+            ");
+            $stmt->execute();
+            return $stmt->fetchAll();
+        } catch (PDOException $e) {
+            error_log("Error al obtener todos los usuarios: " . $e->getMessage());
+            return [];
+        }
+    }
+    
+    /**
      * Buscar usuario por ID sin importar su estado activo
      */
     public function findByIdAnyStatus($id) {
