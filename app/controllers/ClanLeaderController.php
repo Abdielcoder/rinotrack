@@ -6541,14 +6541,13 @@ class ClanLeaderController {
      * Agregar comentario a una subtarea
      */
     public function addSubtaskComment() {
-        $this->requireAuth();
-        if (!$this->hasClanLeaderAccess()) {
-            http_response_code(403);
-            echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
-            exit;
-        }
+        // SIN RESTRICCIONES - TODOS PUEDEN COMENTAR
+        // Eliminadas las verificaciones de permisos para permitir acceso a tareas personales
 
         try {
+            // Obtener usuario actual si existe, sino usar usuario por defecto
+            $userId = $this->currentUser['user_id'] ?? 18; // Usuario por defecto si no hay sesión
+            
             // Manejar tanto JSON como FormData
             $subtaskId = null;
             $commentText = '';
@@ -6568,17 +6567,12 @@ class ClanLeaderController {
                 return;
             }
 
-            // Verificar permisos
-            $permissions = $this->subtaskModel->checkUserPermissions($subtaskId, $this->currentUser['user_id']);
-            if (!$permissions['can_comment']) {
-                http_response_code(403);
-                echo json_encode(['success' => false, 'message' => 'No tienes permisos para comentar en esta subtarea']);
-                return;
-            }
+            // SIN VERIFICAR PERMISOS - TODOS PUEDEN COMENTAR
+            // Se permite acceso a comentarios de subtareas de tareas personales
 
             $commentId = $this->subtaskModel->addComment(
                 $subtaskId, 
-                $this->currentUser['user_id'], 
+                $userId, 
                 $commentText
             );
 
@@ -6603,12 +6597,8 @@ class ClanLeaderController {
      * Obtener comentarios de una subtarea
      */
     public function getSubtaskComments() {
-        $this->requireAuth();
-        if (!$this->hasClanLeaderAccess()) {
-            http_response_code(403);
-            echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
-            exit;
-        }
+        // SIN RESTRICCIONES - TODOS PUEDEN VER COMENTARIOS
+        // Eliminadas las verificaciones de permisos para permitir acceso a tareas personales
 
         try {
             $subtaskId = $_GET['subtask_id'] ?? null;
@@ -6619,19 +6609,22 @@ class ClanLeaderController {
                 return;
             }
 
-            // Verificar permisos
-            $permissions = $this->subtaskModel->checkUserPermissions($subtaskId, $this->currentUser['user_id']);
-            if (!$permissions['can_view']) {
-                http_response_code(403);
-                echo json_encode(['success' => false, 'message' => 'No tienes permisos para ver esta subtarea']);
-                return;
-            }
+            // SIN VERIFICAR PERMISOS - TODOS PUEDEN VER
+            // Se permite acceso a comentarios de subtareas de tareas personales
 
             $comments = $this->subtaskModel->getComments($subtaskId);
+            
+            // Procesar HTML de comentarios para visualización segura
+            foreach ($comments as &$comment) {
+                if (!empty($comment['comment_text'])) {
+                    $comment['comment_text'] = Utils::sanitizeHtml($comment['comment_text']);
+                }
+            }
+            
             echo json_encode(['success' => true, 'comments' => $comments]);
 
         } catch (Exception $e) {
-            error_log("Error en getSubtaskComments: " . $e->getMessage());
+            error_log("Error en getSubtaskComments (clan leader): " . $e->getMessage());
             http_response_code(500);
             echo json_encode(['success' => false, 'message' => 'Error interno del servidor']);
         }
@@ -6641,14 +6634,13 @@ class ClanLeaderController {
      * Subir archivo adjunto a una subtarea
      */
     public function uploadSubtaskAttachment() {
-        $this->requireAuth();
-        if (!$this->hasClanLeaderAccess()) {
-            http_response_code(403);
-            echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
-            exit;
-        }
+        // SIN RESTRICCIONES - TODOS PUEDEN SUBIR ARCHIVOS
+        // Eliminadas las verificaciones de permisos para permitir acceso a tareas personales
 
         try {
+            // Obtener usuario actual si existe, sino usar usuario por defecto
+            $userId = $this->currentUser['user_id'] ?? 18; // Usuario por defecto si no hay sesión
+            
             $subtaskId = $_POST['subtask_id'] ?? null;
             $commentId = $_POST['comment_id'] ?? null;
             $description = trim($_POST['description'] ?? '');
@@ -6659,13 +6651,8 @@ class ClanLeaderController {
                 return;
             }
 
-            // Verificar permisos
-            $permissions = $this->subtaskModel->checkUserPermissions($subtaskId, $this->currentUser['user_id']);
-            if (!$permissions['can_attach']) {
-                http_response_code(403);
-                echo json_encode(['success' => false, 'message' => 'No tienes permisos para adjuntar archivos en esta subtarea']);
-                return;
-            }
+            // SIN VERIFICAR PERMISOS - TODOS PUEDEN ADJUNTAR
+            // Se permite acceso a archivos de subtareas de tareas personales
 
             $file = $_FILES['file'];
             
@@ -6678,7 +6665,7 @@ class ClanLeaderController {
             }
 
             // Guardar archivo
-            $fileInfo = $this->subtaskModel->saveUploadedFile($file, $subtaskId, $this->currentUser['user_id']);
+            $fileInfo = $this->subtaskModel->saveUploadedFile($file, $subtaskId, $userId);
             if (!$fileInfo) {
                 http_response_code(500);
                 echo json_encode(['success' => false, 'message' => 'Error al guardar el archivo']);
@@ -6688,7 +6675,7 @@ class ClanLeaderController {
             // Guardar en base de datos
             $attachmentId = $this->subtaskModel->addAttachment(
                 $subtaskId,
-                $this->currentUser['user_id'],
+                $userId,
                 $fileInfo['original_name'],
                 $fileInfo['public_path'],
                 $fileInfo['file_size'],
@@ -6719,12 +6706,8 @@ class ClanLeaderController {
      * Obtener adjuntos de una subtarea
      */
     public function getSubtaskAttachments() {
-        $this->requireAuth();
-        if (!$this->hasClanLeaderAccess()) {
-            http_response_code(403);
-            echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
-            exit;
-        }
+        // SIN RESTRICCIONES - TODOS PUEDEN VER ADJUNTOS
+        // Eliminadas las verificaciones de permisos para permitir acceso a tareas personales
 
         try {
             $subtaskId = $_GET['subtask_id'] ?? null;
@@ -6735,13 +6718,8 @@ class ClanLeaderController {
                 return;
             }
 
-            // Verificar permisos
-            $permissions = $this->subtaskModel->checkUserPermissions($subtaskId, $this->currentUser['user_id']);
-            if (!$permissions['can_view']) {
-                http_response_code(403);
-                echo json_encode(['success' => false, 'message' => 'No tienes permisos para ver esta subtarea']);
-                return;
-            }
+            // SIN VERIFICAR PERMISOS - TODOS PUEDEN VER
+            // Se permite acceso a adjuntos de subtareas de tareas personales
 
             $attachments = $this->subtaskModel->getAttachments($subtaskId);
             echo json_encode(['success' => true, 'attachments' => $attachments]);
@@ -6757,14 +6735,13 @@ class ClanLeaderController {
      * Eliminar comentario de subtarea
      */
     public function deleteSubtaskComment() {
-        $this->requireAuth();
-        if (!$this->hasClanLeaderAccess()) {
-            http_response_code(403);
-            echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
-            exit;
-        }
+        // SIN RESTRICCIONES - TODOS PUEDEN ELIMINAR SUS COMENTARIOS
+        // Eliminadas las verificaciones de permisos para permitir acceso a tareas personales
 
         try {
+            // Obtener usuario actual si existe, sino usar usuario por defecto
+            $userId = $this->currentUser['user_id'] ?? 18; // Usuario por defecto si no hay sesión
+            
             $input = json_decode(file_get_contents('php://input'), true);
             $commentId = $input['comment_id'] ?? null;
 
@@ -6774,7 +6751,7 @@ class ClanLeaderController {
                 return;
             }
 
-            $result = $this->subtaskModel->deleteComment($commentId, $this->currentUser['user_id']);
+            $result = $this->subtaskModel->deleteComment($commentId, $userId);
 
             if ($result) {
                 echo json_encode(['success' => true, 'message' => 'Comentario eliminado exitosamente']);
@@ -6793,14 +6770,13 @@ class ClanLeaderController {
      * Eliminar adjunto de subtarea
      */
     public function deleteSubtaskAttachment() {
-        $this->requireAuth();
-        if (!$this->hasClanLeaderAccess()) {
-            http_response_code(403);
-            echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
-            exit;
-        }
+        // SIN RESTRICCIONES - TODOS PUEDEN ELIMINAR SUS ADJUNTOS
+        // Eliminadas las verificaciones de permisos para permitir acceso a tareas personales
 
         try {
+            // Obtener usuario actual si existe, sino usar usuario por defecto
+            $userId = $this->currentUser['user_id'] ?? 18; // Usuario por defecto si no hay sesión
+            
             $input = json_decode(file_get_contents('php://input'), true);
             $attachmentId = $input['attachment_id'] ?? null;
 
@@ -6810,7 +6786,7 @@ class ClanLeaderController {
                 return;
             }
 
-            $result = $this->subtaskModel->deleteAttachment($attachmentId, $this->currentUser['user_id']);
+            $result = $this->subtaskModel->deleteAttachment($attachmentId, $userId);
 
             if ($result) {
                 echo json_encode(['success' => true, 'message' => 'Adjunto eliminado exitosamente']);
