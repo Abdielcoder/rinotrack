@@ -179,8 +179,19 @@ ob_start();
                 </button>
                 <div id="task-comment-emoji-picker" class="emoji-picker-container" style="display: none;"></div>
             </div>
+            <div id="task-file-preview" class="file-preview" style="display: none; margin: 10px 0; padding: 10px; background: #f0f9ff; border: 1px solid #0ea5e9; border-radius: 6px;">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-file" style="color: #0ea5e9;"></i>
+                        <span id="task-file-names" style="color: #0369a1; font-size: 14px;"></span>
+                    </div>
+                    <button type="button" onclick="removeTaskAttachment()" class="btn-icon-small" style="background: #fee2e2; color: #dc2626;" title="Quitar archivos">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
             <div style="display: flex; justify-content: space-between; align-items: center;">
-                <input type="file" name="attachments[]" multiple style="font-size: 14px;" />
+                <input type="file" name="attachments[]" multiple style="font-size: 14px;" id="task-comment-files" onchange="showTaskFilePreview()" />
                 <button type="submit" style="background: #1e3a8a; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;">
                     <i class="fas fa-paper-plane"></i> Enviar
                 </button>
@@ -206,7 +217,7 @@ ob_start();
                             <?php foreach ($c['attachments'] as $attachment): ?>
                             <div class="attachment-item" style="display: flex; align-items: center; gap: 8px; background: #f8f9fa; border: 1px solid #e5e7eb; border-radius: 6px; padding: 8px 12px; font-size: 14px;">
                                 <i class="fas fa-paperclip" style="color: #6b7280; font-size: 12px;"></i>
-                                <a href="<?php echo htmlspecialchars($attachment['file_path']); ?>" target="_blank" style="color: #1e3a8a; text-decoration: none; font-weight: 500;">
+                                <a href="javascript:void(0)" onclick="openFilePreview(<?php echo $attachment['attachment_id']; ?>, '<?php echo htmlspecialchars($attachment['file_name']); ?>', '<?php echo htmlspecialchars($attachment['file_type'] ?? ''); ?>')" style="color: #1e3a8a; text-decoration: none; font-weight: 500; cursor: pointer;">
                                     <?php echo htmlspecialchars($attachment['file_name']); ?>
                                 </a>
                                 <a href="<?php echo htmlspecialchars($attachment['file_path']); ?>" download="<?php echo htmlspecialchars($attachment['file_name']); ?>" style="color: #10b981; text-decoration: none; margin-left: 4px;" title="Descargar">
@@ -473,24 +484,51 @@ ob_start();
     position: relative;
 }
 
-.btn-with-badge .badge {
+.badge {
     position: absolute;
     top: -8px;
     right: -8px;
     background: #ef4444;
     color: white;
-    font-size: 10px;
-    font-weight: 600;
     border-radius: 50%;
-    width: 18px;
+    min-width: 18px;
     height: 18px;
+    font-size: 11px;
+    font-weight: bold;
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 2px solid white;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    min-width: 18px;
-    padding: 0;
+    padding: 0 6px;
+    box-sizing: border-box;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    animation: badgePulse 0.3s ease-out;
+}
+
+@keyframes badgePulse {
+    0% {
+        transform: scale(0.5);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Colores específicos para cada tipo de badge */
+.btn-with-badge[id*="comments-btn"] .badge {
+    background: #3b82f6;
+}
+
+.btn-with-badge[id*="attachments-btn"] .badge {
+    background: #10b981;
+}
+
+.badge:empty {
+    display: none !important;
 }
 
 /* Estilos para notificaciones toast */
@@ -1259,7 +1297,7 @@ function removeUserFromSubtask(subtaskId, userId) {
 // Esperar a que el DOM esté listo
 document.addEventListener('DOMContentLoaded', function() {
     // Cargar contadores al inicializar la página
-    loadSubtaskCounters();
+    loadAllSubtaskCounts();
     
     // Cargar usuarios asignados a subtareas
     loadSubtaskAssignedUsers();
@@ -1275,6 +1313,56 @@ document.addEventListener('DOMContentLoaded', function() {
 function closeExistingModals() {
     const existingModals = document.querySelectorAll('.modal-overlay');
     existingModals.forEach(modal => modal.remove());
+}
+
+// Funciones para conteos de subtareas
+function loadAllSubtaskCounts() {
+    const subtaskItems = document.querySelectorAll('[data-subtask-id]');
+    subtaskItems.forEach(item => {
+        const subtaskId = item.getAttribute('data-subtask-id');
+        loadSubtaskCounts(subtaskId);
+    });
+}
+
+function loadSubtaskCounts(subtaskId) {
+    fetch('?route=clan_leader/get-subtask-counts&subtask_id=' + subtaskId)
+        .then(response => response.json())
+        .then(data => {
+            console.log('Counts for subtask ' + subtaskId + ':', data);
+            if (data.success) {
+                updateBadges(subtaskId, data.counts);
+            }
+        })
+        .catch(error => {
+            console.error('Error loading counts for subtask ' + subtaskId, error);
+        });
+}
+
+function updateBadges(subtaskId, counts) {
+    const commentsBadge = document.getElementById('comments-badge-' + subtaskId);
+    const attachmentsBadge = document.getElementById('attachments-badge-' + subtaskId);
+    
+    if (commentsBadge) {
+        // Usar comment_count (sin s) que es lo que devuelve el modelo
+        const commentCount = counts.comment_count || counts.comments_count || 0;
+        if (commentCount > 0) {
+            commentsBadge.textContent = commentCount;
+            commentsBadge.style.display = 'block';
+        } else {
+            commentsBadge.style.display = 'none';
+        }
+    }
+    
+    if (attachmentsBadge) {
+        // Usar attachment_count (sin s) que es lo que devuelve el modelo
+        const attachmentCount = counts.attachment_count || counts.attachments_count || 0;
+        if (attachmentCount > 0) {
+            attachmentsBadge.textContent = attachmentCount;
+            attachmentsBadge.style.display = 'block';
+        } else {
+            attachmentsBadge.style.display = 'none';
+        }
+    }
 }
 
 // Funciones para subtareas
@@ -1320,8 +1408,28 @@ function showCommentsModal(subtaskId, comments) {
                             </button>
                             <div id="subtask-comment-${subtaskId}-emoji-picker" class="emoji-picker-container" style="display: none;"></div>
                         </div>
-                        <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                            <button onclick="addSubtaskComment(${subtaskId})" class="btn btn-primary" style="padding: 8px 16px;">Agregar Comentario</button>
+                        <div id="subtask-file-preview-${subtaskId}" class="file-preview" style="display: none; margin: 10px 0; padding: 10px; background: #f0f9ff; border: 1px solid #0ea5e9; border-radius: 6px;">
+                            <div style="display: flex; align-items: center; justify-content: space-between;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <i class="fas fa-file" style="color: #0ea5e9;"></i>
+                                    <span id="subtask-file-name-${subtaskId}" style="color: #0369a1; font-size: 14px;"></span>
+                                    <span id="subtask-file-size-${subtaskId}" style="color: #64748b; font-size: 12px;"></span>
+                                </div>
+                                <button type="button" onclick="removeSubtaskAttachment(${subtaskId})" class="btn-icon-small" style="background: #fee2e2; color: #dc2626;" title="Quitar archivo">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 10px; justify-content: space-between; align-items: center;">
+                            <div>
+                                <input type="file" id="subtask-comment-file-${subtaskId}" style="display: none;" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif" onchange="showSubtaskFilePreview(${subtaskId})">
+                                <button type="button" onclick="document.getElementById('subtask-comment-file-${subtaskId}').click()" class="btn btn-secondary" style="padding: 8px 16px;">
+                                    <i class="fas fa-paperclip"></i> Adjuntar
+                                </button>
+                            </div>
+                            <button onclick="addSubtaskComment(${subtaskId})" class="btn btn-primary" style="padding: 8px 16px;">
+                                <i class="fas fa-paper-plane"></i> Agregar Comentario
+                            </button>
                         </div>
                     </div>
                     
@@ -1347,6 +1455,19 @@ function showCommentsModal(subtaskId, comments) {
                                 <div class="comment-content" style="color: #374151; line-height: 1.5;">
                                     ${comment.comment_text}
                                 </div>
+                                ${comment.attachments && comment.attachments.length > 0 ? `
+                                    <div class="comment-attachments" style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #e5e7eb;">
+                                        <div style="font-weight: bold; margin-bottom: 5px; color: #6b7280; font-size: 12px;">
+                                            📎 Archivos adjuntos (${comment.attachments.length}):
+                                        </div>
+                                        ${comment.attachments.map(att => `
+                                            <a href="javascript:void(0)" onclick="openFilePreview(${att.attachment_id}, '${att.file_name}', '${att.file_type || ''}')" class="attachment-link" style="display: inline-block; background: #f3f4f6; padding: 4px 8px; border-radius: 4px; margin: 2px 4px 2px 0; font-size: 12px; text-decoration: none; color: #374151; cursor: pointer;">
+                                                <i class="fas fa-file"></i> ${att.file_name}
+                                                ${att.uploaded_at ? `<span class="attachment-date" style="color: #9ca3af; font-size: 10px; margin-left: 4px;">(${new Date(att.uploaded_at).toLocaleDateString()})</span>` : ''}
+                                            </a>
+                                        `).join('')}
+                                    </div>
+                                ` : ''}
                             </div>
                         `).join('')}
                     </div>
@@ -1383,32 +1504,97 @@ function addSubtaskComment(subtaskId) {
     }
     
     const commentText = editor.root.innerHTML.trim();
+    const fileInput = document.getElementById(`subtask-comment-file-${subtaskId}`);
+    
+    // Si hay archivo, primero subirlo
+    if (fileInput && fileInput.files.length > 0) {
+        const formData = new FormData();
+        formData.append('subtask_id', subtaskId);
+        formData.append('file', fileInput.files[0]);
+        
+        fetch('?route=clan_leader/upload-subtask-attachment', {
+            method: 'POST',
+            body: formData
+        })
+        .then(async response => {
+            const text = await response.text();
+            console.log('Upload response:', text);
+            try {
+                return JSON.parse(text);
+            } catch (e) {
+                console.error('Invalid JSON response:', text);
+                throw new Error('Respuesta inválida del servidor');
+            }
+        })
+        .then(data => {
+            if (data.success) {
+                // Después de subir el archivo, agregar el comentario con el attachment_id
+                addSubtaskCommentWithText(subtaskId, commentText, data.attachment_id);
+            } else {
+                showNotification('Error al subir archivo: ' + (data.message || 'Error desconocido'), 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Error al subir archivo: ' + error.message, 'error');
+        });
+        return;
+    }
     
     if (!commentText || commentText === '<p><br></p>') {
         showNotification('Por favor escribe un comentario', 'error');
         return;
     }
     
+    // Si no hay archivo, solo agregar el comentario
+    addSubtaskCommentWithText(subtaskId, commentText, null);
+}
+
+function addSubtaskCommentWithText(subtaskId, commentText, attachmentId = null) {
     const formData = new FormData();
     formData.append('subtask_id', subtaskId);
     formData.append('comment_text', commentText);
+    if (attachmentId) {
+        formData.append('attachment_id', attachmentId);
+    }
     
     fetch('?route=clan_leader/add-subtask-comment', {
         method: 'POST',
         body: formData
     })
-    .then(response => response.json())
+    .then(async response => {
+        const text = await response.text();
+        console.log('Add comment response:', text);
+        try {
+            return JSON.parse(text);
+        } catch (e) {
+            console.error('Invalid JSON response:', text);
+            throw new Error('Respuesta inválida del servidor');
+        }
+    })
     .then(data => {
         if (data.success) {
             // Limpiar el editor
+            const editor = window[`subtaskCommentEditor_${subtaskId}`];
             if (editor) {
                 editor.setContents([]);
             }
+            
+            // Limpiar archivo y vista previa
+            const fileInput = document.getElementById(`subtask-comment-file-${subtaskId}`);
+            if (fileInput) {
+                fileInput.value = '';
+            }
+            const filePreview = document.getElementById(`subtask-file-preview-${subtaskId}`);
+            if (filePreview) {
+                filePreview.style.display = 'none';
+            }
+            
             // Cerrar modal actual antes de recargar
             closeExistingModals();
             // Recargar comentarios y actualizar contadores
             showSubtaskComments(subtaskId);
-            loadSubtaskCounters();
+            loadSubtaskCounts(subtaskId);
         } else {
             showNotification('Error al agregar comentario: ' + data.message, 'error');
         }
@@ -1417,6 +1603,65 @@ function addSubtaskComment(subtaskId) {
         console.error('Error:', error);
         showNotification('Error de conexión', 'error');
     });
+}
+
+// Mostrar vista previa del archivo adjunto en comentarios de tarea principal
+function showTaskFilePreview() {
+    const fileInput = document.getElementById('task-comment-files');
+    const filePreview = document.getElementById('task-file-preview');
+    const fileNames = document.getElementById('task-file-names');
+    
+    if (fileInput && fileInput.files.length > 0) {
+        const names = Array.from(fileInput.files).map(f => f.name).join(', ');
+        fileNames.textContent = `${fileInput.files.length} archivo(s): ${names}`;
+        filePreview.style.display = 'block';
+    }
+}
+
+// Quitar archivos adjuntos de comentario de tarea principal
+function removeTaskAttachment() {
+    const fileInput = document.getElementById('task-comment-files');
+    const filePreview = document.getElementById('task-file-preview');
+    
+    if (fileInput) {
+        fileInput.value = '';
+    }
+    if (filePreview) {
+        filePreview.style.display = 'none';
+    }
+}
+
+// Mostrar vista previa del archivo adjunto en comentarios de subtarea
+function showSubtaskFilePreview(subtaskId) {
+    const fileInput = document.getElementById(`subtask-comment-file-${subtaskId}`);
+    const filePreview = document.getElementById(`subtask-file-preview-${subtaskId}`);
+    const fileName = document.getElementById(`subtask-file-name-${subtaskId}`);
+    const fileSize = document.getElementById(`subtask-file-size-${subtaskId}`);
+    
+    if (fileInput && fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        fileName.textContent = file.name;
+        
+        // Formatear tamaño del archivo
+        const sizeInKB = (file.size / 1024).toFixed(2);
+        const sizeInMB = (file.size / (1024 * 1024)).toFixed(2);
+        fileSize.textContent = file.size > 1024 * 1024 ? `(${sizeInMB} MB)` : `(${sizeInKB} KB)`;
+        
+        filePreview.style.display = 'block';
+    }
+}
+
+// Quitar archivo adjunto de comentario de subtarea
+function removeSubtaskAttachment(subtaskId) {
+    const fileInput = document.getElementById(`subtask-comment-file-${subtaskId}`);
+    const filePreview = document.getElementById(`subtask-file-preview-${subtaskId}`);
+    
+    if (fileInput) {
+        fileInput.value = '';
+    }
+    if (filePreview) {
+        filePreview.style.display = 'none';
+    }
 }
 
 function deleteSubtaskComment(commentId) {
@@ -1503,7 +1748,7 @@ function showAttachmentsModal(subtaskId, attachments) {
                                     <div class="attachment-info">
                                         <div class="attachment-name" style="font-weight: 600; color: #374151; display: flex; align-items: center; gap: 8px;">
                                             <i class="fas fa-file"></i>
-                                            <a href="${attachment.file_path}" target="_blank" style="color: #1e3a8a; text-decoration: none;">
+                                            <a href="javascript:void(0)" onclick="openFilePreview(${attachment.attachment_id}, '${attachment.file_name}', '${attachment.file_type || ''}')" style="color: #1e3a8a; text-decoration: none; cursor: pointer;">
                                                 ${attachment.file_name}
                                             </a>
                                         </div>
@@ -1579,7 +1824,7 @@ function uploadSubtaskAttachment(subtaskId) {
             closeExistingModals();
             // Recargar adjuntos y actualizar contadores
             showSubtaskAttachments(subtaskId);
-            loadSubtaskCounters();
+            loadSubtaskCounts(subtaskId);
         } else {
             showNotification('Error al subir archivo: ' + data.message, 'error');
         }
@@ -2228,6 +2473,15 @@ document.getElementById('tdCommentForm')?.addEventListener('submit', function(e)
                 if (taskCommentEditor) {
                     taskCommentEditor.setContents([]);
                 }
+                // Limpiar vista previa de archivos
+                const fileInput = document.getElementById('task-comment-files');
+                if (fileInput) {
+                    fileInput.value = '';
+                }
+                const filePreview = document.getElementById('task-file-preview');
+                if (filePreview) {
+                    filePreview.style.display = 'none';
+                }
                 location.reload(); 
             } else { 
                 showNotification(d.message||'Error', 'error'); 
@@ -2844,6 +3098,179 @@ if (!document.getElementById('emoji-picker-styles')) {
     `;
     document.head.appendChild(style);
 }
+
+// Funciones para vista previa de archivos
+function openFilePreview(attachmentId, fileName, fileType) {
+    const modal = document.getElementById('file-preview-modal');
+    const title = document.getElementById('file-preview-title');
+    const content = document.getElementById('file-preview-content');
+    const downloadBtn = document.getElementById('download-file-btn');
+    
+    if (!modal) {
+        // Crear modal si no existe
+        createFilePreviewModal();
+        return openFilePreview(attachmentId, fileName, fileType);
+    }
+    
+    title.textContent = fileName;
+    downloadBtn.onclick = () => downloadFile(attachmentId, fileName);
+    
+    // Mostrar loading
+    content.innerHTML = '<div style="padding: 40px; text-align: center;"><i class="fas fa-spinner fa-spin" style="font-size: 24px; color: #6b7280;"></i><p style="margin-top: 10px; color: #6b7280;">Cargando vista previa...</p></div>';
+    
+    modal.style.display = 'flex';
+    
+    // Determinar tipo de archivo y mostrar vista previa
+    if (isImageFile(fileType)) {
+        showImagePreview(attachmentId, content);
+    } else if (isPdfFile(fileType)) {
+        showPdfPreview(attachmentId, content);
+    } else if (isTextFile(fileType)) {
+        showTextPreview(attachmentId, content);
+    } else {
+        showUnsupportedPreview(fileName, fileType, content);
+    }
+}
+
+function createFilePreviewModal() {
+    const modalHTML = `
+        <div id="file-preview-modal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; display: flex; align-items: center; justify-content: center;">
+            <div class="modal-content" style="background: white; border-radius: 12px; max-width: 90%; max-height: 90%; overflow: hidden; position: relative; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);">
+                <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; padding: 20px; border-bottom: 1px solid #e5e7eb;">
+                    <h3 id="file-preview-title" style="margin: 0; font-size: 18px; font-weight: 600; color: #1f2937;"></h3>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <button id="download-file-btn" class="btn btn-primary" style="padding: 8px 16px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                            <i class="fas fa-download"></i> Descargar
+                        </button>
+                        <button onclick="closeFilePreviewModal()" class="btn-icon-small" style="width: 32px; height: 32px; border: none; border-radius: 6px; background: #f3f4f6; color: #6b7280; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="modal-body" style="padding: 20px; overflow: auto; max-height: calc(90vh - 120px);">
+                    <div id="file-preview-content" style="text-align: center;">
+                        <!-- Contenido del archivo se carga aquí -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+function closeFilePreviewModal() {
+    const modal = document.getElementById('file-preview-modal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+function isImageFile(fileType) {
+    return fileType && fileType.startsWith('image/');
+}
+
+function isPdfFile(fileType) {
+    return fileType === 'application/pdf';
+}
+
+function isTextFile(fileType) {
+    return fileType && (fileType.startsWith('text/') || fileType.includes('json') || fileType.includes('xml'));
+}
+
+function showImagePreview(attachmentId, content) {
+    const imageUrl = `file-viewer.php?id=${attachmentId}`;
+    content.innerHTML = `
+        <img src="${imageUrl}" style="max-width: 100%; max-height: 70vh; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);" 
+             onerror="showErrorPreview('Error al cargar la imagen', this.parentElement)" />
+    `;
+}
+
+function showPdfPreview(attachmentId, content) {
+    const pdfUrl = `file-viewer.php?id=${attachmentId}`;
+    content.innerHTML = `
+        <iframe src="${pdfUrl}" style="width: 100%; height: 70vh; border: none; border-radius: 8px;" 
+                onerror="showErrorPreview('Error al cargar el PDF', this.parentElement)"></iframe>
+    `;
+}
+
+function showTextPreview(attachmentId, content) {
+    fetch(`file-viewer.php?id=${attachmentId}`)
+        .then(response => response.text())
+        .then(text => {
+            content.innerHTML = `
+                <pre style="background: #f8fafc; padding: 20px; border-radius: 8px; text-align: left; max-height: 60vh; overflow: auto; font-family: 'Courier New', monospace; font-size: 14px; line-height: 1.5;">${escapeHtml(text)}</pre>
+            `;
+        })
+        .catch(error => {
+            showErrorPreview('Error al cargar el archivo de texto', content);
+        });
+}
+
+function showUnsupportedPreview(fileName, fileType, content) {
+    const icon = getFileIcon(fileType);
+    content.innerHTML = `
+        <div style="padding: 40px; text-align: center;">
+            <i class="${icon}" style="font-size: 64px; color: #6b7280; margin-bottom: 20px;"></i>
+            <h3 style="margin: 0 0 10px 0; color: #374151;">Vista previa no disponible</h3>
+            <p style="margin: 0; color: #6b7280;">Este tipo de archivo (${fileType || 'desconocido'}) no se puede previsualizar.</p>
+            <p style="margin: 10px 0 0 0; color: #6b7280;">Puedes descargarlo usando el botón de descarga.</p>
+        </div>
+    `;
+}
+
+function showErrorPreview(message, content) {
+    content.innerHTML = `
+        <div style="padding: 40px; text-align: center;">
+            <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: #f59e0b; margin-bottom: 20px;"></i>
+            <h3 style="margin: 0 0 10px 0; color: #374151;">${message}</h3>
+            <p style="margin: 0; color: #6b7280;">Intenta descargar el archivo directamente.</p>
+        </div>
+    `;
+}
+
+function getFileIcon(fileType) {
+    if (!fileType) return 'fas fa-file';
+    
+    if (fileType.includes('pdf')) return 'fas fa-file-pdf';
+    if (fileType.includes('word') || fileType.includes('document')) return 'fas fa-file-word';
+    if (fileType.includes('excel') || fileType.includes('spreadsheet')) return 'fas fa-file-excel';
+    if (fileType.includes('powerpoint') || fileType.includes('presentation')) return 'fas fa-file-powerpoint';
+    if (fileType.includes('image')) return 'fas fa-file-image';
+    if (fileType.includes('video')) return 'fas fa-file-video';
+    if (fileType.includes('audio')) return 'fas fa-file-audio';
+    if (fileType.includes('text')) return 'fas fa-file-alt';
+    if (fileType.includes('zip') || fileType.includes('archive')) return 'fas fa-file-archive';
+    
+    return 'fas fa-file';
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function downloadFile(attachmentId, fileName) {
+    const link = document.createElement('a');
+    link.href = `file-viewer.php?id=${attachmentId}&action=download`;
+    link.download = fileName;
+    link.click();
+}
+
+// Cerrar modal con ESC
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeFilePreviewModal();
+    }
+});
+
+// Cerrar modal al hacer click fuera del contenido
+document.addEventListener('click', function(e) {
+    const modal = document.getElementById('file-preview-modal');
+    if (modal && e.target === modal) {
+        closeFilePreviewModal();
+    }
+});
     </script>
 
 <?php

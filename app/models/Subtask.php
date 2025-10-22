@@ -259,6 +259,71 @@ class Subtask {
     }
     
     /**
+     * Vincular un archivo adjunto a un comentario
+     */
+    public function linkAttachmentToComment($attachmentId, $commentId) {
+        try {
+            $stmt = $this->db->prepare("
+                UPDATE Subtask_Attachments 
+                SET comment_id = ? 
+                WHERE attachment_id = ?
+            ");
+            
+            return $stmt->execute([$commentId, $attachmentId]);
+            
+        } catch (Exception $e) {
+            error_log("Error al vincular adjunto a comentario: " . $e->getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * Corregir rutas de archivos adjuntos existentes
+     */
+    public function fixAttachmentPaths() {
+        try {
+            // Obtener todos los archivos adjuntos con rutas incorrectas
+            $stmt = $this->db->prepare("
+                SELECT attachment_id, file_path 
+                FROM Subtask_Attachments 
+                WHERE file_path NOT LIKE 'uploads/%' 
+                AND file_path NOT LIKE 'task_attachments/%'
+            ");
+            $stmt->execute();
+            $attachments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            $updated = 0;
+            foreach ($attachments as $attachment) {
+                $oldPath = $attachment['file_path'];
+                $newPath = 'uploads/' . $oldPath;
+                
+                // Verificar si el archivo existe en el directorio correcto
+                $fullPath = dirname(__DIR__, 2) . '/public/' . $newPath;
+                if (file_exists($fullPath)) {
+                    // Actualizar la ruta en la base de datos
+                    $updateStmt = $this->db->prepare("
+                        UPDATE Subtask_Attachments 
+                        SET file_path = ? 
+                        WHERE attachment_id = ?
+                    ");
+                    if ($updateStmt->execute([$newPath, $attachment['attachment_id']])) {
+                        $updated++;
+                        error_log("Ruta corregida: {$oldPath} -> {$newPath}");
+                    }
+                } else {
+                    error_log("Archivo no encontrado: {$fullPath}");
+                }
+            }
+            
+            return $updated;
+            
+        } catch (Exception $e) {
+            error_log("Error al corregir rutas de archivos: " . $e->getMessage());
+            return false;
+        }
+    }
+    
+    /**
      * Actualizar subtarea
      */
     public function update($subtaskId, $title, $description = null, $assignedUserId = null, $priority = null, $dueDate = null, $completionPercentage = null, $status = null) {
@@ -383,7 +448,7 @@ class Subtask {
                 return [
                     'original_name' => $file['name'],
                     'saved_name' => $uniqueName,
-                    'file_path' => $uniqueName,
+                    'file_path' => 'uploads/' . $uniqueName,
                     'file_size' => $file['size'],
                     'file_type' => $file['type']
                 ];

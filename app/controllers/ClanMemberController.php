@@ -1565,10 +1565,11 @@ class ClanMemberController {
                     $kanbanColumns['hoy'][] = $task;
                 } elseif ($daysUntilDue <= 7) {
                     $kanbanColumns['1_semana'][] = $task;
-                } else {
-                    // TODAS las demás tareas van a 2+ semanas - SIN LÍMITE
+                } elseif ($daysUntilDue <= 14) {
+                    // Solo tareas entre 8-14 días van a 2 semanas
                     $kanbanColumns['2_semanas'][] = $task;
                 }
+                // Las tareas con más de 14 días no se muestran en el Kanban
             }
             
             // Log del resultado final

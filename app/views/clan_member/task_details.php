@@ -1506,8 +1506,20 @@ function showSubtaskComments(subtaskId) {
                             <div id="subtask-comment-${subtaskId}-emoji-picker" class="emoji-picker-container" style="display: none;"></div>
                         </div>
                         <input type="hidden" id="subtask-comment-content-${subtaskId}" />
+                        <div id="file-preview-${subtaskId}" class="file-preview" style="display: none; margin: 10px 0; padding: 10px; background: #f0f9ff; border: 1px solid #0ea5e9; border-radius: 6px;">
+                            <div style="display: flex; align-items: center; justify-content: space-between;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <i class="fas fa-file" style="color: #0ea5e9;"></i>
+                                    <span id="file-name-${subtaskId}" style="color: #0369a1; font-size: 14px;"></span>
+                                    <span id="file-size-${subtaskId}" style="color: #64748b; font-size: 12px;"></span>
+                                </div>
+                                <button type="button" onclick="removeAttachment(${subtaskId})" class="btn-icon-small" style="background: #fee2e2; color: #dc2626;" title="Quitar archivo">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
                         <div class="comment-actions">
-                            <input type="file" id="subtask-comment-file-${subtaskId}" style="display: none;" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif">
+                            <input type="file" id="subtask-comment-file-${subtaskId}" style="display: none;" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif" onchange="showFilePreview(${subtaskId})">
                             <button type="button" onclick="document.getElementById('subtask-comment-file-${subtaskId}').click()" class="btn btn-secondary">
                                 <i class="fas fa-paperclip"></i> Adjuntar
                             </button>
@@ -1574,6 +1586,39 @@ function showSubtaskAttachments(subtaskId) {
     
     document.body.appendChild(modal);
     loadSubtaskAttachments(subtaskId);
+}
+
+// Mostrar vista previa del archivo adjunto
+function showFilePreview(subtaskId) {
+    const fileInput = document.getElementById(`subtask-comment-file-${subtaskId}`);
+    const filePreview = document.getElementById(`file-preview-${subtaskId}`);
+    const fileName = document.getElementById(`file-name-${subtaskId}`);
+    const fileSize = document.getElementById(`file-size-${subtaskId}`);
+    
+    if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        fileName.textContent = file.name;
+        
+        // Formatear tamaño del archivo
+        const sizeInKB = (file.size / 1024).toFixed(2);
+        const sizeInMB = (file.size / (1024 * 1024)).toFixed(2);
+        fileSize.textContent = file.size > 1024 * 1024 ? `(${sizeInMB} MB)` : `(${sizeInKB} KB)`;
+        
+        filePreview.style.display = 'block';
+    }
+}
+
+// Quitar archivo adjunto
+function removeAttachment(subtaskId) {
+    const fileInput = document.getElementById(`subtask-comment-file-${subtaskId}`);
+    const filePreview = document.getElementById(`file-preview-${subtaskId}`);
+    
+    if (fileInput) {
+        fileInput.value = '';
+    }
+    if (filePreview) {
+        filePreview.style.display = 'none';
+    }
 }
 
 function loadSubtaskComments(subtaskId) {
@@ -1825,6 +1870,12 @@ function addSubtaskCommentWithText(subtaskId, commentText, attachmentId = null) 
                 const fileInputToClean = document.getElementById(`subtask-comment-file-${subtaskId}`);
                 if (fileInputToClean) {
                     fileInputToClean.value = '';
+                }
+                
+                // Limpiar vista previa del archivo
+                const filePreview = document.getElementById(`file-preview-${subtaskId}`);
+                if (filePreview) {
+                    filePreview.style.display = 'none';
                 }
                 
                 // Recargar comentarios y hacer scroll al final

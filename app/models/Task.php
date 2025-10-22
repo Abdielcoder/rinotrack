@@ -677,7 +677,7 @@ class Task {
                 $commentIds = array_column($comments, 'comment_id');
                 if (!empty($commentIds)) {
                     $in = implode(',', array_fill(0, count($commentIds), '?'));
-                    $stmtA = $this->db->prepare("SELECT comment_id, file_name, file_path, file_type, uploaded_at FROM Task_Attachments WHERE comment_id IN ($in)");
+                    $stmtA = $this->db->prepare("SELECT attachment_id, comment_id, file_name, file_path, file_type, uploaded_at FROM Task_Attachments WHERE comment_id IN ($in)");
                     $stmtA->execute($commentIds);
                     $rows = $stmtA->fetchAll();
                     $byComment = [];
@@ -700,12 +700,13 @@ class Task {
                     $commentIds = array_column($comments, 'comment_id');
                     if (!empty($commentIds)) {
                         $in = implode(',', array_fill(0, count($commentIds), '?'));
-                        $stmtB = $this->db->prepare("SELECT comment_id, file_name, file_path, uploaded_at FROM Task_Comment_Attachments WHERE comment_id IN ($in)");
+                        $stmtB = $this->db->prepare("SELECT attachment_id, comment_id, file_name, file_path, uploaded_at FROM Task_Comment_Attachments WHERE comment_id IN ($in)");
                         $stmtB->execute($commentIds);
                         $rowsB = $stmtB->fetchAll();
                         $byCommentB = [];
                         foreach ($rowsB as $r) {
                             $byCommentB[$r['comment_id']][] = [
+                                'attachment_id' => $r['attachment_id'] ?? null,
                                 'comment_id' => $r['comment_id'],
                                 'file_name' => $r['file_name'],
                                 'file_path' => $r['file_path'],
@@ -970,6 +971,7 @@ class Task {
                 AND (t.due_date IS NULL OR t.due_date >= CURDATE())
                 AND (p.is_personal IS NULL OR p.is_personal != 1 OR (p.is_personal = 1 AND p.created_by_user_id = ?))
                 AND (t.is_personal IS NULL OR t.is_personal != 1 OR (t.is_personal = 1 AND t.created_by_user_id = ?))
+                AND (t.is_recurrent = 0 OR t.is_recurrent IS NULL OR t.parent_recurrent_task_id IS NOT NULL)
                 ORDER BY t.due_date ASC
             ");
             
@@ -1931,6 +1933,7 @@ class Task {
                     )
                     AND (t.is_subtask = 0 OR t.is_subtask IS NULL)
                     AND t.status != 'completed'
+                    AND (t.is_recurrent = 0 OR t.is_recurrent IS NULL OR t.parent_recurrent_task_id IS NOT NULL)
                 ORDER BY 
                     t.task_id DESC
             ";

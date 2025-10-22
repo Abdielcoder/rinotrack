@@ -6564,14 +6564,17 @@ class ClanLeaderController {
             // Manejar tanto JSON como FormData
             $subtaskId = null;
             $commentText = '';
+            $attachmentId = null;
             
             if ($_SERVER['CONTENT_TYPE'] && strpos($_SERVER['CONTENT_TYPE'], 'application/json') !== false) {
                 $input = json_decode(file_get_contents('php://input'), true);
                 $subtaskId = $input['subtask_id'] ?? null;
                 $commentText = trim($input['comment_text'] ?? '');
+                $attachmentId = $input['attachment_id'] ?? null;
             } else {
                 $subtaskId = $_POST['subtask_id'] ?? null;
                 $commentText = trim($_POST['comment_text'] ?? '');
+                $attachmentId = $_POST['attachment_id'] ?? null;
             }
 
             if (!$subtaskId || !$commentText) {
@@ -6590,6 +6593,11 @@ class ClanLeaderController {
             );
 
             if ($commentId) {
+                // Si hay un attachment_id, vincularlo al comentario
+                if ($attachmentId) {
+                    $this->subtaskModel->linkAttachmentToComment($attachmentId, $commentId);
+                }
+                
                 echo json_encode([
                     'success' => true, 
                     'message' => 'Comentario agregado exitosamente',
@@ -6690,7 +6698,7 @@ class ClanLeaderController {
                 $subtaskId,
                 $userId,
                 $fileInfo['original_name'],
-                $fileInfo['public_path'],
+                $fileInfo['file_path'],
                 $fileInfo['file_size'],
                 $fileInfo['file_type'],
                 $description,
@@ -6741,6 +6749,59 @@ class ClanLeaderController {
             error_log("Error en getSubtaskAttachments: " . $e->getMessage());
             http_response_code(500);
             echo json_encode(['success' => false, 'message' => 'Error interno del servidor']);
+        }
+    }
+
+    /**
+     * Obtener conteos de comentarios y adjuntos de una subtarea
+     */
+    public function getSubtaskCounts() {
+        // SIN RESTRICCIONES - TODOS PUEDEN VER CONTEOS
+        // QUITADO - Sin verificación de acceso
+
+        try {
+            $subtaskId = $_GET['subtask_id'] ?? null;
+
+            if (!$subtaskId) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Subtarea ID requerido']);
+                return;
+            }
+
+            $counts = $this->subtaskModel->getSubtaskCounts($subtaskId);
+            echo json_encode(['success' => true, 'counts' => $counts]);
+
+        } catch (Exception $e) {
+            error_log("Error en getSubtaskCounts (leader): " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error interno del servidor']);
+        }
+    }
+
+    /**
+     * Corregir rutas de archivos adjuntos
+     */
+    public function fixAttachmentPaths() {
+        try {
+            if (!$this->subtaskModel) {
+                throw new Exception("Modelo de subtarea no disponible");
+            }
+            
+            $updated = $this->subtaskModel->fixAttachmentPaths();
+            
+            echo json_encode([
+                'success' => true,
+                'message' => "Se corrigieron {$updated} rutas de archivos adjuntos",
+                'updated_count' => $updated
+            ]);
+            
+        } catch (Exception $e) {
+            error_log("Error en fixAttachmentPaths: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error al corregir rutas: ' . $e->getMessage()
+            ]);
         }
     }
 
@@ -6814,35 +6875,6 @@ class ClanLeaderController {
         }
     }
 
-    /**
-     * Obtener conteos de comentarios y adjuntos de una subtarea
-     */
-    public function getSubtaskCounts() {
-        $this->requireAuth();
-        if (!$this->hasClanLeaderAccess()) {
-            http_response_code(403);
-            echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
-            exit;
-        }
-
-        try {
-            $subtaskId = $_GET['subtask_id'] ?? null;
-
-            if (!$subtaskId) {
-                http_response_code(400);
-                echo json_encode(['success' => false, 'message' => 'Subtarea ID requerido']);
-                return;
-            }
-
-            $counts = $this->subtaskModel->getSubtaskCounts($subtaskId);
-            echo json_encode(['success' => true, 'counts' => $counts]);
-
-        } catch (Exception $e) {
-            error_log("Error en getSubtaskCounts: " . $e->getMessage());
-            http_response_code(500);
-            echo json_encode(['success' => false, 'message' => 'Error interno del servidor']);
-        }
-    }
 
     /**
      * Guardar estado de checkbox en comentario
