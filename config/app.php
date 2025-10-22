@@ -4,8 +4,8 @@
  */
 
 // Configuración de la aplicación
-define('APP_NAME', 'RinoTrack');
-define('APP_URL', 'https://rinotrack.rinorisk.com/rinotrack/public/');
+define('APP_NAME', 'Polaris');
+define('APP_URL', 'https://rinotrack.rinorisk.com/desarrollo/rinotrack/public/');
 define('APP_DEBUG', true);
 
 // Configuración de zona horaria
@@ -15,6 +15,7 @@ date_default_timezone_set('America/Mexico_City');
 ini_set('session.cookie_httponly', 1);
 ini_set('session.use_only_cookies', 1);
 ini_set('session.cookie_secure', 0); // Cambiar a 1 en HTTPS
+ini_set('session.cookie_samesite', 'Lax'); // Agregar configuración de SameSite
 
 // Configuración de errores (solo en desarrollo)
 if (APP_DEBUG) {
@@ -28,6 +29,8 @@ if (APP_DEBUG) {
 
 // Incluir archivos de configuración
 require_once __DIR__ . '/database.php';
+// Configuración de correo (SMTP)
+require_once __DIR__ . '/mail.php';
 
 // Iniciar sesión si no está iniciada
 if (session_status() === PHP_SESSION_NONE) {

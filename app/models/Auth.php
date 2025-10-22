@@ -70,7 +70,7 @@ class Auth {
             $stmt->execute([$userId, hash('sha256', $remember_token)]);
             
             // Establecer cookie (30 días)
-            setcookie('remember_token', $remember_token, time() + (30 * 24 * 60 * 60), '/', '', false, true);
+            setcookie('remember_token', $remember_token, time() + (30 * 24 * 60 * 60), '/', '', false, false);
         } catch (PDOException $e) {
             error_log("Error al configurar token de recordar: " . $e->getMessage());
         }
@@ -80,7 +80,71 @@ class Auth {
      * Verificar si el usuario está autenticado
      */
     public function isLoggedIn() {
-        return isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
+        // Verificar sesión activa
+        if (isset($_SESSION['user_id']) && !empty($_SESSION['user_id'])) {
+            return true;
+        }
+        
+        // Verificar token de "recordarme"
+        if (isset($_COOKIE['remember_token'])) {
+            $user = $this->checkRememberToken($_COOKIE['remember_token']);
+            if ($user) {
+                $this->createSession($user);
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Verificar token de "recordarme" y devolver usuario si es válido
+     */
+    private function checkRememberToken($token) {
+        try {
+            $hashedToken = hash('sha256', $token);
+            
+            $stmt = $this->db->prepare("
+                SELECT u.* 
+                FROM Users u 
+                INNER JOIN remember_tokens rt ON u.user_id = rt.user_id 
+                WHERE rt.token = ? 
+                AND rt.expires_at > NOW() 
+                AND u.status = 'active'
+            ");
+            $stmt->execute([$hashedToken]);
+            $user = $stmt->fetch();
+            
+            if ($user) {
+                // Renovar token por 30 días más
+                $this->renewRememberToken($user['user_id'], $hashedToken);
+                return $user;
+            }
+            
+            return null;
+        } catch (PDOException $e) {
+            error_log("Error al verificar token de recordar: " . $e->getMessage());
+            return null;
+        }
+    }
+    
+    /**
+     * Renovar token de "recordarme"
+     */
+    private function renewRememberToken($userId, $hashedToken) {
+        try {
+            $stmt = $this->db->prepare("
+                UPDATE remember_tokens 
+                SET expires_at = DATE_ADD(NOW(), INTERVAL 30 DAY) 
+                WHERE user_id = ? AND token = ?
+            ");
+            $stmt->execute([$userId, $hashedToken]);
+            
+            // Renovar cookie también
+            setcookie('remember_token', $_COOKIE['remember_token'], time() + (30 * 24 * 60 * 60), '/', '', false, false);
+        } catch (PDOException $e) {
+            error_log("Error al renovar token de recordar: " . $e->getMessage());
+        }
     }
     
     /**
@@ -103,7 +167,7 @@ class Auth {
         // Eliminar token de "recordarme" si existe
         if (isset($_COOKIE['remember_token']) && $user) {
             $this->removeRememberToken($user['user_id']);
-            setcookie('remember_token', '', time() - 3600, '/', '', false, true);
+            setcookie('remember_token', '', time() - 3600, '/', '', false, false);
         }
         
         // Destruir todas las variables de sesión
@@ -182,6 +246,45 @@ class Auth {
         } catch (PDOException $e) {
             error_log("Error al verificar intentos de login: " . $e->getMessage());
             return true; // En caso de error, permitir el intento
+        }
+    }
+
+    /**
+     * Limpiar tokens de "recordarme" expirados
+     */
+    public function cleanExpiredTokens() {
+        try {
+            $stmt = $this->db->prepare("DELETE FROM remember_tokens WHERE expires_at < NOW()");
+            $stmt->execute();
+            
+            $deletedCount = $stmt->rowCount();
+            if ($deletedCount > 0) {
+                error_log("Limpiados $deletedCount tokens de recordar expirados");
+            }
+        } catch (PDOException $e) {
+            error_log("Error al limpiar tokens expirados: " . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Obtener información del token de "recordarme" del usuario actual
+     */
+    public function getRememberTokenInfo() {
+        if (!$this->isLoggedIn()) {
+            return null;
+        }
+        
+        try {
+            $stmt = $this->db->prepare("
+                SELECT token, expires_at 
+                FROM remember_tokens 
+                WHERE user_id = ?
+            ");
+            $stmt->execute([$_SESSION['user_id']]);
+            return $stmt->fetch();
+        } catch (PDOException $e) {
+            error_log("Error al obtener información del token: " . $e->getMessage());
+            return null;
         }
     }
 }

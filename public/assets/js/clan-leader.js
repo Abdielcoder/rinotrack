@@ -357,13 +357,17 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Funciones para el calendario de tareas
-let tasksData = [];
-let currentDate = new Date();
+if (typeof window.clanLeaderTasksData === 'undefined') {
+    window.clanLeaderTasksData = [];
+}
+if (typeof window.clanLeaderCurrentDate === 'undefined') {
+    window.clanLeaderCurrentDate = new Date();
+}
 
 // Generar calendario
 function generateCalendar() {
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
+    const year = window.clanLeaderCurrentDate.getFullYear();
+    const month = window.clanLeaderCurrentDate.getMonth();
     
     // Actualizar título del mes
     const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
@@ -456,7 +460,7 @@ function generateCalendar() {
 function getTasksForDate(date) {
     const dateStr = date.toISOString().split('T')[0];
     
-    const filteredTasks = tasksData.filter(taskData => {
+    const filteredTasks = window.clanLeaderTasksData.filter(taskData => {
         const taskDate = taskData.task.due_date;
         return taskDate === dateStr;
     });
@@ -527,6 +531,18 @@ function showTasksForDate(date, tasks) {
         });
     }
     
+    // Agregar botón "Agregar tarea" al final del modal
+    const addTaskButton = document.createElement('div');
+    addTaskButton.className = 'modal-add-task-section';
+    addTaskButton.innerHTML = `
+        <button class="btn-add-task-modal" onclick="openAddTaskModal('${date.toISOString().split('T')[0]}')">
+            <i class="fas fa-plus"></i>
+            Agregar tarea
+        </button>
+    `;
+    
+    modalTaskList.appendChild(addTaskButton);
+    
     modal.classList.add('show');
 }
 
@@ -540,12 +556,12 @@ function closeTaskModal() {
 
 // Navegación del calendario
 function previousMonth() {
-    currentDate.setMonth(currentDate.getMonth() - 1);
+    window.clanLeaderCurrentDate.setMonth(window.clanLeaderCurrentDate.getMonth() - 1);
     generateCalendar();
 }
 
 function nextMonth() {
-    currentDate.setMonth(currentDate.getMonth() + 1);
+    window.clanLeaderCurrentDate.setMonth(window.clanLeaderCurrentDate.getMonth() + 1);
     generateCalendar();
 }
 
@@ -571,7 +587,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Función para establecer los datos de tareas (llamada desde PHP)
 function setTasksData(data) {
-    tasksData = data;
+    window.clanLeaderTasksData = data;
     if (document.getElementById('calendarDays')) {
         generateCalendar();
     }
@@ -1080,156 +1096,50 @@ function getIconForType(type) {
     return icons[type] || 'exclamation-triangle';
 }
 
-// Función para agregar comentarios a tareas
-function addComment() {
-    const commentText = document.getElementById('newComment').value.trim();
-    if (!commentText) {
-        showNotification('Por favor escribe un comentario', 'error');
-        return;
-    }
-    
-    // Obtener el ID de la tarea directamente del HTML usando PHP
-    const taskIdElement = document.querySelector('[data-task-id]');
-    let taskId = null;
-    
-    if (taskIdElement) {
-        taskId = taskIdElement.getAttribute('data-task-id');
-    } else {
-        // Fallback: obtener del botón de eliminar
-        const deleteButton = document.querySelector('button[onclick*="deleteTask"]');
-        if (deleteButton) {
-            const onclickAttr = deleteButton.getAttribute('onclick');
-            const match = onclickAttr.match(/deleteTask\((\d+)\)/);
-            if (match) {
-                taskId = match[1];
-            }
-        }
-    }
-    
-    if (!taskId) {
-        showNotification('Error: No se pudo obtener el ID de la tarea', 'error');
-        return;
-    }
-    
-    console.log('Enviando comentario para tarea:', taskId);
-    
-    // Enviar comentario usando FormData (incluye adjunto si existe)
-    const formData = new FormData();
-    formData.append('task_id', taskId);
-    formData.append('comment_text', commentText);
-    const fileInput = document.getElementById('fileAttachment');
-    if (fileInput && fileInput.files && fileInput.files[0]) {
-        formData.append('attachment', fileInput.files[0]);
-    }
-    
-    fetch('?route=clan_leader/add-task-comment', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => {
-        console.log('Respuesta del servidor:', response.status);
-        return response.text().then(text => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status} - ${text}`);
-            }
-            try {
-                return JSON.parse(text);
-            } catch (e) {
-                console.error('Respuesta no JSON:', text);
-                throw new Error('La respuesta del servidor no es JSON válido');
-            }
-        });
-    })
-    .then(data => {
-        console.log('Datos de respuesta:', data);
-        if (data.success) {
-            document.getElementById('newComment').value = '';
-            if (fileInput) {
-                fileInput.value = '';
-                const attachmentPreview = document.getElementById('attachmentPreview');
-                if (attachmentPreview) attachmentPreview.style.display = 'none';
-            }
-            showNotification('Comentario agregado exitosamente', 'success');
-            // Recargar la página para mostrar el nuevo comentario
-            setTimeout(() => location.reload(), 1000);
-        } else {
-            showNotification('Error al agregar comentario: ' + data.message, 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Error completo:', error);
-        showNotification('Error al agregar comentario: ' + error.message, 'error');
-    });
-}
+// (Obsoleto) Versión anterior de comentarios y adjuntos eliminada para evitar duplicados.
 
-
-
-// Función para manejar archivos adjuntos
-function handleFileAttachment(input) {
-    const file = input.files[0];
-    if (file) {
-        const attachmentPreview = document.getElementById('attachmentPreview');
-        const attachmentName = document.getElementById('attachmentName');
-        
-        if (attachmentPreview && attachmentName) {
-            attachmentName.textContent = file.name;
-            attachmentPreview.style.display = 'block';
-        }
-    }
-}
-
-// Función para remover archivo adjunto
-function removeAttachment() {
-    const fileInput = document.getElementById('fileAttachment');
-    const attachmentPreview = document.getElementById('attachmentPreview');
-    
-    if (fileInput) {
-        fileInput.value = '';
-    }
-    
-    if (attachmentPreview) {
-        attachmentPreview.style.display = 'none';
-    }
-}
-
-// Función para mostrar notificaciones
+// Función para mostrar notificaciones - DESACTIVADA para evitar duplicados
+// La función showNotification ahora se maneja desde task_details.php
+/*
 function showNotification(message, type = 'info') {
-    // Crear notificación
-    const notification = document.createElement('div');
-    notification.className = `notification notification-${type}`;
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        padding: 12px 20px;
-        border-radius: 6px;
-        color: white;
-        font-weight: 600;
-        z-index: 10000;
-        animation: slideIn 0.3s ease;
-    `;
-    
-    if (type === 'success') {
-        notification.style.background = '#10b981';
-    } else if (type === 'error') {
-        notification.style.background = '#ef4444';
-    } else {
-        notification.style.background = '#3b82f6';
+    // Crear notificación si no existe
+    let notification = document.getElementById('notification');
+    if (!notification) {
+        const notificationHTML = `
+            <div id="notification" class="notification" style="display: none;">
+                <div class="notification-content">
+                    <span id="notificationMessage"></span>
+                    <button onclick="closeNotification()" class="notification-close">&times;</button>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', notificationHTML);
+        notification = document.getElementById('notification');
     }
     
-    notification.textContent = message;
-    document.body.appendChild(notification);
+    // Configurar notificación
+    document.getElementById('notificationMessage').textContent = message;
     
-    // Remover después de 3 segundos
+    // Configurar estilos según tipo
+    notification.className = `notification notification-${type}`;
+    
+    // Mostrar notificación
+    notification.style.display = 'block';
+    
+    // Ocultar automáticamente después de 5 segundos
     setTimeout(() => {
-        notification.style.animation = 'slideOut 0.3s ease';
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.parentNode.removeChild(notification);
-            }
-        }, 300);
-    }, 3000);
+        closeNotification();
+    }, 5000);
 }
+
+// Función para cerrar notificación
+function closeNotification() {
+    const notification = document.getElementById('notification');
+    if (notification) {
+        notification.style.display = 'none';
+    }
+}
+*/
 
 // === Utilidades globales para adjuntos en comentarios ===
 // Asegurar disponibilidad global aunque la vista no declare estas funciones
@@ -1440,3 +1350,662 @@ confirmationModalStyles.textContent = `
 
 // Agregar estilos al head
 document.head.appendChild(confirmationModalStyles); 
+
+// Variables globales para task details
+let selectedFiles = [];
+let selectedUsers = [];
+let isCommentSubmitting = false;
+
+function setCommentSubmitting(isLoading) {
+    const form = document.querySelector('.add-comment-form');
+    const sendBtn = document.querySelector('.add-comment-form .btn.btn-primary');
+    const textarea = document.getElementById('newComment');
+    const fileInput = document.getElementById('fileAttachment');
+    const attachBtn = document.querySelector('.add-comment-form .btn-attachment');
+    if (!sendBtn) return;
+
+    if (isLoading) {
+        isCommentSubmitting = true;
+        // Guardar HTML original para restaurar después
+        if (!sendBtn.dataset.originalHtml) {
+            sendBtn.dataset.originalHtml = sendBtn.innerHTML;
+        }
+        sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+        sendBtn.disabled = true;
+        if (textarea) textarea.disabled = true;
+        if (fileInput) fileInput.disabled = true;
+        if (attachBtn) attachBtn.classList.add('disabled');
+        if (form) form.style.opacity = '0.7';
+    } else {
+        isCommentSubmitting = false;
+        if (sendBtn.dataset.originalHtml) {
+            sendBtn.innerHTML = sendBtn.dataset.originalHtml;
+        }
+        sendBtn.disabled = false;
+        if (textarea) textarea.disabled = false;
+        if (fileInput) fileInput.disabled = false;
+        if (attachBtn) attachBtn.classList.remove('disabled');
+        if (form) form.style.opacity = '';
+    }
+}
+ 
+// Función para eliminar tarea
+function deleteTask(taskId) {
+    showConfirmationModal({
+        title: 'Confirmar Eliminación',
+        message: '¿Estás seguro de que quieres eliminar esta tarea?',
+        type: 'warning',
+        confirmText: 'Eliminar',
+        cancelText: 'Cancelar',
+        onConfirm: () => {
+            fetch('?route=clan_leader/delete-task', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'task_id=' + taskId
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('Tarea eliminada exitosamente', 'success');
+                    setTimeout(() => {
+                        window.location.href = '?route=clan_leader/tasks';
+                    }, 1000);
+                } else {
+                    showNotification('Error al eliminar la tarea: ' + data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Error al eliminar la tarea', 'error');
+            });
+        }
+    });
+}
+
+// Función para agregar comentario con progreso de subida
+function addComment() {
+    if (isCommentSubmitting) return;
+    const commentTextarea = document.getElementById('newComment');
+    const commentText = (commentTextarea ? commentTextarea.value : '').trim();
+    if (!commentText) {
+        showNotification('Por favor escribe un comentario', 'error');
+        return;
+    }
+
+    const container = document.querySelector('.task-details-container');
+    const taskId = container ? container.dataset.taskId : null;
+    if (!taskId) {
+        showNotification('No se pudo obtener el ID de la tarea', 'error');
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('task_id', taskId);
+    formData.append('comment_text', commentText);
+    if (selectedFiles && selectedFiles.length > 0) {
+        selectedFiles.forEach(file => formData.append('attachments[]', file));
+    }
+
+    // Crear/asegurar UI de progreso
+    let progressWrap = document.getElementById('uploadProgressWrap');
+    if (!progressWrap) {
+        const form = document.querySelector('.add-comment-form');
+        if (form) {
+            form.insertAdjacentHTML('beforeend', `
+                <div id="uploadProgressWrap" style="margin-top:8px; display:none;">
+                  <div style="height:6px;background:#e5e7eb;border-radius:999px;overflow:hidden;">
+                    <div id="uploadProgressBar" style="height:6px;width:0%;background:#3b82f6;transition:width .2s ease;"></div>
+                  </div>
+                  <div id="uploadProgressText" style="margin-top:6px;font-size:12px;color:#6b7280;">Preparando subida...</div>
+                </div>
+            `);
+            progressWrap = document.getElementById('uploadProgressWrap');
+        }
+    }
+    const progressBar = document.getElementById('uploadProgressBar');
+    const progressText = document.getElementById('uploadProgressText');
+    if (progressWrap && progressBar && progressText) {
+        progressBar.style.width = '0%';
+        progressText.textContent = 'Iniciando subida...';
+        progressWrap.style.display = 'block';
+    }
+
+    setCommentSubmitting(true);
+
+    // Usar XHR para obtener progreso de subida
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '?route=clan_leader/add-task-comment', true);
+
+    xhr.upload.onprogress = function (e) {
+        if (e.lengthComputable && progressBar && progressText) {
+            const percent = Math.round((e.loaded / e.total) * 100);
+            progressBar.style.width = percent + '%';
+            progressText.textContent = `Subiendo archivos... ${percent}%`;
+        }
+    };
+
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4) {
+            try {
+                const data = JSON.parse(xhr.responseText || '{}');
+                if (xhr.status >= 200 && xhr.status < 300 && data.success) {
+                    if (Array.isArray(data.attachments_saved)) {
+                        const savedCount = data.attachments_saved.length;
+                        const receivedCount = Array.isArray(data.attachments_received) ? data.attachments_received.length : savedCount;
+                        const msg = savedCount > 0 ? `Comentario y ${savedCount}/${receivedCount} adjuntos guardados` : 'Comentario agregado';
+                        showNotification(msg, 'success');
+                    } else {
+                        showNotification('Comentario agregado exitosamente', 'success');
+                    }
+                    if (commentTextarea) commentTextarea.value = '';
+                    removeAttachment();
+                    setTimeout(() => location.reload(), 800);
+                } else {
+                    const message = (data && data.message) ? data.message : 'Error al agregar comentario';
+                    showNotification(message, 'error');
+                }
+            } catch (err) {
+                showNotification('Error de respuesta del servidor', 'error');
+            } finally {
+                setCommentSubmitting(false);
+                if (progressWrap) progressWrap.style.display = 'none';
+            }
+        }
+    };
+
+    xhr.onerror = function () {
+        showNotification('Error de red al enviar el comentario', 'error');
+        setCommentSubmitting(false);
+        if (progressWrap) progressWrap.style.display = 'none';
+    };
+
+    xhr.send(formData);
+}
+
+// Función para manejar adjuntos (múltiples)
+function handleFileAttachment(input) {
+    if (input.files && input.files.length > 0) {
+        // Acumular archivos seleccionados en múltiples clics
+        const incoming = Array.from(input.files);
+        const existingKeys = new Set(selectedFiles.map(f => `${f.name}|${f.size}|${f.lastModified || 0}`));
+        incoming.forEach(f => {
+            const key = `${f.name}|${f.size}|${f.lastModified || 0}`;
+            if (!existingKeys.has(key)) {
+                selectedFiles.push(f);
+                existingKeys.add(key);
+            }
+        });
+
+        // Limpiar el input para permitir volver a seleccionar el mismo archivo si se desea
+        try { input.value = ''; } catch (e) { /* ignore */ }
+
+        const nameSpan = document.getElementById('attachmentName');
+        const preview = document.getElementById('attachmentPreview');
+        if (nameSpan) {
+            if (selectedFiles.length === 1) {
+                nameSpan.textContent = selectedFiles[0].name;
+            } else {
+                const previewNames = selectedFiles.slice(0, 3).map(f => f.name).join(', ');
+                const more = selectedFiles.length > 3 ? ` y ${selectedFiles.length - 3} más` : '';
+                nameSpan.textContent = `${selectedFiles.length} archivos: ${previewNames}${more}`;
+            }
+        }
+        if (preview) preview.style.display = 'block';
+    }
+}
+
+// Función para remover adjuntos
+function removeAttachment() {
+    selectedFiles = [];
+    const preview = document.getElementById('attachmentPreview');
+    const input = document.getElementById('fileAttachment');
+    if (preview) preview.style.display = 'none';
+    if (input) input.value = '';
+}
+
+// Función para abrir modal de agregar tarea desde el calendario
+function openAddTaskModal(selectedDate) {
+    // Cerrar el modal actual de tareas
+    closeTaskModal();
+    
+    // Mostrar el modal de creación de tareas
+    showCreateTaskModal(selectedDate);
+}
+
+// Función para mostrar el modal de creación de tareas
+function showCreateTaskModal(selectedDate) {
+    // Crear el modal si no existe
+    let modal = document.getElementById('createTaskModal');
+    if (!modal) {
+        createTaskModalHTML();
+        modal = document.getElementById('createTaskModal');
+    }
+    
+    // Establecer la fecha preseleccionada
+    const dateInput = document.getElementById('createTaskDueDate');
+    const recurrenceStartInput = document.getElementById('createTaskRecurrenceStartDate');
+    
+    if (selectedDate) {
+        // Establecer en fecha límite (para tareas normales)
+        if (dateInput) {
+            dateInput.value = selectedDate;
+        }
+        
+        // También establecer en fecha de inicio de recurrencia (para tareas recurrentes)
+        if (recurrenceStartInput) {
+            recurrenceStartInput.value = selectedDate;
+        }
+    }
+    
+    // Mostrar el modal
+    modal.style.display = 'flex';
+    setTimeout(() => {
+        modal.classList.add('show');
+    }, 10);
+}
+
+// Función para crear el HTML del modal de creación de tareas
+function createTaskModalHTML() {
+    const modalHTML = `
+        <div id="createTaskModal" class="create-task-modal" style="display: none;">
+            <div class="create-task-modal-content">
+                <div class="create-task-modal-header">
+                    <h3>
+                        <i class="fas fa-plus-circle"></i>
+                        Crear Nueva Tarea
+                    </h3>
+                    <button class="create-task-modal-close" onclick="closeCreateTaskModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <div class="create-task-modal-body">
+                    <form id="createTaskForm">
+                        <!-- Título de la tarea -->
+                        <div class="form-group">
+                            <label for="createTaskTitle">Título de la tarea *</label>
+                            <input type="text" id="createTaskTitle" name="task_title" placeholder="Título de la tarea *" required>
+                        </div>
+                        
+                        <!-- Fecha límite y Proyecto -->
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="createTaskDueDate">Fecha límite *</label>
+                                <div class="date-input-wrapper">
+                                    <input type="date" id="createTaskDueDate" name="task_due_date" required>
+                                    <i class="fas fa-calendar-alt"></i>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="createTaskProject">Proyecto/Concepto</label>
+                                <div class="select-wrapper">
+                                    <select id="createTaskProject" name="task_project">
+                                        <option value="">Seleccionar proyecto...</option>
+                                    </select>
+                                    <i class="fas fa-chevron-down"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Configuración de recurrencia -->
+                        <div class="form-group">
+                            <div class="checkbox-container">
+                                <input type="checkbox" id="createTaskIsRecurrent" name="is_recurrent" value="1" onchange="toggleCreateTaskRecurrenceFields()">
+                                <label for="createTaskIsRecurrent" class="checkbox-label">
+                                    <i class="fas fa-redo"></i>
+                                    Tarea Recurrente
+                                </label>
+                            </div>
+                            <small class="field-help">Las tareas recurrentes se crearán automáticamente en el rango de fechas especificado</small>
+                        </div>
+                        
+                        <div id="createTaskRecurrenceFields" class="recurrence-fields" style="display: none;">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="createTaskRecurrenceType">Tipo de Recurrencia *</label>
+                                    <div class="select-wrapper">
+                                        <select id="createTaskRecurrenceType" name="recurrence_type">
+                                            <option value="">Seleccionar...</option>
+                                            <option value="daily">Diaria</option>
+                                            <option value="weekly">Semanal</option>
+                                            <option value="monthly">Mensual</option>
+                                        </select>
+                                        <i class="fas fa-chevron-down"></i>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="createTaskRecurrenceStartDate">Fecha de Inicio *</label>
+                                    <div class="date-input-wrapper">
+                                        <input type="date" id="createTaskRecurrenceStartDate" name="recurrence_start_date">
+                                        <i class="fas fa-calendar-alt"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="createTaskRecurrenceEndDate">Fecha de Vigencia (Opcional)</label>
+                                    <div class="date-input-wrapper">
+                                        <input type="date" id="createTaskRecurrenceEndDate" name="recurrence_end_date">
+                                        <i class="fas fa-calendar-alt"></i>
+                                    </div>
+                                    <small class="field-help">Si no se especifica, la recurrencia será indefinida. Las tareas se crearán desde la fecha de inicio hasta esta fecha.</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Descripción -->
+                        <div class="form-group">
+                            <label for="createTaskDescription">Descripción</label>
+                            <textarea id="createTaskDescription" name="task_description" rows="3" placeholder="Descripción de la tarea..."></textarea>
+                        </div>
+                        
+                        <!-- Prioridad -->
+                        <div class="form-group">
+                            <label for="createTaskPriority">Prioridad</label>
+                            <div class="select-wrapper">
+                                <select id="createTaskPriority" name="priority">
+                                    <option value="">Seleccionar prioridad...</option>
+                                    <option value="low">Baja</option>
+                                    <option value="medium">Media</option>
+                                    <option value="high">Alta</option>
+                                    <option value="critical">Crítica</option>
+                                </select>
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                        </div>
+                        
+                        <!-- Asignar a colaboradores -->
+                        <div class="form-group">
+                            <label for="createTaskAssignedMembers">Asignar a colaboradores *</label>
+                            <div class="select-wrapper">
+                                <select id="createTaskAssignedMembers" name="assigned_members[]" multiple required>
+                                    <!-- Los colaboradores se cargarán dinámicamente -->
+                                </select>
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                            <small class="field-help">Mantén presionado Ctrl (Cmd en Mac) para seleccionar múltiples colaboradores</small>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="create-task-modal-footer">
+                    <button type="button" class="btn-cancel" onclick="closeCreateTaskModal()">
+                        <i class="fas fa-times"></i>
+                        Cancelar
+                    </button>
+                    <button type="button" class="btn-create" onclick="submitCreateTask()">
+                        <i class="fas fa-plus"></i>
+                        Crear Tarea
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Cargar datos necesarios
+    loadCreateTaskData();
+}
+
+// Función para cargar datos necesarios para el modal
+function loadCreateTaskData() {
+    console.log('🔄 Cargando datos para el modal de creación de tareas...');
+    
+    // Cargar proyectos
+    fetch('?route=clan_leader/get-projects-for-modal')
+        .then(response => {
+            console.log('📡 Respuesta de proyectos:', response.status);
+            return response.json();
+        })
+        .then(data => {
+            console.log('📊 Datos de proyectos recibidos:', data);
+            if (data.success && data.projects) {
+                const projectSelect = document.getElementById('createTaskProject');
+                if (projectSelect) {
+                    console.log('✅ Cargando', data.projects.length, 'proyectos en el select');
+                    data.projects.forEach(project => {
+                        const option = document.createElement('option');
+                        option.value = project.project_id;
+                        option.textContent = project.project_name;
+                        projectSelect.appendChild(option);
+                    });
+                } else {
+                    console.error('❌ No se encontró el select de proyectos');
+                }
+            } else {
+                console.error('❌ Error en datos de proyectos:', data.message);
+            }
+        })
+        .catch(error => {
+            console.error('💥 Error cargando proyectos:', error);
+        });
+    
+    // Cargar colaboradores
+    fetch('?route=clan_leader/get-collaborators-for-modal')
+        .then(response => {
+            console.log('📡 Respuesta de colaboradores:', response.status);
+            return response.json();
+        })
+        .then(data => {
+            console.log('👥 Datos de colaboradores recibidos:', data);
+            if (data.success && data.collaborators) {
+                const collaboratorsSelect = document.getElementById('createTaskAssignedMembers');
+                if (collaboratorsSelect) {
+                    console.log('✅ Cargando', data.collaborators.length, 'colaboradores en el select');
+                    collaboratorsSelect.innerHTML = '';
+                    data.collaborators.forEach(collaborator => {
+                        const option = document.createElement('option');
+                        option.value = collaborator.user_id;
+                        option.textContent = collaborator.full_name;
+                        collaboratorsSelect.appendChild(option);
+                    });
+                } else {
+                    console.error('❌ No se encontró el select de colaboradores');
+                }
+            } else {
+                console.error('❌ Error en datos de colaboradores:', data.message);
+            }
+        })
+        .catch(error => {
+            console.error('💥 Error cargando colaboradores:', error);
+        });
+}
+
+// Función para obtener color del colaborador
+function getCollaboratorColor(userId) {
+    const colors = ['#667eea', '#48bb78', '#ed8936', '#e53e3e', '#9f7aea', '#38b2ac', '#a0aec0', '#f6e05e'];
+    return colors[userId % colors.length];
+}
+
+// Función para mostrar/ocultar campos de recurrencia en el modal de creación
+function toggleCreateTaskRecurrenceFields() {
+    const checkbox = document.getElementById('createTaskIsRecurrent');
+    const fields = document.getElementById('createTaskRecurrenceFields');
+    const dueDateField = document.getElementById('createTaskDueDate');
+    const recurrenceStartField = document.getElementById('createTaskRecurrenceStartDate');
+    const dueDateGroup = dueDateField ? dueDateField.closest('.form-group') : null;
+    
+    if (checkbox.checked) {
+        // Mostrar campos de recurrencia
+        fields.style.display = 'block';
+        
+        // Ocultar campo de fecha límite cuando es recurrente
+        if (dueDateGroup) {
+            dueDateGroup.style.display = 'none';
+        }
+        
+        // Quitar required y limpiar valor del campo de fecha límite
+        if (dueDateField) {
+            dueDateField.required = false;
+            dueDateField.removeAttribute('required');
+            // NO limpiar el valor, mantenerlo para referencia
+        }
+        
+        // Si la fecha de inicio de recurrencia está vacía, copiar la fecha límite
+        if (recurrenceStartField && !recurrenceStartField.value && dueDateField && dueDateField.value) {
+            recurrenceStartField.value = dueDateField.value;
+        }
+        
+        // Hacer requeridos los campos de recurrencia
+        document.getElementById('createTaskRecurrenceType').required = true;
+        document.getElementById('createTaskRecurrenceStartDate').required = true;
+    } else {
+        // Ocultar campos de recurrencia
+        fields.style.display = 'none';
+        
+        // Mostrar campo de fecha límite normal
+        if (dueDateGroup) {
+            dueDateGroup.style.display = 'block';
+        }
+        
+        // Restaurar required
+        if (dueDateField) {
+            dueDateField.required = true;
+            dueDateField.setAttribute('required', 'required');
+        }
+        
+        // Quitar requerimiento de campos de recurrencia
+        document.getElementById('createTaskRecurrenceType').required = false;
+        document.getElementById('createTaskRecurrenceStartDate').required = false;
+        
+        // Limpiar valores de recurrencia
+        document.getElementById('createTaskRecurrenceType').value = '';
+        document.getElementById('createTaskRecurrenceStartDate').value = '';
+        document.getElementById('createTaskRecurrenceEndDate').value = '';
+    }
+}
+
+
+// Función para cerrar el modal de creación de tareas
+function closeCreateTaskModal() {
+    const modal = document.getElementById('createTaskModal');
+    if (modal) {
+        modal.classList.remove('show');
+        setTimeout(() => {
+            modal.style.display = 'none';
+            // Limpiar formulario
+            document.getElementById('createTaskForm').reset();
+        }, 300);
+    }
+}
+
+// Función para enviar el formulario de creación de tareas
+function submitCreateTask() {
+    const form = document.getElementById('createTaskForm');
+    const formData = new FormData();
+    
+    // Validar campos requeridos
+    const title = document.getElementById('createTaskTitle').value.trim();
+    const dueDate = document.getElementById('createTaskDueDate').value;
+    const isRecurrent = document.getElementById('createTaskIsRecurrent').checked;
+    const recurrenceStart = document.getElementById('createTaskRecurrenceStartDate').value;
+    const assignedMembersSelect = document.getElementById('createTaskAssignedMembers');
+    const selectedMembers = Array.from(assignedMembersSelect.selectedOptions);
+    
+    if (!title) {
+        showToast('Por favor ingresa el título de la tarea', 'error');
+        return;
+    }
+    
+    // Validación de fecha según tipo de tarea
+    if (isRecurrent) {
+        if (!recurrenceStart) {
+            showToast('Por favor ingresa la fecha de inicio de recurrencia', 'error');
+            return;
+        }
+    } else {
+        if (!dueDate) {
+            showToast('Por favor selecciona una fecha límite', 'error');
+            return;
+        }
+    }
+    
+    if (selectedMembers.length === 0) {
+        showToast('Debes asignar al menos un colaborador', 'error');
+        return;
+    }
+    
+    // Recopilar datos del formulario
+    formData.append('task_title', title);
+    formData.append('task_due_date', dueDate || '');
+    formData.append('task_project', document.getElementById('createTaskProject').value);
+    formData.append('task_description', document.getElementById('createTaskDescription').value);
+    formData.append('priority', document.getElementById('createTaskPriority').value);
+    
+    // Agregar campos de recurrencia si aplica
+    if (isRecurrent) {
+        formData.append('is_recurrent', '1');
+        formData.append('recurrence_type', document.getElementById('createTaskRecurrenceType').value);
+        formData.append('recurrence_start_date', recurrenceStart);
+        formData.append('recurrence_end_date', document.getElementById('createTaskRecurrenceEndDate').value || '');
+    }
+    
+    // Agregar miembros asignados
+    selectedMembers.forEach(member => {
+        formData.append('assigned_members[]', member.value);
+    });
+    
+    // Agregar subtareas vacías
+    formData.append('subtasks', JSON.stringify([]));
+    
+    // Deshabilitar botón mientras se envía
+    const createBtn = document.querySelector('.btn-create');
+    const originalText = createBtn.innerHTML;
+    createBtn.disabled = true;
+    createBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creando...';
+    
+    // Enviar datos al servidor
+    fetch('?route=clan_leader/create-task', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast('Tarea creada exitosamente', 'success');
+            closeCreateTaskModal();
+            // Recargar la página para mostrar la nueva tarea
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        } else {
+            showToast(data.message || 'Error al crear la tarea', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Error al crear la tarea', 'error');
+    })
+    .finally(() => {
+        // Restaurar botón
+        createBtn.disabled = false;
+        createBtn.innerHTML = originalText;
+    });
+}
+
+// Event listeners para el modal de creación de tareas
+document.addEventListener('DOMContentLoaded', function() {
+    // Cerrar modal al hacer clic fuera de él
+    document.addEventListener('click', function(e) {
+        const modal = document.getElementById('createTaskModal');
+        if (modal && e.target === modal) {
+            closeCreateTaskModal();
+        }
+    });
+    
+    // Cerrar modal con tecla Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const modal = document.getElementById('createTaskModal');
+            if (modal && modal.style.display !== 'none') {
+                closeCreateTaskModal();
+            }
+        }
+    });
+});
+
+// Fin del archivo

@@ -105,10 +105,10 @@ class Role {
             $currentRole = $this->getUserRole($userId);
             $newRole = $this->findById($roleId);
             
-            // PROTECCIÓN CRÍTICA: No permitir degradar el rol del super admin existente
-            if ($currentRole && $currentRole['role_name'] === 'super_admin' && 
+            // PROTECCIÓN CRÍTICA: No permitir degradar el rol del super admin principal (ID 1)
+            if ($currentRole && $currentRole['role_name'] === 'super_admin' && $userId === 1 &&
                 (!$newRole || $newRole['role_name'] !== 'super_admin')) {
-                error_log("SECURITY WARNING: Intento de degradar rol del super admin (User ID: $userId). Operación bloqueada.");
+                error_log("SECURITY WARNING: Intento de degradar rol del super admin principal (User ID: $userId). Operación bloqueada.");
                 return false;
             }
             
@@ -158,15 +158,21 @@ class Role {
      */
     public function userHasMinimumRole($userId, $minimumRole) {
         try {
+            error_log("userHasMinimumRole: Checking user $userId for minimum role $minimumRole");
             $userRole = $this->getUserRole($userId);
             if (!$userRole) {
+                error_log("userHasMinimumRole: No role found for user $userId");
                 return false;
             }
             
+            error_log("userHasMinimumRole: User role = " . $userRole['role_name']);
             $userLevel = self::ROLE_HIERARCHY[$userRole['role_name']] ?? 999;
             $minimumLevel = self::ROLE_HIERARCHY[$minimumRole] ?? 999;
             
-            return $userLevel <= $minimumLevel;
+            error_log("userHasMinimumRole: User level = $userLevel, Minimum level = $minimumLevel");
+            $result = $userLevel <= $minimumLevel;
+            error_log("userHasMinimumRole: Result = " . ($result ? 'true' : 'false'));
+            return $result;
         } catch (Exception $e) {
             error_log("Error al verificar nivel de rol: " . $e->getMessage());
             return false;

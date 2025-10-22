@@ -6,6 +6,9 @@
 
     # EXCEPCIÓN: No aplicar las siguientes reglas a archivos existentes en el directorio 'assets'
     RewriteRule ^assets/ - [L]
+    
+    # EXCEPCIÓN: Permitir acceso directo a archivos PHP específicos
+    RewriteRule ^(create-clan-direct|test-clan|test-assets)\.php$ - [L]
 
     # REGLA PRINCIPAL: Redirigir todas las demás solicitudes a index.php
     RewriteCond %{REQUEST_FILENAME} !-f

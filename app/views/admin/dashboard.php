@@ -9,9 +9,9 @@ ob_start();
         <div class="nav-container">
             <div class="nav-brand">
                 <div class="brand-icon gradient-bg">
-                    <i class="fas fa-rhino"></i>
+                    <i class="fas fa-star"></i>
                 </div>
-                <span class="brand-text">RinoTrack Admin</span>
+                <span class="brand-text">Polaris Admin</span>
             </div>
             
             <ul class="nav-menu">
@@ -34,9 +34,21 @@ ob_start();
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a href="?route=admin/tasks" class="nav-link">
+                        <i class="fas fa-tasks"></i>
+                        <span>Tareas</span>
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a href="?route=admin/clans" class="nav-link">
                         <i class="fas fa-users-cog"></i>
                         <span>Clanes</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="?route=admin/notifications" class="nav-link">
+                        <i class="fas fa-bell"></i>
+                        <span>Notificaciones</span>
                     </a>
                 </li>
                 <li class="nav-item dropdown">
@@ -262,7 +274,7 @@ ob_start();
     </main>
 </div>
 
-<!-- Estilos específicos para el dashboard están en admin.css -->
+
 
 <?php
 // Guardar el contenido en una variable

@@ -46,14 +46,7 @@ ob_start();
                     </a>
                 </div>
                 <div class="navigation-actions">
-                    <a href="?route=clan_leader/dashboard" class="btn-minimal secondary">
-                        <i class="fas fa-arrow-left"></i>
-                        <span>Volver al Dashboard</span>
-                    </a>
-                    <a href="?route=logout" class="btn-minimal danger" title="Cerrar sesión">
-                        <i class="fas fa-sign-out-alt"></i>
-                        <span>Cerrar Sesión</span>
-                    </a>
+                    <!-- Botón de cerrar sesión removido - ahora está en el menú principal -->
                 </div>
             </div>
         </div>
@@ -270,6 +263,148 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+
+<style>
+/* Estilos mejorados para los botones de vista */
+.view-toggle {
+    display: flex;
+    gap: 0;
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 4px;
+    border: 1px solid #e9ecef;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.view-toggle .btn-minimal {
+    border-radius: 6px;
+    padding: 8px 16px;
+    border: none;
+    background: transparent;
+    color: #6c757d;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    font-weight: 500;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 120px;
+    justify-content: center;
+}
+
+.view-toggle .btn-minimal:hover {
+    background: rgba(25, 44, 94, 0.1);
+    color: #192c5e;
+    transform: translateY(-1px);
+}
+
+.view-toggle .btn-minimal.active {
+    background: #192c5e;
+    color: white;
+    box-shadow: 0 2px 8px rgba(25, 44, 94, 0.3);
+    transform: translateY(-1px);
+}
+
+.view-toggle .btn-minimal.active:hover {
+    background: #0f1e3d;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(25, 44, 94, 0.4);
+}
+
+.view-toggle .btn-minimal i {
+    font-size: 16px;
+}
+
+.view-toggle .btn-minimal span {
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+/* Animación para transiciones suaves */
+.view-toggle .btn-minimal {
+    position: relative;
+    overflow: hidden;
+}
+
+.view-toggle .btn-minimal::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    transition: left 0.6s ease;
+}
+
+.view-toggle .btn-minimal:hover::before {
+    left: 100%;
+}
+
+/* Mejorar el header general */
+.actions-minimal {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.navigation-actions {
+    display: flex;
+    gap: 10px;
+}
+
+/* Efectos adicionales para mejor UX */
+.view-toggle .btn-minimal {
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.view-toggle .btn-minimal.active {
+    background: linear-gradient(135deg, #192c5e 0%, #0f1e3d 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.view-toggle .btn-minimal.active::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(255,255,255,0.05) 100%);
+    border-radius: inherit;
+    pointer-events: none;
+}
+
+/* Mejorar la transición del foco */
+.view-toggle .btn-minimal:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(25, 44, 94, 0.2);
+}
+
+/* Responsive para pantallas pequeñas */
+@media (max-width: 768px) {
+    .view-toggle .btn-minimal {
+        min-width: 100px;
+        padding: 6px 12px;
+        font-size: 13px;
+    }
+    
+    .view-toggle .btn-minimal span {
+        display: none;
+    }
+    
+    .view-toggle .btn-minimal i {
+        font-size: 18px;
+    }
+    
+    .view-toggle {
+        gap: 2px;
+        padding: 2px;
+    }
+}
+</style>
 
 <?php
 // Guardar el contenido en una variable

@@ -1,1274 +1,2529 @@
 <?php
-// Verificar que tenemos los datos necesarios
-if (!isset($task) || !isset($subtasks) || !isset($comments) || !isset($history) || !isset($assignedUsers) || !isset($labels)) {
-    echo "<div class='error'>Error: Datos de tarea no disponibles</div>";
-    return;
-}
+ob_start();
 ?>
 
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detalles de Tarea - <?= htmlspecialchars($task['task_name']) ?></title>
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
-    <link rel="stylesheet" href="?route=assets/css/clan-leader.css">
-    <link rel="stylesheet" href="?route=assets/css/styles.css">
-    <style>
-        .task-details-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            background: #fff;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        
-        .task-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #f3f4f6;
-        }
-        
-        .task-title-section {
-            flex: 1;
-        }
-        
-        .task-title {
-            font-size: 28px;
-            font-weight: 700;
-            color: #1f2937;
-            margin-bottom: 10px;
-        }
-        
-        .task-meta {
-            display: flex;
-            gap: 20px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        
-        .task-meta-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: #6b7280;
-            font-size: 14px;
-        }
-        
-        .task-meta-item i {
-            font-size: 16px;
-        }
-        
-        .task-status-section {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 10px;
-        }
-        
-        .status-badge {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-        
-        .status-pending { background: #fef3c7; color: #92400e; }
-        .status-in_progress { background: #dbeafe; color: #1e40af; }
-        .status-completed { background: #d1fae5; color: #065f46; }
-        .status-overdue { background: #fee2e2; color: #dc2626; }
-        
-        .priority-badge {
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 600;
-        }
-        
-        .priority-low { background: #f3f4f6; color: #374151; }
-        .priority-medium { background: #fef3c7; color: #92400e; }
-        .priority-high { background: #fed7d7; color: #c53030; }
-        .priority-urgent { background: #fed7d7; color: #dc2626; }
-        
-        .task-content {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 30px;
-        }
-        
-        .main-content {
-            display: flex;
-            flex-direction: column;
-            gap: 25px;
-        }
-        
-        .sidebar {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-        
-        .section {
-            background: #f9fafb;
-            border-radius: 8px;
-            padding: 20px;
-        }
-        
-        .section-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: #1f2937;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .section-title i {
-            color: #6b7280;
-        }
-        
-        .description {
-            color: #4b5563;
-            line-height: 1.6;
-            white-space: pre-wrap;
-        }
-        
-        .subtasks-list {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        
-        .subtask-item {
-            background: #fff;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            padding: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .subtask-info {
-            flex: 1;
-        }
-        
-        .subtask-title {
-            font-weight: 600;
-            color: #1f2937;
-            margin-bottom: 5px;
-        }
-        
-        .subtask-meta {
-            display: flex;
-            gap: 15px;
-            font-size: 12px;
-            color: #6b7280;
-        }
-        
-        .subtask-progress {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .progress-bar {
-            width: 100px;
-            height: 8px;
-            background: #e5e7eb;
-            border-radius: 4px;
-            overflow: hidden;
-        }
-        
-        .progress-fill {
-            height: 100%;
-            background: #10b981;
-            transition: width 0.3s ease;
-        }
-        
-        .assigned-users {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        
-        .user-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px;
-            background: #fff;
-            border-radius: 6px;
-            border: 1px solid #e5e7eb;
-        }
-        
-        .user-avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: #3b82f6;
-            color: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            font-size: 14px;
-        }
-        
-        .user-info {
-            flex: 1;
-        }
-        
-        .user-name {
-            font-weight: 600;
-            color: #1f2937;
-            font-size: 14px;
-        }
-        
-        .user-role {
-            font-size: 12px;
-            color: #6b7280;
-        }
-        
-        .user-percentage {
-            font-weight: 600;
-            color: #3b82f6;
-            font-size: 14px;
-        }
-        
-        .labels-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-        
-        .label {
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 600;
-        }
-        
-        .comments-section {
-            max-height: 400px;
-            overflow-y: auto;
-        }
-        
-        .comment-item {
-            background: #fff;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 15px;
-        }
-        
-        .comment-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        
-        .comment-author {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .comment-author-avatar {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            background: #3b82f6;
-            color: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            font-size: 12px;
-        }
-        
-        .comment-author-name {
-            font-weight: 600;
-            color: #1f2937;
-            font-size: 14px;
-        }
-        
-        .comment-time {
-            font-size: 12px;
-            color: #6b7280;
-        }
-        
-        .comment-text {
-            color: #4b5563;
-            line-height: 1.5;
-            white-space: pre-wrap;
-        }
-        
-        .comment-type {
-            display: inline-block;
-            padding: 2px 6px;
-            border-radius: 8px;
-            font-size: 10px;
-            font-weight: 600;
-            text-transform: uppercase;
-            margin-left: 8px;
-        }
-        
-        .comment-type-comment { background: #dbeafe; color: #1e40af; }
-        .comment-type-status_change { background: #fef3c7; color: #92400e; }
-        .comment-type-assignment { background: #d1fae5; color: #065f46; }
-        
-        .history-section {
-            max-height: 300px;
-            overflow-y: auto;
-        }
-        
-        .history-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 10px;
-            border-left: 3px solid #e5e7eb;
-            margin-bottom: 10px;
-        }
-        
-        .history-icon {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            background: #f3f4f6;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            color: #6b7280;
-        }
-        
-        .history-content {
-            flex: 1;
-        }
-        
-        .history-action {
-            font-weight: 600;
-            color: #1f2937;
-            font-size: 14px;
-        }
-        
-        .history-details {
-            font-size: 12px;
-            color: #6b7280;
-        }
-        
-        .history-time {
-            font-size: 11px;
-            color: #9ca3af;
-        }
-        
-        .action-buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-        }
-        
-        .btn {
-            padding: 10px 20px;
-            border-radius: 6px;
-            font-weight: 600;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.2s ease;
-        }
-        
-        .btn-primary {
-            background: #3b82f6;
-            color: #fff;
-        }
-        
-        .btn-primary:hover {
-            background: #2563eb;
-        }
-        
-        .btn-secondary {
-            background: #f3f4f6;
-            color: #374151;
-        }
-        
-        .btn-secondary:hover {
-            background: #e5e7eb;
-        }
-        
-        .btn-danger {
-            background: #ef4444;
-            color: #fff;
-        }
-        
-        .btn-danger:hover {
-            background: #dc2626;
-        }
-        
-        .overdue {
-            border-left-color: #ef4444;
-        }
-        
-        .overdue .task-title {
-            color: #dc2626;
-        }
-        
-        /* Estilos para subtareas interactivas */
-        .subtask-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-        
-        .subtask-actions {
-            display: flex;
-            gap: 5px;
-        }
-        
-        .btn-icon-small {
-            width: 24px;
-            height: 24px;
-            border: none;
-            border-radius: 4px;
-            background: #f3f4f6;
-            color: #6b7280;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            transition: all 0.2s ease;
-        }
-        
-        .btn-icon-small:hover {
-            background: #e5e7eb;
-            color: #374151;
-        }
-        
-        .btn-icon-small.btn-danger:hover {
-            background: #fee2e2;
-            color: #dc2626;
-        }
-        
-        .subtask-controls {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        
-        .subtask-status-controls {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-        
-        .status-select {
-            padding: 4px 8px;
-            border: 1px solid #d1d5db;
-            border-radius: 4px;
-            font-size: 12px;
-            background: #fff;
-        }
-        
-        .completion-slider {
-            flex: 1;
-            height: 6px;
-            border-radius: 3px;
-            background: #e5e7eb;
-            outline: none;
-            -webkit-appearance: none;
-        }
-        
-        .completion-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            background: #3b82f6;
-            cursor: pointer;
-        }
-        
-        .completion-slider::-moz-range-thumb {
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            background: #3b82f6;
-            cursor: pointer;
-            border: none;
-        }
-        
-        /* Estilos para comentarios */
-        .add-comment-form {
-            margin-bottom: 20px;
-            padding: 15px;
-            background: #fff;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-        }
-        
-        .comment-input-group {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        
-        .comment-textarea {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
-            font-family: inherit;
-            font-size: 14px;
-            resize: vertical;
-            min-height: 80px;
-        }
-        
-        .comment-textarea:focus {
-            outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        }
-        
-        .comment-actions {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .btn-attachment {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 8px 12px;
-            background: #f3f4f6;
-            color: #374151;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: all 0.2s ease;
-        }
-        
-        .btn-attachment:hover {
-            background: #e5e7eb;
-        }
-        
-        .btn-sm {
-            padding: 8px 16px;
-            font-size: 14px;
-        }
-        
-        .attachment-preview {
-            margin-top: 10px;
-            padding: 10px;
-            background: #f9fafb;
-            border: 1px solid #e5e7eb;
-            border-radius: 6px;
-        }
-        
-        .attachment-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .btn-remove-attachment {
-            background: none;
-            border: none;
-            color: #ef4444;
-            cursor: pointer;
-            padding: 2px;
-        }
-        
-        .comments-list {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        
-        .comment-attachments {
-            margin-top: 10px;
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-        
-        .attachment-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 6px 10px;
-            background: #f3f4f6;
-            color: #374151;
-            text-decoration: none;
-            border-radius: 4px;
-            font-size: 12px;
-            transition: all 0.2s ease;
-        }
-        
-        .attachment-link:hover {
-            background: #e5e7eb;
-        }
-        
-        .no-comments {
-            text-align: center;
-            padding: 20px;
-            color: #6b7280;
-        }
-        
-        /* Estilos para colaboradores */
-        .add-collaborator-section {
-            margin-bottom: 15px;
-        }
-        
-        .user-controls {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .user-percentage {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        
-        .percentage-input {
-            width: 50px;
-            padding: 4px 6px;
-            border: 1px solid #d1d5db;
-            border-radius: 4px;
-            font-size: 12px;
-            text-align: center;
-        }
-        
-        .no-collaborators {
-            text-align: center;
-            padding: 20px;
-            color: #6b7280;
-        }
-        
-        /* Modal para agregar colaborador */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-        }
-        
-        .modal-content {
-            background-color: #fff;
-            margin: 10% auto;
-            padding: 20px;
-            border-radius: 8px;
-            width: 90%;
-            max-width: 500px;
-        }
-        
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        
-        .modal-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: #1f2937;
-        }
-        
-        .close {
-            color: #6b7280;
-            font-size: 24px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        
-        .close:hover {
-            color: #374151;
-        }
-        
-        .user-list {
-            max-height: 300px;
-            overflow-y: auto;
-            border: 1px solid #e5e7eb;
-            border-radius: 6px;
-        }
-        
-        .user-option {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px;
-            border-bottom: 1px solid #f3f4f6;
-            cursor: pointer;
-            transition: background-color 0.2s ease;
-        }
-        
-        .user-option:hover {
-            background-color: #f9fafb;
-        }
-        
-        .user-option.selected {
-            background-color: #dbeafe;
-        }
-        
-        .user-option input[type="checkbox"] {
-            margin: 0;
-        }
-    </style>
-</head>
-<body>
-            <div class="task-details-container <?= ($task['due_date'] && strtotime($task['due_date']) < time() && $task['status'] !== 'completed') ? 'overdue' : '' ?>" data-task-id="<?= $task['task_id'] ?>">
-        <!-- Header de la tarea -->
-        <div class="task-header">
-            <div class="task-title-section">
-                <h1 class="task-title"><?= htmlspecialchars($task['task_name']) ?></h1>
-                <div class="task-meta">
-                    <?php if ($task['due_date']): ?>
-                    <div class="task-meta-item">
-                        <i class="fas fa-calendar"></i>
-                        <span>Fecha límite: <?= date('d/m/Y', strtotime($task['due_date'])) ?></span>
-                    </div>
-                    <?php endif; ?>
-                    <div class="task-meta-item">
-                        <i class="fas fa-user"></i>
-                        <span>Creado por: <?= htmlspecialchars($task['created_by_name'] ?? 'N/A') ?></span>
-                    </div>
-                    <div class="task-meta-item">
-                        <i class="fas fa-project-diagram"></i>
-                        <span>Proyecto: <?= htmlspecialchars($task['project_name'] ?? 'N/A') ?></span>
-                    </div>
-                    <?php if ($task['estimated_hours']): ?>
-                    <div class="task-meta-item">
-                        <i class="fas fa-clock"></i>
-                        <span>Estimado: <?= $task['estimated_hours'] ?>h</span>
-                    </div>
-                    <?php endif; ?>
-                </div>
-            </div>
+<div class="container" style="max-width: 1200px; margin: 0 auto; padding: 20px;">
+    
+    <!-- Botones de Acción -->
+    <div style="display: flex; gap: 12px; margin-bottom: 30px;">
+        <button onclick="history.back()" style="background: #f3f4f6; color: #374151; padding: 12px 20px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-arrow-left"></i> Volver Atrás
+        </button>
+        <a href="?route=clan_leader/tasks&action=edit&task_id=<?php echo $task['task_id']; ?>" style="background: #1e3a8a; color: white; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-edit"></i> Editar Tarea
+        </a>
+        <button onclick="deleteTask(<?php echo $task['task_id']; ?>)" style="background: #ef4444; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-trash"></i> Eliminar
+        </button>
+    </div>
+    
+    <div class="task-layout" style="display: grid; grid-template-columns: 1fr 350px; gap: 30px;">
+        
+        <!-- Columna Principal -->
+        <div class="main-column">
             
-            <div class="task-status-section">
-                <div class="status-badge status-<?= $task['status'] ?>">
-                    <?= ucfirst($task['status']) ?>
+    <!-- Encabezado de la Tarea -->
+    <div class="task-header" style="background: #e0e7ff; color: #1e3a8a; padding: 20px; border-radius: 12px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; border: 1px solid #c7d2fe;">
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <div style="width: 50px; height: 50px; background: rgba(255,255,255,0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 24px;">
+                <i class="fas fa-folder-open"></i>
+                    </div>
+            <div>
+                <h1 style="margin: 0; font-size: 24px; font-weight: 700;"><?php echo htmlspecialchars($task['task_name']); ?></h1>
+                <p style="margin: 5px 0 0 0; opacity: 0.9;">Proyecto: <?php echo htmlspecialchars($task['project_name'] ?? 'N/A'); ?></p>
+                    </div>
+        </div>
+        <div>
+            <span class="status-badge" style="background: #fbbf24; color: #1f2937; padding: 8px 16px; border-radius: 20px; font-weight: 600; text-transform: uppercase; font-size: 12px;">
+                <?php 
+                    $estadosTarea = [
+                        'pending' => 'PENDIENTE',
+                        'in_progress' => 'EN PROGRESO', 
+                        'completed' => 'COMPLETADA',
+                        'blocked' => 'BLOQUEADA',
+                        'cancelled' => 'CANCELADA'
+                    ];
+                    echo $estadosTarea[$task['status']] ?? strtoupper(str_replace('_',' ', (string)$task['status'])); 
+                ?>
+            </span>
                 </div>
-                <div class="priority-badge priority-<?= $task['priority'] ?>">
-                    <?= ucfirst($task['priority']) ?>
                 </div>
-                <?php if ($task['due_date'] && strtotime($task['due_date']) < time() && $task['status'] !== 'completed'): ?>
-                <div class="status-badge status-overdue">
-                    Vencida
+
+    <!-- Frase Motivacional -->
+    <div class="motivational-section" style="background: #e0e7ff; padding: 20px; border-radius: 12px; margin-bottom: 20px; display: flex; align-items: center; gap: 15px; border: 1px solid #c7d2fe;">
+        <div style="width: 50px; height: 50px; background: #fbbf24; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #1f2937;">
+            <i class="fas fa-lightbulb"></i>
                 </div>
-                <?php endif; ?>
-            </div>
+        <div>
+            <div id="motQuote" style="font-weight: 600; color: #1e3a8a; font-size: 16px; margin-bottom: 5px;">"La excelencia no es un acto, es un hábito."</div>
+            <div id="motAuthor" style="color: #6b7280; font-size: 14px;">— Aristóteles</div>
+                </div>
+                </div>
+        
+    <!-- Información del Creador -->
+    <div class="creator-info" style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+        <i class="fas fa-user" style="color: #1e3a8a;"></i>
+        <span style="color: #374151; font-weight: 500;">Creado por: <?php echo htmlspecialchars($task['created_by_name'] ?? 'Usuario Administrador'); ?></span>
         </div>
         
-        <!-- Contenido principal -->
-        <div class="task-content">
-            <div class="main-content">
-                <!-- Descripción -->
+    <!-- Botón para agregar subtarea -->
+    <div style="margin-bottom: 20px;">
+        <button onclick="showAddSubtaskModal()" style="background: #1e3a8a; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: background 0.2s;">
+            <i class="fas fa-plus"></i>
+            Agregar Subtarea
+        </button>
+    </div>
+        
+    <!-- Descripción -->
                 <?php if (!empty($task['description'])): ?>
-                <div class="section">
-                    <h3 class="section-title">
-                        <i class="fas fa-align-left"></i>
-                        Descripción
-                    </h3>
-                    <div class="description"><?= nl2br(htmlspecialchars($task['description'])) ?></div>
+    <div class="description-section" style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+        <h3 style="margin: 0 0 15px 0; color: #1f2937; font-size: 18px; font-weight: 600;">Descripción</h3>
+        <div style="color: #374151; line-height: 1.6;"><?php echo nl2br(htmlspecialchars($task['description'])); ?></div>
                 </div>
                 <?php endif; ?>
                 
-                <!-- Subtareas -->
+    <!-- Subtareas -->
                 <?php if (!empty($subtasks)): ?>
-                <div class="section">
-                    <h3 class="section-title">
-                        <i class="fas fa-tasks"></i>
-                        Subtareas (<?= count($subtasks) ?>)
-                    </h3>
-                    <div class="subtasks-list">
+    <div class="subtasks-section" style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+        <h3 style="margin: 0 0 20px 0; color: #1f2937; font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-tasks"></i> Subtareas (<?php echo count($subtasks); ?>)
+        </h3>
+        
                         <?php foreach ($subtasks as $subtask): ?>
-                        <div class="subtask-item" data-subtask-id="<?= $subtask['subtask_id'] ?>">
-                            <div class="subtask-info">
-                                <div class="subtask-header">
-                                    <div class="subtask-title"><?= htmlspecialchars($subtask['title']) ?></div>
-                                    <div class="subtask-actions">
-                                        <button class="btn-icon-small" onclick="editSubtask(<?= $subtask['subtask_id'] ?>)" title="Editar">
+        <div class="subtask-card" data-subtask-id="<?php echo $subtask['subtask_id']; ?>" style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 15px; background: #f9fafb;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
+                <h4 style="margin: 0; font-size: 16px; font-weight: 600; color: #1f2937;"><?php echo htmlspecialchars($subtask['title']); ?></h4>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn-icon-small btn-with-badge" onclick="showSubtaskComments(<?php echo $subtask['subtask_id']; ?>)" title="Ver comentarios" style="position: relative; width: 32px; height: 32px; border: none; border-radius: 6px; background: #f3f4f6; color: #6b7280; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                                            <i class="fas fa-comments"></i>
+                      <span class="badge" id="comments-badge-<?php echo $subtask['subtask_id']; ?>" style="display: none;">0</span>
+                                        </button>
+                    <button class="btn-icon-small btn-with-badge" onclick="showSubtaskAttachments(<?php echo $subtask['subtask_id']; ?>)" title="Ver adjuntos" style="position: relative; width: 32px; height: 32px; border: none; border-radius: 6px; background: #f3f4f6; color: #6b7280; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                                            <i class="fas fa-paperclip"></i>
+                      <span class="badge" id="attachments-badge-<?php echo $subtask['subtask_id']; ?>" style="display: none;">0</span>
+                                        </button>
+                    <button class="btn-icon-small" onclick="showAssignSubtaskModal(<?php echo $subtask['subtask_id']; ?>)" title="Asignar Usuario" style="width: 32px; height: 32px; border: none; border-radius: 6px; background: #dbeafe; color: #1e3a8a; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                                            <i class="fas fa-user-plus"></i>
+                                        </button>
+                    <button class="btn-icon-small" onclick="editSubtask(<?php echo $subtask['subtask_id']; ?>)" title="Editar" style="width: 32px; height: 32px; border: none; border-radius: 6px; background: #f3f4f6; color: #6b7280; cursor: pointer; display: flex; align-items: center; justify-content: center;">
                                             <i class="fas fa-edit"></i>
                                         </button>
-                                        <button class="btn-icon-small" onclick="deleteSubtask(<?= $subtask['subtask_id'] ?>)" title="Eliminar">
+                    <button class="btn-icon-small" onclick="deleteSubtask(<?php echo $subtask['subtask_id']; ?>)" title="Eliminar" style="width: 32px; height: 32px; border: none; border-radius: 6px; background: #fee2e2; color: #dc2626; cursor: pointer; display: flex; align-items: center; justify-content: center;">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </div>
                                 </div>
-                                <div class="subtask-meta">
-                                    <span>Estado: <?= ucfirst($subtask['status']) ?></span>
-                                    <?php if (!empty($subtask['assigned_user_name'])): ?>
-                                    <span>Asignado: <?= htmlspecialchars($subtask['assigned_user_name']) ?></span>
-                                    <?php endif; ?>
-                                    <?php if ($subtask['due_date']): ?>
-                                    <span>Vence: <?= date('d/m/Y', strtotime($subtask['due_date'])) ?></span>
-                                    <?php endif; ?>
-                                </div>
-                                <?php if (!empty($subtask['description'])): ?>
-                                <div class="subtask-description" style="margin-top: 8px; font-size: 13px; color: #6b7280;">
-                                    <?= htmlspecialchars($subtask['description']) ?>
-                                </div>
-                                <?php endif; ?>
-                            </div>
-                            <div class="subtask-controls">
-                                <div class="subtask-progress">
-                                    <div class="progress-bar">
-                                        <div class="progress-fill" style="width: <?= $subtask['completion_percentage'] ?>%"></div>
+            
+            <div style="margin-bottom: 15px;">
+                <span class="subtask-status-text" style="color: #6b7280; font-size: 14px;">Estado: <?php 
+                    $estados = [
+                        'pending' => 'Pendiente',
+                        'in_progress' => 'En Progreso', 
+                        'completed' => 'Completada',
+                        'blocked' => 'Bloqueada'
+                    ];
+                    echo $estados[$subtask['status']] ?? ucfirst(str_replace('_', ' ', $subtask['status'])); 
+                ?></span>
+                                    <div style="margin-left: 20px; margin-top: 5px;" id="assigned-users-<?php echo $subtask['subtask_id']; ?>">
+                                        <!-- Los usuarios asignados se cargarán dinámicamente -->
                                     </div>
-                                    <span style="font-size: 12px; font-weight: 600; color: #374151;">
-                                        <?= $subtask['completion_percentage'] ?>%
-                                    </span>
+                                    <?php if (!empty($subtask['due_date'])): ?>
+                <span style="color: #6b7280; font-size: 14px; margin-left: 20px;">
+                    <i class="fas fa-calendar-alt" style="margin-right: 4px;"></i>
+                    Vence: <?php echo date('d/m/Y', strtotime($subtask['due_date'])); ?>
+                </span>
+                                    <?php endif; ?>
                                 </div>
-                                <div class="subtask-status-controls">
-                                    <select class="status-select" onchange="updateSubtaskStatus(<?= $subtask['subtask_id'] ?>, this.value)">
-                                        <option value="pending" <?= $subtask['status'] === 'pending' ? 'selected' : '' ?>>Pendiente</option>
-                                        <option value="in_progress" <?= $subtask['status'] === 'in_progress' ? 'selected' : '' ?>>En Progreso</option>
-                                        <option value="completed" <?= $subtask['status'] === 'completed' ? 'selected' : '' ?>>Completada</option>
+            
+                        <div style="display: flex; align-items: center; justify-content: space-between; gap: 15px;">
+                <div style="flex: 1;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div style="flex: 1; position: relative; height: 24px; background: #e5e7eb; border-radius: 12px; cursor: pointer;" 
+                             onclick="updateSubtaskProgressFromClick(event, <?php echo $subtask['subtask_id']; ?>)"
+                             data-subtask-id="<?php echo $subtask['subtask_id']; ?>">
+                            <div class="progress-fill" style="background: linear-gradient(90deg, #10b981, #22c55e); height: 100%; width: <?php echo $subtask['completion_percentage']; ?>%; transition: width 0.3s ease; border-radius: 12px;"></div>
+                            <span class="progress-text" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 12px; font-weight: 600; color: #374151; text-shadow: 0 0 3px white;"><?php echo intval($subtask['completion_percentage']); ?>%</span>
+                        </div>
+                        <input type="range" 
+                               class="subtask-progress-slider" 
+                               data-subtask-id="<?php echo $subtask['subtask_id']; ?>"
+                               min="0" 
+                               max="100" 
+                               value="<?php echo intval($subtask['completion_percentage']); ?>" 
+                               oninput="updateSubtaskProgress(<?php echo $subtask['subtask_id']; ?>, this.value)"
+                               style="width: 150px;">
+                    </div>
+                </div>
+                <select onchange="updateSubtaskStatus(<?php echo $subtask['subtask_id']; ?>, this.value)" style="padding: 6px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; background: white; min-width: 120px;">
+                    <option value="pending" <?php echo $subtask['status'] === 'pending' ? 'selected' : ''; ?>>Pendiente</option>
+                    <option value="in_progress" <?php echo $subtask['status'] === 'in_progress' ? 'selected' : ''; ?>>En Progreso</option>
+                    <option value="completed" <?php echo $subtask['status'] === 'completed' ? 'selected' : ''; ?>>Completada</option>
                                     </select>
-                                    <input type="range" min="0" max="100" value="<?= $subtask['completion_percentage'] ?>" 
-                                           class="completion-slider" 
-                                           onchange="updateSubtaskCompletion(<?= $subtask['subtask_id'] ?>, this.value)">
-                                </div>
                             </div>
                         </div>
                         <?php endforeach; ?>
-                    </div>
                 </div>
                 <?php endif; ?>
                 
-                <!-- Comentarios -->
-                <div class="section comments-section">
-                    <h3 class="section-title">
-                        <i class="fas fa-comments"></i>
-                        Comentarios (<?= count($comments) ?>)
-                    </h3>
-                    
-                    <!-- Formulario para agregar comentario -->
-                    <div class="add-comment-form">
-                        <div class="comment-input-group">
-                            <textarea id="newComment" placeholder="Escribe un comentario..." rows="3" class="comment-textarea"></textarea>
-                            <div class="comment-actions">
-                                <label for="fileAttachment" class="btn-attachment">
-                                    <i class="fas fa-paperclip"></i>
-                                    Adjuntar archivo
-                                </label>
-                                <input type="file" id="fileAttachment" style="display: none;" onchange="handleFileAttachment(this)">
-                                <button onclick="addComment()" class="btn btn-primary btn-sm">
-                                    <i class="fas fa-paper-plane"></i>
-                                    Enviar
-                                </button>
-                            </div>
-                        </div>
-                        <div id="attachmentPreview" class="attachment-preview" style="display: none;">
-                            <div class="attachment-item">
-                                <i class="fas fa-file"></i>
-                                <span id="attachmentName"></span>
-                                <button onclick="removeAttachment()" class="btn-remove-attachment">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
-                        </div>
+        <!-- Comentarios de la Tarea -->
+    <div class="comments-section" style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+        <h3 style="margin: 0 0 20px 0; color: #1f2937; font-size: 18px; font-weight: 600;">Comentarios (<?php echo count($comments); ?>)</h3>
+        
+        <form id="tdCommentForm" class="comment-form" enctype="multipart/form-data" style="margin-bottom: 20px;">
+            <input type="hidden" name="task_id" value="<?php echo (int)$task['task_id']; ?>" />
+            <input type="hidden" name="comment_text" id="task-comment-content" />
+            <div class="rich-editor-container" style="position: relative;">
+                <div id="task-comment-editor" style="margin-bottom: 10px;"></div>
+                <button type="button" class="emoji-picker-btn" onclick="toggleEmojiPicker('task-comment')" title="Agregar emoji">
+                    <i class="fas fa-smile"></i>
+                </button>
+                <div id="task-comment-emoji-picker" class="emoji-picker-container" style="display: none;"></div>
+            </div>
+            <div id="task-file-preview" class="file-preview" style="display: none; margin: 10px 0; padding: 10px; background: #f0f9ff; border: 1px solid #0ea5e9; border-radius: 6px;">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-file" style="color: #0ea5e9;"></i>
+                        <span id="task-file-names" style="color: #0369a1; font-size: 14px;"></span>
                     </div>
-                    
-                    <!-- Lista de comentarios -->
-                    <div class="comments-list">
-                        <?php if (!empty($comments)): ?>
-                            <?php foreach ($comments as $comment): ?>
-                            <div class="comment-item">
-                            <div class="comment-header">
-                                <div class="comment-author">
-                                        <div class="comment-author-avatar">
-                                            <?= strtoupper(substr($comment['full_name'] ?? $comment['username'], 0, 1)) ?>
-                                        </div>
-                                        <span class="comment-author-name"><?= htmlspecialchars($comment['full_name'] ?? $comment['username']) ?></span>
-                                        <span class="comment-type comment-type-<?= $comment['comment_type'] ?>">
-                                            <?= ucfirst(str_replace('_', ' ', $comment['comment_type'])) ?>
-                                        </span>
-                                    <?php 
-                                        $attCount = (int)($comment['attachments_count'] ?? (is_array($comment['attachments'] ?? null) ? count($comment['attachments']) : 0));
-                                    ?>
-                                    <?php if ($attCount > 0): ?>
-                                    <button class="btn-attachment" title="Ver adjuntos" onclick="toggleCommentAttachments(this)">
-                                        <i class="fas fa-paperclip"></i>
-                                        <?= $attCount ?> adjunto<?= $attCount>1?'s':'' ?>
-                                    </button>
-                                    <?php endif; ?>
-                                    </div>
-                                    <span class="comment-time"><?= date('d/m/Y H:i', strtotime($comment['created_at'])) ?></span>
-                                </div>
-                                <div class="comment-text"><?= nl2br(htmlspecialchars($comment['comment_text'])) ?></div>
-                            <?php if ($attCount > 0): ?>
-                            <div class="comment-attachments" style="display: none;">
-                                <?php foreach ($comment['attachments'] as $attachment): ?>
-                                <a href="<?= htmlspecialchars($attachment['file_path']) ?>" class="attachment-link" target="_blank" onclick="event.preventDefault(); openPreview('<?= htmlspecialchars($attachment['file_path']) ?>','<?= htmlspecialchars($attachment['file_name']) ?>')">
-                                    <i class="fas fa-file"></i>
-                                    <?= htmlspecialchars($attachment['file_name']) ?>
-                                </a>
-                                <?php endforeach; ?>
-                            </div>
-                            <?php endif; ?>
-                            </div>
-                            <?php endforeach; ?>
-                        <?php else: ?>
-                            <div class="no-comments">
-                                <p>No hay comentarios aún. ¡Sé el primero en comentar!</p>
-                            </div>
-                        <?php endif; ?>
-                    </div>
+                    <button type="button" onclick="removeTaskAttachment()" class="btn-icon-small" style="background: #fee2e2; color: #dc2626;" title="Quitar archivos">
+                        <i class="fas fa-times"></i>
+                    </button>
                 </div>
             </div>
-            
-            <div class="sidebar">
-                <!-- Usuarios Asignados -->
-                <div class="section">
-                    <h3 class="section-title">
-                        <i class="fas fa-users"></i>
-                        Colaboradores (<?= count($assignedUsers) ?>)
-                    </h3>
-                    
-                    <!-- Botón para agregar colaborador -->
-                    <div class="add-collaborator-section">
-                        <button onclick="showAddCollaboratorModal()" class="btn btn-secondary btn-sm">
-                            <i class="fas fa-plus"></i>
-                            Agregar Colaborador
-                        </button>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <input type="file" name="attachments[]" multiple style="font-size: 14px;" id="task-comment-files" onchange="showTaskFilePreview()" />
+                <button type="submit" style="background: #1e3a8a; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-paper-plane"></i> Enviar
+                </button>
+            </div>
+        </form>
+
+        <div class="comments-list">
+            <?php if (empty($comments)): ?>
+                <div style="text-align: center; color: #6b7280; font-style: italic; padding: 20px;">Sin comentarios</div>
+            <?php else: ?>
+                <?php foreach ($comments as $c): ?>
+                <div class="comment-item" style="border-bottom: 1px solid #f3f4f6; padding: 15px 0;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <span style="font-weight: 600; color: #374151;"><?php echo htmlspecialchars($c['full_name'] ?? $c['username'] ?? ''); ?></span>
+                        <span style="font-size: 12px; color: #6b7280;"><?php echo htmlspecialchars($c['created_at'] ?? ''); ?></span>
                     </div>
+                    <div class="comment-content" style="color: #374151; line-height: 1.5; margin-bottom: 10px;"><?php echo $c['comment_text'] ?? ''; ?></div>
                     
-                    <!-- Lista de colaboradores -->
-                    <div class="assigned-users">
-                        <?php if (!empty($assignedUsers)): ?>
-                            <?php foreach ($assignedUsers as $user): ?>
-                            <div class="user-item" data-user-id="<?= $user['user_id'] ?>">
-                                <div class="user-avatar">
-                                    <?= strtoupper(substr($user['full_name'] ?? $user['username'], 0, 1)) ?>
+                    <!-- Adjuntos del comentario -->
+                    <?php if (!empty($c['attachments']) && is_array($c['attachments'])): ?>
+                    <div class="comment-attachments" style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #f3f4f6;">
+                        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                            <?php foreach ($c['attachments'] as $attachment): ?>
+                            <div class="attachment-item" style="display: flex; align-items: center; gap: 8px; background: #f8f9fa; border: 1px solid #e5e7eb; border-radius: 6px; padding: 8px 12px; font-size: 14px;">
+                                <i class="fas fa-paperclip" style="color: #6b7280; font-size: 12px;"></i>
+                                <a href="javascript:void(0)" onclick="openFilePreview(<?php echo $attachment['attachment_id']; ?>, '<?php echo htmlspecialchars($attachment['file_name']); ?>', '<?php echo htmlspecialchars($attachment['file_type'] ?? ''); ?>')" style="color: #1e3a8a; text-decoration: none; font-weight: 500; cursor: pointer;">
+                                    <?php echo htmlspecialchars($attachment['file_name']); ?>
+                                </a>
+                                <a href="<?php echo htmlspecialchars($attachment['file_path']); ?>" download="<?php echo htmlspecialchars($attachment['file_name']); ?>" style="color: #10b981; text-decoration: none; margin-left: 4px;" title="Descargar">
+                                    <i class="fas fa-download" style="font-size: 12px;"></i>
+                                </a>
+                            </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+                </div>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </div>
+    </div>
+
+        </div>
+            
+        <!-- Columna Lateral -->
+        <div class="sidebar-column">
+            
+    <!-- Colaboradores -->
+    <div class="collaborators-section" style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+        <h3 style="margin: 0 0 20px 0; color: #1e3a8a; font-size: 18px; font-weight: 600;">Colaboradores (<?php echo count($assignedUsers); ?>)</h3>
+        
+        <button onclick="showAddCollaboratorModal()" style="background: #1e3a8a; color: white; border: none; padding: 10px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; margin-bottom: 15px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <i class="fas fa-plus"></i> Agregar Colaborador
+                        </button>
+                    
+        <?php if (empty($assignedUsers)): ?>
+            <div style="text-align: center; color: #6b7280; font-style: italic; padding: 20px;">Sin colaboradores</div>
+        <?php else: ?>
+            <?php foreach ($assignedUsers as $au): ?>
+            <div data-user-id="<?php echo $au['user_id']; ?>" style="display: flex; align-items: center; justify-content: space-between; padding: 12px; border: 1px solid #f3f4f6; border-radius: 6px; margin-bottom: 10px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="width: 40px; height: 40px; background: #1e3a8a; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600;">
+                        <?php echo strtoupper(substr($au['full_name'] ?? $au['username'] ?? '', 0, 1)); ?>
+                    </div>
+                    <div>
+                        <div style="font-weight: 600; color: #374151;"><?php echo htmlspecialchars($au['full_name'] ?? $au['username'] ?? ''); ?></div>
+                        <div style="font-size: 12px; color: #6b7280;"><?php echo htmlspecialchars($au['username'] ?? ''); ?></div>
+                    </div>
                                 </div>
-                                <div class="user-info">
-                                    <div class="user-name"><?= htmlspecialchars($user['full_name'] ?? $user['username']) ?></div>
-                                    <div class="user-role"><?= htmlspecialchars($user['username']) ?></div>
-                                </div>
-                                <div class="user-controls">
-                                    <div class="user-percentage">
-                                        <input type="number" min="0" max="100" value="<?= $user['assigned_percentage'] ?>" 
-                                               class="percentage-input" 
-                                               onchange="updateUserPercentage(<?= $user['user_id'] ?>, this.value)">
-                                        <span>%</span>
-                                    </div>
-                                    <button onclick="removeCollaborator(<?= $user['user_id'] ?>)" class="btn-icon-small btn-danger" title="Remover">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <input type="number" min="0" max="100" value="<?php echo $au['assigned_percentage'] ?? 0; ?>" 
+                           onchange="updateUserPercentage(<?php echo $au['user_id']; ?>, this.value)"
+                           style="width: 60px; padding: 6px; border: 1px solid #d1d5db; border-radius: 4px; text-align: center;">
+                    <span style="font-size: 14px;">%</span>
+                    <button onclick="removeCollaborator(<?php echo $au['user_id']; ?>)" style="background: #fee2e2; color: #dc2626; border: none; padding: 6px 8px; border-radius: 4px; cursor: pointer;">
                                         <i class="fas fa-times"></i>
                                     </button>
                                 </div>
                             </div>
                             <?php endforeach; ?>
-                        <?php else: ?>
-                            <div class="no-collaborators">
-                                <p>No hay colaboradores asignados</p>
-                            </div>
-                        <?php endif; ?>
-                    </div>
+        <?php endif; ?>
                 </div>
                 
-                <!-- Etiquetas -->
-                <?php if (!empty($labels)): ?>
-                <div class="section">
-                    <h3 class="section-title">
-                        <i class="fas fa-tags"></i>
-                        Etiquetas
-                    </h3>
-                    <div class="labels-container">
-                        <?php foreach ($labels as $label): ?>
-                        <span class="label" style="background: <?= $label['label_color'] ?>; color: #fff;">
-                            <?= htmlspecialchars($label['label_name']) ?>
-                        </span>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-                <?php endif; ?>
-                
-                <!-- Historial -->
-                <?php if (!empty($history)): ?>
-                <div class="section history-section">
-                    <h3 class="section-title">
-                        <i class="fas fa-history"></i>
-                        Historial
-                    </h3>
-                    <?php foreach ($history as $item): ?>
-                    <div class="history-item">
-                        <div class="history-icon">
-                            <i class="fas fa-<?= $item['action_type'] === 'created' ? 'plus' : ($item['action_type'] === 'updated' ? 'edit' : 'info') ?>"></i>
-                        </div>
-                        <div class="history-content">
-                            <div class="history-action"><?= htmlspecialchars($item['notes']) ?></div>
-                            <div class="history-details">
-                                Por: <?= htmlspecialchars($item['full_name'] ?? $item['username']) ?>
-                            </div>
-                        </div>
-                        <div class="history-time">
-                            <?= date('d/m/Y H:i', strtotime($item['created_at'])) ?>
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
-                </div>
-                <?php endif; ?>
-                
-                <!-- Información adicional -->
-                <div class="section">
-                    <h3 class="section-title">
-                        <i class="fas fa-info-circle"></i>
-                        Información
-                    </h3>
-                    <div style="display: flex; flex-direction: column; gap: 8px; font-size: 14px;">
-                        <div><strong>Creado:</strong> <?= date('d/m/Y H:i', strtotime($task['created_at'])) ?></div>
-                        <?php if ($task['updated_at'] !== $task['created_at']): ?>
-                        <div><strong>Actualizado:</strong> <?= date('d/m/Y H:i', strtotime($task['updated_at'])) ?></div>
-                        <?php endif; ?>
-                        <div><strong>Progreso:</strong> <?= $task['completion_percentage'] ?>%</div>
-                        <?php if ($task['actual_hours']): ?>
-                        <div><strong>Horas reales:</strong> <?= $task['actual_hours'] ?>h</div>
-                        <?php endif; ?>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <!-- Historial -->
+    <div class="history-section" style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+        <h3 style="margin: 0 0 20px 0; color: #1e3a8a; font-size: 18px; font-weight: 600;">Historial</h3>
         
-        <!-- Botones de acción -->
-        <div class="action-buttons">
-            <a href="?route=clan_leader/tasks" class="btn btn-secondary">
-                <i class="fas fa-arrow-left"></i>
-                Volver a Tareas
-            </a>
-            <a href="?route=clan_leader/tasks&action=edit&task_id=<?= $task['task_id'] ?>" class="btn btn-primary">
-                <i class="fas fa-edit"></i>
-                Editar Tarea
-            </a>
-            <button onclick="deleteTask(<?= $task['task_id'] ?>)" class="btn btn-danger">
-                <i class="fas fa-trash"></i>
-                Eliminar
-            </button>
+            <?php if (empty($history)): ?>
+            <div style="text-align: center; color: #6b7280; font-style: italic; padding: 20px;">Sin historial</div>
+        <?php else: ?>
+            <?php foreach ($history as $h): ?>
+            <div style="border-bottom: 1px solid #f3f4f6; padding: 12px 0;">
+                <div style="font-weight: 600; color: #1e3a8a; margin-bottom: 4px;"><?php 
+                    $accionesHistorial = [
+                        'created' => 'Creado',
+                        'updated' => 'Actualizado',
+                        'assigned' => 'Asignado',
+                        'completed' => 'Completado',
+                        'commented' => 'Comentado',
+                        'attached' => 'Archivo adjuntado'
+                    ];
+                    $accion = $h['action_type'] ?? $h['notes'] ?? '';
+                    echo $accionesHistorial[strtolower($accion)] ?? htmlspecialchars(ucfirst($accion)); 
+                ?></div>
+                <div style="font-size: 12px; color: #6b7280;">Por: <?php echo htmlspecialchars($h['full_name'] ?? $h['username'] ?? ''); ?> — <?php echo htmlspecialchars($h['created_at'] ?? ''); ?></div>
+                        </div>
+            <?php endforeach; ?>
+        <?php endif; ?>
+                        </div>
+
+    <!-- Información -->
+    <div class="info-section" style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px;">
+        <h3 style="margin: 0 0 20px 0; color: #1e3a8a; font-size: 18px; font-weight: 600;">Información</h3>
+        
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            <div><strong style="color: #374151;">Creado:</strong> <span style="color: #6b7280;"><?php echo date('d/m/Y H:i', strtotime($task['created_at'])); ?></span></div>
+                        <?php if ($task['updated_at'] !== $task['created_at']): ?>
+            <div><strong style="color: #374151;">Actualizado:</strong> <span style="color: #6b7280;"><?php echo date('d/m/Y H:i', strtotime($task['updated_at'])); ?></span></div>
+                        <?php endif; ?>
+            <div><strong style="color: #374151;">Progreso:</strong> <span style="color: #6b7280;"><?php echo (int)($task['completion_percentage'] ?? 0); ?>%</span></div>
+                        <?php if ($task['actual_hours']): ?>
+            <div><strong style="color: #374151;">Horas reales:</strong> <span style="color: #6b7280;"><?php echo $task['actual_hours']; ?>h</span></div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+    
+            </div>
         </div>
     </div>
     
     <!-- Modal para agregar colaborador -->
-    <div id="addCollaboratorModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">Agregar Colaborador</h3>
-                <span class="close" onclick="closeAddCollaboratorModal()">&times;</span>
+<div id="addCollaboratorModal" class="modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); display: none; align-items: center; justify-content: center; z-index: 1000;">
+    <div class="modal-content" style="background: white; border-radius: 12px; padding: 24px; max-width: 600px; width: 95%; max-height: 90vh; display: flex; flex-direction: column;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+            <h3 style="margin: 0; color: #1f2937; font-size: 20px; font-weight: 600;">Agregar Colaborador</h3>
+            <button onclick="closeAddCollaboratorModal()" style="background: none; border: none; font-size: 28px; color: #6b7280; cursor: pointer; padding: 4px; line-height: 1;">&times;</button>
+        </div>
+        
+        <!-- Buscador -->
+        <div style="margin-bottom: 20px;">
+            <div style="position: relative;">
+                <input 
+                    type="text" 
+                    id="userSearchInput" 
+                    placeholder="Buscar por nombre, usuario o email..." 
+                    style="width: 100%; padding: 12px 16px 12px 44px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; outline: none; transition: border-color 0.2s;"
+                    onkeyup="filterUsers(this.value)"
+                    onfocus="this.style.borderColor='#1e3a8a'" 
+                    onblur="this.style.borderColor='#e5e7eb'"
+                >
+                <i class="fas fa-search" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #6b7280; font-size: 16px;"></i>
             </div>
-            <div class="modal-body">
-                <div class="user-list" id="availableUsersList">
-                    <!-- Los usuarios se cargarán dinámicamente -->
+        </div>
+        
+        <!-- Lista de usuarios -->
+        <div style="flex: 1; overflow: hidden; display: flex; flex-direction: column;">
+            <div style="margin-bottom: 12px; color: #6b7280; font-size: 14px; display: flex; justify-content: space-between; align-items: center;">
+                <span>Selecciona los colaboradores:</span>
+                <span id="userCount" style="font-weight: 500;">0 usuarios</span>
+            </div>
+            <div id="availableUsersList" style="flex: 1; overflow-y: auto; border: 2px solid #f3f4f6; border-radius: 8px; padding: 8px; max-height: 350px;">
+                <!-- Los usuarios se cargarán dinámicamente -->
+            </div>
+        </div>
+        
+        <!-- Botones -->
+        <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; padding-top: 20px; border-top: 1px solid #f3f4f6;">
+            <button onclick="closeAddCollaboratorModal()" style="background: #f9fafb; color: #374151; border: 2px solid #e5e7eb; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 500; transition: all 0.2s;">
+                Cancelar
+            </button>
+            <button onclick="addSelectedCollaborators()" style="background: #1e3a8a; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 500; transition: all 0.2s; box-shadow: 0 2px 4px rgba(30, 58, 138, 0.2);">
+                <i class="fas fa-plus" style="margin-right: 8px;"></i>Agregar Seleccionados
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Dependencias para editor de texto rico -->
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+
+<style>
+/* Estilos para el editor de texto enriquecido */
+.rich-editor-container {
+    margin-bottom: 10px;
+}
+
+.ql-editor {
+    min-height: 80px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.ql-toolbar {
+    border-top: 1px solid #d1d5db;
+    border-left: 1px solid #d1d5db;
+    border-right: 1px solid #d1d5db;
+    border-radius: 6px 6px 0 0;
+}
+
+.ql-container {
+    border-bottom: 1px solid #d1d5db;
+    border-left: 1px solid #d1d5db;
+    border-right: 1px solid #d1d5db;
+    border-radius: 0 0 6px 6px;
+}
+
+/* Estilos para checklist/bullets interactivos */
+.interactive-checklist {
+    list-style: none;
+    padding-left: 0;
+}
+
+.interactive-checklist li {
+    position: relative;
+    padding-left: 30px;
+    margin: 8px 0;
+    cursor: pointer;
+    user-select: none;
+}
+
+.interactive-checklist li:before {
+    content: '☐';
+    position: absolute;
+    left: 0;
+    font-size: 16px;
+    line-height: 1.2;
+    color: #6b7280;
+}
+
+.interactive-checklist li.checked:before {
+    content: '☑';
+    color: #10b981;
+}
+
+.interactive-checklist li.checked {
+    text-decoration: line-through;
+    color: #9ca3af;
+}
+
+/* Estilos para el botón de checklist personalizado */
+.ql-toolbar .ql-checklist-btn {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+    border: 1px solid #ccc;
+    transition: all 0.2s ease;
+}
+
+.ql-toolbar .ql-checklist-btn:hover {
+    border-color: #10b981;
+    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+}
+
+/* Estilos para checkboxes HTML en comentarios */
+.checkbox-container {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    margin: 4px 0 !important;
+    line-height: 1.5 !important;
+}
+
+.checkbox-container input[type="checkbox"] {
+    width: 16px !important;
+    height: 16px !important;
+    cursor: pointer !important;
+    accent-color: #10b981 !important;
+    margin: 0 !important;
+    flex-shrink: 0 !important;
+}
+
+.checkbox-container span {
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    font-size: 14px !important;
+    line-height: 1.4 !important;
+}
+
+/* Hover effect para mejor UX */
+.checkbox-container:hover {
+    background-color: rgba(16, 185, 129, 0.05);
+    border-radius: 4px;
+    padding: 2px 4px;
+    margin: 2px -4px;
+}
+
+/* Estilos para badges de contadores */
+.btn-with-badge {
+    position: relative;
+}
+
+.badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #ef4444;
+    color: white;
+    border-radius: 50%;
+    min-width: 18px;
+    height: 18px;
+    font-size: 11px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 6px;
+    box-sizing: border-box;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    animation: badgePulse 0.3s ease-out;
+}
+
+@keyframes badgePulse {
+    0% {
+        transform: scale(0.5);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Colores específicos para cada tipo de badge */
+.btn-with-badge[id*="comments-btn"] .badge {
+    background: #3b82f6;
+}
+
+.btn-with-badge[id*="attachments-btn"] .badge {
+    background: #10b981;
+}
+
+.badge:empty {
+    display: none !important;
+}
+
+/* Estilos para notificaciones toast */
+#cl-notification {
+    background: #10b981 !important;
+    color: white !important;
+    border: none !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+#cl-notification * {
+    color: white !important;
+    background: none !important;
+    border: none !important;
+}
+
+#cl-notification button {
+    background: none !important;
+    border: none !important;
+    color: white !important;
+}
+
+.btn-icon-small:hover {
+    background: #e5e7eb !important;
+    color: #374151 !important;
+}
+
+.user-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    border-bottom: 1px solid #f3f4f6;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.user-option:hover {
+    background-color: #f9fafb;
+}
+
+.user-option.selected {
+    background-color: #dbeafe;
+}
+
+.user-option input[type="checkbox"] {
+    margin: 0;
+}
+
+/* Estilos para el modal de colaboradores mejorado */
+#addCollaboratorModal .user-option {
+    transition: all 0.2s ease;
+}
+
+#addCollaboratorModal .user-option:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+#addCollaboratorModal input[type="checkbox"] {
+    accent-color: #1e3a8a;
+    transform: scale(1.1);
+}
+
+#addCollaboratorModal button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+#addCollaboratorModal #userSearchInput:focus {
+    box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
+}
+
+/* Scrollbar personalizada para la lista de usuarios */
+#availableUsersList::-webkit-scrollbar {
+    width: 8px;
+}
+
+#availableUsersList::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 4px;
+}
+
+#availableUsersList::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+#availableUsersList::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+</style>
+
+<script>
+// Función para mostrar modal de agregar subtarea
+function showAddSubtaskModal() {
+    closeExistingModals();
+    
+    const modalHTML = `
+        <div class="modal-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); display: flex; justify-content: center; align-items: center; z-index: 1000;">
+            <div class="modal-content" style="background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 500px; max-height: 80vh; overflow-y: auto;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h3 style="margin: 0; color: #1f2937; font-size: 20px; font-weight: 600;">Agregar Nueva Subtarea</h3>
+                    <button onclick="closeExistingModals()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #6b7280;">&times;</button>
                 </div>
-                <div class="modal-actions" style="margin-top: 20px; text-align: right;">
-                    <button onclick="closeAddCollaboratorModal()" class="btn btn-secondary">Cancelar</button>
-                    <button onclick="addSelectedCollaborators()" class="btn btn-primary">Agregar Seleccionados</button>
+                
+                <form id="add-subtask-form">
+                    <div class="form-group">
+                        <label for="new-subtask-title" style="display: block; margin-bottom: 5px; color: #374151; font-weight: 600;">Título de la Subtarea:</label>
+                        <input type="text" id="new-subtask-title" required style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; margin-bottom: 15px; font-size: 14px;">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="new-subtask-description" style="display: block; margin-bottom: 5px; color: #374151; font-weight: 600;">Descripción:</label>
+                        <textarea id="new-subtask-description" rows="3" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; margin-bottom: 15px; resize: vertical; font-size: 14px;" placeholder="Descripción opcional de la subtarea..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="new-subtask-status" style="display: block; margin-bottom: 5px; color: #374151; font-weight: 600;">Estado:</label>
+                        <select id="new-subtask-status" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; margin-bottom: 15px; font-size: 14px;">
+                            <option value="pending">Pendiente</option>
+                            <option value="in_progress">En Progreso</option>
+                            <option value="completed">Completada</option>
+                            <option value="blocked">Bloqueada</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="new-subtask-due-date" style="display: block; margin-bottom: 5px; color: #374151; font-weight: 600;">Fecha de Término:</label>
+                        <input type="date" id="new-subtask-due-date" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; margin-bottom: 15px; font-size: 14px;">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="new-subtask-percentage" style="display: block; margin-bottom: 5px; color: #374151; font-weight: 600;">Porcentaje de Completación:</label>
+                        <input type="number" id="new-subtask-percentage" min="0" max="100" value="0" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; margin-bottom: 20px; font-size: 14px;">
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                        <button type="button" onclick="closeExistingModals()" style="background: #6b7280; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                            Cancelar
+                        </button>
+                        <button type="button" onclick="saveNewSubtask()" style="background: #1e3a8a; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                            Crear Subtarea
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Enfocar el campo de título
+    setTimeout(() => {
+        document.getElementById('new-subtask-title').focus();
+    }, 100);
+}
+
+// Función para guardar nueva subtarea
+function saveNewSubtask() {
+    const title = document.getElementById('new-subtask-title').value.trim();
+    const description = document.getElementById('new-subtask-description').value.trim();
+    const status = document.getElementById('new-subtask-status').value;
+    const percentage = parseInt(document.getElementById('new-subtask-percentage').value);
+    const dueDate = document.getElementById('new-subtask-due-date').value;
+    
+    if (!title) {
+        showNotification('El título es requerido', 'error');
+        return;
+    }
+    
+    // Datos a enviar
+    const formData = new FormData();
+    formData.append('task_id', <?php echo $task['task_id']; ?>);
+    formData.append('title', title);
+    formData.append('description', description);
+    formData.append('status', status);
+    formData.append('completion_percentage', percentage);
+    formData.append('due_date', dueDate);
+    
+    fetch('?route=clan_leader/add-subtask', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            closeExistingModals();
+            showNotification('Subtarea creada exitosamente', 'success');
+            // Recargar la página para mostrar la nueva subtarea
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        } else {
+            showNotification('Error al crear subtarea: ' + (data.message || 'Error desconocido'), 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error de conexión', 'error');
+    });
+}
+
+// Variables globales para editores
+let taskCommentEditor = null;
+
+// Función para inicializar editor de comentario de tarea principal
+function initializeTaskCommentEditor() {
+    if (document.getElementById('task-comment-editor')) {
+        taskCommentEditor = new Quill('#task-comment-editor', {
+            theme: 'snow',
+            modules: {
+                toolbar: {
+                    container: [
+                        [{ 'header': [1, 2, 3, false] }],
+                        ['bold', 'italic', 'underline', 'strike'],
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                        ['checklist-btn'], // Botón personalizado para checklist
+                        [{ 'color': [] }, { 'background': [] }],
+                        ['link'],
+                        ['clean']
+                    ],
+                    handlers: {
+                        'checklist-btn': function() {
+                            insertChecklist(taskCommentEditor);
+                        }
+                    }
+                }
+            },
+            placeholder: 'Escribe tu comentario...\n\nTip: Usa "???" + espacio para crear checklist rápido'
+        });
+        
+        // Agregar el botón personalizado al toolbar
+        addChecklistButton(taskCommentEditor, 'task');
+        
+        // Agregar detector de atajo ???
+        setupChecklistShortcut(taskCommentEditor);
+    }
+}
+
+// Función para inicializar editor de comentario de subtarea
+function initializeSubtaskCommentEditor(subtaskId) {
+    const editorId = `subtask-comment-editor-${subtaskId}`;
+    const editorElement = document.getElementById(editorId);
+    
+    if (editorElement && !window[`subtaskCommentEditor_${subtaskId}`]) {
+        window[`subtaskCommentEditor_${subtaskId}`] = new Quill(`#${editorId}`, {
+            theme: 'snow',
+            modules: {
+                toolbar: {
+                    container: [
+                        [{ 'header': [1, 2, 3, false] }],
+                        ['bold', 'italic', 'underline', 'strike'],
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                        ['checklist-btn'], // Botón personalizado para checklist
+                        [{ 'color': [] }, { 'background': [] }],
+                        ['link'],
+                        ['clean']
+                    ],
+                    handlers: {
+                        'checklist-btn': function() {
+                            insertChecklist(window[`subtaskCommentEditor_${subtaskId}`]);
+                        }
+                    }
+                }
+            },
+            placeholder: 'Escribe tu comentario...\n\nTip: Usa "???" + espacio para crear checklist rápido'
+        });
+        
+        // Agregar el botón personalizado al toolbar
+        addChecklistButton(window[`subtaskCommentEditor_${subtaskId}`], `subtask-${subtaskId}`);
+        
+        // Agregar detector de atajo ???
+        setupChecklistShortcut(window[`subtaskCommentEditor_${subtaskId}`]);
+    }
+}
+
+// Función para convertir contenido a checklist interactivo con checkboxes HTML
+function makeChecklistInteractive(element) {
+    console.log('Procesando elemento para checklists:', element);
+    
+    // Obtener información del comentario
+    const commentContent = element.closest('.comment-item');
+    const commentId = commentContent ? extractCommentId(commentContent) : null;
+    const commentType = commentContent ? detectCommentType(commentContent) : 'unknown';
+    
+    console.log('Comment ID:', commentId, 'Type:', commentType);
+    
+    // Obtener todo el HTML del elemento
+    let html = element.innerHTML;
+    console.log('HTML original:', html);
+    
+    // Buscar y reemplazar patrones de checkbox en el HTML
+    const checkboxPattern = /(☐|☑)\s*([^<\n]*)/g;
+    let checkboxIndex = 0;
+    
+    html = html.replace(checkboxPattern, function(match, checkbox, text) {
+        const isChecked = checkbox === '☑';
+        const taskText = text.trim();
+        
+        console.log('Encontrado checkbox:', checkbox, 'texto:', taskText, 'marcado:', isChecked);
+        
+        // Crear ID único para cada checkbox
+        const checkboxId = 'checkbox_' + Math.random().toString(36).substr(2, 9);
+        const currentIndex = checkboxIndex++;
+        
+        return `<span class="checkbox-container" style="display: inline-flex; align-items: center; gap: 8px; margin: 4px 0; user-select: none;">
+            <input type="checkbox" id="${checkboxId}" ${isChecked ? 'checked' : ''} 
+                   data-comment-id="${commentId}" 
+                   data-comment-type="${commentType}" 
+                   data-checkbox-index="${currentIndex}"
+                   data-checkbox-text="${taskText}"
+                   style="width: 16px; height: 16px; cursor: pointer; accent-color: #10b981; margin: 0; flex-shrink: 0;" 
+                   onchange="saveCheckboxState(this)" />
+            <span onclick="toggleCheckbox('${checkboxId}')" 
+                  style="cursor: pointer; transition: all 0.2s ease; font-size: 14px; line-height: 1.4; ${isChecked ? 'text-decoration: line-through; color: #9ca3af;' : ''}">${taskText}</span>
+        </span>`;
+    });
+    
+    // Actualizar el HTML del elemento
+    element.innerHTML = html;
+    console.log('HTML procesado:', html);
+    
+    // Cargar estados guardados si tenemos commentId
+    if (commentId && commentType !== 'unknown') {
+        loadCheckboxStates(commentId, commentType);
+    }
+}
+
+// Función para toggle del checkbox desde el texto
+function toggleCheckbox(checkboxId) {
+    const checkbox = document.getElementById(checkboxId);
+    if (checkbox) {
+        checkbox.checked = !checkbox.checked;
+        toggleTaskText(checkbox);
+    }
+}
+
+// Función para aplicar/quitar tachado del texto
+function toggleTaskText(checkbox) {
+    const label = checkbox.nextElementSibling;
+    if (label) {
+        if (checkbox.checked) {
+            label.style.textDecoration = 'line-through';
+            label.style.color = '#9ca3af';
+            console.log('Marcando tarea como completada');
+        } else {
+            label.style.textDecoration = 'none';
+            label.style.color = '';
+            console.log('Desmarcando tarea');
+        }
+        
+        // Añadir animación sutil
+        label.style.transform = 'scale(0.98)';
+        setTimeout(() => {
+            label.style.transform = 'scale(1)';
+        }, 100);
+        
+        // Feedback opcional
+        showCheckboxFeedback(checkbox.checked ? '✓ Tarea marcada' : '○ Tarea desmarcada', 
+                           checkbox.checked ? 'success' : 'info');
+    }
+}
+
+// Función para guardar el estado del checkbox en la base de datos
+function saveCheckboxState(checkbox) {
+    const commentId = checkbox.dataset.commentId;
+    const commentType = checkbox.dataset.commentType;
+    const checkboxIndex = checkbox.dataset.checkboxIndex;
+    const checkboxText = checkbox.dataset.checkboxText;
+    const isChecked = checkbox.checked;
+    
+    console.log('=== CHECKBOX STATE DEBUG ===');
+    console.log('Checkbox element:', checkbox);
+    console.log('Dataset completo:', checkbox.dataset);
+    console.log('commentId:', commentId, 'tipo:', typeof commentId);
+    console.log('commentType:', commentType, 'tipo:', typeof commentType);
+    console.log('checkboxIndex:', checkboxIndex, 'tipo:', typeof checkboxIndex);
+    console.log('checkboxText:', checkboxText, 'tipo:', typeof checkboxText);
+    console.log('isChecked:', isChecked, 'tipo:', typeof isChecked);
+    
+    if (!commentId || !commentType || commentId === 'null' || commentId === 'undefined') {
+        console.error('❌ No se puede guardar: faltan datos del comentario');
+        console.log('Elemento padre del checkbox:', checkbox.closest('.comment-item'));
+        console.log('Intentando extraer commentId del elemento padre...');
+        
+        const parentComment = checkbox.closest('.comment-item');
+        if (parentComment) {
+            const extractedId = extractCommentId(parentComment);
+            const extractedType = detectCommentType(parentComment);
+            console.log('ID extraído:', extractedId, 'Tipo extraído:', extractedType);
+        }
+        return;
+    }
+    
+    // Primero aplicar el cambio visual
+    toggleTaskText(checkbox);
+    
+    // Preparar datos para enviar
+    const payload = {
+        comment_id: parseInt(commentId),
+        comment_type: commentType,
+        checkbox_index: parseInt(checkboxIndex),
+        checkbox_text: checkboxText,
+        is_checked: isChecked
+    };
+    
+    console.log('📤 Enviando datos:', payload);
+    console.log('📤 URL:', '?route=clan_leader/save-checkbox-state');
+    
+    // Luego guardar en la base de datos
+    fetch('?route=clan_leader/save-checkbox-state', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(response => {
+        console.log('📥 Respuesta recibida, status:', response.status);
+        console.log('📥 Headers:', response.headers);
+        
+        // Verificar si la respuesta es JSON válido
+        return response.text().then(text => {
+            console.log('📥 Respuesta como texto:', text);
+            try {
+                return JSON.parse(text);
+            } catch (e) {
+                console.error('❌ Error parsing JSON:', e);
+                console.error('❌ Respuesta recibida (no es JSON):', text);
+                throw new Error('Respuesta no es JSON válido: ' + text.substring(0, 200));
+            }
+        });
+    })
+    .then(data => {
+        console.log('📥 Datos de respuesta:', data);
+        if (data.success) {
+            console.log('✅ Estado guardado correctamente');
+        } else {
+            console.error('❌ Error al guardar estado:', data.message);
+            showNotification('Error al guardar estado del checkbox: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('❌ Error de fetch:', error);
+        showNotification('Error de conexión al guardar estado', 'error');
+    });
+}
+
+// Función para cargar estados guardados de checkboxes
+function loadCheckboxStates(commentId, commentType) {
+    fetch(`?route=clan_leader/get-checkbox-states&comment_ids=${commentId}&comment_type=${commentType}`)
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.states[commentId]) {
+            const states = data.states[commentId];
+            console.log('Estados cargados:', states);
+            
+            // Aplicar estados a los checkboxes
+            Object.keys(states).forEach(index => {
+                const state = states[index];
+                const checkbox = document.querySelector(`[data-comment-id="${commentId}"][data-checkbox-index="${index}"]`);
+                
+                if (checkbox) {
+                    checkbox.checked = state.is_checked;
+                    const label = checkbox.nextElementSibling;
+                    if (label) {
+                        if (state.is_checked) {
+                            label.style.textDecoration = 'line-through';
+                            label.style.color = '#9ca3af';
+                        } else {
+                            label.style.textDecoration = 'none';
+                            label.style.color = '';
+                        }
+                    }
+                }
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error al cargar estados:', error);
+    });
+}
+
+// Función para extraer el ID del comentario
+function extractCommentId(commentElement) {
+    // Primero intentar obtener del atributo data-comment-id
+    const commentId = commentElement.getAttribute('data-comment-id');
+    if (commentId) {
+        return commentId;
+    }
+    
+    // Fallback: buscar en botones de eliminar
+    const deleteButton = commentElement.querySelector('[onclick*="deleteSubtaskComment"]');
+    if (deleteButton) {
+        const match = deleteButton.getAttribute('onclick').match(/deleteSubtaskComment\((\d+)\)/);
+        return match ? match[1] : null;
+    }
+    
+    // Si es comentario de tarea, buscar de manera diferente
+    const taskDeleteButton = commentElement.querySelector('[onclick*="deleteTaskComment"]');
+    if (taskDeleteButton) {
+        const match = taskDeleteButton.getAttribute('onclick').match(/deleteTaskComment\((\d+)\)/);
+        return match ? match[1] : null;
+    }
+    
+    return null;
+}
+
+// Función para detectar el tipo de comentario
+function detectCommentType(commentElement) {
+    // Si estamos en un modal de subtarea, es comentario de subtarea
+    if (commentElement.closest('.modal-overlay')) {
+        return 'subtask';
+    }
+    
+    // Si está en la página principal, es comentario de tarea
+    if (commentElement.closest('.comments-section')) {
+        return 'task';
+    }
+    
+    return 'unknown';
+}
+
+
+
+// Función para mostrar feedback del checkbox
+function showCheckboxFeedback(message, type) {
+    // Solo mostrar feedback ocasionalmente para no ser molesto
+    if (Math.random() < 0.3) { // 30% de probabilidad
+        const feedback = document.createElement('div');
+        feedback.textContent = message;
+        feedback.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: ${type === 'success' ? '#10b981' : '#3b82f6'};
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            z-index: 10000;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+        `;
+        
+        document.body.appendChild(feedback);
+        
+        // Animar entrada
+        setTimeout(() => {
+            feedback.style.opacity = '1';
+            feedback.style.transform = 'translateY(0)';
+        }, 10);
+        
+        // Animar salida y eliminar
+        setTimeout(() => {
+            feedback.style.opacity = '0';
+            feedback.style.transform = 'translateY(-20px)';
+            setTimeout(() => feedback.remove(), 300);
+        }, 1500);
+    }
+}
+
+// Función para agregar botón de checklist al toolbar
+function addChecklistButton(editor, editorType) {
+    setTimeout(() => {
+        const toolbar = editor.getModule('toolbar');
+        const checklistBtn = toolbar.container.querySelector('.ql-checklist-btn');
+        
+        if (checklistBtn) {
+            // Agregar icono y estilo al botón
+            checklistBtn.innerHTML = '☐';
+            checklistBtn.title = 'Agregar Checklist (o escribe "???" + espacio)';
+            checklistBtn.style.fontSize = '16px';
+            checklistBtn.style.fontWeight = 'bold';
+            checklistBtn.style.color = '#374151';
+            checklistBtn.style.padding = '3px 5px';
+            checklistBtn.style.borderRadius = '3px';
+            
+            // Agregar hover effect
+            checklistBtn.addEventListener('mouseenter', function() {
+                this.style.backgroundColor = '#f3f4f6';
+                this.innerHTML = '☑';
+                this.style.color = '#10b981';
+            });
+            
+            checklistBtn.addEventListener('mouseleave', function() {
+                this.style.backgroundColor = 'transparent';
+                this.innerHTML = '☐';
+                this.style.color = '#374151';
+            });
+        }
+    }, 100);
+}
+
+// Función para insertar checklist
+function insertChecklist(editor) {
+    const range = editor.getSelection();
+    if (range) {
+        // Insertar en la posición actual del cursor
+        editor.insertText(range.index, '☐ ', 'user');
+        // Mover cursor después del checkbox
+        editor.setSelection(range.index + 2);
+    } else {
+        // Insertar al final si no hay selección
+        const length = editor.getLength();
+        editor.insertText(length, '\n☐ ', 'user');
+        editor.setSelection(length + 3);
+    }
+    
+    // Hacer focus en el editor
+    editor.focus();
+}
+
+// Función para configurar atajo ??? para checklist
+function setupChecklistShortcut(editor) {
+    editor.on('text-change', function(delta, oldDelta, source) {
+        if (source === 'user') {
+            const range = editor.getSelection();
+            if (range) {
+                const text = editor.getText(Math.max(0, range.index - 4), 4);
+                
+                // Detectar si escribió "??? " (tres signos de interrogación + espacio)
+                if (text.endsWith('??? ')) {
+                    // Eliminar los "??? " y reemplazar con checkbox
+                    editor.deleteText(range.index - 4, 4);
+                    editor.insertText(range.index - 4, '☐ ');
+                    editor.setSelection(range.index - 2);
+                    
+                    // Mostrar notificación temporal
+                    showChecklistTip();
+                }
+            }
+        }
+    });
+}
+
+// Función para mostrar tip de checklist creado
+function showChecklistTip() {
+    // Crear notificación temporal
+    const tip = document.createElement('div');
+    tip.innerHTML = '✨ ¡Checklist creado! Haz clic en ☐ para marcar/desmarcar';
+    tip.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #10b981;
+        color: white;
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 500;
+        z-index: 10000;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        animation: fadeInOut 2.5s ease-in-out;
+    `;
+    
+    // Agregar animación CSS
+    if (!document.getElementById('checklist-tip-style')) {
+        const style = document.createElement('style');
+        style.id = 'checklist-tip-style';
+        style.textContent = `
+            @keyframes fadeInOut {
+                0% { opacity: 0; transform: translateX(100%); }
+                15% { opacity: 1; transform: translateX(0); }
+                85% { opacity: 1; transform: translateX(0); }
+                100% { opacity: 0; transform: translateX(100%); }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    document.body.appendChild(tip);
+    
+    // Eliminar después de la animación
+    setTimeout(() => {
+        tip.remove();
+    }, 2500);
+}
+
+// Función para cargar usuarios asignados a una subtarea
+function loadSubtaskAssignedUsers() {
+    const subtaskElements = document.querySelectorAll('[data-subtask-id]');
+    
+    subtaskElements.forEach(element => {
+        const subtaskId = element.getAttribute('data-subtask-id');
+        
+        fetch(`?route=clan_leader/get-subtask-assigned-users&subtask_id=${subtaskId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    displayAssignedUsers(subtaskId, data.users);
+                } else {
+                    console.error('Error al cargar usuarios asignados:', data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error cargando usuarios asignados para subtarea', subtaskId, ':', error);
+            });
+    });
+}
+
+function displayAssignedUsers(subtaskId, users) {
+    const container = document.getElementById(`assigned-users-${subtaskId}`);
+    if (!container) return;
+    
+    if (users.length === 0) {
+        container.innerHTML = '<span style="color: #ef4444; font-size: 14px;">Sin asignar</span>';
+        return;
+    }
+    
+    let html = '<div style="display: flex; align-items: center; flex-wrap: wrap; gap: 8px;">';
+    html += '<span style="color: #6b7280; font-size: 14px;">Asignado a:</span>';
+    
+    users.forEach((user, index) => {
+        const initial = user.full_name ? user.full_name.charAt(0).toUpperCase() : user.username.charAt(0).toUpperCase();
+        const name = user.full_name || user.username;
+        
+        html += `
+            <div style="display: flex; align-items: center; gap: 4px; background: #dbeafe; padding: 4px 8px; border-radius: 12px; font-size: 12px;">
+                <div style="width: 20px; height: 20px; border-radius: 50%; background: #1e3a8a; color: white; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600;">
+                    ${initial}
+                </div>
+                <span style="color: #1e3a8a; font-weight: 500;">${name}</span>
+                <button onclick="removeUserFromSubtask(${subtaskId}, ${user.user_id})" style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 10px; padding: 0; margin-left: 2px;" title="Remover usuario">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+function removeUserFromSubtask(subtaskId, userId) {
+    if (!confirm('¿Deseas remover este usuario de la subtarea?')) {
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('subtask_id', subtaskId);
+    formData.append('user_id', userId);
+    
+    fetch('?route=clan_leader/remove-subtask-user', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Usuario removido exitosamente', 'success');
+            // Recargar solo los usuarios asignados sin recargar toda la página
+            loadSubtaskAssignedUsers();
+        } else {
+            showNotification('Error al remover usuario: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error de conexión', 'error');
+    });
+}
+
+// Esperar a que el DOM esté listo
+document.addEventListener('DOMContentLoaded', function() {
+    // Cargar contadores al inicializar la página
+    loadAllSubtaskCounts();
+    
+    // Cargar usuarios asignados a subtareas
+    loadSubtaskAssignedUsers();
+    
+    // Inicializar editor de comentario de tarea principal
+    initializeTaskCommentEditor();
+    
+    // Hacer interactivos los checklists existentes
+    document.querySelectorAll('.comment-content').forEach(makeChecklistInteractive);
+});
+
+// Función auxiliar para limpiar modales existentes
+function closeExistingModals() {
+    const existingModals = document.querySelectorAll('.modal-overlay');
+    existingModals.forEach(modal => modal.remove());
+}
+
+// Funciones para conteos de subtareas
+function loadAllSubtaskCounts() {
+    const subtaskItems = document.querySelectorAll('[data-subtask-id]');
+    subtaskItems.forEach(item => {
+        const subtaskId = item.getAttribute('data-subtask-id');
+        loadSubtaskCounts(subtaskId);
+    });
+}
+
+function loadSubtaskCounts(subtaskId) {
+    fetch('?route=clan_leader/get-subtask-counts&subtask_id=' + subtaskId)
+        .then(response => response.json())
+        .then(data => {
+            console.log('Counts for subtask ' + subtaskId + ':', data);
+            if (data.success) {
+                updateBadges(subtaskId, data.counts);
+            }
+        })
+        .catch(error => {
+            console.error('Error loading counts for subtask ' + subtaskId, error);
+        });
+}
+
+function updateBadges(subtaskId, counts) {
+    const commentsBadge = document.getElementById('comments-badge-' + subtaskId);
+    const attachmentsBadge = document.getElementById('attachments-badge-' + subtaskId);
+    
+    if (commentsBadge) {
+        // Usar comment_count (sin s) que es lo que devuelve el modelo
+        const commentCount = counts.comment_count || counts.comments_count || 0;
+        if (commentCount > 0) {
+            commentsBadge.textContent = commentCount;
+            commentsBadge.style.display = 'block';
+        } else {
+            commentsBadge.style.display = 'none';
+        }
+    }
+    
+    if (attachmentsBadge) {
+        // Usar attachment_count (sin s) que es lo que devuelve el modelo
+        const attachmentCount = counts.attachment_count || counts.attachments_count || 0;
+        if (attachmentCount > 0) {
+            attachmentsBadge.textContent = attachmentCount;
+            attachmentsBadge.style.display = 'block';
+        } else {
+            attachmentsBadge.style.display = 'none';
+        }
+    }
+}
+
+// Funciones para subtareas
+function showSubtaskComments(subtaskId) {
+    // Cargar comentarios desde el servidor
+    fetch('?route=clan_leader/get-subtask-comments&subtask_id=' + subtaskId)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showCommentsModal(subtaskId, data.comments);
+            } else {
+                showNotification('Error al cargar comentarios: ' + (data.message || 'Error desconocido'), 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Error al cargar comentarios', 'error');
+        });
+}
+
+function showCommentsModal(subtaskId, comments) {
+    // Cerrar modales existentes antes de abrir uno nuevo
+    closeExistingModals();
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 800px; max-height: 80vh;">
+            <div class="modal-header">
+                <h3><i class="fas fa-comments"></i> Comentarios de la Subtarea</h3>
+                <button class="btn-close" onclick="this.closest('.modal-overlay').remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" style="padding: 20px;">
+                <div class="comments-section">
+                    <div class="add-comment-section" style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                        <h4 style="margin: 0 0 10px 0;">Agregar Comentario</h4>
+                        <div class="rich-editor-container" style="position: relative;">
+                            <div id="subtask-comment-editor-${subtaskId}"></div>
+                            <button type="button" class="emoji-picker-btn" onclick="toggleEmojiPicker('subtask-comment-${subtaskId}')" title="Agregar emoji">
+                                <i class="fas fa-smile"></i>
+                            </button>
+                            <div id="subtask-comment-${subtaskId}-emoji-picker" class="emoji-picker-container" style="display: none;"></div>
+                        </div>
+                        <div id="subtask-file-preview-${subtaskId}" class="file-preview" style="display: none; margin: 10px 0; padding: 10px; background: #f0f9ff; border: 1px solid #0ea5e9; border-radius: 6px;">
+                            <div style="display: flex; align-items: center; justify-content: space-between;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <i class="fas fa-file" style="color: #0ea5e9;"></i>
+                                    <span id="subtask-file-name-${subtaskId}" style="color: #0369a1; font-size: 14px;"></span>
+                                    <span id="subtask-file-size-${subtaskId}" style="color: #64748b; font-size: 12px;"></span>
+                                </div>
+                                <button type="button" onclick="removeSubtaskAttachment(${subtaskId})" class="btn-icon-small" style="background: #fee2e2; color: #dc2626;" title="Quitar archivo">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 10px; justify-content: space-between; align-items: center;">
+                            <div>
+                                <input type="file" id="subtask-comment-file-${subtaskId}" style="display: none;" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif" onchange="showSubtaskFilePreview(${subtaskId})">
+                                <button type="button" onclick="document.getElementById('subtask-comment-file-${subtaskId}').click()" class="btn btn-secondary" style="padding: 8px 16px;">
+                                    <i class="fas fa-paperclip"></i> Adjuntar
+                                </button>
+                            </div>
+                            <button onclick="addSubtaskComment(${subtaskId})" class="btn btn-primary" style="padding: 8px 16px;">
+                                <i class="fas fa-paper-plane"></i> Agregar Comentario
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="comments-list">
+                        ${comments.length === 0 ? '<p style="text-align: center; color: #6b7280; font-style: italic;">No hay comentarios aún</p>' : ''}
+                        ${comments.map(comment => `
+                            <div class="comment-item" data-comment-id="${comment.comment_id}" style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px; margin-bottom: 15px; background: white;">
+                                <div class="comment-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                    <div class="comment-author" style="font-weight: 600; color: #374151;">
+                                        ${comment.full_name || comment.username}
+                                    </div>
+                                    <div class="comment-meta" style="display: flex; align-items: center; gap: 10px;">
+                                        <span style="font-size: 12px; color: #6b7280;">
+                                            ${new Date(comment.created_at).toLocaleString('es-ES')}
+                                        </span>
+                                        ${comment.user_id == <?php echo $this->currentUser['user_id'] ?? 0; ?> ? 
+                                            `<button onclick="deleteSubtaskComment(${comment.comment_id})" class="btn-icon-small" style="background: #ef4444; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;">
+                                                <i class="fas fa-trash"></i>
+                                            </button>` : ''
+                                        }
+                                    </div>
+                                </div>
+                                <div class="comment-content" style="color: #374151; line-height: 1.5;">
+                                    ${comment.comment_text}
+                                </div>
+                                ${comment.attachments && comment.attachments.length > 0 ? `
+                                    <div class="comment-attachments" style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #e5e7eb;">
+                                        <div style="font-weight: bold; margin-bottom: 5px; color: #6b7280; font-size: 12px;">
+                                            📎 Archivos adjuntos (${comment.attachments.length}):
+                                        </div>
+                                        ${comment.attachments.map(att => `
+                                            <a href="javascript:void(0)" onclick="openFilePreview(${att.attachment_id}, '${att.file_name}', '${att.file_type || ''}')" class="attachment-link" style="display: inline-block; background: #f3f4f6; padding: 4px 8px; border-radius: 4px; margin: 2px 4px 2px 0; font-size: 12px; text-decoration: none; color: #374151; cursor: pointer;">
+                                                <i class="fas fa-file"></i> ${att.file_name}
+                                                ${att.uploaded_at ? `<span class="attachment-date" style="color: #9ca3af; font-size: 10px; margin-left: 4px;">(${new Date(att.uploaded_at).toLocaleDateString()})</span>` : ''}
+                                            </a>
+                                        `).join('')}
+                                    </div>
+                                ` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    `;
     
-    <script src="?route=assets/js/clan-leader.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
-    <script>
-        // Modal de previsualización
-        function toggleCommentAttachments(button){
-            const container = button.closest('.comment-item').querySelector('.comment-attachments');
-            if (container) container.style.display = container.style.display==='none'?'block':'none';
-        }
-        function openPreview(url, name){
-            let modal = document.getElementById('previewModal');
-            if (!modal){
-                const html = `
-                <div id="previewModal" class="modal" style="display:none;">
-                  <div class="modal-content" style="max-width:800px;">
-                    <div class="modal-header">
-                      <h3 class="modal-title" id="previewTitle">Vista previa</h3>
-                      <span class="close" onclick="closePreview()">&times;</span>
-                    </div>
-                    <div id="previewBody" style="max-height:70vh;overflow:auto;"></div>
-                    <div class="modal-actions" style="margin-top:12px;text-align:right;">
-                      <a id="previewDownload" class="btn btn-primary" href="#" download>Descargar</a>
-                    </div>
-                  </div>
-                </div>`;
-                document.body.insertAdjacentHTML('beforeend', html);
-                modal = document.getElementById('previewModal');
-            }
-            const body = document.getElementById('previewBody');
-            const a = document.getElementById('previewDownload');
-            body.innerHTML = '';
-            a.href = url;
-            a.setAttribute('download', name || 'archivo');
-            const lower = (name||'').toLowerCase();
-            if (lower.endsWith('.png')||lower.endsWith('.jpg')||lower.endsWith('.jpeg')||lower.endsWith('.gif')||lower.endsWith('.webp')){
-                const img = document.createElement('img'); img.src = url; img.style.maxWidth='100%'; body.appendChild(img);
-            } else if (lower.endsWith('.pdf')){
-                const iframe = document.createElement('iframe'); iframe.src = url; iframe.style.width='100%'; iframe.style.height='70vh'; body.appendChild(iframe);
-            } else {
-                const p = document.createElement('p'); p.textContent = 'No hay vista previa para este formato. Usa Descargar.'; body.appendChild(p);
-            }
-            modal.style.display='block';
-        }
-        function closePreview(){ const modal = document.getElementById('previewModal'); if (modal) modal.style.display='none'; }
-        // Variables globales
-        let selectedFile = null;
-        let selectedUsers = [];
+    modal.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.5); display: flex; align-items: center;
+        justify-content: center; z-index: 1000;
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Inicializar editor de comentarios para subtarea
+    setTimeout(() => {
+        initializeSubtaskCommentEditor(subtaskId);
         
-        // Funciones para subtareas
-        function updateSubtaskStatus(subtaskId, status) {
-            fetch('?route=clan_leader/update-subtask-status', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: `subtask_id=${subtaskId}&status=${status}`
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Actualizar la UI
-                    const subtaskItem = document.querySelector(`[data-subtask-id="${subtaskId}"]`);
-                    if (subtaskItem) {
-                        const statusSpan = subtaskItem.querySelector('.subtask-meta span:first-child');
-                        if (statusSpan) {
-                            statusSpan.textContent = `Estado: ${status.charAt(0).toUpperCase() + status.slice(1)}`;
-                        }
-                    }
-                    showNotification('Estado de subtarea actualizado', 'success');
-                } else {
-                    showNotification('Error al actualizar estado: ' + data.message, 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showNotification('Error al actualizar estado', 'error');
-            });
+        // Hacer interactivos los checklists en los comentarios cargados
+        const commentsSection = modal.querySelector('.comments-list');
+        if (commentsSection) {
+            commentsSection.querySelectorAll('.comment-content').forEach(makeChecklistInteractive);
         }
-        
-        function updateSubtaskCompletion(subtaskId, completion) {
-            fetch('?route=clan_leader/update-subtask-status', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: `subtask_id=${subtaskId}&completion_percentage=${completion}`
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Actualizar la UI
-                    const subtaskItem = document.querySelector(`[data-subtask-id="${subtaskId}"]`);
-                    if (subtaskItem) {
-                        const progressFill = subtaskItem.querySelector('.progress-fill');
-                        const percentageSpan = subtaskItem.querySelector('.subtask-progress span');
-                        if (progressFill) progressFill.style.width = completion + '%';
-                        if (percentageSpan) percentageSpan.textContent = completion + '%';
-                    }
-                    showNotification('Progreso de subtarea actualizado', 'success');
-                } else {
-                    showNotification('Error al actualizar progreso: ' + data.message, 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showNotification('Error al actualizar progreso', 'error');
-            });
-        }
-        
-        function editSubtask(subtaskId) {
-            // Implementar edición de subtarea
-            showConfirmationModal({
-                title: 'Función en Desarrollo',
-                message: 'Función de edición de subtarea en desarrollo',
-                type: 'info',
-                confirmText: 'Entendido',
-                onConfirm: () => {}
-            });
-        }
-        
-        function deleteSubtask(subtaskId) {
-            showConfirmationModal({
-                title: 'Confirmar Eliminación',
-                message: '¿Estás seguro de que quieres eliminar esta subtarea?',
-                type: 'warning',
-                confirmText: 'Eliminar',
-                cancelText: 'Cancelar',
-                onConfirm: () => {
-                    fetch('?route=clan_leader/delete-subtask', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                        },
-                        body: `subtask_id=${subtaskId}`
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            const subtaskItem = document.querySelector(`[data-subtask-id="${subtaskId}"]`);
-                            if (subtaskItem) subtaskItem.remove();
-                            showNotification('Subtarea eliminada', 'success');
-                        } else {
-                            showNotification('Error al eliminar subtarea: ' + data.message, 'error');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        showNotification('Error al eliminar subtarea', 'error');
-                    });
-                }
-            });
-        }
-        
+    }, 100);
+}
 
+function addSubtaskComment(subtaskId) {
+    const editor = window[`subtaskCommentEditor_${subtaskId}`];
+    if (!editor) {
+        showNotification('Error: Editor no encontrado', 'error');
+        return;
+    }
+    
+    const commentText = editor.root.innerHTML.trim();
+    const fileInput = document.getElementById(`subtask-comment-file-${subtaskId}`);
+    
+    // Si hay archivo, primero subirlo
+    if (fileInput && fileInput.files.length > 0) {
+        const formData = new FormData();
+        formData.append('subtask_id', subtaskId);
+        formData.append('file', fileInput.files[0]);
+        
+        fetch('?route=clan_leader/upload-subtask-attachment', {
+            method: 'POST',
+            body: formData
+        })
+        .then(async response => {
+            const text = await response.text();
+            console.log('Upload response:', text);
+            try {
+                return JSON.parse(text);
+            } catch (e) {
+                console.error('Invalid JSON response:', text);
+                throw new Error('Respuesta inválida del servidor');
+            }
+        })
+        .then(data => {
+            if (data.success) {
+                // Después de subir el archivo, agregar el comentario con el attachment_id
+                addSubtaskCommentWithText(subtaskId, commentText, data.attachment_id);
+            } else {
+                showNotification('Error al subir archivo: ' + (data.message || 'Error desconocido'), 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Error al subir archivo: ' + error.message, 'error');
+        });
+        return;
+    }
+    
+    if (!commentText || commentText === '<p><br></p>') {
+        showNotification('Por favor escribe un comentario', 'error');
+        return;
+    }
+    
+    // Si no hay archivo, solo agregar el comentario
+    addSubtaskCommentWithText(subtaskId, commentText, null);
+}
+
+function addSubtaskCommentWithText(subtaskId, commentText, attachmentId = null) {
+    const formData = new FormData();
+    formData.append('subtask_id', subtaskId);
+    formData.append('comment_text', commentText);
+    if (attachmentId) {
+        formData.append('attachment_id', attachmentId);
+    }
+    
+    fetch('?route=clan_leader/add-subtask-comment', {
+        method: 'POST',
+        body: formData
+    })
+    .then(async response => {
+        const text = await response.text();
+        console.log('Add comment response:', text);
+        try {
+            return JSON.parse(text);
+        } catch (e) {
+            console.error('Invalid JSON response:', text);
+            throw new Error('Respuesta inválida del servidor');
+        }
+    })
+    .then(data => {
+        if (data.success) {
+            // Limpiar el editor
+            const editor = window[`subtaskCommentEditor_${subtaskId}`];
+            if (editor) {
+                editor.setContents([]);
+            }
+            
+            // Limpiar archivo y vista previa
+            const fileInput = document.getElementById(`subtask-comment-file-${subtaskId}`);
+            if (fileInput) {
+                fileInput.value = '';
+            }
+            const filePreview = document.getElementById(`subtask-file-preview-${subtaskId}`);
+            if (filePreview) {
+                filePreview.style.display = 'none';
+            }
+            
+            // Cerrar modal actual antes de recargar
+            closeExistingModals();
+            // Recargar comentarios y actualizar contadores
+            showSubtaskComments(subtaskId);
+            loadSubtaskCounts(subtaskId);
+        } else {
+            showNotification('Error al agregar comentario: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error de conexión', 'error');
+    });
+}
+
+// Mostrar vista previa del archivo adjunto en comentarios de tarea principal
+function showTaskFilePreview() {
+    const fileInput = document.getElementById('task-comment-files');
+    const filePreview = document.getElementById('task-file-preview');
+    const fileNames = document.getElementById('task-file-names');
+    
+    if (fileInput && fileInput.files.length > 0) {
+        const names = Array.from(fileInput.files).map(f => f.name).join(', ');
+        fileNames.textContent = `${fileInput.files.length} archivo(s): ${names}`;
+        filePreview.style.display = 'block';
+    }
+}
+
+// Quitar archivos adjuntos de comentario de tarea principal
+function removeTaskAttachment() {
+    const fileInput = document.getElementById('task-comment-files');
+    const filePreview = document.getElementById('task-file-preview');
+    
+    if (fileInput) {
+        fileInput.value = '';
+    }
+    if (filePreview) {
+        filePreview.style.display = 'none';
+    }
+}
+
+// Mostrar vista previa del archivo adjunto en comentarios de subtarea
+function showSubtaskFilePreview(subtaskId) {
+    const fileInput = document.getElementById(`subtask-comment-file-${subtaskId}`);
+    const filePreview = document.getElementById(`subtask-file-preview-${subtaskId}`);
+    const fileName = document.getElementById(`subtask-file-name-${subtaskId}`);
+    const fileSize = document.getElementById(`subtask-file-size-${subtaskId}`);
+    
+    if (fileInput && fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        fileName.textContent = file.name;
+        
+        // Formatear tamaño del archivo
+        const sizeInKB = (file.size / 1024).toFixed(2);
+        const sizeInMB = (file.size / (1024 * 1024)).toFixed(2);
+        fileSize.textContent = file.size > 1024 * 1024 ? `(${sizeInMB} MB)` : `(${sizeInKB} KB)`;
+        
+        filePreview.style.display = 'block';
+    }
+}
+
+// Quitar archivo adjunto de comentario de subtarea
+function removeSubtaskAttachment(subtaskId) {
+    const fileInput = document.getElementById(`subtask-comment-file-${subtaskId}`);
+    const filePreview = document.getElementById(`subtask-file-preview-${subtaskId}`);
+    
+    if (fileInput) {
+        fileInput.value = '';
+    }
+    if (filePreview) {
+        filePreview.style.display = 'none';
+    }
+}
+
+function deleteSubtaskComment(commentId) {
+    if (!confirm('¿Estás seguro de que quieres eliminar este comentario?')) {
+        return;
+    }
+    
+    fetch('?route=clan_leader/delete-subtask-comment', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            comment_id: commentId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Cerrar modal y actualizar contadores
+            closeExistingModals();
+            // Actualizar contadores sin recargar la página
+            loadSubtaskCounters();
+            showNotification('Comentario eliminado exitosamente', 'success');
+        } else {
+            showNotification('Error al eliminar comentario: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error de conexión', 'error');
+    });
+}
+
+function showSubtaskAttachments(subtaskId) {
+    // Cargar adjuntos desde el servidor
+    fetch('?route=clan_leader/get-subtask-attachments&subtask_id=' + subtaskId)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAttachmentsModal(subtaskId, data.attachments);
+            } else {
+                showNotification('Error al cargar adjuntos: ' + (data.message || 'Error desconocido'), 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Error al cargar adjuntos', 'error');
+        });
+}
+
+function showAttachmentsModal(subtaskId, attachments) {
+    // Cerrar modales existentes antes de abrir uno nuevo
+    closeExistingModals();
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 800px; max-height: 80vh;">
+            <div class="modal-header">
+                <h3><i class="fas fa-paperclip"></i> Adjuntos de la Subtarea</h3>
+                <button class="btn-close" onclick="this.closest('.modal-overlay').remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" style="padding: 20px;">
+                <div class="attachments-section">
+                    <div class="add-attachment-section" style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                        <h4 style="margin: 0 0 10px 0;">Subir Archivo</h4>
+                        <form id="upload-form" enctype="multipart/form-data">
+                            <input type="file" id="attachment-file" style="margin-bottom: 10px;" accept="*/*">
+                            <textarea id="attachment-description" rows="2" placeholder="Descripción del archivo (opcional)..." style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px; margin-bottom: 10px; resize: vertical;"></textarea>
+                            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                                <button type="button" onclick="uploadSubtaskAttachment(${subtaskId})" class="btn btn-primary" style="padding: 8px 16px;">Subir Archivo</button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <div class="attachments-list">
+                        ${attachments.length === 0 ? '<p style="text-align: center; color: #6b7280; font-style: italic;">No hay adjuntos aún</p>' : ''}
+                        ${attachments.map(attachment => `
+                            <div class="attachment-item" style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px; margin-bottom: 15px; background: white;">
+                                <div class="attachment-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                    <div class="attachment-info">
+                                        <div class="attachment-name" style="font-weight: 600; color: #374151; display: flex; align-items: center; gap: 8px;">
+                                            <i class="fas fa-file"></i>
+                                            <a href="javascript:void(0)" onclick="openFilePreview(${attachment.attachment_id}, '${attachment.file_name}', '${attachment.file_type || ''}')" style="color: #1e3a8a; text-decoration: none; cursor: pointer;">
+                                                ${attachment.file_name}
+                                            </a>
+                                        </div>
+                                        <div class="attachment-meta" style="font-size: 12px; color: #6b7280; margin-top: 4px;">
+                                            ${formatFileSize(attachment.file_size)} • ${attachment.file_type} • ${new Date(attachment.uploaded_at).toLocaleString('es-ES')}
+                                        </div>
+                                    </div>
+                                    <div class="attachment-actions">
+                                        <a href="${attachment.file_path}" download="${attachment.file_name}" class="btn-icon-small" style="background: #10b981; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; text-decoration: none; margin-right: 5px;">
+                                            <i class="fas fa-download"></i>
+                                        </a>
+                                        ${attachment.user_id == <?php echo $this->currentUser['user_id'] ?? 0; ?> ? 
+                                            `<button onclick="deleteSubtaskAttachment(${attachment.attachment_id})" class="btn-icon-small" style="background: #ef4444; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;">
+                                                <i class="fas fa-trash"></i>
+                                            </button>` : ''
+                                        }
+                                    </div>
+                                </div>
+                                ${attachment.description ? `
+                                    <div class="attachment-description" style="color: #6b7280; font-size: 14px; margin-top: 8px; padding-top: 8px; border-top: 1px solid #f3f4f6;">
+                                        ${attachment.description}
+                                    </div>
+                                ` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    modal.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.5); display: flex; align-items: center;
+        justify-content: center; z-index: 1000;
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+function uploadSubtaskAttachment(subtaskId) {
+    const fileInput = document.getElementById('attachment-file');
+    const description = document.getElementById('attachment-description').value.trim();
+    
+    if (!fileInput.files[0]) {
+        showNotification('Por favor selecciona un archivo', 'error');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('subtask_id', subtaskId);
+    formData.append('file', fileInput.files[0]);
+    if (description) {
+        formData.append('description', description);
+    }
+    
+    fetch('?route=clan_leader/upload-subtask-attachment', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Cerrar modal actual antes de recargar
+            closeExistingModals();
+            // Recargar adjuntos y actualizar contadores
+            showSubtaskAttachments(subtaskId);
+            loadSubtaskCounts(subtaskId);
+        } else {
+            showNotification('Error al subir archivo: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error de conexión', 'error');
+    });
+}
+
+function deleteSubtaskAttachment(attachmentId) {
+    if (!confirm('¿Estás seguro de que quieres eliminar este archivo?')) {
+        return;
+    }
+    
+    fetch('?route=clan_leader/delete-subtask-attachment', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            attachment_id: attachmentId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Cerrar modal y actualizar contadores
+            closeExistingModals();
+            // Actualizar contadores sin recargar la página
+            loadSubtaskCounters();
+            showNotification('Archivo eliminado exitosamente', 'success');
+        } else {
+            showNotification('Error al eliminar archivo: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error de conexión', 'error');
+    });
+}
+
+function editSubtask(subtaskId) {
+    // Obtener datos de la subtarea
+    fetch('?route=clan_leader/get-subtask-for-edit&subtask_id=' + subtaskId)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showEditSubtaskModal(data.subtask);
+            } else {
+                showNotification('Error al cargar datos de subtarea: ' + (data.message || 'Error desconocido'), 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Error al cargar datos de subtarea', 'error');
+        });
+}
+
+function showEditSubtaskModal(subtask) {
+    // Cerrar modales existentes antes de abrir uno nuevo
+    closeExistingModals();
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3><i class="fas fa-edit"></i> Editar Subtarea</h3>
+                <button class="btn-close" onclick="this.closest('.modal-overlay').remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="edit-form">
+                    <div class="form-group">
+                        <label for="edit-subtask-title">Título:</label>
+                        <input type="text" id="edit-subtask-title" value="${subtask.title}" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px; margin-bottom: 10px;">
+                </div>
+                    <div class="form-group">
+                        <label for="edit-subtask-description">Descripción:</label>
+                        <textarea id="edit-subtask-description" rows="3" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px; margin-bottom: 15px;">${subtask.description || ''}</textarea>
+                </div>
+                    <div class="form-group">
+                        <label for="edit-subtask-status">Estado:</label>
+                        <select id="edit-subtask-status" onchange="toggleProgressBarLeader()" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px; margin-bottom: 10px;">
+                            <option value="pending" ${subtask.status === 'pending' ? 'selected' : ''}>Pendiente</option>
+                            <option value="in_progress" ${subtask.status === 'in_progress' ? 'selected' : ''}>En Progreso</option>
+                            <option value="completed" ${subtask.status === 'completed' ? 'selected' : ''}>Completada</option>
+                            <option value="blocked" ${subtask.status === 'blocked' ? 'selected' : ''}>Bloqueada</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-subtask-due-date">Fecha de Término:</label>
+                        <input type="date" id="edit-subtask-due-date" value="${subtask.due_date || ''}" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px; margin-bottom: 15px;">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-subtask-percentage">Progreso:</label>
+                        <div class="progress-control-container-leader" style="margin-bottom: 15px;">
+                            <div class="progress-bar-edit-leader" onclick="updateProgressFromClickLeader(event)" style="position: relative; width: 100%; height: 24px; background: #f3f4f6; border-radius: 12px; border: 2px solid #e5e7eb; cursor: pointer; margin-bottom: 8px;">
+                                <div class="progress-fill-edit-leader" id="progressFillEditLeader" style="height: 100%; background: linear-gradient(90deg, #10b981, #22c55e); border-radius: 10px; width: ${subtask.completion_percentage || 0}%; transition: width 0.3s ease;"></div>
+                                <span class="progress-text-edit-leader" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 12px; font-weight: 600; color: #374151;">${subtask.completion_percentage || 0}%</span>
+                            </div>
+                            <input type="range" id="edit-subtask-percentage" min="0" max="100" value="${subtask.completion_percentage || 0}" oninput="updateProgressDisplayLeader(this.value)" style="width: 100%;">
+                        </div>
+                    </div>
+                    <div class="form-actions" style="display: flex; gap: 10px; justify-content: flex-end;">
+                        <button type="button" onclick="this.closest('.modal-overlay').remove()" class="btn btn-secondary">Cancelar</button>
+                        <button type="button" onclick="saveSubtaskChanges(${subtask.subtask_id})" class="btn btn-primary">Guardar</button>
+    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    modal.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.5); display: flex; align-items: center;
+        justify-content: center; z-index: 1000;
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Configurar estado inicial de la barra de progreso
+    toggleProgressBarLeader();
+    
+    document.getElementById('edit-subtask-title').focus();
+}
+
+// Función para habilitar/deshabilitar la barra de progreso según el estado (líder de clan)
+function toggleProgressBarLeader() {
+    // NO vincular el estado con el porcentaje - función simplificada
+    // Esta función ya no es necesaria pero la mantenemos por compatibilidad
+}
+
+// Función para actualizar el progreso desde el click en la barra (líder de clan)
+function updateProgressFromClickLeader(event) {
+    const status = document.getElementById('edit-subtask-status').value;
+    if (status === 'pending') return; // No permitir cambios si está pendiente
+    
+    const progressBar = event.currentTarget;
+    const rect = progressBar.getBoundingClientRect();
+    const clickX = event.clientX - rect.left;
+    const percentage = Math.round((clickX / rect.width) * 100);
+    
+    if (percentage >= 0 && percentage <= 100) {
+        updateProgressDisplayLeader(percentage);
+        document.getElementById('edit-subtask-percentage').value = percentage;
+    }
+}
+
+// Función para actualizar la visualización del progreso (líder de clan)
+function updateProgressDisplayLeader(percentage) {
+    const progressFill = document.getElementById('progressFillEditLeader');
+    const progressText = document.querySelector('.progress-text-edit-leader');
+    
+    if (progressFill) progressFill.style.width = percentage + '%';
+    if (progressText) progressText.textContent = percentage + '%';
+}
+
+function saveSubtaskChanges(subtaskId) {
+    const title = document.getElementById('edit-subtask-title').value.trim();
+    const description = document.getElementById('edit-subtask-description').value.trim();
+    const status = document.getElementById('edit-subtask-status').value;
+    const completionPercentage = parseInt(document.getElementById('edit-subtask-percentage').value);
+    const dueDate = document.getElementById('edit-subtask-due-date').value;
+    
+    if (!title) {
+        showNotification('El título es requerido', 'error');
+        return;
+    }
+    
+    // Preparar el cuerpo de la petición (estado y porcentaje independientes)
+    const requestBody = {
+        subtask_id: subtaskId,
+        title: title,
+        description: description,
+        status: status,
+        completion_percentage: completionPercentage, // usar el valor del slider tal cual
+        due_date: dueDate
+    };
+    
+    fetch('?route=clan_leader/edit-subtask', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            closeExistingModals();
+            showNotification('Subtarea actualizada exitosamente', 'success');
+            // Recargar la página para mostrar los cambios
+            location.reload();
+        } else {
+            showNotification('Error al actualizar subtarea: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error de conexión', 'error');
+    });
+}
+
+function deleteSubtask(subtaskId) {
+    if (confirm('¿Estás seguro de que quieres eliminar esta subtarea?')) {
+        fetch('?route=clan_leader/delete-subtask', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'subtask_id=' + subtaskId
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Remover el elemento de la vista
+                const subtaskElement = document.querySelector(`[data-subtask-id="${subtaskId}"]`);
+                if (subtaskElement) {
+                    subtaskElement.remove();
+                }
+                showNotification('Subtarea eliminada correctamente', 'success');
+            } else {
+                showNotification('Error al eliminar la subtarea: ' + (data.message || 'Error desconocido'), 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Error al eliminar la subtarea', 'error');
+        });
+    }
+}
+
+// Función para actualizar el progreso de una subtarea
+function updateSubtaskProgress(subtaskId, newProgress) {
+    console.log('Updating subtask progress:', subtaskId, newProgress);
+    
+    // Actualizar la UI inmediatamente
+    const subtaskCard = document.querySelector(`[data-subtask-id="${subtaskId}"]`);
+    if (subtaskCard) {
+        const progressBar = subtaskCard.querySelector('.progress-fill');
+        const progressText = subtaskCard.querySelector('.progress-text');
+        
+        if (progressBar) {
+            progressBar.style.width = newProgress + '%';
+        }
+        if (progressText) {
+            progressText.textContent = newProgress + '%';
+        }
+    }
+    
+    // Enviar al servidor
+    fetch('?route=clan_leader/update-subtask-progress', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'subtask_id=' + subtaskId + '&completion_percentage=' + newProgress
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (!data.success) {
+            showNotification('Error al actualizar el progreso: ' + (data.message || 'Error desconocido'), 'error');
+            // Revertir cambios si hay error
+            location.reload();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error al actualizar el progreso', 'error');
+    });
+}
+
+// Función para actualizar el progreso haciendo click en la barra
+function updateSubtaskProgressFromClick(event, subtaskId) {
+    const progressBar = event.currentTarget;
+    const rect = progressBar.getBoundingClientRect();
+    const clickX = event.clientX - rect.left;
+    const percentage = Math.round((clickX / rect.width) * 100);
+    
+    if (percentage >= 0 && percentage <= 100) {
+        // Actualizar el slider también
+        const slider = document.querySelector(`.subtask-progress-slider[data-subtask-id="${subtaskId}"]`);
+        if (slider) {
+            slider.value = percentage;
+        }
+        updateSubtaskProgress(subtaskId, percentage);
+    }
+}
+
+function updateSubtaskStatus(subtaskId, newStatus) {
+    console.log('=== UPDATE SUBTASK STATUS (LEADER) ===');
+    console.log('Subtask ID:', subtaskId);
+    console.log('New Status:', newStatus);
+    
+    // Calcular el porcentaje de completación basado en el estado
+    // Obtener el porcentaje actual para no modificarlo si se selecciona 'pending'
+    const subtaskCard = document.querySelector(`[data-subtask-id="${subtaskId}"]`);
+    const progressElement = subtaskCard.querySelector('.progress-percentage');
+    const currentProgress = progressElement ? parseInt(progressElement.textContent.replace('%', '')) : 0;
+    
+    console.log('Progress element found:', !!progressElement);
+    console.log('Current progress text:', progressElement ? progressElement.textContent : 'no element');
+    console.log('Current progress parsed:', currentProgress);
+    
+    // NO vincular el estado con el porcentaje - se manejan independientemente
+    console.log('Status change only - not changing percentage');
+    
+    // Preparar el cuerpo de la petición (sin enviar porcentaje)
+    let requestBody = 'subtask_id=' + subtaskId + '&status=' + newStatus;
+    
+    fetch('?route=clan_leader/update-subtask-status', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: requestBody
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Actualizar el estado visual inmediatamente
+            const subtaskCard = document.querySelector(`[data-subtask-id="${subtaskId}"]`);
+            if (subtaskCard) {
+                // Actualizar el texto del estado
+                const estadoSpan = subtaskCard.querySelector('.subtask-status-text');
+                if (estadoSpan) {
+                    const estados = {
+                        'pending': 'Pendiente',
+                        'in_progress': 'En Progreso',
+                        'completed': 'Completada',
+                        'blocked': 'Bloqueada'
+                    };
+                    estadoSpan.textContent = 'Estado: ' + estados[newStatus];
+                }
+                
+                // NO actualizar la barra de progreso (se maneja independientemente)
+                console.log('Status updated - progress bar not changed');
+            }
+            
+            showNotification('Estado de subtarea actualizado correctamente', 'success');
+        } else {
+            showNotification('Error al actualizar el estado: ' + (data.message || 'Error desconocido'), 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error al actualizar el estado de la subtarea', 'error');
+    });
+}
+
+// Función para mostrar modal de asignación de subtarea
+function showAssignSubtaskModal(subtaskId) {
+    // Cargar usuarios disponibles desde el servidor
+    fetch('?route=clan_leader/get-available-users')
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            displayAssignSubtaskModal(subtaskId, data.users);
+        } else {
+            showNotification('Error al cargar usuarios: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error al cargar usuarios', 'error');
+    });
+}
+
+function displayAssignSubtaskModal(subtaskId, users) {
+    // Cerrar modales existentes antes de abrir uno nuevo
+    closeExistingModals();
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 600px; max-height: 80vh;">
+            <div class="modal-header">
+                <h3><i class="fas fa-user-plus"></i> Asignar Usuario a Subtarea</h3>
+                <button class="btn-close" onclick="this.closest('.modal-overlay').remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" style="padding: 20px;">
+                <div class="assign-user-section">
+                    <div style="margin-bottom: 20px;">
+                        <div style="position: relative;">
+                            <input 
+                                type="text" 
+                                id="assignUserSearchInput" 
+                                placeholder="Buscar usuario por nombre o email..." 
+                                style="width: 100%; padding: 12px 16px 12px 44px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; outline: none; transition: border-color 0.2s;"
+                                onkeyup="filterAssignUsers(this.value)"
+                                onfocus="this.style.borderColor='#1e3a8a'" 
+                                onblur="this.style.borderColor='#e5e7eb'"
+                            >
+                            <i class="fas fa-search" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #6b7280; font-size: 16px;"></i>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 12px; color: #6b7280; font-size: 14px; display: flex; justify-content: space-between; align-items: center;">
+                        <span>Selecciona uno o más usuarios para asignar a la subtarea:</span>
+                        <span id="selectedUsersCount" style="background: #1e3a8a; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: 600;">0 seleccionados</span>
+                    </div>
+                    <div id="assignUsersList" style="max-height: 350px; overflow-y: auto; border: 2px solid #f3f4f6; border-radius: 8px; padding: 8px;">
+                        ${users.length === 0 ? '<div style="text-align: center; color: #6b7280; padding: 20px; font-style: italic;">No hay usuarios disponibles</div>' : ''}
+                        ${users.map(user => `
+                            <div class="assign-user-option" data-user-id="${user.user_id}" data-user-search="${(user.full_name || '') + ' ' + user.username + ' ' + (user.email || '')}".toLowerCase() style="display: flex; align-items: center; padding: 12px; border: 2px solid #f3f4f6; border-radius: 8px; margin-bottom: 8px; cursor: pointer; transition: all 0.2s; background-color: white;" onclick="toggleUserSelection(this, ${user.user_id})" onmouseover="this.style.borderColor='#e5e7eb'; this.style.backgroundColor='#f9fafb'" onmouseout="updateUserOptionStyle(this)">
+                                <input type="checkbox" class="user-checkbox" data-user-id="${user.user_id}" style="margin-right: 12px; width: 18px; height: 18px; cursor: pointer; accent-color: #1e3a8a;" onchange="updateSelectionCount()">
+                                <div style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #1e3a8a, #3b82f6); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 18px; margin-right: 12px; flex-shrink: 0;">
+                                    ${user.full_name ? user.full_name.charAt(0).toUpperCase() : user.username.charAt(0).toUpperCase()}
+                                </div>
+                                <div style="flex: 1; min-width: 0;">
+                                    <div style="font-weight: 600; color: #1f2937; font-size: 16px; display: flex; align-items: center; flex-wrap: wrap; gap: 4px;">
+                                        ${user.full_name || user.username}
+                                        ${user.membership_status === 'Miembro del clan' 
+                                            ? '<span style="background: #10b981; color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 8px;">CLAN</span>'
+                                            : '<span style="background: #6b7280; color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 8px;">EXTERNO</span>'
+                                        }
+                                    </div>
+                                    <div style="font-size: 14px; color: #6b7280; margin-top: 2px;">@${user.username}</div>
+                                    ${user.email ? `<div style="font-size: 12px; color: #9ca3af; margin-top: 1px;">${user.email}</div>` : ''}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #f3f4f6; display: flex; gap: 10px;">
+                        <button id="assignSelectedUsersBtn" onclick="assignSelectedUsers(${subtaskId})" style="background: #10b981; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 500; flex: 1; opacity: 0.5;" disabled>
+                            <i class="fas fa-user-plus" style="margin-right: 8px;"></i>Asignar Seleccionados
+                        </button>
+                        <button onclick="unassignSubtaskUser(${subtaskId})" style="background: #ef4444; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 500; flex: 1;">
+                            <i class="fas fa-user-times" style="margin-right: 8px;"></i>Desasignar Todos
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    modal.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.5); display: flex; align-items: center;
+        justify-content: center; z-index: 1000;
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+function filterAssignUsers(searchTerm) {
+    const userOptions = document.querySelectorAll('.assign-user-option');
+    
+    userOptions.forEach(option => {
+        const searchText = option.getAttribute('data-user-search').toLowerCase();
+        const shouldShow = searchText.includes(searchTerm.toLowerCase());
+        option.style.display = shouldShow ? 'flex' : 'none';
+    });
+}
+
+function toggleUserSelection(element, userId) {
+    const checkbox = element.querySelector('.user-checkbox');
+    checkbox.checked = !checkbox.checked;
+    updateSelectionCount();
+}
+
+function updateSelectionCount() {
+    const selectedCheckboxes = document.querySelectorAll('.user-checkbox:checked');
+    const count = selectedCheckboxes.length;
+    const countElement = document.getElementById('selectedUsersCount');
+    const assignBtn = document.getElementById('assignSelectedUsersBtn');
+    
+    if (countElement) {
+        countElement.textContent = `${count} seleccionado${count !== 1 ? 's' : ''}`;
+    }
+    
+    if (assignBtn) {
+        if (count > 0) {
+            assignBtn.disabled = false;
+            assignBtn.style.opacity = '1';
+            assignBtn.style.cursor = 'pointer';
+        } else {
+            assignBtn.disabled = true;
+            assignBtn.style.opacity = '0.5';
+            assignBtn.style.cursor = 'not-allowed';
+        }
+    }
+}
+
+function updateUserOptionStyle(element) {
+    const checkbox = element.querySelector('.user-checkbox');
+    if (checkbox.checked) {
+        element.style.borderColor = '#1e3a8a';
+        element.style.backgroundColor = '#dbeafe';
+    } else {
+        element.style.borderColor = '#f3f4f6';
+        element.style.backgroundColor = 'white';
+    }
+}
+
+function assignSelectedUsers(subtaskId) {
+    const selectedCheckboxes = document.querySelectorAll('.user-checkbox:checked');
+    const selectedUserIds = Array.from(selectedCheckboxes).map(cb => cb.dataset.userId);
+    
+    if (selectedUserIds.length === 0) {
+        showNotification('Por favor selecciona al menos un usuario', 'error');
+        return;
+    }
+    
+    const userNames = Array.from(selectedCheckboxes).map(cb => {
+        const option = cb.closest('.assign-user-option');
+        const nameElement = option.querySelector('[style*="font-weight: 600"]');
+        return nameElement ? nameElement.textContent.trim() : 'Usuario';
+    });
+    
+    if (!confirm(`¿Deseas asignar la subtarea a ${selectedUserIds.length} usuario${selectedUserIds.length !== 1 ? 's' : ''}?\n\n${userNames.join(', ')}`)) {
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('subtask_id', subtaskId);
+    formData.append('user_ids', JSON.stringify(selectedUserIds));
+    
+    fetch('?route=clan_leader/assign-subtask-users', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            closeExistingModals();
+            showNotification(`${selectedUserIds.length} usuario${selectedUserIds.length !== 1 ? 's' : ''} asignado${selectedUserIds.length !== 1 ? 's' : ''} exitosamente`, 'success');
+            // Recargar la página para mostrar el cambio
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        } else {
+            showNotification('Error al asignar usuarios: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error de conexión', 'error');
+    });
+}
+
+function unassignSubtaskUser(subtaskId) {
+    if (!confirm('¿Deseas desasignar TODOS los usuarios de esta subtarea?')) {
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('subtask_id', subtaskId);
+    
+    fetch('?route=clan_leader/unassign-subtask-users', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            closeExistingModals();
+            showNotification('Todos los usuarios desasignados exitosamente', 'success');
+            // Recargar la página para mostrar el cambio
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        } else {
+            showNotification('Error al desasignar usuarios: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error de conexión', 'error');
+    });
+}
+
+// Función auxiliar para cargar contadores de comentarios y adjuntos
+function loadSubtaskCounters() {
+    // Obtener todos los IDs de subtareas
+    const subtaskElements = document.querySelectorAll('[data-subtask-id]');
+    
+    subtaskElements.forEach(element => {
+        const subtaskId = element.getAttribute('data-subtask-id');
+        
+        // Cargar contadores usando la ruta existente
+        fetch('?route=clan_leader/get-subtask-counts&subtask_id=' + subtaskId)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Actualizar badge de comentarios
+                    const commentsBadge = document.getElementById('comments-badge-' + subtaskId);
+                    if (commentsBadge) {
+                        if (data.counts.comments_count > 0) {
+                            commentsBadge.textContent = data.counts.comments_count;
+                            commentsBadge.style.display = 'inline';
+                        } else {
+                            commentsBadge.style.display = 'none';
+                        }
+                    }
+                    
+                    // Actualizar badge de adjuntos
+                    const attachmentsBadge = document.getElementById('attachments-badge-' + subtaskId);
+                    if (attachmentsBadge) {
+                        if (data.counts.attachments_count > 0) {
+                            attachmentsBadge.textContent = data.counts.attachments_count;
+                            attachmentsBadge.style.display = 'inline';
+                        } else {
+                            attachmentsBadge.style.display = 'none';
+                        }
+                    }
+                } else {
+                    console.error('Error al cargar contadores:', data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error cargando contadores para subtarea', subtaskId, ':', error);
+            });
+    });
+}
+
+// Formulario de comentarios de tarea
+document.getElementById('tdCommentForm')?.addEventListener('submit', function(e){
+    e.preventDefault();
+    
+    if (taskCommentEditor) {
+        // Obtener contenido del editor rico
+        const commentContent = taskCommentEditor.root.innerHTML;
+        
+        if (!commentContent || commentContent.trim() === '<p><br></p>') {
+            showNotification('Por favor escribe un comentario', 'error');
+            return;
+        }
+        
+        // Actualizar el campo oculto con el contenido del editor
+        document.getElementById('task-comment-content').value = commentContent;
+    }
+    
+    const fd = new FormData(this);
+    fetch('?route=clan_leader/add-task-comment', { method:'POST', body: fd, credentials:'same-origin' })
+        .then(async r=>{ const t = await r.text(); try{ return JSON.parse(t); } catch(e){ console.error(t); return {success:false,message:'Respuesta inválida'}; } })
+        .then(d=>{ 
+            if(d.success){ 
+                // Limpiar el editor
+                if (taskCommentEditor) {
+                    taskCommentEditor.setContents([]);
+                }
+                // Limpiar vista previa de archivos
+                const fileInput = document.getElementById('task-comment-files');
+                if (fileInput) {
+                    fileInput.value = '';
+                }
+                const filePreview = document.getElementById('task-file-preview');
+                if (filePreview) {
+                    filePreview.style.display = 'none';
+                }
+                location.reload(); 
+            } else { 
+                showNotification(d.message||'Error', 'error'); 
+            } 
+        });
+});
+        
+        // Variable global para almacenar todos los usuarios
+        let allUsers = [];
+        
+        // Función para mostrar nombres amigables de roles
+        function getRoleDisplayName(role) {
+            const roleNames = {
+                'super_admin': 'Super Administrador',
+                'admin': 'Administrador',
+                'lider_clan': 'Líder de Clan',
+                'usuario_normal': 'Usuario Normal'
+            };
+            return roleNames[role] || role;
+        }
+        
+        // Variable para almacenar usuarios ya asignados
+        let assignedUsers = [];
         
         // Funciones para colaboradores
         function showAddCollaboratorModal() {
-            // Cargar usuarios disponibles
+            // Obtener usuarios ya asignados a la tarea
+            const assignedUserElements = document.querySelectorAll('[data-user-id]');
+            assignedUsers = Array.from(assignedUserElements).map(el => parseInt(el.getAttribute('data-user-id')));
+            
             fetch('?route=clan_leader/get-available-users')
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    const userList = document.getElementById('availableUsersList');
-                    userList.innerHTML = '';
+                    allUsers = data.users;
+                    displayUsers(allUsers);
+                    updateUserCount(allUsers.length);
                     
-                    data.users.forEach(user => {
-                        const userOption = document.createElement('div');
-                        userOption.className = 'user-option';
-                        userOption.innerHTML = `
-                            <input type="checkbox" id="user_${user.user_id}" value="${user.user_id}">
-                            <div class="user-avatar">
-                                ${user.full_name ? user.full_name.charAt(0).toUpperCase() : user.username.charAt(0).toUpperCase()}
-                            </div>
-                            <div>
-                                <div style="font-weight: 600;">${user.full_name || user.username}</div>
-                                <div style="font-size: 12px; color: #6b7280;">${user.username}</div>
-                            </div>
-                        `;
-                        userList.appendChild(userOption);
-                    });
+                    // Limpiar el campo de búsqueda
+                    document.getElementById('userSearchInput').value = '';
                     
-                    document.getElementById('addCollaboratorModal').style.display = 'block';
+                    document.getElementById('addCollaboratorModal').style.display = 'flex';
                 } else {
                     showNotification('Error al cargar usuarios: ' + data.message, 'error');
                 }
@@ -1279,9 +2534,108 @@ if (!isset($task) || !isset($subtasks) || !isset($comments) || !isset($history) 
             });
         }
         
+        function displayUsers(users) {
+            const userList = document.getElementById('availableUsersList');
+            userList.innerHTML = '';
+            
+            if (users.length === 0) {
+                userList.innerHTML = '<div style="text-align: center; color: #6b7280; padding: 20px; font-style: italic;">No se encontraron usuarios</div>';
+                return;
+            }
+            
+            users.forEach(user => {
+                const userOption = document.createElement('div');
+                userOption.className = 'user-option';
+                userOption.setAttribute('data-user-search', `${user.full_name || ''} ${user.username} ${user.email || ''}`.toLowerCase());
+                
+                const isAlreadyAssigned = assignedUsers.includes(parseInt(user.user_id));
+                
+                const membershipBadge = user.membership_status === 'Miembro del clan' 
+                    ? '<span style="background: #10b981; color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 8px;">CLAN</span>'
+                    : '<span style="background: #6b7280; color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 8px;">EXTERNO</span>';
+                
+                const assignedBadge = isAlreadyAssigned 
+                    ? '<span style="background: #f59e0b; color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 8px; font-weight: bold;">YA ASIGNADO</span>'
+                    : '';
+                
+                const borderColor = isAlreadyAssigned ? '#f59e0b' : '#f3f4f6';
+                const backgroundColor = isAlreadyAssigned ? '#fffbeb' : 'white';
+                const opacity = isAlreadyAssigned ? '0.7' : '1';
+                
+                userOption.innerHTML = `
+                    <div style="display: flex; align-items: center; padding: 12px; border: 2px solid ${borderColor}; border-radius: 8px; margin-bottom: 8px; cursor: pointer; transition: all 0.2s; background-color: ${backgroundColor}; opacity: ${opacity};" onmouseover="if(!${isAlreadyAssigned}) {this.style.borderColor='#e5e7eb'; this.style.backgroundColor='#f9fafb'}" onmouseout="this.style.borderColor='${borderColor}'; this.style.backgroundColor='${backgroundColor}'">
+                        <input type="checkbox" id="user_${user.user_id}" value="${user.user_id}" style="margin-right: 12px; width: 18px; height: 18px; cursor: pointer;" onchange="updateSelectedCount()" ${isAlreadyAssigned ? 'disabled' : ''}>
+                        <div style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #1e3a8a, #3b82f6); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 18px; margin-right: 12px; flex-shrink: 0;">
+                            ${user.full_name ? user.full_name.charAt(0).toUpperCase() : user.username.charAt(0).toUpperCase()}
+                        </div>
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="font-weight: 600; color: #1f2937; font-size: 16px; display: flex; align-items: center; flex-wrap: wrap; gap: 4px;">
+                                ${user.full_name || user.username}
+                                ${membershipBadge}
+                                ${assignedBadge}
+                            </div>
+                            <div style="font-size: 14px; color: #6b7280; margin-top: 2px;">@${user.username}</div>
+                            ${user.email ? `<div style="font-size: 12px; color: #9ca3af; margin-top: 1px;">${user.email}</div>` : ''}
+                            ${user.role ? `<div style="font-size: 12px; color: #1e3a8a; margin-top: 1px; font-weight: 500;">Rol: ${getRoleDisplayName(user.role)}</div>` : ''}
+                            ${isAlreadyAssigned ? '<div style="font-size: 11px; color: #d97706; margin-top: 2px; font-style: italic;">Este usuario ya está asignado a la tarea</div>' : ''}
+                        </div>
+                    </div>
+                `;
+                
+                // Hacer que todo el div sea clickeable (solo si no está ya asignado)
+                if (!isAlreadyAssigned) {
+                    userOption.onclick = function(e) {
+                        if (e.target.type !== 'checkbox') {
+                            const checkbox = this.querySelector('input[type="checkbox"]');
+                            checkbox.checked = !checkbox.checked;
+                            updateSelectedCount();
+                        }
+                    };
+                }
+                
+                userList.appendChild(userOption);
+            });
+        }
+        
+        function filterUsers(searchTerm) {
+            const filteredUsers = allUsers.filter(user => {
+                const searchText = `${user.full_name || ''} ${user.username} ${user.email || ''}`.toLowerCase();
+                return searchText.includes(searchTerm.toLowerCase());
+            });
+            
+            displayUsers(filteredUsers);
+            updateUserCount(filteredUsers.length);
+        }
+        
+        function updateUserCount(count) {
+            document.getElementById('userCount').textContent = `${count} usuario${count !== 1 ? 's' : ''}`;
+        }
+        
+        function updateSelectedCount() {
+            const selectedCount = document.querySelectorAll('#availableUsersList input[type="checkbox"]:checked').length;
+            const button = document.querySelector('button[onclick="addSelectedCollaborators()"]');
+            
+            if (selectedCount > 0) {
+                button.innerHTML = `<i class="fas fa-plus" style="margin-right: 8px;"></i>Agregar ${selectedCount} Seleccionado${selectedCount !== 1 ? 's' : ''}`;
+                button.style.opacity = '1';
+            } else {
+                button.innerHTML = '<i class="fas fa-plus" style="margin-right: 8px;"></i>Agregar Seleccionados';
+                button.style.opacity = '0.7';
+            }
+        }
+        
         function closeAddCollaboratorModal() {
             document.getElementById('addCollaboratorModal').style.display = 'none';
-            selectedUsers = [];
+            
+            // Limpiar el campo de búsqueda
+            document.getElementById('userSearchInput').value = '';
+            
+            // Desmarcar todos los checkboxes
+            const checkboxes = document.querySelectorAll('#availableUsersList input[type="checkbox"]');
+            checkboxes.forEach(checkbox => checkbox.checked = false);
+            
+            // Resetear el estado del botón
+            updateSelectedCount();
         }
         
         function addSelectedCollaborators() {
@@ -1298,7 +2652,7 @@ if (!isset($task) || !isset($subtasks) || !isset($comments) || !isset($history) 
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                 },
-                body: `task_id=<?= $task['task_id'] ?>&user_ids=${userIds.join(',')}`
+    body: `task_id=<?php echo $task['task_id']; ?>&user_ids=${userIds.join(',')}`
             })
             .then(response => response.json())
             .then(data => {
@@ -1322,7 +2676,7 @@ if (!isset($task) || !isset($subtasks) || !isset($comments) || !isset($history) 
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                 },
-                body: `task_id=<?= $task['task_id'] ?>&user_id=${userId}&percentage=${percentage}`
+    body: `task_id=<?php echo $task['task_id']; ?>&user_id=${userId}&percentage=${percentage}`
             })
             .then(response => response.json())
             .then(data => {
@@ -1339,26 +2693,21 @@ if (!isset($task) || !isset($subtasks) || !isset($comments) || !isset($history) 
         }
         
         function removeCollaborator(userId) {
-            showConfirmationModal({
-            title: 'Confirmar Remoción',
-            message: '¿Estás seguro de que quieres remover este colaborador?',
-            type: 'warning',
-            confirmText: 'Remover',
-            cancelText: 'Cancelar',
-            onConfirm: () => {
+    if (!confirm('¿Estás seguro de que quieres remover este colaborador?')) return;
+    
                 fetch('?route=clan_leader/remove-collaborator', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
                     },
-                    body: `task_id=<?= $task['task_id'] ?>&user_id=${userId}`
+          body: `task_id=<?php echo $task['task_id']; ?>&user_id=${userId}`
                 })
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
                         const userItem = document.querySelector(`[data-user-id="${userId}"]`);
                         if (userItem) userItem.remove();
-                        showNotification('Colaborador removido', 'success');
+            showNotification('Colaborador removido exitosamente', 'success');
                     } else {
                         showNotification('Error al remover colaborador: ' + data.message, 'error');
                     }
@@ -1367,50 +2716,566 @@ if (!isset($task) || !isset($subtasks) || !isset($comments) || !isset($history) 
                     console.error('Error:', error);
                     showNotification('Error al remover colaborador', 'error');
                 });
+}
+
+function deleteTask(taskId) {
+    if (!confirm('¿Estás seguro de que quieres eliminar esta tarea?')) return;
+    
+    fetch('?route=clan_leader/delete-task', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'task_id=' + taskId
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        showNotification('Tarea eliminada exitosamente', 'success');
+        setTimeout(() => { window.location.href = '?route=clan_leader/tasks'; }, 800);
+      } else {
+        showNotification('Error al eliminar la tarea: ' + (data.message || 'Error desconocido'), 'error');
+      }
+    })
+    .catch(() => showNotification('Error al eliminar la tarea', 'error'));
+}
+
+// Función simple de notificación
+function showNotification(message, type = 'info') {
+    let notification = document.getElementById('cl-notification');
+    if (!notification) {
+        const notificationHTML = `
+            <div id="cl-notification" style="
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 9999;
+                padding: 15px 20px;
+                border-radius: 8px;
+                color: white !important;
+                font-weight: 600;
+                display: none;
+                transition: all 0.3s ease;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                border: none;
+                font-family: inherit;
+                font-size: 14px;
+                max-width: 350px;
+                word-wrap: break-word;
+            ">
+                <span id="cl-notificationMessage" style="color: white !important; background: none !important;"></span>
+                <button onclick="closeCLNotification()" style="
+                    background: none !important;
+                    border: none !important;
+                    color: white !important;
+                    margin-left: 10px;
+                    cursor: pointer;
+                    font-size: 18px;
+                    padding: 0;
+                    line-height: 1;
+                ">&times;</button>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', notificationHTML);
+        notification = document.getElementById('cl-notification');
+    }
+    
+    const messageElement = document.getElementById('cl-notificationMessage');
+    messageElement.textContent = message;
+    
+    // Limpiar estilos previos
+    notification.style.background = '';
+    notification.style.backgroundColor = '';
+    
+    if (type === 'success') {
+        notification.style.background = '#10b981 !important';
+        notification.style.backgroundColor = '#10b981';
+    } else if (type === 'error') {
+        notification.style.background = '#ef4444 !important';
+        notification.style.backgroundColor = '#ef4444';
+    } else {
+        notification.style.background = '#1e3a8a !important';
+        notification.style.backgroundColor = '#1e3a8a';
+    }
+    
+    notification.style.display = 'block';
+    
+    setTimeout(() => {
+        notification.style.display = 'none';
+    }, 5000);
+}
+        
+function closeCLNotification() {
+  const notification = document.getElementById('cl-notification');
+  if (notification) {
+    notification.style.display = 'none';
+  }
+}
+
+// Cerrar modal al hacer clic fuera
+window.onclick = function(event) {
+  const modal = document.getElementById('addCollaboratorModal');
+  if (event.target === modal) {
+    closeAddCollaboratorModal();
+  }
+}
+    // Selector de Emojis
+const emojis = [
+    '😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '😊', '😇', '🥰', '😍', '🤩', '😘',
+    '😗', '😚', '😙', '😋', '😛', '😜', '🤪', '😝', '🤑', '🤗', '🤭', '🤫', '🤔', '🤐', '🤨',
+    '😐', '😑', '😶', '😏', '😒', '🙄', '😬', '🤥', '😌', '😔', '😪', '🤤', '😴', '😷', '🤒',
+    '🤕', '🤢', '🤮', '🤧', '🥵', '🥶', '🥴', '😵', '🤯', '🤠', '🥳', '😎', '🤓', '🧐', '😕',
+    '😟', '🙁', '☹️', '😮', '😯', '😲', '😳', '🥺', '😦', '😧', '😨', '😰', '😥', '😢', '😭',
+    '😱', '😖', '😣', '😞', '😓', '😩', '😫', '🥱', '😤', '😡', '😠', '🤬', '😈', '👿', '💀',
+    '☠️', '💩', '🤡', '👹', '👺', '👻', '👽', '👾', '🤖', '😺', '😸', '😹', '😻', '😼', '😽',
+    '🙀', '😿', '😾', '👋', '🤚', '🖐️', '✋', '🖖', '👌', '🤏', '✌️', '🤞', '🤟', '🤘', '🤙',
+    '👈', '👉', '👆', '👇', '☝️', '👍', '👎', '✊', '👊', '🤛', '🤜', '👏', '🙌', '👐',
+    '🤲', '🤝', '🙏', '✍️', '💅', '🤳', '💪', '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤',
+    '🤍', '🤎', '💔', '❣️', '💕', '💞', '💓', '💗', '💖', '💘', '💝', '💟'
+];
+
+function initializeEmojiPicker(containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    container.innerHTML = '';
+    const emojiGrid = document.createElement('div');
+    emojiGrid.className = 'emoji-grid';
+    
+    emojis.forEach(emoji => {
+        const emojiBtn = document.createElement('button');
+        emojiBtn.type = 'button';
+        emojiBtn.className = 'emoji-item';
+        emojiBtn.textContent = emoji;
+        emojiBtn.onclick = () => insertEmoji(emoji, containerId.replace('-emoji-picker', ''));
+        emojiGrid.appendChild(emojiBtn);
+    });
+    
+    container.appendChild(emojiGrid);
+}
+
+function toggleEmojiPicker(editorId) {
+    const pickerId = editorId + '-emoji-picker';
+    const picker = document.getElementById(pickerId);
+    
+    if (!picker) {
+        console.error('No se encontró el picker:', pickerId);
+        return;
+    }
+    
+    if (picker.style.display === 'none') {
+        initializeEmojiPicker(pickerId);
+        picker.style.display = 'block';
+        
+        document.querySelectorAll('.emoji-picker-container').forEach(p => {
+            if (p.id !== pickerId) {
+                p.style.display = 'none';
             }
+        });
+        
+        setTimeout(() => {
+            document.addEventListener('click', function closeEmoji(e) {
+                if (!e.target.closest('.emoji-picker-container') && !e.target.closest('.emoji-picker-btn')) {
+                    picker.style.display = 'none';
+                    document.removeEventListener('click', closeEmoji);
+                }
+            });
+        }, 100);
+    } else {
+        picker.style.display = 'none';
+    }
+}
+
+function insertEmoji(emoji, editorId) {
+    console.log('=== INSERTAR EMOJI ===');
+    console.log('Emoji:', emoji);
+    console.log('Editor ID:', editorId);
+    
+    // Método 1: Insertar directamente en el div contenteditable de Quill
+    let editorContainer = null;
+    
+    if (editorId === 'task-comment') {
+        editorContainer = document.querySelector('#task-comment-editor .ql-editor');
+    } else if (editorId.startsWith('subtask-comment-')) {
+        const subtaskId = editorId.replace('subtask-comment-', '');
+        editorContainer = document.querySelector(`#subtask-comment-editor-${subtaskId} .ql-editor`);
+    }
+    
+    console.log('Editor container encontrado:', editorContainer);
+    
+    if (editorContainer) {
+        // Método directo: insertar en el contenido HTML
+        editorContainer.focus();
+        
+        // Obtener la selección actual o crear una nueva
+        const selection = window.getSelection();
+        let range;
+        
+        try {
+            range = selection.getRangeAt(0);
+        } catch(e) {
+            // Si no hay selección, crear un rango al final del contenido
+            range = document.createRange();
+            range.selectNodeContents(editorContainer);
+            range.collapse(false); // false = colapsar al final
         }
         
-        // Funciones generales
-        function deleteTask(taskId) {
-            showConfirmationModal({
-            title: 'Confirmar Eliminación',
-            message: '¿Estás seguro de que quieres eliminar esta tarea?',
-            type: 'warning',
-            confirmText: 'Eliminar',
-            cancelText: 'Cancelar',
-            onConfirm: () => {
-                fetch('?route=clan_leader/delete-task', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: 'task_id=' + taskId
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        showNotification('Tarea eliminada exitosamente', 'success');
-                        setTimeout(() => {
-                            window.location.href = '?route=clan_leader/tasks';
-                        }, 1000);
-                    } else {
-                        showNotification('Error al eliminar la tarea: ' + data.message, 'error');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showNotification('Error al eliminar la tarea', 'error');
-                });
-            }
+        // Crear un nodo de texto con el emoji
+        const emojiNode = document.createTextNode(emoji);
+        
+        // Insertar el emoji en la posición del cursor
+        range.deleteContents();
+        range.insertNode(emojiNode);
+        
+        // Mover el cursor después del emoji
+        range.setStartAfter(emojiNode);
+        range.setEndAfter(emojiNode);
+        selection.removeAllRanges();
+        selection.addRange(range);
+        
+        // Enfocar el editor
+        editorContainer.focus();
+        
+        console.log('✅ Emoji insertado directamente en el editor');
+        
+        // Disparar evento input para que Quill detecte el cambio
+        editorContainer.dispatchEvent(new Event('input', { bubbles: true }));
+        
+        // Método 2: Si tenemos acceso al objeto Quill, sincronizar
+        let quillEditor = null;
+        
+        if (editorId === 'task-comment') {
+            quillEditor = window.taskCommentEditor;
+        } else if (editorId.startsWith('subtask-comment-')) {
+            const subtaskId = editorId.replace('subtask-comment-', '');
+            quillEditor = window[`subtaskCommentEditor_${subtaskId}`];
         }
         
-        // Cerrar modal al hacer clic fuera
-        window.onclick = function(event) {
-            const modal = document.getElementById('addCollaboratorModal');
-            if (event.target === modal) {
-                closeAddCollaboratorModal();
-            }
+        if (quillEditor) {
+            // Sincronizar el contenido HTML con Quill
+            const html = editorContainer.innerHTML;
+            const delta = quillEditor.clipboard.convert(html);
+            quillEditor.setContents(delta, 'silent');
+            console.log('✅ Contenido sincronizado con Quill');
         }
+    } else {
+        // Fallback: buscar cualquier textarea
+        console.log('Buscando textarea como fallback...');
+        
+        let textarea = null;
+        
+        if (editorId === 'task-comment') {
+            textarea = document.querySelector('#task-comment-editor textarea') ||
+                      document.querySelector('textarea[name="comment_text"]');
+        } else if (editorId.startsWith('subtask-comment-')) {
+            const subtaskId = editorId.replace('subtask-comment-', '');
+            textarea = document.querySelector(`#subtask-comment-editor-${subtaskId} textarea`) ||
+                      document.querySelector(`#subtask-comment-text`);
+        }
+        
+        console.log('Textarea encontrado:', textarea);
+        
+        if (textarea) {
+            const start = textarea.selectionStart || 0;
+            const end = textarea.selectionEnd || 0;
+            const text = textarea.value || '';
+            
+            textarea.value = text.substring(0, start) + emoji + text.substring(end);
+            textarea.selectionStart = textarea.selectionEnd = start + emoji.length;
+            textarea.focus();
+            
+            // Disparar eventos para actualizar
+            textarea.dispatchEvent(new Event('input', { bubbles: true }));
+            textarea.dispatchEvent(new Event('change', { bubbles: true }));
+            
+            console.log('✅ Emoji insertado en textarea');
+        } else {
+            console.error('❌ No se encontró ningún editor para insertar el emoji');
+            
+            // Último intento: copiar al portapapeles
+            navigator.clipboard.writeText(emoji).then(() => {
+                alert(`El emoji ${emoji} se copió al portapapeles. Pégalo con Ctrl+V o Cmd+V`);
+            });
+        }
+    }
+    
+    // Cerrar el picker
+    const pickerId = editorId + '-emoji-picker';
+    const picker = document.getElementById(pickerId);
+    if (picker) {
+        picker.style.display = 'none';
+    }
+}
+
+// CSS para el selector de emojis
+if (!document.getElementById('emoji-picker-styles')) {
+    const style = document.createElement('style');
+    style.id = 'emoji-picker-styles';
+    style.textContent = `
+        .emoji-picker-btn {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 6px 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            z-index: 10;
+        }
+        
+        .emoji-picker-btn:hover {
+            background: #e5e7eb;
+            transform: scale(1.05);
+        }
+        
+        .emoji-picker-btn i {
+            font-size: 18px;
+            color: #6b7280;
+        }
+        
+        .emoji-picker-container {
+            position: absolute;
+            bottom: 50px;
+            right: 10px;
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 10px;
+            width: 320px;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+        
+        .emoji-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 4px;
+        }
+        
+        .emoji-item {
+            background: none;
+            border: none;
+            padding: 6px;
+            font-size: 20px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s;
+            line-height: 1;
+        }
+        
+        .emoji-item:hover {
+            background: #f3f4f6;
+            transform: scale(1.2);
+        }
+        
+        .rich-editor-container .ql-container {
+            padding-bottom: 40px;
+        }
+        
+        .rich-editor-container textarea {
+            padding-bottom: 40px !important;
+        }
+        
+        .emoji-picker-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .emoji-picker-container::-webkit-scrollbar-track {
+            background: #f3f4f6;
+            border-radius: 4px;
+        }
+        
+        .emoji-picker-container::-webkit-scrollbar-thumb {
+            background: #9ca3af;
+            border-radius: 4px;
+        }
+        
+        .emoji-picker-container::-webkit-scrollbar-thumb:hover {
+            background: #6b7280;
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+// Funciones para vista previa de archivos
+function openFilePreview(attachmentId, fileName, fileType) {
+    const modal = document.getElementById('file-preview-modal');
+    const title = document.getElementById('file-preview-title');
+    const content = document.getElementById('file-preview-content');
+    const downloadBtn = document.getElementById('download-file-btn');
+    
+    if (!modal) {
+        // Crear modal si no existe
+        createFilePreviewModal();
+        return openFilePreview(attachmentId, fileName, fileType);
+    }
+    
+    title.textContent = fileName;
+    downloadBtn.onclick = () => downloadFile(attachmentId, fileName);
+    
+    // Mostrar loading
+    content.innerHTML = '<div style="padding: 40px; text-align: center;"><i class="fas fa-spinner fa-spin" style="font-size: 24px; color: #6b7280;"></i><p style="margin-top: 10px; color: #6b7280;">Cargando vista previa...</p></div>';
+    
+    modal.style.display = 'flex';
+    
+    // Determinar tipo de archivo y mostrar vista previa
+    if (isImageFile(fileType)) {
+        showImagePreview(attachmentId, content);
+    } else if (isPdfFile(fileType)) {
+        showPdfPreview(attachmentId, content);
+    } else if (isTextFile(fileType)) {
+        showTextPreview(attachmentId, content);
+    } else {
+        showUnsupportedPreview(fileName, fileType, content);
+    }
+}
+
+function createFilePreviewModal() {
+    const modalHTML = `
+        <div id="file-preview-modal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; display: flex; align-items: center; justify-content: center;">
+            <div class="modal-content" style="background: white; border-radius: 12px; max-width: 90%; max-height: 90%; overflow: hidden; position: relative; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);">
+                <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; padding: 20px; border-bottom: 1px solid #e5e7eb;">
+                    <h3 id="file-preview-title" style="margin: 0; font-size: 18px; font-weight: 600; color: #1f2937;"></h3>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <button id="download-file-btn" class="btn btn-primary" style="padding: 8px 16px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                            <i class="fas fa-download"></i> Descargar
+                        </button>
+                        <button onclick="closeFilePreviewModal()" class="btn-icon-small" style="width: 32px; height: 32px; border: none; border-radius: 6px; background: #f3f4f6; color: #6b7280; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="modal-body" style="padding: 20px; overflow: auto; max-height: calc(90vh - 120px);">
+                    <div id="file-preview-content" style="text-align: center;">
+                        <!-- Contenido del archivo se carga aquí -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+function closeFilePreviewModal() {
+    const modal = document.getElementById('file-preview-modal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+function isImageFile(fileType) {
+    return fileType && fileType.startsWith('image/');
+}
+
+function isPdfFile(fileType) {
+    return fileType === 'application/pdf';
+}
+
+function isTextFile(fileType) {
+    return fileType && (fileType.startsWith('text/') || fileType.includes('json') || fileType.includes('xml'));
+}
+
+function showImagePreview(attachmentId, content) {
+    const imageUrl = `file-viewer.php?id=${attachmentId}`;
+    content.innerHTML = `
+        <img src="${imageUrl}" style="max-width: 100%; max-height: 70vh; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);" 
+             onerror="showErrorPreview('Error al cargar la imagen', this.parentElement)" />
+    `;
+}
+
+function showPdfPreview(attachmentId, content) {
+    const pdfUrl = `file-viewer.php?id=${attachmentId}`;
+    content.innerHTML = `
+        <iframe src="${pdfUrl}" style="width: 100%; height: 70vh; border: none; border-radius: 8px;" 
+                onerror="showErrorPreview('Error al cargar el PDF', this.parentElement)"></iframe>
+    `;
+}
+
+function showTextPreview(attachmentId, content) {
+    fetch(`file-viewer.php?id=${attachmentId}`)
+        .then(response => response.text())
+        .then(text => {
+            content.innerHTML = `
+                <pre style="background: #f8fafc; padding: 20px; border-radius: 8px; text-align: left; max-height: 60vh; overflow: auto; font-family: 'Courier New', monospace; font-size: 14px; line-height: 1.5;">${escapeHtml(text)}</pre>
+            `;
+        })
+        .catch(error => {
+            showErrorPreview('Error al cargar el archivo de texto', content);
+        });
+}
+
+function showUnsupportedPreview(fileName, fileType, content) {
+    const icon = getFileIcon(fileType);
+    content.innerHTML = `
+        <div style="padding: 40px; text-align: center;">
+            <i class="${icon}" style="font-size: 64px; color: #6b7280; margin-bottom: 20px;"></i>
+            <h3 style="margin: 0 0 10px 0; color: #374151;">Vista previa no disponible</h3>
+            <p style="margin: 0; color: #6b7280;">Este tipo de archivo (${fileType || 'desconocido'}) no se puede previsualizar.</p>
+            <p style="margin: 10px 0 0 0; color: #6b7280;">Puedes descargarlo usando el botón de descarga.</p>
+        </div>
+    `;
+}
+
+function showErrorPreview(message, content) {
+    content.innerHTML = `
+        <div style="padding: 40px; text-align: center;">
+            <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: #f59e0b; margin-bottom: 20px;"></i>
+            <h3 style="margin: 0 0 10px 0; color: #374151;">${message}</h3>
+            <p style="margin: 0; color: #6b7280;">Intenta descargar el archivo directamente.</p>
+        </div>
+    `;
+}
+
+function getFileIcon(fileType) {
+    if (!fileType) return 'fas fa-file';
+    
+    if (fileType.includes('pdf')) return 'fas fa-file-pdf';
+    if (fileType.includes('word') || fileType.includes('document')) return 'fas fa-file-word';
+    if (fileType.includes('excel') || fileType.includes('spreadsheet')) return 'fas fa-file-excel';
+    if (fileType.includes('powerpoint') || fileType.includes('presentation')) return 'fas fa-file-powerpoint';
+    if (fileType.includes('image')) return 'fas fa-file-image';
+    if (fileType.includes('video')) return 'fas fa-file-video';
+    if (fileType.includes('audio')) return 'fas fa-file-audio';
+    if (fileType.includes('text')) return 'fas fa-file-alt';
+    if (fileType.includes('zip') || fileType.includes('archive')) return 'fas fa-file-archive';
+    
+    return 'fas fa-file';
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function downloadFile(attachmentId, fileName) {
+    const link = document.createElement('a');
+    link.href = `file-viewer.php?id=${attachmentId}&action=download`;
+    link.download = fileName;
+    link.click();
+}
+
+// Cerrar modal con ESC
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeFilePreviewModal();
+    }
+});
+
+// Cerrar modal al hacer click fuera del contenido
+document.addEventListener('click', function(e) {
+    const modal = document.getElementById('file-preview-modal');
+    if (modal && e.target === modal) {
+        closeFilePreviewModal();
+    }
+});
     </script>
-</body>
-</html> 
+
+
+<?php
+$content = ob_get_clean();
+$additionalCSS = [APP_URL . 'assets/css/clan-leader.css'];
+require_once __DIR__ . '/../layout.php';
+?>

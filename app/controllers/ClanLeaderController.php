@@ -8,11 +8,17 @@ class ClanLeaderController {
     private $roleModel;
     private $kpiModel;
     private $taskModel;
+    private $subtaskModel;
+    private $subtaskAssignmentModel;
     private $currentUser;
     private $userClan;
     private $db;
     
     public function __construct() {
+        // Inicializar conexión a base de datos
+        require_once __DIR__ . '/../../config/database.php';
+        $this->db = Database::getConnection();
+        
         $this->auth = new Auth();
         $this->userModel = new User();
         $this->projectModel = new Project();
@@ -25,6 +31,17 @@ class ClanLeaderController {
             die("Error: La clase Task no se pudo cargar");
         }
         $this->taskModel = new Task();
+        $this->subtaskModel = new Subtask();
+        
+        // Cargar SubtaskAssignment si existe, sino crear una implementación básica
+        if (class_exists('SubtaskAssignment')) {
+            $this->subtaskAssignmentModel = new SubtaskAssignment();
+        } else {
+            // Fallback temporal hasta que se cargue el modelo
+            require_once __DIR__ . '/../models/SubtaskAssignment.php';
+            $this->subtaskAssignmentModel = new SubtaskAssignment();
+        }
+        
         $this->db = Database::getConnection();
         
         // Limpiar cualquier transacción activa al inicializar
@@ -44,6 +61,14 @@ class ClanLeaderController {
             } else {
                 // Obtener el clan del usuario
                 $this->userClan = $this->userModel->getUserClan($this->currentUser['user_id']);
+                
+                // Asignar el clan_id al usuario actual para que esté disponible
+                if ($this->userClan && isset($this->userClan['clan_id'])) {
+                    $this->currentUser['clan_id'] = $this->userClan['clan_id'];
+                    error_log('Clan ID asignado al usuario: ' . $this->currentUser['clan_id']);
+                } else {
+                    error_log('ERROR: No se pudo obtener el clan del usuario');
+                }
             }
         } else {
             $this->userClan = null;
@@ -54,38 +79,175 @@ class ClanLeaderController {
      * Dashboard principal del líder de clan
      */
     public function index() {
-        $taskStats = $this->getTaskStats();
-        $memberContributions = $this->getMemberContributions();
+        // Requerir autenticación
+        $this->requireAuth();
+
+        // Verificar permisos mínimos
+        if (!$this->hasClanLeaderAccess()) {
+            Utils::redirect('dashboard');
+            exit;
+        }
+
+        // Si el usuario no tiene clan asignado, mostrar dashboard vacío seguro
+        if (!$this->userClan || !isset($this->userClan['clan_id'])) {
+            $emptyStats = [
+                'total_tasks' => 0,
+                'completed_tasks' => 0,
+                'pending_tasks' => 0,
+                'in_progress_tasks' => 0,
+                'completion_percentage' => 0
+            ];
+
+            $data = [
+                'userStats' => ['total_members' => 0, 'active_members' => 0, 'recent_members' => 0],
+                'projectStats' => ['total_projects' => 0, 'active_projects' => 0, 'kpi_projects' => 0],
+                'clanStats' => ['member_count' => 0, 'project_count' => 0, 'active_projects' => 0, 'completed_projects' => 0],
+                'taskStats' => $emptyStats,
+                'memberContributions' => [],
+                'clanIcon' => $this->getClanIcon(''),
+                'currentPage' => 'clan_leader',
+                'user' => $this->currentUser,
+                'clan' => ['clan_name' => 'Sin clan asignado', 'clan_departamento' => '-', 'clan_id' => null]
+            ];
+            $this->loadView('clan_leader/dashboard', $data);
+            exit;
+        }
+
+        // PÁGINA RECREADA DESDE CERO - SOLO MIS TAREAS
+        // CONSULTA DIRECTA - Solo tareas asignadas a mí
+        $userId = $this->currentUser['user_id'];
         
-        // Debug: Log de información para verificar datos
-        error_log("Clan Leader Dashboard Debug:");
-        error_log("Clan ID: " . $this->userClan['clan_id']);
-        error_log("Task Stats: " . json_encode($taskStats));
-        error_log("Member Contributions Count: " . count($memberContributions));
+        $sql = "
+            (SELECT 
+                t.task_id,
+                t.task_name,
+                t.status,
+                t.priority,
+                t.due_date,
+                t.assigned_to_user_id,
+                t.project_id,
+                COALESCE(p.project_name, 
+                    CASE 
+                        WHEN COALESCE(p.is_personal, t.is_personal, 0) = 1 THEN 'Tareas Personales'
+                        ELSE 'Sin Proyecto'
+                    END
+                ) AS project_name,
+                CASE 
+                    WHEN p.project_type IS NOT NULL THEN p.project_type
+                    WHEN t.is_personal = 1 AND t.created_by_user_id = t.assigned_to_user_id THEN 'personal'
+                    WHEN p.project_name LIKE '%Recurrente%' OR p.project_name LIKE '%recurrente%' THEN 'recurrent'
+                    WHEN p.project_name LIKE '%Eventual%' OR p.project_name LIKE '%eventual%' THEN 'eventual'
+                    ELSE 'normal'
+                END AS project_type,
+                COALESCE(p.is_personal, t.is_personal, 0) AS is_personal,
+                DATEDIFF(t.due_date, CURDATE()) AS days_until_due,
+                'task' AS item_type,
+                NULL AS parent_task_id,
+                NULL AS parent_task_name
+            FROM Tasks t
+            LEFT JOIN Projects p ON p.project_id = t.project_id
+            WHERE t.assigned_to_user_id = ?
+                AND (t.is_subtask = 0 OR t.is_subtask IS NULL)
+                AND t.status != 'completed'
+                AND t.is_completed = 0
+                AND (
+                    -- Excluir tareas personales de otros usuarios
+                    COALESCE(p.is_personal, t.is_personal, 0) = 0 
+                    OR 
+                    (COALESCE(p.is_personal, t.is_personal, 0) = 1 AND t.created_by_user_id = ?)
+                ))
+            
+            UNION ALL
+            
+            (SELECT 
+                s.subtask_id AS task_id,
+                s.title AS task_name,
+                s.status,
+                s.priority,
+                s.due_date,
+                s.assigned_to_user_id,
+                t.project_id,
+                COALESCE(p.project_name, 
+                    CASE 
+                        WHEN COALESCE(p.is_personal, t.is_personal, 0) = 1 THEN 'Tareas Personales'
+                        ELSE 'Sin Proyecto'
+                    END
+                ) AS project_name,
+                CASE 
+                    WHEN p.project_type IS NOT NULL THEN p.project_type
+                    WHEN t.is_personal = 1 AND t.created_by_user_id = t.assigned_to_user_id THEN 'personal'
+                    WHEN p.project_name LIKE '%Recurrente%' OR p.project_name LIKE '%recurrente%' THEN 'recurrent'
+                    WHEN p.project_name LIKE '%Eventual%' OR p.project_name LIKE '%eventual%' THEN 'eventual'
+                    ELSE 'normal'
+                END AS project_type,
+                COALESCE(p.is_personal, t.is_personal, 0) AS is_personal,
+                DATEDIFF(s.due_date, CURDATE()) AS days_until_due,
+                'subtask' AS item_type,
+                s.task_id AS parent_task_id,
+                t.task_name AS parent_task_name
+            FROM Subtasks s
+            INNER JOIN Tasks t ON s.task_id = t.task_id
+            LEFT JOIN Projects p ON p.project_id = t.project_id
+            WHERE s.assigned_to_user_id = ?
+                AND s.status != 'completed'
+                AND s.due_date IS NOT NULL
+                AND (
+                    -- Excluir subtareas de tareas personales de otros usuarios
+                    COALESCE(p.is_personal, t.is_personal, 0) = 0 
+                    OR 
+                    (COALESCE(p.is_personal, t.is_personal, 0) = 1 AND t.created_by_user_id = ?)
+                ))
+            
+            ORDER BY due_date ASC
+        ";
         
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$userId, $userId, $userId, $userId]); // Pasar userId 4 veces: 1 para tareas assigned, 2 para created_by en tareas, 3 para subtareas assigned, 4 para created_by en subtareas
+        $myTasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Organizar por fecha
+        $vencidas = array_filter($myTasks, fn($t) => $t['days_until_due'] < 0);
+        $hoy = array_filter($myTasks, fn($t) => $t['days_until_due'] == 0);
+        $semana = array_filter($myTasks, fn($t) => $t['days_until_due'] > 0 && $t['days_until_due'] <= 7);
+        $futuras = array_filter($myTasks, fn($t) => $t['days_until_due'] > 7);
+
+        // USAR VISTA ESTÁTICA QUE FUNCIONA
         $data = [
-            'userStats' => $this->getUserStats(),
-            'projectStats' => $this->projectModel->getStatsByClan($this->userClan['clan_id']),
-            'clanStats' => $this->getClanStats(),
-            'taskStats' => $taskStats,
-            'memberContributions' => $memberContributions,
-            'clanIcon' => $this->getClanIcon($this->userClan['clan_name']),
             'currentPage' => 'clan_leader',
             'user' => $this->currentUser,
-            'clan' => $this->userClan
+            'clan' => $this->userClan,
+            'myTasks' => $myTasks,
+            'vencidas' => $vencidas,
+            'hoy' => $hoy,
+            'semana' => $semana,
+            'futuras' => $futuras,
+            'totalTasks' => count($myTasks)
         ];
         
-        $this->loadView('clan_leader/dashboard', $data);
+        // Cargar la vista del dashboard Kanban
+        $this->loadView('clan_leader/dashboard_kanban', $data);
     }
+
     
     /**
      * Gestión de miembros del clan
      */
     public function members() {
+        // Asegurar autenticación y permisos
+        $this->requireAuth();
+        if (!$this->hasClanLeaderAccess()) {
+            Utils::redirect('dashboard');
+            exit;
+        }
+
         $search = $_GET['search'] ?? '';
-        $members = empty($search) ? 
-            $this->clanModel->getMembers($this->userClan['clan_id']) : 
-            $this->searchMembers($search);
+        if (!$this->userClan || !isset($this->userClan['clan_id'])) {
+            $members = [];
+        } else {
+            $members = empty($search)
+                ? $this->clanModel->getMembers($this->userClan['clan_id'])
+                : $this->searchMembers($search);
+        }
         
         $data = [
             'members' => $members,
@@ -102,6 +264,13 @@ class ClanLeaderController {
      * Dashboard de disponibilidad de colaboradores
      */
     public function availability() {
+        // Asegurar autenticación y permisos
+        $this->requireAuth();
+        if (!$this->hasClanLeaderAccess()) {
+            Utils::redirect('dashboard');
+            exit;
+        }
+
         $availabilityData = $this->getCollaboratorAvailability();
         
         $data = [
@@ -133,7 +302,8 @@ class ClanLeaderController {
             
             // Verificar que el usuario tiene clan asignado
             if (!$this->userClan) {
-                Utils::jsonResponse(['success' => false, 'message' => 'No tienes un clan asignado'], 403);
+                // Responder vacío para evitar errores en UI
+                Utils::jsonResponse(['success' => true, 'users' => []]);
                 return;
             }
             
@@ -207,7 +377,7 @@ class ClanLeaderController {
     public function getAvailableUsers() {
         try {
             // Verificar autenticación
-            if (!$this->auth->isLoggedIn()) {
+            if (!$this->auth || !$this->auth->isLoggedIn()) {
                 Utils::jsonResponse(['success' => false, 'message' => 'No autenticado'], 401);
                 return;
             }
@@ -219,30 +389,36 @@ class ClanLeaderController {
             }
             
             // Verificar que el usuario tiene clan asignado
-            if (!$this->userClan) {
+            if (!$this->userClan || !isset($this->userClan['clan_id'])) {
                 Utils::jsonResponse(['success' => false, 'message' => 'No tienes un clan asignado'], 403);
                 return;
             }
             
-            // Obtener todos los usuarios que no están en el clan
+            // Consulta corregida usando la estructura real de la base de datos
             $stmt = $this->db->prepare("
                 SELECT 
                     u.user_id,
                     u.username,
                     u.full_name,
                     u.email,
-                    u.is_active
+                    u.is_active,
+                    u.avatar_path,
+                    COALESCE(r.role_name, 'usuario_normal') as role,
+                    CASE 
+                        WHEN cm.user_id IS NOT NULL THEN 'Miembro del clan'
+                        ELSE 'Usuario externo'
+                    END as membership_status
                 FROM Users u
+                LEFT JOIN Clan_Members cm ON u.user_id = cm.user_id AND cm.clan_id = ?
+                LEFT JOIN User_Roles ur ON u.user_id = ur.user_id
+                LEFT JOIN Roles r ON ur.role_id = r.role_id
                 WHERE u.is_active = 1 
-                AND u.user_id NOT IN (
-                    SELECT cm.user_id 
-                    FROM Clan_Members cm 
-                    WHERE cm.clan_id = ?
-                )
-                ORDER BY u.full_name
+                ORDER BY 
+                    CASE WHEN cm.user_id IS NOT NULL THEN 0 ELSE 1 END,
+                    u.full_name ASC
             ");
             $stmt->execute([$this->userClan['clan_id']]);
-            $users = $stmt->fetchAll();
+            $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
             Utils::jsonResponse([
                 'success' => true,
@@ -250,9 +426,10 @@ class ClanLeaderController {
             ]);
         } catch (Exception $e) {
             error_log("Error al obtener usuarios disponibles: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
             Utils::jsonResponse([
                 'success' => false,
-                'message' => 'Error al obtener usuarios disponibles'
+                'message' => 'Error al obtener usuarios disponibles: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -333,10 +510,45 @@ class ClanLeaderController {
      * Gestión de proyectos del clan
      */
     public function projects() {
+        // Logs de debug comentados para producción
+        // error_log("=== MÉTODO PROJECTS INICIADO ===");
+        // error_log("Usuario actual: " . json_encode($this->currentUser));
+        // error_log("Clan del usuario: " . json_encode($this->userClan));
+        // error_log("¿Tiene acceso de líder?: " . ($this->hasClanLeaderAccess() ? 'SÍ' : 'NO'));
+        
         $search = $_GET['search'] ?? '';
-        $projects = empty($search) ? 
-            $this->projectModel->getByClan($this->userClan['clan_id']) : 
-            $this->searchProjects($search);
+        
+        // Verificar que el usuario tiene clan asignado
+        if (!$this->userClan || !isset($this->userClan['clan_id'])) {
+            $allProjects = [];
+        } else {
+            // Obtener todos los proyectos del clan
+            $allProjects = empty($search) ? 
+                $this->projectModel->getByClan($this->userClan['clan_id']) : 
+                $this->searchProjects($search);
+        }
+        
+        // Los proyectos personales ya están filtrados en el modelo
+        $projects = $allProjects;
+        
+        // Logs de debug comentados para producción
+        // error_log("Total de proyectos después del filtro: " . count($projects));
+        // error_log("=== FIN DEL FILTRADO ===");
+        
+        // Log del resultado del filtrado - comentado para producción
+        $totalProjects = count($allProjects);
+        $filteredProjects = count($projects);
+        // error_log("Filtrado de proyectos - Total: $totalProjects, Filtrados: $filteredProjects");
+        
+        // Log detallado de cada proyecto - comentado para producción
+        // foreach ($allProjects as $project) {
+        //     $isPersonal = ($project['is_personal'] ?? 0) == 1;
+        //     $projectName = $project['project_name'] ?? 'N/A';
+        //     error_log("DEBUG Proyecto: '$projectName' - ID: {$project['project_id']}, is_personal: " . ($isPersonal ? 'SÍ' : 'NO') . ", Clan: {$project['clan_id']}");
+        // }
+        
+        // Reindexar el array después del filtro
+        $projects = array_values($projects);
         
         $data = [
             'projects' => $projects,
@@ -350,24 +562,91 @@ class ClanLeaderController {
     }
     
     /**
+     * Búsqueda AJAX de proyectos
+     */
+    public function searchProjectsAjax() {
+        // Log de debug
+        error_log('searchProjectsAjax llamado');
+        
+        // Verificar autenticación
+        $this->requireAuth();
+        
+        // Verificar permisos de líder de clan
+        if (!$this->hasClanLeaderAccess()) {
+            error_log('Acceso denegado en searchProjectsAjax');
+            echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
+            return;
+        }
+        
+        // Obtener término de búsqueda
+        $search = $_POST['search'] ?? '';
+        error_log('Término de búsqueda recibido: ' . $search);
+        
+        try {
+            // Verificar que el usuario tiene clan asignado
+            if (!$this->userClan || !isset($this->userClan['clan_id'])) {
+                error_log('Usuario sin clan asignado');
+                echo json_encode(['success' => true, 'projects' => []]);
+                return;
+            }
+            
+            error_log('Clan ID: ' . $this->userClan['clan_id']);
+            
+            // Realizar búsqueda
+            $projects = empty($search) ? 
+                $this->projectModel->getByClan($this->userClan['clan_id']) : 
+                $this->searchProjects($search);
+            
+            error_log('Proyectos encontrados: ' . count($projects));
+            
+            // Reindexar array
+            $projects = array_values($projects);
+            
+            $response = [
+                'success' => true, 
+                'projects' => $projects,
+                'search_term' => $search,
+                'total_found' => count($projects)
+            ];
+            
+            error_log('Respuesta JSON: ' . json_encode($response));
+            echo json_encode($response);
+            
+        } catch (Exception $e) {
+            error_log('Error en búsqueda de proyectos: ' . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'Error interno del servidor']);
+        }
+    }
+    
+    /**
      * Crear nuevo proyecto
      */
     public function createProject() {
+        error_log("=== CREATE PROJECT DEBUG ===");
+        error_log("REQUEST_METHOD: " . $_SERVER['REQUEST_METHOD']);
+        error_log("POST data: " . print_r($_POST, true));
+        error_log("User logged in: " . ($this->auth->isLoggedIn() ? 'YES' : 'NO'));
+        error_log("Has clan leader access: " . ($this->hasClanLeaderAccess() ? 'YES' : 'NO'));
+        error_log("User clan: " . print_r($this->userClan, true));
+        
         try {
             // Verificar autenticación
             if (!$this->auth->isLoggedIn()) {
+                error_log("ERROR: User not authenticated");
                 Utils::jsonResponse(['success' => false, 'message' => 'No autenticado'], 401);
                 return;
             }
             
             // Verificar permisos de líder de clan
             if (!$this->hasClanLeaderAccess()) {
+                error_log("ERROR: User doesn't have clan leader access");
                 Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos de líder de clan'], 403);
                 return;
             }
             
             // Verificar que el usuario tiene clan asignado
             if (!$this->userClan) {
+                error_log("ERROR: User has no clan assigned");
                 Utils::jsonResponse(['success' => false, 'message' => 'No tienes un clan asignado'], 403);
                 return;
             }
@@ -381,35 +660,62 @@ class ClanLeaderController {
             // Validar datos
             $projectName = Utils::sanitizeInput($_POST['projectName'] ?? '');
             $description = Utils::sanitizeInput($_POST['description'] ?? '');
+            $timeLimit = !empty($_POST['timeLimit']) ? $_POST['timeLimit'] : null;
+            $isEditable = isset($_POST['isEditable']) ? 1 : 0;
+            
+            error_log("Parsed data: projectName='$projectName', description='$description', timeLimit='$timeLimit', isEditable=$isEditable");
             
             // Validaciones
             if (empty($projectName) || strlen($projectName) < 3) {
+                error_log("ERROR: Project name validation failed - empty or less than 3 chars");
                 Utils::jsonResponse(['success' => false, 'message' => 'El nombre del proyecto debe tener al menos 3 caracteres'], 400);
                 return;
             }
             
             if (empty($description)) {
+                error_log("ERROR: Description validation failed - empty");
                 Utils::jsonResponse(['success' => false, 'message' => 'La descripción es requerida'], 400);
                 return;
             }
             
-            // Crear proyecto
+            // Validar fecha límite si se proporciona
+            if ($timeLimit && !strtotime($timeLimit)) {
+                error_log("ERROR: Time limit validation failed - invalid date format");
+                Utils::jsonResponse(['success' => false, 'message' => 'La fecha límite no es válida'], 400);
+                return;
+            }
+            
+            error_log("All validations passed, creating project...");
+            
+            // Crear proyecto con fecha límite (usando método existente)
             $result = $this->projectModel->create(
                 $projectName, 
                 $description, 
                 $this->userClan['clan_id'], 
-                $this->currentUser['user_id']
+                $this->currentUser['user_id'],
+                null, // kpiQuarterId 
+                0,    // kpiPoints
+                'automatic', // taskDistributionMode
+                $timeLimit
             );
             
+            // TODO: Implementar funcionalidad de is_editable cuando se defina la estructura
+            
+            error_log("Project creation result: " . ($result ? 'SUCCESS' : 'FAILED'));
+            
             if ($result) {
+                error_log("SUCCESS: Project created successfully");
                 Utils::jsonResponse(['success' => true, 'message' => 'Proyecto creado exitosamente']);
             } else {
+                error_log("ERROR: Failed to create project in database");
                 Utils::jsonResponse(['success' => false, 'message' => 'Error al crear proyecto'], 500);
             }
             
         } catch (Exception $e) {
+            error_log("=== EXCEPTION IN CREATE PROJECT ===");
             error_log("Error en ClanLeaderController::createProject: " . $e->getMessage());
-            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor'], 500);
+            error_log("Stack trace: " . $e->getTraceAsString());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor: ' . $e->getMessage()], 500);
         }
     }
     
@@ -424,9 +730,16 @@ class ClanLeaderController {
         $projectId = (int)($_POST['projectId'] ?? 0);
         $projectName = Utils::sanitizeInput($_POST['projectName'] ?? '');
         $description = Utils::sanitizeInput($_POST['description'] ?? '');
+        $timeLimit = !empty($_POST['timeLimit']) ? $_POST['timeLimit'] : null;
         
         if ($projectId <= 0) {
             Utils::jsonResponse(['success' => false, 'message' => 'ID de proyecto inválido'], 400);
+        }
+        
+        // Validar fecha límite si se proporciona
+        if ($timeLimit && !strtotime($timeLimit)) {
+            Utils::jsonResponse(['success' => false, 'message' => 'La fecha límite no es válida'], 400);
+            exit;
         }
         
         // Verificar que el proyecto pertenece al clan
@@ -435,8 +748,8 @@ class ClanLeaderController {
             Utils::jsonResponse(['success' => false, 'message' => 'Proyecto no encontrado'], 404);
         }
         
-        // Actualizar proyecto
-        $result = $this->projectModel->update($projectId, $projectName, $description, $this->userClan['clan_id']);
+        // Actualizar proyecto con fecha límite
+        $result = $this->projectModel->update($projectId, $projectName, $description, $this->userClan['clan_id'], null, $timeLimit);
         
         if ($result) {
             Utils::jsonResponse(['success' => true, 'message' => 'Proyecto actualizado exitosamente']);
@@ -490,13 +803,13 @@ class ClanLeaderController {
         $clanTotalPoints = 1000;
         
         // Obtener proyectos del clan con KPI
-        $projects = $this->projectModel->getByKPIQuarter($currentKPI['kpi_quarter_id'] ?? null);
+        $projects = $this->projectModel->getByKPIQuarter($currentKPI['kpi_quarter_id'] ?? null) ?? [];
         $clanProjects = array_filter($projects, function($project) {
             return $project['clan_id'] == $this->userClan['clan_id'];
         });
         
         // Obtener proyectos sin KPI del clan
-        $projectsWithoutKPI = $this->projectModel->getProjectsWithoutKPIByClan($this->userClan['clan_id']);
+        $projectsWithoutKPI = $this->projectModel->getProjectsWithoutKPIByClan($this->userClan['clan_id']) ?? [];
         
         // Calcular puntos asignados del clan
         $assignedPoints = array_sum(array_column($clanProjects, 'kpi_points'));
@@ -608,16 +921,109 @@ class ClanLeaderController {
     }
     
     /**
+     * Actualizar estado de delegación de un proyecto
+     */
+    public function updateProjectDelegation() {
+        $this->requireAuth();
+        if (!$this->hasClanLeaderAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos'], 403);
+            return;
+        }
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
+            return;
+        }
+        
+        $projectId = (int)($_POST['project_id'] ?? 0);
+        $allowDelegation = (int)($_POST['allow_delegation'] ?? 0);
+        
+        if ($projectId <= 0) {
+            Utils::jsonResponse(['success' => false, 'message' => 'ID de proyecto inválido'], 400);
+            return;
+        }
+        
+        try {
+            // Verificar que el proyecto pertenece al clan del líder
+            $stmt = $this->db->prepare("
+                SELECT project_id, project_name 
+                FROM Projects 
+                WHERE project_id = ? AND clan_id = ?
+            ");
+            $stmt->execute([$projectId, $this->userClan['clan_id']]);
+            $project = $stmt->fetch();
+            
+            if (!$project) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Proyecto no encontrado o sin permisos'], 404);
+                return;
+            }
+            
+            // Actualizar el estado de delegación
+            $updateStmt = $this->db->prepare("
+                UPDATE Projects 
+                SET allow_delegation = ? 
+                WHERE project_id = ?
+            ");
+            $updateStmt->execute([$allowDelegation, $projectId]);
+            
+            $message = $allowDelegation ? 
+                "Los colaboradores ahora pueden agregar tareas a '{$project['project_name']}'" : 
+                "Se ha desactivado la delegación para '{$project['project_name']}'";
+            
+            Utils::jsonResponse([
+                'success' => true, 
+                'message' => $message,
+                'project_id' => $projectId,
+                'allow_delegation' => $allowDelegation
+            ]);
+            
+        } catch (Exception $e) {
+            error_log("Error en updateProjectDelegation: " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error al actualizar delegación'], 500);
+        }
+    }
+    
+    /**
      * Gestión de tareas del clan
      */
     public function tasks() {
+        // Asegurar autenticación y permisos para evitar accesos nulos
+        $this->requireAuth();
+        if (!$this->hasClanLeaderAccess()) {
+            Utils::redirect('dashboard');
+            exit;
+        }
         $projectId = $_GET['project_id'] ?? null;
         $action = $_GET['action'] ?? null;
         
         if ($action === 'create') {
             // Mostrar formulario de creación de tareas
-            $projects = $this->projectModel->getByClan($this->userClan['clan_id']);
+            $allProjects = $this->projectModel->getByClan($this->userClan['clan_id']);
+            
+            // Filtrar proyectos personales: mostrar solo los del líder actual
+            $projects = array_filter($allProjects, function($project) {
+                // Si es un proyecto personal (is_personal = 1)
+                if (($project['is_personal'] ?? 0) == 1) {
+                    // Solo mostrar si fue creado por el líder actual
+                    return ($project['created_by_user_id'] ?? 0) == $this->currentUser['user_id'];
+                }
+                // Mostrar todos los proyectos no personales
+                return true;
+            });
+            
+            // Reindexar el array después del filtro
+            $projects = array_values($projects);
+            
             $members = $this->clanModel->getMembers($this->userClan['clan_id']);
+            
+            // Obtener todos los usuarios del sistema para asignación externa
+            $allUsers = $this->userModel->getAllUsers();
+            
+            // Verificar que la consulta fue exitosa
+            if (!is_array($allUsers)) {
+                error_log("Error: getAllUsers() no retornó un array. Valor: " . print_r($allUsers, true));
+                $allUsers = []; // Valor por defecto
+            }
             
             // Obtener tareas del trimestre actual sin completar
             $currentQuarterTasks = $this->taskModel->getCurrentQuarterTasksByClan($this->userClan['clan_id']);
@@ -628,6 +1034,7 @@ class ClanLeaderController {
             $data = [
                 'projects' => $projects,
                 'members' => $members,
+                'allUsers' => $allUsers,
                 'currentQuarterTasks' => $currentQuarterTasks,
                 'selectedProjectId' => $selectedProjectId,
                 'currentPage' => 'clan_leader',
@@ -650,15 +1057,40 @@ class ClanLeaderController {
                 Utils::redirect('clan_leader/tasks');
             }
             
-            // Verificar que la tarea pertenece a un proyecto del clan
+            // Verificar acceso: proyecto del clan O tarea asignada/creada por el líder
             $project = $this->projectModel->findById($task['project_id']);
-            if (!$project || $project['clan_id'] != $this->userClan['clan_id']) {
+            if (!$project) { Utils::redirect('clan_leader/tasks'); }
+            $isAssigned = $this->isTaskAssignedToUser($taskId, $this->currentUser['user_id'])
+                || (int)($task['assigned_to_user_id'] ?? 0) === (int)$this->currentUser['user_id']
+                || (int)($task['created_by_user_id'] ?? 0) === (int)$this->currentUser['user_id'];
+            if (!($this->userClan && (int)$project['clan_id'] === (int)$this->userClan['clan_id']) && !$isAssigned) {
                 Utils::redirect('clan_leader/tasks');
             }
             
             // Obtener datos necesarios para el formulario
-            $projects = $this->projectModel->getByClan($this->userClan['clan_id']);
-            $members = $this->clanModel->getMembers($this->userClan['clan_id']);
+            if ($this->userClan && (int)$project['clan_id'] === (int)$this->userClan['clan_id']) {
+                $allProjects = $this->projectModel->getByClan($this->userClan['clan_id']);
+                
+                // Filtrar proyectos personales: mostrar solo los del líder actual
+                $projects = array_filter($allProjects, function($project) {
+                    // Si es un proyecto personal (is_personal = 1)
+                    if (($project['is_personal'] ?? 0) == 1) {
+                        // Solo mostrar si fue creado por el líder actual
+                        return ($project['created_by_user_id'] ?? 0) == $this->currentUser['user_id'];
+                    }
+                    // Mostrar todos los proyectos no personales
+                    return true;
+                });
+                
+                // Reindexar el array después del filtro
+                $projects = array_values($projects);
+                
+                $members = $this->clanModel->getMembers($this->userClan['clan_id']);
+            } else {
+                // Proyecto externo: limitar selección
+                $projects = [$project];
+                $members = [];
+            }
             
             // Obtener usuarios asignados a la tarea
             $assignedUsers = $this->taskModel->getAssignedUsers($taskId);
@@ -676,13 +1108,22 @@ class ClanLeaderController {
             
             $this->loadView('clan_leader/task_edit', $data);
         } elseif ($projectId) {
-            // Verificar que el proyecto pertenece al clan
+            // Permitir ver proyecto si es del clan del líder o si el líder tiene tareas asignadas en ese proyecto
             $project = $this->projectModel->findById($projectId);
-            if (!$project || $project['clan_id'] != $this->userClan['clan_id']) {
-                Utils::redirect('clan_leader/tasks');
+            if (!$project) { Utils::redirect('clan_leader/tasks'); }
+
+            $isLeaderClanProject = $this->userClan && ((int)$project['clan_id'] === (int)$this->userClan['clan_id']);
+            $tasks = $this->taskModel->getByProjectWithPrivacy($projectId, $this->currentUser['user_id']);
+            if (!$isLeaderClanProject) {
+                $uid = (int)$this->currentUser['user_id'];
+                $tasks = array_values(array_filter($tasks, function($t) use ($uid){
+                    $primary = (int)($t['assigned_to_user_id'] ?? 0) === $uid;
+                    $list = isset($t['all_assigned_user_ids']) ? array_filter(explode(',', (string)$t['all_assigned_user_ids'])) : [];
+                    $inList = in_array((string)$uid, $list, true);
+                    return $primary || $inList;
+                }));
+                if (empty($tasks)) { Utils::redirect('clan_leader/tasks'); }
             }
-            
-            $tasks = $this->taskModel->getByProject($projectId);
             $data = [
                 'project' => $project,
                 'tasks' => $tasks,
@@ -693,26 +1134,78 @@ class ClanLeaderController {
             
             $this->loadView('clan_leader/project_tasks', $data);
         } else {
-            // Lista de proyectos del clan con estadísticas de tareas
-            $projects = $this->projectModel->getByClan($this->userClan['clan_id']);
-            
-            // Calcular estadísticas de tareas para cada proyecto
-            foreach ($projects as &$project) {
-                $projectTasks = $this->taskModel->getByProject($project['project_id']);
-                $totalTasks = count($projectTasks);
-                $completedTasks = 0;
+            // Tareas propias del líder
+            $ownTasksData = $this->taskModel->getUserTasks($this->currentUser['user_id'], 1, 10000, '', '');
+            $ownTasks = $ownTasksData['tasks'] ?? [];
+            $ownByProject = [];
+            foreach ($ownTasks as $t) {
+                $pid = (int)$t['project_id'];
+                if (!isset($ownByProject[$pid])) {
+                    $ownByProject[$pid] = [
+                        'project_name' => $t['project_name'],
+                        'total' => 0,
+                        'completed' => 0
+                    ];
+                }
+                $ownByProject[$pid]['total']++;
+                if (($t['status'] ?? '') === 'completed') { $ownByProject[$pid]['completed']++; }
+            }
+
+            // 1) Proyectos del clan: mostrar solo proyectos no personales
+            $clanProjects = $this->projectModel->getByClan($this->userClan['clan_id']);
+            $projects = [];
+            $presentIds = [];
+            foreach ($clanProjects as $p) {
+                $pid = (int)$p['project_id'];
+                $presentIds[$pid] = true;
                 
-                foreach ($projectTasks as $task) {
-                    if ($task['status'] === 'completed') {
-                        $completedTasks++;
+                // Para proyectos del clan: mostrar métricas de TODO el proyecto
+                $projectTasks = $this->taskModel->getByProjectWithPrivacy($pid, $this->currentUser['user_id']);
+                $total = count($projectTasks);
+                $completed = 0;
+                
+                // Filtrar tareas personales: solo mostrar las del usuario actual
+                foreach ($projectTasks as $t) {
+                    // Si es un proyecto personal, solo contar tareas del usuario actual
+                    if (($p['is_personal'] ?? 0) == 1) {
+                        if (($t['assigned_to_user_id'] ?? 0) == $this->currentUser['user_id'] ||
+                            ($t['created_by_user_id'] ?? 0) == $this->currentUser['user_id']) {
+                            if (($t['status'] ?? '') === 'completed' || ($t['is_completed'] ?? 0) == 1) { 
+                                $completed++; 
+                            }
+                        }
+                    } else {
+                        // Para proyectos no personales, contar todas las tareas
+                        if (($t['status'] ?? '') === 'completed' || ($t['is_completed'] ?? 0) == 1) { 
+                            $completed++; 
+                        }
                     }
                 }
                 
-                $progressPercentage = $totalTasks > 0 ? round(($completedTasks / $totalTasks) * 100, 2) : 0;
-                
-                $project['total_tasks'] = $totalTasks;
-                $project['completed_tasks'] = $completedTasks;
-                $project['progress_percentage'] = $progressPercentage;
+                $progress = $total > 0 ? round(($completed / $total) * 100, 2) : 0;
+                $projects[] = [
+                    'project_id' => $pid,
+                    'project_name' => $p['project_name'],
+                    'status' => $p['status'],
+                    'total_tasks' => $total,
+                    'completed_tasks' => $completed,
+                    'progress_percentage' => $progress
+                ];
+            }
+
+            // 2) Proyectos adicionales (p. ej., lógicos de Olympo) SOLO si el líder tiene tareas
+            foreach ($ownByProject as $pid => $info) {
+                if (!isset($presentIds[$pid])) {
+                    $progress = $info['total'] > 0 ? round(($info['completed'] / $info['total']) * 100, 2) : 0;
+                    $projects[] = [
+                        'project_id' => (int)$pid,
+                        'project_name' => $info['project_name'],
+                        'status' => 'open',
+                        'total_tasks' => $info['total'],
+                        'completed_tasks' => $info['completed'],
+                        'progress_percentage' => $progress
+                    ];
+                }
             }
             
             // Obtener parámetros de paginación, búsqueda y filtros
@@ -724,8 +1217,31 @@ class ClanLeaderController {
             // Validar perPage para evitar valores muy altos
             $perPage = max(1, min($perPage, 100));
             
-            // Obtener todas las tareas del clan con paginación dinámica
-            $allTasksData = $this->taskModel->getAllTasksByClan($this->userClan['clan_id'], $page, $perPage, $search, $statusFilter);
+            // Tabla: combinar
+            // - Tareas de TODOS del clan (estricto a proyectos del clan)
+            // - MÁS tareas del líder SOLO de proyectos lógicos (Recurrentes/Eventuales)
+            // - MÁS tareas personales del líder actual
+            $clanTasks = $this->taskModel->getAllTasksByClanStrict($this->userClan['clan_id'], $page, $perPage, $search, $statusFilter);
+
+            // Obtener TODAS las tareas asignadas al usuario de proyectos recurrentes y eventuales (sin filtro de clan)
+            $ownLogical = $this->getRecurrentAndEventualTasks($this->currentUser['user_id']);
+
+            // Obtener tareas personales del líder actual
+            $ownPersonalTasks = $this->taskModel->getPersonalTasksForClanLeader(
+                $this->currentUser['user_id'], 
+                $this->userClan['clan_id']
+            );
+
+            // Fusionar evitando duplicados por task_id
+            $merged = [];
+            foreach ($clanTasks['tasks'] as $t) { $merged[$t['task_id']] = $t; }
+            foreach ($ownLogical as $t) { $merged[$t['task_id']] = $t; }
+            foreach ($ownPersonalTasks as $t) { $merged[$t['task_id']] = $t; }
+            $mergedTasks = array_values($merged);
+
+            // Reusar estructura de paginación del estricta
+            $allTasksData = $clanTasks;
+            $allTasksData['tasks'] = $mergedTasks;
             
             $data = [
                 'projects' => $projects,
@@ -766,7 +1282,12 @@ class ClanLeaderController {
                 $taskDueDate = null;
             }
             
-            $priority = Utils::sanitizeInput($_POST['priority'] ?? 'medium');
+            $priority = Utils::sanitizeInput($_POST['priority'] ?? '');
+            
+            // Si no se seleccionó prioridad, usar medium por defecto
+            if (empty($priority)) {
+                $priority = 'medium';
+            }
             
             // Corregir valor de prioridad si es 'urgent' por 'critical'
             if ($priority === 'urgent') {
@@ -775,6 +1296,7 @@ class ClanLeaderController {
             
             $taskStatus = Utils::sanitizeInput($_POST['task_status'] ?? 'pending');
             $assignedToUserId = (int)($_POST['assigned_to_user_id'] ?? 0);
+            $taskProgress = isset($_POST['task_progress']) ? (float)$_POST['task_progress'] : null;
             
             // Log para debugging
             error_log("=== INICIO ACTUALIZACIÓN TAREA ===");
@@ -785,8 +1307,16 @@ class ClanLeaderController {
             error_log("priority: " . $priority);
             error_log("dueDate: " . ($taskDueDate ?? 'NULL'));
             
-            if ($taskId <= 0 || empty($taskName) || $taskProject <= 0) {
-                Utils::jsonResponse(['success' => false, 'message' => 'Datos inválidos'], 400);
+            if ($taskId <= 0) {
+                Utils::jsonResponse(['success' => false, 'message' => 'ID de tarea inválido'], 400);
+            }
+            
+            if (empty($taskName)) {
+                Utils::jsonResponse(['success' => false, 'message' => 'El título es requerido'], 400);
+            }
+            
+            if ($taskProject <= 0) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Debe seleccionar un proyecto válido'], 400);
             }
             
             // Verificar que la tarea existe y pertenece al clan
@@ -819,11 +1349,15 @@ class ClanLeaderController {
                     Utils::jsonResponse(['success' => false, 'message' => 'Usuario asignado no encontrado'], 404);
                 }
                 
+                // Comentado: Ya no validamos que el usuario pertenezca al clan
+                // Esto permite asignar tareas a usuarios externos
+                /*
                 $userClan = $this->userModel->getUserClan($assignedToUserId);
                 if (!$userClan || $userClan['clan_id'] != $this->userClan['clan_id']) {
                     error_log("Usuario no pertenece al clan: " . $assignedToUserId);
                     Utils::jsonResponse(['success' => false, 'message' => 'El usuario asignado no pertenece al clan'], 400);
                 }
+                */
             }
             
             // Actualizar tarea
@@ -843,7 +1377,8 @@ class ClanLeaderController {
                 $priority, 
                 $taskDueDate,
                 null, // assigned_percentage
-                $taskStatus // nuevo parámetro para estado
+                $taskStatus, // nuevo parámetro para estado
+                $taskProgress // porcentaje de progreso
             );
             
             error_log("Resultado de actualización: " . ($result ? 'true' : 'false'));
@@ -865,6 +1400,18 @@ class ClanLeaderController {
      * Crear tarea con múltiples usuarios y subtareas
      */
     public function createTask() {
+        // Limpiar cualquier output previo
+        if (ob_get_level()) {
+            ob_clean();
+        }
+        ob_start();
+        
+        // Asegurar que siempre devolvemos JSON
+        header('Content-Type: application/json');
+        
+        // Suprimir warnings temporalmente para evitar interferencia con JSON
+        error_reporting(E_ALL & ~E_WARNING);
+        
         error_log('=== ClanLeaderController::createTask - INICIO ===');
         error_log('POST data: ' . print_r($_POST, true));
         error_log('FILES data: ' . print_r($_FILES, true));
@@ -872,12 +1419,25 @@ class ClanLeaderController {
         error_log('Auth logged in: ' . ($this->auth->isLoggedIn() ? 'YES' : 'NO'));
         
         try {
+            error_log('createTask - Iniciando try principal');
+            
+            // Inicializar taskModel si no existe
+            if (!isset($this->taskModel) || !$this->taskModel) {
+                error_log('createTask - taskModel no existe, creando nueva instancia...');
+                $this->taskModel = new Task();
+                error_log('createTask - taskModel inicializado exitosamente');
+            } else {
+                error_log('createTask - taskModel ya existe');
+            }
+            
             // Verificar autenticación
+            error_log('createTask - Verificando autenticación...');
             if (!$this->auth->isLoggedIn()) {
                 error_log('createTask - Error: No autenticado');
                 Utils::jsonResponse(['success' => false, 'message' => 'No autenticado'], 401);
                 return;
             }
+            error_log('createTask - Usuario autenticado correctamente');
             
             // Verificar permisos de líder de clan
             if (!$this->hasClanLeaderAccess()) {
@@ -905,7 +1465,10 @@ class ClanLeaderController {
                 $this->db->rollback();
             }
         
-        // Logs detallados de los datos recibidos
+        // Logs EXTREMADAMENTE DETALLADOS de los datos recibidos
+        error_log('=== createTask - INICIO DE LOGS ===');
+        error_log('createTask - $_POST completo: ' . print_r($_POST, true));
+        error_log('createTask - $_FILES completo: ' . print_r($_FILES, true));
         error_log('createTask - Datos recibidos:');
         error_log('  task_title: ' . ($_POST['task_title'] ?? 'NOT SET'));
         error_log('  task_due_date: ' . ($_POST['task_due_date'] ?? 'NOT SET'));
@@ -913,6 +1476,41 @@ class ClanLeaderController {
         error_log('  priority: ' . ($_POST['priority'] ?? 'NOT SET'));
         error_log('  assigned_members: ' . print_r($_POST['assigned_members'] ?? 'NOT SET', true));
         error_log('  subtasks: ' . print_r($_POST['subtasks'] ?? 'NOT SET', true));
+        
+        // Log SUPER DETALLADO para subtareas
+        error_log('=== VERIFICACIÓN DE SUBTAREAS ===');
+        error_log('createTask - $_POST completo: ' . print_r($_POST, true));
+        error_log('createTask - Claves en $_POST: ' . implode(', ', array_keys($_POST)));
+        
+        if (isset($_POST['subtasks'])) {
+            error_log('createTask - ✅ Subtareas recibidas (raw): ' . $_POST['subtasks']);
+            error_log('createTask - ✅ Tipo de subtareas: ' . gettype($_POST['subtasks']));
+            error_log('createTask - ✅ Longitud de subtareas: ' . strlen($_POST['subtasks']));
+            
+            $decodedSubtasks = json_decode($_POST['subtasks'], true);
+            error_log('createTask - ✅ Subtareas decodificadas: ' . print_r($decodedSubtasks, true));
+            error_log('createTask - ✅ Tipo de subtareas decodificadas: ' . gettype($decodedSubtasks));
+            
+            if (is_array($decodedSubtasks)) {
+                error_log('createTask - ✅ Cantidad de subtareas: ' . count($decodedSubtasks));
+                foreach ($decodedSubtasks as $index => $subtask) {
+                    error_log("createTask - ✅ Subtarea {$index}: " . print_r($subtask, true));
+                }
+            } else {
+                error_log('createTask - ❌ Subtareas decodificadas NO es array');
+                error_log('createTask - ❌ JSON error: ' . json_last_error_msg());
+            }
+        } else {
+            error_log('createTask - ❌ NO se recibieron subtareas en $_POST');
+            error_log('createTask - ❌ Claves disponibles en $_POST: ' . implode(', ', array_keys($_POST)));
+            
+            // Verificar si hay algún campo similar
+            foreach ($_POST as $key => $value) {
+                if (strpos($key, 'subtask') !== false || strpos($key, 'sub') !== false) {
+                    error_log("createTask - 🔍 Campo similar encontrado: {$key} = " . print_r($value, true));
+                }
+            }
+        }
         
         $taskTitle = Utils::sanitizeInput($_POST['task_title'] ?? '');
         $taskDueDate = $_POST['task_due_date'] ?? '';
@@ -923,7 +1521,65 @@ class ClanLeaderController {
         }
         
         $taskProject = (int)($_POST['task_project'] ?? 0);
+        error_log('createTask - taskProject recibido desde POST: ' . $taskProject);
+        
+        // Si el proyecto es 0 o no se especificó, obtener o crear proyecto personal
+        if ($taskProject <= 0) {
+            error_log('createTask - taskProject es 0 o inválido (' . $taskProject . '), obteniendo proyecto personal...');
+            
+            try {
+                // Usar la instancia existente o crear una nueva si no existe
+                if (!$this->taskModel) {
+                    error_log('createTask - Creando nueva instancia de Task para proyecto personal...');
+                    $this->taskModel = new Task();
+                }
+                
+                $userId = $_SESSION['user_id'] ?? 0;
+                error_log('createTask - Obteniendo proyecto personal para usuario: ' . $userId);
+                
+                if (!$userId || $userId <= 0) {
+                    error_log('createTask - ERROR: userId inválido: ' . $userId);
+                    Utils::jsonResponse(['success' => false, 'message' => 'Usuario no válido'], 400);
+                    return;
+                }
+                
+                $personalProjectId = $this->taskModel->getOrCreatePersonalProject($userId);
+                error_log('createTask - Resultado getOrCreatePersonalProject: ' . ($personalProjectId ? $personalProjectId : 'FALSE'));
+                
+                if ($personalProjectId && $personalProjectId > 0) {
+                    $taskProject = $personalProjectId;
+                    error_log('createTask - Proyecto personal obtenido/creado exitosamente: ' . $taskProject);
+                } else {
+                    error_log('createTask - ERROR: No se pudo obtener/crear proyecto personal para usuario ' . $userId);
+                    Utils::jsonResponse(['success' => false, 'message' => 'No se pudo obtener el proyecto personal'], 500);
+                    return;
+                }
+            } catch (Exception $e) {
+                error_log('createTask - EXCEPCIÓN al obtener proyecto personal: ' . $e->getMessage());
+                error_log('createTask - Stack trace: ' . $e->getTraceAsString());
+                Utils::jsonResponse(['success' => false, 'message' => 'Error al obtener proyecto personal: ' . $e->getMessage()], 500);
+                return;
+            }
+        } else {
+            error_log('createTask - Usando proyecto especificado: ' . $taskProject);
+        }
+        
+        error_log('createTask - taskProject FINAL a usar: ' . $taskProject);
         $taskDescription = Utils::sanitizeInput($_POST['task_description'] ?? '');
+        
+        // Campos de recurrencia
+        $isRecurrent = isset($_POST['is_recurrent']) ? 1 : 0;
+        $recurrenceType = $isRecurrent ? trim($_POST['recurrence_type'] ?? '') : null;
+        $recurrenceStart = $isRecurrent ? trim($_POST['recurrence_start_date'] ?? '') : null;
+        $recurrenceEnd = $isRecurrent ? trim($_POST['recurrence_end_date'] ?? '') : null;
+        
+        // Si es recurrente, usar la fecha de inicio de recurrencia como due_date
+        if ($isRecurrent && !empty($recurrenceStart)) {
+            $taskDueDate = $recurrenceStart;
+        }
+        
+        error_log('createTask - Campos de recurrencia: is_recurrent=' . $isRecurrent . ', type=' . ($recurrenceType ?? 'NULL') . ', start=' . ($recurrenceStart ?? 'NULL') . ', end=' . ($recurrenceEnd ?? 'NULL'));
+        error_log('createTask - taskDueDate final: ' . ($taskDueDate ?? 'NULL'));
         // Manejar assigned_members que puede ser un array (desde formulario) o JSON string
         $assignedMembersRaw = $_POST['assigned_members'] ?? [];
         if (is_string($assignedMembersRaw)) {
@@ -932,40 +1588,99 @@ class ClanLeaderController {
             $assignedMembers = $assignedMembersRaw;
         }
         // Manejar subtasks que puede ser un array o JSON string y normalizar datos
+        error_log('=== createTask - PROCESAMIENTO DE SUBTAREAS ===');
         $subtasksRaw = $_POST['subtasks'] ?? [];
+        error_log('createTask - subtasksRaw: ' . print_r($subtasksRaw, true));
+        error_log('createTask - Tipo de subtasksRaw: ' . gettype($subtasksRaw));
+        
         if (is_string($subtasksRaw)) {
+            error_log('createTask - subtasksRaw es string, decodificando JSON...');
             $subtasks = json_decode($subtasksRaw, true) ?: [];
+            error_log('createTask - ✅ subtasks decodificadas de JSON: ' . print_r($subtasks, true));
+            error_log('createTask - Tipo de subtasks decodificadas: ' . gettype($subtasks));
         } else {
+            error_log('createTask - subtasksRaw NO es string, usando como array');
             $subtasks = $subtasksRaw;
+            error_log('createTask - ✅ subtasks ya es array: ' . print_r($subtasks, true));
         }
+        
         if (!empty($subtasks) && is_array($subtasks)) {
+            error_log('createTask - ✅ Procesando ' . count($subtasks) . ' subtareas');
             $normalized = [];
-            foreach ($subtasks as $st) {
+            foreach ($subtasks as $index => $st) {
+                error_log('createTask - 🔄 Procesando subtarea ' . ($index + 1) . ': ' . print_r($st, true));
+                
                 $title = trim($st['title'] ?? '');
-                if ($title === '') { continue; }
+                error_log('createTask - Subtarea ' . ($index + 1) . ' - title: "' . $title . '"');
+                
+                if ($title === '') { 
+                    error_log('createTask - ❌ Subtarea ' . ($index + 1) . ' sin título, saltando');
+                    continue; 
+                }
+                
                 $desc = trim($st['description'] ?? '');
-                $perc = isset($st['percentage']) && $st['percentage'] !== '' ? (float)$st['percentage'] : 0.0;
+                error_log('createTask - Subtarea ' . ($index + 1) . ' - description: "' . $desc . '"');
+                
+                $perc = isset($st['completion_percentage']) && $st['completion_percentage'] !== '' ? (float)$st['completion_percentage'] : (isset($st['percentage']) && $st['percentage'] !== '' ? (float)$st['percentage'] : 0.0);
+                error_log('createTask - Subtarea ' . ($index + 1) . ' - percentage procesado: ' . $perc);
+                
+                // Validar que el porcentaje esté en el rango correcto
+                if ($perc < 0 || $perc > 100) {
+                    error_log('createTask - ⚠️ Porcentaje fuera de rango: ' . $perc . ', ajustando a 0.0');
+                    $perc = 0.0;
+                }
+                
                 $due  = isset($st['due_date']) && trim((string)$st['due_date']) !== '' ? trim($st['due_date']) : null;
-                $prio = in_array(($st['priority'] ?? 'medium'), ['low','medium','high','urgent'], true) ? $st['priority'] : 'medium';
-                $auid = isset($st['assigned_user_id']) && $st['assigned_user_id'] !== '' ? (int)$st['assigned_user_id'] : null;
+                error_log('createTask - Subtarea ' . ($index + 1) . ' - due_date: ' . ($due ?? 'NULL'));
+                
+                $prio = in_array(($st['priority'] ?? 'medium'), ['low','medium','high','urgent'], true) ? ($st['priority'] ?? 'medium') : 'medium';
+                error_log('createTask - Subtarea ' . ($index + 1) . ' - priority: ' . $prio);
+                
+                $auid = isset($st['assigned_to_user_id']) && $st['assigned_to_user_id'] !== '' ? (int)$st['assigned_to_user_id'] : null;
+                error_log('createTask - Subtarea ' . ($index + 1) . ' - assigned_to_user_id: ' . ($auid ?? 'NULL'));
+                
                 $normalized[] = [
                     'title' => $title,
                     'description' => $desc,
-                    'percentage' => $perc,
+                    'completion_percentage' => $perc,
                     'due_date' => $due,
                     'priority' => $prio,
-                    'assigned_user_id' => $auid,
+                    'assigned_to_user_id' => $auid,
                 ];
+                error_log('createTask - ✅ Subtarea ' . ($index + 1) . ' normalizada: ' . print_r($normalized[count($normalized)-1], true));
             }
             $subtasks = $normalized;
+            error_log('createTask - ✅ Total de subtareas normalizadas: ' . count($subtasks));
+        } else {
+            error_log('createTask - ❌ No hay subtareas para procesar o no es un array válido');
+            error_log('createTask - ❌ subtasks está vacío: ' . (empty($subtasks) ? 'SÍ' : 'NO'));
+            error_log('createTask - ❌ subtasks es array: ' . (is_array($subtasks) ? 'SÍ' : 'NO'));
         }
         
-        $priority = Utils::sanitizeInput($_POST['priority'] ?? 'medium');
+        // DEBUG: Log detallado del procesamiento de prioridad
+        error_log('=== DEBUG PRIORIDAD ===');
+        error_log('POST[priority] raw: ' . ($_POST['priority'] ?? 'NOT SET'));
+        error_log('isset POST[priority]: ' . (isset($_POST['priority']) ? 'YES' : 'NO'));
+        error_log('empty POST[priority]: ' . (empty($_POST['priority']) ? 'YES' : 'NO'));
+        
+        $priority = Utils::sanitizeInput($_POST['priority'] ?? '');
+        error_log('Priority after sanitize: "' . $priority . '"');
+        error_log('Priority length: ' . strlen($priority));
+        
+        // Si no se seleccionó prioridad, usar medium por defecto
+        if (empty($priority)) {
+            error_log('Priority is empty, setting to medium');
+            $priority = 'medium';
+        }
         
         // Corregir valor de prioridad al enum de Tasks
         if (!in_array($priority, ['low','medium','high','critical'], true)) {
+            error_log('Priority not in valid values, was: "' . $priority . '", setting to medium or critical');
             $priority = ($priority === 'urgent') ? 'critical' : 'medium';
         }
+        
+        error_log('FINAL Priority value: "' . $priority . '"');
+        error_log('=== END DEBUG PRIORIDAD ===');
         
         // Manejar labels que puede ser un array o JSON string
         $labelsRaw = $_POST['labels'] ?? [];
@@ -983,9 +1698,25 @@ class ClanLeaderController {
         error_log('  assignedMembers count: ' . count($assignedMembers));
         error_log('  subtasks count: ' . count($subtasks));
         
-        if (empty($taskTitle) || empty($taskDueDate)) {
-            error_log('createTask - Error: Título o fecha vacíos');
-            Utils::jsonResponse(['success' => false, 'message' => 'Título y fecha límite son requeridos'], 400);
+        // Validar título siempre
+        if (empty($taskTitle)) {
+            error_log('createTask - Error: Título vacío');
+            Utils::jsonResponse(['success' => false, 'message' => 'El título es requerido'], 400);
+            return;
+        }
+        
+        // Validar fecha límite SOLO si NO es recurrente
+        if (!$isRecurrent && empty($taskDueDate)) {
+            error_log('createTask - Error: Fecha vacía y no es recurrente');
+            Utils::jsonResponse(['success' => false, 'message' => 'La fecha límite es requerida para tareas no recurrentes'], 400);
+            return;
+        }
+        
+        // Si es recurrente, validar que tenga fecha de inicio
+        if ($isRecurrent && empty($recurrenceStart)) {
+            error_log('createTask - Error: Es recurrente pero sin fecha de inicio');
+            Utils::jsonResponse(['success' => false, 'message' => 'La fecha de inicio es requerida para tareas recurrentes'], 400);
+            return;
         }
         
         if (empty($assignedMembers)) {
@@ -1007,14 +1738,16 @@ class ClanLeaderController {
             }
         } else {
             // Si no se selecciona proyecto, usar el primer proyecto del clan
+            // Los proyectos personales ya están filtrados en el modelo
             $projects = $this->projectModel->getByClan($this->userClan['clan_id']);
+            
             if (empty($projects)) {
                 Utils::jsonResponse(['success' => false, 'message' => 'No hay proyectos disponibles en el clan'], 400);
             }
             $taskProject = $projects[0]['project_id'];
         }
         
-        // Verificar que todos los usuarios asignados pertenecen al clan
+        // Verificar que todos los usuarios asignados existen (permitir usuarios externos al clan)
         error_log('createTask - Verificando usuarios asignados...');
         foreach ($assignedMembers as $userId) {
             error_log('  Verificando usuario ID: ' . $userId);
@@ -1024,11 +1757,17 @@ class ClanLeaderController {
                 Utils::jsonResponse(['success' => false, 'message' => 'Usuario no encontrado'], 404);
             }
             
+            // Comentado: Ya no validamos que el usuario pertenezca al clan
+            // Esto permite asignar tareas a usuarios externos
+            /*
             $userClan = $this->userModel->getUserClan($userId);
             if (!$userClan || $userClan['clan_id'] != $this->userClan['clan_id']) {
                 error_log('  Error: Usuario ' . $userId . ' no pertenece al clan');
                 Utils::jsonResponse(['success' => false, 'message' => 'Usuario no pertenece al clan'], 400);
             }
+            */
+            
+            error_log('  Usuario ' . $userId . ' verificado correctamente (puede ser externo al clan)');
         }
         
         try {
@@ -1076,6 +1815,18 @@ class ClanLeaderController {
             
             error_log('createTask - taskModel OK, ejecutando createAdvanced...');
             
+            error_log('=== createTask - LLAMADA AL MODELO ===');
+            error_log('createTask - Llamando a createAdvanced con subtasks: ' . print_r($subtasks, true));
+            error_log('createTask - Cantidad de subtareas a enviar: ' . count($subtasks));
+            error_log('createTask - taskProject: ' . $taskProject);
+            error_log('createTask - taskTitle: ' . $taskTitle);
+            error_log('createTask - taskDueDate: ' . ($taskDueDate ?? 'NULL'));
+            error_log('createTask - clan_id: ' . $this->userClan['clan_id']);
+            error_log('createTask - priority: ' . $priority);
+            error_log('createTask - createdByUserId: ' . $createdByUserId);
+            error_log('createTask - assignedMembers: ' . print_r($assignedMembers, true));
+            error_log('createTask - labels: ' . print_r($labels, true));
+            
             $taskId = $this->taskModel->createAdvanced(
                 $taskProject,
                 $taskTitle,
@@ -1096,7 +1847,41 @@ class ClanLeaderController {
             }
             
             error_log("createTask - ÉXITO: Tarea creada con ID " . $taskId);
-            Utils::jsonResponse(['success' => true, 'message' => 'Tarea creada exitosamente', 'task_id' => $taskId]);
+            
+            $message = 'Tarea creada exitosamente';
+            $generatedInstances = 0;
+            
+            // Si es tarea recurrente, generar instancias inmediatamente
+            if ($isRecurrent) {
+                // Primero actualizar la tarea creada con los campos de recurrencia
+                $updateStmt = $this->db->prepare("
+                    UPDATE Tasks 
+                    SET is_recurrent = ?, recurrence_type = ?, recurrence_start_date = ?, 
+                        recurrence_end_date = ?, last_generated_date = ?
+                    WHERE task_id = ?
+                ");
+                $updateStmt->execute([
+                    1, $recurrenceType, $recurrenceStart, $recurrenceEnd, 
+                    $recurrenceStart, $taskId
+                ]);
+                
+                // Generar instancias
+                $generatedInstances = $this->taskModel->generateInstancesForTask($taskId);
+                if ($generatedInstances > 0) {
+                    $message .= ". Se generaron $generatedInstances instancias recurrentes";
+                }
+                
+                error_log("createTask - Instancias recurrentes generadas: $generatedInstances");
+            }
+            
+            // Notificación de asignación si está activa
+            try { (new NotificationService())->notifyTaskAssigned((int)$taskId, $assignedMembers); } catch (Exception $e) { error_log('Notif error (clan_leader task_assigned): ' . $e->getMessage()); }
+            Utils::jsonResponse([
+                'success' => true, 
+                'message' => $message, 
+                'task_id' => $taskId,
+                'generated_instances' => $generatedInstances
+            ]);
             
         } catch (Exception $e) {
             error_log("createTask - EXCEPCIÓN en try interno: " . $e->getMessage());
@@ -1105,8 +1890,26 @@ class ClanLeaderController {
         }
         
     } catch (Exception $e) {
-        error_log("Error en ClanLeaderController::createTask: " . $e->getMessage());
-        Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor'], 500);
+        error_log("=== ERROR FINAL en createTask ===");
+        error_log("Error message: " . $e->getMessage());
+        error_log("Error file: " . $e->getFile());
+        error_log("Error line: " . $e->getLine());
+        error_log("Stack trace: " . $e->getTraceAsString());
+        
+        Utils::jsonResponse([
+            'success' => false, 
+            'message' => 'Error interno del servidor: ' . $e->getMessage()
+        ], 500);
+    } catch (Throwable $t) {
+        error_log("=== THROWABLE FINAL en createTask ===");
+        error_log("Throwable message: " . $t->getMessage());
+        error_log("Throwable file: " . $t->getFile());
+        error_log("Throwable line: " . $t->getLine());
+        
+        Utils::jsonResponse([
+            'success' => false, 
+            'message' => 'Error crítico del servidor'
+        ], 500);
     }
 }
     
@@ -1170,6 +1973,12 @@ class ClanLeaderController {
             Utils::jsonResponse(['success' => false, 'message' => 'ID de tarea inválido'], 400);
         }
         
+        // Si no es líder de clan, redirigir a la vista de miembro
+        if (!$this->hasClanLeaderAccess()) {
+            header("Location: ?route=clan_member/task-details&task_id=" . $taskId);
+            exit;
+        }
+        
         try {
             // Obtener información completa de la tarea
             $task = $this->taskModel->findById($taskId);
@@ -1177,9 +1986,32 @@ class ClanLeaderController {
                 Utils::jsonResponse(['success' => false, 'message' => 'Tarea no encontrada'], 404);
             }
             
-            // Verificar que la tarea pertenece al clan del líder
+            // Verificar acceso: pertenece al clan del líder, la tarea está asignada al usuario actual, 
+            // o el usuario es miembro del clan y la tarea tiene asignados miembros del clan
             $project = $this->projectModel->findById($task['project_id']);
-            if (!$project || $project['clan_id'] != $this->userClan['clan_id']) {
+            $isAssigned = $this->isTaskAssignedToUser($taskId, $this->currentUser['user_id']);
+            $isProjectFromClan = ((int)$project['clan_id'] === (int)$this->userClan['clan_id']);
+            
+            // Verificar si es miembro del clan y hay miembros del clan asignados a la tarea
+            $hasTeamMembersAssigned = false;
+            if (!$isProjectFromClan && !$isAssigned && $this->userClan) {
+                $stmt = $this->db->prepare("
+                    SELECT COUNT(*) as count 
+                    FROM Task_Assignments ta 
+                    INNER JOIN Clan_Members cm ON ta.user_id = cm.user_id 
+                    WHERE ta.task_id = ? AND cm.clan_id = ?
+                    UNION
+                    SELECT COUNT(*) as count 
+                    FROM Tasks t 
+                    INNER JOIN Clan_Members cm ON t.assigned_to_user_id = cm.user_id 
+                    WHERE t.task_id = ? AND cm.clan_id = ?
+                ");
+                $stmt->execute([$taskId, $this->userClan['clan_id'], $taskId, $this->userClan['clan_id']]);
+                $results = $stmt->fetchAll();
+                $hasTeamMembersAssigned = array_sum(array_column($results, 'count')) > 0;
+            }
+            
+            if (!$project || (!$isProjectFromClan && !$isAssigned && !$hasTeamMembersAssigned)) {
                 Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
             }
             
@@ -1239,6 +2071,17 @@ class ClanLeaderController {
             
             error_log("addTaskComment: Usuario autenticado, user_id: " . $this->currentUser['user_id']);
             
+            // Verificar acceso: tarea del clan o asignada al usuario
+            $task = $this->taskModel->findById($taskId);
+            if (!$task) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Tarea no encontrada'], 404);
+            }
+            $project = $this->projectModel->findById($task['project_id']);
+            $isAssigned = $this->isTaskAssignedToUser($taskId, $this->currentUser['user_id']);
+            if (!$project || ((int)$project['clan_id'] !== (int)($this->userClan['clan_id'] ?? 0) && !$isAssigned)) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+            }
+
             // Agregar comentario y obtener comment_id
             $commentId = $this->taskModel->addComment(
                 $taskId, 
@@ -1248,8 +2091,37 @@ class ClanLeaderController {
             );
             
             if ($commentId) {
-                // Manejar adjunto si viene en la solicitud
-                if (!empty($_FILES['attachment']) && $_FILES['attachment']['error'] === UPLOAD_ERR_OK) {
+                // Manejar adjuntos (soporta uno: 'attachment' y varios: 'attachments[]')
+                $files = [];
+                $receivedNames = [];
+                $savedNames = [];
+                if (!empty($_FILES['attachments']) && isset($_FILES['attachments']['name']) && is_array($_FILES['attachments']['name'])) {
+                    // Normalizar arreglo de múltiples archivos
+                    $count = count($_FILES['attachments']['name']);
+                    for ($i = 0; $i < $count; $i++) {
+                        if (($_FILES['attachments']['error'][$i] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK) {
+                            $currentName = $_FILES['attachments']['name'][$i] ?? null;
+                            $files[] = [
+                                'name' => $_FILES['attachments']['name'][$i] ?? null,
+                                'type' => $_FILES['attachments']['type'][$i] ?? null,
+                                'tmp_name' => $_FILES['attachments']['tmp_name'][$i] ?? null,
+                                'size' => $_FILES['attachments']['size'][$i] ?? null,
+                            ];
+                            if ($currentName) { $receivedNames[] = $currentName; }
+                        }
+                    }
+                } elseif (!empty($_FILES['attachment']) && ($_FILES['attachment']['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK) {
+                    // Soporte legado de un solo archivo
+                    $files[] = [
+                        'name' => $_FILES['attachment']['name'] ?? null,
+                        'type' => $_FILES['attachment']['type'] ?? null,
+                        'tmp_name' => $_FILES['attachment']['tmp_name'] ?? null,
+                        'size' => $_FILES['attachment']['size'] ?? null,
+                    ];
+                    if (!empty($_FILES['attachment']['name'])) { $receivedNames[] = $_FILES['attachment']['name']; }
+                }
+
+                if (!empty($files)) {
                     // Base pública absoluta
                     $publicRoot = dirname(__DIR__, 2) . '/public';
                     $baseUploads = $publicRoot . '/uploads';
@@ -1257,21 +2129,36 @@ class ClanLeaderController {
                     // Crear rutas si no existen
                     if (!is_dir($baseUploads)) { @mkdir($baseUploads, 0775, true); }
                     if (!is_dir($uploadDir)) { @mkdir($uploadDir, 0775, true); }
-                    $originalName = basename($_FILES['attachment']['name']);
-                    $ext = pathinfo($originalName, PATHINFO_EXTENSION);
-                    $safeName = uniqid('att_') . ($ext ? ('.' . $ext) : '');
-                    $destPath = $uploadDir . '/' . $safeName;
-                    if (@move_uploaded_file($_FILES['attachment']['tmp_name'], $destPath)) {
-                        // Servir directamente desde /public/uploads/... sin router
-                        $publicPath = 'uploads/task_attachments/' . $safeName;
-                        // Guardar registro de adjunto (si existe comment_id en tabla se asociará al comentario)
-                        $this->taskModel->saveAttachmentRecord($taskId, is_numeric($commentId) ? (int)$commentId : null, $this->currentUser['user_id'], $originalName, $publicPath, $_FILES['attachment']['type'] ?? null);
-                    } else {
-                        error_log('addTaskComment: No se pudo mover el archivo subido a ' . $destPath);
+
+                    foreach ($files as $file) {
+                        if (empty($file['tmp_name']) || !is_uploaded_file($file['tmp_name'])) { continue; }
+                        $originalName = basename($file['name'] ?? 'archivo');
+                        $ext = pathinfo($originalName, PATHINFO_EXTENSION);
+                        $safeName = uniqid('att_') . ($ext ? ('.' . $ext) : '');
+                        $destPath = $uploadDir . '/' . $safeName;
+                        if (@move_uploaded_file($file['tmp_name'], $destPath)) {
+                            $publicPath = 'uploads/task_attachments/' . $safeName;
+                            $this->taskModel->saveAttachmentRecord(
+                                $taskId,
+                                is_numeric($commentId) ? (int)$commentId : null,
+                                $this->currentUser['user_id'],
+                                $originalName,
+                                $publicPath,
+                                $file['type'] ?? null
+                            );
+                            $savedNames[] = $originalName;
+                        } else {
+                            error_log('addTaskComment: No se pudo mover el archivo subido a ' . $destPath);
+                        }
                     }
                 }
-                error_log("addTaskComment: Comentario agregado exitosamente");
-                Utils::jsonResponse(['success' => true, 'message' => 'Comentario agregado exitosamente']);
+                error_log("addTaskComment: Comentario agregado exitosamente. Archivos recibidos: " . json_encode($receivedNames) . ", guardados: " . json_encode($savedNames));
+                Utils::jsonResponse([
+                    'success' => true,
+                    'message' => 'Comentario agregado exitosamente',
+                    'attachments_received' => $receivedNames,
+                    'attachments_saved' => $savedNames
+                ]);
             } else {
                 error_log("addTaskComment: Error al agregar comentario en la base de datos");
                 Utils::jsonResponse(['success' => false, 'message' => 'Error al agregar comentario'], 500);
@@ -1285,6 +2172,120 @@ class ClanLeaderController {
     }
     
     /**
+     * Actualizar progreso de tarea principal
+     */
+    public function updateTaskProgress() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
+        }
+        
+        $taskId = (int)($_POST['task_id'] ?? 0);
+        $completionPercentage = isset($_POST['completion_percentage']) ? (float)$_POST['completion_percentage'] : null;
+        
+        if ($taskId <= 0 || $completionPercentage === null) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Datos inválidos'], 400);
+        }
+        
+        try {
+            // Verificar que la tarea pertenece al clan
+            $stmt = $this->db->prepare("
+                SELECT t.*, p.clan_id
+                FROM Tasks t
+                JOIN Projects p ON t.project_id = p.project_id
+                WHERE t.task_id = ?
+            ");
+            $stmt->execute([$taskId]);
+            $task = $stmt->fetch();
+            
+            if (!$task) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Tarea no encontrada'], 404);
+            }
+            
+            if ($task['clan_id'] != $this->userClan['clan_id']) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+            }
+            
+            // Actualizar solo el progreso (sin cambiar el estado)
+            $result = $this->taskModel->update(
+                $taskId,
+                $task['task_name'],
+                $task['description'],
+                $task['assigned_to_user_id'],
+                $task['priority'],
+                $task['due_date'],
+                $task['assigned_percentage'],
+                null, // no cambiar estado
+                $completionPercentage
+            );
+            
+            if ($result) {
+                Utils::jsonResponse(['success' => true, 'message' => 'Progreso actualizado exitosamente']);
+            } else {
+                Utils::jsonResponse(['success' => false, 'message' => 'Error al actualizar progreso'], 500);
+            }
+            
+        } catch (Exception $e) {
+            error_log("Error en updateTaskProgress: " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor'], 500);
+        }
+    }
+    
+    /**
+     * Actualizar progreso de subtarea
+     */
+    public function updateSubtaskProgress() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
+        }
+        
+        $subtaskId = (int)($_POST['subtask_id'] ?? 0);
+        $completionPercentage = isset($_POST['completion_percentage']) ? (float)$_POST['completion_percentage'] : null;
+        
+        if ($subtaskId <= 0 || $completionPercentage === null) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Datos inválidos'], 400);
+        }
+        
+        try {
+            // Verificar que la subtarea pertenece a una tarea del clan
+            $stmt = $this->db->prepare("
+                SELECT s.*, t.project_id, p.clan_id
+                FROM Subtasks s
+                JOIN Tasks t ON s.task_id = t.task_id
+                JOIN Projects p ON t.project_id = p.project_id
+                WHERE s.subtask_id = ?
+            ");
+            $stmt->execute([$subtaskId]);
+            $subtask = $stmt->fetch();
+            
+            if (!$subtask) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Subtarea no encontrada'], 404);
+            }
+            
+            if ($subtask['clan_id'] != $this->userClan['clan_id']) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+            }
+            
+            // Actualizar solo el progreso
+            $result = $this->taskModel->updateSubtaskStatus(
+                $subtaskId, 
+                null, // no cambiar estado
+                $completionPercentage, 
+                $this->currentUser['user_id']
+            );
+            
+            if ($result) {
+                Utils::jsonResponse(['success' => true, 'message' => 'Progreso actualizado exitosamente']);
+            } else {
+                Utils::jsonResponse(['success' => false, 'message' => 'Error al actualizar progreso'], 500);
+            }
+            
+        } catch (Exception $e) {
+            error_log("Error en updateSubtaskProgress: " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor'], 500);
+        }
+    }
+    
+    /**
      * Actualizar estado de subtarea
      */
     public function updateSubtaskStatus() {
@@ -1294,10 +2295,15 @@ class ClanLeaderController {
         
         $subtaskId = (int)($_POST['subtask_id'] ?? 0);
         $status = Utils::sanitizeInput($_POST['status'] ?? '');
-        $completionPercentage = (float)($_POST['completion_percentage'] ?? 0);
+        $completionPercentage = isset($_POST['completion_percentage']) ? (float)$_POST['completion_percentage'] : null;
         
-        if ($subtaskId <= 0 || empty($status)) {
-            Utils::jsonResponse(['success' => false, 'message' => 'Datos inválidos'], 400);
+        if ($subtaskId <= 0) {
+            Utils::jsonResponse(['success' => false, 'message' => 'ID de subtarea inválido'], 400);
+        }
+        
+        // Si no se envía status pero sí completion_percentage, solo actualizar porcentaje
+        if (empty($status) && $completionPercentage === null) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Debe proporcionar estado o porcentaje de completación'], 400);
         }
         
         try {
@@ -1341,6 +2347,183 @@ class ClanLeaderController {
     }
     
     /**
+     * Agregar una subtarea individual
+     */
+    public function addSubtask() {
+        $this->requireAuth();
+        if (!$this->hasClanLeaderAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos'], 403);
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
+        }
+
+        $taskId = (int)($_POST['task_id'] ?? 0);
+        $title = trim(Utils::sanitizeInput($_POST['title'] ?? ''));
+        $description = trim(Utils::sanitizeInput($_POST['description'] ?? ''));
+        $status = Utils::sanitizeInput($_POST['status'] ?? 'pending');
+        $completionPercentage = (float)($_POST['completion_percentage'] ?? 0);
+        $dueDate = !empty($_POST['due_date']) ? $_POST['due_date'] : null;
+
+        if ($taskId <= 0) {
+            Utils::jsonResponse(['success' => false, 'message' => 'ID de tarea inválido'], 400);
+        }
+
+        if (empty($title)) {
+            Utils::jsonResponse(['success' => false, 'message' => 'El título es requerido'], 400);
+        }
+
+        // Validar estado
+        $validStatuses = ['pending', 'in_progress', 'completed', 'blocked'];
+        if (!in_array($status, $validStatuses)) {
+            $status = 'pending';
+        }
+
+        // Validar porcentaje
+        if ($completionPercentage < 0 || $completionPercentage > 100) {
+            $completionPercentage = 0;
+        }
+
+        try {
+            // Verificar que la tarea existe
+            $task = $this->taskModel->findById($taskId);
+            if (!$task) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Tarea no encontrada'], 404);
+            }
+
+            // Verificar que el usuario tiene acceso a la tarea
+            $project = $this->projectModel->findById($task['project_id']);
+            if (!$project) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Proyecto no encontrado'], 404);
+            }
+            
+            // Permitir si es líder del clan del proyecto O si está asignado a la tarea
+            $isProjectClanLeader = ($project['clan_id'] == $this->userClan['clan_id']);
+            $isTaskAssigned = ($task['assigned_to_user_id'] == $this->currentUser['user_id']);
+            
+            // Verificar también si está asignado via Task_Assignments
+            if (!$isTaskAssigned) {
+                $stmt = $this->db->prepare("SELECT COUNT(*) FROM Task_Assignments WHERE task_id = ? AND user_id = ?");
+                $stmt->execute([$taskId, $this->currentUser['user_id']]);
+                $isTaskAssigned = $stmt->fetchColumn() > 0;
+            }
+            
+            if (!$isProjectClanLeader && !$isTaskAssigned) {
+                Utils::jsonResponse(['success' => false, 'message' => 'No tienes permisos para agregar subtareas a esta tarea'], 403);
+            }
+
+            // Crear la subtarea usando el método existente
+            $subtaskId = $this->taskModel->createSubtaskAdvanced(
+                $taskId,
+                $title,
+                $this->currentUser['user_id'],
+                $description,
+                $completionPercentage,
+                $dueDate, // fecha límite
+                'medium', // prioridad por defecto
+                null  // sin usuario asignado inicialmente
+            );
+
+            if ($subtaskId) {
+                // Actualizar el estado si no es 'pending'
+                if ($status !== 'pending') {
+                    $this->taskModel->updateSubtaskStatus($subtaskId, $status, $completionPercentage, $this->currentUser['user_id']);
+                }
+
+                Utils::jsonResponse([
+                    'success' => true, 
+                    'message' => 'Subtarea creada exitosamente',
+                    'subtask_id' => $subtaskId
+                ]);
+            } else {
+                Utils::jsonResponse(['success' => false, 'message' => 'Error al crear la subtarea'], 500);
+            }
+
+        } catch (Exception $e) {
+            error_log('Error al crear subtarea: ' . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor'], 500);
+        }
+    }
+
+    /**
+     * Añadir subtareas a una tarea existente
+     */
+    public function addSubtasksToTask() {
+        $this->requireAuth();
+        if (!$this->hasClanLeaderAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos'], 403);
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
+        }
+
+        $taskId = (int)($_POST['taskId'] ?? 0);
+        $subtasks = $_POST['subtasks'] ?? [];
+
+        if ($taskId <= 0) {
+            Utils::jsonResponse(['success' => false, 'message' => 'ID de tarea inválido'], 400);
+        }
+
+        if (empty($subtasks) || !is_array($subtasks)) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Debe proporcionar al menos una subtarea'], 400);
+        }
+
+        try {
+            // Verificar que la tarea existe y pertenece al clan
+            $task = $this->taskModel->findById($taskId);
+            if (!$task) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Tarea no encontrada'], 404);
+            }
+
+            // Verificar que la tarea pertenece a un proyecto del clan
+            $project = $this->projectModel->findById($task['project_id']);
+            if (!$project || $project['clan_id'] != $this->userClan['clan_id']) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+            }
+
+            $createdByUserId = $this->currentUser['user_id'];
+            
+            // Crear cada subtarea
+            $createdCount = 0;
+            foreach ($subtasks as $subtaskTitle) {
+                $subtaskTitle = trim(Utils::sanitizeInput($subtaskTitle));
+                if ($subtaskTitle !== '') {
+                    $subtaskId = $this->taskModel->createSubtaskAdvanced(
+                        $taskId,
+                        $subtaskTitle,
+                        $createdByUserId,
+                        '', // descripción vacía
+                        0,  // porcentaje inicial
+                        null, // sin fecha límite
+                        Task::PRIORITY_MEDIUM,
+                        null  // sin usuario asignado inicialmente
+                    );
+                    
+                    if ($subtaskId) {
+                        $createdCount++;
+                    }
+                }
+            }
+
+            if ($createdCount > 0) {
+                Utils::jsonResponse([
+                    'success' => true, 
+                    'message' => "Se crearon {$createdCount} subtareas exitosamente",
+                    'created_count' => $createdCount
+                ]);
+            } else {
+                Utils::jsonResponse(['success' => false, 'message' => 'No se pudo crear ninguna subtarea'], 500);
+            }
+
+        } catch (Exception $e) {
+            error_log('Error al añadir subtareas (clan leader): ' . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
      * Método de prueba para verificar que el controlador funciona
      */
     public function test() {
@@ -1351,13 +2534,21 @@ class ClanLeaderController {
      * Eliminar una tarea
      */
     public function deleteTask() {
+        // Debug logging
+        error_log("=== DELETE TASK DEBUG ===");
+        error_log("REQUEST_METHOD: " . $_SERVER['REQUEST_METHOD']);
+        error_log("POST data: " . print_r($_POST, true));
+        error_log("Raw input: " . file_get_contents('php://input'));
+        
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
         }
         
         $taskId = (int)($_POST['task_id'] ?? 0);
+        error_log("Parsed task_id: " . $taskId);
         
         if ($taskId <= 0) {
+            error_log("Task ID inválido: " . $taskId);
             Utils::jsonResponse(['success' => false, 'message' => 'ID de tarea inválido'], 400);
         }
         
@@ -1388,45 +2579,62 @@ class ClanLeaderController {
         }
     }
     
+    
     /**
-     * Eliminar una subtarea
+     * Agregar comentario a una tarea
      */
-    public function deleteSubtask() {
+    public function addComment() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
         }
         
-        $subtaskId = (int)($_POST['subtask_id'] ?? 0);
+        $taskId = (int)($_POST['task_id'] ?? 0);
+        $commentText = trim($_POST['comment_text'] ?? '');
         
-        if ($subtaskId <= 0) {
-            Utils::jsonResponse(['success' => false, 'message' => 'ID de subtarea inválido'], 400);
+        if ($taskId <= 0 || empty($commentText)) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Datos inválidos'], 400);
         }
         
         try {
-            // Verificar que la subtarea pertenece a una tarea del clan
-            $subtask = $this->taskModel->getSubtasks(null, $subtaskId);
-            if (empty($subtask)) {
-                Utils::jsonResponse(['success' => false, 'message' => 'Subtarea no encontrada'], 404);
+            // Verificar que la tarea pertenece al clan del líder
+            $task = $this->taskModel->findById($taskId);
+            if (!$task) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Tarea no encontrada'], 404);
             }
             
-            $task = $this->taskModel->findById($subtask[0]['task_id']);
             $project = $this->projectModel->findById($task['project_id']);
             if (!$project || $project['clan_id'] != $this->userClan['clan_id']) {
                 Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
             }
             
-            // Eliminar la subtarea
-            $result = $this->taskModel->deleteSubtask($subtaskId);
+            // Agregar el comentario
+            $result = $this->taskModel->addComment($taskId, $this->currentUser['user_id'], $commentText, 'comment');
             
             if ($result) {
-                Utils::jsonResponse(['success' => true, 'message' => 'Subtarea eliminada exitosamente']);
+                // Manejar archivo adjunto si existe
+                if (isset($_FILES['attachment']) && $_FILES['attachment']['error'] === UPLOAD_ERR_OK) {
+                    $uploadDir = 'uploads/task_attachments/';
+                    if (!is_dir($uploadDir)) {
+                        mkdir($uploadDir, 0755, true);
+                    }
+                    
+                    $fileName = time() . '_' . $_FILES['attachment']['name'];
+                    $filePath = $uploadDir . $fileName;
+                    
+                    if (move_uploaded_file($_FILES['attachment']['tmp_name'], $filePath)) {
+                        // Guardar información del archivo adjunto
+                        $this->taskModel->addCommentAttachment($result, $fileName, $filePath);
+                    }
+                }
+                
+                Utils::jsonResponse(['success' => true, 'message' => 'Comentario agregado exitosamente']);
             } else {
-                Utils::jsonResponse(['success' => false, 'message' => 'Error al eliminar la subtarea'], 500);
+                Utils::jsonResponse(['success' => false, 'message' => 'Error al agregar el comentario'], 500);
             }
             
         } catch (Exception $e) {
-            error_log("Error al eliminar subtarea: " . $e->getMessage());
-            Utils::jsonResponse(['success' => false, 'message' => 'Error al eliminar la subtarea'], 500);
+            error_log("Error al agregar comentario: " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error al agregar el comentario'], 500);
         }
     }
     
@@ -1458,7 +2666,7 @@ class ClanLeaderController {
             }
             
             $userIdsArray = explode(',', $userIds);
-            $result = $this->taskModel->assignMultipleUsers($taskId, $userIdsArray, $this->currentUser['user_id']);
+            $result = $this->taskModel->addCollaborators($taskId, $userIdsArray, $this->currentUser['user_id']);
             
             if ($result) {
                 Utils::jsonResponse(['success' => true, 'message' => 'Colaboradores agregados exitosamente']);
@@ -1609,15 +2817,26 @@ class ClanLeaderController {
                 return;
             }
             
-            $taskId = (int)($_POST['taskId'] ?? 0);
-            $isCompleted = (bool)($_POST['isCompleted'] ?? false);
+            // Debug logging para identificar el problema
+            error_log("=== TOGGLE TASK STATUS DEBUG ===");
+            error_log("POST data: " . print_r($_POST, true));
+            error_log("Raw input: " . file_get_contents('php://input'));
+            
+            $taskId = (int)($_POST['task_id'] ?? 0);
+            $newStatus = $_POST['status'] ?? '';
+            $isCompleted = ($newStatus === 'completed');
+            
+            error_log("Parsed taskId: " . $taskId);
+            error_log("Parsed newStatus: " . $newStatus);
+            error_log("isCompleted: " . ($isCompleted ? 'true' : 'false'));
             
             if ($taskId <= 0) {
-                Utils::jsonResponse(['success' => false, 'message' => 'ID de tarea inválido'], 400);
+                error_log("Task ID validation failed. taskId: " . $taskId);
+                Utils::jsonResponse(['success' => false, 'message' => 'ID de tarea inválido - ID recibido: ' . $taskId], 400);
                 return;
             }
             
-            // Verificar que la tarea pertenece a un proyecto del clan
+            // Verificar que la tarea pertenece a un proyecto del clan o asignada al líder
             $task = $this->taskModel->findById($taskId);
             if (!$task) {
                 Utils::jsonResponse(['success' => false, 'message' => 'Tarea no encontrada'], 404);
@@ -1625,7 +2844,8 @@ class ClanLeaderController {
             }
             
             $project = $this->projectModel->findById($task['project_id']);
-            if (!$project || $project['clan_id'] != $this->userClan['clan_id']) {
+            $isAssigned = $this->isTaskAssignedToUser($taskId, $this->currentUser['user_id']);
+            if (!$project || ((int)$project['clan_id'] !== (int)$this->userClan['clan_id'] && !$isAssigned)) {
                 Utils::jsonResponse(['success' => false, 'message' => 'Tarea no encontrada'], 404);
                 return;
             }
@@ -1641,6 +2861,9 @@ class ClanLeaderController {
                 $newStatus = 'pending';
             }
             
+            // Calcular el completion_percentage basado en el estado
+            $completionPercentage = ($newStatus === 'completed') ? 100 : 0;
+            
             // Actualizar estado usando el método update del modelo
             $result = $this->taskModel->update(
                 $taskId,
@@ -1653,8 +2876,25 @@ class ClanLeaderController {
                 $newStatus // nuevo parámetro para estado
             );
             
+            // SIEMPRE actualizar el completion_percentage después de cambiar el estado
             if ($result) {
-                Utils::jsonResponse(['success' => true, 'message' => 'Estado de tarea actualizado']);
+                $this->taskModel->updateTaskProgress($taskId, $completionPercentage);
+                error_log("Progreso actualizado: task_id=$taskId, completion_percentage=$completionPercentage%");
+            }
+            
+            if ($result) {
+                // Si se completó la tarea, actualizar el progreso del proyecto
+                if ($newStatus === 'completed') {
+                    $this->projectModel->updateProgress($task['project_id']);
+                }
+                
+                Utils::jsonResponse([
+                    'success' => true, 
+                    'message' => 'Estado de tarea actualizado (status, is_completed y completion_percentage)',
+                    'completion_percentage' => $completionPercentage,
+                    'status' => $newStatus,
+                    'is_completed' => ($newStatus === 'completed') ? 1 : 0
+                ]);
             } else {
                 Utils::jsonResponse(['success' => false, 'message' => 'Error al actualizar tarea'], 500);
             }
@@ -1662,6 +2902,205 @@ class ClanLeaderController {
         } catch (Exception $e) {
             error_log("Error en ClanLeaderController::toggleTaskStatus: " . $e->getMessage());
             Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor'], 500);
+        }
+    }
+    
+    /**
+     * Método para actualizar estado de subtarea
+     */
+    public function simpleToggleSubtask() {
+        // Limpiar cualquier salida previa y establecer headers
+        if (ob_get_level()) {
+            ob_clean();
+        }
+        header('Content-Type: application/json; charset=utf-8');
+        
+        // Logging detallado
+        error_log("=== SIMPLE TOGGLE SUBTASK ===");
+        error_log("REQUEST_METHOD: " . $_SERVER['REQUEST_METHOD']);
+        error_log("POST: " . print_r($_POST, true));
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+            exit;
+        }
+        
+        // Obtener parámetros
+        $subtaskId = (int)($_POST['subtask_id'] ?? 0);
+        $status = $_POST['status'] ?? '';
+        
+        error_log("Final subtaskId: " . $subtaskId);
+        error_log("Final status: " . $status);
+        
+        if (!$subtaskId || $subtaskId <= 0) {
+            echo json_encode(['success' => false, 'message' => 'ID de subtarea inválido: ' . $subtaskId]);
+            exit;
+        }
+        
+        if (!in_array($status, ['pending', 'completed', 'in_progress', 'cancelled'])) {
+            echo json_encode(['success' => false, 'message' => 'Estado inválido: ' . $status]);
+            exit;
+        }
+        
+        try {
+            // Buscar la subtarea
+            $stmt = $this->db->prepare("SELECT * FROM Subtasks WHERE subtask_id = ?");
+            $stmt->execute([$subtaskId]);
+            $subtask = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$subtask) {
+                echo json_encode(['success' => false, 'message' => 'Subtarea no encontrada']);
+                return;
+            }
+            
+            // Calcular completion_percentage - 100% si completada, 0% si no completada
+            $completionPercentage = ($status === 'completed') ? 100 : 0;
+            
+            error_log("Actualizando subtarea con: status=$status, completion_percentage=$completionPercentage%");
+            
+            // Actualizar la subtarea
+            $updateStmt = $this->db->prepare("
+                UPDATE Subtasks 
+                SET status = ?, completion_percentage = ?, updated_at = NOW() 
+                WHERE subtask_id = ?
+            ");
+            
+            $result = $updateStmt->execute([$status, $completionPercentage, $subtaskId]);
+            
+            if ($result) {
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Subtarea actualizada correctamente (status y completion_percentage)',
+                    'completion_percentage' => $completionPercentage,
+                    'status' => $status
+                ]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Error al actualizar la subtarea']);
+            }
+            
+        } catch (Exception $e) {
+            error_log("Error en simpleToggleSubtask: " . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+        }
+    }
+    
+    /**
+     * Método simple para cambiar estado de tarea
+     */
+    public function simpleToggleTask() {
+        // Limpiar cualquier salida previa y establecer headers
+        if (ob_get_level()) {
+            ob_clean();
+        }
+        header('Content-Type: application/json; charset=utf-8');
+        
+        // Logging detallado
+        error_log("=== SIMPLE TOGGLE TASK ===");
+        error_log("REQUEST_METHOD: " . $_SERVER['REQUEST_METHOD']);
+        error_log("POST: " . print_r($_POST, true));
+        error_log("GET: " . print_r($_GET, true));
+        error_log("Raw input: " . file_get_contents('php://input'));
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+            exit;
+        }
+        
+        // Intentar obtener task_id de diferentes formas
+        $taskId = null;
+        if (isset($_POST['task_id'])) {
+            $taskId = (int)$_POST['task_id'];
+            error_log("task_id desde POST: " . $taskId);
+        } else {
+            // Intentar desde raw input
+            $rawInput = file_get_contents('php://input');
+            parse_str($rawInput, $parsedData);
+            if (isset($parsedData['task_id'])) {
+                $taskId = (int)$parsedData['task_id'];
+                error_log("task_id desde raw input: " . $taskId);
+            }
+        }
+        
+        $status = $_POST['status'] ?? $parsedData['status'] ?? '';
+        
+        error_log("Final taskId: " . $taskId);
+        error_log("Final status: " . $status);
+        
+        if (!$taskId || $taskId <= 0) {
+            $debugInfo = [
+                'received_task_id' => $_POST['task_id'] ?? 'no POST task_id',
+                'parsed_task_id' => $parsedData['task_id'] ?? 'no parsed task_id',
+                'final_task_id' => $taskId,
+                'post_data' => $_POST,
+                'parsed_data' => $parsedData ?? null,
+                'raw_input' => file_get_contents('php://input'),
+                'content_type' => $_SERVER['CONTENT_TYPE'] ?? 'no content type'
+            ];
+            
+            error_log("Task ID validation failed. Debug info: " . print_r($debugInfo, true));
+            
+            echo json_encode([
+                'success' => false, 
+                'message' => 'ID de tarea inválido. Recibido: ' . var_export($taskId, true) . '. Verifique que está enviando un número válido mayor que 0.',
+                'debug' => $debugInfo
+            ]);
+            exit;
+        }
+        
+        if (!in_array($status, ['pending', 'completed', 'in_progress', 'cancelled'])) {
+            echo json_encode(['success' => false, 'message' => 'Estado inválido: ' . $status]);
+            exit;
+        }
+        
+        try {
+            // Buscar la tarea usando el modelo
+            $task = $this->taskModel->findById($taskId);
+            
+            if (!$task) {
+                echo json_encode(['success' => false, 'message' => 'Tarea no encontrada']);
+                return;
+            }
+            
+            error_log("Tarea encontrada: " . print_r($task, true));
+            
+            // Calcular completion_percentage - 100% si completada, 0% si no completada
+            $completionPercentage = ($status === 'completed') ? 100 : 0;
+            
+            error_log("Actualizando tarea con: status=$status, completion_percentage=$completionPercentage%");
+            
+            // Usar el método update del modelo que maneja correctamente status, is_completed, completed_at, etc.
+            $result = $this->taskModel->update(
+                $taskId,
+                $task['task_name'],
+                $task['description'],
+                $task['assigned_to_user_id'],
+                $task['priority'],
+                $task['due_date'],
+                $task['assigned_percentage'],
+                $status  // Este parámetro hará que se actualice status, is_completed y completed_at automáticamente
+            );
+            
+            // SIEMPRE actualizar el completion_percentage después de cambiar el estado
+            if ($result) {
+                $this->taskModel->updateTaskProgress($taskId, $completionPercentage);
+                error_log("Progreso actualizado: task_id=$taskId, completion_percentage=$completionPercentage%");
+            }
+            
+            if ($result) {
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Tarea actualizada correctamente (status, is_completed y completion_percentage)',
+                    'completion_percentage' => $completionPercentage,
+                    'status' => $status,
+                    'is_completed' => ($status === 'completed') ? 1 : 0
+                ]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Error al actualizar la tarea']);
+            }
+            
+        } catch (Exception $e) {
+            error_log("Error en simpleToggleTask: " . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
         }
     }
     
@@ -1678,24 +3117,55 @@ class ClanLeaderController {
                    strpos(strtolower($member['email']), $searchPattern) !== false;
         });
     }
+
+    /**
+     * Verificar si una tarea está asignada a un usuario (asignación principal o en Task_Assignments)
+     */
+    private function isTaskAssignedToUser($taskId, $userId) {
+        try {
+            $stmt = $this->db->prepare("SELECT COUNT(*) AS c FROM Tasks WHERE task_id = ? AND assigned_to_user_id = ?");
+            $stmt->execute([$taskId, $userId]);
+            $row = $stmt->fetch();
+            if ((int)($row['c'] ?? 0) > 0) { return true; }
+
+            $stmt = $this->db->prepare("SELECT COUNT(*) AS c FROM Task_Assignments WHERE task_id = ? AND user_id = ?");
+            $stmt->execute([$taskId, $userId]);
+            $row = $stmt->fetch();
+            return (int)($row['c'] ?? 0) > 0;
+        } catch (Exception $e) {
+            error_log('Error isTaskAssignedToUser (Leader): ' . $e->getMessage());
+            return false;
+        }
+    }
     
     /**
      * Buscar proyectos del clan
      */
     private function searchProjects($searchTerm) {
-        $projects = $this->projectModel->getByClan($this->userClan['clan_id']);
+        $allProjects = $this->projectModel->getByClan($this->userClan['clan_id']);
         $searchPattern = strtolower($searchTerm);
         
-        return array_filter($projects, function($project) use ($searchPattern) {
+        // Primero filtrar por búsqueda
+        $searchResults = array_filter($allProjects, function($project) use ($searchPattern) {
             return strpos(strtolower($project['project_name']), $searchPattern) !== false ||
                    strpos(strtolower($project['description']), $searchPattern) !== false;
         });
+        
+        // Los proyectos personales ya están filtrados en el modelo
+        return array_values($searchResults);
     }
     
     /**
      * Obtener estadísticas de usuarios del clan
      */
     private function getUserStats() {
+        if (!$this->userClan || !isset($this->userClan['clan_id'])) {
+            return [
+                'total_members' => 0,
+                'active_members' => 0,
+                'recent_members' => 0
+            ];
+        }
         $members = $this->clanModel->getMembers($this->userClan['clan_id']);
         
         return [
@@ -1715,16 +3185,27 @@ class ClanLeaderController {
      * Obtener estadísticas del clan
      */
     private function getClanStats() {
+        if (!$this->userClan || !isset($this->userClan['clan_id'])) {
+            return [
+                'member_count' => 0,
+                'project_count' => 0,
+                'active_projects' => 0,
+                'completed_projects' => 0
+            ];
+        }
         $members = $this->clanModel->getMembers($this->userClan['clan_id']);
-        $projects = $this->projectModel->getByClan($this->userClan['clan_id']);
+        $allProjects = $this->projectModel->getByClan($this->userClan['clan_id']);
+        
+        // Los proyectos personales ya están filtrados en el modelo
+        $filteredProjects = $allProjects;
         
         return [
             'member_count' => count($members),
-            'project_count' => count($projects),
-            'active_projects' => count(array_filter($projects, function($project) {
+            'project_count' => count($filteredProjects),
+            'active_projects' => count(array_filter($filteredProjects, function($project) {
                 return $project['status'] == 'active';
             })),
-            'completed_projects' => count(array_filter($projects, function($project) {
+            'completed_projects' => count(array_filter($filteredProjects, function($project) {
                 return $project['status'] == 'completed';
             }))
         ];
@@ -1735,12 +3216,7 @@ class ClanLeaderController {
      */
     private function getTaskStats() {
         try {
-            // Primero verificar si hay proyectos en el clan
-            $projectStmt = $this->db->prepare("SELECT project_id FROM Projects WHERE clan_id = ?");
-            $projectStmt->execute([$this->userClan['clan_id']]);
-            $projects = $projectStmt->fetchAll(PDO::FETCH_COLUMN);
-            
-            if (empty($projects)) {
+            if (!$this->userClan || !isset($this->userClan['clan_id'])) {
                 return [
                     'total_tasks' => 0,
                     'completed_tasks' => 0,
@@ -1750,28 +3226,35 @@ class ClanLeaderController {
                 ];
             }
             
-            $placeholders = str_repeat('?,', count($projects) - 1) . '?';
-            $stmt = $this->db->prepare("
-                SELECT 
-                    COUNT(*) as total_tasks,
-                    SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_tasks,
-                    SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_tasks,
-                    SUM(CASE WHEN status = 'in_progress' THEN 1 ELSE 0 END) as in_progress_tasks
-                FROM Tasks 
-                WHERE project_id IN ($placeholders) AND is_subtask = 0
-            ");
+            // Obtener tareas del clan (excluyendo proyectos personales)
+            $clanTasksData = $this->taskModel->getAllTasksByClanStrict($this->userClan['clan_id'], 1, 10000, '', '');
+            $clanTasks = $clanTasksData['tasks'] ?? [];
             
-            $stmt->execute($projects);
-            $stats = $stmt->fetch(PDO::FETCH_ASSOC);
+            // Obtener tareas personales del líder actual
+            $ownPersonalTasks = $this->taskModel->getPersonalTasksForClanLeader(
+                $this->currentUser['user_id'], 
+                $this->userClan['clan_id']
+            );
             
-            $totalTasks = (int)$stats['total_tasks'];
-            $completedTasks = (int)$stats['completed_tasks'];
-            
+            // Combinar tareas del clan y tareas personales del líder
+            $allTasks = array_merge($clanTasks, $ownPersonalTasks);
+
+            $totalTasks = count($allTasks);
+            $completedTasks = 0;
+            $pendingTasks = 0;
+            $inProgressTasks = 0;
+            foreach ($allTasks as $t) {
+                $status = $t['status'] ?? 'pending';
+                if ($status === 'completed') { $completedTasks++; }
+                elseif ($status === 'in_progress') { $inProgressTasks++; }
+                elseif ($status === 'pending') { $pendingTasks++; }
+            }
+
             return [
                 'total_tasks' => $totalTasks,
                 'completed_tasks' => $completedTasks,
-                'pending_tasks' => (int)$stats['pending_tasks'],
-                'in_progress_tasks' => (int)$stats['in_progress_tasks'],
+                'pending_tasks' => $pendingTasks,
+                'in_progress_tasks' => $inProgressTasks,
                 'completion_percentage' => $totalTasks > 0 ? round(($completedTasks / $totalTasks) * 100, 1) : 0
             ];
         } catch (Exception $e) {
@@ -1879,18 +3362,9 @@ class ClanLeaderController {
                 $placeholders = str_repeat('?,', count($projectIds) - 1) . '?';
                 
                 // Estadísticas generales
-                $statsStmt = $this->db->prepare("
-                    SELECT 
-                        COUNT(*) as total_tasks,
-                        SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_tasks,
-                        SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_tasks,
-                        SUM(CASE WHEN status = 'in_progress' THEN 1 ELSE 0 END) as in_progress_tasks,
-                        SUM(CASE WHEN due_date < CURDATE() AND status != 'completed' THEN 1 ELSE 0 END) as overdue_tasks
-                    FROM Tasks 
-                    WHERE assigned_to_user_id = ? AND project_id IN ($placeholders) AND is_subtask = 0
-                ");
+                $statsStmt = $this->db->prepare("\n                    SELECT \n                        COUNT(DISTINCT t.task_id) as total_tasks,\n                        SUM(CASE WHEN t.status = 'completed' THEN 1 ELSE 0 END) as completed_tasks,\n                        SUM(CASE WHEN t.status = 'pending' THEN 1 ELSE 0 END) as pending_tasks,\n                        SUM(CASE WHEN t.status = 'in_progress' THEN 1 ELSE 0 END) as in_progress_tasks,\n                        SUM(CASE WHEN t.due_date < CURDATE() AND t.status != 'completed' THEN 1 ELSE 0 END) as overdue_tasks\n                    FROM Tasks t\n                    WHERE t.project_id IN ($placeholders) AND t.is_subtask = 0\n                      AND (t.assigned_to_user_id = ? OR t.task_id IN (SELECT ta.task_id FROM Task_Assignments ta WHERE ta.user_id = ?))\n                ");
                 
-                $params = array_merge([$userId], $projectIds);
+                $params = array_merge($projectIds, [$userId, $userId]);
                 $statsStmt->execute($params);
                 $stats = $statsStmt->fetch(PDO::FETCH_ASSOC);
                 
@@ -1904,22 +3378,8 @@ class ClanLeaderController {
                 
                 // Tareas por proyecto
                 foreach ($projects as $project) {
-                    $projectTaskStmt = $this->db->prepare("
-                        SELECT 
-                            t.task_id,
-                            t.task_name,
-                            t.description,
-                            t.status,
-                            t.priority,
-                            t.due_date,
-                            t.completed_at,
-                            t.assigned_percentage,
-                            t.automatic_points
-                        FROM Tasks t
-                        WHERE t.assigned_to_user_id = ? AND t.project_id = ? AND t.is_subtask = 0
-                        ORDER BY t.due_date ASC, t.created_at DESC
-                    ");
-                    $projectTaskStmt->execute([$userId, $project['project_id']]);
+                    $projectTaskStmt = $this->db->prepare("\n                        SELECT \n                            t.task_id,\n                            t.task_name,\n                            t.description,\n                            t.status,\n                            t.priority,\n                            t.due_date,\n                            t.completed_at,\n                            t.assigned_percentage,\n                            t.automatic_points\n                        FROM Tasks t\n                        WHERE t.project_id = ? AND t.is_subtask = 0\n                          AND (t.assigned_to_user_id = ? OR t.task_id IN (SELECT ta.task_id FROM Task_Assignments ta WHERE ta.user_id = ?))\n                        ORDER BY t.due_date ASC, t.created_at DESC\n                    ");
+                    $projectTaskStmt->execute([$project['project_id'], $userId, $userId]);
                     $projectTasks = $projectTaskStmt->fetchAll(PDO::FETCH_ASSOC);
                     
                     if (!empty($projectTasks)) {
@@ -2003,6 +3463,9 @@ class ClanLeaderController {
      */
     private function getMemberContributions() {
         try {
+            if (!$this->userClan || !isset($this->userClan['clan_id'])) {
+                return [];
+            }
             // Obtener todos los miembros del clan usando el modelo Clan
             $members = $this->clanModel->getMembers($this->userClan['clan_id']);
             
@@ -2010,10 +3473,34 @@ class ClanLeaderController {
                 return [];
             }
             
-            // Obtener proyectos del clan
-            $projectStmt = $this->db->prepare("SELECT project_id FROM Projects WHERE clan_id = ?");
-            $projectStmt->execute([$this->userClan['clan_id']]);
-            $projects = $projectStmt->fetchAll(PDO::FETCH_COLUMN);
+            // Obtener proyectos del clan (excluyendo proyectos personales de otros usuarios)
+            $projectStmt = $this->db->prepare("
+                SELECT project_id, is_personal, created_by_user_id 
+                FROM Projects 
+                WHERE clan_id = ? 
+                AND (is_personal IS NULL OR is_personal != 1 OR created_by_user_id = ?)
+            ");
+            $projectStmt->execute([$this->userClan['clan_id'], $this->currentUser['user_id']]);
+            $projectData = $projectStmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Separar proyectos personales del usuario actual y proyectos no personales
+            $personalProjects = [];
+            $nonPersonalProjects = [];
+            
+            foreach ($projectData as $project) {
+                if (($project['is_personal'] ?? 0) == 1) {
+                    // Solo incluir proyectos personales del usuario actual
+                    if ($project['created_by_user_id'] == $this->currentUser['user_id']) {
+                        $personalProjects[] = $project['project_id'];
+                    }
+                } else {
+                    // Incluir todos los proyectos no personales
+                    $nonPersonalProjects[] = $project['project_id'];
+                }
+            }
+            
+            // Combinar ambos tipos de proyectos
+            $projects = array_merge($nonPersonalProjects, $personalProjects);
             
             $totalCompletedTasks = 0;
             
@@ -2025,17 +3512,30 @@ class ClanLeaderController {
                 
                 if (!empty($projects)) {
                     $placeholders = str_repeat('?,', count($projects) - 1) . '?';
+                    
+                    // Consulta que respeta la privacidad de proyectos personales
                     $taskStmt = $this->db->prepare("
-                        SELECT 
-                            COUNT(*) as total_tasks,
-                            SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_tasks,
-                            SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_tasks,
-                            SUM(CASE WHEN status = 'in_progress' THEN 1 ELSE 0 END) as in_progress_tasks
-                        FROM Tasks 
-                        WHERE assigned_to_user_id = ? AND project_id IN ($placeholders) AND is_subtask = 0
+                        SELECT
+                            COUNT(DISTINCT t.task_id) as total_tasks,
+                            SUM(CASE WHEN t.status = 'completed' THEN 1 ELSE 0 END) as completed_tasks,
+                            SUM(CASE WHEN t.status = 'pending' THEN 1 ELSE 0 END) as pending_tasks,
+                            SUM(CASE WHEN t.status = 'in_progress' THEN 1 ELSE 0 END) as in_progress_tasks
+                        FROM Tasks t
+                        JOIN Projects p ON t.project_id = p.project_id
+                        WHERE t.project_id IN ($placeholders)
+                          AND t.is_subtask = 0
+                          AND (
+                            t.assigned_to_user_id = ?
+                            OR t.task_id IN (SELECT ta.task_id FROM Task_Assignments ta WHERE ta.user_id = ?)
+                          )
+                          AND (
+                            p.is_personal IS NULL 
+                            OR p.is_personal != 1 
+                            OR (p.is_personal = 1 AND p.created_by_user_id = ?)
+                          )
                     ");
                     
-                    $params = array_merge([$member['user_id']], $projects);
+                    $params = array_merge($projects, [$member['user_id'], $member['user_id'], $this->currentUser['user_id']]);
                     $taskStmt->execute($params);
                     $taskStats = $taskStmt->fetch(PDO::FETCH_ASSOC);
                     
@@ -2080,20 +3580,23 @@ class ClanLeaderController {
     public function collaboratorAvailability() {
         $view = $_GET['view'] ?? 'calendar'; // calendar o gantt
         
-        // Verificar autenticación
-        $this->requireAuth();
-        
-        // Verificar acceso de líder de clan
-        if (!$this->hasClanLeaderAccess()) {
-            Utils::redirect('dashboard');
-        }
+        // TEMPORAL: Sin verificaciones para debug
+        error_log("collaboratorAvailability: ACCESO DIRECTO SIN VERIFICACIONES - view: $view");
         
         // Obtener datos de disponibilidad
         $availability_data = [];
-        $members = $this->clanModel->getMembers($this->userClan['clan_id']);
+        
+        // TEMPORAL: Usar clan_id = 1 si no hay userClan
+        $clanId = $this->userClan['clan_id'] ?? 1;
+        error_log("collaboratorAvailability: Usando clan_id: $clanId");
+        
+        $members = $this->clanModel->getMembers($clanId);
+        
+        // Definir currentUserId una sola vez
+        $currentUserId = $this->currentUser['user_id'] ?? 1;
         
         foreach ($members as $member) {
-            $activeTasks = $this->taskModel->getActiveTasksByUser($member['user_id']);
+            $activeTasks = $this->taskModel->getActiveTasksByUserForClanLeader($member['user_id'], $currentUserId);
             $taskCount = count($activeTasks);
             
             // Determinar nivel de disponibilidad
@@ -2129,30 +3632,46 @@ class ClanLeaderController {
             }
         }
         
-        // Obtener todas las tareas del clan para el calendario
+        // Obtener todas las tareas (excluyendo tareas personales de otros usuarios) para el calendario
         $allTasks = [];
-        $projects = $this->projectModel->getByClan($this->userClan['clan_id']);
         
-        foreach ($projects as $project) {
-            $projectTasks = $this->taskModel->getByProject($project['project_id']);
-            foreach ($projectTasks as $task) {
-                // Incluir tareas que no estén canceladas y tengan fecha de vencimiento
-                if ($task['status'] !== 'cancelled' && $task['due_date']) {
-                    $allTasks[] = [
-                        'task' => $task,
-                        'project' => $project,
-                        'assigned_user' => null
-                    ];
-                    
-                    // Obtener usuario asignado si existe
-                    if ($task['assigned_to_user_id']) {
-                        $assignedUser = $this->userModel->findById($task['assigned_to_user_id']);
-                        if ($assignedUser) {
-                            $allTasks[count($allTasks) - 1]['assigned_user'] = $assignedUser;
-                        }
-                    }
-                }
+        // Obtener tareas del clan (excluyendo proyectos personales)
+        $clanTasksData = $this->taskModel->getAllTasksByClanStrict($clanId, 1, 10000, '', '');
+        $clanTasks = $clanTasksData['tasks'] ?? [];
+        
+        // Obtener tareas personales del líder actual
+        $ownPersonalTasks = $this->taskModel->getPersonalTasksForClanLeader(
+            $currentUserId, 
+            $clanId
+        );
+        
+        // Combinar tareas del clan y tareas personales del líder
+        $calendarTasks = array_merge($clanTasks, $ownPersonalTasks);
+        foreach ($calendarTasks as $t) {
+            if (($t['status'] ?? '') !== 'cancelled' && !empty($t['due_date'])) {
+                $allTasks[] = [
+                    'task' => [
+                        'task_id' => $t['task_id'],
+                        'task_name' => $t['task_name'],
+                        'description' => $t['description'],
+                        'due_date' => $t['due_date'],
+                        'status' => $t['status'],
+                    ],
+                    'project' => [
+                        'project_id' => $t['project_id'],
+                        'project_name' => $t['project_name']
+                    ],
+                    'assigned_user' => null
+                ];
             }
+        }
+        
+        // Obtener proyectos del clan para mostrar en la vista
+        try {
+            $projects = $this->projectModel->getByClan($clanId) ?: [];
+        } catch (Exception $e) {
+            error_log("Error obteniendo proyectos: " . $e->getMessage());
+            $projects = [];
         }
         
         $data = [
@@ -2163,8 +3682,8 @@ class ClanLeaderController {
             'projects' => $projects,
             'view' => $view,
             'currentPage' => 'clan_leader',
-            'user' => $this->currentUser,
-            'clan' => $this->userClan
+            'user' => $this->currentUser ?? ['user_id' => 1, 'full_name' => 'Usuario Temporal'],
+            'clan' => $this->userClan ?? ['clan_id' => $clanId, 'clan_name' => 'Clan Temporal']
         ];
         
         if ($view === 'gantt') {
@@ -2174,6 +3693,104 @@ class ClanLeaderController {
         }
     }
     
+    /**
+     * Obtener proyectos para el modal de creación de tareas
+     */
+    public function getProjectsForModal() {
+        header('Content-Type: application/json');
+        
+        try {
+            // Verificar autenticación
+            if (!$this->auth->isLoggedIn()) {
+                Utils::jsonResponse(['success' => false, 'message' => 'No autenticado'], 401);
+                return;
+            }
+            
+            // Verificar permisos de líder de clan
+            if (!$this->hasClanLeaderAccess()) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos de líder de clan'], 403);
+                return;
+            }
+            
+            // Verificar que el usuario tiene clan asignado
+            if (!$this->userClan) {
+                Utils::jsonResponse(['success' => false, 'message' => 'No tienes un clan asignado'], 403);
+                return;
+            }
+            
+            $allProjects = $this->projectModel->getByClan($this->userClan['clan_id']);
+            
+            // Filtrar proyectos personales: mostrar solo los del líder actual
+            $projects = array_filter($allProjects, function($project) {
+                // Si es un proyecto personal (is_personal = 1)
+                if (($project['is_personal'] ?? 0) == 1) {
+                    // Solo mostrar si fue creado por el líder actual
+                    return ($project['created_by_user_id'] ?? 0) == $this->currentUser['user_id'];
+                }
+                // Mostrar todos los proyectos no personales
+                return true;
+            });
+            
+            // Reindexar el array después del filtro
+            $projects = array_values($projects);
+            
+            error_log("getProjectsForModal - Proyectos encontrados: " . count($projects));
+            
+            Utils::jsonResponse([
+                'success' => true,
+                'projects' => $projects
+            ]);
+        } catch (Exception $e) {
+            error_log("Error obteniendo proyectos para modal: " . $e->getMessage());
+            Utils::jsonResponse([
+                'success' => false,
+                'message' => 'Error al cargar proyectos'
+            ], 500);
+        }
+    }
+    
+    /**
+     * Obtener colaboradores para el modal de creación de tareas
+     */
+    public function getCollaboratorsForModal() {
+        header('Content-Type: application/json');
+        
+        try {
+            // Verificar autenticación
+            if (!$this->auth->isLoggedIn()) {
+                Utils::jsonResponse(['success' => false, 'message' => 'No autenticado'], 401);
+                return;
+            }
+            
+            // Verificar permisos de líder de clan
+            if (!$this->hasClanLeaderAccess()) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos de líder de clan'], 403);
+                return;
+            }
+            
+            // Verificar que el usuario tiene clan asignado
+            if (!$this->userClan) {
+                Utils::jsonResponse(['success' => false, 'message' => 'No tienes un clan asignado'], 403);
+                return;
+            }
+            
+            $members = $this->clanModel->getMembers($this->userClan['clan_id']);
+            
+            error_log("getCollaboratorsForModal - Colaboradores encontrados: " . count($members));
+            
+            Utils::jsonResponse([
+                'success' => true,
+                'collaborators' => $members
+            ]);
+        } catch (Exception $e) {
+            error_log("Error obteniendo colaboradores para modal: " . $e->getMessage());
+            Utils::jsonResponse([
+                'success' => false,
+                'message' => 'Error al cargar colaboradores'
+            ], 500);
+        }
+    }
+
     /**
      * Obtener color de avatar basado en el ID del usuario
      */
@@ -2200,7 +3817,12 @@ class ClanLeaderController {
             return false;
         }
         
-        return $this->roleModel->userHasRole($this->currentUser['user_id'], Role::LIDER_CLAN);
+        // Permitir acceso a Líder de Clan y también a Admin/Super Admin
+        if ($this->roleModel->userHasRole($this->currentUser['user_id'], Role::LIDER_CLAN)) {
+            return true;
+        }
+        // Admin o superior (usa jerarquía definida)
+        return $this->roleModel->userHasMinimumRole($this->currentUser['user_id'], Role::ADMIN);
     }
     
     /**
@@ -2209,6 +3831,1989 @@ class ClanLeaderController {
     private function requireAuth() {
         if (!$this->auth->isLoggedIn()) {
             Utils::redirect('login');
+        }
+    }
+
+    /**
+     * Obtener datos de una tarea para clonación
+     */
+    public function getTaskData() {
+        $this->requireAuth();
+        
+        if (!$this->hasClanLeaderAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+            return;
+        }
+
+        $taskId = (int)($_GET['task_id'] ?? 0);
+        
+        if ($taskId <= 0) {
+            Utils::jsonResponse(['success' => false, 'message' => 'ID de tarea inválido'], 400);
+            return;
+        }
+
+        try {
+            // Obtener datos de la tarea
+            $task = $this->taskModel->findById($taskId);
+            
+            if (!$task) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Tarea no encontrada'], 404);
+                return;
+            }
+
+            // Verificar que el usuario es dueño de la tarea
+            if ((int)($task['created_by_user_id'] ?? 0) !== (int)$this->currentUser['user_id']) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Solo puedes clonar tus propias tareas'], 403);
+                return;
+            }
+
+            // Obtener proyectos disponibles para el líder (proyectos del clan)
+            $projects = $this->projectModel->getByClan($this->userClan['clan_id']);
+
+            Utils::jsonResponse([
+                'success' => true,
+                'task' => $task,
+                'projects' => $projects
+            ]);
+
+        } catch (Exception $e) {
+            error_log("Error en getTaskData (ClanLeader): " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor'], 500);
+        }
+    }
+
+    /**
+     * Clonar una tarea
+     */
+    public function cloneTask() {
+        $this->requireAuth();
+        
+        if (!$this->hasClanLeaderAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+            return;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
+            return;
+        }
+
+        try {
+            $originalTaskId = (int)($_POST['originalTaskId'] ?? 0);
+            $taskName = trim($_POST['task_name'] ?? '');
+            $description = trim($_POST['description'] ?? '');
+            $projectId = (int)($_POST['project_id'] ?? 0);
+            $priority = $_POST['priority'] ?? 'medium';
+            $dueDate = $_POST['due_date'] ?? null;
+            $cloneSubtasks = ($_POST['clone_subtasks'] ?? '0') === '1';
+
+            // Validaciones
+            if ($originalTaskId <= 0) {
+                Utils::jsonResponse(['success' => false, 'message' => 'ID de tarea original inválido'], 400);
+                return;
+            }
+
+            if (empty($taskName)) {
+                Utils::jsonResponse(['success' => false, 'message' => 'El nombre de la tarea es requerido'], 400);
+                return;
+            }
+
+            if ($projectId <= 0) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Debe seleccionar un proyecto'], 400);
+                return;
+            }
+
+            // Verificar que la tarea original existe y pertenece al usuario
+            $originalTask = $this->taskModel->findById($originalTaskId);
+            
+            if (!$originalTask) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Tarea original no encontrada'], 404);
+                return;
+            }
+
+            // Verificar que la tarea pertenece al clan del líder
+            $originalProject = $this->projectModel->findById($originalTask['project_id']);
+            if (!$originalProject || (int)$originalProject['clan_id'] !== (int)$this->userClan['clan_id']) {
+                Utils::jsonResponse(['success' => false, 'message' => 'No tienes permisos para clonar esta tarea'], 403);
+                return;
+            }
+
+            // Verificar que el proyecto destino existe y pertenece al clan del líder
+            $targetProject = $this->projectModel->findById($projectId);
+            
+            if (!$targetProject) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Proyecto destino no encontrado'], 404);
+                return;
+            }
+
+            if ((int)$targetProject['clan_id'] !== (int)$this->userClan['clan_id']) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Solo puedes clonar a proyectos de tu clan'], 403);
+                return;
+            }
+
+            // Validar fecha límite si se proporciona
+            if (!empty($dueDate) && !strtotime($dueDate)) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Fecha límite inválida'], 400);
+                return;
+            }
+
+            // Crear la nueva tarea
+            $newTaskId = $this->taskModel->create(
+                $projectId,
+                $taskName,
+                $description,
+                $this->currentUser['user_id'], // creador
+                $priority,
+                $dueDate,
+                $this->currentUser['user_id'] // asignado inicialmente al creador
+            );
+
+            if (!$newTaskId) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Error al crear la tarea clonada'], 500);
+                return;
+            }
+
+            // Clonar subtareas si se solicitó
+            if ($cloneSubtasks) {
+                $subtasks = $this->taskModel->getSubtasks($originalTaskId);
+                
+                foreach ($subtasks as $subtask) {
+                    $this->taskModel->createSubtaskAdvanced(
+                        $newTaskId,
+                        $subtask['title'],
+                        $this->currentUser['user_id'], // creador
+                        $subtask['description'] ?? '',
+                        0, // percentage inicial
+                        $subtask['due_date'] ?? null,
+                        $subtask['priority'] ?? 'medium',
+                        $this->currentUser['user_id'] // asignado inicialmente al creador
+                    );
+                }
+            }
+
+            Utils::jsonResponse([
+                'success' => true,
+                'message' => 'Tarea clonada exitosamente',
+                'new_task_id' => $newTaskId
+            ]);
+
+        } catch (Exception $e) {
+            error_log("Error en cloneTask (ClanLeader): " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor'], 500);
+        }
+    }
+    
+    /**
+     * Obtener datos de proyecto para clonación
+     */
+    public function getProjectData() {
+        $this->requireAuth();
+        
+        if (!$this->hasClanLeaderAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+            return;
+        }
+
+        $projectId = (int)($_GET['project_id'] ?? 0);
+        
+        if ($projectId <= 0) {
+            Utils::jsonResponse(['success' => false, 'message' => 'ID de proyecto inválido'], 400);
+            return;
+        }
+
+        try {
+            // Obtener datos del proyecto
+            $project = $this->projectModel->findById($projectId);
+            
+            if (!$project) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Proyecto no encontrado'], 404);
+                return;
+            }
+
+            // Verificar que el proyecto pertenezca al clan del líder
+            if ($this->userClan && $project['clan_id'] != $this->userClan['clan_id']) {
+                Utils::jsonResponse(['success' => false, 'message' => 'No tienes permisos para clonar este proyecto'], 403);
+                return;
+            }
+
+            Utils::jsonResponse([
+                'success' => true,
+                'project' => $project
+            ]);
+
+        } catch (Exception $e) {
+            error_log("Error en getProjectData (ClanLeader): " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor'], 500);
+        }
+    }
+    
+    /**
+     * Clonar proyecto
+     */
+    public function cloneProject() {
+        $this->requireAuth();
+        
+        if (!$this->hasClanLeaderAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+            return;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
+            return;
+        }
+
+        $originalProjectId = (int)($_POST['originalProjectId'] ?? 0);
+        $projectName = trim($_POST['project_name'] ?? '');
+        $description = trim($_POST['description'] ?? '');
+        $startDate = $_POST['start_date'] ?? null;
+        $endDate = $_POST['end_date'] ?? null;
+        $cloneTasks = ($_POST['clone_tasks'] ?? '0') === '1';
+        $adjustDates = ($_POST['adjust_dates'] ?? '0') === '1';
+
+        if ($originalProjectId <= 0 || empty($projectName)) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Datos inválidos'], 400);
+            return;
+        }
+
+        try {
+            // Obtener proyecto original
+            $originalProject = $this->projectModel->findById($originalProjectId);
+            
+            if (!$originalProject) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Proyecto original no encontrado'], 404);
+                return;
+            }
+
+            // Verificar permisos
+            if ($this->userClan && $originalProject['clan_id'] != $this->userClan['clan_id']) {
+                Utils::jsonResponse(['success' => false, 'message' => 'No tienes permisos para clonar este proyecto'], 403);
+                return;
+            }
+
+            // Crear el nuevo proyecto
+            $newProjectId = $this->projectModel->create(
+                $projectName,
+                $description,
+                $originalProject['clan_id'],
+                $this->currentUser['user_id']
+            );
+
+            if (!$newProjectId) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Error al crear el proyecto'], 500);
+                return;
+            }
+
+            // Clonar tareas si se solicita
+            if ($cloneTasks) {
+                $originalTasks = $this->taskModel->getByProject($originalProjectId);
+                
+                // Calcular factor de proporción para ajustar fechas si es necesario
+                $dateAdjustmentFactor = 1.0;
+                if ($adjustDates && $startDate && $endDate && $originalProject['time_limit']) {
+                    $originalStart = $originalProject['start_date'] ?? $originalProject['created_at'];
+                    $originalEnd = $originalProject['time_limit'];
+                    $originalDuration = strtotime($originalEnd) - strtotime($originalStart);
+                    $newDuration = strtotime($endDate) - strtotime($startDate);
+                    
+                    if ($originalDuration > 0) {
+                        $dateAdjustmentFactor = $newDuration / $originalDuration;
+                    }
+                }
+                
+                foreach ($originalTasks as $task) {
+                    if ($task['is_subtask'] == 0) { // Solo tareas principales
+                        // Calcular nueva fecha de vencimiento si se ajustan fechas
+                        $newDueDate = $task['due_date'];
+                        if ($adjustDates && $task['due_date'] && $startDate) {
+                            $originalStart = $originalProject['start_date'] ?? $originalProject['created_at'];
+                            $daysFromStart = (strtotime($task['due_date']) - strtotime($originalStart)) / (24 * 60 * 60);
+                            $newDaysFromStart = $daysFromStart * $dateAdjustmentFactor;
+                            $newDueDate = date('Y-m-d', strtotime($startDate) + ($newDaysFromStart * 24 * 60 * 60));
+                        }
+                        
+                        $newTaskId = $this->taskModel->create(
+                            $newProjectId,
+                            $task['task_name'],
+                            $task['description'] ?? '',
+                            $this->currentUser['user_id'],
+                            $task['priority'] ?? 'medium',
+                            $newDueDate,
+                            $this->currentUser['user_id']
+                        );
+
+                        // Clonar subtareas si existen
+                        if ($newTaskId) {
+                            $subtasks = $this->taskModel->getSubtasks($task['task_id']);
+                            foreach ($subtasks as $subtask) {
+                                // Calcular nueva fecha de vencimiento para subtarea
+                                $newSubtaskDueDate = $subtask['due_date'];
+                                if ($adjustDates && $subtask['due_date'] && $startDate) {
+                                    $originalStart = $originalProject['start_date'] ?? $originalProject['created_at'];
+                                    $daysFromStart = (strtotime($subtask['due_date']) - strtotime($originalStart)) / (24 * 60 * 60);
+                                    $newDaysFromStart = $daysFromStart * $dateAdjustmentFactor;
+                                    $newSubtaskDueDate = date('Y-m-d', strtotime($startDate) + ($newDaysFromStart * 24 * 60 * 60));
+                                }
+                                
+                                $this->taskModel->createSubtaskAdvanced(
+                                    $newTaskId,
+                                    $subtask['title'],
+                                    $this->currentUser['user_id'],
+                                    $subtask['description'] ?? '',
+                                    0,
+                                    $newSubtaskDueDate,
+                                    $subtask['priority'] ?? 'medium',
+                                    $this->currentUser['user_id']
+                                );
+                            }
+                        }
+                    }
+                }
+            }
+
+            Utils::jsonResponse([
+                'success' => true,
+                'message' => 'Proyecto clonado exitosamente',
+                'new_project_id' => $newProjectId
+            ]);
+
+        } catch (Exception $e) {
+            error_log("Error en cloneProject (ClanLeader): " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor'], 500);
+        }
+    }
+    
+    /**
+     * DEBUG - Revisar base de datos directamente (SIN AUTENTICACIÓN)
+     */
+    public function debugDatabase() {
+        header('Content-Type: text/html; charset=utf-8');
+        
+        try {
+            echo "<h1>🔍 DEBUG DIRECTO DE BASE DE DATOS</h1>";
+            echo "<p>Revisando tareas para user_id = 2</p>";
+            
+            // Consulta directa
+            $sql = "SELECT task_id, task_name, assigned_to_user_id, status, due_date 
+                    FROM Tasks 
+                    WHERE assigned_to_user_id = 2 
+                    LIMIT 10";
+            
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute();
+            $tasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            echo "<h2>📋 Tareas encontradas: " . count($tasks) . "</h2>";
+            
+            if (count($tasks) > 0) {
+                echo "<table border='1' style='border-collapse: collapse; padding: 5px;'>";
+                echo "<tr><th>ID</th><th>Nombre</th><th>Asignado a</th><th>Estado</th><th>Vencimiento</th></tr>";
+                
+                foreach ($tasks as $task) {
+                    echo "<tr>";
+                    echo "<td>" . $task['task_id'] . "</td>";
+                    echo "<td>" . htmlspecialchars($task['task_name']) . "</td>";
+                    echo "<td>" . $task['assigned_to_user_id'] . "</td>";
+                    echo "<td>" . $task['status'] . "</td>";
+                    echo "<td>" . $task['due_date'] . "</td>";
+                    echo "</tr>";
+                }
+                echo "</table>";
+            } else {
+                echo "<p style='color: red; font-size: 18px;'>❌ NO HAY TAREAS con assigned_to_user_id = 2</p>";
+            }
+            
+            // Ver todas las tareas
+            echo "<h2>🔍 Últimas 10 tareas (cualquier usuario):</h2>";
+            $sqlAll = "SELECT task_id, task_name, assigned_to_user_id, created_by_user_id, status 
+                       FROM Tasks 
+                       ORDER BY task_id DESC 
+                       LIMIT 10";
+            
+            $stmtAll = $this->db->prepare($sqlAll);
+            $stmtAll->execute();
+            $allTasks = $stmtAll->fetchAll(PDO::FETCH_ASSOC);
+            
+            echo "<table border='1' style='border-collapse: collapse; padding: 5px;'>";
+            echo "<tr><th>ID</th><th>Nombre</th><th>Asignado a</th><th>Creado por</th><th>Estado</th></tr>";
+            
+            foreach ($allTasks as $task) {
+                $highlight = ($task['assigned_to_user_id'] == 2) ? "style='background: yellow;'" : "";
+                echo "<tr $highlight>";
+                echo "<td>" . $task['task_id'] . "</td>";
+                echo "<td>" . htmlspecialchars($task['task_name']) . "</td>";
+                echo "<td>" . $task['assigned_to_user_id'] . "</td>";
+                echo "<td>" . $task['created_by_user_id'] . "</td>";
+                echo "<td>" . $task['status'] . "</td>";
+                echo "</tr>";
+            }
+            echo "</table>";
+            
+        } catch (Exception $e) {
+            echo "<h2 style='color: red;'>❌ ERROR</h2>";
+            echo "<p>Error: " . $e->getMessage() . "</p>";
+        }
+    }
+    
+    /**
+     * KANBAN SIMPLE - Solo tareas donde assigned_to_user_id = mi usuario
+     * Sin filtros, sin condiciones adicionales
+     */
+    public function getSimpleKanbanTasks() {
+        header('Content-Type: application/json');
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        
+        $this->requireAuth();
+        
+        try {
+            $userId = $this->currentUser['user_id'];
+            
+            // CONSULTA ULTRA SIMPLE - Solo tareas asignadas a mí
+            $sql = "
+                SELECT 
+                    t.task_id,
+                    t.task_name,
+                    t.status,
+                    t.priority,
+                    t.due_date,
+                    DATEDIFF(t.due_date, CURDATE()) as days_until_due
+                FROM Tasks t
+                WHERE t.assigned_to_user_id = ?
+                
+                ORDER BY t.due_date ASC
+            ";
+            
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$userId]);
+            $tasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Organizar en columnas Kanban por fecha
+            $kanban = [
+                'vencidas' => [],
+                'hoy' => [],
+                'semana' => [],
+                'futuras' => []
+            ];
+            
+            foreach ($tasks as $task) {
+                $days = (int)$task['days_until_due'];
+                
+                if ($days < 0) {
+                    $kanban['vencidas'][] = $task;
+                } elseif ($days == 0) {
+                    $kanban['hoy'][] = $task;
+                } elseif ($days <= 7) {
+                    $kanban['semana'][] = $task;
+                } else {
+                    $kanban['futuras'][] = $task;
+                }
+            }
+            
+            Utils::jsonResponse([
+                'success' => true,
+                'kanban' => $kanban,
+                'total' => count($tasks),
+                'user_id' => $userId
+            ]);
+            
+        } catch (Exception $e) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
+        }
+    }
+    
+    /**
+     * Obtener MIS tareas (SOLO las asignadas directamente a mi user_id)
+     */
+    public function getMyTasks() {
+        // Asegurar que la respuesta sea JSON y evitar caché
+        header('Content-Type: application/json');
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        header('Pragma: no-cache');
+        
+        $this->requireAuth();
+        
+        if (!$this->hasClanLeaderAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+            return;
+        }
+
+        try {
+            $userId = $this->currentUser['user_id'];
+            $clanId = $this->userClan['clan_id'] ?? null;
+            
+            if (!$userId || !$clanId) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Usuario o clan no válido'], 400);
+                return;
+            }
+            
+            $db = Database::getInstance();
+            
+            $query = "
+                SELECT 
+                    t.task_id,
+                    t.task_name,
+                    t.description,
+                    t.status,
+                    t.priority,
+                    t.due_date,
+                    t.completion_percentage,
+                    t.created_by_user_id,
+                    p.project_id,
+                    p.project_name,
+                    p.is_personal,
+                    u.full_name as assigned_user_name,
+                    DATEDIFF(t.due_date, CURDATE()) as days_until_due
+                FROM Tasks t
+                INNER JOIN Projects p ON t.project_id = p.project_id
+                LEFT JOIN Users u ON t.assigned_to_user_id = u.user_id
+                WHERE 
+                    (t.is_subtask = 0 OR t.is_subtask IS NULL)
+                    AND t.assigned_to_user_id = :user_id
+                    AND (
+                        -- Excluir tareas personales de otros usuarios
+                        COALESCE(p.is_personal, t.is_personal, 0) = 0 
+                        OR 
+                        (COALESCE(p.is_personal, t.is_personal, 0) = 1 AND t.created_by_user_id = :user_id2)
+                    )
+                ORDER BY t.due_date ASC
+                LIMIT 200
+            ";
+
+            $stmt = $db->prepare($query);
+            $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
+            $stmt->bindParam(':user_id2', $userId, PDO::PARAM_INT);
+            
+            if (!$stmt->execute()) {
+                throw new Exception("Error ejecutando consulta de tareas");
+            }
+            
+            $tasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Log detallado de la consulta getMyTasks
+            error_log("=== DEBUG getMyTasks - BACKEND ===");
+            error_log("User ID: $userId, Clan ID: $clanId");
+            error_log("Total tasks found: " . count($tasks));
+            foreach ($tasks as $task) {
+                error_log("My Task: ID={$task['task_id']}, Name={$task['task_name']}, Project={$task['project_name']}, Assigned={$task['assigned_user_name']}");
+            }
+            error_log("=== END getMyTasks ===");
+            
+            // Asegurar que tasks es un array
+            if (!is_array($tasks)) {
+                $tasks = [];
+            }
+
+            Utils::jsonResponse([
+                'success' => true,
+                'tasks' => $tasks,
+                'total' => count($tasks),
+                'debug_backend' => [
+                    'query_type' => 'getMyTasks',
+                    'user_id' => $userId,
+                    'clan_id' => $clanId,
+                    'task_count' => count($tasks),
+                    'task_ids' => array_column($tasks, 'task_id')
+                ]
+            ]);
+
+        } catch (Exception $e) {
+            error_log("Error en getMyTasks: " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error al obtener tareas'], 500);
+        }
+    }
+    
+    /**
+     * Obtener tareas del equipo/clan (tareas del clan que NO están asignadas al líder)
+     */
+    public function getTeamTasks() {
+        // Asegurar que la respuesta sea JSON y evitar caché
+        header('Content-Type: application/json');
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        header('Pragma: no-cache');
+        
+        $this->requireAuth();
+        
+        if (!$this->hasClanLeaderAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+            return;
+        }
+
+        try {
+            $userId = $this->currentUser['user_id'];
+            $clanId = $this->userClan['clan_id'] ?? null;
+            
+            if (!$userId || !$clanId) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Usuario o clan no válido'], 400);
+                return;
+            }
+
+            $db = Database::getInstance();
+            
+            // Consulta para tareas del equipo (del clan pero NO asignadas al líder)
+            $query = "
+                SELECT 
+                    t.task_id,
+                    t.task_name,
+                    t.description,
+                    t.status,
+                    t.priority,
+                    t.due_date,
+                    t.completion_percentage,
+                    t.created_by_user_id,
+                    p.project_id,
+                    p.project_name,
+                    u.full_name as assigned_user_name,
+                    DATEDIFF(t.due_date, CURDATE()) as days_until_due
+                FROM Tasks t
+                INNER JOIN Projects p ON t.project_id = p.project_id
+                LEFT JOIN Users u ON t.assigned_to_user_id = u.user_id
+                WHERE 
+                    p.clan_id = :clan_id
+                    AND (p.is_personal = 0 OR p.is_personal IS NULL)
+                    AND (t.is_subtask = 0 OR t.is_subtask IS NULL)
+                    AND (
+                        -- Excluir tareas asignadas directamente al líder
+                        t.assigned_to_user_id != :user_id1 OR t.assigned_to_user_id IS NULL
+                    )
+                    AND (
+                        -- Excluir tareas donde el líder está en Task_Assignments
+                        NOT EXISTS (SELECT 1 FROM Task_Assignments ta WHERE ta.task_id = t.task_id AND ta.user_id = :user_id2)
+                    )
+                GROUP BY t.task_id
+                ORDER BY t.due_date ASC
+                LIMIT 200
+            ";
+
+            $stmt = $db->prepare($query);
+            $stmt->bindParam(':clan_id', $clanId, PDO::PARAM_INT);
+            $stmt->bindParam(':user_id1', $userId, PDO::PARAM_INT);
+            $stmt->bindParam(':user_id2', $userId, PDO::PARAM_INT);
+            
+            if (!$stmt->execute()) {
+                throw new Exception("Error ejecutando consulta de tareas del equipo");
+            }
+            
+            $tasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Log detallado de la consulta getTeamTasks
+            error_log("=== DEBUG getTeamTasks - BACKEND ===");
+            error_log("User ID: $userId, Clan ID: $clanId");
+            error_log("Total team tasks found: " . count($tasks));
+            foreach ($tasks as $task) {
+                error_log("Team Task: ID={$task['task_id']}, Name={$task['task_name']}, Project={$task['project_name']}, Assigned={$task['assigned_user_name']}");
+            }
+            error_log("=== END getTeamTasks ===");
+            
+            // Asegurar que tasks es un array
+            if (!is_array($tasks)) {
+                $tasks = [];
+            }
+
+            Utils::jsonResponse([
+                'success' => true,
+                'tasks' => $tasks,
+                'total' => count($tasks),
+                'debug_backend' => [
+                    'query_type' => 'getTeamTasks',
+                    'user_id' => $userId,
+                    'clan_id' => $clanId,
+                    'task_count' => count($tasks),
+                    'task_ids' => array_column($tasks, 'task_id'),
+                    'excludedLeaderTasks' => 'Tasks assigned to leader are excluded from team view'
+                ]
+            ]);
+
+        } catch (Exception $e) {
+            error_log("Error en getTeamTasks: " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
+        }
+    }
+    
+    /**
+     * SOLUCIÓN DEFINITIVA: Obtener MIS tareas usando la misma lógica que clan_member
+     */
+    public function getMyKanbanTasksNew() {
+        header('Content-Type: application/json');
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        
+        $this->requireAuth();
+        
+        if (!$this->hasClanLeaderAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+            return;
+        }
+
+        try {
+            $userId = $this->currentUser['user_id'];
+            $clanId = $this->userClan['clan_id'] ?? null;
+            
+            error_log("=== getMyKanbanTasksNew CLAN LEADER ===");
+            error_log("User ID: $userId, Clan ID: $clanId");
+            
+            // USAR LA MISMA FUNCIÓN QUE CLAN_MEMBER
+            $result = $this->taskModel->getAllUserTasksForDashboard($userId);
+            
+            if (!$result['success']) {
+                error_log('Error obteniendo tareas para Kanban leader: ' . ($result['error'] ?? 'Error desconocido'));
+                Utils::jsonResponse([
+                    'success' => false,
+                    'message' => $result['error'] ?? 'Error al obtener tareas'
+                ], 500);
+                return;
+            }
+            
+            error_log("Tareas obtenidas para líder: " . count($result['tasks']));
+            
+            // Usar TODAS las tareas
+            $allTasks = $result['tasks'];
+            
+            // Organizar en columnas Kanban
+            $kanbanTasks = [
+                'vencidas' => [],
+                'hoy' => [],
+                'semana1' => [],
+                'semana2' => []
+            ];
+            
+            foreach ($allTasks as $task) {
+                $days = (int)$task['days_until_due'];
+                $task['item_type'] = 'task';
+                
+                error_log("Tarea líder ID={$task['task_id']}, días={$days}, proyecto={$task['project_name']}, personal=" . ($task['is_personal'] ?? 0));
+                
+                if ($days < 0) {
+                    $kanbanTasks['vencidas'][] = $task;
+                } elseif ($days <= 0) {
+                    $kanbanTasks['hoy'][] = $task;
+                } elseif ($days <= 7) {
+                    $kanbanTasks['semana1'][] = $task;
+                } else {
+                    $kanbanTasks['semana2'][] = $task;
+                }
+            }
+            
+            // Log del resultado
+            foreach ($kanbanTasks as $column => $tasks) {
+                error_log("Columna líder '{$column}': " . count($tasks) . " tareas");
+            }
+            
+            $personalCount = array_sum(array_map(function($task) {
+                return $task['is_personal'] == 1 ? 1 : 0;
+            }, $allTasks));
+            
+            error_log("Total tareas personales líder: {$personalCount}");
+            error_log("=== FIN getMyKanbanTasksNew ===");
+
+            Utils::jsonResponse([
+                'success' => true,
+                'kanbanTasks' => $kanbanTasks,
+                'total' => count($allTasks),
+                'personal_tasks' => $personalCount
+            ]);
+
+        } catch (Exception $e) {
+            error_log("Error en getMyKanbanTasksNew: " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
+        }
+    }
+    
+    /**
+     * MÉTODO ACTUALIZADO - Ahora usa la misma lógica que clan_member
+     */
+    public function getMyKanbanTasks() {
+        header('Content-Type: application/json');
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        
+        $this->requireAuth();
+        
+        if (!$this->hasClanLeaderAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+            return;
+        }
+
+        try {
+            $userId = $this->currentUser['user_id'];
+            $clanId = $this->userClan['clan_id'] ?? null;
+            
+            // Obtener filtros de la URL
+            $statusFilter = $_GET['status_filter'] ?? '';
+            $searchFilter = $_GET['search'] ?? '';
+            
+            if (!$userId || !$clanId) {
+                throw new Exception("Usuario o clan no válido");
+            }
+            
+            // Construir filtros dinámicos
+            $taskStatusFilter = '';
+            $subtaskStatusFilter = '';
+            $params = [
+                ':user_id' => $userId,
+                ':clan_id' => $clanId,
+                ':user_id2' => $userId,
+                ':clan_id2' => $clanId,
+                ':user_id3' => $userId
+            ];
+            
+            // Aplicar filtro de estado si está presente
+            if (!empty($statusFilter)) {
+                $taskStatusFilter = "AND t.status = :status_filter";
+                $subtaskStatusFilter = "AND s.status = :status_filter2";
+                $params[':status_filter'] = $statusFilter;
+                $params[':status_filter2'] = $statusFilter;
+            } else {
+                // Si no hay filtro específico, excluir completadas por defecto (comportamiento original)
+                $taskStatusFilter = "AND t.status != 'completed'";
+                $subtaskStatusFilter = "AND s.status != 'completed'";
+            }
+            
+            // Aplicar filtro de búsqueda si está presente
+            $searchTaskFilter = '';
+            $searchSubtaskFilter = '';
+            if (!empty($searchFilter)) {
+                $searchTaskFilter = "AND (t.task_name LIKE :search_task_name OR t.description LIKE :search_task_desc OR p.project_name LIKE :search_project)";
+                $searchSubtaskFilter = "AND (s.title LIKE :search_sub_title OR s.description LIKE :search_sub_desc OR p.project_name LIKE :search_sub_project)";
+                $searchValue = '%' . $searchFilter . '%';
+                $params[':search_task_name'] = $searchValue;
+                $params[':search_task_desc'] = $searchValue;
+                $params[':search_project'] = $searchValue;
+                $params[':search_sub_title'] = $searchValue;
+                $params[':search_sub_desc'] = $searchValue;
+                $params[':search_sub_project'] = $searchValue;
+            }
+            
+            // CONSULTA MEJORADA - MIS TAREAS Y SUBTAREAS CON FILTROS
+            $stmt = $this->db->prepare("
+                (SELECT 
+                    t.task_id,
+                    t.task_name,
+                    t.description,
+                    t.status,
+                    t.priority,
+                    t.due_date,
+                    t.completion_percentage,
+                    p.project_id,
+                    p.project_name,
+                    p.is_personal,
+                    u.full_name as assigned_user_name,
+                    'task' as item_type,
+                    NULL as parent_task_id,
+                    NULL as parent_task_name,
+                    CASE 
+                        WHEN t.due_date IS NULL THEN 999
+                        WHEN t.due_date < CURDATE() THEN -1
+                        WHEN t.due_date = CURDATE() THEN 0
+                        WHEN t.due_date <= DATE_ADD(CURDATE(), INTERVAL 7 DAY) THEN DATEDIFF(t.due_date, CURDATE())
+                        ELSE 999
+                    END as days_until_due
+                FROM Tasks t
+                JOIN Projects p ON t.project_id = p.project_id
+                LEFT JOIN Users u ON t.assigned_to_user_id = u.user_id
+                WHERE t.assigned_to_user_id = :user_id
+                    AND p.clan_id = :clan_id
+                    AND t.is_subtask = 0
+                    $taskStatusFilter
+                    $searchTaskFilter)
+                UNION ALL
+                (SELECT 
+                    s.subtask_id as task_id,
+                    s.title as task_name,
+                    s.description,
+                    s.status,
+                    s.priority,
+                    s.due_date,
+                    s.completion_percentage,
+                    p.project_id,
+                    p.project_name,
+                    p.is_personal,
+                    u.full_name as assigned_user_name,
+                    'subtask' as item_type,
+                    t.task_id as parent_task_id,
+                    t.task_name as parent_task_name,
+                    CASE 
+                        WHEN s.due_date IS NULL THEN 999
+                        WHEN s.due_date < CURDATE() THEN -1
+                        WHEN s.due_date = CURDATE() THEN 0
+                        WHEN s.due_date <= DATE_ADD(CURDATE(), INTERVAL 7 DAY) THEN DATEDIFF(s.due_date, CURDATE())
+                        ELSE 999
+                    END as days_until_due
+                FROM Subtasks s
+                JOIN Tasks t ON s.task_id = t.task_id
+                JOIN Projects p ON t.project_id = p.project_id
+                LEFT JOIN Users u ON s.assigned_to_user_id = u.user_id
+                WHERE s.assigned_to_user_id = :user_id2
+                    AND p.clan_id = :clan_id2
+                    $subtaskStatusFilter
+                    $searchSubtaskFilter
+                    AND (
+                        -- Excluir subtareas de tareas personales de otros usuarios
+                        COALESCE(p.is_personal, t.is_personal, 0) = 0 
+                        OR 
+                        (COALESCE(p.is_personal, t.is_personal, 0) = 1 AND t.created_by_user_id = :user_id3)
+                    ))
+                ORDER BY item_type, task_id
+            ");
+            
+            $stmt->execute($params);
+            
+            $allTasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            error_log("=== NUEVO getMyKanbanTasks ===");
+            error_log("User: $userId, Clan: $clanId");
+            error_log("Status Filter: " . ($statusFilter ?: 'NONE'));
+            error_log("Search Filter: " . ($searchFilter ?: 'NONE'));
+            error_log("Total tareas encontradas: " . count($allTasks));
+            
+            foreach ($allTasks as $task) {
+                $type = $task['is_personal'] ? 'PERSONAL' : 'CLAN';
+                error_log("Task: ID={$task['task_id']}, Name='{$task['task_name']}', Type=$type, Project='{$task['project_name']}'");
+            }
+            
+            // Organizar tareas en columnas Kanban
+            $kanbanTasks = [
+                'vencidas' => [],
+                'hoy' => [],
+                'semana1' => [],
+                'semana2' => []
+            ];
+            
+            foreach ($allTasks as $task) {
+                $days = (int)$task['days_until_due'];
+                
+                if ($days < 0) {
+                    $kanbanTasks['vencidas'][] = $task;
+                } elseif ($days == 0) {
+                    $kanbanTasks['hoy'][] = $task;
+                } elseif ($days <= 7) {
+                    $kanbanTasks['semana1'][] = $task;
+                } else {
+                    $kanbanTasks['semana2'][] = $task;
+                }
+            }
+            
+            error_log("Distribución Kanban: vencidas=" . count($kanbanTasks['vencidas']) . 
+                     ", hoy=" . count($kanbanTasks['hoy']) . 
+                     ", semana1=" . count($kanbanTasks['semana1']) . 
+                     ", semana2=" . count($kanbanTasks['semana2']));
+
+            Utils::jsonResponse([
+                'success' => true,
+                'kanbanTasks' => $kanbanTasks,
+                'total' => count($allTasks),
+                'debug' => [
+                    'userId' => $userId,
+                    'clanId' => $clanId,
+                    'query' => 'SIMPLE_ASSIGNED_TASKS',
+                    'totalTasks' => count($allTasks)
+                ]
+            ]);
+
+        } catch (Exception $e) {
+            error_log("Error en getMyKanbanTasks: " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
+        }
+    }
+    
+    /**
+     * Obtener MIS tareas para vista de lista (SOLO asignadas directamente a mi user_id)
+     */
+    public function getMyTasksList() {
+        header('Content-Type: application/json');
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        
+        $this->requireAuth();
+        
+        if (!$this->hasClanLeaderAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+            return;
+        }
+
+        try {
+            $userId = $this->currentUser['user_id'];
+            $clanId = $this->userClan['clan_id'] ?? null;
+            
+            if (!$userId || !$clanId) {
+                throw new Exception("Usuario o clan no válido");
+            }
+            
+            // CONSULTA PARA MIS TAREAS Y SUBTAREAS (SOLO asignadas directamente)
+            $stmt = $this->db->prepare("
+                (SELECT 
+                    t.task_id,
+                    t.task_name,
+                    t.description,
+                    t.status,
+                    t.priority,
+                    t.due_date,
+                    t.completion_percentage,
+                    p.project_id,
+                    p.project_name,
+                    p.is_personal,
+                    u.full_name as assigned_user_name,
+                    'task' as item_type,
+                    NULL as parent_task_id,
+                    NULL as parent_task_name,
+                    t.created_at
+                FROM Tasks t
+                JOIN Projects p ON t.project_id = p.project_id
+                LEFT JOIN Users u ON t.assigned_to_user_id = u.user_id
+                WHERE t.assigned_to_user_id = :user_id
+                    AND p.clan_id = :clan_id
+                    AND t.is_subtask = 0
+                    AND (
+                        -- Excluir tareas personales de otros usuarios
+                        COALESCE(p.is_personal, t.is_personal, 0) = 0 
+                        OR 
+                        (COALESCE(p.is_personal, t.is_personal, 0) = 1 AND t.created_by_user_id = :user_id3)
+                    ))
+                UNION ALL
+                (SELECT 
+                    s.subtask_id as task_id,
+                    s.title as task_name,
+                    s.description,
+                    s.status,
+                    s.priority,
+                    s.due_date,
+                    s.completion_percentage,
+                    p.project_id,
+                    p.project_name,
+                    p.is_personal,
+                    u.full_name as assigned_user_name,
+                    'subtask' as item_type,
+                    t.task_id as parent_task_id,
+                    t.task_name as parent_task_name,
+                    s.created_at
+                FROM Subtasks s
+                JOIN Tasks t ON s.task_id = t.task_id
+                JOIN Projects p ON t.project_id = p.project_id
+                LEFT JOIN Users u ON s.assigned_to_user_id = u.user_id
+                WHERE s.assigned_to_user_id = :user_id2
+                    AND (
+                        -- Excluir subtareas de tareas personales de otros usuarios
+                        COALESCE(p.is_personal, t.is_personal, 0) = 0 
+                        OR 
+                        (COALESCE(p.is_personal, t.is_personal, 0) = 1 AND t.created_by_user_id = :user_id4)
+                    ))
+                ORDER BY created_at DESC
+            ");
+            
+            $stmt->execute([
+                ':user_id' => $userId,
+                ':clan_id' => $clanId,
+                ':user_id2' => $userId,
+                ':user_id3' => $userId,
+                ':user_id4' => $userId
+            ]);
+            
+            $allTasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            error_log("=== getMyTasksList ===");
+            error_log("User: $userId, Clan: $clanId");
+            error_log("Total tareas encontradas: " . count($allTasks));
+
+            Utils::jsonResponse([
+                'success' => true,
+                'tasks' => $allTasks,
+                'total' => count($allTasks),
+                'debug' => [
+                    'userId' => $userId,
+                    'clanId' => $clanId,
+                    'query' => 'MY_TASKS_LIST'
+                ]
+            ]);
+
+        } catch (Exception $e) {
+            error_log("Error en getMyTasksList: " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
+        }
+    }
+    
+    /**
+     * Obtener tareas del EQUIPO para Kanban - REESTRUCTURADO COMPLETAMENTE  
+     */
+    public function getTeamKanbanTasks() {
+        header('Content-Type: application/json');
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        
+        $this->requireAuth();
+        
+        if (!$this->hasClanLeaderAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+            return;
+        }
+
+        try {
+            $userId = $this->currentUser['user_id'];
+            $clanId = $this->userClan['clan_id'] ?? null;
+            
+            // Obtener filtros de la URL
+            $statusFilter = $_GET['status_filter'] ?? '';
+            $searchFilter = $_GET['search'] ?? '';
+            
+            if (!$userId || !$clanId) {
+                throw new Exception("Usuario o clan no válido");
+            }
+            
+            // Construir filtros dinámicos para equipo
+            $taskStatusFilter = '';
+            $subtaskStatusFilter = '';
+            $params = [
+                ':clan_id' => $clanId,
+                ':user_id' => $userId,
+                ':clan_id2' => $clanId,
+                ':user_id2' => $userId
+            ];
+            
+            // Aplicar filtro de estado si está presente
+            if (!empty($statusFilter)) {
+                $taskStatusFilter = "AND t.status = :status_filter";
+                $subtaskStatusFilter = "AND s.status = :status_filter2";
+                $params[':status_filter'] = $statusFilter;
+                $params[':status_filter2'] = $statusFilter;
+            } else {
+                // Si no hay filtro específico, excluir completadas por defecto (comportamiento original)
+                $taskStatusFilter = "AND t.status != 'completed'";
+                $subtaskStatusFilter = "AND s.status != 'completed'";
+            }
+            
+            // Aplicar filtro de búsqueda si está presente
+            $searchTaskFilter = '';
+            $searchSubtaskFilter = '';
+            if (!empty($searchFilter)) {
+                $searchTaskFilter = "AND (t.task_name LIKE :search_team_task_name OR t.description LIKE :search_team_task_desc OR p.project_name LIKE :search_team_project OR u.full_name LIKE :search_team_user)";
+                $searchSubtaskFilter = "AND (s.title LIKE :search_team_sub_title OR s.description LIKE :search_team_sub_desc OR p.project_name LIKE :search_team_sub_project OR u.full_name LIKE :search_team_sub_user)";
+                $searchValue = '%' . $searchFilter . '%';
+                $params[':search_team_task_name'] = $searchValue;
+                $params[':search_team_task_desc'] = $searchValue;
+                $params[':search_team_project'] = $searchValue;
+                $params[':search_team_user'] = $searchValue;
+                $params[':search_team_sub_title'] = $searchValue;
+                $params[':search_team_sub_desc'] = $searchValue;
+                $params[':search_team_sub_project'] = $searchValue;
+                $params[':search_team_sub_user'] = $searchValue;
+            }
+            
+            // CONSULTA MEJORADA - TAREAS DEL EQUIPO Y SUBTAREAS (NO MÍAS) CON FILTROS
+            $stmt = $this->db->prepare("
+                (SELECT 
+                    t.task_id,
+                    t.task_name,
+                    t.description,
+                    t.status,
+                    t.priority,
+                    t.due_date,
+                    t.completion_percentage,
+                    p.project_id,
+                    p.project_name,
+                    p.is_personal,
+                    u.full_name as assigned_user_name,
+                    'task' as item_type,
+                    NULL as parent_task_id,
+                    NULL as parent_task_name,
+                    CASE 
+                        WHEN t.due_date IS NULL THEN 999
+                        WHEN t.due_date < CURDATE() THEN -1
+                        WHEN t.due_date = CURDATE() THEN 0
+                        WHEN t.due_date <= DATE_ADD(CURDATE(), INTERVAL 7 DAY) THEN DATEDIFF(t.due_date, CURDATE())
+                        ELSE 999
+                    END as days_until_due
+                FROM Tasks t
+                JOIN Projects p ON t.project_id = p.project_id
+                JOIN Users u ON t.assigned_to_user_id = u.user_id
+                JOIN Clan_Members cm ON u.user_id = cm.user_id
+                WHERE cm.clan_id = :clan_id
+                    AND t.assigned_to_user_id != :user_id
+                    AND t.assigned_to_user_id IS NOT NULL
+                    AND t.is_subtask = 0
+                    $taskStatusFilter
+                    $searchTaskFilter
+                    AND (p.is_personal = 0 OR p.is_personal IS NULL)
+                    AND (t.is_personal = 0 OR t.is_personal IS NULL))
+                UNION ALL
+                (SELECT 
+                    s.subtask_id as task_id,
+                    s.title as task_name,
+                    s.description,
+                    s.status,
+                    s.priority,
+                    s.due_date,
+                    s.completion_percentage,
+                    p.project_id,
+                    p.project_name,
+                    p.is_personal,
+                    u.full_name as assigned_user_name,
+                    'subtask' as item_type,
+                    t.task_id as parent_task_id,
+                    t.task_name as parent_task_name,
+                    CASE 
+                        WHEN s.due_date IS NULL THEN 999
+                        WHEN s.due_date < CURDATE() THEN -1
+                        WHEN s.due_date = CURDATE() THEN 0
+                        WHEN s.due_date <= DATE_ADD(CURDATE(), INTERVAL 7 DAY) THEN DATEDIFF(s.due_date, CURDATE())
+                        ELSE 999
+                    END as days_until_due
+                FROM Subtasks s
+                JOIN Tasks t ON s.task_id = t.task_id
+                JOIN Projects p ON t.project_id = p.project_id
+                LEFT JOIN Users u ON s.assigned_to_user_id = u.user_id
+                LEFT JOIN Clan_Members cm ON u.user_id = cm.user_id
+                WHERE cm.clan_id = :clan_id2
+                    AND (s.assigned_to_user_id != :user_id2 OR s.assigned_to_user_id IS NULL)
+                    $subtaskStatusFilter
+                    $searchSubtaskFilter
+                    AND (p.is_personal = 0 OR p.is_personal IS NULL)
+                    AND (t.is_personal = 0 OR t.is_personal IS NULL))
+                ORDER BY item_type, task_id
+            ");
+            
+            $stmt->execute($params);
+            
+            $allTasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            error_log("=== NUEVO getTeamKanbanTasks ===");
+            error_log("Leader: $userId, Clan: $clanId");
+            error_log("Status Filter: " . ($statusFilter ?: 'NONE'));
+            error_log("Search Filter: " . ($searchFilter ?: 'NONE'));
+            error_log("Total tareas del equipo: " . count($allTasks));
+            
+            foreach ($allTasks as $task) {
+                error_log("Team Task: ID={$task['task_id']}, Name='{$task['task_name']}', Assigned='{$task['assigned_user_name']}', Project='{$task['project_name']}'");
+            }
+            
+            // Organizar tareas en columnas Kanban
+            $kanbanTasks = [
+                'vencidas' => [],
+                'hoy' => [],
+                'semana1' => [],
+                'semana2' => []
+            ];
+            
+            foreach ($allTasks as $task) {
+                $days = (int)$task['days_until_due'];
+                
+                if ($days < 0) {
+                    $kanbanTasks['vencidas'][] = $task;
+                } elseif ($days == 0) {
+                    $kanbanTasks['hoy'][] = $task;
+                } elseif ($days <= 7) {
+                    $kanbanTasks['semana1'][] = $task;
+                } else {
+                    $kanbanTasks['semana2'][] = $task;
+                }
+            }
+            
+            error_log("Team Kanban: vencidas=" . count($kanbanTasks['vencidas']) . 
+                     ", hoy=" . count($kanbanTasks['hoy']) . 
+                     ", semana1=" . count($kanbanTasks['semana1']) . 
+                     ", semana2=" . count($kanbanTasks['semana2']));
+
+            Utils::jsonResponse([
+                'success' => true,
+                'kanbanTasks' => $kanbanTasks,
+                'total' => count($allTasks),
+                'debug' => [
+                    'leaderId' => $userId,
+                    'clanId' => $clanId,
+                    'query' => 'TEAM_ASSIGNED_TASKS',
+                    'totalTeamTasks' => count($allTasks)
+                ]
+            ]);
+
+        } catch (Exception $e) {
+            error_log("Error en getTeamKanbanTasks: " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
+        }
+    }
+    
+    /**
+     * Obtener tareas del EQUIPO para vista de lista
+     */
+    public function getTeamTasksList() {
+        header('Content-Type: application/json');
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        
+        $this->requireAuth();
+        
+        if (!$this->hasClanLeaderAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+            return;
+        }
+
+        try {
+            $userId = $this->currentUser['user_id'];
+            $clanId = $this->userClan['clan_id'] ?? null;
+            
+            if (!$userId || !$clanId) {
+                throw new Exception("Usuario o clan no válido");
+            }
+            
+            // CONSULTA PARA TAREAS DEL EQUIPO Y SUBTAREAS (incluye completadas)
+            $stmt = $this->db->prepare("
+                (SELECT 
+                    t.task_id,
+                    t.task_name,
+                    t.description,
+                    t.status,
+                    t.priority,
+                    t.due_date,
+                    t.completion_percentage,
+                    p.project_id,
+                    p.project_name,
+                    p.is_personal,
+                    u.full_name as assigned_user_name,
+                    'task' as item_type,
+                    NULL as parent_task_id,
+                    NULL as parent_task_name,
+                    t.created_at
+                FROM Tasks t
+                JOIN Projects p ON t.project_id = p.project_id
+                JOIN Users u ON t.assigned_to_user_id = u.user_id
+                JOIN Clan_Members cm ON u.user_id = cm.user_id
+                WHERE cm.clan_id = :clan_id
+                    AND t.assigned_to_user_id != :user_id
+                    AND t.assigned_to_user_id IS NOT NULL
+                    AND t.is_subtask = 0
+                    AND (p.is_personal = 0 OR p.is_personal IS NULL)
+                    AND (t.is_personal = 0 OR t.is_personal IS NULL))
+                UNION ALL
+                (SELECT 
+                    s.subtask_id as task_id,
+                    s.title as task_name,
+                    s.description,
+                    s.status,
+                    s.priority,
+                    s.due_date,
+                    s.completion_percentage,
+                    p.project_id,
+                    p.project_name,
+                    p.is_personal,
+                    u.full_name as assigned_user_name,
+                    'subtask' as item_type,
+                    t.task_id as parent_task_id,
+                    t.task_name as parent_task_name,
+                    s.created_at
+                FROM Subtasks s
+                JOIN Tasks t ON s.task_id = t.task_id
+                JOIN Projects p ON t.project_id = p.project_id
+                LEFT JOIN Users u ON s.assigned_to_user_id = u.user_id
+                LEFT JOIN Clan_Members cm ON u.user_id = cm.user_id
+                WHERE cm.clan_id = :clan_id2
+                    AND (s.assigned_to_user_id != :user_id2 OR s.assigned_to_user_id IS NULL)
+                    AND (p.is_personal = 0 OR p.is_personal IS NULL)
+                    AND (t.is_personal = 0 OR t.is_personal IS NULL))
+                ORDER BY created_at DESC
+            ");
+            
+            $stmt->execute([
+                ':clan_id' => $clanId,
+                ':user_id' => $userId,
+                ':clan_id2' => $clanId,
+                ':user_id2' => $userId
+            ]);
+            
+            $allTasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            error_log("=== getTeamTasksList ===");
+            error_log("Leader: $userId, Clan: $clanId");
+            error_log("Total tareas del equipo: " . count($allTasks));
+
+            Utils::jsonResponse([
+                'success' => true,
+                'tasks' => $allTasks,
+                'total' => count($allTasks),
+                'debug' => [
+                    'userId' => $userId,
+                    'clanId' => $clanId,
+                    'query' => 'TEAM_TASKS_LIST'
+                ]
+            ]);
+
+        } catch (Exception $e) {
+            error_log("Error en getTeamTasksList: " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
+        }
+    }
+    
+    /**
+     * Actualizar estado de tarea o subtarea
+     */
+    public function updateTaskStatus() {
+        // Limpiar cualquier output previo
+        if (ob_get_level()) {
+            ob_clean();
+        }
+        
+        header('Content-Type: application/json');
+        
+        try {
+            // Log para debugging
+            error_log("=== UPDATE TASK STATUS DEBUG ===");
+            error_log("POST data: " . json_encode($_POST));
+            error_log("Session user_id: " . ($_SESSION['user_id'] ?? 'NO_SESSION'));
+            
+            // Verificación básica de sesión
+            if (!isset($_SESSION['user_id']) || empty($_SESSION['user_id'])) {
+                error_log("Error: Usuario no autenticado");
+                echo json_encode(['success' => false, 'message' => 'Usuario no autenticado']);
+                exit;
+            }
+
+            $taskId = (int)($_POST['task_id'] ?? 0);
+            $status = $_POST['status'] ?? '';
+            $itemType = $_POST['item_type'] ?? 'task';
+            
+            error_log("Parsed: taskId=$taskId, status=$status, itemType=$itemType");
+            
+            if ($taskId <= 0) {
+                throw new Exception("ID de tarea inválido");
+            }
+            
+            if (!in_array($status, ['pending', 'in_progress', 'completed'])) {
+                throw new Exception("Estado inválido");
+            }
+            
+            if ($itemType === 'subtask') {
+                // Actualizar subtarea
+                $stmt = $this->db->prepare("
+                    UPDATE Subtasks 
+                    SET status = ?, 
+                        completion_percentage = ?,
+                        updated_at = CURRENT_TIMESTAMP 
+                    WHERE subtask_id = ?
+                ");
+                
+                $completionPercentage = ($status === 'completed') ? 100 : 0;
+                $stmt->execute([$status, $completionPercentage, $taskId]);
+                
+                if ($stmt->rowCount() > 0) {
+                    error_log("Subtarea actualizada: ID=$taskId, Status=$status");
+                    echo json_encode([
+                        'success' => true, 
+                        'message' => 'Subtarea actualizada correctamente',
+                        'new_status' => $status,
+                        'completion_percentage' => $completionPercentage
+                    ]);
+                    exit;
+                } else {
+                    throw new Exception("No se pudo actualizar la subtarea");
+                }
+                
+            } else {
+                // Actualizar tarea principal
+                $stmt = $this->db->prepare("
+                    UPDATE Tasks 
+                    SET status = ?, 
+                        is_completed = ?,
+                        completion_percentage = ?,
+                        completed_at = ?,
+                        updated_at = CURRENT_TIMESTAMP 
+                    WHERE task_id = ?
+                ");
+                
+                $isCompleted = ($status === 'completed') ? 1 : 0;
+                $completionPercentage = ($status === 'completed') ? 100 : 0;
+                $completedAt = ($status === 'completed') ? date('Y-m-d H:i:s') : null;
+                $stmt->execute([$status, $isCompleted, $completionPercentage, $completedAt, $taskId]);
+                
+                if ($stmt->rowCount() > 0) {
+                    error_log("Tarea actualizada: ID=$taskId, Status=$status");
+                    echo json_encode([
+                        'success' => true, 
+                        'message' => 'Tarea actualizada correctamente',
+                        'new_status' => $status,
+                        'completion_percentage' => $completionPercentage
+                    ]);
+                    exit;
+                } else {
+                    throw new Exception("No se pudo actualizar la tarea");
+                }
+            }
+
+        } catch (Exception $e) {
+            error_log("Error en updateTaskStatus: " . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+            exit;
+        }
+    }
+    
+    /**
+     * Método simplificado para completar tareas desde Kanban
+     */
+    public function completeTask() {
+        // Headers y limpieza
+        if (ob_get_level()) ob_clean();
+        header('Content-Type: application/json');
+        
+        // Log básico
+        error_log("=== COMPLETE TASK SIMPLE ===");
+        error_log("POST: " . json_encode($_POST));
+        
+        // Verificar datos básicos
+        $taskId = (int)($_POST['task_id'] ?? 0);
+        
+        if ($taskId <= 0) {
+            echo json_encode(['success' => false, 'message' => 'ID inválido']);
+            exit;
+        }
+
+        try {
+            // Actualizar tarea directamente
+            $stmt = $this->db->prepare("
+                UPDATE Tasks 
+                SET status = 'completed', 
+                    is_completed = 1,
+                    completion_percentage = 100,
+                    completed_at = NOW(),
+                    updated_at = NOW() 
+                WHERE task_id = ?
+            ");
+            
+            $result = $stmt->execute([$taskId]);
+            
+            if ($result && $stmt->rowCount() > 0) {
+                error_log("✅ Tarea $taskId completada correctamente");
+                echo json_encode([
+                    'success' => true, 
+                    'message' => 'Tarea completada',
+                    'task_id' => $taskId
+                ]);
+            } else {
+                error_log("❌ No se pudo completar tarea $taskId");
+                echo json_encode(['success' => false, 'message' => 'No se pudo actualizar']);
+            }
+            
+        } catch (Exception $e) {
+            error_log("❌ Error SQL: " . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'Error de base de datos']);
+        }
+        
+        exit;
+    }
+    
+    /**
+     * Obtener ID del proyecto personal del usuario
+     */
+    public function getPersonalProjectId() {
+        // Limpiar cualquier output previo
+        if (ob_get_level()) {
+            ob_clean();
+        }
+        ob_start();
+        
+        // Asegurar que siempre devolvemos JSON
+        header('Content-Type: application/json');
+        
+        // Suprimir warnings para evitar interferencia con JSON
+        error_reporting(E_ALL & ~E_WARNING);
+        
+        try {
+            error_log('=== getPersonalProjectId - INICIO ===');
+            
+            // Verificar autenticación
+            if (!$this->isAuthenticated()) {
+                error_log('getPersonalProjectId - Error: No autenticado');
+                Utils::jsonResponse(['success' => false, 'message' => 'No autenticado'], 401);
+                return;
+            }
+            
+            $userId = $_SESSION['user_id'] ?? 0;
+            error_log("getPersonalProjectId - Usuario ID: $userId");
+            
+            if (!$userId || $userId <= 0) {
+                error_log("getPersonalProjectId - ERROR: userId inválido: $userId");
+                Utils::jsonResponse(['success' => false, 'message' => 'Usuario no válido'], 400);
+                return;
+            }
+            
+            // Obtener o crear proyecto personal
+            error_log("getPersonalProjectId - Creando instancia de Task...");
+            $taskModel = new Task();
+            error_log("getPersonalProjectId - Task instanciado correctamente");
+            
+            error_log("getPersonalProjectId - Llamando getOrCreatePersonalProject para usuario $userId");
+            $personalProjectId = $taskModel->getOrCreatePersonalProject($userId);
+            error_log("getPersonalProjectId - Resultado: " . ($personalProjectId ?: 'FALSE'));
+            
+            if ($personalProjectId) {
+                Utils::jsonResponse([
+                    'success' => true, 
+                    'project_id' => $personalProjectId,
+                    'message' => 'Proyecto personal obtenido exitosamente'
+                ]);
+            } else {
+                Utils::jsonResponse([
+                    'success' => false, 
+                    'message' => 'No se pudo obtener/crear el proyecto personal'
+                ], 500);
+            }
+            
+        } catch (Exception $e) {
+            error_log("=== ERROR en getPersonalProjectId ===");
+            error_log("Error message: " . $e->getMessage());
+            error_log("Error file: " . $e->getFile());
+            error_log("Error line: " . $e->getLine());
+            error_log("Stack trace: " . $e->getTraceAsString());
+            
+            Utils::jsonResponse([
+                'success' => false, 
+                'message' => 'Error interno del servidor: ' . $e->getMessage()
+            ], 500);
+        } catch (Throwable $t) {
+            error_log("=== THROWABLE en getPersonalProjectId ===");
+            error_log("Throwable message: " . $t->getMessage());
+            error_log("Throwable file: " . $t->getFile());
+            error_log("Throwable line: " . $t->getLine());
+            
+            Utils::jsonResponse([
+                'success' => false, 
+                'message' => 'Error crítico del servidor'
+            ], 500);
+        }
+    }
+    
+    /**
+     * Método para obtener datos de una tarea para edición (AJAX)
+     */
+    public function getTaskDataForEdit() {
+        // Limpiar cualquier output previo
+        while (ob_get_level()) {
+            ob_end_clean();
+        }
+        
+        header('Content-Type: application/json');
+        header('Cache-Control: no-cache, must-revalidate');
+        
+        try {
+            // Verificar autenticación
+            if (!$this->auth->isLoggedIn()) {
+                echo json_encode(['success' => false, 'message' => 'Usuario no autenticado']);
+                exit;
+            }
+            
+            // Verificar acceso de clan leader
+            if (!$this->hasClanLeaderAccess()) {
+                echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
+                exit;
+            }
+            
+            // Obtener task_id
+            $taskId = isset($_GET['task_id']) ? intval($_GET['task_id']) : 0;
+            
+            if ($taskId <= 0) {
+                echo json_encode(['success' => false, 'message' => 'ID de tarea inválido']);
+                exit;
+            }
+            
+            // Obtener datos de la tarea
+            $task = $this->taskModel->findById($taskId);
+            if (!$task) {
+                echo json_encode(['success' => false, 'message' => 'Tarea no encontrada']);
+                exit;
+            }
+            
+            // Obtener proyecto de la tarea
+            $project = $this->projectModel->findById($task['project_id']);
+            if (!$project) {
+                echo json_encode(['success' => false, 'message' => 'Proyecto no encontrado']);
+                exit;
+            }
+            
+            // Verificar que la tarea pertenece al clan del usuario
+            if ($project['clan_id'] != $this->userClan['clan_id']) {
+                echo json_encode(['success' => false, 'message' => 'Tarea no pertenece a tu clan']);
+                exit;
+            }
+            
+            // Obtener proyectos del clan
+            $projects = $this->projectModel->getByClan($this->userClan['clan_id']);
+            
+            // Obtener miembros del clan
+            $members = [];
+            if ($this->db) {
+                try {
+                    $stmt = $this->db->prepare("
+                        SELECT u.user_id, u.full_name, u.email
+                        FROM Users u
+                        JOIN Clan_Members cm ON u.user_id = cm.user_id
+                        WHERE cm.clan_id = :clan_id AND u.is_active = 1
+                        ORDER BY u.full_name ASC
+                    ");
+                    $stmt->execute(['clan_id' => $this->userClan['clan_id']]);
+                    $members = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                } catch (Exception $e) {
+                    // Continuar sin miembros si hay error
+                    error_log("Error obteniendo miembros del clan: " . $e->getMessage());
+                }
+            }
+            
+            // Preparar respuesta
+            $response = [
+                'success' => true,
+                'message' => 'Datos obtenidos exitosamente',
+                'task' => $task,
+                'project' => $project,
+                'projects' => $projects ?: [],
+                'members' => $members ?: []
+            ];
+            
+            echo json_encode($response);
+            exit;
+            
+        } catch (Exception $e) {
+            error_log("Error en getTaskDataForEdit: " . $e->getMessage());
+            
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error al obtener datos de la tarea'
+            ]);
+            exit;
+        }
+    }
+    
+    /**
+     * Método para actualizar una tarea desde modal (AJAX)
+     */
+    public function updateTaskFromModal() {
+        // Limpiar cualquier output previo
+        while (ob_get_level()) {
+            ob_end_clean();
+        }
+        
+        header('Content-Type: application/json');
+        header('Cache-Control: no-cache, must-revalidate');
+        
+        try {
+            // Verificar autenticación
+            if (!$this->auth->isLoggedIn()) {
+                echo json_encode(['success' => false, 'message' => 'Usuario no autenticado']);
+                exit;
+            }
+            
+            // Verificar acceso de clan leader
+            if (!$this->hasClanLeaderAccess()) {
+                echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
+                exit;
+            }
+            
+            // Verificar método POST
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+                exit;
+            }
+            
+            // Obtener datos del formulario
+            $taskId = isset($_POST['task_id']) ? intval($_POST['task_id']) : 0;
+            $taskTitle = trim($_POST['task_name'] ?? '');
+            $taskDescription = trim($_POST['task_description'] ?? '');
+            $taskProject = isset($_POST['task_project']) ? intval($_POST['task_project']) : null;
+            $taskDueDate = $_POST['task_due_date'] ?? null;
+            $priority = $_POST['priority'] ?? 'medium';
+            $status = $_POST['task_status'] ?? 'pending';
+            $assignedToUserId = isset($_POST['assigned_to_user_id']) ? intval($_POST['assigned_to_user_id']) : null;
+            $taskProgress = isset($_POST['task_progress']) ? intval($_POST['task_progress']) : null;
+            
+            // Validaciones
+            if ($taskId <= 0) {
+                echo json_encode(['success' => false, 'message' => 'ID de tarea inválido']);
+                exit;
+            }
+            
+            if (empty($taskTitle)) {
+                echo json_encode(['success' => false, 'message' => 'El título es requerido']);
+                exit;
+            }
+            
+            // Verificar que la tarea existe
+            $existingTask = $this->taskModel->findById($taskId);
+            if (!$existingTask) {
+                echo json_encode(['success' => false, 'message' => 'Tarea no encontrada']);
+                exit;
+            }
+            
+            // Verificar que la tarea pertenece al clan del usuario
+            $project = $this->projectModel->findById($existingTask['project_id']);
+            if (!$project || $project['clan_id'] != $this->userClan['clan_id']) {
+                echo json_encode(['success' => false, 'message' => 'Tarea no pertenece a tu clan']);
+                exit;
+            }
+            
+            // Actualizar tarea usando la firma correcta del método
+            // public function update($taskId, $taskName, $description, $assignedUserId = null, $priority = null, $dueDate = null, $assignedPercentage = null, $status = null, $completionPercentage = null)
+            $result = $this->taskModel->update(
+                $taskId,
+                $taskTitle,                                                    // taskName
+                $taskDescription,                                               // description
+                $assignedToUserId > 0 ? $assignedToUserId : null,             // assignedUserId
+                $priority,                                                      // priority
+                $taskDueDate,                                                  // dueDate
+                null,                                                          // assignedPercentage (no se usa aquí)
+                $status,                                                       // status
+                $taskProgress                                                  // completionPercentage
+            );
+            
+            // Si se especifica un proyecto diferente, actualizarlo por separado
+            if ($taskProject > 0 && $taskProject != $existingTask['project_id']) {
+                try {
+                    $stmt = $this->db->prepare("UPDATE Tasks SET project_id = ? WHERE task_id = ?");
+                    $stmt->execute([$taskProject, $taskId]);
+                } catch (Exception $e) {
+                    error_log("Error actualizando project_id: " . $e->getMessage());
+                }
+            }
+            
+            if ($result) {
+                echo json_encode(['success' => true, 'message' => 'Tarea actualizada exitosamente']);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Error al actualizar la tarea']);
+            }
+            exit;
+            
+        } catch (Exception $e) {
+            error_log("Error en updateTaskFromModal: " . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'Error al actualizar la tarea']);
+            exit;
+        }
+    }
+    
+    /**
+     * Obtener tareas recurrentes y eventuales asignadas al usuario (sin filtro de clan)
+     */
+    private function getRecurrentAndEventualTasks($userId) {
+        try {
+            $stmt = $this->db->prepare("
+                SELECT 
+                    t.task_id,
+                    t.task_name,
+                    t.description,
+                    t.due_date,
+                    t.priority,
+                    t.status,
+                    t.completion_percentage,
+                    t.automatic_points,
+                    t.created_by_user_id,
+                    p.project_name,
+                    p.project_id,
+                    p.project_type,
+                    p.clan_id,
+                    DATEDIFF(t.due_date, CURDATE()) as days_until_due
+                FROM Tasks t
+                JOIN Projects p ON t.project_id = p.project_id
+                LEFT JOIN Task_Assignments ta ON ta.task_id = t.task_id
+                WHERE t.is_subtask = 0
+                  AND (t.assigned_to_user_id = ? OR ta.user_id = ?)
+                  AND (
+                    p.project_name IN ('Tareas Recurrentes', 'Tareas Eventuales', 'Mis Tareas Recurrentes')
+                    OR p.project_type = 'recurrent'
+                  )
+                ORDER BY t.due_date ASC, t.task_id ASC
+            ");
+            
+            $stmt->execute([$userId, $userId]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+        } catch (Exception $e) {
+            error_log("Error en getRecurrentAndEventualTasks: " . $e->getMessage());
+            return [];
+        }
+    }
+    
+    /**
+     * Mostrar página de edición de tarea
+     */
+    public function taskEdit() {
+        try {
+            // Verificar autenticación y permisos
+            if (!$this->auth->isLoggedIn()) {
+                header('Location: ?route=login');
+                exit();
+            }
+            
+            if (!$this->hasClanLeaderAccess()) {
+                header('Location: ?route=dashboard');
+                exit();
+            }
+            
+            // Obtener ID de la tarea
+            $taskId = (int)($_GET['task_id'] ?? 0);
+            
+            if ($taskId <= 0) {
+                header('Location: ?route=clan_leader/tasks');
+                exit();
+            }
+            
+            // Obtener datos de la tarea
+            if (!$this->taskModel) {
+                $this->taskModel = new Task();
+            }
+            
+            $task = $this->taskModel->findById($taskId);
+            
+            if (!$task) {
+                header('Location: ?route=clan_leader/tasks');
+                exit();
+            }
+            
+            // Obtener datos del proyecto para verificar clan
+            if (!$this->projectModel) {
+                $this->projectModel = new Project();
+            }
+            
+            $project = $this->projectModel->findById($task['project_id']);
+            
+            // Verificar que la tarea pertenece al clan del usuario
+            if (!$project || !$this->userClan || $project['clan_id'] != $this->userClan['clan_id']) {
+                header('Location: ?route=clan_leader/tasks');
+                exit();
+            }
+            
+            // Obtener proyectos del clan para el selector
+            $projects = [];
+            $members = [];
+            
+            if ($this->userClan) {
+                // Inicializar modelo de clan si no existe
+                if (!$this->clanModel) {
+                    $this->clanModel = new Clan();
+                }
+                
+                // Si es proyecto del clan, mostrar todos los proyectos del clan
+                if ($project['clan_id'] == $this->userClan['clan_id']) {
+                    $projects = $this->projectModel->getByClan($this->userClan['clan_id']);
+                    
+                    // Filtrar proyectos activos
+                    $projects = array_filter($projects, function($p) {
+                        return true; // Mantener todos por ahora, se puede filtrar por estado si es necesario
+                    });
+                    
+                    // Reindexar el array después del filtro
+                    $projects = array_values($projects);
+                    
+                    $members = $this->clanModel->getMembers($this->userClan['clan_id']);
+                } else {
+                    // Proyecto externo: solo mostrar el proyecto actual
+                    $projects = [$project];
+                    $members = [];
+                }
+            }
+            
+            // Obtener usuarios asignados a la tarea
+            $assignedUsers = $this->taskModel->getAssignedUsers($taskId);
+            
+            $this->loadView('clan_leader/task_edit', [
+                'task' => $task,
+                'project' => $project,
+                'projects' => $projects,
+                'members' => $members,
+                'assignedUsers' => $assignedUsers,
+                'currentPage' => 'clan_leader',
+                'user' => $this->currentUser,
+                'userClan' => $this->userClan,
+                'clan' => $this->userClan ?: ['clan_name' => 'Sin clan asignado', 'clan_id' => null]
+            ]);
+            
+        } catch (Exception $e) {
+            error_log("Error en taskEdit: " . $e->getMessage());
+            header('Location: ?route=clan_leader/tasks');
+            exit();
         }
     }
     
@@ -2221,11 +5826,33 @@ class ClanLeaderController {
         extract($data);
         $viewPath = $viewPathBackup;
         
-        // Incluir archivo de vista
+        // Agregar estilos CSS específicos del clan leader
+        $additionalCSS = [
+            Utils::asset('assets/css/clan-leader.css')
+        ];
+        
+        // Agregar JavaScript específico del clan leader
+        $additionalJS = [
+            Utils::asset('assets/js/clan-leader.js')
+        ];
+        
+        // Cargar contenido de la vista
         $viewFile = __DIR__ . '/../views/' . $viewPath . '.php';
         
         if (file_exists($viewFile)) {
+            // Capturar el contenido de la vista
+            ob_start();
             include $viewFile;
+            $content = ob_get_clean();
+            
+            // Configurar variables para el layout
+            $title = "RinoTrack - Clan Leader";
+            $currentPage = 'clan_leader';
+            $user = $this->currentUser;
+            $clan = $this->userClan;
+            
+            // Cargar el layout completo
+            include __DIR__ . '/../views/layout.php';
         } else {
             die('Vista no encontrada: ' . $viewPath);
         }
@@ -2236,37 +5863,12 @@ class ClanLeaderController {
      */
     private function getMembersSnakePathData($kpiQuarterId) {
         try {
-            // Consulta para obtener miembros del clan con sus puntos ganados
-            $stmt = $this->db->prepare("
-                SELECT 
-                    u.user_id,
-                    u.full_name,
-                    u.email,
-                    COALESCE(SUM(p.kpi_points), 0) as total_assigned,
-                    COALESCE(SUM(
-                        CASE 
-                            WHEN p.task_distribution_mode = 'automatic' THEN 
-                                (SELECT COALESCE(SUM(t.automatic_points), 0) 
-                                 FROM Tasks t 
-                                 WHERE t.project_id = p.project_id AND t.is_completed = 1 AND t.assigned_to_user_id = u.user_id)
-                            ELSE 
-                                (SELECT COALESCE(SUM(t.assigned_percentage * p.kpi_points / 100), 0) 
-                                 FROM Tasks t 
-                                 WHERE t.project_id = p.project_id AND t.is_completed = 1 AND t.assigned_to_user_id = u.user_id)
-                        END
-                    ), 0) as earned_points,
-                    COUNT(DISTINCT p.project_id) as total_projects
-                FROM Users u
-                JOIN Clan_Members cm ON u.user_id = cm.user_id
-                LEFT JOIN Projects p ON cm.clan_id = p.clan_id AND p.kpi_quarter_id = ?
-                WHERE cm.clan_id = ? AND u.is_active = 1
-                GROUP BY u.user_id, u.full_name, u.email
-                ORDER BY earned_points DESC, total_assigned DESC
-            ");
-            $stmt->execute([$kpiQuarterId, $this->userClan['clan_id']]);
+            // Consulta revisada para calcular puntos por usuario considerando múltiples asignaciones
+            $stmt = $this->db->prepare("\n                SELECT \n                    u.user_id,\n                    u.full_name,\n                    u.email,\n                    0 as total_assigned,\n                    (\n                        -- Puntos por tareas con asignaciones múltiples (Task_Assignments)\n                        COALESCE((\n                            SELECT SUM(\n                                CASE \n                                    WHEN p.task_distribution_mode = 'automatic' THEN \n                                        t.automatic_points / NULLIF((SELECT COUNT(*) FROM Task_Assignments ta2 WHERE ta2.task_id = t.task_id), 0)\n                                    ELSE \n                                        (ta.assigned_percentage * p.kpi_points / 100)\n                                END\n                            )\n                            FROM Tasks t\n                            JOIN Projects p ON p.project_id = t.project_id\n                            JOIN Task_Assignments ta ON ta.task_id = t.task_id AND ta.user_id = u.user_id\n                            WHERE p.kpi_quarter_id = ?\n                              AND p.clan_id = ?\n                              AND t.is_completed = 1\n                              AND t.is_subtask = 0\n                        ), 0)\n                        +\n                        -- Puntos por tareas con asignación directa (sin Task_Assignments)\n                        COALESCE((\n                            SELECT SUM(\n                                CASE \n                                    WHEN p.task_distribution_mode = 'automatic' THEN t.automatic_points\n                                    ELSE (t.assigned_percentage * p.kpi_points / 100)\n                                END\n                            )\n                            FROM Tasks t\n                            JOIN Projects p ON p.project_id = t.project_id\n                            WHERE p.kpi_quarter_id = ?\n                              AND p.clan_id = ?\n                              AND t.is_completed = 1\n                              AND t.is_subtask = 0\n                              AND t.assigned_to_user_id = u.user_id\n                              AND NOT EXISTS (SELECT 1 FROM Task_Assignments ta WHERE ta.task_id = t.task_id)\n                        ), 0)\n                    ) AS earned_points,\n                    0 as total_projects\n                FROM Users u\n                JOIN Clan_Members cm ON u.user_id = cm.user_id\n                WHERE cm.clan_id = ? AND u.is_active = 1\n                ORDER BY earned_points DESC\n            ");
+            $stmt->execute([$kpiQuarterId, $this->userClan['clan_id'], $kpiQuarterId, $this->userClan['clan_id'], $this->userClan['clan_id']]);
             $members = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
-            // Asignar colores e iconos específicos para cada miembro
+            // Asignar colores, iconos y normalizar valores
             $memberIcons = [
                 'default' => 'fas fa-user',
                 'admin' => 'fas fa-crown',
@@ -2283,18 +5885,11 @@ class ClanLeaderController {
             ];
             
             foreach ($members as &$member) {
-                // Asignar color específico para el miembro
                 $member['member_color'] = $memberColors[array_rand($memberColors)];
-                
-                // Asignar icono específico para el miembro
                 $member['member_icon'] = $memberIcons['default'];
-                
-                // Asegurar que los valores numéricos sean correctos
-                $member['earned_points'] = (int)($member['earned_points'] ?? 0);
+                $member['earned_points'] = (int)round($member['earned_points'] ?? 0);
                 $member['total_assigned'] = (int)($member['total_assigned'] ?? 0);
-                $member['total_points'] = 1000; // Límite por miembro
-                
-                // Calcular posición en el camino (sin límite de 1000)
+                $member['total_points'] = 1000;
                 $member['path_position'] = max(0, $member['earned_points']);
                 $member['progress_percentage'] = $member['total_points'] > 0 ? 
                     round(($member['earned_points'] / $member['total_points']) * 100, 1) : 0;
@@ -2327,12 +5922,12 @@ class ClanLeaderController {
         $membersData = $this->getMembersSnakePathData($currentKPI['kpi_quarter_id']);
         
         // Información del trimestre
-        $quarterInfo = $this->getQuarterInfo($currentKPI['quarter'], $currentKPI['year']);
+        $quarterInfo = $this->getQuarterInfo($currentKPI['quarter'], $currentKPI['year']) ?? [];
 
         return [
             'quarter_progress' => $quarterProgress,
             'members_data' => $membersData,
-            'total_points' => $currentKPI['total_points'],
+            'total_points' => $currentKPI['total_points'] ?? 1000,
             'quarter_info' => $quarterInfo
         ];
     }
@@ -2409,4 +6004,1852 @@ class ClanLeaderController {
             'display_name' => $quarter . ' ' . $year
         ];
     }
+
+    /**
+     * Obtener tareas para el tablero Kanban del líder (incluye tareas de otros clanes donde hay miembros asignados)
+     */
+    private function getKanbanTasksForLeader($userId, $primaryClanId, $excludePersonalTasks = false) {
+        try {
+            
+            // CONSULTA SIMPLE: Obtener TODAS las tareas asignadas al usuario
+            $stmt = $this->db->prepare("
+                SELECT 
+                    t.task_id,
+                    t.task_name,
+                    t.description,
+                    t.due_date,
+                    t.priority,
+                    t.status,
+                    t.completion_percentage,
+                    t.automatic_points,
+                    p.project_name,
+                    p.project_id,
+                    p.project_type,
+                    p.is_personal,
+                    p.clan_id,
+                    c.clan_name,
+                    u_assigned.full_name as assigned_to_name,
+                    u_assigned.username as assigned_to_username,
+                    CASE 
+                        WHEN t.due_date IS NULL THEN 999
+                        ELSE DATEDIFF(t.due_date, CURDATE())
+                    END as days_until_due,
+                    'task' as item_type
+                FROM Tasks t
+                JOIN Projects p ON p.project_id = t.project_id
+                LEFT JOIN Clans c ON p.clan_id = c.clan_id
+                LEFT JOIN Task_Assignments ta ON ta.task_id = t.task_id
+                LEFT JOIN Users u_assigned ON t.assigned_to_user_id = u_assigned.user_id
+                WHERE t.is_subtask = 0
+                  AND t.status != 'completed'
+                  AND t.status != 'cancelled'
+                  AND (t.assigned_to_user_id = ? OR ta.user_id = ?)
+                ORDER BY t.due_date ASC, t.task_id ASC
+            ");
+            
+            $stmt->execute([$userId, $userId]);
+            $allTasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Obtener subtareas asignadas al usuario (simple)
+            $subtaskStmt = $this->db->prepare("
+                SELECT 
+                    s.subtask_id as task_id,
+                    s.task_id as parent_task_id,
+                    s.title as task_name,
+                    s.description,
+                    s.due_date,
+                    s.priority,
+                    s.status,
+                    s.completion_percentage,
+                    0 as automatic_points,
+                    CONCAT('Subtarea de: ', t.task_name) as project_name,
+                    t.project_id,
+                    p.project_type,
+                    p.is_personal,
+                    p.clan_id,
+                    c.clan_name,
+                    u_assigned.full_name as assigned_to_name,
+                    u_assigned.username as assigned_to_username,
+                    CASE 
+                        WHEN s.due_date IS NULL THEN 999
+                        ELSE DATEDIFF(s.due_date, CURDATE())
+                    END as days_until_due,
+                    'subtask' as item_type
+                FROM Subtasks s
+                JOIN Tasks t ON s.task_id = t.task_id
+                JOIN Projects p ON t.project_id = p.project_id
+                LEFT JOIN Clans c ON p.clan_id = c.clan_id
+                LEFT JOIN Users u_assigned ON s.assigned_to_user_id = u_assigned.user_id
+                WHERE s.status != 'completed' 
+                  AND s.completion_percentage < 100
+                  AND s.assigned_to_user_id = ?
+                  AND (
+                      -- Excluir subtareas de tareas personales de otros usuarios
+                      COALESCE(p.is_personal, t.is_personal, 0) = 0 
+                      OR 
+                      (COALESCE(p.is_personal, t.is_personal, 0) = 1 AND t.created_by_user_id = ?)
+                  )
+                ORDER BY s.due_date ASC
+            ");
+            
+            $subtaskStmt->execute([$userId, $userId]);
+            $allSubtasks = $subtaskStmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Combinar tareas y subtareas
+            $allTasks = array_merge($allTasks, $allSubtasks);
+            
+            // Organizar en columnas Kanban
+            $kanbanTasks = [
+                'vencidas' => [],
+                'hoy' => [],
+                '1_semana' => [],
+                '2_semanas' => []
+            ];
+
+            foreach ($allTasks as $task) {
+                $daysUntilDue = (int)$task['days_until_due'];
+                
+                if ($daysUntilDue < 0) {
+                    $kanbanTasks['vencidas'][] = $task;
+                } elseif ($daysUntilDue <= 0) {
+                    $kanbanTasks['hoy'][] = $task;
+                } elseif ($daysUntilDue <= 7) {
+                    $kanbanTasks['1_semana'][] = $task;
+                } elseif ($daysUntilDue <= 14) {
+                    $kanbanTasks['2_semanas'][] = $task;
+                }
+            }
+
+            // Ordenar cada columna por prioridad
+            $priorityOrder = ['high' => 1, 'medium' => 2, 'low' => 3];
+            
+            foreach ($kanbanTasks as $column => &$tasks) {
+                usort($tasks, function($a, $b) use ($priorityOrder) {
+                    $priorityA = $priorityOrder[$a['priority']] ?? 4;
+                    $priorityB = $priorityOrder[$b['priority']] ?? 4;
+                    
+                    if ($priorityA === $priorityB) {
+                        return strtotime($a['due_date']) - strtotime($b['due_date']);
+                    }
+                    
+                    return $priorityA - $priorityB;
+                });
+            }
+
+
+
+            return $kanbanTasks;
+        } catch (Exception $e) {
+            error_log('Error getKanbanTasksForLeader: ' . $e->getMessage());
+            return [
+                'vencidas' => [],
+                'hoy' => [],
+                '1_semana' => [],
+                '2_semanas' => []
+            ];
+        }
+    }
+
+    /**
+     * Obtener tareas para el tablero Kanban del clan
+     */
+    private function getKanbanTasksForClan($clanId) {
+        try {
+            error_log("=== DEBUG getKanbanTasksForClan ===");
+            error_log("Clan ID: $clanId");
+            
+            // Tareas del clan del líder + tareas recurrentes/eventuales asignadas al usuario
+            error_log("Filtrando tareas del clan ID: $clanId y tareas recurrentes/eventuales asignadas al usuario");
+            
+            // Obtener tareas del clan del líder + tareas recurrentes/eventuales asignadas al usuario
+            $stmt = $this->db->prepare(
+                "SELECT 
+                    t.task_id,
+                    t.task_name,
+                    t.description,
+                    t.due_date,
+                    t.priority,
+                    t.status,
+                    t.completion_percentage,
+                    t.automatic_points,
+                    p.project_name,
+                    p.project_id,
+                    CASE 
+                        WHEN t.due_date IS NULL THEN 999
+                        ELSE DATEDIFF(t.due_date, CURDATE())
+                    END as days_until_due
+                 FROM Tasks t
+                 INNER JOIN Projects p ON p.project_id = t.project_id
+                 WHERE (
+                        (p.clan_id = ? AND (p.is_personal IS NULL OR p.is_personal != 1))
+                        OR (p.project_name IN ('Tareas Recurrentes', 'Tareas Eventuales') 
+                            AND t.assigned_to_user_id = ?)
+                        OR (p.clan_id = ? AND p.is_personal = 1 AND p.created_by_user_id = ? AND (t.assigned_to_user_id = ? OR t.created_by_user_id = ?))
+                       )
+                   AND t.is_subtask = 0
+                   AND t.status != 'completed'
+                 ORDER BY t.due_date ASC, t.task_id ASC"
+            );
+            
+            $params = [$clanId, $this->currentUser['user_id'], $clanId, $this->currentUser['user_id'], $this->currentUser['user_id'], $this->currentUser['user_id']];
+            error_log("Ejecutando consulta con parámetros: clanId=$clanId, userId={$this->currentUser['user_id']} (tareas del clan + recurrentes/eventuales + personales asignadas al usuario)");
+            error_log("Parámetros SQL: " . implode(', ', $params));
+            $stmt->execute($params);
+            $allTasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            error_log("Total tareas encontradas: " . count($allTasks));
+            
+            // Debug: mostrar todas las tareas encontradas
+            foreach ($allTasks as $index => $task) {
+                error_log("Tarea $index: ID={$task['task_id']}, Nombre='{$task['task_name']}', Proyecto='{$task['project_name']}', Due_date='{$task['due_date']}', Days_until_due='{$task['days_until_due']}'");
+                
+                // Debug específico para tareas personales
+                if ($task['project_name'] === 'Tareas Personales') {
+                    error_log("  *** TAREA PERSONAL DETECTADA *** - Necesita verificación de filtrado");
+                }
+            }
+            
+            // Debug: verificar qué proyectos únicos se encontraron
+            $uniqueProjects = array_unique(array_column($allTasks, 'project_name'));
+            error_log("Proyectos únicos encontrados: " . implode(', ', $uniqueProjects));
+            
+            // Debug: verificar tareas del clan y tareas recurrentes/eventuales asignadas al usuario
+            $clanTasks = array_filter($allTasks, function($task) use ($clanId) {
+                return true; // Todas las tareas son del clan del líder o recurrentes/eventuales asignadas
+            });
+            error_log("Total tareas encontradas (clan + recurrentes/eventuales asignadas): " . count($clanTasks));
+            
+            // Separar tareas por tipo para debug
+            $clanSpecificTasks = array_filter($allTasks, function($task) use ($clanId) {
+                return !in_array($task['project_name'], ['Tareas Recurrentes', 'Tareas Eventuales', 'Tareas Personales']);
+            });
+            $recurrentEventualTasks = array_filter($allTasks, function($task) {
+                return in_array($task['project_name'], ['Tareas Recurrentes', 'Tareas Eventuales']);
+            });
+            $personalTasks = array_filter($allTasks, function($task) {
+                return $task['project_name'] === 'Tareas Personales';
+            });
+            
+            error_log("Tareas específicas del clan: " . count($clanSpecificTasks));
+            error_log("Tareas recurrentes/eventuales asignadas al usuario: " . count($recurrentEventualTasks));
+            error_log("Tareas personales del usuario: " . count($personalTasks));
+            
+            foreach ($recurrentEventualTasks as $task) {
+                error_log("Tarea recurrente/eventual asignada: ID={$task['task_id']}, Nombre='{$task['task_name']}', Proyecto='{$task['project_name']}'");
+            }
+            
+            foreach ($personalTasks as $task) {
+                error_log("Tarea personal: ID={$task['task_id']}, Nombre='{$task['task_name']}', Proyecto='{$task['project_name']}'");
+            }
+            
+            // Debug: verificar todas las tareas por proyecto
+            $tasksByProject = [];
+            foreach ($allTasks as $task) {
+                $projectName = $task['project_name'];
+                if (!isset($tasksByProject[$projectName])) {
+                    $tasksByProject[$projectName] = 0;
+                }
+                $tasksByProject[$projectName]++;
+            }
+            error_log("Tareas por proyecto: " . json_encode($tasksByProject));
+
+            // Organizar tareas por columnas del Kanban
+            $kanbanTasks = [
+                'vencidas' => [],
+                'hoy' => [],
+                '1_semana' => [],
+                '2_semanas' => []
+            ];
+
+            foreach ($allTasks as $task) {
+                $daysUntilDue = (int)$task['days_until_due'];
+                
+                if ($daysUntilDue == 999) {
+                    // Tareas sin fecha de vencimiento van a la columna de 2 semanas
+                    $kanbanTasks['2_semanas'][] = $task;
+                } elseif ($daysUntilDue < 0) {
+                    $kanbanTasks['vencidas'][] = $task;
+                } elseif ($daysUntilDue == 0) {
+                    $kanbanTasks['hoy'][] = $task;
+                } elseif ($daysUntilDue <= 7) {
+                    $kanbanTasks['1_semana'][] = $task;
+                } elseif ($daysUntilDue <= 14) {
+                    $kanbanTasks['2_semanas'][] = $task;
+                }
+            }
+            
+            error_log("Tareas organizadas por columna:");
+            error_log("- Vencidas: " . count($kanbanTasks['vencidas']));
+            error_log("- Hoy: " . count($kanbanTasks['hoy']));
+            error_log("- 1 Semana: " . count($kanbanTasks['1_semana']));
+            error_log("- 2 Semanas: " . count($kanbanTasks['2_semanas']));
+
+            return $kanbanTasks;
+        } catch (Exception $e) {
+            error_log('Error getKanbanTasksForClan: ' . $e->getMessage());
+            return [
+                'vencidas' => [],
+                'hoy' => [],
+                '1_semana' => [],
+                '2_semanas' => []
+            ];
+        }
+    }
+
+    /**
+     * Debug: Verificar filtrado de tareas personales (temporal)
+     */
+    public function debugTaskFiltering() {
+        $this->requireAuth();
+        if (!$this->hasClanLeaderAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Sin permisos'], 403);
+            exit;
+        }
+
+        if (!$this->userClan) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Sin clan asignado'], 400);
+            exit;
+        }
+
+        $userId = $this->currentUser['user_id'];
+        $clanId = $this->userClan['clan_id'];
+
+        // Obtener todas las tareas personales en el clan (sin filtro)
+        $stmt = $this->db->prepare("
+            SELECT 
+                t.task_id,
+                t.task_name,
+                t.assigned_to_user_id,
+                t.created_by_user_id,
+                p.project_name,
+                p.created_by_user_id as project_creator,
+                p.is_personal
+            FROM Tasks t
+            JOIN Projects p ON t.project_id = p.project_id
+            WHERE p.clan_id = ? AND p.is_personal = 1
+            ORDER BY t.task_id
+        ");
+        $stmt->execute([$clanId]);
+        $allPersonalTasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Obtener tareas personales con filtro
+        $filteredTasks = $this->taskModel->getPersonalTasksForClanLeader($userId, $clanId);
+
+        Utils::jsonResponse([
+            'success' => true,
+            'debug_info' => [
+                'current_user_id' => $userId,
+                'clan_id' => $clanId,
+                'all_personal_tasks_in_clan' => count($allPersonalTasks),
+                'filtered_personal_tasks' => count($filteredTasks),
+                'all_tasks' => $allPersonalTasks,
+                'filtered_tasks' => $filteredTasks
+            ]
+        ]);
+    }
+
+    /**
+     * Debug: Verificar estado del usuario y clan
+     */
+    private function debugUserState() {
+        error_log('=== DEBUG USER STATE ===');
+        error_log('Current User: ' . print_r($this->currentUser, true));
+        error_log('User Clan: ' . print_r($this->userClan, true));
+        error_log('Has Clan Leader Access: ' . ($this->hasClanLeaderAccess() ? 'YES' : 'NO'));
+        if ($this->currentUser && isset($this->currentUser['user_id'])) {
+            error_log('User ID: ' . $this->currentUser['user_id']);
+            $clanFromDB = $this->userModel->getUserClan($this->currentUser['user_id']);
+            error_log('Clan from DB: ' . print_r($clanFromDB, true));
+        }
+        error_log('=== END DEBUG ===');
+    }
+
+    /**
+     * Forzar recarga del clan del usuario
+     */
+    private function reloadUserClan() {
+        if ($this->currentUser && isset($this->currentUser['user_id'])) {
+            error_log('Recargando clan del usuario...');
+            $this->userClan = $this->userModel->getUserClan($this->currentUser['user_id']);
+            if ($this->userClan && isset($this->userClan['clan_id'])) {
+                $this->currentUser['clan_id'] = $this->userClan['clan_id'];
+                error_log('Clan recargado exitosamente: ' . $this->currentUser['clan_id']);
+                return true;
+            } else {
+                error_log('ERROR: No se pudo recargar el clan del usuario');
+                return false;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Crear tarea personal para el líder del clan
+     */
+    public function createPersonalTask() {
+        // Establecer headers para JSON
+        header('Content-Type: application/json');
+        header('Cache-Control: no-cache, must-revalidate');
+        
+        $this->requireAuth();
+        error_log('Usuario autenticado correctamente');
+        
+        if (!$this->hasClanLeaderAccess()) {
+            error_log('ERROR: Usuario no tiene acceso de líder');
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
+            exit;
+        }
+        error_log('Usuario tiene acceso de líder correctamente');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            error_log('ERROR: Método HTTP incorrecto: ' . $_SERVER['REQUEST_METHOD']);
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+            exit;
+        }
+        error_log('Método HTTP correcto: POST');
+
+        try {
+            // Log para debugging
+            error_log('=== INICIO createPersonalTask ===');
+            $this->debugUserState();
+            error_log('POST data: ' . print_r($_POST, true));
+            
+            // Verificar que el usuario tenga clan
+            if (!$this->userClan || !isset($this->userClan['clan_id'])) {
+                error_log('ERROR: Usuario no tiene clan asignado, intentando recargar...');
+                if (!$this->reloadUserClan()) {
+                    error_log('ERROR: No se pudo recargar el clan del usuario');
+                    echo json_encode(['success' => false, 'message' => 'Usuario no tiene clan asignado']);
+                    return;
+                }
+            }
+            error_log('Usuario tiene clan ID: ' . $this->userClan['clan_id']);
+            
+            // Verificar que el currentUser tenga clan_id
+            if (!isset($this->currentUser['clan_id'])) {
+                error_log('ERROR: currentUser no tiene clan_id, intentando recargar...');
+                if (!$this->reloadUserClan()) {
+                    error_log('ERROR: No se pudo recargar el clan del usuario');
+                    echo json_encode(['success' => false, 'message' => 'Usuario no tiene clan asignado']);
+                    return;
+                }
+            }
+            error_log('Current user tiene clan_id: ' . $this->currentUser['clan_id']);
+            
+            // Verificar que el clan_id coincida entre currentUser y userClan
+            if ($this->currentUser['clan_id'] != $this->userClan['clan_id']) {
+                error_log('ERROR: clan_id no coincide entre currentUser y userClan');
+                error_log('Current user clan_id: ' . $this->currentUser['clan_id']);
+                error_log('User clan clan_id: ' . $this->userClan['clan_id']);
+                echo json_encode(['success' => false, 'message' => 'Usuario no tiene clan asignado']);
+                return;
+            }
+            error_log('Clan_id coincide correctamente: ' . $this->currentUser['clan_id']);
+            
+            $taskName = trim($_POST['task_name'] ?? '');
+            $description = trim($_POST['description'] ?? '');
+            $priority = $_POST['priority'] ?? 'medium';
+            $dueDate = $_POST['due_date'] ?? '';
+            $status = $_POST['status'] ?? 'pending';
+            $userId = (int)($_POST['user_id'] ?? 0);
+
+            // Validaciones
+            if (empty($taskName)) {
+                echo json_encode(['success' => false, 'message' => 'El nombre de la tarea es requerido']);
+                return;
+            }
+
+            if (empty($dueDate)) {
+                echo json_encode(['success' => false, 'message' => 'La fecha de vencimiento es requerida']);
+                return;
+            }
+
+            if ($userId !== (int)$this->currentUser['user_id']) {
+                error_log('ERROR: userId no coincide con currentUser');
+                echo json_encode(['success' => false, 'message' => 'Usuario no válido']);
+                return;
+            }
+            error_log('Usuario validado correctamente: ' . $userId);
+            
+            // Las validaciones de clan y rol ya se hicieron en hasClanLeaderAccess()
+            error_log('Validaciones de acceso completadas correctamente');
+            
+
+
+            
+            // Crear la tarea personal con solo campos básicos
+            $taskData = [
+                'task_name' => $taskName,
+                'description' => $description,
+                'priority' => $priority,
+                'due_date' => $dueDate,
+                'status' => $status,
+                'assigned_to_user_id' => $userId
+            ];
+
+            error_log('Task data a crear: ' . print_r($taskData, true));
+            
+            // Verificar que todos los campos requeridos estén presentes
+            if (empty($taskData['task_name']) || empty($taskData['due_date']) || empty($taskData['assigned_to_user_id'])) {
+                error_log('ERROR: Campos requeridos faltantes en taskData');
+                echo json_encode(['success' => false, 'message' => 'Campos requeridos faltantes']);
+                return;
+            }
+            error_log('Todos los campos requeridos están presentes');
+
+            // Crear tarea personal directamente
+            error_log('Llamando a createPersonalTaskSimple...');
+            error_log('Task data completo: ' . json_encode($taskData));
+            
+            try {
+                // Verificar que el modelo esté disponible
+                if (!$this->taskModel) {
+                    throw new Exception('taskModel no está inicializado');
+                }
+                error_log('taskModel está disponible');
+                
+                // Verificar que la base de datos esté disponible
+                if (!$this->db) {
+                    throw new Exception('Base de datos no está disponible');
+                }
+                error_log('Base de datos está disponible');
+                
+                $taskId = $this->taskModel->createPersonalTaskSimple($taskData);
+                error_log('Resultado de createPersonalTaskSimple: ' . $taskId);
+                
+                if ($taskId) {
+                    $response = [
+                        'success' => true, 
+                        'message' => 'Tarea personal creada exitosamente',
+                        'task_id' => $taskId
+                    ];
+                    error_log('Respuesta exitosa: ' . json_encode($response));
+                    echo json_encode($response);
+                } else {
+                    $response = ['success' => false, 'message' => 'Error al crear la tarea - revisar logs del servidor'];
+                    error_log('Respuesta de error: ' . json_encode($response));
+                    echo json_encode($response);
+                }
+            } catch (Exception $modelException) {
+                error_log('Error en createPersonalTaskSimple: ' . $modelException->getMessage());
+                error_log('Stack trace: ' . $modelException->getTraceAsString());
+                
+                $response = ['success' => false, 'message' => 'Error en el modelo: ' . $modelException->getMessage()];
+                echo json_encode($response);
+            }
+
+        } catch (Exception $e) {
+            error_log('Error createPersonalTask: ' . $e->getMessage());
+            error_log('Stack trace: ' . $e->getTraceAsString());
+            echo json_encode(['success' => false, 'message' => 'Error interno del servidor: ' . $e->getMessage()]);
+        }
+        
+        // Asegurar que no se ejecute código adicional
+        exit;
+    }
+
+    /**
+     * Agregar comentario a una subtarea
+     */
+    public function addSubtaskComment() {
+        // SIN RESTRICCIONES - TODOS PUEDEN COMENTAR
+        // Eliminadas las verificaciones de permisos para permitir acceso a tareas personales
+
+        try {
+            // Obtener usuario actual si existe, sino usar usuario por defecto
+            $userId = $this->currentUser['user_id'] ?? 18; // Usuario por defecto si no hay sesión
+            
+            // Manejar tanto JSON como FormData
+            $subtaskId = null;
+            $commentText = '';
+            $attachmentId = null;
+            
+            if ($_SERVER['CONTENT_TYPE'] && strpos($_SERVER['CONTENT_TYPE'], 'application/json') !== false) {
+                $input = json_decode(file_get_contents('php://input'), true);
+                $subtaskId = $input['subtask_id'] ?? null;
+                $commentText = trim($input['comment_text'] ?? '');
+                $attachmentId = $input['attachment_id'] ?? null;
+            } else {
+                $subtaskId = $_POST['subtask_id'] ?? null;
+                $commentText = trim($_POST['comment_text'] ?? '');
+                $attachmentId = $_POST['attachment_id'] ?? null;
+            }
+
+            if (!$subtaskId || !$commentText) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Subtarea ID y texto del comentario son requeridos']);
+                return;
+            }
+
+            // SIN VERIFICAR PERMISOS - TODOS PUEDEN COMENTAR
+            // Se permite acceso a comentarios de subtareas de tareas personales
+
+            $commentId = $this->subtaskModel->addComment(
+                $subtaskId, 
+                $userId, 
+                $commentText
+            );
+
+            if ($commentId) {
+                // Si hay un attachment_id, vincularlo al comentario
+                if ($attachmentId) {
+                    $this->subtaskModel->linkAttachmentToComment($attachmentId, $commentId);
+                }
+                
+                echo json_encode([
+                    'success' => true, 
+                    'message' => 'Comentario agregado exitosamente',
+                    'comment_id' => $commentId
+                ]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Error al agregar comentario']);
+            }
+
+        } catch (Exception $e) {
+            error_log("Error en addSubtaskComment: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error interno del servidor']);
+        }
+    }
+
+    /**
+     * Obtener comentarios de una subtarea
+     */
+    public function getSubtaskComments() {
+        // SIN RESTRICCIONES - TODOS PUEDEN VER COMENTARIOS
+        // Eliminadas las verificaciones de permisos para permitir acceso a tareas personales
+
+        try {
+            $subtaskId = $_GET['subtask_id'] ?? null;
+
+            if (!$subtaskId) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Subtarea ID requerido']);
+                return;
+            }
+
+            // SIN VERIFICAR PERMISOS - TODOS PUEDEN VER
+            // Se permite acceso a comentarios de subtareas de tareas personales
+
+            $comments = $this->subtaskModel->getComments($subtaskId);
+            
+            // Procesar HTML de comentarios para visualización segura
+            foreach ($comments as &$comment) {
+                if (!empty($comment['comment_text'])) {
+                    $comment['comment_text'] = Utils::sanitizeHtml($comment['comment_text']);
+                }
+            }
+            
+            echo json_encode(['success' => true, 'comments' => $comments]);
+
+        } catch (Exception $e) {
+            error_log("Error en getSubtaskComments (clan leader): " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error interno del servidor']);
+        }
+    }
+
+    /**
+     * Subir archivo adjunto a una subtarea
+     */
+    public function uploadSubtaskAttachment() {
+        // SIN RESTRICCIONES - TODOS PUEDEN SUBIR ARCHIVOS
+        // Eliminadas las verificaciones de permisos para permitir acceso a tareas personales
+
+        try {
+            // Obtener usuario actual si existe, sino usar usuario por defecto
+            $userId = $this->currentUser['user_id'] ?? 18; // Usuario por defecto si no hay sesión
+            
+            $subtaskId = $_POST['subtask_id'] ?? null;
+            $commentId = $_POST['comment_id'] ?? null;
+            $description = trim($_POST['description'] ?? '');
+
+            if (!$subtaskId || !isset($_FILES['file'])) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Subtarea ID y archivo son requeridos']);
+                return;
+            }
+
+            // SIN VERIFICAR PERMISOS - TODOS PUEDEN ADJUNTAR
+            // Se permite acceso a archivos de subtareas de tareas personales
+
+            $file = $_FILES['file'];
+            
+            // Validar archivo
+            $maxSize = 50 * 1024 * 1024; // 50MB
+            if ($file['size'] > $maxSize) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'El archivo es demasiado grande (máximo 50MB)']);
+                return;
+            }
+
+            // Guardar archivo
+            $fileInfo = $this->subtaskModel->saveUploadedFile($file, $subtaskId, $userId);
+            if (!$fileInfo) {
+                http_response_code(500);
+                echo json_encode(['success' => false, 'message' => 'Error al guardar el archivo']);
+                return;
+            }
+
+            // Guardar en base de datos
+            $attachmentId = $this->subtaskModel->addAttachment(
+                $subtaskId,
+                $userId,
+                $fileInfo['original_name'],
+                $fileInfo['file_path'],
+                $fileInfo['file_size'],
+                $fileInfo['file_type'],
+                $description,
+                $commentId
+            );
+
+            if ($attachmentId) {
+                echo json_encode([
+                    'success' => true, 
+                    'message' => 'Archivo adjuntado exitosamente',
+                    'attachment_id' => $attachmentId,
+                    'file_info' => $fileInfo
+                ]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Error al guardar el adjunto en la base de datos']);
+            }
+
+        } catch (Exception $e) {
+            error_log("Error en uploadSubtaskAttachment: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error interno del servidor']);
+        }
+    }
+
+    /**
+     * Obtener adjuntos de una subtarea
+     */
+    public function getSubtaskAttachments() {
+        // SIN RESTRICCIONES - TODOS PUEDEN VER ADJUNTOS
+        // Eliminadas las verificaciones de permisos para permitir acceso a tareas personales
+
+        try {
+            $subtaskId = $_GET['subtask_id'] ?? null;
+
+            if (!$subtaskId) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Subtarea ID requerido']);
+                return;
+            }
+
+            // SIN VERIFICAR PERMISOS - TODOS PUEDEN VER
+            // Se permite acceso a adjuntos de subtareas de tareas personales
+
+            $attachments = $this->subtaskModel->getAttachments($subtaskId);
+            echo json_encode(['success' => true, 'attachments' => $attachments]);
+
+        } catch (Exception $e) {
+            error_log("Error en getSubtaskAttachments: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error interno del servidor']);
+        }
+    }
+
+    /**
+     * Obtener conteos de comentarios y adjuntos de una subtarea
+     */
+    public function getSubtaskCounts() {
+        // SIN RESTRICCIONES - TODOS PUEDEN VER CONTEOS
+        // QUITADO - Sin verificación de acceso
+
+        try {
+            $subtaskId = $_GET['subtask_id'] ?? null;
+
+            if (!$subtaskId) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Subtarea ID requerido']);
+                return;
+            }
+
+            $counts = $this->subtaskModel->getSubtaskCounts($subtaskId);
+            echo json_encode(['success' => true, 'counts' => $counts]);
+
+        } catch (Exception $e) {
+            error_log("Error en getSubtaskCounts (leader): " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error interno del servidor']);
+        }
+    }
+
+    /**
+     * Corregir rutas de archivos adjuntos
+     */
+    public function fixAttachmentPaths() {
+        try {
+            if (!$this->subtaskModel) {
+                throw new Exception("Modelo de subtarea no disponible");
+            }
+            
+            $updated = $this->subtaskModel->fixAttachmentPaths();
+            
+            echo json_encode([
+                'success' => true,
+                'message' => "Se corrigieron {$updated} rutas de archivos adjuntos",
+                'updated_count' => $updated
+            ]);
+            
+        } catch (Exception $e) {
+            error_log("Error en fixAttachmentPaths: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error al corregir rutas: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Eliminar comentario de subtarea
+     */
+    public function deleteSubtaskComment() {
+        // SIN RESTRICCIONES - TODOS PUEDEN ELIMINAR SUS COMENTARIOS
+        // Eliminadas las verificaciones de permisos para permitir acceso a tareas personales
+
+        try {
+            // Obtener usuario actual si existe, sino usar usuario por defecto
+            $userId = $this->currentUser['user_id'] ?? 18; // Usuario por defecto si no hay sesión
+            
+            $input = json_decode(file_get_contents('php://input'), true);
+            $commentId = $input['comment_id'] ?? null;
+
+            if (!$commentId) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Comment ID requerido']);
+                return;
+            }
+
+            $result = $this->subtaskModel->deleteComment($commentId, $userId);
+
+            if ($result) {
+                echo json_encode(['success' => true, 'message' => 'Comentario eliminado exitosamente']);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Error al eliminar comentario o no tienes permisos']);
+            }
+
+        } catch (Exception $e) {
+            error_log("Error en deleteSubtaskComment: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error interno del servidor']);
+        }
+    }
+
+    /**
+     * Eliminar adjunto de subtarea
+     */
+    public function deleteSubtaskAttachment() {
+        // SIN RESTRICCIONES - TODOS PUEDEN ELIMINAR SUS ADJUNTOS
+        // Eliminadas las verificaciones de permisos para permitir acceso a tareas personales
+
+        try {
+            // Obtener usuario actual si existe, sino usar usuario por defecto
+            $userId = $this->currentUser['user_id'] ?? 18; // Usuario por defecto si no hay sesión
+            
+            $input = json_decode(file_get_contents('php://input'), true);
+            $attachmentId = $input['attachment_id'] ?? null;
+
+            if (!$attachmentId) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Attachment ID requerido']);
+                return;
+            }
+
+            $result = $this->subtaskModel->deleteAttachment($attachmentId, $userId);
+
+            if ($result) {
+                echo json_encode(['success' => true, 'message' => 'Adjunto eliminado exitosamente']);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Error al eliminar adjunto o no tienes permisos']);
+            }
+
+        } catch (Exception $e) {
+            error_log("Error en deleteSubtaskAttachment: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error interno del servidor']);
+        }
+    }
+
+
+    /**
+     * Guardar estado de checkbox en comentario
+     */
+    public function saveCheckboxState() {
+        // Log para debugging
+        error_log("saveCheckboxState: Iniciando función");
+        error_log("saveCheckboxState: REQUEST_METHOD = " . $_SERVER['REQUEST_METHOD']);
+        error_log("saveCheckboxState: Content-Type = " . ($_SERVER['CONTENT_TYPE'] ?? 'no-set'));
+        
+        $this->requireAuth();
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            error_log("saveCheckboxState: Método no permitido");
+            Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
+        }
+        
+        $rawInput = file_get_contents('php://input');
+        error_log("saveCheckboxState: Raw input = " . $rawInput);
+        
+        $input = json_decode($rawInput, true);
+        error_log("saveCheckboxState: Parsed input = " . print_r($input, true));
+        
+        $commentId = (int)($input['comment_id'] ?? 0);
+        $commentType = $input['comment_type'] ?? ''; // 'task' o 'subtask'
+        $checkboxIndex = (int)($input['checkbox_index'] ?? 0);
+        $checkboxText = trim($input['checkbox_text'] ?? '');
+        $isChecked = (bool)($input['is_checked'] ?? false);
+        
+        error_log("saveCheckboxState: commentId=$commentId, commentType=$commentType, checkboxIndex=$checkboxIndex, isChecked=" . ($isChecked ? 'true' : 'false'));
+        
+        if ($commentId <= 0 || !in_array($commentType, ['task', 'subtask']) || empty($checkboxText)) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Datos inválidos'], 400);
+        }
+        
+        try {
+            // Verificar permisos según el tipo de comentario
+            if ($commentType === 'task') {
+                // Verificar que el comentario pertenece a una tarea del clan
+                $stmt = $this->db->prepare("
+                    SELECT tc.*, t.project_id, p.clan_id
+                    FROM Task_Comments tc
+                    JOIN Tasks t ON tc.task_id = t.task_id
+                    JOIN Projects p ON t.project_id = p.project_id
+                    WHERE tc.comment_id = ?
+                ");
+                $stmt->execute([$commentId]);
+                $comment = $stmt->fetch();
+                
+                if (!$comment || $comment['clan_id'] != $this->userClan['clan_id']) {
+                    Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+                }
+            } else {
+                // Verificar que el comentario pertenece a una subtarea del clan
+                $stmt = $this->db->prepare("
+                    SELECT sc.*, s.task_id, t.project_id, p.clan_id
+                    FROM Subtask_Comments sc
+                    JOIN Subtasks s ON sc.subtask_id = s.subtask_id
+                    JOIN Tasks t ON s.task_id = t.task_id
+                    JOIN Projects p ON t.project_id = p.project_id
+                    WHERE sc.comment_id = ?
+                ");
+                $stmt->execute([$commentId]);
+                $comment = $stmt->fetch();
+                
+                if (!$comment || $comment['clan_id'] != $this->userClan['clan_id']) {
+                    Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+                }
+            }
+            
+            // Verificar que el modelo existe y cargar si es necesario
+            if (!class_exists('CheckboxState')) {
+                require_once __DIR__ . '/../models/CheckboxState.php';
+            }
+            
+            // Guardar estado del checkbox
+            $checkboxModel = new CheckboxState();
+            $checkboxModel->createTableIfNotExists(); // Crear tabla si no existe
+            
+            $result = $checkboxModel->saveCheckboxState(
+                $commentId,
+                $commentType,
+                $checkboxIndex,
+                $checkboxText,
+                $isChecked,
+                $this->currentUser['user_id']
+            );
+            
+            if ($result) {
+                Utils::jsonResponse(['success' => true, 'message' => 'Estado guardado correctamente']);
+            } else {
+                Utils::jsonResponse(['success' => false, 'message' => 'Error al guardar estado'], 500);
+            }
+            
+        } catch (Exception $e) {
+            error_log("Error al guardar estado de checkbox: " . $e->getMessage());
+            error_log("Error al guardar estado de checkbox - Stack trace: " . $e->getTraceAsString());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor: ' . $e->getMessage()], 500);
+        }
+    }
+    
+    /**
+     * Obtener estados de checkboxes para comentarios
+     */
+    public function getCheckboxStates() {
+        $this->requireAuth();
+        
+        $commentIds = $_GET['comment_ids'] ?? '';
+        $commentType = $_GET['comment_type'] ?? '';
+        
+        if (empty($commentIds) || !in_array($commentType, ['task', 'subtask'])) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Parámetros inválidos'], 400);
+        }
+        
+        try {
+            // Verificar que el modelo existe
+            if (!class_exists('CheckboxState')) {
+                require_once __DIR__ . '/../models/CheckboxState.php';
+            }
+            
+            $commentIdsArray = explode(',', $commentIds);
+            $checkboxModel = new CheckboxState();
+            $allStates = [];
+            
+            foreach ($commentIdsArray as $commentId) {
+                $commentId = (int)trim($commentId);
+                if ($commentId > 0) {
+                    $states = $checkboxModel->getCheckboxStates($commentId, $commentType);
+                    if (!empty($states)) {
+                        $allStates[$commentId] = $states;
+                    }
+                }
+            }
+            
+            Utils::jsonResponse(['success' => true, 'states' => $allStates]);
+            
+        } catch (Exception $e) {
+            error_log("Error al obtener estados de checkbox: " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor'], 500);
+        }
+    }
+
+    /**
+     * Test simple para verificar que la ruta funciona
+     */
+    public function testCheckboxRoute() {
+        error_log("testCheckboxRoute: Función ejecutada correctamente");
+        Utils::jsonResponse(['success' => true, 'message' => 'Ruta funcionando', 'timestamp' => time()]);
+    }
+
+    /**
+     * Debug: Verificar funcionamiento de checkboxes
+     */
+    public function debugCheckboxes() {
+        $this->requireAuth();
+        
+        try {
+            // Verificar que el modelo existe
+            if (!class_exists('CheckboxState')) {
+                require_once __DIR__ . '/../models/CheckboxState.php';
+            }
+            
+            // Verificar si la tabla existe
+            $checkboxModel = new CheckboxState();
+            $tableCreated = $checkboxModel->createTableIfNotExists();
+            
+            // Datos de prueba
+            $testData = [
+                'comment_id' => 1,
+                'comment_type' => 'task',
+                'checkbox_index' => 0,
+                'checkbox_text' => 'Test checkbox',
+                'is_checked' => true,
+                'user_id' => $this->currentUser['user_id']
+            ];
+            
+            // Intentar guardar datos de prueba
+            $saved = $checkboxModel->saveCheckboxState(
+                $testData['comment_id'],
+                $testData['comment_type'],
+                $testData['checkbox_index'],
+                $testData['checkbox_text'],
+                $testData['is_checked'],
+                $testData['user_id']
+            );
+            
+            // Intentar obtener datos
+            $states = $checkboxModel->getCheckboxStates(1, 'task');
+            
+            Utils::jsonResponse([
+                'success' => true,
+                'debug' => [
+                    'table_created' => $tableCreated,
+                    'test_data' => $testData,
+                    'save_result' => $saved,
+                    'retrieved_states' => $states,
+                    'user_id' => $this->currentUser['user_id']
+                ]
+            ]);
+            
+        } catch (Exception $e) {
+            Utils::jsonResponse([
+                'success' => false,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+        }
+    }
+
+    /**
+     * Obtener datos de subtarea para edición
+     */
+    public function getSubtaskForEdit() {
+        $this->requireAuth();
+        if (!$this->hasClanLeaderAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+        }
+
+        $subtaskId = (int)($_GET['subtask_id'] ?? 0);
+        
+        if ($subtaskId <= 0) {
+            Utils::jsonResponse(['success' => false, 'message' => 'ID de subtarea inválido'], 400);
+        }
+
+        try {
+            // Obtener datos de la subtarea
+            $stmt = $this->db->prepare("
+                SELECT s.*, t.project_id, p.clan_id
+                FROM Subtasks s
+                JOIN Tasks t ON s.task_id = t.task_id
+                JOIN Projects p ON t.project_id = p.project_id
+                WHERE s.subtask_id = ?
+            ");
+            $stmt->execute([$subtaskId]);
+            $subtask = $stmt->fetch();
+
+            if (!$subtask) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Subtarea no encontrada'], 404);
+            }
+
+            // Verificar que pertenece al clan
+            if ($subtask['clan_id'] != $this->userClan['clan_id']) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+            }
+
+            Utils::jsonResponse([
+                'success' => true, 
+                'subtask' => [
+                    'subtask_id' => $subtask['subtask_id'],
+                    'title' => $subtask['title'],
+                    'description' => $subtask['description'] ?? '',
+                    'status' => $subtask['status'],
+                    'completion_percentage' => $subtask['completion_percentage'],
+                    'due_date' => $subtask['due_date']
+                ]
+            ]);
+
+        } catch (Exception $e) {
+            error_log("Error al obtener subtarea para edición: " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor'], 500);
+        }
+    }
+
+    /**
+     * Editar subtarea
+     */
+    public function editSubtask() {
+        $this->requireAuth();
+        if (!$this->hasClanLeaderAccess()) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
+            exit;
+        }
+
+        try {
+            $input = json_decode(file_get_contents('php://input'), true);
+            $subtaskId = $input['subtask_id'] ?? null;
+            $title = trim($input['title'] ?? '');
+            $description = trim($input['description'] ?? '');
+            $status = $input['status'] ?? null;
+            $completionPercentage = isset($input['completion_percentage']) ? (int)$input['completion_percentage'] : null;
+            $dueDate = $input['due_date'] ?? null;
+
+            if (!$subtaskId || !$title) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Subtarea ID y título son requeridos']);
+                return;
+            }
+
+            // Verificar que la subtarea pertenece al clan
+            $stmt = $this->db->prepare("
+                SELECT s.*, t.project_id, p.clan_id
+                FROM Subtasks s
+                JOIN Tasks t ON s.task_id = t.task_id
+                JOIN Projects p ON t.project_id = p.project_id
+                WHERE s.subtask_id = ?
+            ");
+            $stmt->execute([$subtaskId]);
+            $subtask = $stmt->fetch();
+
+            if (!$subtask) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'message' => 'Subtarea no encontrada']);
+                return;
+            }
+
+            if ($subtask['clan_id'] != $this->userClan['clan_id']) {
+                http_response_code(403);
+                echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
+                return;
+            }
+
+            // Actualizar subtarea en base de datos
+            $updateFields = ['title = ?', 'description = ?', 'updated_at = CURRENT_TIMESTAMP'];
+            $params = [$title, $description];
+            
+            if ($status !== null) {
+                $updateFields[] = 'status = ?';
+                $params[] = $status;
+            }
+            
+            if ($completionPercentage !== null) {
+                $updateFields[] = 'completion_percentage = ?';
+                $params[] = $completionPercentage;
+            }
+            
+            if ($dueDate !== null) {
+                if (!empty($dueDate)) {
+                    $updateFields[] = 'due_date = ?';
+                    $params[] = $dueDate;
+                } else {
+                    $updateFields[] = 'due_date = NULL';
+                }
+            }
+            
+            $params[] = $subtaskId;
+            
+            $stmt = $this->db->prepare("
+                UPDATE Subtasks 
+                SET " . implode(', ', $updateFields) . "
+                WHERE subtask_id = ?
+            ");
+            
+            $result = $stmt->execute($params);
+
+            if ($result) {
+                echo json_encode(['success' => true, 'message' => 'Subtarea actualizada exitosamente']);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Error al actualizar subtarea']);
+            }
+
+        } catch (Exception $e) {
+            error_log("Error en editSubtask: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error interno del servidor']);
+        }
+    }
+
+    /**
+     * Eliminar subtarea
+     */
+    public function deleteSubtask() {
+        $this->requireAuth();
+        if (!$this->hasClanLeaderAccess()) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
+            exit;
+        }
+
+        try {
+            $subtaskId = $_POST['subtask_id'] ?? null;
+
+            if (!$subtaskId) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Subtarea ID requerido']);
+                return;
+            }
+
+            // Iniciar transacción
+            $this->db->beginTransaction();
+
+            try {
+                // Eliminar comentarios de la subtarea
+                $stmt = $this->db->prepare("DELETE FROM Subtask_Comments WHERE subtask_id = ?");
+                $stmt->execute([$subtaskId]);
+
+                // Eliminar adjuntos de la subtarea
+                $stmt = $this->db->prepare("DELETE FROM Subtask_Attachments WHERE subtask_id = ?");
+                $stmt->execute([$subtaskId]);
+
+                // Eliminar la subtarea
+                $stmt = $this->db->prepare("DELETE FROM Subtasks WHERE subtask_id = ?");
+                $result = $stmt->execute([$subtaskId]);
+
+                if ($result && $stmt->rowCount() > 0) {
+                    $this->db->commit();
+                    echo json_encode(['success' => true, 'message' => 'Subtarea eliminada exitosamente']);
+                } else {
+                    $this->db->rollback();
+                    echo json_encode(['success' => false, 'message' => 'Subtarea no encontrada']);
+                }
+
+            } catch (Exception $e) {
+                $this->db->rollback();
+                throw $e;
+            }
+
+        } catch (Exception $e) {
+            error_log("Error en deleteSubtask: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error interno del servidor']);
+        }
+    }
+    
+    /**
+     * Asignar múltiples usuarios a una subtarea
+     */
+    public function assignSubtaskUsers() {
+        $this->requireAuth();
+        if (!$this->hasClanLeaderAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
+        }
+
+        try {
+            $subtaskId = (int)($_POST['subtask_id'] ?? 0);
+            $userIdsJson = $_POST['user_ids'] ?? '';
+            
+            if ($subtaskId <= 0) {
+                Utils::jsonResponse(['success' => false, 'message' => 'ID de subtarea inválido'], 400);
+            }
+            
+            $userIds = json_decode($userIdsJson, true);
+            if (!is_array($userIds) || empty($userIds)) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Lista de usuarios inválida'], 400);
+            }
+
+            // Verificar que la subtarea pertenece al clan del líder
+            $stmt = $this->db->prepare("
+                SELECT s.*, t.project_id, p.clan_id
+                FROM Subtasks s
+                JOIN Tasks t ON s.task_id = t.task_id
+                JOIN Projects p ON t.project_id = p.project_id
+                WHERE s.subtask_id = ?
+            ");
+            $stmt->execute([$subtaskId]);
+            $subtask = $stmt->fetch();
+
+            if (!$subtask) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Subtarea no encontrada'], 404);
+            }
+
+            if ((int)$subtask['clan_id'] !== (int)$this->userClan['clan_id']) {
+                Utils::jsonResponse(['success' => false, 'message' => 'No tienes permisos para modificar esta subtarea'], 403);
+            }
+
+            // Verificar que todos los usuarios existen
+            $userNames = [];
+            foreach ($userIds as $userId) {
+                $user = $this->userModel->findById($userId);
+                if (!$user) {
+                    Utils::jsonResponse(['success' => false, 'message' => "Usuario con ID {$userId} no encontrado"], 404);
+                }
+                $userNames[] = $user['full_name'] ?? $user['username'];
+            }
+
+            // Asignar usuarios usando el modelo de asignaciones (AGREGAR, no reemplazar)
+            $newUsersAssigned = $this->subtaskAssignmentModel->assignUsers($subtaskId, $userIds, $this->currentUser['user_id']);
+
+            if ($newUsersAssigned !== false) {
+                // Registrar en el historial de la tarea padre
+                $historyStmt = $this->db->prepare("
+                    INSERT INTO Task_History (task_id, user_id, action_type, field_name, old_value, new_value, notes) 
+                    VALUES (?, ?, 'assigned', 'subtask_assignment', 'múltiples usuarios', ?, ?)
+                ");
+                $historyStmt->execute([
+                    $subtask['task_id'],
+                    $this->currentUser['user_id'],
+                    implode(', ', $userNames),
+                    'Subtarea "' . $subtask['title'] . '" - ' . $newUsersAssigned . ' usuario(s) nuevo(s) asignado(s): ' . implode(', ', $userNames)
+                ]);
+
+                if ($newUsersAssigned > 0) {
+                    Utils::jsonResponse([
+                        'success' => true,
+                        'message' => $newUsersAssigned . ' usuario(s) nuevo(s) asignado(s) exitosamente. Total de usuarios asignados: ' . (count($userIds) + $newUsersAssigned - $newUsersAssigned)
+                    ]);
+                } else {
+                    Utils::jsonResponse([
+                        'success' => true,
+                        'message' => 'Los usuarios seleccionados ya estaban asignados a esta subtarea'
+                    ]);
+                }
+            } else {
+                Utils::jsonResponse(['success' => false, 'message' => 'Error al asignar usuarios'], 500);
+            }
+
+        } catch (Exception $e) {
+            error_log("Error en assignSubtaskUsers: " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor'], 500);
+        }
+    }
+
+    /**
+     * Reemplazar completamente las asignaciones de usuarios a una subtarea
+     */
+    public function replaceSubtaskUsers() {
+        $this->requireAuth();
+        if (!$this->hasClanLeaderAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
+        }
+
+        try {
+            $subtaskId = (int)($_POST['subtask_id'] ?? 0);
+            $userIdsJson = $_POST['user_ids'] ?? '';
+            
+            if ($subtaskId <= 0) {
+                Utils::jsonResponse(['success' => false, 'message' => 'ID de subtarea inválido'], 400);
+            }
+            
+            $userIds = json_decode($userIdsJson, true);
+            if (!is_array($userIds)) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Lista de usuarios inválida'], 400);
+            }
+
+            // Verificar que la subtarea pertenece al clan del líder
+            $stmt = $this->db->prepare("
+                SELECT s.*, t.project_id, p.clan_id
+                FROM Subtasks s
+                JOIN Tasks t ON s.task_id = t.task_id
+                JOIN Projects p ON t.project_id = p.project_id
+                WHERE s.subtask_id = ?
+            ");
+            $stmt->execute([$subtaskId]);
+            $subtask = $stmt->fetch();
+
+            if (!$subtask) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Subtarea no encontrada'], 404);
+            }
+
+            if ((int)$subtask['clan_id'] !== (int)$this->userClan['clan_id']) {
+                Utils::jsonResponse(['success' => false, 'message' => 'No tienes permisos para modificar esta subtarea'], 403);
+            }
+
+            // Verificar que todos los usuarios existen
+            $userNames = [];
+            foreach ($userIds as $userId) {
+                $user = $this->userModel->findById($userId);
+                if (!$user) {
+                    Utils::jsonResponse(['success' => false, 'message' => "Usuario con ID {$userId} no encontrado"], 404);
+                }
+                $userNames[] = $user['full_name'] ?? $user['username'];
+            }
+
+            // Reemplazar usuarios usando el modelo de asignaciones
+            $result = $this->subtaskAssignmentModel->replaceUsers($subtaskId, $userIds, $this->currentUser['user_id']);
+
+            if ($result) {
+                // Registrar en el historial de la tarea padre
+                $historyStmt = $this->db->prepare("
+                    INSERT INTO Task_History (task_id, user_id, action_type, field_name, old_value, new_value, notes) 
+                    VALUES (?, ?, 'replaced', 'subtask_assignment', 'asignaciones anteriores', ?, ?)
+                ");
+                $historyStmt->execute([
+                    $subtask['task_id'],
+                    $this->currentUser['user_id'],
+                    implode(', ', $userNames),
+                    'Subtarea "' . $subtask['title'] . '" - asignaciones reemplazadas por: ' . implode(', ', $userNames)
+                ]);
+
+                Utils::jsonResponse([
+                    'success' => true,
+                    'message' => 'Asignaciones reemplazadas exitosamente. ' . count($userIds) . ' usuario(s) asignado(s): ' . implode(', ', $userNames)
+                ]);
+            } else {
+                Utils::jsonResponse(['success' => false, 'message' => 'Error al reemplazar asignaciones'], 500);
+            }
+
+        } catch (Exception $e) {
+            error_log("Error en replaceSubtaskUsers: " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor'], 500);
+        }
+    }
+
+    /**
+     * Desasignar todos los usuarios de una subtarea
+     */
+    public function unassignSubtaskUsers() {
+        $this->requireAuth();
+        if (!$this->hasClanLeaderAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
+        }
+
+        try {
+            $subtaskId = (int)($_POST['subtask_id'] ?? 0);
+
+            if ($subtaskId <= 0) {
+                Utils::jsonResponse(['success' => false, 'message' => 'ID de subtarea inválido'], 400);
+            }
+
+            // Verificar que la subtarea pertenece al clan del líder
+            $stmt = $this->db->prepare("
+                SELECT s.*, t.project_id, p.clan_id
+                FROM Subtasks s
+                JOIN Tasks t ON s.task_id = t.task_id
+                JOIN Projects p ON t.project_id = p.project_id
+                WHERE s.subtask_id = ?
+            ");
+            $stmt->execute([$subtaskId]);
+            $subtask = $stmt->fetch();
+
+            if (!$subtask) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Subtarea no encontrada'], 404);
+            }
+
+            if ((int)$subtask['clan_id'] !== (int)$this->userClan['clan_id']) {
+                Utils::jsonResponse(['success' => false, 'message' => 'No tienes permisos para modificar esta subtarea'], 403);
+            }
+
+            // Obtener usuarios actualmente asignados para el historial
+            $assignedUsers = $this->subtaskAssignmentModel->getAssignedUsers($subtaskId);
+            $userNames = array_map(function($user) {
+                return $user['full_name'] ?? $user['username'];
+            }, $assignedUsers);
+
+            // Desasignar todos los usuarios
+            $result = $this->subtaskAssignmentModel->unassignAllUsers($subtaskId);
+
+            if ($result) {
+                // Registrar en el historial de la tarea padre
+                $historyStmt = $this->db->prepare("
+                    INSERT INTO Task_History (task_id, user_id, action_type, field_name, old_value, new_value, notes) 
+                    VALUES (?, ?, 'unassigned', 'subtask_assignment', ?, 'Sin asignar', ?)
+                ");
+                $historyStmt->execute([
+                    $subtask['task_id'],
+                    $this->currentUser['user_id'],
+                    implode(', ', $userNames),
+                    'Subtarea "' . $subtask['title'] . '" - todos los usuarios desasignados'
+                ]);
+
+                Utils::jsonResponse([
+                    'success' => true,
+                    'message' => 'Todos los usuarios desasignados exitosamente'
+                ]);
+            } else {
+                Utils::jsonResponse(['success' => false, 'message' => 'Error al desasignar usuarios'], 500);
+            }
+
+        } catch (Exception $e) {
+            error_log("Error en unassignSubtaskUsers: " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor'], 500);
+        }
+    }
+    
+    /**
+     * Obtener usuarios asignados a una subtarea
+     */
+    public function getSubtaskAssignedUsers() {
+        $this->requireAuth();
+        if (!$this->hasClanLeaderAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
+        }
+
+        try {
+            $subtaskId = (int)($_GET['subtask_id'] ?? 0);
+
+            if ($subtaskId <= 0) {
+                Utils::jsonResponse(['success' => false, 'message' => 'ID de subtarea inválido'], 400);
+            }
+
+            // Verificar que la subtarea pertenece al clan del líder
+            $stmt = $this->db->prepare("
+                SELECT s.*, t.project_id, p.clan_id
+                FROM Subtasks s
+                JOIN Tasks t ON s.task_id = t.task_id
+                JOIN Projects p ON t.project_id = p.project_id
+                WHERE s.subtask_id = ?
+            ");
+            $stmt->execute([$subtaskId]);
+            $subtask = $stmt->fetch();
+
+            if (!$subtask) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Subtarea no encontrada'], 404);
+            }
+
+            if ((int)$subtask['clan_id'] !== (int)$this->userClan['clan_id']) {
+                Utils::jsonResponse(['success' => false, 'message' => 'No tienes permisos para ver esta subtarea'], 403);
+            }
+
+            // Obtener usuarios asignados
+            $assignedUsers = $this->subtaskAssignmentModel->getAssignedUsers($subtaskId);
+
+            Utils::jsonResponse([
+                'success' => true,
+                'users' => $assignedUsers
+            ]);
+
+        } catch (Exception $e) {
+            error_log("Error en getSubtaskAssignedUsers: " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor'], 500);
+        }
+    }
+    
+    /**
+     * Remover un usuario específico de una subtarea
+     */
+    public function removeSubtaskUser() {
+        $this->requireAuth();
+        if (!$this->hasClanLeaderAccess()) {
+            Utils::jsonResponse(['success' => false, 'message' => 'Acceso denegado'], 403);
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Utils::jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
+        }
+
+        try {
+            $subtaskId = (int)($_POST['subtask_id'] ?? 0);
+            $userId = (int)($_POST['user_id'] ?? 0);
+
+            if ($subtaskId <= 0 || $userId <= 0) {
+                Utils::jsonResponse(['success' => false, 'message' => 'ID de subtarea o usuario inválido'], 400);
+            }
+
+            // Verificar que la subtarea pertenece al clan del líder
+            $stmt = $this->db->prepare("
+                SELECT s.*, t.project_id, p.clan_id
+                FROM Subtasks s
+                JOIN Tasks t ON s.task_id = t.task_id
+                JOIN Projects p ON t.project_id = p.project_id
+                WHERE s.subtask_id = ?
+            ");
+            $stmt->execute([$subtaskId]);
+            $subtask = $stmt->fetch();
+
+            if (!$subtask) {
+                Utils::jsonResponse(['success' => false, 'message' => 'Subtarea no encontrada'], 404);
+            }
+
+            if ((int)$subtask['clan_id'] !== (int)$this->userClan['clan_id']) {
+                Utils::jsonResponse(['success' => false, 'message' => 'No tienes permisos para modificar esta subtarea'], 403);
+            }
+
+            // Obtener información del usuario para el historial
+            $user = $this->userModel->findById($userId);
+            $userName = $user ? ($user['full_name'] ?? $user['username']) : 'Usuario desconocido';
+
+            // Remover el usuario específico
+            $result = $this->subtaskAssignmentModel->removeUser($subtaskId, $userId);
+
+            if ($result) {
+                // Registrar en el historial de la tarea padre
+                $historyStmt = $this->db->prepare("
+                    INSERT INTO Task_History (task_id, user_id, action_type, field_name, old_value, new_value, notes) 
+                    VALUES (?, ?, 'unassigned', 'subtask_assignment', ?, 'removido', ?)
+                ");
+                $historyStmt->execute([
+                    $subtask['task_id'],
+                    $this->currentUser['user_id'],
+                    $userName,
+                    'Usuario "' . $userName . '" removido de subtarea "' . $subtask['title'] . '"'
+                ]);
+
+                Utils::jsonResponse([
+                    'success' => true,
+                    'message' => 'Usuario removido exitosamente'
+                ]);
+            } else {
+                Utils::jsonResponse(['success' => false, 'message' => 'Error al remover usuario'], 500);
+            }
+
+        } catch (Exception $e) {
+            error_log("Error en removeSubtaskUser: " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor'], 500);
+        }
+    }
+
+    // === Perfil de Líder de Clan ===
+    public function profile() {
+        $this->requireAuth();
+        if (!$this->hasClanLeaderAccess()) { Utils::redirect('dashboard'); return; }
+        $user = $this->currentUser;
+        $data = [
+            'currentPage' => 'clan_leader',
+            'user' => $user,
+            'clan' => $this->userClan,
+        ];
+        $this->loadView('clan_leader/profile', $data);
+    }
+
+    public function updateProfile() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { 
+            Utils::jsonResponse(['success'=>false,'message'=>'Método no permitido'],405); 
+        }
+        $this->requireAuth();
+        if (!$this->hasClanLeaderAccess()) { 
+            Utils::jsonResponse(['success'=>false,'message'=>'Acceso denegado'],403); 
+        }
+
+        $username = $this->currentUser['username'];
+        $email = trim($_POST['email'] ?? '');
+        $fullName = trim($_POST['full_name'] ?? '');
+
+        if ($email === '' || $fullName === '') {
+            Utils::jsonResponse(['success'=>false,'message'=>'Email y nombre completo son requeridos'],400);
+        }
+        if (!Utils::isValidEmail($email)) {
+            Utils::jsonResponse(['success'=>false,'message'=>'El email no es válido'],400);
+        }
+
+        try {
+            $ok = $this->userModel->update($this->currentUser['user_id'], $username, $email, $fullName, 1);
+            if ($ok) {
+                $_SESSION['username'] = $username; 
+                $_SESSION['email'] = $email; 
+                $_SESSION['full_name'] = $fullName;
+                Utils::jsonResponse(['success'=>true,'message'=>'Perfil actualizado']);
+            } else {
+                Utils::jsonResponse(['success'=>false,'message'=>'No se pudo actualizar el perfil']);
+            }
+        } catch (Exception $e) {
+            Utils::jsonResponse(['success'=>false,'message'=>'Error interno: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function updatePasswordPlain() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { Utils::jsonResponse(['success'=>false,'message'=>'Método no permitido'],405); }
+        $this->requireAuth();
+        if (!$this->hasClanLeaderAccess()) { Utils::jsonResponse(['success'=>false,'message'=>'Acceso denegado'],403); }
+        $new = (string)($_POST['new_password'] ?? '');
+        $confirm = (string)($_POST['confirm_password'] ?? '');
+        if ($new === '' || $new !== $confirm) { Utils::jsonResponse(['success'=>false,'message'=>'La confirmación no coincide'],400); }
+        $ok = $this->userModel->updatePasswordPlain($this->currentUser['user_id'], $new);
+        Utils::jsonResponse(['success'=>$ok,'message'=>$ok?'Contraseña actualizada':'No se pudo actualizar la contraseña']);
+    }
+
+    public function uploadAvatar() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { Utils::jsonResponse(['success'=>false,'message'=>'Método no permitido'],405); }
+        $this->requireAuth();
+        if (!$this->hasClanLeaderAccess()) { Utils::jsonResponse(['success'=>false,'message'=>'Acceso denegado'],403); }
+        if (empty($_FILES['avatar']) || ($_FILES['avatar']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+            Utils::jsonResponse(['success'=>false,'message'=>'Archivo no recibido'],400);
+        }
+        $file = $_FILES['avatar'];
+        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        $allowed = ['jpg','jpeg','png','gif','webp'];
+        if (!in_array($ext, $allowed)) { Utils::jsonResponse(['success'=>false,'message'=>'Formato no permitido'],400); }
+        $uploads = dirname(__DIR__,2) . '/public/uploads';
+        if (!is_dir($uploads)) { @mkdir($uploads, 0775, true); }
+        $safe = 'avatar_' . $this->currentUser['user_id'] . '_' . time() . '.' . $ext;
+        $dest = $uploads . '/' . $safe;
+        if (!move_uploaded_file($file['tmp_name'], $dest)) { Utils::jsonResponse(['success'=>false,'message'=>'Error al guardar archivo'],500); }
+        $publicPath = 'uploads/' . $safe;
+        $ok = $this->userModel->updateAvatarPath($this->currentUser['user_id'], $publicPath);
+        if ($ok) {
+            Utils::jsonResponse(['success'=>true,'message'=>'Avatar actualizado','avatar_url'=>Utils::asset($publicPath)]);
+        }
+        Utils::jsonResponse(['success'=>false,'message'=>'No se pudo actualizar avatar']);
+    }
+
+    /**
+     * Eliminar múltiples tareas
+     */
+    public function bulkDeleteTasks() {
+        // Limpiar cualquier salida previa
+        if (ob_get_level()) {
+            ob_clean();
+        }
+        
+        // Establecer headers para JSON
+        header('Content-Type: application/json; charset=utf-8');
+        
+        try {
+            // Verificar autenticación
+            $this->requireAuth();
+            $this->hasClanLeaderAccess();
+
+            // Obtener los IDs de las tareas
+            $taskIdsJson = $_POST['task_ids'] ?? '';
+            error_log("BulkDelete - task_ids recibido: " . $taskIdsJson);
+            
+            if (empty($taskIdsJson)) {
+                error_log("BulkDelete - Error: No se proporcionaron task_ids");
+                Utils::jsonResponse(['success' => false, 'message' => 'No se proporcionaron tareas para eliminar'], 400);
+                return;
+            }
+
+            $taskIds = json_decode($taskIdsJson, true);
+            error_log("BulkDelete - task_ids decodificados: " . print_r($taskIds, true));
+            
+            if (!is_array($taskIds) || empty($taskIds)) {
+                error_log("BulkDelete - Error: Lista de tareas inválida");
+                Utils::jsonResponse(['success' => false, 'message' => 'Lista de tareas inválida'], 400);
+                return;
+            }
+
+            // Validar que todas las tareas pertenezcan al clan del líder
+            $deletedCount = 0;
+            $errors = [];
+
+            foreach ($taskIds as $taskId) {
+                $taskId = (int)$taskId;
+                if ($taskId <= 0) {
+                    $errors[] = "ID de tarea inválido: $taskId";
+                    continue;
+                }
+
+                // Verificar que la tarea existe y pertenece al clan
+                $task = $this->taskModel->findById($taskId);
+                if (!$task) {
+                    $errors[] = "Tarea con ID $taskId no encontrada";
+                    continue;
+                }
+
+                $project = $this->projectModel->findById($task['project_id']);
+                if (!$project || (int)$project['clan_id'] !== (int)$this->userClan['clan_id']) {
+                    $errors[] = "No tienes permisos para eliminar la tarea: " . $task['task_name'];
+                    continue;
+                }
+
+                // Eliminar la tarea
+                if ($this->taskModel->delete($taskId)) {
+                    $deletedCount++;
+                    error_log("BulkDelete - Tarea $taskId eliminada exitosamente");
+                } else {
+                    $errors[] = "Error al eliminar la tarea: " . $task['task_name'];
+                    error_log("BulkDelete - Error al eliminar tarea $taskId");
+                }
+            }
+
+            // Preparar respuesta
+            error_log("BulkDelete - Resultado: deletedCount=$deletedCount, errors=" . print_r($errors, true));
+            
+            if ($deletedCount > 0) {
+                $message = "$deletedCount tarea" . ($deletedCount > 1 ? 's' : '') . " eliminada" . ($deletedCount > 1 ? 's' : '') . " exitosamente";
+                
+                if (!empty($errors)) {
+                    $message .= ". Errores: " . implode(', ', $errors);
+                }
+
+                error_log("BulkDelete - Enviando respuesta de éxito: " . $message);
+                Utils::jsonResponse([
+                    'success' => true,
+                    'message' => $message,
+                    'deleted_count' => $deletedCount,
+                    'errors' => $errors
+                ]);
+            } else {
+                error_log("BulkDelete - Enviando respuesta de error");
+                Utils::jsonResponse([
+                    'success' => false,
+                    'message' => 'No se pudo eliminar ninguna tarea. Errores: ' . implode(', ', $errors)
+                ], 400);
+            }
+
+        } catch (Exception $e) {
+            error_log("Error en bulkDeleteTasks: " . $e->getMessage());
+            Utils::jsonResponse(['success' => false, 'message' => 'Error interno del servidor'], 500);
+        }
+    }
+
 } 

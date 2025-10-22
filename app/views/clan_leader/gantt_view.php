@@ -10,7 +10,7 @@ ob_start();
             <div class="title-minimal">
                 <div class="clan-icon-large"><?php echo $this->getClanIcon($clan['clan_name']); ?></div>
                 <h1>Diagrama de Gantt</h1>
-                <span class="subtitle"><?php echo htmlspecialchars($clan['clan_name']); ?> - <?php echo htmlspecialchars($clan['clan_departamento']); ?></span>
+                <span class="subtitle"><?php echo htmlspecialchars($clan['clan_name'] ?? 'Clan'); ?> - <?php echo htmlspecialchars($clan['clan_departamento'] ?? 'Departamento'); ?></span>
             </div>
             
             <div class="actions-minimal">
@@ -24,14 +24,8 @@ ob_start();
                         Diagrama Gantt
                     </a>
                 </div>
-                <a href="?route=clan_leader/dashboard" class="btn-minimal">
-                    <i class="fas fa-arrow-left"></i>
-                    Volver al Dashboard
-                </a>
-                <a href="?route=logout" class="btn-minimal danger" title="Cerrar sesión">
-                    <i class="fas fa-sign-out-alt"></i>
-                    Cerrar Sesión
-                </a>
+                
+                <!-- Botón de cerrar sesión removido - ahora está en el menú principal -->
             </div>
         </div>
     </header>
@@ -89,12 +83,42 @@ ob_start();
 }
 
 .btn-minimal.active {
-    background: #3b82f6;
-    color: white;
+    background: #192c5e !important; /* Azul oscuro */
+    color: white !important;
+    box-shadow: 0 2px 8px rgba(25, 44, 94, 0.3) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    transform: translateY(-1px);
+    transition: all 0.3s ease;
 }
 
 .btn-minimal.active:hover {
-    background: #2563eb;
+    background: #0f1e3d !important; /* Azul más oscuro al hover */
+    box-shadow: 0 4px 12px rgba(25, 44, 94, 0.4) !important;
+    transform: translateY(-2px);
+}
+
+/* Botón calendario en gris cuando no está activo */
+.view-toggle .btn-minimal:not(.active) {
+    color: #6b7280 !important; /* Gris */
+    background: transparent !important;
+}
+
+.view-toggle .btn-minimal:not(.active):hover {
+    color: #374151 !important; /* Gris más oscuro al hover */
+    background: rgba(107, 114, 128, 0.1) !important;
+}
+
+/* Específico para el botón Diagrama Gantt cuando está activo */
+.view-toggle a[href*="view=gantt"].btn-minimal.active {
+    background: linear-gradient(135deg, #192c5e 0%, #0f1e3d 100%) !important;
+    color: white !important;
+    box-shadow: 0 2px 8px rgba(25, 44, 94, 0.3) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.view-toggle a[href*="view=gantt"].btn-minimal.active:hover {
+    background: linear-gradient(135deg, #0f1e3d 0%, #081426 100%) !important;
+    box-shadow: 0 4px 12px rgba(25, 44, 94, 0.5) !important;
 }
 
 /* Estilos para el diagrama de Gantt */

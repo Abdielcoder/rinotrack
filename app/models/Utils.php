@@ -6,9 +6,17 @@ class Utils {
      * Limpiar datos de entrada
      */
     public static function sanitizeInput($data) {
+        // Tolerar nulls y arreglos; evitar deprecations en PHP 8.1+
+        if ($data === null) {
+            return '';
+        }
+        if (is_array($data)) {
+            return array_map([self::class, 'sanitizeInput'], $data);
+        }
+        $data = (string)$data;
         $data = trim($data);
         $data = stripslashes($data);
-        $data = htmlspecialchars($data);
+        $data = htmlspecialchars($data, ENT_QUOTES, 'UTF-8');
         return $data;
     }
     
@@ -41,9 +49,21 @@ class Utils {
      * Enviar respuesta JSON
      */
     public static function jsonResponse($data, $statusCode = 200) {
+        // Limpiar cualquier output previo
+        if (ob_get_level()) {
+            ob_clean();
+        }
+        
         http_response_code($statusCode);
         header('Content-Type: application/json');
-        echo json_encode($data);
+        
+        $json = json_encode($data);
+        if ($json === false) {
+            error_log('ERROR: json_encode falló: ' . json_last_error_msg());
+            echo '{"success":false,"message":"Error de codificación JSON"}';
+        } else {
+            echo $json;
+        }
         exit();
     }
     
@@ -135,5 +155,55 @@ class Utils {
         $html .= '</ul></nav>';
         
         return $html;
+    }
+    
+    /**
+     * Formatear fecha de forma segura evitando errores deprecated con null
+     */
+    public static function formatDate($date, $format = 'd/m/Y', $emptyText = 'Sin fecha') {
+        if (empty($date)) {
+            return $emptyText;
+        }
+        
+        // Verificar si la fecha es válida
+        $timestamp = strtotime($date);
+        if ($timestamp === false) {
+            return $emptyText;
+        }
+        
+        return date($format, $timestamp);
+    }
+    
+    /**
+     * Formatear fecha y hora de forma segura
+     */
+    public static function formatDateTime($datetime, $format = 'd/m/Y H:i', $emptyText = 'Sin fecha') {
+        return self::formatDate($datetime, $format, $emptyText);
+    }
+    
+    /**
+     * Sanitizar HTML permitiendo solo etiquetas seguras
+     */
+    public static function sanitizeHtml($html) {
+        if (empty($html)) {
+            return '';
+        }
+        
+        // Lista de etiquetas HTML permitidas para comentarios ricos
+        $allowedTags = '<p><br><strong><b><em><i><u><ul><ol><li><a><h1><h2><h3><h4><h5><h6><blockquote><span><div>';
+        
+        // Limpiar HTML manteniendo solo etiquetas permitidas
+        $cleaned = strip_tags($html, $allowedTags);
+        
+        // Limpiar atributos peligrosos pero mantener algunos seguros
+        $cleaned = preg_replace('/(<[^>]*)\s+(on\w+|javascript:|vbscript:|data:)[^>]*>/i', '$1>', $cleaned);
+        
+        // Permitir algunos atributos seguros en enlaces
+        $cleaned = preg_replace('/(<a[^>]*)\s+href=(["\'])([^"\']*)\2([^>]*>)/i', '$1 href=$2$3$2 target="_blank" rel="noopener"$4', $cleaned);
+        
+        // Limpiar style attributes peligrosos pero permitir colores básicos
+        $cleaned = preg_replace('/style\s*=\s*["\'][^"\']*["\']/', '', $cleaned);
+        
+        return $cleaned;
     }
 }

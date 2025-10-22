@@ -9,7 +9,7 @@ class Task {
     const PRIORITY_LOW = 'low';
     const PRIORITY_MEDIUM = 'medium';
     const PRIORITY_HIGH = 'high';
-    const PRIORITY_URGENT = 'urgent';
+    const PRIORITY_URGENT = 'critical'; // Se usa 'critical' en la BD pero 'urgent' en la UI
     
     // Constantes de estado
     const STATUS_PENDING = 'pending';
@@ -83,53 +83,145 @@ class Task {
      */
     public function createAdvanced($projectId, $taskName, $description = '', $dueDate = null, $clanId = null, $priority = self::PRIORITY_MEDIUM, $createdByUserId = null, $assignedUsers = [], $subtasks = [], $labels = []) {
         try {
+            error_log('=== Task::createAdvanced - INICIO ===');
+            error_log('Task::createAdvanced - Parámetros recibidos:');
+            error_log('  projectId: ' . $projectId);
+            error_log('  taskName: ' . $taskName);
+            error_log('  description: ' . $description);
+            error_log('  dueDate: ' . ($dueDate ?? 'NULL'));
+            error_log('  clanId: ' . ($clanId ?? 'NULL'));
+            error_log('  priority: ' . $priority);
+            error_log('  createdByUserId: ' . ($createdByUserId ?? 'NULL'));
+            error_log('  assignedUsers: ' . print_r($assignedUsers, true));
+            error_log('  subtasks: ' . print_r($subtasks, true));
+            error_log('  labels: ' . print_r($labels, true));
+            
             // Verificar si hay una transacción activa y cerrarla
             if ($this->db->inTransaction()) {
+                error_log('Task::createAdvanced - Transacción activa detectada, haciendo rollback');
                 $this->db->rollback();
             }
             
             $this->db->beginTransaction();
+            error_log('Task::createAdvanced - ✅ Transacción iniciada');
             
             // Crear la tarea principal
-            $stmt = $this->db->prepare("
-                INSERT INTO Tasks (project_id, task_name, description, due_date, priority, created_by_user_id, status, completion_percentage) 
-                VALUES (?, ?, ?, ?, ?, ?, 'pending', 0.00)
-            ");
-            $result = $stmt->execute([$projectId, $taskName, $description, $dueDate, $priority, $createdByUserId]);
+            error_log('Task::createAdvanced - 🔄 Creando tarea principal...');
+            
+            $sqlQuery = "INSERT INTO Tasks (project_id, task_name, description, due_date, priority, created_by_user_id, status, completion_percentage) 
+                VALUES (?, ?, ?, ?, ?, ?, 'pending', 0.00)";
+            
+            $taskParams = [$projectId, $taskName, $description, $dueDate, $priority, $createdByUserId];
+            
+            error_log('');
+            error_log('╔═══════════════════════════════════════════════════════════════╗');
+            error_log('║       📊 INSERCIÓN EN BASE DE DATOS - TASK PRINCIPAL          ║');
+            error_log('╚═══════════════════════════════════════════════════════════════╝');
+            error_log('SQL Query: ' . $sqlQuery);
+            error_log('');
+            error_log('📌 MAPEO COLUMNA → VALOR:');
+            error_log('  [1] project_id           → ' . var_export($taskParams[0], true) . ' (tipo: ' . gettype($taskParams[0]) . ')');
+            error_log('  [2] task_name            → ' . var_export($taskParams[1], true) . ' (tipo: ' . gettype($taskParams[1]) . ')');
+            error_log('  [3] description          → ' . var_export($taskParams[2], true) . ' (tipo: ' . gettype($taskParams[2]) . ')');
+            error_log('  [4] due_date             → ' . var_export($taskParams[3], true) . ' (tipo: ' . gettype($taskParams[3]) . ')');
+            error_log('  [5] priority             → ' . var_export($taskParams[4], true) . ' (tipo: ' . gettype($taskParams[4]) . ')');
+            error_log('  [6] created_by_user_id   → ' . var_export($taskParams[5], true) . ' (tipo: ' . gettype($taskParams[5]) . ')');
+            error_log('  [7] status               → "pending" (hardcoded)');
+            error_log('  [8] completion_percentage → 0.00 (hardcoded)');
+            error_log('');
+            error_log('🔍 Array completo de parámetros: ' . print_r($taskParams, true));
+            error_log('════════════════════════════════════════════════════════════════');
+            error_log('');
+            
+            $stmt = $this->db->prepare($sqlQuery);
+            
+            $result = $stmt->execute($taskParams);
             
             if (!$result) {
                 $err = $stmt->errorInfo();
-                error_log('Task::createAdvanced - Error al crear tarea principal: ' . json_encode($err));
+                error_log('Task::createAdvanced - ❌ Error al crear tarea principal: ' . json_encode($err));
                 throw new Exception('Error al crear la tarea principal: ' . ($err[2] ?? ''));
             }
             
             $taskId = $this->db->lastInsertId();
+            error_log('Task::createAdvanced - ✅ Tarea principal creada con ID: ' . $taskId);
+            
+            // VERIFICACIÓN INMEDIATA: Leer lo que se guardó en la BD
+            error_log('');
+            error_log('╔═══════════════════════════════════════════════════════════════╗');
+            error_log('║       🔍 VERIFICACIÓN POST-INSERT - Lectura desde BD          ║');
+            error_log('╚═══════════════════════════════════════════════════════════════╝');
+            $verifyStmt = $this->db->prepare("SELECT task_id, project_id, task_name, priority, due_date, status, created_by_user_id FROM Tasks WHERE task_id = ?");
+            $verifyStmt->execute([$taskId]);
+            $savedTask = $verifyStmt->fetch(PDO::FETCH_ASSOC);
+            if ($savedTask) {
+                error_log('📋 Datos guardados en la BD:');
+                foreach ($savedTask as $column => $value) {
+                    error_log('  ✓ ' . str_pad($column, 20) . ' = ' . var_export($value, true));
+                }
+                error_log('');
+                error_log('⚠️ COMPARACIÓN priority:');
+                error_log('  - Enviado:  ' . var_export($priority, true));
+                error_log('  - Guardado: ' . var_export($savedTask['priority'], true));
+                error_log('  - ¿Coinciden? ' . ($savedTask['priority'] === $priority ? '✅ SÍ' : '❌ NO'));
+            } else {
+                error_log('❌ ERROR: No se pudo leer la tarea recién creada');
+            }
+            error_log('════════════════════════════════════════════════════════════════');
+            error_log('');
             
             // Asignar múltiples usuarios si se especifican
             if (!empty($assignedUsers)) {
+                error_log('Task::createAdvanced - 🔄 Asignando ' . count($assignedUsers) . ' usuarios...');
                 $ok = $this->assignMultipleUsers($taskId, $assignedUsers, $createdByUserId);
                 if (!$ok) {
+                    error_log('Task::createAdvanced - ❌ Error al asignar múltiples usuarios');
                     throw new Exception('Error al asignar múltiples usuarios');
                 }
+                error_log('Task::createAdvanced - ✅ Usuarios asignados exitosamente');
+            } else {
+                error_log('Task::createAdvanced - ⚠️ No hay usuarios para asignar');
             }
             
-            // Crear subtareas si se especifican
+                        // Crear subtareas si se especifican
+            error_log('=== Task::createAdvanced - PROCESAMIENTO DE SUBTAREAS ===');
             if (!empty($subtasks)) {
-                foreach ($subtasks as $subtask) {
+                error_log('Task::createAdvanced - ✅ Procesando ' . count($subtasks) . ' subtareas');
+                foreach ($subtasks as $index => $subtask) {
+                    error_log('Task::createAdvanced - 🔄 Creando subtarea ' . ($index + 1) . ' con datos: ' . print_r($subtask, true));
+                    
+                    // Mapear prioridad de tarea a prioridad de subtarea
+                    $subtaskPriority = $subtask['priority'] ?? 'medium';
+                    if ($subtaskPriority === 'critical') {
+                        error_log('Task::createAdvanced - Mapeando prioridad "critical" a "urgent"');
+                        $subtaskPriority = 'urgent'; // Mapear 'critical' a 'urgent' para subtareas
+                    }
+                    error_log('Task::createAdvanced - Prioridad final para subtarea: ' . $subtaskPriority);
+                    
                     $subId = $this->createSubtaskAdvanced(
                         $taskId, 
                         $subtask['title'], 
                         $createdByUserId,
                         $subtask['description'] ?? '', 
-                        $subtask['percentage'] ?? 0,
+                        $subtask['completion_percentage'] ?? 0,
                         $subtask['due_date'] ?? null,
-                        $subtask['priority'] ?? self::PRIORITY_MEDIUM,
-                        $subtask['assigned_user_id'] ?? null
+                        $subtaskPriority,
+                        $subtask['assigned_to_user_id'] ?? null,
+                        $assignedUsers // Pasar todos los usuarios asignados a la tarea principal
                     );
+                    
                     if (!$subId) {
+                        error_log('Task::createAdvanced - ❌ Error al crear subtarea ' . ($index + 1) . ': ' . ($subtask['title'] ?? 'sin título'));
                         throw new Exception('Error al crear subtarea: ' . ($subtask['title'] ?? 'sin título'));
+                    } else {
+                        error_log('Task::createAdvanced - ✅ Subtarea ' . ($index + 1) . ' creada exitosamente con ID: ' . $subId);
                     }
                 }
+            } else {
+                error_log('Task::createAdvanced - ❌ No hay subtareas para procesar');
+                error_log('Task::createAdvanced - ❌ subtasks está vacío: ' . (empty($subtasks) ? 'SÍ' : 'NO'));
+                error_log('Task::createAdvanced - ❌ subtasks es array: ' . (is_array($subtasks) ? 'SÍ' : 'NO'));
+                error_log('Task::createAdvanced - ❌ subtasks: ' . print_r($subtasks, true));
             }
             
             // Asignar etiquetas si se especifican
@@ -143,9 +235,15 @@ class Task {
             }
             
             // Registrar en el historial
+            error_log('Task::createAdvanced - 🔄 Registrando tarea en historial...');
             $this->logTaskAction($taskId, $createdByUserId, 'created', null, null, null, 'Tarea creada');
+            error_log('Task::createAdvanced - ✅ Historial registrado');
             
+            error_log('Task::createAdvanced - 🔄 Confirmando transacción...');
             $this->db->commit();
+            error_log('Task::createAdvanced - ✅ Transacción confirmada exitosamente');
+            error_log('Task::createAdvanced - ✅ Tarea creada exitosamente con ID: ' . $taskId);
+            error_log('=== Task::createAdvanced - FINALIZADO EXITOSAMENTE ===');
             return $taskId;
             
         } catch (Exception $e) {
@@ -233,33 +331,160 @@ class Task {
     }
     
     /**
+     * Agregar nuevos usuarios a una tarea sin borrar los existentes
+     */
+    public function addCollaborators($taskId, $userIds, $assignedByUserId) {
+        try {
+            
+            // Validar que userIds es array y no está vacío
+            if (!is_array($userIds) || empty($userIds)) {
+                error_log('Task::addCollaborators - Error: userIds no es array válido');
+                throw new Exception('userIds debe ser un array no vacío');
+            }
+            
+            // Obtener usuarios ya asignados para evitar duplicados
+            $stmt = $this->db->prepare("SELECT user_id FROM Task_Assignments WHERE task_id = ?");
+            $stmt->execute([$taskId]);
+            $existingUsers = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+            
+            // Filtrar usuarios que ya están asignados
+            $newUserIds = array_diff($userIds, $existingUsers);
+            
+            // También verificar el assigned_to_user_id de la tabla Tasks
+            $taskStmt = $this->db->prepare("SELECT assigned_to_user_id FROM Tasks WHERE task_id = ?");
+            $taskStmt->execute([$taskId]);
+            $primaryAssignedUser = $taskStmt->fetchColumn();
+            if ($primaryAssignedUser) {
+                $newUserIds = array_diff($newUserIds, [$primaryAssignedUser]);
+            }
+            
+            if (empty($newUserIds)) {
+                return true; // No es error, simplemente no hay nada que hacer
+            }
+            
+            // Obtener el total de usuarios asignados después de agregar los nuevos
+            $totalUsers = count($existingUsers) + count($newUserIds);
+            if ($primaryAssignedUser && !in_array($primaryAssignedUser, $existingUsers)) {
+                $totalUsers++;
+            }
+            
+            // Calcular porcentaje por usuario
+            $percentagePerUser = $totalUsers > 0 ? 100.00 / $totalUsers : 0;
+            
+            // Insertar nuevas asignaciones
+            $stmt = $this->db->prepare("
+                INSERT INTO Task_Assignments (task_id, user_id, assigned_percentage, assigned_by_user_id, status) 
+                VALUES (?, ?, ?, ?, 'assigned')
+            ");
+            
+            foreach ($newUserIds as $userId) {
+                $userIdInt = (int)$userId;
+                
+                $ok = $stmt->execute([$taskId, $userIdInt, $percentagePerUser, $assignedByUserId]);
+                if (!$ok) {
+                    $err = $stmt->errorInfo();
+                    error_log('Task::addCollaborators - Error insert assignment (user ' . $userIdInt . '): ' . json_encode($err));
+                    throw new Exception('Error al asignar usuario ' . $userIdInt . ' a la tarea');
+                }
+            }
+            
+            // Actualizar porcentajes de todos los usuarios asignados
+            $updateStmt = $this->db->prepare("
+                UPDATE Task_Assignments 
+                SET assigned_percentage = ? 
+                WHERE task_id = ?
+            ");
+            $updateStmt->execute([$percentagePerUser, $taskId]);
+            
+            // Registrar en el historial
+            $this->logTaskAction($taskId, $assignedByUserId, 'assigned', 'added_collaborators', null, implode(',', $newUserIds), count($newUserIds) . ' nuevos colaboradores agregados');
+            
+            return true;
+            
+        } catch (Exception $e) {
+            error_log("Error al agregar colaboradores: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
+            throw new Exception("addCollaborators falló: " . $e->getMessage());
+        }
+    }
+    
+    /**
      * Crear subtarea avanzada
      */
-    public function createSubtaskAdvanced($taskId, $title, $createdByUserId, $description = '', $percentage = 0, $dueDate = null, $priority = self::PRIORITY_MEDIUM, $assignedUserId = null) {
+    public function createSubtaskAdvanced($taskId, $title, $createdByUserId, $description = '', $percentage = 0, $dueDate = null, $priority = self::PRIORITY_MEDIUM, $assignedUserId = null, $assignedUsers = []) {
         try {
+            error_log('=== Task::createSubtaskAdvanced - INICIO ===');
+            error_log('Task::createSubtaskAdvanced - Parámetros recibidos:');
+            error_log('  taskId: ' . $taskId);
+            error_log('  title: "' . $title . '"');
+            error_log('  createdByUserId: ' . $createdByUserId);
+            error_log('  description: "' . $description . '"');
+            error_log('  percentage: ' . $percentage);
+            error_log('  dueDate: ' . ($dueDate ?? 'NULL'));
+            error_log('  priority: ' . $priority);
+            error_log('  assignedUserId: ' . ($assignedUserId ?? 'NULL'));
+            error_log('  assignedUsers (de tarea principal): ' . print_r($assignedUsers, true));
+            
+            error_log('Task::createSubtaskAdvanced - 🔄 Preparando INSERT en tabla Subtasks...');
             $stmt = $this->db->prepare("
                 INSERT INTO Subtasks (task_id, title, description, completion_percentage, due_date, priority, assigned_to_user_id, created_by_user_id, subtask_order) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, (SELECT COALESCE(MAX(subtask_order), 0) + 1 FROM Subtasks s WHERE s.task_id = ?))
             ");
             
-            $result = $stmt->execute([$taskId, $title, $description, $percentage, $dueDate, $priority, $assignedUserId, $createdByUserId, $taskId]);
+            // Convertir valores vacíos a NULL
+            $dueDate = empty($dueDate) ? null : $dueDate;
+            $assignedUserId = empty($assignedUserId) ? null : $assignedUserId;
+            
+            $params = [$taskId, $title, $description, $percentage, $dueDate, $priority, $assignedUserId, $createdByUserId, $taskId];
+            error_log('Task::createSubtaskAdvanced - Parámetros para INSERT: ' . print_r($params, true));
+            error_log('Task::createSubtaskAdvanced - Cantidad de parámetros: ' . count($params));
+            
+            error_log('Task::createSubtaskAdvanced - 🔄 Ejecutando INSERT...');
+            $result = $stmt->execute($params);
             
             if ($result) {
                 $subtaskId = $this->db->lastInsertId();
+                error_log('Task::createSubtaskAdvanced - ✅ Subtarea creada exitosamente con ID: ' . $subtaskId);
+                
+                // Asignar la subtarea a múltiples usuarios si se proporcionaron
+                if (!empty($assignedUsers) && is_array($assignedUsers)) {
+                    error_log('Task::createSubtaskAdvanced - 🔄 Asignando subtarea a ' . count($assignedUsers) . ' usuarios...');
+                    
+                    // Incluir el modelo de SubtaskAssignment
+                    require_once __DIR__ . '/SubtaskAssignment.php';
+                    $subtaskAssignmentModel = new SubtaskAssignment();
+                    
+                    // Asignar la subtarea a todos los usuarios de la tarea principal
+                    $assignmentResult = $subtaskAssignmentModel->assignUsers($subtaskId, $assignedUsers, $createdByUserId);
+                    
+                    if ($assignmentResult !== false) {
+                        error_log('Task::createSubtaskAdvanced - ✅ Subtarea asignada exitosamente a ' . $assignmentResult . ' usuarios');
+                    } else {
+                        error_log('Task::createSubtaskAdvanced - ⚠️ Error al asignar usuarios a la subtarea');
+                    }
+                } else {
+                    error_log('Task::createSubtaskAdvanced - ℹ️ No se proporcionaron usuarios adicionales para asignar');
+                }
                 
                 // Registrar en el historial
+                error_log('Task::createSubtaskAdvanced - 🔄 Registrando en historial...');
                 $this->logTaskAction($taskId, $createdByUserId, 'created', 'subtask', null, $title, 'Subtarea creada: ' . $title);
+                error_log('Task::createSubtaskAdvanced - ✅ Historial registrado');
                 
                 return $subtaskId;
             }
             
             $err = $stmt->errorInfo();
-            error_log('Task::createSubtaskAdvanced - Error al crear subtarea: ' . json_encode($err));
+            error_log('Task::createSubtaskAdvanced - ❌ Error al crear subtarea: ' . json_encode($err));
+            error_log('Task::createSubtaskAdvanced - ❌ Código de error: ' . $err[0]);
+            error_log('Task::createSubtaskAdvanced - ❌ Código de error específico: ' . $err[1]);
+            error_log('Task::createSubtaskAdvanced - ❌ Mensaje de error: ' . $err[2]);
             return false;
             
         } catch (Exception $e) {
-            error_log("Error al crear subtarea avanzada: " . $e->getMessage());
-            error_log("Stack trace: " . $e->getTraceAsString());
+            error_log("Task::createSubtaskAdvanced - ❌ EXCEPCIÓN: " . $e->getMessage());
+            error_log("Task::createSubtaskAdvanced - ❌ Stack trace: " . $e->getTraceAsString());
             // Temporalmente lanzar la excepción para ver el error exacto
             throw new Exception("createSubtaskAdvanced falló: " . $e->getMessage());
         }
@@ -327,15 +552,100 @@ class Task {
      */
     public function getSubtasks($taskId) {
         try {
+            // Usar directamente la tabla Subtasks con LEFT JOINs
             $stmt = $this->db->prepare("
-                SELECT * FROM v_subtasks_complete 
-                WHERE task_id = ? 
-                ORDER BY subtask_order ASC
+                SELECT 
+                    s.subtask_id,
+                    s.task_id,
+                    t.task_name as parent_task_name,
+                    s.title,
+                    s.description,
+                    s.completion_percentage,
+                    s.estimated_hours,
+                    s.actual_hours,
+                    s.status,
+                    s.priority,
+                    s.due_date,
+                    s.assigned_to_user_id,
+                    u_assigned.full_name as assigned_user_name,
+                    u_assigned.username as assigned_user_username,
+                    s.assigned_to_user_id,
+                    s.created_by_user_id,
+                    s.subtask_order,
+                    s.created_at,
+                    s.updated_at,
+                    u_assigned.full_name as assigned_to_fullname,
+                    u_assigned.username as assigned_to_username,
+                    u_created.full_name as created_by_fullname,
+                    u_created.username as created_by_username
+                FROM Subtasks s
+                LEFT JOIN Tasks t ON s.task_id = t.task_id
+                LEFT JOIN Users u_assigned ON s.assigned_to_user_id = u_assigned.user_id
+                LEFT JOIN Users u_created ON s.created_by_user_id = u_created.user_id
+                WHERE s.task_id = ? 
+                ORDER BY s.subtask_order ASC
             ");
             $stmt->execute([$taskId]);
             return $stmt->fetchAll();
         } catch (Exception $e) {
             error_log("Error al obtener subtareas: " . $e->getMessage());
+            return [];
+        }
+    }
+    
+    /**
+     * Obtener subtareas de una tarea filtradas por usuario asignado
+     * Incluye subtareas asignadas directamente y a través de Subtask_Assignments
+     */
+    public function getSubtasksForUser($taskId, $userId) {
+        try {
+            // Incluir subtareas asignadas directamente Y a través de Subtask_Assignments
+            $stmt = $this->db->prepare("
+                SELECT DISTINCT
+                    s.subtask_id,
+                    s.task_id,
+                    t.task_name as parent_task_name,
+                    s.title,
+                    s.description,
+                    s.completion_percentage,
+                    s.estimated_hours,
+                    s.actual_hours,
+                    s.status,
+                    s.priority,
+                    s.due_date,
+                    s.assigned_to_user_id,
+                    s.created_by_user_id,
+                    s.subtask_order,
+                    s.created_at,
+                    s.updated_at,
+                    u_assigned.full_name as assigned_to_fullname,
+                    u_assigned.username as assigned_to_username,
+                    u_created.full_name as created_by_fullname,
+                    u_created.username as created_by_username,
+                    sa.assigned_percentage,
+                    GROUP_CONCAT(DISTINCT u_all_assigned.full_name ORDER BY u_all_assigned.full_name SEPARATOR ', ') as all_assigned_users
+                FROM Subtasks s
+                LEFT JOIN Tasks t ON s.task_id = t.task_id
+                LEFT JOIN Users u_assigned ON s.assigned_to_user_id = u_assigned.user_id
+                LEFT JOIN Users u_created ON s.created_by_user_id = u_created.user_id
+                LEFT JOIN Subtask_Assignments sa ON s.subtask_id = sa.subtask_id
+                LEFT JOIN Users u_all_assigned ON sa.user_id = u_all_assigned.user_id
+                WHERE s.task_id = ? 
+                  AND (
+                    s.assigned_to_user_id = ? 
+                    OR s.created_by_user_id = ?
+                    OR EXISTS (
+                        SELECT 1 FROM Subtask_Assignments sa2 
+                        WHERE sa2.subtask_id = s.subtask_id AND sa2.user_id = ?
+                    )
+                  )
+                GROUP BY s.subtask_id
+                ORDER BY s.subtask_order ASC
+            ");
+            $stmt->execute([$taskId, $userId, $userId, $userId]);
+            return $stmt->fetchAll();
+        } catch (Exception $e) {
+            error_log("Error al obtener subtareas para usuario: " . $e->getMessage());
             return [];
         }
     }
@@ -367,7 +677,7 @@ class Task {
                 $commentIds = array_column($comments, 'comment_id');
                 if (!empty($commentIds)) {
                     $in = implode(',', array_fill(0, count($commentIds), '?'));
-                    $stmtA = $this->db->prepare("SELECT comment_id, file_name, file_path, file_type, uploaded_at FROM Task_Attachments WHERE comment_id IN ($in)");
+                    $stmtA = $this->db->prepare("SELECT attachment_id, comment_id, file_name, file_path, file_type, uploaded_at FROM Task_Attachments WHERE comment_id IN ($in)");
                     $stmtA->execute($commentIds);
                     $rows = $stmtA->fetchAll();
                     $byComment = [];
@@ -378,6 +688,44 @@ class Task {
                         $c['attachments'] = $byComment[$c['comment_id']] ?? [];
                         $c['attachments_count'] = isset($c['attachments']) ? count($c['attachments']) : 0;
                     }
+                }
+            }
+
+            // Fallback/compatibilidad: si aún no hay adjuntos, intentar desde Task_Comment_Attachments
+            $needsFallback = empty($comments) ? false : (int)array_sum(array_map(function($c){ return (int)($c['attachments_count'] ?? 0); }, $comments)) === 0;
+            if ($needsFallback) {
+                try {
+                    // Verificar existencia de tabla
+                    $this->db->query("SELECT 1 FROM Task_Comment_Attachments LIMIT 1");
+                    $commentIds = array_column($comments, 'comment_id');
+                    if (!empty($commentIds)) {
+                        $in = implode(',', array_fill(0, count($commentIds), '?'));
+                        $stmtB = $this->db->prepare("SELECT attachment_id, comment_id, file_name, file_path, uploaded_at FROM Task_Comment_Attachments WHERE comment_id IN ($in)");
+                        $stmtB->execute($commentIds);
+                        $rowsB = $stmtB->fetchAll();
+                        $byCommentB = [];
+                        foreach ($rowsB as $r) {
+                            $byCommentB[$r['comment_id']][] = [
+                                'attachment_id' => $r['attachment_id'] ?? null,
+                                'comment_id' => $r['comment_id'],
+                                'file_name' => $r['file_name'],
+                                'file_path' => $r['file_path'],
+                                'file_type' => $r['file_type'] ?? null,
+                                'uploaded_at' => $r['uploaded_at']
+                            ];
+                        }
+                        foreach ($comments as &$c) {
+                            $existing = $c['attachments'] ?? [];
+                            $fallback = $byCommentB[$c['comment_id']] ?? [];
+                            $merged = array_merge($existing, $fallback);
+                            if (!empty($merged)) {
+                                $c['attachments'] = $merged;
+                                $c['attachments_count'] = count($merged);
+                            }
+                        }
+                    }
+                } catch (Exception $e) {
+                    // Si no existe la tabla o falla, ignorar silenciosamente
                 }
             }
 
@@ -411,6 +759,24 @@ class Task {
             
         } catch (Exception $e) {
             error_log("Error al agregar comentario: " . $e->getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * Agregar adjunto a un comentario
+     */
+    public function addCommentAttachment($commentId, $fileName, $filePath) {
+        try {
+            $stmt = $this->db->prepare("
+                INSERT INTO Task_Comment_Attachments (comment_id, file_name, file_path, uploaded_at) 
+                VALUES (?, ?, ?, NOW())
+            ");
+            
+            return $stmt->execute([$commentId, $fileName, $filePath]);
+            
+        } catch (Exception $e) {
+            error_log("Error al agregar adjunto al comentario: " . $e->getMessage());
             return false;
         }
     }
@@ -481,8 +847,13 @@ class Task {
      */
     public function updateSubtaskStatus($subtaskId, $status, $completionPercentage = null, $userId = null) {
         try {
-            $sql = "UPDATE Subtasks SET status = ?, updated_at = CURRENT_TIMESTAMP";
-            $params = [$status];
+            $sql = "UPDATE Subtasks SET updated_at = CURRENT_TIMESTAMP";
+            $params = [];
+            
+            if (!empty($status)) {
+                $sql .= ", status = ?";
+                $params[] = $status;
+            }
             
             if ($completionPercentage !== null) {
                 $sql .= ", completion_percentage = ?";
@@ -594,18 +965,57 @@ class Task {
                 WHERE (t.assigned_to_user_id = ? OR t.task_id IN (
                     SELECT task_id FROM Task_Assignments WHERE user_id = ?
                 ))
-                AND p.clan_id = (SELECT clan_id FROM Users WHERE user_id = ?)
+                AND (p.clan_id = (SELECT clan_id FROM Users WHERE user_id = ?) OR p.is_personal = 1)
                 AND t.is_subtask = 0
                 AND t.status IN ('pending', 'in_progress')
-                AND (t.due_date IS NULL OR t.due_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 15 DAY))
+                AND (t.due_date IS NULL OR t.due_date >= CURDATE())
+                AND (p.is_personal IS NULL OR p.is_personal != 1 OR (p.is_personal = 1 AND p.created_by_user_id = ?))
+                AND (t.is_personal IS NULL OR t.is_personal != 1 OR (t.is_personal = 1 AND t.created_by_user_id = ?))
+                AND (t.is_recurrent = 0 OR t.is_recurrent IS NULL OR t.parent_recurrent_task_id IS NOT NULL)
                 ORDER BY t.due_date ASC
             ");
             
-            $stmt->execute([$userId, $userId, $userId]);
+            $stmt->execute([$userId, $userId, $userId, $userId, $userId]);
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
             
         } catch (Exception $e) {
             error_log("Error al obtener tareas activas del usuario: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Obtener tareas activas de un usuario con filtro de privacidad para el dashboard del clan leader
+     */
+    public function getActiveTasksByUserForClanLeader($userId, $clanLeaderId) {
+        try {
+            $stmt = $this->db->prepare("
+                SELECT 
+                    t.*,
+                    p.project_name,
+                    p.status as project_status
+                FROM Tasks t
+                INNER JOIN Projects p ON t.project_id = p.project_id
+                WHERE (t.assigned_to_user_id = ? OR t.task_id IN (
+                    SELECT task_id FROM Task_Assignments WHERE user_id = ?
+                ))
+                AND p.clan_id = (SELECT clan_id FROM Users WHERE user_id = ?)
+                AND t.is_subtask = 0
+                AND t.status IN ('pending', 'in_progress')
+                AND (t.due_date IS NULL OR t.due_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 15 DAY))
+                                 AND (
+                     p.is_personal IS NULL 
+                     OR p.is_personal != 1 
+                     OR (p.is_personal = 1 AND p.created_by_user_id = ?)
+                 )
+                ORDER BY t.due_date ASC
+            ");
+            
+            $stmt->execute([$userId, $userId, $userId, $clanLeaderId]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+        } catch (Exception $e) {
+            error_log("Error al obtener tareas activas del usuario para clan leader: " . $e->getMessage());
             return [];
         }
     }
@@ -659,6 +1069,7 @@ class Task {
             $stmt = $this->db->prepare("
                 SELECT 
                     t.*,
+                    p.project_name AS project_name,
                     p.task_distribution_mode,
                     p.kpi_points,
                     u_assigned.username as assigned_to_username,
@@ -707,6 +1118,53 @@ class Task {
             
         } catch (Exception $e) {
             error_log("Error al obtener tareas del proyecto: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Obtener tareas de un proyecto con filtro de privacidad para proyectos personales
+     */
+    public function getByProjectWithPrivacy($projectId, $userId = null) {
+        try {
+            // Primero verificar si el proyecto es personal
+            $projectStmt = $this->db->prepare("SELECT is_personal, created_by_user_id FROM Projects WHERE project_id = ?");
+            $projectStmt->execute([$projectId]);
+            $project = $projectStmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$project) {
+                return [];
+            }
+            
+            // Si es un proyecto personal y se proporciona userId, solo mostrar tareas del usuario
+            if (($project['is_personal'] ?? 0) == 1 && $userId) {
+                $stmt = $this->db->prepare("
+                    SELECT 
+                        t.*,
+                        u.full_name as assigned_to_fullname,
+                        u.username as assigned_to_username,
+                        GROUP_CONCAT(DISTINCT ta_users.full_name ORDER BY ta_users.full_name SEPARATOR ', ') as all_assigned_users,
+                        GROUP_CONCAT(DISTINCT ta_users.user_id ORDER BY ta_users.full_name SEPARATOR ',') as all_assigned_user_ids
+                    FROM Tasks t
+                    LEFT JOIN Users u ON t.assigned_to_user_id = u.user_id
+                    LEFT JOIN Task_Assignments ta ON t.task_id = ta.task_id
+                    LEFT JOIN Users ta_users ON ta.user_id = ta_users.user_id
+                    WHERE t.project_id = ?
+                    AND t.is_subtask = 0
+                    AND (t.assigned_to_user_id = ? OR t.created_by_user_id = ?)
+                    GROUP BY t.task_id
+                    ORDER BY t.due_date ASC, t.created_at DESC
+                ");
+                
+                $stmt->execute([$projectId, $userId, $userId]);
+                return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            } else {
+                // Para proyectos no personales, usar el método original
+                return $this->getByProject($projectId);
+            }
+            
+        } catch (Exception $e) {
+            error_log("Error al obtener tareas del proyecto con privacidad: " . $e->getMessage());
             return [];
         }
     }
@@ -778,14 +1236,23 @@ class Task {
     /**
      * Actualizar tarea
      */
-    public function update($taskId, $taskName, $description, $assignedUserId = null, $priority = null, $dueDate = null, $assignedPercentage = null, $status = null) {
+    public function update($taskId, $taskName, $description, $assignedUserId = null, $priority = null, $dueDate = null, $assignedPercentage = null, $status = null, $completionPercentage = null) {
         try {
+            error_log("=== TASK UPDATE DEBUG ===");
+            error_log("Task::update called with taskId: $taskId");
+            error_log("Parameters: taskName='$taskName', description='$description', assignedUserId=" . ($assignedUserId ?? 'NULL') . 
+                     ", priority='$priority', dueDate='$dueDate', assignedPercentage=" . ($assignedPercentage ?? 'NULL') . ", status='$status'");
+            
             $this->db->beginTransaction();
+            error_log("Transaction started");
             
             $task = $this->findById($taskId);
+            error_log("Task found: " . ($task ? "YES" : "NO"));
             if (!$task) {
+                error_log("Task not found with ID: $taskId");
                 throw new Exception("Tarea no encontrada");
             }
+            error_log("Task data: " . print_r($task, true));
             
             // Construir query dinámicamente
             $fields = [];
@@ -794,48 +1261,68 @@ class Task {
             if ($taskName !== null) {
                 $fields[] = "task_name = ?";
                 $values[] = $taskName;
+                error_log("Adding task_name to update");
             }
             
             if ($description !== null) {
                 $fields[] = "description = ?";
                 $values[] = $description;
+                error_log("Adding description to update");
             }
             
             // Manejar assigned_to_user_id - puede ser null para desasignar
             if ($assignedUserId !== null) {
                 $fields[] = "assigned_to_user_id = ?";
                 $values[] = $assignedUserId;
+                error_log("Adding assigned_to_user_id to update");
             }
             
             if ($priority !== null) {
                 $fields[] = "priority = ?";
                 $values[] = $priority;
+                error_log("Adding priority to update");
             }
             
             if ($dueDate !== null) {
                 $fields[] = "due_date = ?";
                 $values[] = $dueDate;
+                error_log("Adding due_date to update");
             }
             
-            if ($assignedPercentage !== null && $task['task_distribution_mode'] === 'percentage') {
+            if ($assignedPercentage !== null) {
                 $fields[] = "assigned_percentage = ?";
                 $values[] = $assignedPercentage;
+                error_log("Adding assigned_percentage to update");
             }
             
-            // Manejar estado
+            // Manejar porcentaje de completación (independiente del estado)
+            if ($completionPercentage !== null) {
+                $fields[] = "completion_percentage = ?";
+                $values[] = $completionPercentage;
+                error_log("Adding completion_percentage to update: $completionPercentage");
+            }
+            
+            // Manejar estado (sin vincular con porcentaje)
             if ($status !== null) {
                 $fields[] = "status = ?";
                 $values[] = $status;
+                error_log("Adding status to update");
                 
-                // Si el estado es completed, establecer completed_at
+                // Solo manejar completed_at y is_completed, NO el porcentaje
                 if ($status === 'completed') {
                     $fields[] = "completed_at = NOW()";
                     $fields[] = "is_completed = 1";
+                    error_log("Setting completed_at and is_completed=1 for completed status");
                 } else {
                     $fields[] = "completed_at = NULL";
                     $fields[] = "is_completed = 0";
+                    error_log("Setting completed_at=NULL and is_completed=0 for non-completed status");
                 }
+                // NO modificar completion_percentage - se maneja independientemente
             }
+            
+            error_log("Total fields to update: " . count($fields));
+            error_log("Fields array: " . print_r($fields, true));
             
             if (!empty($fields)) {
                 $fields[] = "updated_at = NOW()";
@@ -844,32 +1331,57 @@ class Task {
                 $sql = "UPDATE Tasks SET " . implode(", ", $fields) . " WHERE task_id = ?";
                 
                 // Log para debugging
-                error_log("SQL Query: " . $sql);
-                error_log("Values: " . json_encode($values));
+                error_log("Final SQL Query: " . $sql);
+                error_log("Final Values: " . json_encode($values));
                 
                 $stmt = $this->db->prepare($sql);
+                if (!$stmt) {
+                    $errorInfo = $this->db->errorInfo();
+                    error_log("PREPARE FAILED: " . json_encode($errorInfo));
+                    throw new Exception("Error al preparar la consulta SQL: " . json_encode($errorInfo));
+                }
+                
                 $result = $stmt->execute($values);
+                error_log("Execute result: " . ($result ? "SUCCESS" : "FAILED"));
                 
                 if (!$result) {
                     $errorInfo = $stmt->errorInfo();
+                    error_log("EXECUTE ERROR: " . json_encode($errorInfo));
                     throw new Exception("Error al ejecutar la consulta SQL: " . json_encode($errorInfo));
                 }
+                
+                $rowCount = $stmt->rowCount();
+                error_log("Rows affected: $rowCount");
+            } else {
+                error_log("No fields to update - skipping SQL execution");
             }
             
-            // Actualizar progreso del proyecto si se cambió el estado
-            if ($status !== null) {
-                $projectModel = new Project();
-                $projectModel->updateProgress($task['project_id']);
+            // Actualizar progreso del proyecto si se cambió el estado y existe project_id
+            if ($status !== null && !empty($task['project_id'])) {
+                error_log("Updating project progress for project_id: " . $task['project_id']);
+                try {
+                    $projectModel = new Project();
+                    $projectModel->updateProgress($task['project_id']);
+                    error_log("Project progress updated successfully");
+                } catch (Exception $projectError) {
+                    error_log("ERROR updating project progress: " . $projectError->getMessage());
+                    // No fallar la actualización de tarea por un error de proyecto
+                }
+            } else if ($status !== null) {
+                error_log("Skipping project progress update - no project_id or empty project_id");
             }
             
             $this->db->commit();
+            error_log("Transaction committed successfully");
             return true;
             
         } catch (Exception $e) {
+            error_log("EXCEPTION in Task::update: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
             if ($this->db->inTransaction()) {
                 $this->db->rollback();
+                error_log("Transaction rolled back");
             }
-            error_log("Error al actualizar tarea: " . $e->getMessage());
             return false;
         }
     }
@@ -1031,12 +1543,25 @@ class Task {
                 LEFT JOIN Users creator ON t.created_by_user_id = creator.user_id
                 LEFT JOIN Task_Assignments ta ON t.task_id = ta.task_id
                 LEFT JOIN Users ta_users ON ta.user_id = ta_users.user_id
-                WHERE p.clan_id = ? 
+                WHERE (
+                    p.clan_id = ?
+                    OR t.assigned_to_user_id IN (
+                        SELECT user_id FROM Clan_Members WHERE clan_id = ?
+                    )
+                    OR EXISTS (
+                        SELECT 1
+                        FROM Task_Assignments ta2
+                        JOIN Clan_Members cm2 ON cm2.user_id = ta2.user_id
+                        WHERE ta2.task_id = t.task_id AND cm2.clan_id = ?
+                    )
+                )
                 AND t.is_subtask = 0
+                AND (p.is_personal IS NULL OR p.is_personal != 1)
+                AND (t.is_personal IS NULL OR t.is_personal != 1)
             ";
             
             // Agregar filtro de búsqueda si se proporciona
-            $searchParams = [$clanId];
+            $searchParams = [$clanId, $clanId, $clanId];
             if (!empty($search)) {
                 $baseQuery .= " AND (
                     t.task_name LIKE ? OR 
@@ -1074,6 +1599,7 @@ class Task {
                     t.status,
                     t.completion_percentage,
                     t.automatic_points,
+                    t.created_by_user_id,
                     p.project_name,
                     p.project_id,
                     u.full_name as assigned_user_name,
@@ -1122,6 +1648,486 @@ class Task {
     }
 
     /**
+     * Obtener todas las tareas del clan (estricto: solo proyectos del clan)
+     */
+    public function getAllTasksByClanStrict($clanId, $page = 1, $perPage = 5, $search = '', $statusFilter = '', $assignedUserId = null, $fromDate = null, $toDate = null) {
+        try {
+            $offset = ($page - 1) * $perPage;
+
+            $baseQuery = "
+                FROM Tasks t
+                JOIN Projects p ON t.project_id = p.project_id
+                LEFT JOIN Users u ON t.assigned_to_user_id = u.user_id
+                LEFT JOIN Users creator ON t.created_by_user_id = creator.user_id
+                LEFT JOIN Task_Assignments ta ON t.task_id = ta.task_id
+                LEFT JOIN Users ta_users ON ta.user_id = ta_users.user_id
+                WHERE p.clan_id = ? 
+                AND t.is_subtask = 0
+                AND (p.is_personal IS NULL OR p.is_personal != 1)
+                AND (t.is_personal IS NULL OR t.is_personal != 1)
+            ";
+
+            $params = [$clanId];
+            if (!empty($search)) {
+                $baseQuery .= " AND (t.task_name LIKE ? OR t.description LIKE ? OR p.project_name LIKE ? OR u.full_name LIKE ? OR creator.full_name LIKE ?)";
+                $term = "%{$search}%";
+                $params = array_merge($params, [$term, $term, $term, $term, $term]);
+            }
+            if (!empty($statusFilter)) {
+                $baseQuery .= " AND t.status = ?";
+                $params[] = $statusFilter;
+            }
+            if (!empty($assignedUserId)) {
+                // Coincidencia por asignación directa o por tabla Task_Assignments
+                $baseQuery .= " AND (t.assigned_to_user_id = ? OR EXISTS (SELECT 1 FROM Task_Assignments ta3 WHERE ta3.task_id = t.task_id AND ta3.user_id = ?))";
+                $params[] = (int)$assignedUserId;
+                $params[] = (int)$assignedUserId;
+            }
+            if (!empty($fromDate)) {
+                $baseQuery .= " AND (t.due_date IS NOT NULL AND t.due_date >= ?)";
+                $params[] = $fromDate;
+            }
+            if (!empty($toDate)) {
+                $baseQuery .= " AND (t.due_date IS NOT NULL AND t.due_date <= ?)";
+                $params[] = $toDate;
+            }
+            $baseQuery .= " GROUP BY t.task_id";
+
+            $countSql = "SELECT COUNT(DISTINCT t.task_id) as total " . $baseQuery;
+            $countStmt = $this->db->prepare($countSql);
+            $countStmt->execute($params);
+            $total = (int)$countStmt->fetchColumn();
+
+            $mainSql = "
+                SELECT 
+                    t.task_id,
+                    t.task_name,
+                    t.description,
+                    t.due_date,
+                    t.priority,
+                    t.status,
+                    t.completion_percentage,
+                    t.automatic_points,
+                    t.created_by_user_id,
+                    p.project_name,
+                    p.project_id,
+                    u.full_name as assigned_user_name,
+                    u.username as assigned_username,
+                    creator.full_name as created_by_name,
+                    creator.username as created_by_username,
+                    DATEDIFF(t.due_date, CURDATE()) as days_until_due,
+                    GROUP_CONCAT(DISTINCT ta_users.full_name ORDER BY ta_users.full_name SEPARATOR ', ') as all_assigned_users,
+                    GROUP_CONCAT(DISTINCT ta_users.user_id ORDER BY ta_users.full_name SEPARATOR ',') as all_assigned_user_ids
+                " . $baseQuery . "
+                ORDER BY 
+                    CASE t.priority 
+                        WHEN 'urgent' THEN 1 
+                        WHEN 'high' THEN 2 
+                        WHEN 'medium' THEN 3 
+                        WHEN 'low' THEN 4 
+                    END,
+                    t.due_date ASC,
+                    t.created_at DESC
+                LIMIT ? OFFSET ?
+            ";
+            $stmt = $this->db->prepare($mainSql);
+            $execParams = array_merge($params, [$perPage, $offset]);
+            $stmt->execute($execParams);
+            $tasks = $stmt->fetchAll();
+
+            return [
+                'tasks' => $tasks,
+                'total' => $total,
+                'page' => $page,
+                'per_page' => $perPage,
+                'total_pages' => $perPage > 0 ? (int)ceil($total / $perPage) : 0
+            ];
+        } catch (PDOException $e) {
+            error_log("Error al obtener tareas del clan (estricto): " . $e->getMessage());
+            return ['tasks' => [], 'total' => 0, 'page' => $page, 'per_page' => $perPage, 'total_pages' => 0];
+        }
+    }
+
+    /**
+     * Obtener tareas del usuario limitadas a proyectos con nombres dados
+     */
+    public function getUserTasksByProjectNames($userId, array $projectNames) {
+        try {
+            if (empty($projectNames)) { return []; }
+            $placeholders = implode(',', array_fill(0, count($projectNames), '?'));
+            $params = $projectNames;
+            array_unshift($params, $userId, $userId); // userId for assigned checks
+
+            $sql = "
+                SELECT 
+                    t.task_id,
+                    t.task_name,
+                    t.description,
+                    t.due_date,
+                    t.priority,
+                    t.status,
+                    t.completion_percentage,
+                    t.automatic_points,
+                    t.created_by_user_id,
+                    p.project_name,
+                    p.project_id,
+                    p.project_type,
+                    DATEDIFF(t.due_date, CURDATE()) as days_until_due
+                FROM Tasks t
+                JOIN Projects p ON t.project_id = p.project_id
+                LEFT JOIN Task_Assignments ta ON ta.task_id = t.task_id
+                WHERE t.is_subtask = 0
+                  AND (t.assigned_to_user_id = ? OR ta.user_id = ?)
+                  AND p.project_name IN ($placeholders)
+            ";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute($params);
+            return $stmt->fetchAll();
+        } catch (PDOException $e) {
+            error_log("Error al obtener tareas del usuario por proyectos: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Obtener tareas del usuario en un proyecto específico
+     */
+    public function getUserTasksByProject($userId, $projectId) {
+        try {
+            $sql = "
+                SELECT 
+                    t.task_id,
+                    t.task_name,
+                    t.description,
+                    t.due_date,
+                    t.priority,
+                    t.status,
+                    t.completion_percentage,
+                    t.automatic_points,
+                    t.created_by_user_id,
+                    t.assigned_to_user_id,
+                    u.full_name as assigned_to_fullname,
+                    u.username as assigned_to_username,
+                    p.project_name,
+                    p.project_id,
+                    DATEDIFF(t.due_date, CURDATE()) as days_until_due,
+                    GROUP_CONCAT(DISTINCT ta_users.full_name ORDER BY ta_users.full_name SEPARATOR ', ') as all_assigned_users,
+                    GROUP_CONCAT(DISTINCT ta_users.user_id ORDER BY ta_users.full_name SEPARATOR ',') as all_assigned_user_ids
+                FROM Tasks t
+                JOIN Projects p ON t.project_id = p.project_id
+                LEFT JOIN Users u ON t.assigned_to_user_id = u.user_id
+                LEFT JOIN Task_Assignments ta ON ta.task_id = t.task_id
+                LEFT JOIN Users ta_users ON ta.user_id = ta_users.user_id
+                WHERE t.is_subtask = 0
+                  AND t.project_id = ?
+                  AND (t.assigned_to_user_id = ? OR ta.user_id = ?)
+                GROUP BY t.task_id
+                ORDER BY t.due_date ASC, t.created_at DESC
+            ";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$projectId, $userId, $userId]);
+            return $stmt->fetchAll();
+        } catch (PDOException $e) {
+            error_log("Error al obtener tareas del usuario por proyecto: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Obtener tareas personales del usuario para el dashboard del clan leader
+     */
+    public function getPersonalTasksForClanLeader($userId, $clanId) {
+        try {
+            $sql = "
+                SELECT 
+                    t.task_id,
+                    t.task_name,
+                    t.description,
+                    t.due_date,
+                    t.priority,
+                    t.status,
+                    t.completion_percentage,
+                    t.automatic_points,
+                    t.created_by_user_id,
+                    p.project_name,
+                    p.project_id,
+                    p.project_type,
+                    DATEDIFF(t.due_date, CURDATE()) as days_until_due
+                FROM Tasks t
+                JOIN Projects p ON t.project_id = p.project_id
+                WHERE t.is_subtask = 0
+                  AND p.clan_id = ?
+                  AND p.is_personal = 1
+                  AND p.created_by_user_id = ?
+                  AND (t.assigned_to_user_id = ? OR t.created_by_user_id = ?)
+                ORDER BY 
+                    CASE t.priority 
+                        WHEN 'urgent' THEN 1 
+                        WHEN 'high' THEN 2 
+                        WHEN 'medium' THEN 3 
+                        WHEN 'low' THEN 4 
+                    END,
+                    t.due_date ASC,
+                    t.created_at DESC
+            ";
+            
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$clanId, $userId, $userId, $userId]);
+            return $stmt->fetchAll();
+            
+        } catch (PDOException $e) {
+            error_log("Error al obtener tareas personales para clan leader: " . $e->getMessage());
+            return [];
+        }
+    }
+    
+    /**
+     * OBTENER SOLO TAREAS ASIGNADAS DIRECTAMENTE AL USUARIO
+     * SELECT * FROM Tasks WHERE assigned_to_user_id = userId (sin lógicas adicionales)
+     */
+    public function getAllUserTasksForDashboard($userId) {
+        try {
+            // CONSULTA ULTRA-SIMPLE - Como debe ser, sin mamadas
+            $sql = "
+                SELECT 
+                    t.task_id,
+                    t.task_name,
+                    t.description,
+                    t.project_id,
+                    t.assigned_to_user_id,
+                    t.created_by_user_id,
+                    t.priority,
+                    t.due_date,
+                    t.completion_percentage,
+                    t.automatic_points,
+                    t.color_tag,
+                    t.status,
+                    t.is_completed,
+                    t.completed_at,
+                    t.created_at,
+                    t.is_personal,
+                    p.project_name as original_project_name,
+                    p.clan_id,
+                    c.clan_name,
+                    -- LA MAGIA: Si is_personal = 1, mostrar 'Personal'
+                    CASE 
+                        WHEN t.is_personal = 1 THEN 'Personal'
+                        ELSE COALESCE(p.project_name, 'Sin Proyecto')
+                    END AS project_name,
+                    DATEDIFF(t.due_date, CURDATE()) as days_until_due,
+                    -- Clasificación simple de urgencia
+                    CASE 
+                        WHEN t.status = 'completed' THEN 'completed'
+                        WHEN DATEDIFF(t.due_date, CURDATE()) < 0 THEN 'overdue'
+                        WHEN DATEDIFF(t.due_date, CURDATE()) <= 3 THEN 'urgent'
+                        WHEN DATEDIFF(t.due_date, CURDATE()) <= 7 THEN 'soon'
+                        ELSE 'normal'
+                    END AS urgency_status
+                FROM Tasks t
+                LEFT JOIN Projects p ON t.project_id = p.project_id
+                LEFT JOIN Clans c ON p.clan_id = c.clan_id
+                WHERE 
+                    (
+                        -- SOLO tareas asignadas directamente al usuario
+                        t.assigned_to_user_id = ?
+                    )
+                    AND (t.is_subtask = 0 OR t.is_subtask IS NULL)
+                    AND t.status != 'completed'
+                    AND (t.is_recurrent = 0 OR t.is_recurrent IS NULL OR t.parent_recurrent_task_id IS NOT NULL)
+                ORDER BY 
+                    t.task_id DESC
+            ";
+            
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$userId]);
+            
+            $tasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Log para debugging
+            error_log("=== getAllUserTasksForDashboard ===");
+            error_log("Usuario ID: $userId");
+            error_log("Tareas encontradas: " . count($tasks));
+            
+            // Agrupar tareas por proyecto para facilitar el renderizado
+            $tasksByProject = [];
+            $stats = [
+                'total_tasks' => 0,
+                'completed_tasks' => 0,
+                'pending_tasks' => 0,
+                'in_progress_tasks' => 0,
+                'overdue_tasks' => 0,
+                'personal_tasks' => 0,
+                'project_tasks' => 0
+            ];
+            
+            foreach ($tasks as $task) {
+                $projectKey = $task['project_id'] ?? 'sin_proyecto';
+                if (!isset($tasksByProject[$projectKey])) {
+                    $tasksByProject[$projectKey] = [
+                        'project_id' => $task['project_id'],
+                        'project_name' => $task['project_name'],
+                        'clan_name' => $task['clan_name'],
+                        'tasks' => []
+                    ];
+                }
+                $tasksByProject[$projectKey]['tasks'][] = $task;
+                
+                // Actualizar estadísticas
+                $stats['total_tasks']++;
+                
+                if ($task['is_personal'] == 1) {
+                    $stats['personal_tasks']++;
+                } else {
+                    $stats['project_tasks']++;
+                }
+                
+                switch ($task['status']) {
+                    case 'completed':
+                        $stats['completed_tasks']++;
+                        break;
+                    case 'in_progress':
+                        $stats['in_progress_tasks']++;
+                        break;
+                    case 'pending':
+                        $stats['pending_tasks']++;
+                        break;
+                }
+                
+                if ($task['urgency_status'] == 'overdue') {
+                    $stats['overdue_tasks']++;
+                }
+                
+                // Log de cada tarea personal para debugging
+                if ($task['is_personal'] == 1) {
+                    error_log("Tarea personal encontrada: ID={$task['task_id']}, Nombre={$task['task_name']}, Proyecto mostrado={$task['project_name']}");
+                }
+            }
+            
+            error_log("Estadísticas: " . json_encode($stats));
+            error_log("=== FIN getAllUserTasksForDashboard ===");
+            
+            return [
+                'success' => true,
+                'tasks' => $tasks,
+                'tasks_by_project' => $tasksByProject,
+                'stats' => $stats,
+                'total' => count($tasks)
+            ];
+            
+        } catch (PDOException $e) {
+            error_log("Error CRÍTICO en getAllUserTasksForDashboard: " . $e->getMessage());
+            error_log("Query que falló: " . $sql);
+            return [
+                'success' => false,
+                'tasks' => [],
+                'tasks_by_project' => [],
+                'stats' => [],
+                'total' => 0,
+                'error' => 'Error al obtener las tareas del usuario: ' . $e->getMessage()
+            ];
+        }
+    }
+    
+    /**
+     * Obtener todas las tareas del usuario (incluye asignación directa y por Task_Assignments)
+     */
+    public function getUserTasks($userId, $page = 1, $perPage = 10, $search = '', $statusFilter = '') {
+        try {
+            $offset = ($page - 1) * $perPage;
+
+            $baseQuery = "
+                FROM Tasks t
+                LEFT JOIN Projects p ON t.project_id = p.project_id
+                LEFT JOIN Users u ON t.assigned_to_user_id = u.user_id
+                LEFT JOIN Users creator ON t.created_by_user_id = creator.user_id
+                LEFT JOIN Task_Assignments ta ON t.task_id = ta.task_id
+                LEFT JOIN Users ta_users ON ta.user_id = ta_users.user_id
+                WHERE t.is_subtask = 0
+                  AND (
+                    t.assigned_to_user_id = ?
+                    OR EXISTS (SELECT 1 FROM Task_Assignments ta2 WHERE ta2.task_id = t.task_id AND ta2.user_id = ?)
+                  )
+                  AND (t.is_personal IS NULL OR t.is_personal != 1)
+            ";
+
+            $params = [$userId, $userId];
+            if (!empty($search)) {
+                $baseQuery .= " AND (t.task_name LIKE ? OR t.description LIKE ? OR p.project_name LIKE ? OR u.full_name LIKE ? OR creator.full_name LIKE ?)";
+                $term = "%{$search}%";
+                $params = array_merge($params, [$term, $term, $term, $term, $term]);
+            }
+            
+
+
+            if (!empty($statusFilter)) {
+                $baseQuery .= " AND t.status = ?";
+                $params[] = $statusFilter;
+            }
+
+            $baseQuery .= " GROUP BY t.task_id";
+
+            $countSql = "SELECT COUNT(DISTINCT t.task_id) as total " . $baseQuery;
+            $countStmt = $this->db->prepare($countSql);
+            $countStmt->execute($params);
+            $total = (int)$countStmt->fetchColumn();
+
+            $mainSql = "
+                SELECT 
+                    t.task_id,
+                    t.task_name,
+                    t.description,
+                    t.due_date,
+                    t.priority,
+                    t.status,
+                    t.completion_percentage,
+                    t.automatic_points,
+                    t.created_by_user_id,
+                    p.project_name,
+                    p.project_id,
+                    u.full_name as assigned_user_name,
+                    u.username as assigned_username,
+                    creator.full_name as created_by_name,
+                    creator.username as created_by_username,
+                    DATEDIFF(t.due_date, CURDATE()) as days_until_due,
+                    GROUP_CONCAT(DISTINCT ta_users.full_name ORDER BY ta_users.full_name SEPARATOR ', ') as all_assigned_users,
+                    GROUP_CONCAT(DISTINCT ta_users.user_id ORDER BY ta_users.full_name SEPARATOR ',') as all_assigned_user_ids
+                " . $baseQuery . "
+                ORDER BY 
+                    CASE t.priority 
+                        WHEN 'urgent' THEN 1 
+                        WHEN 'high' THEN 2 
+                        WHEN 'medium' THEN 3 
+                        WHEN 'low' THEN 4 
+                    END,
+                    t.due_date ASC,
+                    t.created_at DESC
+                LIMIT ? OFFSET ?
+            ";
+
+            $stmt = $this->db->prepare($mainSql);
+            $execParams = array_merge($params, [$perPage, $offset]);
+            $stmt->execute($execParams);
+            $tasks = $stmt->fetchAll();
+
+            return [
+                'tasks' => $tasks,
+                'total' => $total,
+                'page' => $page,
+                'per_page' => $perPage,
+                'total_pages' => $perPage > 0 ? (int)ceil($total / $perPage) : 0
+            ];
+        } catch (PDOException $e) {
+            error_log("Error al obtener tareas del usuario: " . $e->getMessage());
+            return [
+                'tasks' => [],
+                'total' => 0,
+                'page' => $page,
+                'per_page' => $perPage,
+                'total_pages' => 0
+            ];
+        }
+    }
+    /**
      * Obtener tareas pendientes importantes del clan con paginación y búsqueda
      */
     public function getPendingTasksByClan($clanId, $page = 1, $perPage = 5, $search = '') {
@@ -1136,12 +2142,25 @@ class Task {
                 LEFT JOIN Users creator ON t.created_by_user_id = creator.user_id
                 LEFT JOIN Task_Assignments ta ON t.task_id = ta.task_id
                 LEFT JOIN Users ta_users ON ta.user_id = ta_users.user_id
-                WHERE p.clan_id = ? 
+                WHERE (
+                    p.clan_id = ?
+                    OR t.assigned_to_user_id IN (
+                        SELECT user_id FROM Clan_Members WHERE clan_id = ?
+                    )
+                    OR EXISTS (
+                        SELECT 1
+                        FROM Task_Assignments ta2
+                        JOIN Clan_Members cm2 ON cm2.user_id = ta2.user_id
+                        WHERE ta2.task_id = t.task_id AND cm2.clan_id = ?
+                    )
+                )
                 AND t.status IN ('pending', 'in_progress')
+                AND (p.is_personal IS NULL OR p.is_personal != 1)
+                AND (t.is_personal IS NULL OR t.is_personal != 1)
             ";
             
             // Agregar filtro de búsqueda si se proporciona
-            $searchParams = [$clanId];
+            $searchParams = [$clanId, $clanId, $clanId];
             if (!empty($search)) {
                 $baseQuery .= " AND (
                     t.task_name LIKE ? OR 
@@ -1173,6 +2192,7 @@ class Task {
                     t.status,
                     t.completion_percentage,
                     t.automatic_points,
+                    t.created_by_user_id,
                     p.project_name,
                     p.project_id,
                     u.full_name as assigned_user_name,
@@ -1262,6 +2282,8 @@ class Task {
                 WHERE p.clan_id = ?
                 AND t.is_subtask = 0
                 AND t.status != 'completed'
+                AND (p.is_personal IS NULL OR p.is_personal != 1)
+                AND (t.is_personal IS NULL OR t.is_personal != 1)
                 AND p.kpi_quarter_id IN (
                     SELECT kpi_id 
                     FROM Clan_KPIs 
@@ -1286,6 +2308,689 @@ class Task {
             
         } catch (PDOException $e) {
             error_log("Error al obtener tareas del trimestre actual: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Crear tarea personal del usuario - versión simplificada
+     */
+    /**
+     * Crear tarea en proyecto con soporte para recurrencia
+     */
+    public function createProjectTaskWithRecurrence($taskData) {
+        try {
+            error_log("=== INICIO createProjectTaskWithRecurrence ===");
+            error_log("Task data: " . print_r($taskData, true));
+            
+            $stmt = $this->db->prepare("
+                INSERT INTO Tasks (
+                    task_name, 
+                    description, 
+                    priority, 
+                    due_date, 
+                    status, 
+                    project_id,
+                    assigned_to_user_id, 
+                    created_by_user_id,
+                    is_recurrent,
+                    recurrence_type,
+                    recurrence_start_date,
+                    recurrence_end_date,
+                    last_generated_date,
+                    created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+            ");
+            
+            $result = $stmt->execute([
+                $taskData['task_name'],
+                $taskData['description'],
+                $taskData['priority'],
+                $taskData['due_date'],
+                $taskData['status'],
+                $taskData['project_id'],
+                $taskData['assigned_to_user_id'],
+                $taskData['created_by_user_id'],
+                $taskData['is_recurrent'] ?? 0,
+                $taskData['recurrence_type'] ?? null,
+                $taskData['recurrence_start_date'] ?? null,
+                $taskData['recurrence_end_date'] ?? null,
+                $taskData['recurrence_start_date'] ?? null // last_generated_date = start_date inicialmente
+            ]);
+            
+            if ($result) {
+                $taskId = $this->db->lastInsertId();
+                error_log("Tarea de proyecto con recurrencia creada exitosamente con ID: " . $taskId);
+                return $taskId;
+            } else {
+                error_log("Error al crear tarea de proyecto: " . print_r($stmt->errorInfo(), true));
+                return false;
+            }
+            
+        } catch (Exception $e) {
+            error_log("ERROR en createProjectTaskWithRecurrence: " . $e->getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * Crear tarea en proyecto (personal o delegado)
+     */
+    public function createProjectTask($taskData) {
+        try {
+            error_log("=== INICIO createProjectTask ===");
+            error_log("Task data: " . print_r($taskData, true));
+            
+            $stmt = $this->db->prepare("
+                INSERT INTO Tasks (
+                    task_name, 
+                    description, 
+                    priority, 
+                    due_date, 
+                    status, 
+                    project_id,
+                    assigned_to_user_id, 
+                    created_by_user_id,
+                    created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
+            ");
+            
+            $result = $stmt->execute([
+                $taskData['task_name'],
+                $taskData['description'],
+                $taskData['priority'],
+                $taskData['due_date'],
+                $taskData['status'],
+                $taskData['project_id'],
+                $taskData['assigned_to_user_id'],
+                $taskData['created_by_user_id']
+            ]);
+            
+            if ($result) {
+                $taskId = $this->db->lastInsertId();
+                error_log("Tarea de proyecto creada exitosamente con ID: " . $taskId);
+                return $taskId;
+            } else {
+                error_log("Error al crear tarea de proyecto: " . print_r($stmt->errorInfo(), true));
+                return false;
+            }
+            
+        } catch (Exception $e) {
+            error_log("ERROR en createProjectTask: " . $e->getMessage());
+            return false;
+        }
+    }
+    
+    public function createPersonalTaskSimple($taskData) {
+        try {
+            error_log("=== INICIO createPersonalTaskSimple ===");
+            error_log("Datos recibidos: " . print_r($taskData, true));
+            
+            // Validar prioridad - CRÍTICO: asegurar que se mantenga el valor
+            $validPriorities = ['low', 'medium', 'high', 'critical'];
+            $priority = $taskData['priority'] ?? 'medium';
+            if (!in_array($priority, $validPriorities)) {
+                error_log("ERROR: Prioridad inválida: " . $priority . ". Debe ser: " . implode(', ', $validPriorities));
+                $priority = 'medium'; // fallback seguro
+            }
+            error_log("PRIORIDAD FINAL A USAR: " . $priority);
+            
+            // Validar status
+            $validStatuses = ['pending', 'in_progress', 'completed', 'cancelled'];
+            $status = $taskData['status'] ?? 'pending';
+            if (!in_array($status, $validStatuses)) {
+                error_log("ERROR: Status inválido: " . $status . ". Debe ser: " . implode(', ', $validStatuses));
+                $status = 'pending';
+            }
+            
+            // Primero, crear o obtener el proyecto personal del usuario
+            $personalProjectId = $this->getOrCreatePersonalProject($taskData['assigned_to_user_id']);
+            if (!$personalProjectId) {
+                error_log("Error: No se pudo crear/obtener el proyecto personal");
+                return false;
+            }
+            
+            error_log("Proyecto personal ID: " . $personalProjectId);
+            
+            // Crear tarea personal con todos los campos NOT NULL - ASEGURAR QUE PRIORITY SE MANTENGA
+            $sql = "INSERT INTO Tasks (
+                task_name, 
+                description, 
+                priority, 
+                due_date, 
+                status, 
+                assigned_to_user_id, 
+                created_by_user_id,
+                project_id,
+                automatic_points,
+                assigned_percentage,
+                is_completed,
+                is_personal,
+                is_recurrent,
+                recurrence_type,
+                recurrence_start_date,
+                recurrence_end_date,
+                last_generated_date
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0.00, 0.00, 0, 1, ?, ?, ?, ?, ?)";
+            
+            $params = [
+                $taskData['task_name'],
+                $taskData['description'],
+                $priority, // usar la variable validada
+                $taskData['due_date'],
+                $status, // usar la variable validada
+                $taskData['assigned_to_user_id'],
+                $taskData['assigned_to_user_id'], // created_by_user_id = assigned_to_user_id
+                $personalProjectId,
+                $taskData['is_recurrent'] ?? 0,
+                $taskData['recurrence_type'] ?? null,
+                $taskData['recurrence_start_date'] ?? null,
+                $taskData['recurrence_end_date'] ?? null,
+                ($taskData['is_recurrent'] ?? 0) ? ($taskData['recurrence_start_date'] ?? null) : null // last_generated_date = start_date para tareas recurrentes
+            ];
+            
+            error_log("SQL completo: " . $sql);
+            error_log("Parámetros a ejecutar: " . print_r($params, true));
+            
+            $stmt = $this->db->prepare($sql);
+            if (!$stmt) {
+                error_log("Error en prepare: " . print_r($this->db->errorInfo(), true));
+                return false;
+            }
+            
+            $result = $stmt->execute($params);
+            
+            if ($result) {
+                $taskId = $this->db->lastInsertId();
+                error_log("Tarea personal creada exitosamente con ID: " . $taskId);
+                
+                // VERIFICACIÓN INMEDIATA: comprobar que la prioridad se guardó correctamente
+                $verifyStmt = $this->db->prepare("SELECT priority FROM Tasks WHERE task_id = ?");
+                $verifyStmt->execute([$taskId]);
+                $savedPriority = $verifyStmt->fetchColumn();
+                error_log("VERIFICACIÓN: Prioridad guardada en BD: " . $savedPriority . " (esperada: " . $priority . ")");
+                
+                if ($savedPriority !== $priority) {
+                    error_log("ALERTA: La prioridad guardada ($savedPriority) no coincide con la enviada ($priority)");
+                }
+                
+                return $taskId;
+            } else {
+                error_log("Error en execute: " . print_r($stmt->errorInfo(), true));
+                return false;
+            }
+            
+        } catch (Exception $e) {
+            error_log("ERROR en createPersonalTaskSimple: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
+            return false;
+        }
+    }
+
+    /**
+     * Obtener o crear un proyecto personal para el usuario
+     */
+    public function getOrCreatePersonalProject($userId) {
+        try {
+            error_log("getOrCreatePersonalProject - INICIO para usuario $userId");
+            
+            // Validar userId
+            if (!$userId || $userId <= 0) {
+                error_log("getOrCreatePersonalProject - ERROR: userId inválido: $userId");
+                return false;
+            }
+            
+            // Primero obtener el clan del usuario
+            $stmt = $this->db->prepare("
+                SELECT cm.clan_id, c.clan_name 
+                FROM Clan_Members cm 
+                JOIN Clans c ON c.clan_id = cm.clan_id 
+                WHERE cm.user_id = ?
+                LIMIT 1
+            ");
+            $stmt->execute([$userId]);
+            $userClan = $stmt->fetch();
+            
+            error_log("getOrCreatePersonalProject - Consulta clan ejecutada para usuario $userId");
+            
+            if (!$userClan) {
+                error_log("Usuario $userId no pertenece a ningún clan");
+                return false;
+            }
+            
+            $clanId = $userClan['clan_id'];
+            $clanName = $userClan['clan_name'];
+            
+            // Buscar proyecto personal existente en el clan del usuario
+            $stmt = $this->db->prepare("
+                SELECT project_id FROM Projects 
+                WHERE project_name = ? AND clan_id = ? AND created_by_user_id = ? AND is_personal = 1
+                LIMIT 1
+            ");
+            $personalProjectName = "Tareas Personales";
+            error_log("Buscando proyecto personal: nombre='$personalProjectName', clan_id=$clanId, user_id=$userId");
+            $stmt->execute([$personalProjectName, $clanId, $userId]);
+            $existingProject = $stmt->fetch();
+            
+            if ($existingProject) {
+                error_log("✅ Proyecto personal existente encontrado: " . $existingProject['project_id']);
+                return $existingProject['project_id'];
+            } else {
+                error_log("❌ NO se encontró proyecto personal existente para usuario $userId en clan $clanId");
+                
+                // Debug: Buscar todos los proyectos del usuario para diagnosticar
+                $debugStmt = $this->db->prepare("
+                    SELECT project_id, project_name, is_personal, clan_id, created_by_user_id 
+                    FROM Projects 
+                    WHERE created_by_user_id = ?
+                ");
+                $debugStmt->execute([$userId]);
+                $userProjects = $debugStmt->fetchAll();
+                error_log("🔍 Proyectos del usuario $userId: " . print_r($userProjects, true));
+            }
+            
+            // Si no existe, crear uno nuevo en el clan del usuario
+            error_log("Creando nuevo proyecto personal para usuario $userId en clan $clanName (ID: $clanId)");
+            
+            $stmt = $this->db->prepare("
+                INSERT INTO Projects (
+                    project_name, 
+                    description, 
+                    clan_id, 
+                    created_by_user_id, 
+                    status,
+                    is_personal
+                ) VALUES (?, ?, ?, ?, 'active', 1)
+            ");
+            
+            $result = $stmt->execute([
+                $personalProjectName,
+                "Proyecto personal para tareas individuales del usuario",
+                $clanId,
+                $userId
+            ]);
+            
+            if ($result) {
+                $projectId = $this->db->lastInsertId();
+                error_log("Nuevo proyecto personal creado con ID: " . $projectId);
+                return $projectId;
+            } else {
+                error_log("Error al crear proyecto personal: " . print_r($stmt->errorInfo(), true));
+                return false;
+            }
+            
+        } catch (Exception $e) {
+            error_log("ERROR en getOrCreatePersonalProject: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Generar instancias para una tarea recurrente específica
+     */
+    public function generateInstancesForTask($taskId) {
+        try {
+            error_log("=== INICIO generateInstancesForTask para tarea ID: $taskId ===");
+            
+            // Obtener datos de la tarea recurrente
+            $stmt = $this->db->prepare("
+                SELECT * FROM Tasks 
+                WHERE task_id = ? AND is_recurrent = 1
+            ");
+            $stmt->execute([$taskId]);
+            $task = $stmt->fetch();
+            
+            if (!$task) {
+                error_log("ERROR: Tarea $taskId no encontrada o no es recurrente");
+                return 0;
+            }
+            
+            $recurrenceType = $task['recurrence_type'];
+            $startDate = $task['recurrence_start_date'];
+            $endDate = $task['recurrence_end_date'];
+            
+            error_log("Generando instancias para: Tipo=$recurrenceType, Inicio=$startDate, Fin=" . ($endDate ?? 'indefinido'));
+            
+            // Calcular fechas a generar (hasta 1 año o hasta fecha de fin)
+            $maxDaysAhead = $endDate ? 
+                (strtotime($endDate) - strtotime($startDate)) / (60*60*24) : 
+                365; // 1 año máximo si no hay fecha de fin
+            
+            $nextDates = $this->calculateNextRecurrenceDates($recurrenceType, $startDate, $endDate, min($maxDaysAhead, 365));
+            
+            $generatedCount = 0;
+            
+            foreach ($nextDates as $nextDate) {
+                // Verificar si ya existe una instancia para esta fecha
+                $existsStmt = $this->db->prepare("
+                    SELECT task_id FROM Tasks 
+                    WHERE parent_recurrent_task_id = ? 
+                      AND due_date = ?
+                    LIMIT 1
+                ");
+                $existsStmt->execute([$taskId, $nextDate]);
+                
+                if ($existsStmt->fetch()) {
+                    continue; // Ya existe instancia para esta fecha
+                }
+                
+                // Crear nueva instancia
+                $instanceData = [
+                    'task_name' => $task['task_name'] . ' (' . date('d/m/Y', strtotime($nextDate)) . ')',
+                    'description' => $task['description'],
+                    'priority' => $task['priority'],
+                    'due_date' => $nextDate,
+                    'status' => 'pending',
+                    'assigned_to_user_id' => $task['assigned_to_user_id'],
+                    'created_by_user_id' => $task['created_by_user_id'],
+                    'project_id' => $task['project_id'],
+                    'is_personal' => $task['is_personal'],
+                    'parent_recurrent_task_id' => $taskId
+                ];
+                
+                $instanceId = $this->createRecurrentInstance($instanceData);
+                if ($instanceId) {
+                    $generatedCount++;
+                    error_log("Instancia creada: $instanceId para fecha $nextDate");
+                }
+            }
+            
+            // Actualizar last_generated_date de la tarea padre
+            $updateStmt = $this->db->prepare("
+                UPDATE Tasks 
+                SET last_generated_date = ? 
+                WHERE task_id = ?
+            ");
+            $updateStmt->execute([date('Y-m-d'), $taskId]);
+            
+            error_log("=== FIN generateInstancesForTask - Generadas: $generatedCount ===");
+            return $generatedCount;
+            
+        } catch (Exception $e) {
+            error_log("ERROR en generateInstancesForTask: " . $e->getMessage());
+            return 0;
+        }
+    }
+
+    /**
+     * Generar instancias de tareas recurrentes (método para cron)
+     */
+    public function generateRecurrentInstances() {
+        try {
+            error_log("=== INICIO generateRecurrentInstances ===");
+            
+            // Obtener todas las tareas recurrentes activas
+            $stmt = $this->db->prepare("
+                SELECT * FROM Tasks 
+                WHERE is_recurrent = 1 
+                  AND status != 'cancelled'
+                  AND (recurrence_end_date IS NULL OR recurrence_end_date >= CURDATE())
+                ORDER BY task_id
+            ");
+            $stmt->execute();
+            $recurrentTasks = $stmt->fetchAll();
+            
+            $today = date('Y-m-d');
+            $generatedCount = 0;
+            
+            foreach ($recurrentTasks as $task) {
+                $taskId = $task['task_id'];
+                $recurrenceType = $task['recurrence_type'];
+                $startDate = $task['recurrence_start_date'];
+                $endDate = $task['recurrence_end_date'];
+                $lastGenerated = $task['last_generated_date'] ?? $startDate;
+                
+                error_log("Procesando tarea recurrente ID: $taskId, Tipo: $recurrenceType, Último generado: $lastGenerated");
+                
+                // Calcular próximas fechas a generar
+                $nextDates = $this->calculateNextRecurrenceDates($recurrenceType, $lastGenerated, $endDate, 30); // Generar hasta 30 días adelante
+                
+                foreach ($nextDates as $nextDate) {
+                    if ($nextDate <= $today) continue; // No generar fechas pasadas
+                    
+                    // Verificar si ya existe una instancia para esta fecha
+                    $existsStmt = $this->db->prepare("
+                        SELECT task_id FROM Tasks 
+                        WHERE parent_recurrent_task_id = ? 
+                          AND due_date = ?
+                        LIMIT 1
+                    ");
+                    $existsStmt->execute([$taskId, $nextDate]);
+                    
+                    if ($existsStmt->fetch()) {
+                        continue; // Ya existe instancia para esta fecha
+                    }
+                    
+                    // Crear nueva instancia
+                    $instanceData = [
+                        'task_name' => $task['task_name'] . ' (' . date('d/m/Y', strtotime($nextDate)) . ')',
+                        'description' => $task['description'],
+                        'priority' => $task['priority'],
+                        'due_date' => $nextDate,
+                        'status' => 'pending',
+                        'assigned_to_user_id' => $task['assigned_to_user_id'],
+                        'created_by_user_id' => $task['created_by_user_id'],
+                        'project_id' => $task['project_id'],
+                        'is_personal' => $task['is_personal'],
+                        'parent_recurrent_task_id' => $taskId
+                    ];
+                    
+                    $instanceId = $this->createRecurrentInstance($instanceData);
+                    if ($instanceId) {
+                        $generatedCount++;
+                        error_log("Instancia creada: $instanceId para fecha $nextDate");
+                    }
+                }
+                
+                // Actualizar last_generated_date
+                $updateStmt = $this->db->prepare("
+                    UPDATE Tasks 
+                    SET last_generated_date = ? 
+                    WHERE task_id = ?
+                ");
+                $updateStmt->execute([$today, $taskId]);
+            }
+            
+            error_log("=== FIN generateRecurrentInstances - Generadas: $generatedCount ===");
+            return $generatedCount;
+            
+        } catch (Exception $e) {
+            error_log("ERROR en generateRecurrentInstances: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Calcular próximas fechas de recurrencia
+     */
+    private function calculateNextRecurrenceDates($type, $startDate, $endDate, $maxDaysAhead = 365) {
+        $dates = [];
+        $current = new DateTime($startDate);
+        $today = new DateTime(date('Y-m-d'));
+        
+        // Determinar fecha límite
+        if ($endDate) {
+            $end = new DateTime($endDate);
+        } else {
+            $end = new DateTime(date('Y-m-d', strtotime("+$maxDaysAhead days")));
+        }
+        
+        error_log("Calculando fechas desde $startDate hasta " . $end->format('Y-m-d') . " con tipo $type");
+        
+        // Generar todas las fechas desde el inicio
+        while ($current <= $end) {
+            $dateStr = $current->format('Y-m-d');
+            
+            // Solo agregar fechas futuras o de hoy
+            if ($current >= $today) {
+                $dates[] = $dateStr;
+                error_log("Fecha calculada: $dateStr");
+            }
+            
+            // Avanzar según el tipo de recurrencia
+            switch ($type) {
+                case 'daily':
+                    $current->add(new DateInterval('P1D'));
+                    break;
+                case 'weekly':
+                    $current->add(new DateInterval('P7D'));
+                    break;
+                case 'monthly':
+                    $current->add(new DateInterval('P1M'));
+                    break;
+                case 'quarterly':
+                    // Trimestral = cada 3 meses
+                    $current->add(new DateInterval('P3M'));
+                    break;
+                default:
+                    error_log("ERROR: Tipo de recurrencia desconocido: $type");
+                    return [];
+            }
+            
+            // Límite de seguridad para evitar bucles infinitos
+            if (count($dates) > 1000) {
+                error_log("ADVERTENCIA: Se alcanzó el límite de 1000 instancias");
+                break;
+            }
+        }
+        
+        error_log("Total de fechas calculadas: " . count($dates));
+        return $dates;
+    }
+
+    /**
+     * Crear instancia de tarea recurrente
+     */
+    private function createRecurrentInstance($instanceData) {
+        try {
+            $sql = "INSERT INTO Tasks (
+                task_name, 
+                description, 
+                priority, 
+                due_date, 
+                status, 
+                assigned_to_user_id, 
+                created_by_user_id,
+                project_id,
+                automatic_points,
+                assigned_percentage,
+                is_completed,
+                is_personal,
+                is_recurrent,
+                parent_recurrent_task_id
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0.00, 0.00, 0, ?, 0, ?)";
+            
+            $stmt = $this->db->prepare($sql);
+            $result = $stmt->execute([
+                $instanceData['task_name'],
+                $instanceData['description'],
+                $instanceData['priority'],
+                $instanceData['due_date'],
+                $instanceData['status'],
+                $instanceData['assigned_to_user_id'],
+                $instanceData['created_by_user_id'],
+                $instanceData['project_id'],
+                $instanceData['is_personal'],
+                $instanceData['parent_recurrent_task_id']
+            ]);
+            
+            return $result ? $this->db->lastInsertId() : false;
+            
+        } catch (Exception $e) {
+            error_log("ERROR en createRecurrentInstance: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Actualizar solo el porcentaje de progreso de una tarea
+     */
+    public function updateTaskProgress($taskId, $completionPercentage) {
+        try {
+            $stmt = $this->db->prepare("
+                UPDATE Tasks 
+                SET 
+                    completion_percentage = ?,
+                    updated_at = NOW()
+                WHERE task_id = ?
+            ");
+            
+            $result = $stmt->execute([$completionPercentage, $taskId]);
+            
+            if ($result) {
+                // Actualizar el progreso del proyecto padre
+                $task = $this->findById($taskId);
+                if ($task && !empty($task['project_id'])) {
+                    $projectModel = new Project();
+                    $projectModel->updateProgress($task['project_id']);
+                }
+                
+                return true;
+            }
+            
+            return false;
+            
+        } catch (Exception $e) {
+            error_log("Error al actualizar progreso de tarea: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Obtener tareas creadas por el usuario (tareas personales)
+     */
+    public function getUserCreatedTasks($userId, $search = '', $statusFilter = '') {
+        try {
+            $baseQuery = "
+                FROM Tasks t
+                JOIN Projects p ON t.project_id = p.project_id
+                LEFT JOIN Users u ON t.assigned_to_user_id = u.user_id
+                LEFT JOIN Users creator ON t.created_by_user_id = creator.user_id
+                WHERE t.is_subtask = 0
+                  AND t.created_by_user_id = ?
+                  AND p.is_personal = 1
+            ";
+
+            $params = [$userId];
+            
+            if (!empty($search)) {
+                $baseQuery .= " AND (t.task_name LIKE ? OR t.description LIKE ?)";
+                $params[] = "%$search%";
+                $params[] = "%$search%";
+            }
+            
+            if (!empty($statusFilter)) {
+                $baseQuery .= " AND t.status = ?";
+                $params[] = $statusFilter;
+            }
+
+            $sql = "
+                SELECT DISTINCT
+                    t.task_id,
+                    t.task_name,
+                    t.description,
+                    t.due_date,
+                    t.priority,
+                    t.status,
+                    t.completion_percentage,
+                    t.automatic_points,
+                    t.created_by_user_id,
+                    p.project_name,
+                    p.project_id,
+                    creator.full_name as created_by_fullname,
+                    u.full_name as assigned_user_name,
+                    DATEDIFF(t.due_date, CURDATE()) as days_until_due,
+                    NULL as all_assigned_users
+                $baseQuery
+                ORDER BY t.created_at DESC
+            ";
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute($params);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+        } catch (Exception $e) {
+            error_log("Error al obtener tareas creadas por usuario: " . $e->getMessage());
             return [];
         }
     }

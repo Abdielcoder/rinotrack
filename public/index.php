@@ -39,7 +39,13 @@ $models = [
     __DIR__ . '/../app/models/Role.php',
     __DIR__ . '/../app/models/KPI.php',
     __DIR__ . '/../app/models/Task.php',
-    __DIR__ . '/../app/models/Gamification.php'
+    __DIR__ . '/../app/models/Subtask.php',
+    __DIR__ . '/../app/models/SubtaskAssignment.php',
+    __DIR__ . '/../app/models/Gamification.php',
+    __DIR__ . '/../app/models/Notification.php',
+    __DIR__ . '/../app/services/Mailer.php',
+    __DIR__ . '/../app/services/EmailTemplate.php',
+    __DIR__ . '/../app/services/NotificationService.php'
 ];
 
 foreach ($models as $model) {
@@ -57,7 +63,8 @@ $controllers = [
     __DIR__ . '/../app/controllers/AdminController.php',
     __DIR__ . '/../app/controllers/KPIController.php',
     __DIR__ . '/../app/controllers/ClanLeaderController.php',
-    __DIR__ . '/../app/controllers/GamificationController.php'
+    __DIR__ . '/../app/controllers/GamificationController.php',
+    __DIR__ . '/../app/controllers/ClanMemberController.php'
 ];
 
 foreach ($controllers as $controller) {
@@ -68,8 +75,34 @@ foreach ($controllers as $controller) {
     }
 }
 
+// Limpiar tokens de "recordarme" expirados (ejecutar solo ocasionalmente)
+try {
+    $auth = new Auth();
+    if (method_exists($auth, 'cleanExpiredTokens')) {
+        // Solo limpiar cada 100 requests para no afectar el rendimiento
+        $cleanupCounter = isset($_SESSION['cleanup_counter']) ? $_SESSION['cleanup_counter'] : 0;
+        if ($cleanupCounter % 100 === 0) {
+            $auth->cleanExpiredTokens();
+        }
+        $_SESSION['cleanup_counter'] = $cleanupCounter + 1;
+    }
+} catch (Exception $e) {
+    // Silenciar errores de limpieza para no afectar la funcionalidad principal
+    error_log("Error en limpieza de tokens: " . $e->getMessage());
+}
+
 // Obtener ruta
 $route = $_GET['route'] ?? '';
+
+// Normalizar APP_URL para despliegue en /desarrollo/
+if (defined('APP_URL')) {
+    // Si la URL actual contiene /desarrollo/rinotrack/public/ y APP_URL no, corregir
+    $requestUri = $_SERVER['REQUEST_URI'] ?? '';
+    if (strpos($requestUri, '/desarrollo/rinotrack/public/') !== false && strpos(APP_URL, '/desarrollo/rinotrack/public/') === false) {
+        // No se redefine la constante, pero sirve como recordatorio en logs
+        error_log('SUGERENCIA: Ajusta APP_URL a https://rinotrack.rinorisk.com/desarrollo/rinotrack/public/');
+    }
+}
 
 // Router simple
 try {
@@ -119,15 +152,46 @@ try {
             $controller = new AdminController();
             $controller->toggleUserStatus();
             break;
+        
+        case 'admin/delete-user':
+            $controller = new AdminController();
+            $controller->deleteUser();
+            break;
             
         case 'admin/projects':
             $controller = new AdminController();
             $controller->projects();
             break;
+        case 'admin/tasks':
+            $controller = new AdminController();
+            $controller->tasks();
+            break;
+        case 'admin/get-project':
+            $controller = new AdminController();
+            $controller->getProject();
+            break;
+        
+        case 'admin/project-details':
+            $controller = new AdminController();
+            $controller->projectDetails();
+            break;
+        case 'admin/delete-project':
+            $controller = new AdminController();
+            $controller->deleteProject();
+            break;
             
         case 'admin/create-project':
             $controller = new AdminController();
             $controller->createProject();
+            break;
+        case 'admin/update-project':
+            $controller = new AdminController();
+            $controller->updateProject();
+            break;
+        
+        case 'admin/add-task':
+            $controller = new AdminController();
+            $controller->addTask();
             break;
             
         case 'admin/clans':
@@ -155,6 +219,64 @@ try {
             $controller->getClanMembers();
             break;
             
+        case 'admin/get-task-subtasks':
+            $controller = new AdminController();
+            $controller->getTaskSubtasks();
+            break;
+            
+        case 'admin/get-task-details':
+            $controller = new AdminController();
+            $controller->getTaskDetails();
+            break;
+            
+        case 'admin/add-task-comment':
+            $controller = new AdminController();
+            $controller->addTaskComment();
+            break;
+            
+        case 'admin/add-unified-comment':
+            $controller = new AdminController();
+            $controller->addUnifiedComment();
+            break;
+            
+        case 'admin/add-task-attachment':
+            $controller = new AdminController();
+            $controller->addTaskAttachment();
+            break;
+            
+        case 'admin/add-task-reply':
+            $controller = new AdminController();
+            $controller->addTaskReply();
+            break;
+            
+        case 'admin/get-comment-replies':
+            $controller = new AdminController();
+            $controller->getCommentReplies();
+            break;
+            
+        case 'admin/add-subtask-reply':
+            $controller = new AdminController();
+            $controller->addSubtaskReply();
+            break;
+            
+        case 'admin/add-subtasks-to-task':
+            $controller = new AdminController();
+            $controller->addSubtasksToTask();
+            break;
+            
+                    case 'test-subtasks':
+            include __DIR__ . '/../test_subtasks.php';
+            break;
+        case 'test-clan-member-subtask':
+            include __DIR__ . '/../test_clan_member_subtask.php';
+            break;
+
+
+
+
+
+
+            
         case 'admin/clan-details':
             $controller = new AdminController();
             $controller->getClanDetails();
@@ -168,6 +290,27 @@ try {
         case 'admin/remove-clan-member':
             $controller = new AdminController();
             $controller->removeClanMember();
+            break;
+
+        case 'admin/run-notification-jobs':
+            $controller = new AdminController();
+            $controller->runNotificationJobs();
+            break;
+
+        // Notificaciones - Admin
+        case 'admin/notifications':
+            $controller = new AdminController();
+            $controller->notifications();
+            break;
+
+        case 'admin/update-notification-settings':
+            $controller = new AdminController();
+            $controller->updateNotificationSettings();
+            break;
+
+        case 'admin/test-notification':
+            $controller = new AdminController();
+            $controller->sendTestNotification();
             break;
         
     // Rutas KPI
@@ -256,6 +399,11 @@ try {
         $controller = new KPIController();
         $controller->getProjectsData();
         break;
+
+    case 'kpi/get-clan-user-points':
+        $controller = new KPIController();
+        $controller->getClanUserPoints();
+        break;
         
     // Rutas del Líder de Clan
     case 'clan_leader':
@@ -284,6 +432,16 @@ try {
         $controller->getAvailableUsers();
         break;
         
+    case 'clan_leader/get-projects-for-modal':
+        $controller = new ClanLeaderController();
+        $controller->getProjectsForModal();
+        break;
+        
+    case 'clan_leader/get-collaborators-for-modal':
+        $controller = new ClanLeaderController();
+        $controller->getCollaboratorsForModal();
+        break;
+        
     case 'clan_leader/get-clan-members':
         $controller = new ClanLeaderController();
         $controller->getClanMembers();
@@ -304,6 +462,11 @@ try {
         $controller->updateProject();
         break;
         
+    case 'clan_leader/update-project-delegation':
+        $controller = new ClanLeaderController();
+        $controller->updateProjectDelegation();
+        break;
+        
     case 'clan_leader/delete-project':
         $controller = new ClanLeaderController();
         $controller->deleteProject();
@@ -314,15 +477,20 @@ try {
         $controller->kpiDashboard();
         break;
         
-    case 'clan_leader/assign-kpi':
-        $controller = new ClanLeaderController();
-        $controller->assignKPI();
-        break;
-        
-    case 'clan_leader/get-available-points':
-        $controller = new ClanLeaderController();
-        $controller->getAvailablePoints();
-        break;
+                    case 'clan_leader/assign-kpi':
+            $controller = new ClanLeaderController();
+            $controller->assignKPI();
+            break;
+            
+        case 'clan_leader/get-available-points':
+            $controller = new ClanLeaderController();
+            $controller->getAvailablePoints();
+            break;
+            
+        case 'clan_leader/create-personal-task':
+            $controller = new ClanLeaderController();
+            $controller->createPersonalTask();
+            break;
         
     case 'clan_leader/tasks':
         $controller = new ClanLeaderController();
@@ -339,9 +507,19 @@ try {
         $controller->createTask();
         break;
         
+    case 'clan_leader/get-personal-project-id':
+        $controller = new ClanLeaderController();
+        $controller->getPersonalProjectId();
+        break;
+        
+    case 'clan_leader/get-task-data':
+        $controller = new ClanLeaderController();
+        $controller->getTaskDataForEdit();
+        break;
+        
     case 'clan_leader/update-task':
         $controller = new ClanLeaderController();
-        $controller->updateTask();
+        $controller->updateTaskFromModal();
         break;
         
     case 'clan_leader/toggle-task-status':
@@ -349,9 +527,39 @@ try {
         $controller->toggleTaskStatus();
         break;
         
+    case 'clan_leader/updateTaskStatus':
+        $controller = new ClanLeaderController();
+        $controller->updateTaskStatus();
+        break;
+        
+    case 'clan_leader/completeTask':
+        $controller = new ClanLeaderController();
+        $controller->completeTask();
+        break;
+        
+    case 'clan_leader/simple-toggle-task':
+        $controller = new ClanLeaderController();
+        $controller->simpleToggleTask();
+        break;
+        
+    case 'clan_leader/simple-toggle-subtask':
+        $controller = new ClanLeaderController();
+        $controller->simpleToggleSubtask();
+        break;
+        
     case 'clan_leader/get-task-details':
         $controller = new ClanLeaderController();
         $controller->getTaskDetails();
+        break;
+        
+    case 'clan_leader/task_edit':
+        $controller = new ClanLeaderController();
+        $controller->taskEdit();
+        break;
+        
+    case 'clan_leader/get-team-tasks':
+        $controller = new ClanLeaderController();
+        $controller->getTeamTasks();
         break;
         
     case 'clan_leader/add-task-comment':
@@ -364,24 +572,181 @@ try {
         $controller->updateSubtaskStatus();
         break;
         
+    case 'clan_leader/update-subtask-progress':
+        $controller = new ClanLeaderController();
+        $controller->updateSubtaskProgress();
+        break;
+        
+    case 'clan_leader/update-task-progress':
+        $controller = new ClanLeaderController();
+        $controller->updateTaskProgress();
+        break;
+        
     case 'clan_leader/get-available-labels':
         $controller = new ClanLeaderController();
         $controller->getAvailableLabels();
         break;
         
-    case 'clan_leader/test':
-        $controller = new ClanLeaderController();
-        $controller->test();
-        break;
+            case 'clan_leader/test':
+            $controller = new ClanLeaderController();
+            $controller->test();
+            break;
+            
+        case 'test-subtask-creation':
+            require_once 'test-subtask-creation.php';
+            break;
+            
+        case 'debug-subtasks':
+            require_once 'debug-subtasks.html';
+            break;
+            
+        case 'test-controller':
+            require_once 'test-controller.php';
+            break;
+            
+        case 'check-database':
+            require_once 'check-database.php';
+            break;
+            
+        case 'test-subtask-insert':
+            require_once 'test-subtask-insert.php';
+            break;
+            
+        case 'test-subtask-simple':
+            require_once 'test-subtask-simple.html';
+            break;
         
     case 'clan_leader/delete-task':
         $controller = new ClanLeaderController();
         $controller->deleteTask();
         break;
+    
+    case 'clan_leader/profile':
+        $controller = new ClanLeaderController();
+        $controller->profile();
+        break;
+    case 'clan_leader/update-profile':
+        $controller = new ClanLeaderController();
+        $controller->updateProfile();
+        break;
+    case 'clan_leader/update-password-plain':
+        $controller = new ClanLeaderController();
+        $controller->updatePasswordPlain();
+        break;
+    case 'clan_leader/upload-avatar':
+        $controller = new ClanLeaderController();
+        $controller->uploadAvatar();
+        break;
         
     case 'clan_leader/delete-subtask':
         $controller = new ClanLeaderController();
         $controller->deleteSubtask();
+        break;
+        
+    case 'clan_leader/add-subtask':
+        $controller = new ClanLeaderController();
+        $controller->addSubtask();
+        break;
+        
+    // Rutas para comentarios y documentos de subtareas
+    case 'clan_leader/add-subtask-comment':
+        $controller = new ClanLeaderController();
+        $controller->addSubtaskComment();
+        break;
+        
+    case 'clan_leader/get-subtask-comments':
+        $controller = new ClanLeaderController();
+        $controller->getSubtaskComments();
+        break;
+        
+    case 'clan_leader/upload-subtask-attachment':
+        $controller = new ClanLeaderController();
+        $controller->uploadSubtaskAttachment();
+        break;
+        
+    case 'clan_leader/get-subtask-attachments':
+        $controller = new ClanLeaderController();
+        $controller->getSubtaskAttachments();
+        break;
+        
+    case 'clan_leader/delete-subtask-comment':
+        $controller = new ClanLeaderController();
+        $controller->deleteSubtaskComment();
+        break;
+        
+    case 'clan_leader/delete-subtask-attachment':
+        $controller = new ClanLeaderController();
+        $controller->deleteSubtaskAttachment();
+        break;
+        
+    case 'clan_leader/assign-subtask-users':
+        $controller = new ClanLeaderController();
+        $controller->assignSubtaskUsers();
+        break;
+        
+    case 'clan_leader/replace-subtask-users':
+        $controller = new ClanLeaderController();
+        $controller->replaceSubtaskUsers();
+        break;
+        
+    case 'clan_leader/bulk-delete-tasks':
+        $controller = new ClanLeaderController();
+        $controller->bulkDeleteTasks();
+        break;
+        
+    case 'clan_leader/unassign-subtask-users':
+        $controller = new ClanLeaderController();
+        $controller->unassignSubtaskUsers();
+        break;
+        
+    case 'clan_leader/get-subtask-assigned-users':
+        $controller = new ClanLeaderController();
+        $controller->getSubtaskAssignedUsers();
+        break;
+        
+    case 'clan_leader/remove-subtask-user':
+        $controller = new ClanLeaderController();
+        $controller->removeSubtaskUser();
+        break;
+        
+    case 'clan_leader/get-subtask-counts':
+        $controller = new ClanLeaderController();
+        $controller->getSubtaskCounts();
+        break;
+        
+    case 'clan_leader/save-checkbox-state':
+        $controller = new ClanLeaderController();
+        $controller->saveCheckboxState();
+        break;
+        
+    case 'clan_leader/get-checkbox-states':
+        $controller = new ClanLeaderController();
+        $controller->getCheckboxStates();
+        break;
+        
+    case 'clan_leader/debug-checkboxes':
+        $controller = new ClanLeaderController();
+        $controller->debugCheckboxes();
+        break;
+        
+    case 'clan_leader/test-checkbox-route':
+        $controller = new ClanLeaderController();
+        $controller->testCheckboxRoute();
+        break;
+        
+    case 'clan_leader/get-subtask-for-edit':
+        $controller = new ClanLeaderController();
+        $controller->getSubtaskForEdit();
+        break;
+        
+    case 'clan_leader/edit-subtask':
+        $controller = new ClanLeaderController();
+        $controller->editSubtask();
+        break;
+        
+    case 'clan_leader/add-comment':
+        $controller = new ClanLeaderController();
+        $controller->addComment();
         break;
         
     case 'clan_leader/add-collaborators':
@@ -404,10 +769,74 @@ try {
         $controller->getUserDetailedStats();
         break;
         
-            case 'clan_leader/collaborator-availability':
+    case 'clan_leader/collaborator-availability':
+        $controller = new ClanLeaderController();
+        $controller->collaboratorAvailability();
+        break;
+
+    case 'clan_leader/clone-task':
+        $controller = new ClanLeaderController();
+        $controller->cloneTask();
+        break;
+        
+    case 'clan_leader/get-project-data':
+        $controller = new ClanLeaderController();
+        $controller->getProjectData();
+        break;
+
+    case 'clan_leader/clone-project':
+        $controller = new ClanLeaderController();
+        $controller->cloneProject();
+        break;
+        
+        case 'clan_leader/debug-database':
             $controller = new ClanLeaderController();
-            $controller->collaboratorAvailability();
+            $controller->debugDatabase();
             break;
+            
+        case 'debug-project-tasks':
+            require_once 'debug-project-tasks.php';
+            break;
+        
+    case 'clan_leader/simple-kanban-tasks':
+        $controller = new ClanLeaderController();
+        $controller->getSimpleKanbanTasks();
+        break;
+        
+    case 'clan_leader/get-my-tasks':
+        $controller = new ClanLeaderController();
+        $controller->getMyTasks();
+        break;
+        
+    case 'clan_leader/get-my-kanban-tasks':
+        $controller = new ClanLeaderController();
+        $controller->getMyKanbanTasks();
+        break;
+        
+    case 'clan_leader/getMyKanbanTasksNew':
+        $controller = new ClanLeaderController();
+        $controller->getMyKanbanTasksNew();
+        break;
+        
+    case 'clan_leader/get-team-kanban-tasks':
+        $controller = new ClanLeaderController();
+        $controller->getTeamKanbanTasks();
+        break;
+        
+    case 'clan_leader/test-team-kanban':
+        header('Content-Type: application/json');
+        echo json_encode(['success' => true, 'message' => 'Ruta funciona', 'timestamp' => time()]);
+        break;
+        
+    case 'clan_leader/update-task-status':
+        $controller = new ClanLeaderController();
+        $controller->updateTaskStatus();
+        break;
+        
+    case 'clan_leader/search-projects-ajax':
+        $controller = new ClanLeaderController();
+        $controller->searchProjectsAjax();
+        break;
         
         // Rutas de Gamificación
         case 'gamification':
@@ -483,6 +912,214 @@ try {
         case 'perfil':
             // Por ahora redirigir al dashboard
             Utils::redirect('dashboard');
+            break;
+
+        // Rutas Miembro de Clan
+        case 'clan_member':
+        case 'clan_member/dashboard':
+            $controller = new ClanMemberController();
+            $controller->index();
+            break;
+
+        case 'clan_member/projects':
+            $controller = new ClanMemberController();
+            $controller->projects();
+            break;
+
+        case 'clan_member/tasks':
+            $controller = new ClanMemberController();
+            $controller->tasks();
+            break;
+
+        case 'clan_member/project-tasks':
+            $controller = new ClanMemberController();
+            $controller->projectTasks();
+            break;
+
+        case 'clan_member/toggle-task-status':
+            $controller = new ClanMemberController();
+            $controller->toggleTaskStatus();
+            break;
+            
+        case 'clan_member/simple-toggle-subtask':
+            $controller = new ClanMemberController();
+            $controller->simpleToggleSubtask();
+            break;
+
+        case 'clan_member/update-task':
+            $controller = new ClanMemberController();
+            $controller->updateTask();
+            break;
+
+        case 'clan_member/add-task-comment':
+            $controller = new ClanMemberController();
+            $controller->addTaskComment();
+            break;
+
+        case 'clan_member/create-task':
+            $controller = new ClanMemberController();
+            $controller->createTask();
+            break;
+
+        case 'clan_member/task-details':
+            $controller = new ClanMemberController();
+            $controller->taskDetails();
+            break;
+
+        case 'clan_member/task-comments':
+            $controller = new ClanMemberController();
+            $controller->taskComments();
+            break;
+
+        case 'clan_member/availability':
+            $controller = new ClanMemberController();
+            $controller->availability();
+            break;
+
+        case 'clan_member/kpi-dashboard':
+            $controller = new ClanMemberController();
+            $controller->kpiDashboard();
+            break;
+        
+        case 'clan_member/profile':
+            $controller = new ClanMemberController();
+            $controller->profile();
+            break;
+        case 'clan_member/update-profile':
+            $controller = new ClanMemberController();
+            $controller->updateProfile();
+            break;
+        case 'clan_member/update-password-plain':
+            $controller = new ClanMemberController();
+            $controller->updatePasswordPlain();
+            break;
+        case 'clan_member/upload-avatar':
+            $controller = new ClanMemberController();
+            $controller->uploadAvatar();
+            break;
+            
+            case 'clan_member/create-personal-task':
+        $controller = new ClanMemberController();
+        $controller->createPersonalTask();
+        break;
+        
+    case 'clan_member/create-project-task':
+        $controller = new ClanMemberController();
+        $controller->createProjectTask();
+        break;
+            
+        case 'clan_member/create-personal-project':
+            $controller = new ClanMemberController();
+            $controller->createPersonalProject();
+            break;
+            
+        case 'clan_member/test-personal-task':
+            $controller = new ClanMemberController();
+            $controller->testPersonalTask();
+            break;
+        
+        case 'clan_member/update-subtask-status':
+            $controller = new ClanMemberController();
+            $controller->updateSubtaskStatus();
+            break;
+            
+        case 'clan_member/update-subtask-progress':
+            $controller = new ClanMemberController();
+            $controller->updateSubtaskProgress();
+            break;
+            
+        // Ruta para crear subtarea
+        case 'clan_member/add-subtask':
+            $controller = new ClanMemberController();
+            $controller->addSubtask();
+            break;
+            
+        // Rutas para comentarios y documentos de subtareas
+        case 'clan_member/add-subtask-comment':
+            $controller = new ClanMemberController();
+            $controller->addSubtaskComment();
+            break;
+            
+        case 'clan_member/get-subtask-comments':
+            $controller = new ClanMemberController();
+            $controller->getSubtaskComments();
+            break;
+            
+        case 'clan_member/upload-subtask-attachment':
+            $controller = new ClanMemberController();
+            $controller->uploadSubtaskAttachment();
+            break;
+            
+        case 'clan_member/get-subtask-attachments':
+            $controller = new ClanMemberController();
+            $controller->getSubtaskAttachments();
+            break;
+            
+        case 'clan_member/delete-subtask-comment':
+            $controller = new ClanMemberController();
+            $controller->deleteSubtaskComment();
+            break;
+            
+        case 'clan_member/delete-subtask-attachment':
+            $controller = new ClanMemberController();
+            $controller->deleteSubtaskAttachment();
+            break;
+            
+    case 'clan_member/export-task-history':
+        $controller = new ClanMemberController();
+        $controller->exportTaskHistory();
+        break;
+        
+    case 'clan_member/save-checkbox-state':
+        $controller = new ClanMemberController();
+        $controller->saveCheckboxState();
+        break;
+        
+    case 'clan_member/get-checkbox-states':
+        $controller = new ClanMemberController();
+        $controller->getCheckboxStates();
+        break;
+
+    case 'clan_member/get-task-data':
+        $controller = new ClanMemberController();
+        $controller->getTaskData();
+        break;
+
+    case 'clan_member/clone-task':
+        $controller = new ClanMemberController();
+        $controller->cloneTask();
+        break;
+            
+        case 'clan_member/get-subtask-counts':
+            $controller = new ClanMemberController();
+            $controller->getSubtaskCounts();
+            break;
+            
+        case 'clan_member/edit-subtask':
+            $controller = new ClanMemberController();
+            $controller->editSubtask();
+            break;
+
+        case 'clan_member/update-task-progress':
+            error_log("=== Ruta clan_member/update-task-progress reconocida ===");
+            $controller = new ClanMemberController();
+            $controller->updateTaskProgress();
+            break;
+            
+        // Rutas para asignación de subtareas por clan members
+        case 'clan_member/get-clan-members':
+            $controller = new ClanMemberController();
+            $controller->getClanMembers();
+            break;
+            
+        case 'clan_member/assign-subtask-users':
+            $controller = new ClanMemberController();
+            $controller->assignSubtaskUsers();
+            break;
+            
+        case 'clan_member/unassign-subtask-user':
+            $controller = new ClanMemberController();
+            $controller->unassignSubtaskUser();
             break;
             
         default:

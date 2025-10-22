@@ -1,0 +1,35 @@
+# Configuración simple y robusta para servir archivos estáticos
+
+# Desactivar ejecución de PHP completamente
+<Files "*.php">
+    Order Deny,Allow
+    Deny from all
+</Files>
+
+# Configurar tipos MIME básicos
+AddType image/jpeg .jpg .jpeg
+AddType image/png .png
+AddType image/gif .gif
+AddType application/pdf .pdf
+AddType text/plain .txt
+
+# Permitir acceso a archivos de imagen y documentos
+<FilesMatch "\.(jpg|jpeg|png|gif|pdf|txt)$">
+    Order Allow,Deny
+    Allow from all
+</FilesMatch>
+
+# Denegar acceso a archivos PHP y ejecutables
+<FilesMatch "\.(php|phtml|php3|php4|php5|php7|phps|cgi|pl|py|jsp|asp|aspx|sh|exe|bat)$">
+    Order Deny,Allow
+    Deny from all
+</FilesMatch>
+
+# Prevenir listado de directorios
+Options -Indexes
+
+# Headers básicos de seguridad
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options nosniff
+</IfModule>
+

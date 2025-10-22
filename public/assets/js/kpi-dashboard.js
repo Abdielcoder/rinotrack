@@ -795,6 +795,10 @@ function showClanDetails(clan) {
                 <div class="clan-detail-item">
                     <strong>Progreso:</strong> ${clan.progress_percentage}%
                 </div>
+                <div id="clan-users-points" class="clan-users-points" style="margin-top:14px">
+                    <div style="font-weight:700;margin-bottom:8px">Resumen por usuario</div>
+                    <div class="loading">Cargando...</div>
+                </div>
             </div>
         </div>
     `;
@@ -818,7 +822,7 @@ function showClanDetails(clan) {
         background: white;
         border-radius: 12px;
         padding: 2rem;
-        max-width: 400px;
+        max-width: 520px;
         width: 90%;
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     `;
@@ -854,6 +858,25 @@ function showClanDetails(clan) {
     });
     
     document.body.appendChild(modal);
+    // Cargar resumen por usuario (API dedicada)
+    fetch(`?route=kpi/get-clan-user-points&clan_id=${encodeURIComponent(clan.clan_id)}`)
+        .then(r => r.json())
+        .then(data => {
+            const cont = modal.querySelector('#clan-users-points');
+            if (!cont) return;
+            if (!data || !data.success || !Array.isArray(data.users)) { cont.innerHTML = '<div class="empty">Sin datos</div>'; return; }
+            if (data.users.length === 0) { cont.innerHTML = '<div class="empty">Sin puntos aún</div>'; return; }
+            const items = data.users.slice(0,20)
+                .map(u => `<div class="user-point-item" style="display:flex;justify-content:space-between;padding:8px;border:1px solid #e5e7eb;border-radius:10px;margin-bottom:6px">
+                    <span style="font-weight:600">${u.name}</span>
+                    <span>${(u.earned||0).toFixed(1)} pts</span>
+                </div>`).join('');
+            cont.innerHTML = items;
+        })
+        .catch(()=>{
+            const cont = modal.querySelector('#clan-users-points');
+            if (cont) cont.innerHTML = '<div class="empty">Error al cargar</div>';
+        });
     
     // Cerrar modal al hacer click fuera
     modal.addEventListener('click', (e) => {

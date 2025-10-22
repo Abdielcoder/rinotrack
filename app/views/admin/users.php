@@ -33,6 +33,7 @@ window.closeUserModal = function() {
 };
 
 window.editUser = function(userId) {
+    console.log("editUser called with userId:", userId);
     isEditMode = true;
     currentUserId = userId;
     document.getElementById("modalTitle").textContent = "Editar Usuario";
@@ -41,33 +42,90 @@ window.editUser = function(userId) {
     document.getElementById("passwordGroup").style.display = "none";
     document.getElementById("password").required = false;
     
-    // Cargar datos del usuario desde la tabla
-    const userRow = document.querySelector("tr:has(button[onclick=\"editUser(" + userId + ")\"])");
-    if (userRow) {
-        const cells = userRow.querySelectorAll("td");
+    // Cargar datos del usuario desde la tabla - método mejorado
+    const editButton = document.querySelector(`button[onclick=\"editUser(${userId})\"]`);
+    console.log("Edit button found:", editButton);
+    
+    if (editButton) {
+        const userRow = editButton.closest("tr");
+        console.log("User row found:", userRow);
         
-        // Extraer datos de la fila
-        const username = cells[0].querySelector(".username").textContent;
-        const email = cells[1].textContent;
-        const fullName = cells[2].textContent !== "-" ? cells[2].textContent : "";
-        const roleBadge = cells[3].querySelector(".role-badge");
-        const isActive = cells[4].querySelector(".status-badge").classList.contains("active");
-        
-        // Llenar el formulario
-        document.getElementById("username").value = username;
-        document.getElementById("email").value = email;
-        document.getElementById("fullName").value = fullName;
-        document.getElementById("isActive").checked = isActive;
-        
-        // Buscar el rol en el select
-        const roleText = roleBadge.textContent.trim();
-        const roleSelect = document.getElementById("roleId");
-        for (let option of roleSelect.options) {
-            if (option.textContent.trim() === roleText) {
-                roleSelect.value = option.value;
-                break;
+        if (userRow) {
+            const cells = userRow.querySelectorAll("td");
+            console.log("Cells found:", cells.length);
+            
+            try {
+                // Extraer datos de la fila con validación mejorada
+                const usernameElement = cells[0].querySelector(".username");
+                const username = usernameElement ? usernameElement.textContent.trim() : "";
+                
+                const email = cells[1] ? cells[1].textContent.trim() : "";
+                
+                const fullNameText = cells[2] ? cells[2].textContent.trim() : "";
+                const fullName = fullNameText !== "-" ? fullNameText : "";
+                
+                const roleBadge = cells[3] ? cells[3].querySelector(".role-badge") : null;
+                const roleText = roleBadge ? roleBadge.textContent.trim() : "";
+                
+                const statusBadge = cells[4] ? cells[4].querySelector(".status-badge") : null;
+                const isActive = statusBadge ? statusBadge.classList.contains("active") : false;
+                
+                console.log("Extracted data:", {username, email, fullName, roleText, isActive});
+                
+                // Llenar el formulario
+                const usernameField = document.getElementById("username");
+                const emailField = document.getElementById("email");
+                const fullNameField = document.getElementById("fullName");
+                const isActiveField = document.getElementById("isActive");
+                const roleSelect = document.getElementById("roleId");
+                
+                if (usernameField) usernameField.value = username;
+                if (emailField) emailField.value = email;
+                if (fullNameField) fullNameField.value = fullName;
+                if (isActiveField) isActiveField.checked = isActive;
+                
+                // Buscar el rol en el select con mejor coincidencia
+                if (roleSelect && roleText) {
+                    let optionFound = false;
+                    for (let option of roleSelect.options) {
+                        const optionText = option.textContent.trim().toLowerCase();
+                        const searchText = roleText.toLowerCase();
+                        
+                        // Búsqueda exacta primero
+                        if (optionText === searchText) {
+                            roleSelect.value = option.value;
+                            optionFound = true;
+                            break;
+                        }
+                    }
+                    
+                    // Si no se encontró coincidencia exacta, buscar por contenido
+                    if (!optionFound) {
+                        for (let option of roleSelect.options) {
+                            const optionText = option.textContent.trim().toLowerCase();
+                            const searchText = roleText.toLowerCase();
+                            
+                            if (optionText.includes(searchText) || searchText.includes(optionText)) {
+                                roleSelect.value = option.value;
+                                optionFound = true;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    console.log("Role selection result:", optionFound ? "Found" : "Not found", "for role:", roleText);
+                }
+                
+            } catch (error) {
+                console.error("Error extracting user data:", error);
+                alert("Error al cargar los datos del usuario. Por favor, recarga la página e intenta de nuevo.");
+                return;
             }
         }
+    } else {
+        console.error("No se pudo encontrar la fila del usuario para ID:", userId);
+        alert("Error al encontrar los datos del usuario. Por favor, recarga la página e intenta de nuevo.");
+        return;
     }
     
     document.getElementById("userModal").style.display = "block";
@@ -85,28 +143,133 @@ window.searchUsers = function() {
 };
 
 window.toggleUserStatus = function(userId) {
-    if (confirm("¿Estás seguro de que quieres cambiar el estado de este usuario?")) {
-        const formData = new FormData();
-        formData.append("userId", userId);
-        
-        fetch("?route=admin/toggle-user-status", {
-            method: "POST",
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert("Estado del usuario actualizado exitosamente");
-                location.reload();
-            } else {
-                alert(data.message || "Error al actualizar el estado del usuario");
-            }
-        })
-        .catch(error => {
-            console.error("Error:", error);
-            alert("Error de conexión al actualizar el estado del usuario");
-        });
+    console.log("toggleUserStatus called with userId:", userId);
+    
+    // Encontrar el botón y determinar el estado actual
+    const toggleButton = document.querySelector(`button[onclick=\"toggleUserStatus(${userId})\"]`);
+    const userRow = toggleButton ? toggleButton.closest("tr") : null;
+    const statusBadge = userRow ? userRow.querySelector(".status-badge") : null;
+    const isCurrentlyActive = statusBadge ? statusBadge.classList.contains("active") : false;
+    
+    const actionText = isCurrentlyActive ? "desactivar" : "activar";
+    const confirmMessage = `¿Estás seguro de que quieres ${actionText} este usuario?`;
+    
+    if (!confirm(confirmMessage)) {
+        return;
     }
+    
+    // Mostrar indicador de carga en el botón
+    if (toggleButton) {
+        toggleButton.disabled = true;
+        const originalContent = toggleButton.innerHTML;
+        toggleButton.innerHTML = "<i class=\"fas fa-spinner fa-spin\"></i>";
+        
+        // Restaurar botón después de 10 segundos como fallback
+        setTimeout(() => {
+            toggleButton.disabled = false;
+            toggleButton.innerHTML = originalContent;
+        }, 10000);
+    }
+    
+    const formData = new FormData();
+    formData.append("userId", userId);
+    
+    fetch("?route=admin/toggle-user-status", {
+        method: "POST",
+        body: formData
+    })
+    .then(response => {
+        console.log("Toggle status response status:", response.status);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log("Toggle status response:", data);
+        
+        if (data.success) {
+            alert("Estado del usuario actualizado exitosamente");
+            location.reload();
+        } else {
+            alert(data.message || "Error al actualizar el estado del usuario");
+            // Restaurar botón en caso de error
+            if (toggleButton) {
+                toggleButton.disabled = false;
+                toggleButton.innerHTML = isCurrentlyActive ? "<i class=\"fas fa-ban\"></i>" : "<i class=\"fas fa-check\"></i>";
+            }
+        }
+    })
+    .catch(error => {
+        console.error("Error en toggleUserStatus:", error);
+        alert("Error de conexión al actualizar el estado del usuario: " + error.message);
+        // Restaurar botón en caso de error
+        if (toggleButton) {
+            toggleButton.disabled = false;
+            toggleButton.innerHTML = isCurrentlyActive ? "<i class=\"fas fa-ban\"></i>" : "<i class=\"fas fa-check\"></i>";
+        }
+    });
+};
+
+window.deleteUser = function(userId) {
+    console.log("deleteUser called with userId:", userId);
+    
+    if (!confirm("¿Deseas eliminar definitivamente este usuario? Esta acción no se puede deshacer.")) {
+        return;
+    }
+    
+    // Mostrar indicador de carga
+    const deleteButton = document.querySelector(`button[onclick=\"deleteUser(${userId})\"]`);
+    if (deleteButton) {
+        deleteButton.disabled = true;
+        const originalContent = deleteButton.innerHTML;
+        deleteButton.innerHTML = "<i class=\"fas fa-spinner fa-spin\"></i>";
+        
+        // Restaurar botón después de 10 segundos como fallback
+        setTimeout(() => {
+            deleteButton.disabled = false;
+            deleteButton.innerHTML = originalContent;
+        }, 10000);
+    }
+    
+    const formData = new FormData();
+    formData.append("userId", userId);
+    
+    fetch("?route=admin/delete-user", {
+        method: "POST",
+        body: formData
+    })
+    .then(response => {
+        console.log("Response status:", response.status);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log("Delete response:", data);
+        
+        if (data && data.success) {
+            alert("Usuario eliminado exitosamente");
+            location.reload();
+        } else {
+            alert(data && data.message ? data.message : "Error al eliminar usuario");
+            // Restaurar botón en caso de error
+            if (deleteButton) {
+                deleteButton.disabled = false;
+                deleteButton.innerHTML = "<i class=\"fas fa-trash\"></i>";
+            }
+        }
+    })
+    .catch(error => {
+        console.error("Error en deleteUser:", error);
+        alert("Error de conexión al eliminar usuario: " + error.message);
+        // Restaurar botón en caso de error
+        if (deleteButton) {
+            deleteButton.disabled = false;
+            deleteButton.innerHTML = "<i class=\"fas fa-trash\"></i>";
+        }
+    });
 };
 
 function clearErrors() {
@@ -144,20 +307,61 @@ document.addEventListener("DOMContentLoaded", function() {
             submitText.style.display = "none";
             submitLoader.style.display = "inline-block";
             
+            // Validación en cliente para evitar 400 por datos obvios inválidos
+            const usernameVal = (document.getElementById("username")?.value || "").trim();
+            const emailVal = (document.getElementById("email")?.value || "").trim();
+            const fullNameVal = (document.getElementById("fullName")?.value || "").trim();
+            const roleIdVal = (document.getElementById("roleId")?.value || "").trim();
+            const passwordVal = (document.getElementById("password")?.value || "").trim();
+
+            const clientErrors = [];
+            if (!usernameVal || usernameVal.length < 3) clientErrors.push("El nombre de usuario debe tener al menos 3 caracteres");
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailVal || !emailRegex.test(emailVal)) clientErrors.push("Debe proporcionar un email válido");
+            if (!fullNameVal) clientErrors.push("El nombre completo es requerido");
+            if (!roleIdVal) clientErrors.push("Debe seleccionar un rol válido");
+            if (!isEditMode) {
+                if (!passwordVal || passwordVal.length < 6) clientErrors.push("La contraseña debe tener al menos 6 caracteres");
+            }
+
+            if (clientErrors.length > 0) {
+                alert("Errores de validación:\n" + clientErrors.map(e => `- ${e}`).join("\n"));
+                submitBtn.disabled = false;
+                submitText.style.display = "inline";
+                submitLoader.style.display = "none";
+                return;
+            }
+
             const formData = new FormData(this);
             const url = isEditMode ? "?route=admin/update-user" : "?route=admin/create-user";
-            
+
             fetch(url, {
                 method: "POST",
                 body: formData
             })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                return response.json();
-            })
+            .then(response => response.json().catch(() => ({ success: false, message: "Respuesta inválida del servidor" })))
             .then(data => {
+                // Debug: Mostrar información completa en consola
+                console.log("=== RESPUESTA DEL SERVIDOR ===");
+                console.log("Success:", data.success);
+                console.log("Message:", data.message);
+                if (data.debug) {
+                    console.log("Debug Info:");
+                    data.debug.forEach((msg, index) => {
+                        console.log(`  ${index + 1}. ${msg}`);
+                    });
+                }
+                if (data.exception) {
+                    console.error("Exception:", data.exception);
+                }
+                if (data.trace) {
+                    console.error("Stack Trace:", data.trace);
+                }
+                if (data.errors) {
+                    console.log("Validation Errors:", data.errors);
+                }
+                console.log("=== FIN RESPUESTA ===");
+                
                 if (data.success) {
                     alert(data.message);
                     closeUserModal();
@@ -178,7 +382,11 @@ document.addEventListener("DOMContentLoaded", function() {
                 }
             })
             .catch(error => {
-                console.error("Error:", error);
+                console.error("=== ERROR DE CONEXIÓN ===");
+                console.error("Error completo:", error);
+                console.error("Mensaje:", error.message);
+                console.error("Stack:", error.stack);
+                console.error("=== FIN ERROR ===");
                 alert("Error de conexión: " + error.message);
             })
             .finally(() => {
@@ -196,6 +404,8 @@ document.addEventListener("DOMContentLoaded", function() {
             closeUserModal();
         }
     };
+
+
 });
 </script>';
 
@@ -382,6 +592,11 @@ $additionalJS[] = $inlineJS;
                                                 title="<?php echo $userItem['is_active'] ? 'Desactivar' : 'Activar'; ?>">
                                             <i class="fas fa-<?php echo $userItem['is_active'] ? 'ban' : 'check'; ?>"></i>
                                         </button>
+                                        <button class="btn-icon btn-delete" 
+                                                onclick="deleteUser(<?php echo $userItem['user_id']; ?>)"
+                                                title="Eliminar">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -526,7 +741,7 @@ $additionalJS[] = $inlineJS;
 }
 
 .search-btn {
-    background: var(--primary-color);
+    background: #1e3a8a;
     border: none;
     padding: var(--spacing-sm);
     border-radius: var(--radius-sm);
@@ -536,7 +751,7 @@ $additionalJS[] = $inlineJS;
 }
 
 .search-btn:hover {
-    background: var(--primary-dark);
+    background: #1e40af;
 }
 
 .table-container {
@@ -694,6 +909,16 @@ $additionalJS[] = $inlineJS;
 
 .btn-toggle:hover {
     background: #e0a800;
+    transform: translateY(-1px);
+}
+
+.btn-delete {
+    background: var(--error);
+    color: white;
+}
+
+.btn-delete:hover {
+    filter: brightness(0.9);
     transform: translateY(-1px);
 }
 

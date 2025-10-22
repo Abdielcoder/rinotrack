@@ -13,7 +13,7 @@ class User {
     public function findByUsernameOrEmail($username) {
         try {
             $stmt = $this->db->prepare("
-                SELECT user_id, username, email, password_hash, full_name, is_active, last_login, created_at 
+                SELECT user_id, username, email, password_hash, full_name, is_active, last_login, created_at, avatar_path 
                 FROM Users 
                 WHERE (username = ? OR email = ?) AND is_active = 1
             ");
@@ -31,7 +31,7 @@ class User {
     public function findById($id) {
         try {
             $stmt = $this->db->prepare("
-                SELECT user_id, username, email, full_name, is_active, last_login, created_at 
+                SELECT user_id, username, email, full_name, is_active, last_login, created_at, avatar_path 
                 FROM Users 
                 WHERE user_id = ? AND is_active = 1
             ");
@@ -44,12 +44,30 @@ class User {
     }
     
     /**
+     * Obtener todos los usuarios del sistema
+     */
+    public function getAll() {
+        try {
+            $stmt = $this->db->prepare("
+                SELECT user_id, username, email, full_name, is_active, last_login, created_at, avatar_path 
+                FROM Users 
+                ORDER BY full_name ASC, username ASC
+            ");
+            $stmt->execute();
+            return $stmt->fetchAll();
+        } catch (PDOException $e) {
+            error_log("Error al obtener todos los usuarios: " . $e->getMessage());
+            return [];
+        }
+    }
+    
+    /**
      * Buscar usuario por ID sin importar su estado activo
      */
     public function findByIdAnyStatus($id) {
         try {
             $stmt = $this->db->prepare("
-                SELECT user_id, username, email, full_name, is_active, last_login, created_at 
+                SELECT user_id, username, email, full_name, is_active, last_login, created_at, avatar_path 
                 FROM Users 
                 WHERE user_id = ?
             ");
@@ -79,19 +97,40 @@ class User {
      */
     public function create($username, $email, $password, $fullName) {
         try {
-            $passwordHash = password_hash($password, PASSWORD_DEFAULT);
-            $stmt = $this->db->prepare("
-                INSERT INTO Users (username, email, password_hash, full_name, created_at) 
-                VALUES (?, ?, ?, ?, NOW())
-            ");
-            $result = $stmt->execute([$username, $email, $passwordHash, $fullName]);
+            error_log("User::create - Starting user creation");
+            error_log("Parameters: username='$username', email='$email', fullName='$fullName', password_length=" . strlen($password));
             
-            if ($result) {
-                return $this->db->lastInsertId();
+            $passwordHash = password_hash($password, PASSWORD_DEFAULT);
+            error_log("Password hash generated successfully: " . (empty($passwordHash) ? "FAILED" : "SUCCESS"));
+            
+            $sql = "INSERT INTO Users (username, email, password_hash, full_name, avatar_path, created_at) VALUES (?, ?, ?, ?, '', NOW())";
+            error_log("SQL query: $sql");
+            
+            $stmt = $this->db->prepare($sql);
+            if (!$stmt) {
+                error_log("PREPARE FAILED: " . print_r($this->db->errorInfo(), true));
+                return false;
             }
-            return false;
+            
+            $result = $stmt->execute([$username, $email, $passwordHash, $fullName]);
+            error_log("Execute result: " . ($result ? "SUCCESS" : "FAILED"));
+            
+            if (!$result) {
+                error_log("EXECUTE ERROR: " . print_r($stmt->errorInfo(), true));
+                return false;
+            }
+            
+            $lastId = $this->db->lastInsertId();
+            error_log("Last insert ID: $lastId");
+            
+            return $lastId;
         } catch (PDOException $e) {
-            error_log("Error al crear usuario: " . $e->getMessage());
+            error_log("PDOException in User::create: " . $e->getMessage());
+            error_log("Error Code: " . $e->getCode());
+            error_log("SQL State: " . ($e->errorInfo[0] ?? 'N/A'));
+            return false;
+        } catch (Exception $e) {
+            error_log("General Exception in User::create: " . $e->getMessage());
             return false;
         }
     }
@@ -111,6 +150,25 @@ class User {
             return $result['count'] > 0;
         } catch (PDOException $e) {
             error_log("Error al verificar existencia de usuario: " . $e->getMessage());
+            return true; // En caso de error, asumir que existe para evitar duplicados
+        }
+    }
+    
+    /**
+     * Verificar si un username o email ya existe excluyendo un usuario específico
+     */
+    public function existsExcludingUser($excludeUserId, $username, $email) {
+        try {
+            $stmt = $this->db->prepare("
+                SELECT COUNT(*) as count 
+                FROM Users 
+                WHERE (username = ? OR email = ?) AND user_id != ?
+            ");
+            $stmt->execute([$username, $email, $excludeUserId]);
+            $result = $stmt->fetch();
+            return $result['count'] > 0;
+        } catch (PDOException $e) {
+            error_log("Error al verificar existencia de usuario (excluyendo): " . $e->getMessage());
             return true; // En caso de error, asumir que existe para evitar duplicados
         }
     }
@@ -195,6 +253,32 @@ class User {
             return $stmt->execute([$passwordHash, $userId]);
         } catch (PDOException $e) {
             error_log("Error al actualizar contraseña: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Actualizar contraseña en texto plano (según requerimiento específico)
+     */
+    public function updatePasswordPlain($userId, $newPassword) {
+        try {
+            $stmt = $this->db->prepare("UPDATE Users SET password_hash = ? WHERE user_id = ?");
+            return $stmt->execute([$newPassword, $userId]);
+        } catch (PDOException $e) {
+            error_log("Error al actualizar contraseña (plain): " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Actualizar avatar_path del usuario
+     */
+    public function updateAvatarPath($userId, $avatarPath) {
+        try {
+            $stmt = $this->db->prepare("UPDATE Users SET avatar_path = ? WHERE user_id = ?");
+            return $stmt->execute([$avatarPath, $userId]);
+        } catch (PDOException $e) {
+            error_log("Error al actualizar avatar_path: " . $e->getMessage());
             return false;
         }
     }
@@ -321,6 +405,60 @@ class User {
             return $stmt->fetchAll();
         } catch (PDOException $e) {
             error_log("Error al obtener usuarios por clan: " . $e->getMessage());
+            return [];
+        }
+    }
+    
+    /**
+     * Obtener todos los usuarios del sistema
+     */
+    public function getAllUsers() {
+        try {
+            // Primero obtener usuarios básicos
+            $stmt = $this->db->prepare("
+                SELECT 
+                    u.user_id,
+                    u.username,
+                    u.full_name,
+                    u.email,
+                    u.is_active,
+                    u.last_login,
+                    u.created_at
+                FROM Users u
+                WHERE u.is_active = 1
+                ORDER BY u.full_name
+            ");
+            $stmt->execute();
+            $users = $stmt->fetchAll();
+            
+            // Luego obtener roles y clanes para cada usuario
+            foreach ($users as &$user) {
+                // Obtener rol
+                $roleStmt = $this->db->prepare("
+                    SELECT r.role_name 
+                    FROM User_Roles ur 
+                    JOIN Roles r ON ur.role_id = r.role_id 
+                    WHERE ur.user_id = ?
+                ");
+                $roleStmt->execute([$user['user_id']]);
+                $role = $roleStmt->fetch();
+                $user['role_name'] = $role ? $role['role_name'] : null;
+                
+                // Obtener clan
+                $clanStmt = $this->db->prepare("
+                    SELECT c.clan_name 
+                    FROM Clan_Members cm 
+                    JOIN Clans c ON cm.clan_id = c.clan_id 
+                    WHERE cm.user_id = ?
+                ");
+                $clanStmt->execute([$user['user_id']]);
+                $clan = $clanStmt->fetch();
+                $user['clan_name'] = $clan ? $clan['clan_name'] : null;
+            }
+            
+            return $users;
+        } catch (PDOException $e) {
+            error_log("Error al obtener todos los usuarios: " . $e->getMessage());
             return [];
         }
     }

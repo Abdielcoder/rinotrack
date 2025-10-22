@@ -10,13 +10,14 @@ class Project {
     /**
      * Crear nuevo proyecto
      */
-    public function create($projectName, $description, $clanId, $createdByUserId, $kpiQuarterId = null, $kpiPoints = 0, $taskDistributionMode = 'automatic') {
+    public function create($projectName, $description, $clanId, $createdByUserId, $kpiQuarterId = null, $kpiPoints = 0, $taskDistributionMode = 'automatic', $timeLimit = null) {
         try {
+            $timeLimitValue = (is_string($timeLimit) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $timeLimit)) ? $timeLimit : null;
             $stmt = $this->db->prepare("
-                INSERT INTO Projects (project_name, description, clan_id, created_by_user_id, kpi_quarter_id, kpi_points, task_distribution_mode, status, created_at) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, 'open', NOW())
+                INSERT INTO Projects (project_name, description, clan_id, created_by_user_id, kpi_quarter_id, kpi_points, task_distribution_mode, time_limit, status, created_at) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'open', NOW())
             ");
-            $result = $stmt->execute([$projectName, $description, $clanId, $createdByUserId, $kpiQuarterId, $kpiPoints, $taskDistributionMode]);
+            $result = $stmt->execute([$projectName, $description, $clanId, $createdByUserId, $kpiQuarterId, $kpiPoints, $taskDistributionMode, $timeLimitValue]);
             
             if ($result) {
                 return $this->db->lastInsertId();
@@ -31,7 +32,7 @@ class Project {
     /**
      * Crear proyecto con KPI asignado
      */
-    public function createWithKPI($projectName, $description, $clanId, $createdByUserId, $kpiQuarterId, $kpiPoints, $taskDistributionMode = 'automatic') {
+    public function createWithKPI($projectName, $description, $clanId, $createdByUserId, $kpiQuarterId, $kpiPoints, $taskDistributionMode = 'automatic', $timeLimit = null) {
         try {
             $this->db->beginTransaction();
             
@@ -54,7 +55,7 @@ class Project {
             }
             
             // Crear proyecto
-            $projectId = $this->create($projectName, $description, $clanId, $createdByUserId, $kpiQuarterId, $kpiPoints, $taskDistributionMode);
+            $projectId = $this->create($projectName, $description, $clanId, $createdByUserId, $kpiQuarterId, $kpiPoints, $taskDistributionMode, $timeLimit);
             
             if (!$projectId) {
                 throw new Exception("Error al crear proyecto");
@@ -94,12 +95,12 @@ class Project {
                     ck.total_points as kpi_total_points,
                     (ck.total_points - ck.assigned_points) as kpi_available_points,
                     COUNT(t.task_id) as total_tasks,
-                    SUM(CASE WHEN t.is_completed = 1 THEN 1 ELSE 0 END) as completed_tasks,
+                    SUM(CASE WHEN (t.status = 'completed' OR t.is_completed = 1) THEN 1 ELSE 0 END) as completed_tasks,
                     CASE 
                         WHEN p.task_distribution_mode = 'automatic' THEN 
-                            COALESCE(SUM(CASE WHEN t.is_completed = 1 THEN t.automatic_points ELSE 0 END), 0)
+                            COALESCE(SUM(CASE WHEN (t.status = 'completed' OR t.is_completed = 1) THEN t.automatic_points ELSE 0 END), 0)
                         ELSE 
-                            COALESCE(SUM(CASE WHEN t.is_completed = 1 THEN (t.assigned_percentage * p.kpi_points / 100) ELSE 0 END), 0)
+                            COALESCE(SUM(CASE WHEN (t.status = 'completed' OR t.is_completed = 1) THEN (t.assigned_percentage * p.kpi_points / 100) ELSE 0 END), 0)
                     END as earned_points
                 FROM Projects p
                 LEFT JOIN Clans c ON p.clan_id = c.clan_id
@@ -122,9 +123,13 @@ class Project {
                 $kpiPoints = (float)$project['kpi_points'];
                 $earnedPoints = (float)$project['earned_points'];
                 
-                // Calcular el porcentaje de progreso
+                // Calcular el porcentaje de progreso con fallback
                 if ($kpiPoints > 0) {
-                    $project['progress_percentage'] = round(($earnedPoints / $kpiPoints) * 100, 1);
+                    if ($earnedPoints > 0) {
+                        $project['progress_percentage'] = round(($earnedPoints / $kpiPoints) * 100, 1);
+                    } else {
+                        $project['progress_percentage'] = $totalTasks > 0 ? round(($completedTasks / $totalTasks) * 100, 1) : 0;
+                    }
                 } else {
                     // Si no hay KPI asignado, calcular basado en tareas completadas
                     $project['progress_percentage'] = $totalTasks > 0 ? round(($completedTasks / $totalTasks) * 100, 1) : 0;
@@ -152,12 +157,12 @@ class Project {
                     c.clan_name,
                     u.full_name as created_by_name,
                     COUNT(t.task_id) as total_tasks_count,
-                    SUM(CASE WHEN t.is_completed = 1 THEN 1 ELSE 0 END) as completed_tasks_count,
+                    SUM(CASE WHEN (t.status = 'completed' OR t.is_completed = 1) THEN 1 ELSE 0 END) as completed_tasks_count,
                     CASE 
                         WHEN p.task_distribution_mode = 'automatic' THEN 
-                            COALESCE(SUM(CASE WHEN t.is_completed = 1 THEN t.automatic_points ELSE 0 END), 0)
+                            COALESCE(SUM(CASE WHEN (t.status = 'completed' OR t.is_completed = 1) THEN t.automatic_points ELSE 0 END), 0)
                         ELSE 
-                            COALESCE(SUM(CASE WHEN t.is_completed = 1 THEN (t.assigned_percentage * p.kpi_points / 100) ELSE 0 END), 0)
+                            COALESCE(SUM(CASE WHEN (t.status = 'completed' OR t.is_completed = 1) THEN (t.assigned_percentage * p.kpi_points / 100) ELSE 0 END), 0)
                     END as earned_points
                 FROM Projects p
                 LEFT JOIN Clans c ON p.clan_id = c.clan_id
@@ -206,19 +211,65 @@ class Project {
      */
     public function getByClan($clanId) {
         try {
+            error_log("=== getByClan INICIADO ===");
+            error_log("Clan ID solicitado: $clanId");
+            
             $stmt = $this->db->prepare("
                 SELECT 
                     p.*,
                     c.clan_name,
-                    u.full_name as created_by_name
+                    u.full_name as created_by_name,
+                    COALESCE(p.allow_delegation, 0) as allow_delegation,
+                    COUNT(t.task_id) as total_tasks,
+                    SUM(CASE WHEN (t.status = 'completed' OR t.is_completed = 1) THEN 1 ELSE 0 END) as completed_tasks,
+                    CASE 
+                        WHEN p.task_distribution_mode = 'automatic' THEN 
+                            COALESCE(SUM(CASE WHEN (t.status = 'completed' OR t.is_completed = 1) THEN t.automatic_points ELSE 0 END), 0)
+                        ELSE 
+                            COALESCE(SUM(CASE WHEN (t.status = 'completed' OR t.is_completed = 1) THEN (t.assigned_percentage * p.kpi_points / 100) ELSE 0 END), 0)
+                    END as earned_points
                 FROM Projects p
                 LEFT JOIN Clans c ON p.clan_id = c.clan_id
                 LEFT JOIN Users u ON p.created_by_user_id = u.user_id
-                WHERE p.clan_id = ?
+                LEFT JOIN Tasks t ON p.project_id = t.project_id AND t.is_subtask = 0
+                WHERE p.clan_id = ? AND (p.is_personal IS NULL OR p.is_personal != 1)
+                GROUP BY p.project_id, p.project_name, p.description, p.clan_id, p.created_by_user_id, 
+                         p.status, p.created_at, p.updated_at, p.kpi_quarter_id, p.kpi_points, 
+                         p.task_distribution_mode, p.allow_delegation, p.project_type, p.is_personal, 
+                         p.time_limit, p.total_tasks, p.completed_tasks, p.progress_percentage,
+                         c.clan_name, u.full_name
                 ORDER BY p.created_at DESC
             ");
             $stmt->execute([$clanId]);
-            return $stmt->fetchAll();
+            $projects = $stmt->fetchAll();
+            
+            error_log("Proyectos obtenidos: " . count($projects));
+            foreach ($projects as $project) {
+                error_log("  Proyecto: ID={$project['project_id']}, Nombre='{$project['project_name']}', is_personal={$project['is_personal']}, created_by={$project['created_by_user_id']}");
+            }
+            
+            error_log("=== getByClan FINALIZADO ===");
+
+            foreach ($projects as &$project) {
+                $totalTasks = (int)($project['total_tasks'] ?? 0);
+                $completedTasks = (int)($project['completed_tasks'] ?? 0);
+                $kpiPoints = (float)($project['kpi_points'] ?? 0);
+                $earnedPoints = (float)($project['earned_points'] ?? 0);
+
+                if ($kpiPoints > 0) {
+                    if ($earnedPoints > 0) {
+                        $project['progress_percentage'] = round(($earnedPoints / $kpiPoints) * 100, 1);
+                    } else {
+                        $project['progress_percentage'] = $totalTasks > 0 ? round(($completedTasks / $totalTasks) * 100, 1) : 0;
+                    }
+                } else {
+                    $project['progress_percentage'] = $totalTasks > 0 ? round(($completedTasks / $totalTasks) * 100, 1) : 0;
+                }
+
+                $project['progress_percentage'] = max(0, min(100, $project['progress_percentage']));
+            }
+
+            return $projects;
         } catch (PDOException $e) {
             error_log("Error al obtener proyectos del clan: " . $e->getMessage());
             return [];
@@ -226,12 +277,201 @@ class Project {
     }
     
     /**
+     * Obtener proyectos de un clan donde el usuario tiene tareas asignadas
+     */
+    public function getByClanForUser($clanId, $userId) {
+        try {
+            error_log("=== getByClanForUser INICIADO ===");
+            error_log("Clan ID: $clanId, User ID: $userId");
+            
+            $stmt = $this->db->prepare("
+                SELECT DISTINCT
+                    p.*,
+                    c.clan_name,
+                    u.full_name as created_by_name,
+                    COUNT(DISTINCT t.task_id) as total_tasks,
+                    SUM(CASE WHEN (t.status = 'completed' OR t.is_completed = 1) THEN 1 ELSE 0 END) as completed_tasks,
+                    CASE 
+                        WHEN p.task_distribution_mode = 'automatic' THEN 
+                            COALESCE(SUM(CASE WHEN (t.status = 'completed' OR t.is_completed = 1) THEN t.automatic_points ELSE 0 END), 0)
+                        ELSE 
+                            COALESCE(SUM(CASE WHEN (t.status = 'completed' OR t.is_completed = 1) THEN (t.assigned_percentage * p.kpi_points / 100) ELSE 0 END), 0)
+                    END as earned_points
+                FROM Projects p
+                LEFT JOIN Clans c ON p.clan_id = c.clan_id
+                LEFT JOIN Users u ON p.created_by_user_id = u.user_id
+                INNER JOIN Tasks t ON p.project_id = t.project_id AND t.is_subtask = 0
+                LEFT JOIN Task_Assignments ta ON t.task_id = ta.task_id
+                WHERE p.clan_id = ? 
+                  AND (p.is_personal IS NULL OR p.is_personal != 1)
+                  AND (t.assigned_to_user_id = ? OR ta.user_id = ?)
+                GROUP BY p.project_id, p.project_name, p.description, p.clan_id, p.created_by_user_id, 
+                         p.status, p.created_at, p.updated_at, p.kpi_quarter_id, p.kpi_points, 
+                         p.task_distribution_mode, c.clan_name, u.full_name
+                ORDER BY p.created_at DESC
+            ");
+            $stmt->execute([$clanId, $userId, $userId]);
+            $projects = $stmt->fetchAll();
+            
+            error_log("Proyectos con tareas asignadas: " . count($projects));
+            
+            // Incluir siempre los proyectos especiales "Tareas Eventuales" y "Tareas Recurrentes"
+            $specialProjectsStmt = $this->db->prepare("
+                SELECT 
+                    p.*,
+                    c.clan_name,
+                    u.full_name as created_by_name,
+                    0 as total_tasks,
+                    0 as completed_tasks,
+                    0 as earned_points
+                FROM Projects p
+                LEFT JOIN Clans c ON p.clan_id = c.clan_id
+                LEFT JOIN Users u ON p.created_by_user_id = u.user_id
+                WHERE p.clan_id = ? 
+                  AND p.project_name IN ('Tareas Eventuales', 'Tareas Recurrentes')
+                ORDER BY p.created_at DESC
+            ");
+            $specialProjectsStmt->execute([$clanId]);
+            $specialProjects = $specialProjectsStmt->fetchAll();
+            
+            // Combinar proyectos regulares con proyectos especiales
+            $allProjects = array_merge($projects, $specialProjects);
+            
+            // Calcular progreso para cada proyecto
+            foreach ($allProjects as &$project) {
+                $totalTasks = (int)($project['total_tasks'] ?? 0);
+                $completedTasks = (int)($project['completed_tasks'] ?? 0);
+                $kpiPoints = (float)($project['kpi_points'] ?? 0);
+                $earnedPoints = (float)($project['earned_points'] ?? 0);
+
+                if ($kpiPoints > 0) {
+                    if ($earnedPoints > 0) {
+                        $project['progress_percentage'] = round(($earnedPoints / $kpiPoints) * 100, 1);
+                    } else {
+                        $project['progress_percentage'] = $totalTasks > 0 ? round(($completedTasks / $totalTasks) * 100, 1) : 0;
+                    }
+                } else {
+                    $project['progress_percentage'] = $totalTasks > 0 ? round(($completedTasks / $totalTasks) * 100, 1) : 0;
+                }
+
+                $project['progress_percentage'] = max(0, min(100, $project['progress_percentage']));
+            }
+
+            error_log("=== getByClanForUser FINALIZADO ===");
+            return $allProjects;
+            
+        } catch (PDOException $e) {
+            error_log("Error al obtener proyectos del clan para usuario: " . $e->getMessage());
+            return [];
+        }
+    }
+    
+    /**
+     * Obtener proyectos donde el usuario tiene tareas asignadas (incluyendo de otros clanes)
+     */
+    public function getProjectsForUser($userId, $primaryClanId = null) {
+        try {
+            
+            $stmt = $this->db->prepare("
+                SELECT DISTINCT
+                    p.*,
+                    c.clan_name,
+                    u.full_name as created_by_name,
+                    COUNT(DISTINCT t.task_id) as total_tasks,
+                    SUM(CASE WHEN (t.status = 'completed' OR t.is_completed = 1) THEN 1 ELSE 0 END) as completed_tasks,
+                    CASE 
+                        WHEN p.task_distribution_mode = 'automatic' THEN 
+                            COALESCE(SUM(CASE WHEN (t.status = 'completed' OR t.is_completed = 1) THEN t.automatic_points ELSE 0 END), 0)
+                        ELSE 
+                            COALESCE(SUM(CASE WHEN (t.status = 'completed' OR t.is_completed = 1) THEN (t.assigned_percentage * p.kpi_points / 100) ELSE 0 END), 0)
+                    END as earned_points,
+                    CASE 
+                        WHEN p.clan_id = ? THEN 1
+                        ELSE 0
+                    END as is_primary_clan
+                FROM Projects p
+                LEFT JOIN Clans c ON p.clan_id = c.clan_id
+                LEFT JOIN Users u ON p.created_by_user_id = u.user_id
+                INNER JOIN Tasks t ON p.project_id = t.project_id AND t.is_subtask = 0
+                LEFT JOIN Task_Assignments ta ON t.task_id = ta.task_id
+                WHERE (p.is_personal IS NULL OR p.is_personal != 1)
+                  AND (t.assigned_to_user_id = ? OR ta.user_id = ?)
+                GROUP BY p.project_id, p.project_name, p.description, p.clan_id, p.created_by_user_id, 
+                         p.status, p.created_at, p.updated_at, p.kpi_quarter_id, p.kpi_points, 
+                         p.task_distribution_mode, c.clan_name, u.full_name
+                ORDER BY 
+                    is_primary_clan DESC,
+                    p.created_at DESC
+            ");
+            $stmt->execute([$primaryClanId, $userId, $userId]);
+            $projects = $stmt->fetchAll();
+            
+            // Incluir proyectos especiales del clan principal si existe
+            if ($primaryClanId) {
+                $specialProjectsStmt = $this->db->prepare("
+                    SELECT 
+                        p.*,
+                        c.clan_name,
+                        u.full_name as created_by_name,
+                        0 as total_tasks,
+                        0 as completed_tasks,
+                        0 as earned_points,
+                        1 as is_primary_clan
+                    FROM Projects p
+                    LEFT JOIN Clans c ON p.clan_id = c.clan_id
+                    LEFT JOIN Users u ON p.created_by_user_id = u.user_id
+                    WHERE p.clan_id = ? 
+                      AND p.project_name IN ('Tareas Eventuales', 'Tareas Recurrentes')
+                    ORDER BY p.created_at DESC
+                ");
+                $specialProjectsStmt->execute([$primaryClanId]);
+                $specialProjects = $specialProjectsStmt->fetchAll();
+                
+                // Combinar proyectos regulares con proyectos especiales
+                $projects = array_merge($projects, $specialProjects);
+            }
+            
+            // Calcular progreso para cada proyecto
+            foreach ($projects as &$project) {
+                $totalTasks = (int)($project['total_tasks'] ?? 0);
+                $completedTasks = (int)($project['completed_tasks'] ?? 0);
+                $kpiPoints = (float)($project['kpi_points'] ?? 0);
+                $earnedPoints = (float)($project['earned_points'] ?? 0);
+
+                if ($kpiPoints > 0) {
+                    if ($earnedPoints > 0) {
+                        $project['progress_percentage'] = round(($earnedPoints / $kpiPoints) * 100, 1);
+                    } else {
+                        $project['progress_percentage'] = $totalTasks > 0 ? round(($completedTasks / $totalTasks) * 100, 1) : 0;
+                    }
+                } else {
+                    $project['progress_percentage'] = $totalTasks > 0 ? round(($completedTasks / $totalTasks) * 100, 1) : 0;
+                }
+
+                $project['progress_percentage'] = max(0, min(100, $project['progress_percentage']));
+            }
+
+            return $projects;
+            
+        } catch (PDOException $e) {
+            error_log("Error al obtener proyectos para usuario: " . $e->getMessage());
+            return [];
+        }
+    }
+    
+    /**
      * Actualizar proyecto
      */
-    public function update($projectId, $projectName, $description, $clanId, $status = null) {
+    public function update($projectId, $projectName, $description, $clanId, $status = null, $timeLimit = null) {
         try {
             $sql = "UPDATE Projects SET project_name = ?, description = ?, clan_id = ?, updated_at = NOW()";
             $params = [$projectName, $description, $clanId];
+
+            if ($timeLimit !== null) {
+                $timeLimitValue = (is_string($timeLimit) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $timeLimit)) ? $timeLimit : null;
+                $sql .= ", time_limit = ?";
+                $params[] = $timeLimitValue;
+            }
             
             if ($status !== null) {
                 $sql .= ", status = ?";
@@ -327,12 +567,12 @@ class Project {
                     p.kpi_points,
                     p.task_distribution_mode,
                     COUNT(t.task_id) as total_tasks,
-                    SUM(CASE WHEN t.is_completed = 1 THEN 1 ELSE 0 END) as completed_tasks,
+                    SUM(CASE WHEN (t.status = 'completed' OR t.is_completed = 1) THEN 1 ELSE 0 END) as completed_tasks,
                     CASE 
                         WHEN p.task_distribution_mode = 'automatic' THEN 
-                            COALESCE(SUM(CASE WHEN t.is_completed = 1 THEN t.automatic_points ELSE 0 END), 0)
+                            COALESCE(SUM(CASE WHEN (t.status = 'completed' OR t.is_completed = 1) THEN t.automatic_points ELSE 0 END), 0)
                         ELSE 
-                            COALESCE(SUM(CASE WHEN t.is_completed = 1 THEN (t.assigned_percentage * p.kpi_points / 100) ELSE 0 END), 0)
+                            COALESCE(SUM(CASE WHEN (t.status = 'completed' OR t.is_completed = 1) THEN (t.assigned_percentage * p.kpi_points / 100) ELSE 0 END), 0)
                     END as earned_points
                 FROM Projects p
                 LEFT JOIN Tasks t ON p.project_id = t.project_id AND t.is_subtask = 0
@@ -468,12 +708,12 @@ class Project {
                     p.kpi_points,
                     p.task_distribution_mode,
                     COUNT(t.task_id) as total_tasks,
-                    SUM(CASE WHEN t.is_completed = 1 THEN 1 ELSE 0 END) as completed_tasks,
+                    SUM(CASE WHEN (t.status = 'completed' OR t.is_completed = 1) THEN 1 ELSE 0 END) as completed_tasks,
                     CASE 
                         WHEN p.task_distribution_mode = 'automatic' THEN 
-                            COALESCE(SUM(CASE WHEN t.is_completed = 1 THEN t.automatic_points ELSE 0 END), 0)
+                            COALESCE(SUM(CASE WHEN (t.status = 'completed' OR t.is_completed = 1) THEN t.automatic_points ELSE 0 END), 0)
                         ELSE 
-                            COALESCE(SUM(CASE WHEN t.is_completed = 1 THEN (t.assigned_percentage * p.kpi_points / 100) ELSE 0 END), 0)
+                            COALESCE(SUM(CASE WHEN (t.status = 'completed' OR t.is_completed = 1) THEN (t.assigned_percentage * p.kpi_points / 100) ELSE 0 END), 0)
                     END as earned_points
                 FROM Projects p
                 LEFT JOIN Tasks t ON p.project_id = t.project_id
@@ -585,12 +825,12 @@ class Project {
                     p.kpi_points,
                     p.task_distribution_mode,
                     COUNT(t.task_id) as total_tasks,
-                    SUM(CASE WHEN t.is_completed = 1 THEN 1 ELSE 0 END) as completed_tasks,
+                    SUM(CASE WHEN (t.status = 'completed' OR t.is_completed = 1) THEN 1 ELSE 0 END) as completed_tasks,
                     CASE 
                         WHEN p.task_distribution_mode = 'automatic' THEN 
-                            COALESCE(SUM(CASE WHEN t.is_completed = 1 THEN t.automatic_points ELSE 0 END), 0)
+                            COALESCE(SUM(CASE WHEN (t.status = 'completed' OR t.is_completed = 1) THEN t.automatic_points ELSE 0 END), 0)
                         ELSE 
-                            COALESCE(SUM(CASE WHEN t.is_completed = 1 THEN (t.assigned_percentage * p.kpi_points / 100) ELSE 0 END), 0)
+                            COALESCE(SUM(CASE WHEN (t.status = 'completed' OR t.is_completed = 1) THEN (t.assigned_percentage * p.kpi_points / 100) ELSE 0 END), 0)
                     END as earned_points
                 FROM Projects p
                 LEFT JOIN Tasks t ON p.project_id = t.project_id
@@ -711,7 +951,7 @@ class Project {
                     SUM(CASE WHEN kpi_quarter_id IS NOT NULL AND kpi_points > 0 THEN 1 ELSE 0 END) as kpi_projects,
                     COALESCE(SUM(kpi_points), 0) as total_kpi_points
                 FROM Projects 
-                WHERE clan_id = ?
+                WHERE clan_id = ? AND (is_personal IS NULL OR is_personal != 1)
             ");
             $stmt->execute([$clanId]);
             $result = $stmt->fetch();
@@ -734,6 +974,73 @@ class Project {
                 'kpi_projects' => 0,
                 'total_kpi_points' => 0
             ];
+        }
+    }
+
+    /**
+     * Crear proyecto personal para un usuario
+     */
+    public function createPersonalProject($projectData) {
+        try {
+            $userId = (int)($projectData['user_id'] ?? 0);
+            
+            if ($userId <= 0) {
+                error_log("createPersonalProject: user_id inválido: $userId");
+                return false;
+            }
+            
+            // Obtener el clan del usuario
+            $stmt = $this->db->prepare("
+                SELECT cm.clan_id, c.clan_name 
+                FROM Clan_Members cm 
+                JOIN Clans c ON c.clan_id = cm.clan_id 
+                WHERE cm.user_id = ?
+                LIMIT 1
+            ");
+            $stmt->execute([$userId]);
+            $userClan = $stmt->fetch();
+            
+            if (!$userClan) {
+                error_log("createPersonalProject: Usuario $userId no pertenece a ningún clan");
+                return false;
+            }
+            
+            $clanId = $userClan['clan_id'];
+            $clanName = $userClan['clan_name'];
+            
+            error_log("createPersonalProject: Creando proyecto personal para usuario $userId en clan $clanName (ID: $clanId)");
+            
+            // Crear el proyecto personal
+            $stmt = $this->db->prepare("
+                INSERT INTO Projects (
+                    project_name, 
+                    description, 
+                    clan_id, 
+                    created_by_user_id, 
+                    status,
+                    is_personal
+                ) VALUES (?, ?, ?, ?, 'active', 1)
+            ");
+            
+            $result = $stmt->execute([
+                $projectData['project_name'],
+                $projectData['description'],
+                $clanId,
+                $userId
+            ]);
+            
+            if ($result) {
+                $projectId = $this->db->lastInsertId();
+                error_log("createPersonalProject: Proyecto personal creado exitosamente con ID: " . $projectId);
+                return $projectId;
+            } else {
+                error_log("createPersonalProject: Error al crear proyecto: " . print_r($stmt->errorInfo(), true));
+                return false;
+            }
+            
+        } catch (Exception $e) {
+            error_log("ERROR en createPersonalProject: " . $e->getMessage());
+            return false;
         }
     }
 }

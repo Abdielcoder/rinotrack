@@ -34,6 +34,12 @@ ob_start();
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a href="?route=admin/tasks" class="nav-link">
+                        <i class="fas fa-tasks"></i>
+                        <span>Tareas</span>
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a href="?route=admin/clans" class="nav-link">
                         <i class="fas fa-users-cog"></i>
                         <span>Clanes</span>
@@ -90,7 +96,7 @@ ob_start();
                     Gestión de Proyectos
                 </h1>
                 <div class="header-actions">
-                    <button class="btn btn-primary" onclick="openCreateProjectModal()">
+                    <button class="btn btn-primary" id="openCreateProjectBtnHeader" data-action="create-project">
                         <i class="fas fa-plus"></i>
                         Crear Proyecto
                     </button>
@@ -98,24 +104,120 @@ ob_start();
             </div>
         </header>
 
+        <!-- Minicards: Estados generales de tareas (todos los clanes) -->
+        <section class="stats-section animate-fade-in">
+            <div class="stats-grid stats-compact one-line">
+                <div class="stat-card compact">
+                    <div class="stat-header">
+                        <h3><i class="fas fa-list-ul"></i> Tareas totales</h3>
+                    </div>
+                    <div class="stat-number"><?php echo (int)($taskStats['total'] ?? 0); ?></div>
+                </div>
+                <div class="stat-card compact">
+                    <div class="stat-header">
+                        <h3><i class="fas fa-hourglass-half"></i> Pendientes</h3>
+                    </div>
+                    <div class="stat-number"><?php echo (int)($taskStats['pending'] ?? 0); ?></div>
+                </div>
+                <div class="stat-card compact">
+                    <div class="stat-header">
+                        <h3><i class="fas fa-spinner"></i> En progreso</h3>
+                    </div>
+                    <div class="stat-number"><?php echo (int)($taskStats['in_progress'] ?? 0); ?></div>
+                </div>
+                <div class="stat-card compact">
+                    <div class="stat-header">
+                        <h3><i class="fas fa-check-circle"></i> Completadas</h3>
+                    </div>
+                    <div class="stat-number"><?php echo (int)($taskStats['completed'] ?? 0); ?></div>
+                </div>
+                <div class="stat-card compact">
+                    <div class="stat-header">
+                        <h3><i class="fas fa-exclamation-triangle"></i> Vencidas</h3>
+                    </div>
+                    <div class="stat-number" style="color:#ef4444"><?php echo (int)($taskStats['overdue'] ?? 0); ?></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Actividad reciente global -->
+        <section class="content-section animate-fade-in">
+            <div class="content-card">
+                <div class="card-header">
+                    <h3><i class="fas fa-bolt"></i> Actividad Reciente</h3>
+                    <button class="btn btn-secondary" id="toggleRecentActivity">Mostrar/Ocultar</button>
+                </div>
+                <div class="activity-list" id="recentActivityContent" style="display: none;">
+                    <?php if (empty($recentActivity ?? [])): ?>
+                        <div class="empty">Sin actividad reciente</div>
+                    <?php else: foreach (($recentActivity ?? []) as $h): ?>
+                        <div class="activity-item" style="display:flex;flex-direction:column;gap:4px;padding:10px 0;border-bottom:1px solid var(--admin-border)">
+                            <div class="meta" style="display:flex;justify-content:space-between;color:var(--admin-text-muted)">
+                                <span class="task"><?php echo Utils::escape(($h['task_name'] ?? '')); ?></span>
+                                <span class="time"><?php echo date('d/m/Y H:i', strtotime($h['created_at'])); ?></span>
+                            </div>
+                            <div class="desc" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">
+                                <span class="user"><?php echo Utils::escape(($h['full_name'] ?: $h['username'] ?: 'Sistema')); ?></span>
+                                <span>→</span>
+                                <strong><?php echo Utils::escape($h['action_type']); ?></strong>
+                                <?php if (!empty($h['field_name'])): ?>
+                                    <span class="field" style="color:var(--admin-text-muted)">(<?php echo Utils::escape($h['field_name']); ?>)</span>
+                                <?php endif; ?>
+                                <?php if (!empty($h['project_name'])): ?>
+                                    <span>•</span>
+                                    <span class="project" style="color:var(--admin-text-secondary)"><?php echo Utils::escape($h['project_name']); ?></span>
+                                <?php endif; ?>
+                                <?php if (!empty($h['clan_name'])): ?>
+                                    <span>•</span>
+                                    <span class="clan" style="color:var(--admin-text-secondary)"><?php echo Utils::escape($h['clan_name']); ?></span>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    <?php endforeach; endif; ?>
+                </div>
+            </div>
+        </section>
+
+        <script>
+        (function(){
+            var btn = document.getElementById('toggleRecentActivity');
+            var content = document.getElementById('recentActivityContent');
+            if (btn && content) {
+                btn.addEventListener('click', function(){
+                    if (content.style.display === 'none') {
+                        content.style.display = '';
+                    } else {
+                        content.style.display = 'none';
+                    }
+                });
+            }
+        })();
+        </script>
+
         <!-- Grid de proyectos -->
         <section class="content-section animate-fade-in">
             <div class="projects-header">
                 <h3>Proyectos Activos (<?php echo count($projects); ?>)</h3>
                 <div class="filter-options">
-                    <select id="statusFilter" onchange="filterProjects()">
+                    <select id="statusFilter" data-action="filter-projects">
                         <option value="">Todos los estados</option>
                         <option value="open">Abiertos</option>
                         <option value="completed">Completados</option>
                         <option value="paused">Pausados</option>
+                        <option value="overdue">Vencidos</option>
                     </select>
-                    <select id="clanFilter" onchange="filterProjects()">
+                    <select id="clanFilter" data-action="filter-projects">
                         <option value="">Todos los clanes</option>
                         <?php foreach ($clans as $clan): ?>
-                        <option value="<?php echo $clan['clan_id']; ?>">
+                        <option value="<?php echo intval($clan['clan_id']); ?>">
                             <?php echo Utils::escape($clan['clan_name']); ?>
                         </option>
                         <?php endforeach; ?>
+                    </select>
+                    <select id="assignmentFilter" data-action="filter-projects" title="Asignación KPI">
+                        <option value="">Todas las asignaciones</option>
+                        <option value="assigned">Asignados</option>
+                        <option value="unassigned">Sin asignar</option>
                     </select>
                 </div>
             </div>
@@ -126,7 +228,7 @@ ob_start();
                     <i class="fas fa-project-diagram"></i>
                     <h3>No hay proyectos</h3>
                     <p>Comienza creando tu primer proyecto</p>
-                    <button class="btn btn-primary" onclick="openCreateProjectModal()">
+                    <button class="btn btn-primary" id="openCreateProjectBtnEmpty" data-action="create-project">
                         <i class="fas fa-plus"></i>
                         Crear Primer Proyecto
                     </button>
@@ -134,8 +236,13 @@ ob_start();
             </div>
             <?php else: ?>
             <div class="projects-grid">
-                <?php foreach ($projects as $project): ?>
-                <div class="project-card" data-status="<?php echo $project['status']; ?>" data-clan="<?php echo $project['clan_id']; ?>">
+                <?php 
+                $today = date('Y-m-d');
+                foreach ($projects as $project): 
+                    $isOverdue = !empty($project['time_limit']) && $project['time_limit'] < $today && !in_array($project['status'], ['completed','cancelled']);
+                ?>
+                <?php $isAssigned = ((float)($project['kpi_points'] ?? 0) > 0) && !empty($project['kpi_quarter_id']); ?>
+                <div class="project-card" data-status="<?php echo htmlspecialchars($project['status']); ?>" data-clan="<?php echo intval($project['clan_id']); ?>" data-assigned="<?php echo $isAssigned ? 'assigned' : 'unassigned'; ?>" data-overdue="<?php echo $isOverdue ? '1' : '0'; ?>">
                     <div class="project-header">
                         <div class="project-info">
                             <h4 class="project-name"><?php echo Utils::escape($project['project_name']); ?></h4>
@@ -154,17 +261,20 @@ ob_start();
                                 ?>
                             </span>
                             <div class="action-menu">
-                                <button class="btn-icon" onclick="toggleProjectMenu(<?php echo $project['project_id']; ?>)">
+                                <button class="btn-icon" data-action="toggle-menu" data-project-id="<?php echo intval($project['project_id']); ?>">
                                     <i class="fas fa-ellipsis-v"></i>
                                 </button>
-                                <div class="menu-dropdown" id="menu-<?php echo $project['project_id']; ?>">
-                                    <button onclick="editProject(<?php echo $project['project_id']; ?>)">
+                                <div class="menu-dropdown" id="menu-<?php echo intval($project['project_id']); ?>">
+                                     <button data-action="add-task" data-project-id="<?php echo intval($project['project_id']); ?>">
+                                         <i class="fas fa-plus-circle"></i> Agregar Tarea
+                                     </button>
+                                    <button data-action="edit-project" data-project-id="<?php echo intval($project['project_id']); ?>">
                                         <i class="fas fa-edit"></i> Editar
                                     </button>
-                                    <button onclick="viewProject(<?php echo $project['project_id']; ?>)">
+                                    <a href="?route=admin/project-details&projectId=<?php echo intval($project['project_id']); ?>">
                                         <i class="fas fa-eye"></i> Ver Detalles
-                                    </button>
-                                    <button onclick="deleteProject(<?php echo $project['project_id']; ?>)" class="danger">
+                                    </a>
+                                    <button data-action="delete-project" data-project-id="<?php echo intval($project['project_id']); ?>" class="danger">
                                         <i class="fas fa-trash"></i> Eliminar
                                     </button>
                                 </div>
@@ -181,10 +291,10 @@ ob_start();
                     <div class="project-progress">
                         <div class="progress-info">
                             <span>Progreso</span>
-                            <span class="progress-value"><?php echo number_format($project['progress_percentage'], 1); ?>%</span>
+                            <span class="progress-value <?php echo $isAssigned ? '' : 'unassigned'; ?>"><?php echo number_format($project['progress_percentage'], 1); ?>%</span>
                         </div>
                         <div class="progress-bar">
-                            <div class="progress-fill" style="width: <?php echo $project['progress_percentage']; ?>%"></div>
+                            <div class="progress-fill <?php echo $isAssigned ? '' : 'unassigned'; ?>" style="width: <?php echo $project['progress_percentage']; ?>%"></div>
                         </div>
                     </div>
 
@@ -197,6 +307,18 @@ ob_start();
                             <i class="fas fa-check-circle"></i>
                             <span><?php echo $project['completed_tasks']; ?> completadas</span>
                         </div>
+                        <?php if (!empty($project['time_limit'])): ?>
+                        <div class="stat-item" title="Fecha límite">
+                            <i class="fas fa-hourglass-end"></i>
+                            <span>Límite: <?php echo date('d/m/Y', strtotime($project['time_limit'])); ?></span>
+                        </div>
+                        <?php endif; ?>
+                        <?php if(!$isAssigned): ?>
+                        <div class="stat-item" title="Proyecto sin KPI/OKR asignado">
+                            <i class="fas fa-exclamation-triangle" style="color:var(--warning)"></i>
+                            <span>Sin KPI</span>
+                        </div>
+                        <?php endif; ?>
                     </div>
 
                     <div class="project-footer">
@@ -218,7 +340,7 @@ ob_start();
     <div class="modal-content">
         <div class="modal-header">
             <h3 id="modalTitle">Crear Proyecto</h3>
-            <button class="modal-close" onclick="closeProjectModal()">
+            <button class="modal-close" data-action="close-modal">
                 <i class="fas fa-times"></i>
             </button>
         </div>
@@ -243,17 +365,22 @@ ob_start();
                 <select id="clanId" name="clanId" required>
                     <option value="">Seleccionar clan</option>
                     <?php foreach ($clans as $clan): ?>
-                    <option value="<?php echo $clan['clan_id']; ?>">
+                    <option value="<?php echo intval($clan['clan_id']); ?>">
                         <?php echo Utils::escape($clan['clan_name']); ?>
-                        (<?php echo $clan['member_count']; ?> miembros)
+                        (<?php echo intval($clan['member_count']); ?> miembros)
                     </option>
                     <?php endforeach; ?>
                 </select>
                 <span class="error-message" id="clanIdError"></span>
             </div>
+
+            <div class="form-group">
+                <label for="timeLimit">Fecha límite del proyecto</label>
+                <input type="date" id="timeLimit" name="timeLimit">
+            </div>
             
             <div class="modal-actions">
-                <button type="button" class="btn btn-secondary" onclick="closeProjectModal()">
+                <button type="button" class="btn btn-secondary" data-action="close-modal">
                     Cancelar
                 </button>
                 <button type="submit" class="btn btn-primary" id="submitBtn">
@@ -261,6 +388,69 @@ ob_start();
                     <span id="submitLoader" class="btn-loader" style="display: none;">
                         <i class="fas fa-spinner fa-spin"></i>
                     </span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal para crear tarea -->
+<div id="taskModal" class="modal" style="display:none">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="taskModalTitle">Crear Tarea</h3>
+            <button class="modal-close" data-action="close-task-modal">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <form id="taskForm" class="modal-form">
+            <input type="hidden" id="taskProjectId" name="projectId">
+
+            <div class="form-group">
+                <label for="taskName">Nombre de la tarea *</label>
+                <input type="text" id="taskName" name="taskName" required>
+            </div>
+
+            <div class="form-group">
+                <label for="taskDescription">Descripción</label>
+                <textarea id="taskDescription" name="description" rows="3" placeholder="Describe la tarea..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Asignar a colaboradores del clan</label>
+                <div id="taskMembers" class="checkbox-list" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"></div>
+                <span class="error-message" id="taskMembersError"></span>
+            </div>
+
+            <div class="form-group">
+                <label for="taskDueDate">Fecha estimada de entrega</label>
+                <input type="date" id="taskDueDate" name="dueDate">
+            </div>
+
+            <!-- Sección de Subtareas -->
+            <div class="form-group">
+                <label>Subtareas</label>
+                <div class="subtasks-container">
+                    <div class="subtasks-header">
+                        <span>Organiza tu tarea en pasos más pequeños</span>
+                        <button type="button" class="btn btn-small btn-secondary" id="addSubtaskBtn">
+                            <i class="fas fa-plus"></i> Agregar Subtarea
+                        </button>
+                    </div>
+                    <div id="subtasksList" class="subtasks-list">
+                        <!-- Las subtareas se agregarán aquí dinámicamente -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" data-action="close-task-modal">
+                    Cancelar
+                </button>
+                <button type="submit" class="btn btn-primary" id="taskSubmitBtn">
+                    <span id="taskSubmitText">Crear Tarea</span>
+                    <span id="taskSubmitLoader" class="btn-loader" style="display:none"><i class="fas fa-spinner fa-spin"></i></span>
                 </button>
             </div>
         </form>
@@ -420,6 +610,29 @@ ob_start();
     background: var(--bg-tertiary);
 }
 
+/* Estilos consistentes para enlaces dentro del menú (evitar colores de visitado) */
+.menu-dropdown a {
+    width: 100%;
+    padding: var(--spacing-sm) var(--spacing-md);
+    text-decoration: none;
+    background: transparent;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.menu-dropdown a:hover {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+.menu-dropdown a:visited,
+.menu-dropdown a:active,
+.menu-dropdown a:focus {
+    color: var(--text-primary);
+}
+
 .menu-dropdown button.danger {
     color: var(--error);
 }
@@ -471,6 +684,14 @@ ob_start();
     background: var(--primary-gradient);
     border-radius: var(--radius-full);
     transition: width var(--transition-normal);
+}
+
+.progress-fill.unassigned {
+    background: var(--warning);
+}
+
+.progress-value.unassigned {
+    color: var(--warning);
 }
 
 .project-stats {
@@ -539,6 +760,119 @@ textarea {
     font-family: inherit;
 }
 
+/* Estilos para subtareas */
+.subtasks-container {
+    border: 1px solid var(--bg-accent);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    background: var(--bg-tertiary);
+}
+
+.subtasks-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-md);
+    padding-bottom: var(--spacing-sm);
+    border-bottom: 1px solid var(--bg-accent);
+}
+
+.subtasks-header span {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.btn-small {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: 0.85rem;
+}
+
+.subtasks-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.subtask-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm);
+    background: var(--bg-primary);
+    border: 1px solid var(--bg-accent);
+    border-radius: var(--radius-sm);
+    position: relative;
+}
+
+.subtask-item:hover {
+    border-color: var(--primary-color);
+}
+
+.subtask-drag-handle {
+    cursor: grab;
+    color: var(--text-muted);
+    font-size: 1.1rem;
+}
+
+.subtask-drag-handle:active {
+    cursor: grabbing;
+}
+
+.subtask-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    padding: var(--spacing-xs);
+}
+
+.subtask-input:focus {
+    outline: none;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-xs);
+}
+
+.subtask-remove {
+    background: none;
+    border: none;
+    color: var(--error);
+    cursor: pointer;
+    padding: var(--spacing-xs);
+    border-radius: var(--radius-xs);
+    font-size: 0.9rem;
+    opacity: 0.7;
+    transition: opacity var(--transition-normal);
+}
+
+.subtask-remove:hover {
+    opacity: 1;
+    background: var(--error);
+    color: white;
+}
+
+.subtasks-empty {
+    text-align: center;
+    color: var(--text-muted);
+    font-style: italic;
+    padding: var(--spacing-lg);
+    border: 2px dashed var(--bg-accent);
+    border-radius: var(--radius-sm);
+    background: var(--bg-primary);
+}
+
+.subtask-counter {
+    position: absolute;
+    top: -8px;
+    left: 8px;
+    background: var(--primary-color);
+    color: white;
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-weight: var(--font-weight-medium);
+}
+
 @media (max-width: 768px) {
     .projects-header {
         flex-direction: column;
@@ -570,171 +904,437 @@ textarea {
 }
 </style>
 
+<!-- JavaScript Inline con todas las funciones necesarias -->
 <script>
-// JavaScript para gestión de proyectos
-let currentProjectId = null;
-let isEditMode = false;
-
-function openCreateProjectModal() {
-    isEditMode = false;
-    currentProjectId = null;
-    document.getElementById('modalTitle').textContent = 'Crear Proyecto';
-    document.getElementById('submitText').textContent = 'Crear Proyecto';
-    document.getElementById('projectForm').reset();
-    document.getElementById('projectId').value = '';
-    document.getElementById('projectModal').style.display = 'block';
-}
-
-function closeProjectModal() {
-    document.getElementById('projectModal').style.display = 'none';
-    clearErrors();
-}
-
-function editProject(projectId) {
-    // Placeholder para edición
-    isEditMode = true;
-    currentProjectId = projectId;
-    document.getElementById('modalTitle').textContent = 'Editar Proyecto';
-    document.getElementById('submitText').textContent = 'Actualizar Proyecto';
-    document.getElementById('projectId').value = projectId;
-    document.getElementById('projectModal').style.display = 'block';
-}
-
-function viewProject(projectId) {
-    // Placeholder para ver detalles
-    showToast('Función de ver detalles en desarrollo', 'info');
-}
-
-function deleteProject(projectId) {
-            showConfirmationModal({
-            title: 'Confirmar Eliminación',
-            message: '¿Estás seguro de que quieres eliminar este proyecto?',
-            type: 'warning',
-            confirmText: 'Eliminar',
-            cancelText: 'Cancelar',
-            onConfirm: () => {
-        showToast('Función de eliminar en desarrollo', 'warning');
-    }
-}
-
-function toggleProjectMenu(projectId) {
-    const menu = document.getElementById('menu-' + projectId);
-    const allMenus = document.querySelectorAll('.menu-dropdown');
+(function() {
+    'use strict';
     
-    // Cerrar otros menús
-    allMenus.forEach(m => {
-        if (m !== menu) {
-            m.classList.remove('show');
-        }
-    });
-    
-    menu.classList.toggle('show');
-}
-
-function filterProjects() {
-    const statusFilter = document.getElementById('statusFilter').value;
-    const clanFilter = document.getElementById('clanFilter').value;
-    const projectCards = document.querySelectorAll('.project-card');
-    
-    projectCards.forEach(card => {
-        const projectStatus = card.dataset.status;
-        const projectClan = card.dataset.clan;
+    // Sistema de gestión de proyectos con event delegation
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Inicializando gestión de proyectos...');
         
-        let showCard = true;
+        // Referencias a elementos del DOM
+        const modal = document.getElementById('projectModal');
+        const form = document.getElementById('projectForm');
+        const modalTitle = document.getElementById('modalTitle');
+        const submitText = document.getElementById('submitText');
+        const submitLoader = document.getElementById('submitLoader');
+        const submitBtn = document.getElementById('submitBtn');
+        const projectIdField = document.getElementById('projectId');
         
-        if (statusFilter && projectStatus !== statusFilter) {
-            showCard = false;
-        }
-        
-        if (clanFilter && projectClan !== clanFilter) {
-            showCard = false;
-        }
-        
-        card.style.display = showCard ? 'block' : 'none';
-    });
-}
-
-// Manejar envío del formulario
-document.getElementById('projectForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const submitBtn = document.getElementById('submitBtn');
-    const submitText = document.getElementById('submitText');
-    const submitLoader = document.getElementById('submitLoader');
-    
-    // Mostrar loader
-    submitBtn.disabled = true;
-    submitText.style.display = 'none';
-    submitLoader.style.display = 'inline-block';
-    
-    const formData = new FormData(this);
-    
-    fetch('?route=admin/create-project', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showToast(data.message, 'success');
-            closeProjectModal();
-            setTimeout(() => {
-                window.location.reload();
-            }, 1500);
-        } else {
-            if (data.errors) {
-                showFormErrors(data.errors);
+        // Función para abrir el modal de crear/editar
+        function openProjectModal(isEdit = false, projectId = null) {
+            if (!modal) {
+                console.error('Modal no encontrado');
+                return;
+            }
+            
+            if (isEdit && projectId) {
+                modalTitle.textContent = 'Editar Proyecto';
+                submitText.textContent = 'Actualizar Proyecto';
+                projectIdField.value = projectId;
+                // TODO: Cargar datos del proyecto
             } else {
-                showToast(data.message, 'error');
+                modalTitle.textContent = 'Crear Proyecto';
+                submitText.textContent = 'Crear Proyecto';
+                if (form) form.reset();
+                projectIdField.value = '';
+            }
+            
+            modal.style.display = 'block';
+            clearErrors();
+        }
+        
+        // Función para cerrar el modal
+        function closeProjectModal() {
+            if (modal) {
+                modal.style.display = 'none';
+                clearErrors();
             }
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showToast('Error de conexión', 'error');
-    })
-    .finally(() => {
-        submitBtn.disabled = false;
-        submitText.style.display = 'inline';
-        submitLoader.style.display = 'none';
-    });
-});
 
-function showFormErrors(errors) {
-    clearErrors();
-    Object.keys(errors).forEach(field => {
-        const errorElement = document.getElementById(field + 'Error');
-        if (errorElement) {
-            errorElement.textContent = errors[field];
-            errorElement.classList.add('show');
+        // -------- Modal de Tarea --------
+        const taskModal = document.getElementById('taskModal');
+        const taskForm = document.getElementById('taskForm');
+        const taskProjectId = document.getElementById('taskProjectId');
+        const taskMembers = document.getElementById('taskMembers');
+        const taskSubmitBtn = document.getElementById('taskSubmitBtn');
+        const taskSubmitText = document.getElementById('taskSubmitText');
+        const taskSubmitLoader = document.getElementById('taskSubmitLoader');
+
+        function openTaskModal(projectId, clanId) {
+            if (!taskModal) return;
+            // reset form
+            if (taskForm) taskForm.reset();
+            if (taskMembers) taskMembers.innerHTML = '<div class="empty">Cargando miembros...</div>';
+            taskProjectId.value = projectId || '';
+            taskModal.style.display = 'block';
+            // cargar miembros del clan por AJAX
+            if (clanId) {
+                fetch('?route=admin/clan-members&clanId=' + encodeURIComponent(clanId))
+                    .then(r => r.json())
+                    .then(data => {
+                        if (!data || !data.success) {
+                            taskMembers.innerHTML = '<div class="empty">No se pudieron cargar miembros</div>';
+                            return;
+                        }
+                        const members = data.members || [];
+                        if (!members.length) {
+                            taskMembers.innerHTML = '<div class="empty">No hay miembros en el clan</div>';
+                            return;
+                        }
+                        taskMembers.innerHTML = members.map(m => {
+                            const full = (m.full_name || m.username || '').replace(/</g,'&lt;');
+                            const role = (m.role_name || '').replace(/</g,'&lt;');
+                            return `<label style="display:flex;align-items:center;gap:8px;border:1px solid var(--bg-accent);padding:8px;border-radius:10px;background:var(--bg-primary)">
+                                <input type="checkbox" name="assignedUsers[]" value="${m.user_id}">
+                                <span>${full} ${role?`(${role})`:''}</span>
+                            </label>`;
+                        }).join('');
+                    })
+                    .catch(() => { taskMembers.innerHTML = '<div class="empty">Error cargando miembros</div>'; });
+            }
         }
-    });
-}
 
-function clearErrors() {
-    const errorElements = document.querySelectorAll('.error-message');
-    errorElements.forEach(element => {
-        element.classList.remove('show');
-        element.textContent = '';
-    });
-}
+        function closeTaskModal() { 
+            if (taskModal) {
+                taskModal.style.display = 'none';
+                // Limpiar subtareas al cerrar
+                clearSubtasks();
+            }
+        }
 
-// Cerrar menús al hacer clic fuera
-document.addEventListener('click', function(e) {
-    if (!e.target.closest('.action-menu')) {
-        document.querySelectorAll('.menu-dropdown').forEach(menu => {
-            menu.classList.remove('show');
+        // -------- Gestión de Subtareas --------
+        let subtaskCounter = 0;
+
+        function addSubtask(title = '') {
+            subtaskCounter++;
+            const subtaskId = 'subtask_' + subtaskCounter;
+            const subtasksList = document.getElementById('subtasksList');
+            
+            // Crear elemento de subtarea
+            const subtaskItem = document.createElement('div');
+            subtaskItem.className = 'subtask-item';
+            subtaskItem.dataset.subtaskId = subtaskId;
+            
+            subtaskItem.innerHTML = `
+                <span class="subtask-counter">${subtaskCounter}</span>
+                <i class="fas fa-grip-vertical subtask-drag-handle" title="Arrastrar para reordenar"></i>
+                <input type="text" class="subtask-input" name="subtasks[]" placeholder="Nombre de la subtarea..." value="${title}" required>
+                <button type="button" class="subtask-remove" onclick="removeSubtask('${subtaskId}')" title="Eliminar subtarea">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            if (subtasksList) {
+                subtasksList.appendChild(subtaskItem);
+                updateSubtasksDisplay();
+                
+                // Enfocar el input de la nueva subtarea
+                const input = subtaskItem.querySelector('.subtask-input');
+                if (input) {
+                    input.focus();
+                }
+            }
+        }
+
+        function removeSubtask(subtaskId) {
+            const subtaskItem = document.querySelector(`[data-subtask-id="${subtaskId}"]`);
+            if (subtaskItem) {
+                subtaskItem.remove();
+                updateSubtasksDisplay();
+                renumberSubtasks();
+            }
+        }
+
+        function clearSubtasks() {
+            const subtasksList = document.getElementById('subtasksList');
+            if (subtasksList) {
+                subtasksList.innerHTML = '';
+                subtaskCounter = 0;
+                updateSubtasksDisplay();
+            }
+        }
+
+        function updateSubtasksDisplay() {
+            const subtasksList = document.getElementById('subtasksList');
+            const subtaskItems = subtasksList ? subtasksList.querySelectorAll('.subtask-item') : [];
+            
+            if (subtaskItems.length === 0 && subtasksList) {
+                subtasksList.innerHTML = '<div class="subtasks-empty">No hay subtareas agregadas. Haz clic en "Agregar Subtarea" para comenzar.</div>';
+            } else if (subtasksList && subtasksList.querySelector('.subtasks-empty')) {
+                subtasksList.querySelector('.subtasks-empty').remove();
+            }
+        }
+
+        function renumberSubtasks() {
+            const subtaskItems = document.querySelectorAll('.subtask-item');
+            subtaskItems.forEach((item, index) => {
+                const counter = item.querySelector('.subtask-counter');
+                if (counter) {
+                    counter.textContent = index + 1;
+                }
+            });
+            subtaskCounter = subtaskItems.length;
+        }
+
+        // Event listener para agregar subtareas
+        document.addEventListener('click', function(e) {
+            if (e.target.id === 'addSubtaskBtn' || e.target.closest('#addSubtaskBtn')) {
+                e.preventDefault();
+                addSubtask();
+            }
         });
-    }
-});
 
-// Cerrar modal al hacer clic fuera
-window.onclick = function(event) {
-    const modal = document.getElementById('projectModal');
-    if (event.target === modal) {
-        closeProjectModal();
-    }
-}
+        // Inicializar display de subtareas vacío
+        document.addEventListener('DOMContentLoaded', function() {
+            updateSubtasksDisplay();
+        });
+        
+        // Función para limpiar errores
+        function clearErrors() {
+            document.querySelectorAll('.error-message').forEach(function(el) {
+                el.classList.remove('show');
+                el.textContent = '';
+            });
+        }
+        
+        // Función para mostrar errores
+        function showFormErrors(errors) {
+            clearErrors();
+            Object.keys(errors).forEach(function(field) {
+                const errorElement = document.getElementById(field + 'Error');
+                if (errorElement) {
+                    errorElement.textContent = errors[field];
+                    errorElement.classList.add('show');
+                }
+            });
+        }
+        
+        // Función para filtrar proyectos
+            function filterProjects() {
+            const statusFilter = document.getElementById('statusFilter');
+            const clanFilter = document.getElementById('clanFilter');
+            const assignmentFilter = document.getElementById('assignmentFilter');
+            const projectCards = document.querySelectorAll('.project-card');
+            
+            const status = statusFilter ? statusFilter.value : '';
+            const clan = clanFilter ? clanFilter.value : '';
+            const assignment = assignmentFilter ? assignmentFilter.value : '';
+            
+            projectCards.forEach(function(card) {
+                const projectStatus = card.dataset.status;
+                const projectClan = card.dataset.clan;
+                const projectAssigned = card.dataset.assigned || '';
+                    const projectOverdue = card.dataset.overdue === '1';
+                let showCard = true;
+                
+                    if (status) {
+                        if (status === 'overdue') {
+                            if (!projectOverdue) showCard = false;
+                        } else if (projectStatus !== status) {
+                            showCard = false;
+                        }
+                    }
+                if (clan && projectClan !== clan) showCard = false;
+                if (assignment && projectAssigned !== assignment) showCard = false;
+                
+                card.style.display = showCard ? 'block' : 'none';
+            });
+        }
+        
+        // Event delegation para manejar todos los clicks
+        document.addEventListener('click', function(e) {
+            const target = e.target.closest('[data-action]');
+            if (!target) return;
+            
+            const action = target.dataset.action;
+            const projectId = target.dataset.projectId;
+            
+            switch(action) {
+                case 'create-project':
+                    e.preventDefault();
+                    openProjectModal(false);
+                    break;
+                    
+                case 'edit-project':
+                    e.preventDefault();
+                    openProjectModal(true, projectId);
+                    break;
+
+                case 'add-task':
+                    e.preventDefault();
+                    // Buscar clan desde la tarjeta del proyecto
+                    const card = target.closest('.project-card');
+                    const clanId = card ? card.dataset.clan : '';
+                    openTaskModal(projectId, clanId);
+                    break;
+                    
+                case 'view-project':
+                    e.preventDefault();
+                    alert('Función de ver detalles en desarrollo');
+                    break;
+                    
+                case 'delete-project':
+                    e.preventDefault();
+                    if (!projectId) return;
+                    if (!confirm('¿Estás seguro de que quieres eliminar este proyecto? Esta acción no se puede deshacer.')) return;
+                    const fd = new FormData();
+                    fd.append('projectId', projectId);
+                    fetch('?route=admin/delete-project', {
+                        method: 'POST',
+                        body: fd
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data && data.success) {
+                            alert('Proyecto eliminado exitosamente');
+                            setTimeout(() => window.location.reload(), 800);
+                        } else {
+                            alert((data && data.message) ? data.message : 'Error al eliminar proyecto');
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Error al eliminar proyecto:', err);
+                        alert('Error de conexión al eliminar proyecto');
+                    });
+                    break;
+                    
+                case 'toggle-menu':
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const menu = document.getElementById('menu-' + projectId);
+                    if (menu) {
+                        // Cerrar otros menús
+                        document.querySelectorAll('.menu-dropdown').forEach(function(m) {
+                            if (m !== menu) m.classList.remove('show');
+                        });
+                        menu.classList.toggle('show');
+                    }
+                    break;
+                    
+                case 'close-modal':
+                    e.preventDefault();
+                    closeProjectModal();
+                    break;
+                case 'close-task-modal':
+                    e.preventDefault();
+                    closeTaskModal();
+                    break;
+            }
+        });
+        
+        // Event listener para cambios en filtros
+        document.addEventListener('change', function(e) {
+            if (e.target.dataset.action === 'filter-projects') {
+                filterProjects();
+            }
+        });
+        
+        // Cerrar menús al hacer clic fuera
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.action-menu')) {
+                document.querySelectorAll('.menu-dropdown').forEach(function(menu) {
+                    menu.classList.remove('show');
+                });
+            }
+        });
+        
+        // Cerrar modal al hacer clic fuera
+        window.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closeProjectModal();
+            }
+            if (e.target === taskModal) {
+                closeTaskModal();
+            }
+        });
+        
+        // Manejar envío del formulario
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Mostrar loader
+                if (submitBtn) submitBtn.disabled = true;
+                if (submitText) submitText.style.display = 'none';
+                if (submitLoader) submitLoader.style.display = 'inline-block';
+                
+                // Preparar datos
+                const formData = new FormData(form);
+                
+                // Enviar petición
+                fetch('?route=admin/create-project', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(function(response) {
+                    return response.json();
+                })
+                .then(function(data) {
+                    if (data.success) {
+                        closeProjectModal();
+                        setTimeout(function() {
+                            window.location.reload();
+                        }, 1500);
+                    } else {
+                        if (data.errors) {
+                            showFormErrors(data.errors);
+                        } else {
+                            alert(data.message || 'Error al crear el proyecto');
+                        }
+                    }
+                })
+                .catch(function(error) {
+                    console.error('Error:', error);
+                    alert('Error de conexión');
+                })
+                .finally(function() {
+                    // Ocultar loader
+                    if (submitBtn) submitBtn.disabled = false;
+                    if (submitText) submitText.style.display = 'inline';
+                    if (submitLoader) submitLoader.style.display = 'none';
+                });
+            });
+        }
+        
+        // Envío del formulario de tarea
+        if (taskForm) {
+            taskForm.addEventListener('submit', function(e){
+                e.preventDefault();
+                if (taskSubmitBtn) taskSubmitBtn.disabled = true;
+                if (taskSubmitText) taskSubmitText.style.display = 'none';
+                if (taskSubmitLoader) taskSubmitLoader.style.display = 'inline-block';
+
+                const formData = new FormData(taskForm);
+                fetch('?route=admin/add-task', { method: 'POST', body: formData, headers: { 'Accept': 'application/json' } })
+                    .then(async r=>{
+                        const text = await r.text();
+                        try { return { ok: r.ok, data: JSON.parse(text) }; }
+                        catch(_) { throw new Error(text); }
+                    })
+                    .then(resp=>{
+                        const data = resp.data || {};
+                        if (resp.ok && data.success) {
+                            // Cerrar inmediatamente y refrescar rápido
+                            closeTaskModal();
+                            window.location.reload();
+                        } else {
+                            alert(data.message || 'Error al crear tarea');
+                        }
+                    })
+                    .catch(err=>{ console.error('Error add-task:', err); alert('Error: ' + (err && err.message ? err.message.substring(0, 300) : 'conexión')); })
+                    .finally(()=>{
+                        if (taskSubmitBtn) taskSubmitBtn.disabled = false;
+                        if (taskSubmitText) taskSubmitText.style.display = 'inline';
+                        if (taskSubmitLoader) taskSubmitLoader.style.display = 'none';
+                    });
+            });
+        }
+
+        console.log('Gestión de proyectos inicializada correctamente');
+    });
+})();
 </script>
 
 <?php
@@ -744,6 +1344,6 @@ $content = ob_get_clean();
 // Configurar variables para el layout
 $title = 'Gestión de Proyectos - ' . APP_NAME;
 
-// Incluir el layout del admin
+// Incluir el layout del admin (sin JavaScript adicional porque ya está inline)
 include __DIR__ . '/layout.php';
 ?>
