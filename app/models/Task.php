@@ -107,13 +107,33 @@ class Task {
             
             // Crear la tarea principal
             error_log('Task::createAdvanced - 🔄 Creando tarea principal...');
-            $stmt = $this->db->prepare("
-                INSERT INTO Tasks (project_id, task_name, description, due_date, priority, created_by_user_id, status, completion_percentage) 
-                VALUES (?, ?, ?, ?, ?, ?, 'pending', 0.00)
-            ");
+            
+            $sqlQuery = "INSERT INTO Tasks (project_id, task_name, description, due_date, priority, created_by_user_id, status, completion_percentage) 
+                VALUES (?, ?, ?, ?, ?, ?, 'pending', 0.00)";
             
             $taskParams = [$projectId, $taskName, $description, $dueDate, $priority, $createdByUserId];
-            error_log('Task::createAdvanced - Parámetros para INSERT de tarea: ' . print_r($taskParams, true));
+            
+            error_log('');
+            error_log('╔═══════════════════════════════════════════════════════════════╗');
+            error_log('║       📊 INSERCIÓN EN BASE DE DATOS - TASK PRINCIPAL          ║');
+            error_log('╚═══════════════════════════════════════════════════════════════╝');
+            error_log('SQL Query: ' . $sqlQuery);
+            error_log('');
+            error_log('📌 MAPEO COLUMNA → VALOR:');
+            error_log('  [1] project_id           → ' . var_export($taskParams[0], true) . ' (tipo: ' . gettype($taskParams[0]) . ')');
+            error_log('  [2] task_name            → ' . var_export($taskParams[1], true) . ' (tipo: ' . gettype($taskParams[1]) . ')');
+            error_log('  [3] description          → ' . var_export($taskParams[2], true) . ' (tipo: ' . gettype($taskParams[2]) . ')');
+            error_log('  [4] due_date             → ' . var_export($taskParams[3], true) . ' (tipo: ' . gettype($taskParams[3]) . ')');
+            error_log('  [5] priority             → ' . var_export($taskParams[4], true) . ' (tipo: ' . gettype($taskParams[4]) . ')');
+            error_log('  [6] created_by_user_id   → ' . var_export($taskParams[5], true) . ' (tipo: ' . gettype($taskParams[5]) . ')');
+            error_log('  [7] status               → "pending" (hardcoded)');
+            error_log('  [8] completion_percentage → 0.00 (hardcoded)');
+            error_log('');
+            error_log('🔍 Array completo de parámetros: ' . print_r($taskParams, true));
+            error_log('════════════════════════════════════════════════════════════════');
+            error_log('');
+            
+            $stmt = $this->db->prepare($sqlQuery);
             
             $result = $stmt->execute($taskParams);
             
@@ -125,6 +145,30 @@ class Task {
             
             $taskId = $this->db->lastInsertId();
             error_log('Task::createAdvanced - ✅ Tarea principal creada con ID: ' . $taskId);
+            
+            // VERIFICACIÓN INMEDIATA: Leer lo que se guardó en la BD
+            error_log('');
+            error_log('╔═══════════════════════════════════════════════════════════════╗');
+            error_log('║       🔍 VERIFICACIÓN POST-INSERT - Lectura desde BD          ║');
+            error_log('╚═══════════════════════════════════════════════════════════════╝');
+            $verifyStmt = $this->db->prepare("SELECT task_id, project_id, task_name, priority, due_date, status, created_by_user_id FROM Tasks WHERE task_id = ?");
+            $verifyStmt->execute([$taskId]);
+            $savedTask = $verifyStmt->fetch(PDO::FETCH_ASSOC);
+            if ($savedTask) {
+                error_log('📋 Datos guardados en la BD:');
+                foreach ($savedTask as $column => $value) {
+                    error_log('  ✓ ' . str_pad($column, 20) . ' = ' . var_export($value, true));
+                }
+                error_log('');
+                error_log('⚠️ COMPARACIÓN priority:');
+                error_log('  - Enviado:  ' . var_export($priority, true));
+                error_log('  - Guardado: ' . var_export($savedTask['priority'], true));
+                error_log('  - ¿Coinciden? ' . ($savedTask['priority'] === $priority ? '✅ SÍ' : '❌ NO'));
+            } else {
+                error_log('❌ ERROR: No se pudo leer la tarea recién creada');
+            }
+            error_log('════════════════════════════════════════════════════════════════');
+            error_log('');
             
             // Asignar múltiples usuarios si se especifican
             if (!empty($assignedUsers)) {

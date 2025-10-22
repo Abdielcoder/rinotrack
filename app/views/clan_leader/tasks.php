@@ -2734,6 +2734,12 @@ ob_start();
 </div> <!-- Cierre de clan-leader-tasks-container -->
 
 <script>
+console.log('🚀 ========================================');
+console.log('📄 ARCHIVO tasks.php CARGADO');
+console.log('⏰ Timestamp:', new Date().toISOString());
+console.log('🌐 URL actual:', window.location.href);
+console.log('🚀 ========================================');
+
 // ===============================
 // FUNCIONES MODAL DE EDICIÓN
 // ===============================
@@ -3501,12 +3507,26 @@ function updateTaskProgressFromClick(event, taskId) {
 
 // Función para abrir el modal de clonación
 function openCloneTaskModal(taskId) {
-    console.log('🔄 Iniciando clonación de tarea ID:', taskId);
+    console.log('═══════════════════════════════════════════════════════════════');
+    console.log('🔄 FUNCIÓN openCloneTaskModal LLAMADA');
+    console.log('  Task ID recibido:', taskId);
+    console.log('  Tipo de taskId:', typeof taskId);
+    console.log('═══════════════════════════════════════════════════════════════');
+    
+    // Verificar que taskId es válido
+    if (!taskId || taskId === 'undefined' || taskId === 'null') {
+        console.error('❌ ERROR: taskId inválido:', taskId);
+        showToast('Error: ID de tarea inválido', 'error');
+        return;
+    }
     
     // Mostrar indicador de carga
     const loadingToast = showToast('Cargando datos de la tarea...', 'info');
     
-    fetch('?route=clan_leader/get-task-data&task_id=' + taskId)
+    const url = '?route=clan_leader/get-task-data&task_id=' + taskId;
+    console.log('📡 Haciendo fetch a:', url);
+    
+    fetch(url)
         .then(response => {
             console.log('📡 Respuesta recibida, status:', response.status);
             return response.json();
@@ -4152,6 +4172,75 @@ document.addEventListener('DOMContentLoaded', function() {
     const activeTab = urlParams.get('tab') || 'my-tasks';
     
     switchTab(activeTab);
+    
+    // AGREGAR EVENT LISTENER PARA BOTONES DE CLONAR
+    console.log('🔧 Inicializando event listeners para botones de clonar...');
+    
+    // Usar delegación de eventos en el documento
+    document.addEventListener('click', function(event) {
+        // Verificar si el clic fue en un botón de clonar (múltiples selectores posibles)
+        const cloneButton = event.target.closest('.btn-action-table.clone:not(.disabled), .btn-action.btn-clone:not(.disabled), .btn-clone:not(.disabled)');
+        
+        if (cloneButton) {
+            console.log('🎯 CLIC DETECTADO en botón de clonar');
+            console.log('  Botón:', cloneButton);
+            console.log('  Clases:', cloneButton.className);
+            console.log('  Tiene onclick:', cloneButton.hasAttribute('onclick'));
+            console.log('  Valor onclick:', cloneButton.getAttribute('onclick'));
+            
+            // Si no tiene onclick o está vacío, buscar el task_id en el DOM
+            if (!cloneButton.hasAttribute('onclick') || !cloneButton.getAttribute('onclick').trim()) {
+                console.log('⚠️ Botón sin onclick, buscando task_id...');
+                
+                // Buscar en la fila padre
+                const taskRow = cloneButton.closest('tr.task-row, tr[data-task-id]');
+                if (taskRow) {
+                    const taskId = taskRow.getAttribute('data-task-id');
+                    console.log('✅ Task ID encontrado en row:', taskId);
+                    
+                    if (taskId) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        openCloneTaskModal(taskId);
+                    }
+                } else {
+                    console.error('❌ No se encontró la fila de tarea');
+                }
+            } else {
+                console.log('✅ Botón tiene onclick, se ejecutará normalmente');
+            }
+        }
+    });
+    
+    console.log('✅ Event listeners inicializados');
+    
+    // EVENT LISTENER ESPECÍFICO PARA BOTONES CON CLASE btn-action btn-clone
+    console.log('🔧 Agregando event listener específico para .btn-action.btn-clone...');
+    
+    // Buscar todos los botones de clonar existentes
+    const existingCloneButtons = document.querySelectorAll('.btn-action.btn-clone');
+    console.log('📊 Botones de clonar encontrados:', existingCloneButtons.length);
+    
+    existingCloneButtons.forEach((button, index) => {
+        console.log(`  Botón ${index + 1}:`, button);
+        console.log(`    - onclick:`, button.getAttribute('onclick'));
+        console.log(`    - title:`, button.getAttribute('title'));
+        
+        // Si no tiene onclick, agregarlo
+        if (!button.getAttribute('onclick')) {
+            // Buscar el task_id en la fila padre
+            const taskRow = button.closest('tr[data-task-id]');
+            if (taskRow) {
+                const taskId = taskRow.getAttribute('data-task-id');
+                console.log(`    - Task ID encontrado: ${taskId}`);
+                
+                if (taskId) {
+                    button.setAttribute('onclick', `openCloneTaskModal(${taskId})`);
+                    console.log(`    - onclick agregado: openCloneTaskModal(${taskId})`);
+                }
+            }
+        }
+    });
 });
 
 // Timestamp para forzar recarga: <?= time() ?>
@@ -5467,6 +5556,9 @@ function renderTasksTableFromKanban(tasks, tbodyId) {
         const isRecurrent = task.project_type === 'recurrent' || task.project_name === 'Mis Tareas Recurrentes';
         const isEventual = task.project_name === 'Tareas Eventuales';
         
+        // DEBUG: Log para verificar qué tareas se están marcando como subtareas
+        console.log(`Task ID: ${task.task_id}, Name: ${task.task_name}, item_type: ${task.item_type}, isSubtask: ${isSubtask}`);
+        
         // Calcular días hasta vencimiento para mostrar urgencia
         let urgencyClass = '';
         let urgencyText = '';
@@ -5504,7 +5596,7 @@ function renderTasksTableFromKanban(tasks, tbodyId) {
                            onchange="toggleTaskStatus(${task.task_id}, this.checked, '${isSubtask ? 'subtask' : 'task'}')">
                 </td>
                 <td class="td-priority">
-                    <span class="priority-badge priority-${task.priority || 'medium'}">${(task.priority || 'medium').toUpperCase()}</span>
+                    <span class="priority-badge priority-${task.priority || 'medium'}">${task.priority === 'critical' ? 'Urgente' : task.priority === 'high' ? 'Alta' : task.priority === 'low' ? 'Baja' : 'Media'}</span>
                 </td>
                 <td class="td-task">
                     <div class="task-name-table">
@@ -5550,11 +5642,13 @@ function renderTasksTableFromKanban(tasks, tbodyId) {
                         <button class="btn-action-table delete" onclick="deleteTaskTable(${task.task_id}, '${task.task_name}')" title="Eliminar">
                             <i class="fas fa-trash"></i>
                         </button>
-                        ${!isSubtask ? `<button class="btn-action-table clone" onclick="openCloneTaskModal(${task.task_id})" title="Clonar tarea">
+                        ${!isSubtask && task.item_type !== 'subtask' ? `<button class="btn-action-table clone" onclick="openCloneTaskModal(${task.task_id})" title="Clonar tarea">
                             <i class="fas fa-copy"></i>
-                        </button>` : `<span class="btn-action-table clone disabled" title="Las subtareas no se pueden clonar directamente">
+                        </button>` : (task.item_type === 'subtask' ? `<span class="btn-action-table clone disabled" title="Las subtareas no se pueden clonar directamente">
                             <i class="fas fa-copy"></i>
-                        </span>`}
+                        </span>` : `<button class="btn-action-table clone" onclick="openCloneTaskModal(${task.task_id})" title="Clonar tarea">
+                            <i class="fas fa-copy"></i>
+                        </button>`)}
                     </div>
                 </td>
                 <td class="td-select">

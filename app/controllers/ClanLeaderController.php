@@ -1657,17 +1657,30 @@ class ClanLeaderController {
             error_log('createTask - ❌ subtasks es array: ' . (is_array($subtasks) ? 'SÍ' : 'NO'));
         }
         
+        // DEBUG: Log detallado del procesamiento de prioridad
+        error_log('=== DEBUG PRIORIDAD ===');
+        error_log('POST[priority] raw: ' . ($_POST['priority'] ?? 'NOT SET'));
+        error_log('isset POST[priority]: ' . (isset($_POST['priority']) ? 'YES' : 'NO'));
+        error_log('empty POST[priority]: ' . (empty($_POST['priority']) ? 'YES' : 'NO'));
+        
         $priority = Utils::sanitizeInput($_POST['priority'] ?? '');
+        error_log('Priority after sanitize: "' . $priority . '"');
+        error_log('Priority length: ' . strlen($priority));
         
         // Si no se seleccionó prioridad, usar medium por defecto
         if (empty($priority)) {
+            error_log('Priority is empty, setting to medium');
             $priority = 'medium';
         }
         
         // Corregir valor de prioridad al enum de Tasks
         if (!in_array($priority, ['low','medium','high','critical'], true)) {
+            error_log('Priority not in valid values, was: "' . $priority . '", setting to medium or critical');
             $priority = ($priority === 'urgent') ? 'critical' : 'medium';
         }
+        
+        error_log('FINAL Priority value: "' . $priority . '"');
+        error_log('=== END DEBUG PRIORIDAD ===');
         
         // Manejar labels que puede ser un array o JSON string
         $labelsRaw = $_POST['labels'] ?? [];

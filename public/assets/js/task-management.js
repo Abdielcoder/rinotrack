@@ -120,6 +120,23 @@ function saveTask() {
     formData.append('task_project', document.getElementById('task_project').value);
     formData.append('task_description', document.getElementById('task_description').value);
     
+    // Capturar prioridad - Método simplificado con logs detallados
+    const prioritySelect = document.getElementById('priority');
+    console.log('═══════════════════════════════════════');
+    console.log('🔍 PRIORITY SELECT DEBUG:');
+    console.log('  - Element:', prioritySelect);
+    console.log('  - Element ID:', prioritySelect ? prioritySelect.id : 'NULL');
+    console.log('  - Element name:', prioritySelect ? prioritySelect.name : 'NULL');
+    console.log('  - Selected index:', prioritySelect ? prioritySelect.selectedIndex : 'NULL');
+    console.log('  - Value:', prioritySelect ? prioritySelect.value : 'NULL');
+    console.log('  - All options:', prioritySelect ? Array.from(prioritySelect.options).map(o => ({value: o.value, text: o.text, selected: o.selected})) : 'NULL');
+    
+    const priorityValue = prioritySelect ? prioritySelect.value : 'medium';
+    console.log('  - FINAL VALUE TO SEND:', priorityValue);
+    console.log('═══════════════════════════════════════');
+    
+    formData.append('priority', priorityValue);
+    
     // Agregar miembros asignados
     assignedMembers.forEach(member => {
         formData.append('assigned_members[]', member.value);
@@ -195,12 +212,56 @@ function saveTask() {
         console.log('⚠️ No hay subtareas para incluir');
     }
     
-    // Log para debug
-    console.log('🚀 === ENVIANDO TAREA AL SERVIDOR ===');
-    console.log('📋 FormData completo:');
+    // Log para debug - PAYLOAD COMPLETO
+    console.log('');
+    console.log('╔═══════════════════════════════════════════════════════════════╗');
+    console.log('║          🚀 ENVIANDO TAREA AL SERVIDOR - PAYLOAD COMPLETO     ║');
+    console.log('╚═══════════════════════════════════════════════════════════════╝');
+    console.log('');
+    console.log('📋 FormData completo que se enviará:');
+    console.log('─────────────────────────────────────────────────────────────');
+    
+    const payloadDebug = {};
     for (let [key, value] of formData.entries()) {
-        console.log(`  ${key}:`, value);
+        if (!payloadDebug[key]) {
+            payloadDebug[key] = [];
+        }
+        payloadDebug[key].push(value);
+        console.log(`  ✓ ${key}:`, value);
     }
+    
+    console.log('');
+    console.log('📦 Resumen del Payload (agrupado):');
+    console.log('─────────────────────────────────────────────────────────────');
+    for (let [key, values] of Object.entries(payloadDebug)) {
+        if (values.length === 1) {
+            console.log(`  ${key}: "${values[0]}"`);
+        } else {
+            console.log(`  ${key}: [${values.length} elementos]`, values);
+        }
+    }
+    console.log('─────────────────────────────────────────────────────────────');
+    console.log('');
+    console.log('');
+    console.log('⏸️  PAUSA PARA REVISIÓN DE LOGS');
+    console.log('   Revisa la consola arriba antes de continuar.');
+    console.log('   Presta especial atención a:');
+    console.log('     - PRIORITY SELECT DEBUG');
+    console.log('     - FINAL VALUE TO SEND en priority');
+    console.log('     - Resumen del Payload');
+    console.log('');
+    
+    // ⏸️  PAUSA AUTOMÁTICA - Revisa todos los logs de arriba
+    debugger;
+    
+    // PAUSA AQUÍ - El usuario debe confirmar para continuar
+    if (!confirm('⚠️ MODO DEBUG ACTIVADO\n\n✅ Revisa la CONSOLA ahora (F12)\n\nBusca:\n- Priority value to send\n- Payload completo\n\n¿Continuar con el envío al servidor?')) {
+        console.log('❌ Envío cancelado por el usuario');
+        return;
+    }
+    
+    console.log('✅ Usuario confirmó - Procediendo con el envío...');
+    console.log('');
     
     // Log específico para subtareas
     const subtasksValue = formData.get('subtasks');

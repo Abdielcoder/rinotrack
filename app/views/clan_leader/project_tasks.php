@@ -824,9 +824,205 @@ function showToast(message, type = 'info') {
     }, 5000);
 }
 
-// Función para clonar tarea (placeholder)
+// Función para abrir el modal de clonación
 function openCloneTaskModal(taskId) {
-    showToast('Funcionalidad de clonación de tareas en desarrollo', 'info');
+    console.log('═══════════════════════════════════════════════════════════════');
+    console.log('🔄 FUNCIÓN openCloneTaskModal LLAMADA (project_tasks.php)');
+    console.log('  Task ID recibido:', taskId);
+    console.log('  Tipo de taskId:', typeof taskId);
+    console.log('═══════════════════════════════════════════════════════════════');
+    
+    // Verificar que taskId es válido
+    if (!taskId || taskId === 'undefined' || taskId === 'null') {
+        console.error('❌ ERROR: taskId inválido:', taskId);
+        showToast('Error: ID de tarea inválido', 'error');
+        return;
+    }
+    
+    // Mostrar indicador de carga
+    const loadingToast = showToast('Cargando datos de la tarea...', 'info');
+    
+    const url = '?route=clan_leader/get-task-data&task_id=' + taskId;
+    console.log('📡 Haciendo fetch a:', url);
+    
+    fetch(url)
+        .then(response => {
+            console.log('📡 Respuesta recibida, status:', response.status);
+            return response.json();
+        })
+        .then(data => {
+            console.log('📦 Datos recibidos:', data);
+            
+            // Ocultar indicador de carga
+            if (loadingToast) loadingToast.remove();
+            
+            if (data.success) {
+                console.log('✅ Datos válidos, mostrando modal');
+                showCloneTaskModal(data.task, data.projects);
+            } else {
+                console.error('❌ Error del servidor:', data.message);
+                showToast('Error al cargar los datos de la tarea: ' + data.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('💥 Error de conexión:', error);
+            
+            // Ocultar indicador de carga
+            if (loadingToast) loadingToast.remove();
+            
+            showToast('Error de conexión al cargar los datos de la tarea', 'error');
+        });
+}
+
+// Función para mostrar el modal de clonación
+function showCloneTaskModal(task, projects) {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal-content clone-task-modal">
+            <div class="modal-header">
+                <h3><i class="fas fa-copy"></i> Clonar Tarea</h3>
+                <button class="modal-close" onclick="closeCloneTaskModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="cloneTaskForm">
+                    <input type="hidden" id="originalTaskId" value="${task.task_id}">
+                    
+                    <div class="form-group">
+                        <label for="cloneTaskName">Nombre de la tarea</label>
+                        <input type="text" id="cloneTaskName" name="task_name" value="${task.task_name}" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="cloneTaskDescription">Descripción</label>
+                        <textarea id="cloneTaskDescription" name="description" rows="4">${task.description || ''}</textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="cloneTaskProject">Proyecto destino</label>
+                        <select id="cloneTaskProject" name="project_id" required>
+                            <option value="">Seleccionar proyecto...</option>
+                            ${projects.map(project => 
+                                `<option value="${project.project_id}" ${project.project_id == task.project_id ? 'selected' : ''}>
+                                    ${project.project_name} (${project.clan_name})
+                                </option>`
+                            ).join('')}
+                        </select>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="cloneTaskPriority">Prioridad</label>
+                            <select id="cloneTaskPriority" name="priority">
+                                <option value="low" ${task.priority === 'low' ? 'selected' : ''}>Baja</option>
+                                <option value="medium" ${task.priority === 'medium' ? 'selected' : ''}>Media</option>
+                                <option value="high" ${task.priority === 'high' ? 'selected' : ''}>Alta</option>
+                                <option value="critical" ${task.priority === 'critical' ? 'selected' : ''}>Crítica</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="cloneTaskDueDate">Fecha límite</label>
+                            <input type="date" id="cloneTaskDueDate" name="due_date" value="${task.due_date || ''}">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="cloneSubtasks" name="clone_subtasks" checked>
+                            Clonar también las subtareas
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="closeCloneTaskModal()">Cancelar</button>
+                <button type="button" class="btn-primary" onclick="cloneTask()">
+                    <i class="fas fa-copy"></i> Clonar Tarea
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    modal.style.display = 'flex';
+}
+
+// Función para cerrar el modal de clonación
+function closeCloneTaskModal() {
+    const modal = document.querySelector('.modal-overlay');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+// Función para ejecutar la clonación
+function cloneTask() {
+    console.log('🔄 Iniciando proceso de clonación');
+    
+    const form = document.getElementById('cloneTaskForm');
+    const formData = new FormData(form);
+    
+    // Validaciones del lado del cliente
+    const taskName = document.getElementById('cloneTaskName').value.trim();
+    const projectId = document.getElementById('cloneTaskProject').value;
+    
+    if (!taskName) {
+        showToast('El nombre de la tarea es requerido', 'error');
+        return;
+    }
+    
+    if (!projectId) {
+        showToast('Debes seleccionar un proyecto destino', 'error');
+        return;
+    }
+    
+    // Agregar campos adicionales
+    formData.append('originalTaskId', document.getElementById('originalTaskId').value);
+    formData.append('clone_subtasks', document.getElementById('cloneSubtasks').checked ? '1' : '0');
+    
+    console.log('📤 Enviando datos de clonación');
+    
+    // Deshabilitar el botón para evitar clics múltiples
+    const cloneButton = document.querySelector('.btn-primary');
+    const originalText = cloneButton.innerHTML;
+    cloneButton.disabled = true;
+    cloneButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Clonando...';
+    
+    fetch('?route=clan_leader/clone-task', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        console.log('📡 Respuesta de clonación recibida, status:', response.status);
+        return response.json();
+    })
+    .then(data => {
+        console.log('📦 Resultado de clonación:', data);
+        
+        // Rehabilitar el botón
+        cloneButton.disabled = false;
+        cloneButton.innerHTML = originalText;
+        
+        if (data.success) {
+            console.log('✅ Tarea clonada exitosamente');
+            closeCloneTaskModal();
+            showToast('Tarea clonada exitosamente - ID: ' + (data.new_task_id || 'N/A'), 'success');
+            setTimeout(() => location.reload(), 1500); // Recargar para mostrar los cambios
+        } else {
+            console.error('❌ Error al clonar:', data.message);
+            showToast('Error al clonar la tarea: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('💥 Error de conexión al clonar:', error);
+        
+        // Rehabilitar el botón
+        cloneButton.disabled = false;
+        cloneButton.innerHTML = originalText;
+        
+        showToast('Error de conexión al clonar la tarea', 'error');
+    });
 }
 
 // Cerrar modal al hacer clic fuera

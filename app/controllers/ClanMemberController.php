@@ -1881,21 +1881,8 @@ class ClanMemberController {
                 return;
             }
             
-            // Verificar permisos: debe ser personal del usuario O tener delegación activada
-            $canCreate = false;
-            if (isset($project['is_personal']) && $project['is_personal'] == 1 && $project['created_by_user_id'] == $userId) {
-                $canCreate = true; // Proyecto personal del usuario
-            } elseif (isset($project['allow_delegation']) && $project['allow_delegation'] == 1) {
-                // Proyecto con delegación: verificar que el usuario pertenece al mismo clan
-                if ($project['clan_id'] == $this->userClan['clan_id']) {
-                    $canCreate = true;
-                }
-            }
-            
-            if (!$canCreate) {
-                echo json_encode(['success' => false, 'message' => 'No tienes permisos para crear tareas en este proyecto']);
-                return;
-            }
+            // Los miembros del clan pueden crear tareas en cualquier proyecto
+            // (restricción de permisos eliminada según solicitud del usuario)
             
             // Validaciones de recurrencia
             if ($isRecurrent) {
