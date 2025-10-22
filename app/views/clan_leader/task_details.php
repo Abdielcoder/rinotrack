@@ -3273,6 +3273,7 @@ document.addEventListener('click', function(e) {
 });
     </script>
 
+
 <?php
 $content = ob_get_clean();
 $additionalCSS = [APP_URL . 'assets/css/clan-leader.css'];
